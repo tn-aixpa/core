@@ -75,7 +75,7 @@ pluggy==1.2.0
     # via pytest
 psycopg2-binary==2.9.7
     # via sdk (pyproject.toml)
-pyarrow==13.0.0
+pyarrow==14.0.1
     # via sdk (pyproject.toml)
 pycparser==2.21
     # via cffi
