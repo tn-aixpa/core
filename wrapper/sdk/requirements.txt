@@ -26,7 +26,7 @@ pandas==2.1.1
     # via sdk (pyproject.toml)
 psycopg2-binary==2.9.7
     # via sdk (pyproject.toml)
-pyarrow==13.0.0
+pyarrow==14.0.1
     # via sdk (pyproject.toml)
 pydantic==2.4.1
     # via sdk (pyproject.toml)

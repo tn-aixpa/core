@@ -20,7 +20,7 @@ dependencies = [
 "boto3==1.28.55",
 "pydantic==2.4.1",
 "pandas==2.1.1",
-"pyarrow==13.0.0",
+"pyarrow==14.0.1",
 "sqlalchemy==2.0.21",
 "psycopg2-binary==2.9.7",
 ]
