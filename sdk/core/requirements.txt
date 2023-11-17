@@ -30,7 +30,7 @@ pandas==1.3.5
     # via digitalhub-core (pyproject.toml)
 psycopg2-binary==2.9.7
     # via digitalhub-core (pyproject.toml)
-pyarrow==12.0.1
+pyarrow==14.0.1
     # via digitalhub-core (pyproject.toml)
 pydantic==1.10.13
     # via digitalhub-core (pyproject.toml)
