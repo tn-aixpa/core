@@ -172,6 +172,28 @@
                     <mainClass>it.smartcommunitylabdhub.core.CoreApplication</mainClass>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build-native</id>
+                        <goals>
+                            <goal>compile-no-fork</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <buildArgs>
+                        <arg>--no-server</arg>
+                        <arg>--enable-all-security-services</arg>
+                        <!-- Add other build arguments as needed -->
+                        <arg>-H:ReflectionConfigurationFiles=reflect-config.json</arg>
+                    </buildArgs>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
 </project>
