@@ -9,8 +9,8 @@ import it.smartcommunitylabdhub.core.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
+import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.XTask;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.TaskService;
@@ -42,7 +42,7 @@ public class TaskServiceImpl implements TaskService {
     SpecRegistry<? extends Spec> specRegistry;
 
     @Override
-    public List<XTask> getTasks(Pageable pageable) {
+    public List<Task> getTasks(Pageable pageable) {
         try {
             Page<TaskEntity> TaskPage = this.taskRepository.findAll(pageable);
             return TaskPage.getContent().stream().map(task -> taskDTOBuilder.build(task))
@@ -55,7 +55,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public XTask getTask(String uuid) {
+    public Task getTask(String uuid) {
         return taskRepository.findById(uuid).map(task -> taskDTOBuilder.build(task))
                 .orElseThrow(() -> new CoreException("TaskNotFound",
                         "The Task you are searching for does not exist.",
@@ -74,7 +74,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public XTask createTask(XTask taskDTO) {
+    public Task createTask(Task taskDTO) {
         if (taskDTO.getId() != null && taskRepository.existsById(taskDTO.getId())) {
             throw new CoreException("DuplicateTaskId", "Cannot create the task",
                     HttpStatus.INTERNAL_SERVER_ERROR);
@@ -100,7 +100,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public XTask updateTask(XTask taskDTO, String uuid) {
+    public Task updateTask(Task taskDTO, String uuid) {
         if (!taskDTO.getId().equals(uuid)) {
             throw new CoreException("TaskNotMatch",
                     "Trying to update a task with an uuid different from the one passed in the request.",

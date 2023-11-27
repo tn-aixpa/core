@@ -5,8 +5,8 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.S
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
+import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.XTask;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
@@ -28,7 +28,7 @@ public class TaskEntityBuilder {
      * @param taskDTO
      * @return Task
      */
-    public TaskEntity build(XTask taskDTO) {
+    public TaskEntity build(Task taskDTO) {
 
         specRegistry.createSpec(taskDTO.getKind(), SpecEntity.TASK, Map.of());
 
@@ -67,7 +67,7 @@ public class TaskEntityBuilder {
      * @param taskDTO
      * @return
      */
-    public TaskEntity update(TaskEntity task, XTask taskDTO) {
+    public TaskEntity update(TaskEntity task, Task taskDTO) {
         // Retrieve base spec
         TaskBaseSpec spec = JacksonMapper.objectMapper
                 .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);

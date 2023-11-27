@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.accessors.utils;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
-import it.smartcommunitylabdhub.core.models.entities.task.XTask;
+import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
 import org.springframework.http.HttpStatus;
 
@@ -35,7 +35,7 @@ public class RunUtils {
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    public static <T extends BaseEntity> String buildRunString(T type, XTask task) {
+    public static <T extends BaseEntity> String buildRunString(T type, Task task) {
         if (type instanceof Function) {
 
             Function f = (Function) type;

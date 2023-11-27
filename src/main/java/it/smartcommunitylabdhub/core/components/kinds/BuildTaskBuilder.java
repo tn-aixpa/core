@@ -13,7 +13,7 @@ import it.smartcommunitylabdhub.core.components.kinds.factory.builders.KindBuild
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
-import it.smartcommunitylabdhub.core.models.entities.task.XTask;
+import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ import org.springframework.http.HttpStatus;
 import java.util.Optional;
 
 @RunBuilderComponent(platform = "build", perform = "perform")
-public class BuildTaskBuilder implements KindBuilder<XTask, XTask> {
+public class BuildTaskBuilder implements KindBuilder<Task, Task> {
     // Implementation of the builder
 
     @Autowired
@@ -40,7 +40,7 @@ public class BuildTaskBuilder implements KindBuilder<XTask, XTask> {
      *                       in building the TaskDTO.
      */
     @Override
-    public XTask build(XTask taskDTO) {
+    public Task build(Task taskDTO) {
         // Use TaskUtils to parse the task and create the TaskAccessor
 
         TaskBaseSpec<?> taskSpec = specRegistry.createSpec(
@@ -51,7 +51,7 @@ public class BuildTaskBuilder implements KindBuilder<XTask, XTask> {
         return Optional.of(TaskUtils.parseTask(taskSpec.getFunction()))
                 .map(accessor -> {
                     // Build the TaskDTO with the parsed task data
-                    XTask dto = XTask.builder()
+                    Task dto = Task.builder()
                             .kind(taskDTO.getKind())
                             .project(taskDTO.getProject())
                             .spec(taskDTO.getSpec()).build();

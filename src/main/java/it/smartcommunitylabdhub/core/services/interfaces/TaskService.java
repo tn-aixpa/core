@@ -1,19 +1,19 @@
 package it.smartcommunitylabdhub.core.services.interfaces;
 
-import it.smartcommunitylabdhub.core.models.entities.task.XTask;
+import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface TaskService {
 
-    List<XTask> getTasks(Pageable pageable);
+    List<Task> getTasks(Pageable pageable);
 
-    XTask getTask(String uuid);
+    Task getTask(String uuid);
 
     boolean deleteTask(String uuid);
 
-    XTask createTask(XTask TaskDTO);
+    Task createTask(Task TaskDTO);
 
-    XTask updateTask(XTask TaskDTO, String uuid);
+    Task updateTask(Task TaskDTO, String uuid);
 }
