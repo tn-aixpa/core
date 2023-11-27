@@ -3,8 +3,8 @@ package it.smartcommunitylabdhub.core.models.builders.task;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
-import it.smartcommunitylabdhub.core.models.entities.task.Task;
-import it.smartcommunitylabdhub.core.models.entities.task.TaskDTO;
+import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.entities.task.XTask;
 import it.smartcommunitylabdhub.core.models.entities.task.metadata.TaskMetadata;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,9 @@ public class TaskDTOBuilder {
      * @param task the Task
      * @return TaskDTO
      */
-    public TaskDTO build(Task task) {
+    public XTask build(TaskEntity task) {
 
-        return EntityFactory.create(TaskDTO::new, task, builder -> builder
+        return EntityFactory.create(XTask::new, task, builder -> builder
                 .with(dto -> dto.setId(task.getId()))
                 .with(dto -> dto.setProject(task.getProject()))
                 .with(dto -> dto.setKind(task.getKind()))

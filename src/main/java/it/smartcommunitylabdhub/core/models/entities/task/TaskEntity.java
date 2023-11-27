@@ -20,7 +20,7 @@ import java.util.UUID;
         @UniqueConstraint(columnNames = {"function", "kind"})
 
 })
-public class Task implements BaseEntity {
+public class TaskEntity implements BaseEntity {
 
     @Id
     @Column(unique = true)

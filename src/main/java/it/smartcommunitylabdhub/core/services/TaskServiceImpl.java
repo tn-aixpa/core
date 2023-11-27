@@ -9,8 +9,8 @@ import it.smartcommunitylabdhub.core.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
-import it.smartcommunitylabdhub.core.models.entities.task.Task;
-import it.smartcommunitylabdhub.core.models.entities.task.TaskDTO;
+import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.entities.task.XTask;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.TaskService;
@@ -42,9 +42,9 @@ public class TaskServiceImpl implements TaskService {
     SpecRegistry<? extends Spec> specRegistry;
 
     @Override
-    public List<TaskDTO> getTasks(Pageable pageable) {
+    public List<XTask> getTasks(Pageable pageable) {
         try {
-            Page<Task> TaskPage = this.taskRepository.findAll(pageable);
+            Page<TaskEntity> TaskPage = this.taskRepository.findAll(pageable);
             return TaskPage.getContent().stream().map(task -> taskDTOBuilder.build(task))
                     .collect(Collectors.toList());
 
@@ -55,7 +55,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDTO getTask(String uuid) {
+    public XTask getTask(String uuid) {
         return taskRepository.findById(uuid).map(task -> taskDTOBuilder.build(task))
                 .orElseThrow(() -> new CoreException("TaskNotFound",
                         "The Task you are searching for does not exist.",
@@ -74,7 +74,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDTO createTask(TaskDTO taskDTO) {
+    public XTask createTask(XTask taskDTO) {
         if (taskDTO.getId() != null && taskRepository.existsById(taskDTO.getId())) {
             throw new CoreException("DuplicateTaskId", "Cannot create the task",
                     HttpStatus.INTERNAL_SERVER_ERROR);
@@ -91,7 +91,7 @@ public class TaskServiceImpl implements TaskService {
                     "Cannot create the task", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        Optional<Task> savedTask = Optional.ofNullable(taskDTO).map(taskEntityBuilder::build)
+        Optional<TaskEntity> savedTask = Optional.ofNullable(taskDTO).map(taskEntityBuilder::build)
                 .map(this.taskRepository::save);
 
         return savedTask.map(task -> taskDTOBuilder.build(task)).orElseThrow(
@@ -100,14 +100,14 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDTO updateTask(TaskDTO taskDTO, String uuid) {
+    public XTask updateTask(XTask taskDTO, String uuid) {
         if (!taskDTO.getId().equals(uuid)) {
             throw new CoreException("TaskNotMatch",
                     "Trying to update a task with an uuid different from the one passed in the request.",
                     HttpStatus.NOT_FOUND);
         }
 
-        final Task task = taskRepository.findById(uuid).orElse(null);
+        final TaskEntity task = taskRepository.findById(uuid).orElse(null);
         if (task == null) {
             throw new CoreException("TaskNotFound",
                     "The task you are searching for does not exist.",
@@ -116,7 +116,7 @@ public class TaskServiceImpl implements TaskService {
 
         try {
 
-            final Task taskUpdated = taskEntityBuilder.update(task, taskDTO);
+            final TaskEntity taskUpdated = taskEntityBuilder.update(task, taskDTO);
             this.taskRepository.save(taskUpdated);
 
             return taskDTOBuilder.build(taskUpdated);

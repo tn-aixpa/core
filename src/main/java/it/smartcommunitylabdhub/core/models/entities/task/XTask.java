@@ -20,7 +20,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Builder
-public class TaskDTO implements BaseEntity {
+public class XTask implements BaseEntity {
 
     @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
     private String id;
