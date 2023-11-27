@@ -42,47 +42,47 @@ public class ProjectController {
     }
 
     @Operation(summary = "Get an project by uuid", description = "Return an project")
-    @GetMapping(path = "/{uuidOrName}", produces = "application/json; charset=UTF-8")
+    @GetMapping(path = "/{name}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Project> getProject(
-            @ValidateField @PathVariable(name = "uuidOrName", required = true) String uuidOrName) {
-        return ResponseEntity.ok(this.projectService.getProject(uuidOrName));
+            @ValidateField @PathVariable(name = "name", required = true) String name) {
+        return ResponseEntity.ok(this.projectService.getProject(name));
     }
 
     @Operation(summary = "Update specific project", description = "Update and return the project")
-    @PutMapping(path = "/{uuidOrName}", consumes = {MediaType.APPLICATION_JSON_VALUE,
+    @PutMapping(path = "/{name}", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
     public ResponseEntity<Project> updateProject(
             @RequestBody Project projectDTO,
-            @ValidateField @PathVariable(name = "uuidOrName", required = true) String uuidOrName) {
-        return ResponseEntity.ok(this.projectService.updateProject(projectDTO, uuidOrName));
+            @ValidateField @PathVariable(name = "name", required = true) String name) {
+        return ResponseEntity.ok(this.projectService.updateProject(projectDTO, name));
     }
 
     @Operation(summary = "Delete a project", description = "Delete a specific project")
-    @DeleteMapping(path = "/{uuidOrName}")
+    @DeleteMapping(path = "/{name}")
     public ResponseEntity<Boolean> deleteProject(
-            @ValidateField @PathVariable(name = "uuidOrName", required = true) String uuidOrName) {
-        return ResponseEntity.ok(this.projectService.deleteProject(uuidOrName));
+            @ValidateField @PathVariable(name = "name", required = true) String name) {
+        return ResponseEntity.ok(this.projectService.deleteProject(name));
     }
 
     @Operation(summary = "List project functions", description = "Get all project function list")
-    @GetMapping(path = "/{uuidOrName}/functions", produces = "application/json; charset=UTF-8")
+    @GetMapping(path = "/{name}/functions", produces = "application/json; charset=UTF-8")
     public ResponseEntity<List<Function>> projectFunctions(
-            @ValidateField @PathVariable String uuidOrName) {
-        return ResponseEntity.ok(this.projectService.getProjectFunctions(uuidOrName));
+            @ValidateField @PathVariable String name) {
+        return ResponseEntity.ok(this.projectService.getProjectFunctions(name));
     }
 
     @Operation(summary = "List project workflows", description = "Get all project workflow list")
-    @GetMapping(path = "/{uuidOrName}/workflows", produces = "application/json; charset=UTF-8")
+    @GetMapping(path = "/{name}/workflows", produces = "application/json; charset=UTF-8")
     public ResponseEntity<List<Workflow>> projectWorkflows(
-            @ValidateField @PathVariable String uuidOrName) {
-        return ResponseEntity.ok(this.projectService.getProjectWorkflows(uuidOrName));
+            @ValidateField @PathVariable String name) {
+        return ResponseEntity.ok(this.projectService.getProjectWorkflows(name));
     }
 
     @Operation(summary = "List project artifacts", description = "Get all project artifact list")
-    @GetMapping(path = "/{uuidOrName}/artifacts", produces = "application/json; charset=UTF-8")
+    @GetMapping(path = "/{name}/artifacts", produces = "application/json; charset=UTF-8")
     public ResponseEntity<List<Artifact>> projectArtifacts(
-            @ValidateField @PathVariable String uuidOrName) {
-        return ResponseEntity.ok(this.projectService.getProjectArtifacts(uuidOrName));
+            @ValidateField @PathVariable String name) {
+        return ResponseEntity.ok(this.projectService.getProjectArtifacts(name));
     }
 
 }

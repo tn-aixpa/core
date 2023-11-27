@@ -74,10 +74,9 @@ public class ProjectServiceImpl implements ProjectService {
     WorkflowDTOBuilder workflowDTOBuilder;
 
     @Override
-    public Project getProject(String uuidOrName) {
+    public Project getProject(String name) {
 
-        return projectRepository.findById(uuidOrName)
-                .or(() -> projectRepository.findByName(uuidOrName))
+        return projectRepository.findByName(name)
                 .map(project -> {
                     List<FunctionEntity> functions = functionRepository.findByProject(project.getName());
                     List<ArtifactEntity> artifacts = artifactRepository.findByProject(project.getName());
@@ -118,8 +117,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Project createProject(Project projectDTO) {
-        if ((projectDTO.getId() != null && projectRepository.existsById(projectDTO.getId())) ||
-                projectRepository.existsByName(projectDTO.getName())) {
+        if (projectRepository.existsByName(projectDTO.getName())) {
             throw new CoreException(ErrorList.DUPLICATE_PROJECT.getValue(),
                     ErrorList.DUPLICATE_PROJECT.getReason(),
                     HttpStatus.INTERNAL_SERVER_ERROR);
@@ -138,14 +136,11 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Project updateProject(Project projectDTO, String uuidOrName) {
+    public Project updateProject(Project projectDTO, String name) {
 
-        return Optional.ofNullable(projectDTO.getId())
-                .filter(id -> id.equals(uuidOrName))
-                .or(() -> Optional.ofNullable(projectDTO.getName())
-                        .filter(name -> name.equals(uuidOrName)))
-                .map(id -> projectRepository.findById(uuidOrName)
-                        .or(() -> projectRepository.findByName(uuidOrName))
+        return Optional.ofNullable(projectDTO.getName())
+                .filter(projectName -> projectName.equals(name))
+                .map(projectName -> projectRepository.findByName(projectName)
                         .orElseThrow(() -> new CoreException(
                                 ErrorList.PROJECT_NOT_FOUND.getValue(),
                                 ErrorList.PROJECT_NOT_FOUND.getReason(),
@@ -176,12 +171,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public boolean deleteProject(String uuidOrName) {
-        return Optional.ofNullable(uuidOrName)
-                .map(value -> {
+    public boolean deleteProject(String name) {
+        return Optional.ofNullable(name)
+                .map(projectName -> {
                     boolean deleted = false;
-                    if (projectRepository.existsById(value)) {
-                        projectRepository.findById(value).ifPresent(project -> {
+                    if (projectRepository.existsByName(projectName)) {
+                        projectRepository.findByName(projectName).ifPresent(project -> {
                             // delete functions, artifacts, workflow, dataitems
                             this.artifactRepository.deleteByProjectName(project.getName());
                             this.dataItemRepository.deleteByProjectName(project.getName());
@@ -192,21 +187,7 @@ public class ProjectServiceImpl implements ProjectService {
                             this.runRepository.deleteByProjectName(project.getName());
                             this.taskRepository.deleteByProjectName(project.getName());
                         });
-                        projectRepository.deleteById(value);
-                        deleted = true;
-                    } else if (projectRepository.existsByName(value)) {
-                        projectRepository.findByName(value).ifPresent(project -> {
-                            // delete functions, artifacts, workflow, dataitems
-                            this.artifactRepository.deleteByProjectName(project.getName());
-                            this.dataItemRepository.deleteByProjectName(project.getName());
-                            this.workflowRepository.deleteByProjectName(project.getName());
-                            this.functionRepository.deleteByProjectName(project.getName());
-                            this.dataItemRepository.deleteByProjectName(project.getName());
-                            this.logRepository.deleteByProjectName(project.getName());
-                            this.runRepository.deleteByProjectName(project.getName());
-                            this.taskRepository.deleteByProjectName(project.getName());
-                        });
-                        projectRepository.deleteByName(value);
+                        projectRepository.deleteByName(projectName);
                         deleted = true;
                     }
                     if (!deleted) {
@@ -224,10 +205,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Function> getProjectFunctions(String uuidOrName) {
+    public List<Function> getProjectFunctions(String name) {
 
-        return Optional.of(projectRepository.findById(uuidOrName)
-                        .or(() -> projectRepository.findByName(uuidOrName)))
+        return Optional.of(projectRepository.findByName(name))
                 .orElseThrow(() -> new CoreException(
                         ErrorList.PROJECT_NOT_FOUND.getValue(),
                         ErrorList.PROJECT_NOT_FOUND.getReason(),
@@ -255,9 +235,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Artifact> getProjectArtifacts(String uuidOrName) {
-        return Optional.of(projectRepository.findById(uuidOrName)
-                        .or(() -> projectRepository.findByName(uuidOrName)))
+    public List<Artifact> getProjectArtifacts(String name) {
+        return Optional.of(projectRepository.findByName(name))
                 .orElseThrow(() -> new CoreException(
                         ErrorList.PROJECT_NOT_FOUND.getValue(),
                         ErrorList.PROJECT_NOT_FOUND.getReason(),
@@ -285,9 +264,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<Workflow> getProjectWorkflows(String uuidOrName) {
-        return Optional.of(projectRepository.findById(uuidOrName)
-                        .or(() -> projectRepository.findByName(uuidOrName)))
+    public List<Workflow> getProjectWorkflows(String name) {
+        return Optional.of(projectRepository.findByName(name))
                 .orElseThrow(() -> new CoreException(
                         ErrorList.PROJECT_NOT_FOUND.getValue(),
                         ErrorList.PROJECT_NOT_FOUND.getReason(),

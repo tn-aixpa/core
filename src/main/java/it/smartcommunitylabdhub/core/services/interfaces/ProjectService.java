@@ -15,18 +15,18 @@ public interface ProjectService {
 
     Project createProject(Project projectDTO);
 
-    Project getProject(String uuidOrName);
+    Project getProject(String name);
 
-    Project updateProject(Project projectDTO, String uuidOrName);
+    Project updateProject(Project projectDTO, String name);
 
-    boolean deleteProject(String uuidOrName);
+    boolean deleteProject(String name);
 
     boolean deleteProjectByName(String name);
 
-    List<Function> getProjectFunctions(String uuidOrName);
+    List<Function> getProjectFunctions(String name);
 
-    List<Artifact> getProjectArtifacts(String uuidOrName);
+    List<Artifact> getProjectArtifacts(String name);
 
-    List<Workflow> getProjectWorkflows(String uuidOrName);
+    List<Workflow> getProjectWorkflows(String name);
 
 }
