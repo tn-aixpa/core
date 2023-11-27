@@ -8,10 +8,10 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
+import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.repositories.WorkflowRepository;
@@ -50,9 +50,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     TaskDTOBuilder taskDTOBuilder;
 
     @Override
-    public List<WorkflowDTO> getWorkflows(Pageable pageable) {
+    public List<Workflow> getWorkflows(Pageable pageable) {
         try {
-            Page<Workflow> workflowPage = this.workflowRepository.findAll(pageable);
+            Page<WorkflowEntity> workflowPage = this.workflowRepository.findAll(pageable);
             return workflowPage.getContent().stream().map((workflow) -> {
                 return workflowDTOBuilder.build(workflow, false);
             }).collect(Collectors.toList());
@@ -66,12 +66,12 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     @Override
-    public WorkflowDTO createWorkflow(WorkflowDTO workflowDTO) {
+    public Workflow createWorkflow(Workflow workflowDTO) {
         if (workflowDTO.getId() != null && workflowRepository.existsById(workflowDTO.getId())) {
             throw new CoreException("DuplicateWorkflowId",
                     "Cannot create the workflow", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Optional<Workflow> savedWorkflow = Optional.of(workflowDTO)
+        Optional<WorkflowEntity> savedWorkflow = Optional.of(workflowDTO)
                 .map(workflowEntityBuilder::build)
                 .map(this.workflowRepository::save);
 
@@ -83,7 +83,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     @Override
-    public WorkflowDTO getWorkflow(String uuid) {
+    public Workflow getWorkflow(String uuid) {
         return workflowRepository.findById(uuid)
                 .map(workflow -> {
                     try {
@@ -102,7 +102,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     @Override
-    public WorkflowDTO updateWorkflow(WorkflowDTO workflowDTO, String uuid) {
+    public Workflow updateWorkflow(Workflow workflowDTO, String uuid) {
         if (!workflowDTO.getId().equals(uuid)) {
             throw new CoreException(
                     "WorkflowNotMatch",
@@ -113,7 +113,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         return workflowRepository.findById(uuid)
                 .map(workflow -> {
                     try {
-                        Workflow workflowUpdated =
+                        WorkflowEntity workflowUpdated =
                                 workflowEntityBuilder.update(workflow, workflowDTO);
                         workflowRepository.save(workflowUpdated);
                         return workflowDTOBuilder.build(workflowUpdated, false);
@@ -151,7 +151,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     @Override
     public List<Run> getWorkflowRuns(String uuid) {
-        final Workflow workflow = workflowRepository.findById(uuid).orElse(null);
+        final WorkflowEntity workflow = workflowRepository.findById(uuid).orElse(null);
         if (workflow == null) {
             throw new CoreException(
                     "WorkflowNotFound",
@@ -159,7 +159,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                     HttpStatus.NOT_FOUND);
         }
 
-        WorkflowDTO workflowDTO = workflowDTOBuilder.build(workflow, false);
+        Workflow workflowDTO = workflowDTOBuilder.build(workflow, false);
 
         try {
             List<RunEntity> runs =

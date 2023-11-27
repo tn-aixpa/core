@@ -13,7 +13,7 @@ import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.metadata.ProjectMetadata;
-import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
+import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -45,7 +45,7 @@ public class ProjectDTOBuilder {
             ProjectEntity project,
             List<ArtifactEntity> artifacts,
             List<FunctionEntity> functions,
-            List<Workflow> workflows,
+            List<WorkflowEntity> workflows,
             List<DataItemEntity> dataItems,
             boolean embeddable) {
 

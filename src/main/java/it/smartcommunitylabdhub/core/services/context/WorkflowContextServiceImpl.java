@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
+import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.repositories.WorkflowRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.WorkflowContextService;
 import jakarta.transaction.Transactional;
@@ -33,7 +33,7 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     WorkflowDTOBuilder workflowDTOBuilder;
 
     @Override
-    public WorkflowDTO createWorkflow(String projectName, WorkflowDTO workflowDTO) {
+    public Workflow createWorkflow(String projectName, Workflow workflowDTO) {
         try {
             // Check that project context is the same as the project passed to the
             // workflowDTO
@@ -47,7 +47,7 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
 
             // Check if workflow already exist if exist throw exception otherwise create a
             // new one
-            Workflow workflow = (Workflow) Optional.ofNullable(workflowDTO.getId())
+            WorkflowEntity workflow = (WorkflowEntity) Optional.ofNullable(workflowDTO.getId())
                     .flatMap(id -> workflowRepository.findById(id)
                             .map(a -> {
                                 throw new CustomException(
@@ -56,7 +56,7 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
                             }))
                     .orElseGet(() -> {
                         // Build an workflow and store it in the database
-                        Workflow newWorkflow = workflowEntityBuilder.build(workflowDTO);
+                        WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
                         return workflowRepository.save(newWorkflow);
                     });
 
@@ -72,11 +72,11 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     }
 
     @Override
-    public Page<WorkflowDTO> getLatestByProjectName(String projectName, Pageable pageable) {
+    public Page<Workflow> getLatestByProjectName(String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<Workflow> workflowPage = this.workflowRepository
+            Page<WorkflowEntity> workflowPage = this.workflowRepository
                     .findAllLatestWorkflowsByProject(projectName,
                             pageable);
             return new PageImpl<>(
@@ -96,13 +96,13 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     }
 
     @Override
-    public Page<WorkflowDTO> getByProjectNameAndWorkflowName(String projectName,
-                                                             String workflowName,
-                                                             Pageable pageable) {
+    public Page<Workflow> getByProjectNameAndWorkflowName(String projectName,
+                                                          String workflowName,
+                                                          Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<Workflow> workflowPage = this.workflowRepository
+            Page<WorkflowEntity> workflowPage = this.workflowRepository
                     .findAllByProjectAndNameOrderByCreatedDesc(projectName, workflowName,
                             pageable);
             return new PageImpl<>(
@@ -123,8 +123,8 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     }
 
     @Override
-    public WorkflowDTO getByProjectAndWorkflowAndUuid(String projectName, String workflowName,
-                                                      String uuid) {
+    public Workflow getByProjectAndWorkflowAndUuid(String projectName, String workflowName,
+                                                   String uuid) {
         try {
             // Check project context
             checkContext(projectName);
@@ -144,8 +144,8 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     }
 
     @Override
-    public WorkflowDTO getLatestByProjectNameAndWorkflowName(String projectName,
-                                                             String workflowName) {
+    public Workflow getLatestByProjectNameAndWorkflowName(String projectName,
+                                                          String workflowName) {
         try {
             // Check project context
             checkContext(projectName);
@@ -165,8 +165,8 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     }
 
     @Override
-    public WorkflowDTO createOrUpdateWorkflow(String projectName, String workflowName,
-                                              WorkflowDTO workflowDTO) {
+    public Workflow createOrUpdateWorkflow(String projectName, String workflowName,
+                                           Workflow workflowDTO) {
         try {
             // Check that project context is the same as the project passed to the
             // workflowDTO
@@ -185,27 +185,27 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
 
             // Check if workflow already exist if exist throw exception otherwise create a
             // new one
-            Workflow workflow = Optional.ofNullable(workflowDTO.getId())
+            WorkflowEntity workflow = Optional.ofNullable(workflowDTO.getId())
                     .flatMap(id -> {
-                        Optional<Workflow> optionalWorkflow = workflowRepository.findById(id);
+                        Optional<WorkflowEntity> optionalWorkflow = workflowRepository.findById(id);
                         if (optionalWorkflow.isPresent()) {
-                            Workflow existingWorkflow = optionalWorkflow.get();
+                            WorkflowEntity existingWorkflow = optionalWorkflow.get();
 
                             // Update the existing workflow version
-                            final Workflow workflowUpdated =
+                            final WorkflowEntity workflowUpdated =
                                     workflowEntityBuilder.update(existingWorkflow,
                                             workflowDTO);
                             return Optional.of(this.workflowRepository.save(workflowUpdated));
 
                         } else {
                             // Build a new workflow and store it in the database
-                            Workflow newWorkflow = workflowEntityBuilder.build(workflowDTO);
+                            WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
                             return Optional.of(workflowRepository.save(newWorkflow));
                         }
                     })
                     .orElseGet(() -> {
                         // Build a new workflow and store it in the database
-                        Workflow newWorkflow = workflowEntityBuilder.build(workflowDTO);
+                        WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
                         return workflowRepository.save(newWorkflow);
                     });
 
@@ -221,8 +221,8 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     }
 
     @Override
-    public WorkflowDTO updateWorkflow(String projectName, String workflowName, String uuid,
-                                      WorkflowDTO workflowDTO) {
+    public Workflow updateWorkflow(String projectName, String workflowName, String uuid,
+                                   Workflow workflowDTO) {
 
         try {
             // Check that project context is the same as the project passed to the
@@ -239,7 +239,7 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
             // Check project context
             checkContext(workflowDTO.getProject());
 
-            Workflow workflow = this.workflowRepository.findById(workflowDTO.getId()).map(
+            WorkflowEntity workflow = this.workflowRepository.findById(workflowDTO.getId()).map(
                             a -> {
                                 // Update the existing workflow version
                                 return workflowEntityBuilder.update(a, workflowDTO);

@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
+import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.metadata.WorkflowMetadata;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +18,10 @@ public class WorkflowDTOBuilder {
     @Autowired
     MetadataConverter<WorkflowMetadata> metadataConverter;
 
-    public WorkflowDTO build(
-            Workflow workflow,
+    public Workflow build(
+            WorkflowEntity workflow,
             boolean embeddable) {
-        return EntityFactory.create(WorkflowDTO::new, workflow, builder -> builder
+        return EntityFactory.create(Workflow::new, workflow, builder -> builder
                 .with(dto -> dto.setId(workflow.getId()))
                 .with(dto -> dto.setKind(workflow.getKind()))
                 .with(dto -> dto.setProject(workflow.getProject()))

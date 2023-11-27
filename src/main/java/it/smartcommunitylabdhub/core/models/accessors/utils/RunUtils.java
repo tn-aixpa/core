@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
+import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import org.springframework.http.HttpStatus;
 
 import java.util.regex.Matcher;
@@ -41,9 +41,9 @@ public class RunUtils {
             Function f = (Function) type;
             return f.getKind() + "+" + task.getKind() + "://" + f.getProject() + "/"
                     + f.getName() + ":" + f.getId();
-        } else if (type instanceof WorkflowDTO) {
+        } else if (type instanceof Workflow) {
 
-            WorkflowDTO w = (WorkflowDTO) type;
+            Workflow w = (Workflow) type;
             return w.getKind() + "+" + task.getKind() + "://" + w.getProject() + "/"
                     + w.getName() + ":" + w.getId();
         } else {

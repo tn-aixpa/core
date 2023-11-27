@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.controllers.v1.context;
 import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
+import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.services.context.interfaces.WorkflowContextService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +26,9 @@ public class WorkflowContextController implements ContextController {
             description = "First check if project exist and then create the workflow for the project (context)")
     @PostMapping(value = "/workflows", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<WorkflowDTO> createWorkflow(
+    public ResponseEntity<Workflow> createWorkflow(
             @ValidateField @PathVariable String project,
-            @Valid @RequestBody WorkflowDTO workflowDTO) {
+            @Valid @RequestBody Workflow workflowDTO) {
         return ResponseEntity.ok(
                 this.workflowContextService.createWorkflow(project, workflowDTO));
     }
@@ -36,7 +36,7 @@ public class WorkflowContextController implements ContextController {
     @Operation(summary = "Retrive only the latest version of all workflow",
             description = "First check if project exist and then return a list of the latest version of each workflow related to a project)")
     @GetMapping(path = "/workflows", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<WorkflowDTO>> getLatestWorkflows(
+    public ResponseEntity<Page<Workflow>> getLatestWorkflows(
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
@@ -47,7 +47,7 @@ public class WorkflowContextController implements ContextController {
     @Operation(summary = "Retrieve all versions of the workflow sort by creation",
             description = "First check if project exist and then return a list of all version of the workflow sort by creation)")
     @GetMapping(path = "/workflows/{name}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<WorkflowDTO>> getAllWorkflows(
+    public ResponseEntity<Page<Workflow>> getAllWorkflows(
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
             Pageable pageable) {
@@ -60,7 +60,7 @@ public class WorkflowContextController implements ContextController {
     @Operation(summary = "Retrive a specific workflow version given the workflow uuid",
             description = "First check if project exist and then return a specific version of the workflow identified by the uuid)")
     @GetMapping(path = "/workflows/{name}/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<WorkflowDTO> getWorkflowByUuid(
+    public ResponseEntity<Workflow> getWorkflowByUuid(
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
             @ValidateField @PathVariable String uuid) {
@@ -73,7 +73,7 @@ public class WorkflowContextController implements ContextController {
     @Operation(summary = "Retrive the latest version of an workflow",
             description = "First check if project exist and then return the latest version of an workflow)")
     @GetMapping(path = "/workflows/{name}/latest", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<WorkflowDTO> getLatestWorkflowByName(
+    public ResponseEntity<Workflow> getLatestWorkflowByName(
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name) {
 
@@ -85,10 +85,10 @@ public class WorkflowContextController implements ContextController {
             description = "First check if project exist, if workflow exist update one otherwise create a new version of the workflow")
     @PostMapping(value = "/workflows/{name}", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<WorkflowDTO> createOrUpdateWorkflow(
+    public ResponseEntity<Workflow> createOrUpdateWorkflow(
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
-            @Valid @RequestBody WorkflowDTO workflowDTO) {
+            @Valid @RequestBody Workflow workflowDTO) {
         return ResponseEntity
                 .ok(this.workflowContextService.createOrUpdateWorkflow(project,
                         name, workflowDTO));
@@ -100,11 +100,11 @@ public class WorkflowContextController implements ContextController {
             consumes = {MediaType.APPLICATION_JSON_VALUE,
                     "application/x-yaml"},
             produces = "application/json; charset=UTF-8")
-    public ResponseEntity<WorkflowDTO> updateUpdateWorkflow(
+    public ResponseEntity<Workflow> updateUpdateWorkflow(
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
             @ValidateField @PathVariable String uuid,
-            @Valid @RequestBody WorkflowDTO workflowDTO) {
+            @Valid @RequestBody Workflow workflowDTO) {
         return ResponseEntity.ok(this.workflowContextService.updateWorkflow(project, name,
                 uuid, workflowDTO));
     }

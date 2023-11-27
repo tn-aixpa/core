@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
+import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +73,7 @@ public class ProjectController {
 
     @Operation(summary = "List project workflows", description = "Get all project workflow list")
     @GetMapping(path = "/{uuidOrName}/workflows", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<WorkflowDTO>> projectWorkflows(
+    public ResponseEntity<List<Workflow>> projectWorkflows(
             @ValidateField @PathVariable String uuidOrName) {
         return ResponseEntity.ok(this.projectService.getProjectWorkflows(uuidOrName));
     }

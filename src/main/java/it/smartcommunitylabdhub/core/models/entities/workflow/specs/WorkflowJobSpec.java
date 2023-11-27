@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 public class WorkflowJobSpec extends WorkflowBaseSpec<WorkflowJobSpec> {
     @Override
     protected void configureSpec(WorkflowJobSpec workflowJobSpec) {
+        //super.configureSpec(workflowJobSpec);
+
         throw new CoreException(
                 ErrorList.METHOD_NOT_IMPLEMENTED.getValue(),
                 ErrorList.METHOD_NOT_IMPLEMENTED.getReason(),

@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.services.interfaces;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
+import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -27,6 +27,6 @@ public interface ProjectService {
 
     List<Artifact> getProjectArtifacts(String uuidOrName);
 
-    List<WorkflowDTO> getProjectWorkflows(String uuidOrName);
+    List<Workflow> getProjectWorkflows(String uuidOrName);
 
 }

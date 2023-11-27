@@ -1,30 +1,30 @@
 package it.smartcommunitylabdhub.core.services.context.interfaces;
 
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
+import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface WorkflowContextService {
 
-    WorkflowDTO createWorkflow(String projectName, WorkflowDTO workflowDTO);
+    Workflow createWorkflow(String projectName, Workflow workflowDTO);
 
-    Page<WorkflowDTO> getByProjectNameAndWorkflowName(
+    Page<Workflow> getByProjectNameAndWorkflowName(
             String projectName, String workflowName, Pageable pageable);
 
-    Page<WorkflowDTO> getLatestByProjectName(
+    Page<Workflow> getLatestByProjectName(
             String projectName, Pageable pageable);
 
-    WorkflowDTO getByProjectAndWorkflowAndUuid(
+    Workflow getByProjectAndWorkflowAndUuid(
             String projectName, String workflowName, String uuid);
 
-    WorkflowDTO getLatestByProjectNameAndWorkflowName(
+    Workflow getLatestByProjectNameAndWorkflowName(
             String projectName, String workflowName);
 
-    WorkflowDTO createOrUpdateWorkflow(String projectName, String workflowName,
-                                       WorkflowDTO workflowDTO);
+    Workflow createOrUpdateWorkflow(String projectName, String workflowName,
+                                    Workflow workflowDTO);
 
-    WorkflowDTO updateWorkflow(String projectName, String workflowName, String uuid,
-                               WorkflowDTO workflowDTO);
+    Workflow updateWorkflow(String projectName, String workflowName, String uuid,
+                            Workflow workflowDTO);
 
     Boolean deleteSpecificWorkflowVersion(String projectName, String workflowName, String uuid);
 
