@@ -14,7 +14,7 @@ def main():
 
     LOGGER.info("Getting run from backend.")
     project = dhcore.get_project(os.getenv("PROJECT_NAME"))
-    run = dhcore.get_run(project.metadata.name, os.getenv("RUN_ID"))
+    run = dhcore.get_run(project.name, os.getenv("RUN_ID"))
 
     LOGGER.info("Executing function.")
     run.run()
