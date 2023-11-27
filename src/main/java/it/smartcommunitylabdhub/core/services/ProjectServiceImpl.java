@@ -8,12 +8,12 @@ import it.smartcommunitylabdhub.core.models.builders.project.ProjectDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.project.ProjectEntityBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactDTO;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectDTO;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
 import it.smartcommunitylabdhub.core.repositories.*;
@@ -74,13 +74,13 @@ public class ProjectServiceImpl implements ProjectService {
     WorkflowDTOBuilder workflowDTOBuilder;
 
     @Override
-    public ProjectDTO getProject(String uuidOrName) {
+    public Project getProject(String uuidOrName) {
 
         return projectRepository.findById(uuidOrName)
                 .or(() -> projectRepository.findByName(uuidOrName))
                 .map(project -> {
                     List<FunctionEntity> functions = functionRepository.findByProject(project.getName());
-                    List<Artifact> artifacts = artifactRepository.findByProject(project.getName());
+                    List<ArtifactEntity> artifacts = artifactRepository.findByProject(project.getName());
                     List<Workflow> workflows = workflowRepository.findByProject(project.getName());
                     List<DataItem> dataItems = dataItemRepository.findByProject(project.getName());
 
@@ -94,13 +94,13 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Page<ProjectDTO> getProjects(Pageable pageable) {
+    public Page<Project> getProjects(Pageable pageable) {
         try {
-            Page<Project> projectPage = this.projectRepository.findAll(pageable);
+            Page<ProjectEntity> projectPage = this.projectRepository.findAll(pageable);
             return new PageImpl<>(
                     projectPage.getContent().stream().map((project) -> {
                         List<FunctionEntity> functions = functionRepository.findByProject(project.getName());
-                        List<Artifact> artifacts = artifactRepository.findByProject(project.getName());
+                        List<ArtifactEntity> artifacts = artifactRepository.findByProject(project.getName());
                         List<Workflow> workflows = workflowRepository.findByProject(project.getName());
                         List<DataItem> dataItems = dataItemRepository.findByProject(project.getName());
 
@@ -117,7 +117,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectDTO createProject(ProjectDTO projectDTO) {
+    public Project createProject(Project projectDTO) {
         if ((projectDTO.getId() != null && projectRepository.existsById(projectDTO.getId())) ||
                 projectRepository.existsByName(projectDTO.getName())) {
             throw new CoreException(ErrorList.DUPLICATE_PROJECT.getValue(),
@@ -138,7 +138,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectDTO updateProject(ProjectDTO projectDTO, String uuidOrName) {
+    public Project updateProject(Project projectDTO, String uuidOrName) {
 
         return Optional.ofNullable(projectDTO.getId())
                 .filter(id -> id.equals(uuidOrName))
@@ -151,12 +151,12 @@ public class ProjectServiceImpl implements ProjectService {
                                 ErrorList.PROJECT_NOT_FOUND.getReason(),
                                 HttpStatus.NOT_FOUND)))
                 .map(project -> {
-                    final Project projectUpdated = projectEntityBuilder.update(project, projectDTO);
+                    final ProjectEntity projectUpdated = projectEntityBuilder.update(project, projectDTO);
                     this.projectRepository.save(projectUpdated);
 
                     List<FunctionEntity> functions =
                             functionRepository.findByProject(projectUpdated.getName());
-                    List<Artifact> artifacts =
+                    List<ArtifactEntity> artifacts =
                             artifactRepository.findByProject(projectUpdated.getName());
                     List<Workflow> workflows =
                             workflowRepository.findByProject(projectUpdated.getName());
@@ -232,7 +232,7 @@ public class ProjectServiceImpl implements ProjectService {
                         ErrorList.PROJECT_NOT_FOUND.getValue(),
                         ErrorList.PROJECT_NOT_FOUND.getReason(),
                         HttpStatus.NOT_FOUND))
-                .map(Project::getName)
+                .map(ProjectEntity::getName)
                 .flatMap(projectName -> {
                     try {
                         List<FunctionEntity> functions = functionRepository.findByProject(projectName);
@@ -255,17 +255,17 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ArtifactDTO> getProjectArtifacts(String uuidOrName) {
+    public List<Artifact> getProjectArtifacts(String uuidOrName) {
         return Optional.of(projectRepository.findById(uuidOrName)
                         .or(() -> projectRepository.findByName(uuidOrName)))
                 .orElseThrow(() -> new CoreException(
                         ErrorList.PROJECT_NOT_FOUND.getValue(),
                         ErrorList.PROJECT_NOT_FOUND.getReason(),
                         HttpStatus.NOT_FOUND))
-                .map(Project::getName)
+                .map(ProjectEntity::getName)
                 .flatMap(projectName -> {
                     try {
-                        List<Artifact> artifacts = artifactRepository.findByProject(projectName);
+                        List<ArtifactEntity> artifacts = artifactRepository.findByProject(projectName);
                         return Optional.of(
                                 artifacts.stream().map(
                                                 artifact -> artifactDTOBuilder.build(artifact, false))
@@ -292,7 +292,7 @@ public class ProjectServiceImpl implements ProjectService {
                         ErrorList.PROJECT_NOT_FOUND.getValue(),
                         ErrorList.PROJECT_NOT_FOUND.getReason(),
                         HttpStatus.NOT_FOUND))
-                .map(Project::getName)
+                .map(ProjectEntity::getName)
                 .flatMap(projectName -> {
                     try {
                         List<Workflow> workflows = workflowRepository.findByProject(projectName);

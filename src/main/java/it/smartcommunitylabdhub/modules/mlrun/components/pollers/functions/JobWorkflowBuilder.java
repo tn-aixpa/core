@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.core.exceptions.StopPoller;
 import it.smartcommunitylabdhub.core.models.accessors.enums.DataItemKind;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.DataItemFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.ArtifactUtils;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactDTO;
+import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
 import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
@@ -157,8 +157,8 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
                                                                                             artifact);
 
                                                                     // Create artifact
-                                                                    ArtifactDTO artifactDTO =
-                                                                            ArtifactDTO
+                                                                    Artifact artifactDTO =
+                                                                            Artifact
                                                                                     .builder()
                                                                                     .name(mlrunDataItemAccessor
                                                                                             .getTree())

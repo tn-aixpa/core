@@ -1,30 +1,30 @@
 package it.smartcommunitylabdhub.core.services.context.interfaces;
 
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactDTO;
+import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ArtifactContextService {
 
-    ArtifactDTO createArtifact(String projectName, ArtifactDTO artifactDTO);
+    Artifact createArtifact(String projectName, Artifact artifactDTO);
 
-    Page<ArtifactDTO> getByProjectNameAndArtifactName(
+    Page<Artifact> getByProjectNameAndArtifactName(
             String projectName, String artifactName, Pageable pageable);
 
-    Page<ArtifactDTO> getLatestByProjectName(
+    Page<Artifact> getLatestByProjectName(
             String projectName, Pageable pageable);
 
-    ArtifactDTO getByProjectAndArtifactAndUuid(
+    Artifact getByProjectAndArtifactAndUuid(
             String projectName, String artifactName, String uuid);
 
-    ArtifactDTO getLatestByProjectNameAndArtifactName(
+    Artifact getLatestByProjectNameAndArtifactName(
             String projectName, String artifactName);
 
-    ArtifactDTO createOrUpdateArtifact(String projectName, String artifactName,
-                                       ArtifactDTO artifactDTO);
+    Artifact createOrUpdateArtifact(String projectName, String artifactName,
+                                    Artifact artifactDTO);
 
-    ArtifactDTO updateArtifact(String projectName, String artifactName, String uuid,
-                               ArtifactDTO artifactDTO);
+    Artifact updateArtifact(String projectName, String artifactName, String uuid,
+                            Artifact artifactDTO);
 
     Boolean deleteSpecificArtifactVersion(String projectName, String artifactName, String uuid);
 

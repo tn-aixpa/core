@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactDTO;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.artifact.specs.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class ArtifactEntityBuilder {
      * @param artifactDTO the artifact DTO
      * @return Artifact
      */
-    public Artifact build(ArtifactDTO artifactDTO) {
+    public ArtifactEntity build(Artifact artifactDTO) {
 
         specRegistry.createSpec(artifactDTO.getKind(), SpecEntity.ARTIFACT, Map.of());
 
@@ -59,7 +59,7 @@ public class ArtifactEntityBuilder {
      * @param artifactDTO the ArtifactDTO to combine with the entity
      * @return Artifact
      */
-    public Artifact update(Artifact artifact, ArtifactDTO artifactDTO) {
+    public ArtifactEntity update(ArtifactEntity artifact, Artifact artifactDTO) {
         // Retrieve Spec
         ArtifactBaseSpec spec = JacksonMapper.objectMapper
                 .convertValue(artifactDTO.getSpec(), ArtifactBaseSpec.class);

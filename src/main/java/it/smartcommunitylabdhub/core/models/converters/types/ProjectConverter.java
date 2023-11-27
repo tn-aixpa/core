@@ -4,15 +4,15 @@ import it.smartcommunitylabdhub.core.annotations.common.ConverterType;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectDTO;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 
 @ConverterType(type = "project")
-public class ProjectConverter implements Converter<ProjectDTO, Project> {
+public class ProjectConverter implements Converter<Project, ProjectEntity> {
 
     @Override
-    public Project convert(ProjectDTO projectDTO) throws CustomException {
-        return Project.builder()
+    public ProjectEntity convert(Project projectDTO) throws CustomException {
+        return ProjectEntity.builder()
                 .id(projectDTO.getId())
                 .name(projectDTO.getName())
                 .kind(projectDTO.getKind())
@@ -24,8 +24,8 @@ public class ProjectConverter implements Converter<ProjectDTO, Project> {
     }
 
     @Override
-    public ProjectDTO reverseConvert(Project project) throws CustomException {
-        return ProjectDTO.builder()
+    public Project reverseConvert(ProjectEntity project) throws CustomException {
+        return Project.builder()
                 .id(project.getId())
                 .name(project.getName())
                 .kind(project.getKind())

@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactDTO;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.ArtifactContextService;
 import jakarta.transaction.Transactional;
@@ -33,7 +33,7 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     ArtifactDTOBuilder artifactDTOBuilder;
 
     @Override
-    public ArtifactDTO createArtifact(String projectName, ArtifactDTO artifactDTO) {
+    public Artifact createArtifact(String projectName, Artifact artifactDTO) {
         try {
             // Check that project context is the same as the project passed to the
             // artifactDTO
@@ -47,7 +47,7 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
 
             // Check if artifact already exist if exist throw exception otherwise create a
             // new one
-            Artifact artifact = (Artifact) Optional.ofNullable(artifactDTO.getId())
+            ArtifactEntity artifact = (ArtifactEntity) Optional.ofNullable(artifactDTO.getId())
                     .flatMap(id -> artifactRepository.findById(id)
                             .map(a -> {
                                 throw new CustomException(
@@ -56,7 +56,7 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
                             }))
                     .orElseGet(() -> {
                         // Build an artifact and store it in the database
-                        Artifact newArtifact = artifactEntityBuilder.build(artifactDTO);
+                        ArtifactEntity newArtifact = artifactEntityBuilder.build(artifactDTO);
                         return artifactRepository.save(newArtifact);
                     });
 
@@ -72,11 +72,11 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public Page<ArtifactDTO> getLatestByProjectName(String projectName, Pageable pageable) {
+    public Page<Artifact> getLatestByProjectName(String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<Artifact> artifactPage = this.artifactRepository
+            Page<ArtifactEntity> artifactPage = this.artifactRepository
                     .findAllLatestArtifactsByProject(projectName,
                             pageable);
             return new PageImpl<>(
@@ -96,13 +96,13 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public Page<ArtifactDTO> getByProjectNameAndArtifactName(String projectName,
-                                                             String artifactName,
-                                                             Pageable pageable) {
+    public Page<Artifact> getByProjectNameAndArtifactName(String projectName,
+                                                          String artifactName,
+                                                          Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<Artifact> artifactPage = this.artifactRepository
+            Page<ArtifactEntity> artifactPage = this.artifactRepository
                     .findAllByProjectAndNameOrderByCreatedDesc(projectName, artifactName,
                             pageable);
             return new PageImpl<>(
@@ -123,8 +123,8 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public ArtifactDTO getByProjectAndArtifactAndUuid(String projectName, String artifactName,
-                                                      String uuid) {
+    public Artifact getByProjectAndArtifactAndUuid(String projectName, String artifactName,
+                                                   String uuid) {
         try {
             // Check project context
             checkContext(projectName);
@@ -144,8 +144,8 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public ArtifactDTO getLatestByProjectNameAndArtifactName(String projectName,
-                                                             String artifactName) {
+    public Artifact getLatestByProjectNameAndArtifactName(String projectName,
+                                                          String artifactName) {
         try {
             // Check project context
             checkContext(projectName);
@@ -165,8 +165,8 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public ArtifactDTO createOrUpdateArtifact(String projectName, String artifactName,
-                                              ArtifactDTO artifactDTO) {
+    public Artifact createOrUpdateArtifact(String projectName, String artifactName,
+                                           Artifact artifactDTO) {
         try {
             // Check that project context is the same as the project passed to the
             // artifactDTO
@@ -185,27 +185,27 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
 
             // Check if artifact already exist if exist throw exception otherwise create a
             // new one
-            Artifact artifact = Optional.ofNullable(artifactDTO.getId())
+            ArtifactEntity artifact = Optional.ofNullable(artifactDTO.getId())
                     .flatMap(id -> {
-                        Optional<Artifact> optionalArtifact = artifactRepository.findById(id);
+                        Optional<ArtifactEntity> optionalArtifact = artifactRepository.findById(id);
                         if (optionalArtifact.isPresent()) {
-                            Artifact existingArtifact = optionalArtifact.get();
+                            ArtifactEntity existingArtifact = optionalArtifact.get();
 
                             // Update the existing artifact version
-                            final Artifact artifactUpdated =
+                            final ArtifactEntity artifactUpdated =
                                     artifactEntityBuilder.update(existingArtifact,
                                             artifactDTO);
                             return Optional.of(this.artifactRepository.save(artifactUpdated));
 
                         } else {
                             // Build a new artifact and store it in the database
-                            Artifact newArtifact = artifactEntityBuilder.build(artifactDTO);
+                            ArtifactEntity newArtifact = artifactEntityBuilder.build(artifactDTO);
                             return Optional.of(artifactRepository.save(newArtifact));
                         }
                     })
                     .orElseGet(() -> {
                         // Build a new artifact and store it in the database
-                        Artifact newArtifact = artifactEntityBuilder.build(artifactDTO);
+                        ArtifactEntity newArtifact = artifactEntityBuilder.build(artifactDTO);
                         return artifactRepository.save(newArtifact);
                     });
 
@@ -221,8 +221,8 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public ArtifactDTO updateArtifact(String projectName, String artifactName, String uuid,
-                                      ArtifactDTO artifactDTO) {
+    public Artifact updateArtifact(String projectName, String artifactName, String uuid,
+                                   Artifact artifactDTO) {
 
         try {
             // Check that project context is the same as the project passed to the
@@ -239,7 +239,7 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
             // Check project context
             checkContext(artifactDTO.getProject());
 
-            Artifact artifact = this.artifactRepository.findById(artifactDTO.getId()).map(
+            ArtifactEntity artifact = this.artifactRepository.findById(artifactDTO.getId()).map(
                             a -> {
                                 // Update the existing artifact version
                                 return artifactEntityBuilder.update(a, artifactDTO);

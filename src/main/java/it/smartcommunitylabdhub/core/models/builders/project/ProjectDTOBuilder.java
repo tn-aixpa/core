@@ -7,11 +7,11 @@ import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
-import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectDTO;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.metadata.ProjectMetadata;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.enums.State;
@@ -41,9 +41,9 @@ public class ProjectDTOBuilder {
     @Autowired
     MetadataConverter<ProjectMetadata> metadataConverter;
 
-    public ProjectDTO build(
-            Project project,
-            List<Artifact> artifacts,
+    public Project build(
+            ProjectEntity project,
+            List<ArtifactEntity> artifacts,
             List<FunctionEntity> functions,
             List<Workflow> workflows,
             List<DataItem> dataItems,
@@ -75,7 +75,7 @@ public class ProjectDTOBuilder {
                         .collect(Collectors.toList()));
 
         // Find base run spec
-        return EntityFactory.create(ProjectDTO::new, project, builder -> builder
+        return EntityFactory.create(Project::new, project, builder -> builder
                 .with(dto -> dto.setId(project.getId()))
                 .with(dto -> dto.setName(project.getName()))
                 .with(dto -> dto.setKind(project.getKind()))

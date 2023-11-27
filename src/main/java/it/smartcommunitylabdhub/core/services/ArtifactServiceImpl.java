@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactDTO;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import jakarta.transaction.Transactional;
@@ -33,9 +33,9 @@ public class ArtifactServiceImpl implements ArtifactService {
     ArtifactDTOBuilder artifactDTOBuilder;
 
     @Override
-    public List<ArtifactDTO> getArtifacts(Pageable pageable) {
+    public List<Artifact> getArtifacts(Pageable pageable) {
         try {
-            Page<Artifact> artifactPage = this.artifactRepository.findAll(pageable);
+            Page<ArtifactEntity> artifactPage = this.artifactRepository.findAll(pageable);
             return artifactPage.getContent().stream().map((artifact) -> {
                 return artifactDTOBuilder.build(artifact, false);
             }).collect(Collectors.toList());
@@ -49,12 +49,12 @@ public class ArtifactServiceImpl implements ArtifactService {
     }
 
     @Override
-    public ArtifactDTO createArtifact(ArtifactDTO artifactDTO) {
+    public Artifact createArtifact(Artifact artifactDTO) {
         if (artifactDTO.getId() != null && artifactRepository.existsById(artifactDTO.getId())) {
             throw new CoreException("DuplicateArtifactId",
                     "Cannot create the artifact", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Optional<Artifact> savedArtifact = Optional.ofNullable(artifactDTO)
+        Optional<ArtifactEntity> savedArtifact = Optional.ofNullable(artifactDTO)
                 .map(artifactEntityBuilder::build)
                 .map(this.artifactRepository::save);
 
@@ -66,7 +66,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     }
 
     @Override
-    public ArtifactDTO getArtifact(String uuid) {
+    public Artifact getArtifact(String uuid) {
         return artifactRepository.findById(uuid)
                 .map(artifact -> {
                     try {
@@ -85,7 +85,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     }
 
     @Override
-    public ArtifactDTO updateArtifact(ArtifactDTO artifactDTO, String uuid) {
+    public Artifact updateArtifact(Artifact artifactDTO, String uuid) {
         if (!artifactDTO.getId().equals(uuid)) {
             throw new CoreException(
                     "ArtifactNotMatch",
@@ -96,7 +96,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         return artifactRepository.findById(uuid)
                 .map(artifact -> {
                     try {
-                        Artifact artifactUpdated =
+                        ArtifactEntity artifactUpdated =
                                 artifactEntityBuilder.update(artifact, artifactDTO);
                         artifactRepository.save(artifactUpdated);
                         return artifactDTOBuilder.build(artifactUpdated, false);

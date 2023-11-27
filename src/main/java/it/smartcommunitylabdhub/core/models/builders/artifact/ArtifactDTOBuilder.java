@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactDTO;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.artifact.metadata.ArtifactMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,10 +18,10 @@ public class ArtifactDTOBuilder {
     @Autowired
     MetadataConverter<ArtifactMetadata> metadataConverter;
 
-    public ArtifactDTO build(Artifact artifact, Boolean embeddable) {
+    public Artifact build(ArtifactEntity artifact, Boolean embeddable) {
 
 
-        return EntityFactory.create(ArtifactDTO::new, artifact, builder -> builder
+        return EntityFactory.create(Artifact::new, artifact, builder -> builder
                 .with(dto -> dto.setId(artifact.getId()))
                 .with(dto -> dto.setKind(artifact.getKind()))
                 .with(dto -> dto.setProject(artifact.getProject()))

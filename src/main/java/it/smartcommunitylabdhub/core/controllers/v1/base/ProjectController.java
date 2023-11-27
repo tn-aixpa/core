@@ -3,9 +3,9 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactDTO;
+import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectDTO;
+import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectService;
 import jakarta.validation.Valid;
@@ -30,20 +30,20 @@ public class ProjectController {
 
     @Operation(summary = "List project", description = "Return a list of all projects")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<ProjectDTO>> getProjects(Pageable pageable) {
+    public ResponseEntity<Page<Project>> getProjects(Pageable pageable) {
         return ResponseEntity.ok(this.projectService.getProjects(pageable));
     }
 
     @Operation(summary = "Create project", description = "Create an project and return")
     @PostMapping(value = "", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<ProjectDTO> createProject(@Valid @RequestBody ProjectDTO projectDTO) {
+    public ResponseEntity<Project> createProject(@Valid @RequestBody Project projectDTO) {
         return ResponseEntity.ok(this.projectService.createProject(projectDTO));
     }
 
     @Operation(summary = "Get an project by uuid", description = "Return an project")
     @GetMapping(path = "/{uuidOrName}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<ProjectDTO> getProject(
+    public ResponseEntity<Project> getProject(
             @ValidateField @PathVariable(name = "uuidOrName", required = true) String uuidOrName) {
         return ResponseEntity.ok(this.projectService.getProject(uuidOrName));
     }
@@ -51,8 +51,8 @@ public class ProjectController {
     @Operation(summary = "Update specific project", description = "Update and return the project")
     @PutMapping(path = "/{uuidOrName}", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<ProjectDTO> updateProject(
-            @RequestBody ProjectDTO projectDTO,
+    public ResponseEntity<Project> updateProject(
+            @RequestBody Project projectDTO,
             @ValidateField @PathVariable(name = "uuidOrName", required = true) String uuidOrName) {
         return ResponseEntity.ok(this.projectService.updateProject(projectDTO, uuidOrName));
     }
@@ -80,7 +80,7 @@ public class ProjectController {
 
     @Operation(summary = "List project artifacts", description = "Get all project artifact list")
     @GetMapping(path = "/{uuidOrName}/artifacts", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<ArtifactDTO>> projectArtifacts(
+    public ResponseEntity<List<Artifact>> projectArtifacts(
             @ValidateField @PathVariable String uuidOrName) {
         return ResponseEntity.ok(this.projectService.getProjectArtifacts(uuidOrName));
     }
