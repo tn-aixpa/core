@@ -1,7 +1,0 @@
-
-sdk.store.objects.s3
-====================
-
-.. automodule:: sdk.store.objects.s3
-    :members:
-    :show-inheritance:
