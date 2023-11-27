@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.components.events.services.interfaces;
 
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 
 public interface KindService<T> {
-    T run(XRun runDTO);
+    T run(Run runDTO);
 }

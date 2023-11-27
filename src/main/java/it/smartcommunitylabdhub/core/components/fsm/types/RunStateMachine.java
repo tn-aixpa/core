@@ -12,7 +12,7 @@ import it.smartcommunitylabdhub.core.components.fsm.StateMachine;
 import it.smartcommunitylabdhub.core.components.fsm.Transaction;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunEvent;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +80,7 @@ public class RunStateMachine {
                 .withExitAction(RunState.CREATED, (context) -> {
                     context.ifPresent(c -> {
                         // update run state
-                        XRun runDTO = runService
+                        Run runDTO = runService
                                 .getRun(c.get("runId")
                                         .toString());
                         runDTO.setState(RunState.READY.toString());
@@ -93,7 +93,7 @@ public class RunStateMachine {
                 .withState(RunState.RUNNING, runningState)
                 .withEntryAction(RunState.RUNNING, (context) -> {
                     context.ifPresent(c -> {
-                        XRun runDTO = runService
+                        Run runDTO = runService
                                 .getRun(c.get("runId")
                                         .toString());
                         runDTO.setState(RunState.RUNNING.toString());
@@ -105,7 +105,7 @@ public class RunStateMachine {
                 .withErrorState(RunState.ERROR, errorState)
                 .withEntryAction(RunState.ERROR, (context) -> {
                     context.ifPresent(c -> {
-                        XRun runDTO = runService
+                        Run runDTO = runService
                                 .getRun(c.get("runId").toString());
                         runDTO.setState(RunState.ERROR.toString());
                         runService.updateRun(runDTO, runDTO.getId());

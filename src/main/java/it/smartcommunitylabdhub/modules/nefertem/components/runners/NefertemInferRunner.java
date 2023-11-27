@@ -8,7 +8,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobR
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.utils.BeanProvider;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.FunctionNefertemSpec;
@@ -35,14 +35,14 @@ public class NefertemInferRunner implements Runner {
     }
 
     @Override
-    public Runnable produce(XRun runDTO) {
+    public Runnable produce(Run runDTO) {
 
         return Optional.ofNullable(runDTO)
                 .map(this::validateRunDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
     }
 
-    private K8sJobRunnable validateRunDTO(XRun runDTO) {
+    private K8sJobRunnable validateRunDTO(Run runDTO) {
 
         SpecRegistry<? extends Spec> specRegistry =
                 BeanProvider.getSpecRegistryBean(SpecRegistry.class)

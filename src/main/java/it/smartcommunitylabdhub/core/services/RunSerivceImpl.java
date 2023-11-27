@@ -17,7 +17,7 @@ import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
@@ -73,7 +73,7 @@ public class RunSerivceImpl implements RunService {
     SpecRegistry<? extends Spec> specRegistry;
 
     @Override
-    public List<XRun> getRuns(Pageable pageable) {
+    public List<Run> getRuns(Pageable pageable) {
         try {
             Page<RunEntity> runPage = this.runRepository.findAll(pageable);
             return runPage.getContent().stream().map(run -> runDTOBuilder.build(run))
@@ -87,7 +87,7 @@ public class RunSerivceImpl implements RunService {
     }
 
     @Override
-    public XRun getRun(String uuid) {
+    public Run getRun(String uuid) {
         return runRepository.findById(uuid).map(run -> runDTOBuilder.build(run))
                 .orElseThrow(() -> new CoreException(
                         ErrorList.RUN_NOT_FOUND.getValue(),
@@ -108,7 +108,7 @@ public class RunSerivceImpl implements RunService {
     }
 
     @Override
-    public XRun save(XRun runDTO) {
+    public Run save(Run runDTO) {
 
         return Optional.of(this.runRepository.save(runEntityBuilder.build(runDTO)))
                 .map(run -> runDTOBuilder.build(run))
@@ -119,7 +119,7 @@ public class RunSerivceImpl implements RunService {
     }
 
     @Override
-    public XRun updateRun(XRun runDTO, String uuid) {
+    public Run updateRun(Run runDTO, String uuid) {
 
         if (!runDTO.getId().equals(uuid)) {
             throw new CoreException(
@@ -149,7 +149,7 @@ public class RunSerivceImpl implements RunService {
     }
 
     @Override
-    public <F extends FunctionBaseSpec<F>> XRun createRun(XRun runDTO) {
+    public <F extends FunctionBaseSpec<F>> Run createRun(Run runDTO) {
 
         // Retrieve Run base spec
         RunBaseSpec<?> runBaseSpec = specRegistry.createSpec(
@@ -188,7 +188,7 @@ public class RunSerivceImpl implements RunService {
 
                                 // Check weather the run has local set to True in that case return
                                 // immediately the run without invoke the execution.
-                                Supplier<XRun> result = () -> Optional
+                                Supplier<Run> result = () -> Optional
                                         .of(runBaseSpec.isLocalExecution()) // if true save and return
                                         .filter(value -> value.equals(true))
 

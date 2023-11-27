@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.core.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskDTO;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.FunctionService;
@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RunBuilderComponent(platform = "job", perform = "perform")
-public class JobRunBuilder implements KindBuilder<TaskDTO, XRun> {
+public class JobRunBuilder implements KindBuilder<TaskDTO, Run> {
     @Autowired
     TaskRepository taskRepository;
 
@@ -36,7 +36,7 @@ public class JobRunBuilder implements KindBuilder<TaskDTO, XRun> {
 
 
     @Override
-    public XRun build(TaskDTO taskDTO) {
+    public Run build(TaskDTO taskDTO) {
         // 1. get function get if exist otherwise throw exeception.
         return taskRepository.findById(taskDTO.getId()).map(task -> {
             // 1. produce function object for mlrun and put it on spec.
@@ -66,7 +66,7 @@ public class JobRunBuilder implements KindBuilder<TaskDTO, XRun> {
                                 (oldValue, newValue) -> newValue);
 
                         // 5. produce a run object and store it
-                        return XRun.builder()
+                        return Run.builder()
                                 .kind("run")
 //                                .taskId(task.getId())
                                 .project(task.getProject())

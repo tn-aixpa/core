@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class RunEntityBuilder {
      * @param runDTO the run dto
      * @return Run
      */
-    public RunEntity build(XRun runDTO) {
+    public RunEntity build(Run runDTO) {
 
         specRegistry.createSpec(runDTO.getKind(), SpecEntity.RUN, Map.of());
 
@@ -67,7 +67,7 @@ public class RunEntityBuilder {
      * @param runDTO the run DTO
      * @return Run
      */
-    public RunEntity update(RunEntity run, XRun runDTO) {
+    public RunEntity update(RunEntity run, Run runDTO) {
         // Retrieve base spec
         RunBaseSpec spec = JacksonMapper.objectMapper
                 .convertValue(runDTO.getSpec(), RunBaseSpec.class);

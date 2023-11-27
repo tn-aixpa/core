@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -174,7 +174,7 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     @Override
-    public List<XRun> getFunctionRuns(String uuid) {
+    public List<Run> getFunctionRuns(String uuid) {
         final FunctionEntity function = functionRepository.findById(uuid).orElse(null);
         if (function == null) {
             throw new CoreException(
@@ -198,7 +198,7 @@ public class FunctionServiceImpl implements FunctionService {
                             .collect(Collectors.toList());
 
 
-            return (List<XRun>) ConversionUtils.reverseIterable(runs, "run", XRun.class);
+            return (List<Run>) ConversionUtils.reverseIterable(runs, "run", Run.class);
 
         } catch (CustomException e) {
             throw new CoreException(

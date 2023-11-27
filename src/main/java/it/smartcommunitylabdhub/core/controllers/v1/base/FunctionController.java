@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.FunctionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +61,7 @@ public class FunctionController {
 
     @Operation(summary = "Get function runs", description = "Given a function return the run list")
     @GetMapping(path = "/{uuid}/runs", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<XRun>> functionRuns(@ValidateField @PathVariable String uuid) {
+    public ResponseEntity<List<Run>> functionRuns(@ValidateField @PathVariable String uuid) {
         return ResponseEntity.ok(this.functionService.getFunctionRuns(uuid));
     }
 }

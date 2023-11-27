@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import jakarta.validation.Valid;
@@ -29,7 +29,7 @@ public class RunController {
 
     @Operation(summary = "Get a run", description = "Given an uuid return the related Run")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<XRun> getRun(
+    public ResponseEntity<Run> getRun(
             @ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
         return ResponseEntity.ok(this.runService.getRun(uuid));
     }
@@ -43,7 +43,7 @@ public class RunController {
 
     @Operation(summary = "Run list", description = "Return a list of all runs")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<XRun>> getRuns(Pageable pageable) {
+    public ResponseEntity<List<Run>> getRuns(Pageable pageable) {
         return ResponseEntity.ok(this.runService.getRuns(pageable));
     }
 
@@ -51,7 +51,7 @@ public class RunController {
             description = "Create a run and then execute it")
     @PostMapping(path = "", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<XRun> createRun(@Valid @RequestBody XRun inputRunDTO) {
+    public ResponseEntity<Run> createRun(@Valid @RequestBody Run inputRunDTO) {
         return ResponseEntity.ok(this.runService.createRun(inputRunDTO));
     }
 
@@ -59,8 +59,8 @@ public class RunController {
     @Operation(summary = "Update specific run", description = "Update and return the update run")
     @PutMapping(path = "/{uuid}", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<XRun> updateRun(@Valid @RequestBody XRun runDTO,
-                                          @ValidateField @PathVariable String uuid) {
+    public ResponseEntity<Run> updateRun(@Valid @RequestBody Run runDTO,
+                                         @ValidateField @PathVariable String uuid) {
         return ResponseEntity.ok(this.runService.updateRun(runDTO, uuid));
     }
 

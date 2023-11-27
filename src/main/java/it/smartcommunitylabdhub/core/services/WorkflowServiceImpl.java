@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.XRun;
+import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
@@ -150,7 +150,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     @Override
-    public List<XRun> getWorkflowRuns(String uuid) {
+    public List<Run> getWorkflowRuns(String uuid) {
         final Workflow workflow = workflowRepository.findById(uuid).orElse(null);
         if (workflow == null) {
             throw new CoreException(
@@ -171,7 +171,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                                     .stream())
                             .collect(Collectors.toList());
 
-            return (List<XRun>) ConversionUtils.reverseIterable(runs, "run", XRun.class);
+            return (List<Run>) ConversionUtils.reverseIterable(runs, "run", Run.class);
 
         } catch (CustomException e) {
             throw new CoreException(
