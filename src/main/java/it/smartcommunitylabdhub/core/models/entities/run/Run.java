@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractJsonOrder;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.StatusFieldUtility;
 import it.smartcommunitylabdhub.core.models.entities.run.metadata.RunMetadata;
@@ -21,7 +22,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Builder
-public class Run implements BaseEntity {
+public class Run extends AbstractJsonOrder implements BaseEntity {
 
     @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
     private String id;

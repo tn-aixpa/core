@@ -8,7 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -55,7 +54,7 @@ public class ProjectEntity implements BaseEntity {
     @PrePersist
     public void prePersist() {
         if (id == null) {
-            this.id = UUID.randomUUID().toString();
+            this.id = this.name;
         }
     }
 }
