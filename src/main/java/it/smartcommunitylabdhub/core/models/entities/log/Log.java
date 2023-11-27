@@ -3,8 +3,9 @@ package it.smartcommunitylabdhub.core.models.entities.log;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractJsonOrder;
+import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractExtractorProperties;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.StatusFieldUtility;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +20,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Builder
-public class Log extends AbstractJsonOrder implements BaseEntity {
+public class Log extends AbstractExtractorProperties implements BaseEntity {
 
     @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
     private String id;
@@ -31,6 +32,7 @@ public class Log extends AbstractJsonOrder implements BaseEntity {
     private String run;
 
     @Builder.Default
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Object> body = new HashMap<>();
 
     @Builder.Default

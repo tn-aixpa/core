@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.models.entities.project;
 
 import com.fasterxml.jackson.annotation.*;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractJsonOrder;
+import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractExtractorProperties;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.StatusFieldUtility;
 import it.smartcommunitylabdhub.core.models.entities.project.metadata.ProjectMetadata;
@@ -19,7 +19,7 @@ import java.util.Map;
 @Setter
 @Builder
 @JsonPropertyOrder(alphabetic = true)
-public class Project extends AbstractJsonOrder implements BaseEntity {
+public class Project extends AbstractExtractorProperties implements BaseEntity {
 
     @JsonIgnore
     private String id;
@@ -35,8 +35,8 @@ public class Project extends AbstractJsonOrder implements BaseEntity {
     private String description;
     private String source;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Builder.Default
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Object> spec = new HashMap<>();
 
     @Builder.Default
