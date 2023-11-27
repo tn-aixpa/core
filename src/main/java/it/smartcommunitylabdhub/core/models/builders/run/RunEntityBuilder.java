@@ -6,8 +6,8 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.S
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,31 +68,12 @@ public class RunEntityBuilder {
      * @return Run
      */
     public RunEntity update(RunEntity run, Run runDTO) {
-        // Retrieve base spec
-        RunBaseSpec spec = JacksonMapper.objectMapper
-                .convertValue(runDTO.getSpec(), RunBaseSpec.class);
 
         return EntityFactory.combine(
                 run, runDTO, builder -> builder
-                        .with(r -> r.setTask(run.getTask()))
-                        .with(r -> r.setTaskId(spec.getTaskId()))
                         .with(r -> r.setState(runDTO.getState() == null
                                 ? RunState.CREATED
                                 : RunState.valueOf(
-                                runDTO.getState())))
-                        .with(r -> r.setMetadata(
-                                ConversionUtils.convert(
-                                        runDTO.getMetadata(),
-                                        "metadata")))
-
-                        .with(r -> r.setExtra(
-                                ConversionUtils.convert(
-                                        runDTO.getExtra(),
-
-                                        "cbor")))
-                        .with(r -> r.setSpec(
-                                ConversionUtils.convert(
-                                        spec.toMap(),
-                                        "cbor"))));
+                                runDTO.getState()))));
     }
 }

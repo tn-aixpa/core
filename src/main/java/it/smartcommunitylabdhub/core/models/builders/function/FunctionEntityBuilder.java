@@ -60,10 +60,6 @@ public class FunctionEntityBuilder {
      */
     public FunctionEntity update(FunctionEntity function, Function functionDTO) {
 
-        // Retrieve object spec
-        FunctionBaseSpec spec = JacksonMapper.objectMapper
-                .convertValue(functionDTO.getSpec(), FunctionBaseSpec.class);
-
         return EntityFactory.combine(
                 function, functionDTO, builder -> builder
                         .with(f -> f.setState(functionDTO.getState() == null
@@ -79,9 +75,6 @@ public class FunctionEntityBuilder {
                                 ConversionUtils.convert(functionDTO
                                                 .getExtra(),
 
-                                        "cbor")))
-                        .with(f -> f.setSpec(
-                                ConversionUtils.convert(spec.toMap(),
                                         "cbor")))
                         .with(f -> f.setEmbedded(
                                 functionDTO.getEmbedded())));

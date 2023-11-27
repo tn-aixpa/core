@@ -57,14 +57,10 @@ public class WorkflowEntityBuilder {
     /**
      * Update a workflow if element is not passed it override causing empty field
      *
-     * @param workflow
-     * @return
+     * @param workflow Workflow
+     * @return WorkflowEntity
      */
     public WorkflowEntity update(WorkflowEntity workflow, Workflow workflowDTO) {
-
-        WorkflowBaseSpec spec = JacksonMapper.objectMapper
-                .convertValue(workflowDTO.getSpec(), WorkflowBaseSpec.class);
-
 
         return EntityFactory.combine(
                 workflow, workflowDTO, builder -> builder
@@ -79,9 +75,6 @@ public class WorkflowEntityBuilder {
                         .with(w -> w.setExtra(
                                 ConversionUtils.convert(workflowDTO
                                                 .getExtra(),
-                                        "cbor")))
-                        .with(w -> w.setSpec(
-                                ConversionUtils.convert(spec.toMap(),
                                         "cbor")))
                         .with(w -> w.setEmbedded(
                                 workflowDTO.getEmbedded())));

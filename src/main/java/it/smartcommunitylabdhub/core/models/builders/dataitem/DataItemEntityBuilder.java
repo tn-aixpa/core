@@ -57,12 +57,6 @@ public class DataItemEntityBuilder {
      */
     public DataItemEntity update(DataItemEntity dataItem, DataItem dataItemDTO) {
 
-        // Retrieve object spec
-        // Retrieve Spec
-        DataItemBaseSpec spec = JacksonMapper.objectMapper
-                .convertValue(dataItemDTO.getSpec(), DataItemBaseSpec.class);
-
-
         return EntityFactory.combine(
                 dataItem, dataItemDTO, builder -> builder
                         .with(d -> d.setState(dataItemDTO.getState() == null
@@ -79,7 +73,6 @@ public class DataItemEntityBuilder {
                                                 .getExtra(),
 
                                         "cbor")))
-                        .with(d -> d.setSpec(ConversionUtils.convert(spec.toMap(), "cbor")))
                         .with(d -> d.setEmbedded(
                                 dataItemDTO.getEmbedded())));
     }

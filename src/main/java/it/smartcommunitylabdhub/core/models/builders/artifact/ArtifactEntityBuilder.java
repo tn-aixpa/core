@@ -60,9 +60,6 @@ public class ArtifactEntityBuilder {
      * @return Artifact
      */
     public ArtifactEntity update(ArtifactEntity artifact, Artifact artifactDTO) {
-        // Retrieve Spec
-        ArtifactBaseSpec spec = JacksonMapper.objectMapper
-                .convertValue(artifactDTO.getSpec(), ArtifactBaseSpec.class);
 
         return EntityFactory.combine(
                 artifact, artifactDTO, builder -> builder
@@ -80,8 +77,6 @@ public class ArtifactEntityBuilder {
                                                 .getExtra(),
 
                                         "cbor")))
-                        .with(a -> a.setSpec(
-                                ConversionUtils.convert(spec.toMap(), "cbor")))
                         .with(a -> a.setEmbedded(
                                 artifactDTO.getEmbedded())));
     }
