@@ -6,8 +6,8 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.S
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
-import it.smartcommunitylabdhub.core.models.entities.run.Run;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +28,12 @@ public class RunEntityBuilder {
      * @param runDTO the run dto
      * @return Run
      */
-    public Run build(RunDTO runDTO) {
+    public RunEntity build(XRun runDTO) {
 
         specRegistry.createSpec(runDTO.getKind(), SpecEntity.RUN, Map.of());
 
         // Create run Object
-        Run run = ConversionUtils.convert(runDTO, "run");
+        RunEntity run = ConversionUtils.convert(runDTO, "run");
         // Retrieve base spec
         RunBaseSpec<?> spec = JacksonMapper.objectMapper
                 .convertValue(runDTO.getSpec(), RunBaseSpec.class);
@@ -67,7 +67,7 @@ public class RunEntityBuilder {
      * @param runDTO the run DTO
      * @return Run
      */
-    public Run update(Run run, RunDTO runDTO) {
+    public RunEntity update(RunEntity run, XRun runDTO) {
         // Retrieve base spec
         RunBaseSpec spec = JacksonMapper.objectMapper
                 .convertValue(runDTO.getSpec(), RunBaseSpec.class);

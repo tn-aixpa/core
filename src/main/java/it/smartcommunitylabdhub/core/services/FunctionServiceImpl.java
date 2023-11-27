@@ -10,8 +10,8 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.Run;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -174,7 +174,7 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     @Override
-    public List<RunDTO> getFunctionRuns(String uuid) {
+    public List<XRun> getFunctionRuns(String uuid) {
         final FunctionEntity function = functionRepository.findById(uuid).orElse(null);
         if (function == null) {
             throw new CoreException(
@@ -186,7 +186,7 @@ public class FunctionServiceImpl implements FunctionService {
         Function functionDTO = functionDTOBuilder.build(function, false);
         try {
             // Find and collect runs for a function
-            List<Run> runs =
+            List<RunEntity> runs =
                     this.taskRepository.findByFunction(TaskUtils.buildTaskString(functionDTO))
                             .stream()
                             .flatMap(task -> this.runRepository
@@ -198,7 +198,7 @@ public class FunctionServiceImpl implements FunctionService {
                             .collect(Collectors.toList());
 
 
-            return (List<RunDTO>) ConversionUtils.reverseIterable(runs, "run", RunDTO.class);
+            return (List<XRun>) ConversionUtils.reverseIterable(runs, "run", XRun.class);
 
         } catch (CustomException e) {
             throw new CoreException(

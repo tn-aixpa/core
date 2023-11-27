@@ -17,7 +17,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "runs")
-public class Run implements BaseEntity {
+public class RunEntity implements BaseEntity {
 
     @Id
     @Column(unique = true)

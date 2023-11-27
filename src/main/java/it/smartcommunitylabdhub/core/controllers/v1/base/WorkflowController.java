@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
 import it.smartcommunitylabdhub.core.services.interfaces.WorkflowService;
 import jakarta.validation.Valid;
@@ -60,7 +60,7 @@ public class WorkflowController {
     }
 
     @GetMapping(path = "/{uuid}/runs", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<RunDTO>> workflowRuns(@ValidateField @PathVariable String uuid) {
+    public ResponseEntity<List<XRun>> workflowRuns(@ValidateField @PathVariable String uuid) {
         return ResponseEntity.ok(this.workflowService.getWorkflowRuns(uuid));
     }
 

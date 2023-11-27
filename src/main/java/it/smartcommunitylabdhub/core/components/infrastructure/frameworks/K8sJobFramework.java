@@ -19,7 +19,7 @@ import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.StopPoller;
 import it.smartcommunitylabdhub.core.models.builders.log.LogEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -189,7 +189,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                     log.info("Job completed successfully.");
                     // Update state machine and update runDTO
                     fMachine.goToState(RunState.COMPLETED);
-                    RunDTO runDTO = runService.getRun(runnable.getId());
+                    XRun runDTO = runService.getRun(runnable.getId());
                     runDTO.setState(fsm.getCurrentState().name());
                     runService.updateRun(runDTO, runDTO.getId());
 

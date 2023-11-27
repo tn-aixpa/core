@@ -21,7 +21,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Builder
-public class RunDTO implements BaseEntity {
+public class XRun implements BaseEntity {
 
     @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
     private String id;
@@ -64,7 +64,7 @@ public class RunDTO implements BaseEntity {
         }
     }
 
-    public void overrideFields(RunDTO runDTO) {
+    public void overrideFields(XRun runDTO) {
         Class<?> runClass = runDTO.getClass();
 
         for (Map.Entry<String, Object> entry : extra.entrySet()) {

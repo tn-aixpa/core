@@ -16,7 +16,7 @@ import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.DataItemF
 import it.smartcommunitylabdhub.core.models.accessors.utils.ArtifactUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
@@ -31,7 +31,7 @@ import java.util.function.Function;
 @Slf4j
 @RunWorkflowComponent(platform = "job", perform = "perform")
 public class JobWorkflowBuilder extends BaseWorkflowBuilder
-        implements KindWorkflow<RunDTO, Workflow> {
+        implements KindWorkflow<XRun, Workflow> {
 
     private final RunService runService;
     private final LogService logService;
@@ -55,7 +55,7 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
     }
 
     @SuppressWarnings("unchecked")
-    public Workflow build(RunDTO runDTO) {
+    public Workflow build(XRun runDTO) {
         Function<Object[], Object> getRunUpdate = params -> {
 
             try {
@@ -66,8 +66,8 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
                 HttpEntity<String> entity = new HttpEntity<>(headers);
 
                 String requestUrl = params[0].toString()
-                        .replace("{project}", ((RunDTO) params[1]).getProject())
-                        .replace("{uid}", ((RunDTO) params[1]).getExtra().get("mlrun_run_uid")
+                        .replace("{project}", ((XRun) params[1]).getProject())
+                        .replace("{uid}", ((XRun) params[1]).getExtra().get("mlrun_run_uid")
                                 .toString());
 
                 /*

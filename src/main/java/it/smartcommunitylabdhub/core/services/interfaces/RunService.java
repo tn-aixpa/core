@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.services.interfaces;
 
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 
@@ -9,16 +9,16 @@ import java.util.List;
 
 public interface RunService {
 
-    List<RunDTO> getRuns(Pageable pageable);
+    List<XRun> getRuns(Pageable pageable);
 
-    RunDTO getRun(String uuid);
+    XRun getRun(String uuid);
 
     boolean deleteRun(String uuid);
 
-    RunDTO save(RunDTO runDTO);
+    XRun save(XRun runDTO);
 
-    <F extends FunctionBaseSpec<F>> RunDTO createRun(RunDTO inputRunDTO);
+    <F extends FunctionBaseSpec<F>> XRun createRun(XRun inputRunDTO);
 
-    RunDTO updateRun(@Valid RunDTO runDTO, String uuid);
+    XRun updateRun(@Valid XRun runDTO, String uuid);
 
 }

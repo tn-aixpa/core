@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.S
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
@@ -74,7 +74,7 @@ public class JobEventListener {
         }
     }
 
-    private void handleSuccessfulResponse(Map<String, Object> response, RunDTO runDTO) {
+    private void handleSuccessfulResponse(Map<String, Object> response, XRun runDTO) {
         Optional<Map<String, Object>> optionalData = MapUtils.getNestedFieldValue(response, "data");
 
         optionalData.ifPresentOrElse(
@@ -84,7 +84,7 @@ public class JobEventListener {
                     });
 
                     // Save RunDTO
-                    RunDTO savedRunDTO = runService.save(runDTO);
+                    XRun savedRunDTO = runService.save(runDTO);
 
                     log.info("Dispatch event to RunMessage");
                     eventPublisher.publishEvent(RunMessage.builder().runDTO(savedRunDTO).build());

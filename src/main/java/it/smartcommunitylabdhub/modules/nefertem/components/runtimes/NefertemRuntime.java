@@ -12,7 +12,7 @@ import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
@@ -150,7 +150,7 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
 
 
     @Override
-    public Runnable run(RunDTO runDTO) {
+    public Runnable run(XRun runDTO) {
 
         /**
          *  As an alternative, you can use the code below to retrieve the correct runner.

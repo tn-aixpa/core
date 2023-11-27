@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.services.interfaces;
 
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowDTO;
 import org.springframework.data.domain.Pageable;
 
@@ -17,5 +17,5 @@ public interface WorkflowService {
 
     boolean deleteWorkflow(String uuid);
 
-    List<RunDTO> getWorkflowRuns(String uuid);
+    List<XRun> getWorkflowRuns(String uuid);
 }

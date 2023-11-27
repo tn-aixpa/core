@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.utils.TaskAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class JobServiceImpl implements KindService<Map<String, Object>> {
     }
 
     @Override
-    public Map<String, Object> run(RunDTO runDTO) {
+    public Map<String, Object> run(XRun runDTO) {
         ParameterizedTypeReference<Map<String, Object>> responseType =
                 new ParameterizedTypeReference<>() {
                 };

@@ -10,7 +10,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRunt
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
@@ -90,7 +90,7 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
 
 
     @Override
-    public Runnable run(RunDTO runDTO) {
+    public Runnable run(XRun runDTO) {
 
         /**
          *  As an alternative, you can use the code below to retrieve the correct runner.

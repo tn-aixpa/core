@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.runtim
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.run.RunDTO;
+import it.smartcommunitylabdhub.core.models.entities.run.XRun;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import jakarta.validation.constraints.NotNull;
@@ -20,7 +20,7 @@ public interface Runtime<F extends FunctionBaseSpec<?>> {
             @NotNull String kind
     );
 
-    Runnable run(RunDTO runDTO);
+    Runnable run(XRun runDTO);
 
     // TODO: parse should get and parse result job for the given runtime.
     RunStatus parse();
