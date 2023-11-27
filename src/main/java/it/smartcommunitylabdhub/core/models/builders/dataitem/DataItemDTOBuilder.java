@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemDTO;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.metadata.DataItemMetadata;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +18,10 @@ public class DataItemDTOBuilder {
     @Autowired
     MetadataConverter<DataItemMetadata> metadataConverter;
 
-    public DataItemDTO build(DataItem dataItem, boolean embeddable) {
+    public DataItem build(DataItemEntity dataItem, boolean embeddable) {
 
 
-        return EntityFactory.create(DataItemDTO::new, dataItem, builder -> builder
+        return EntityFactory.create(DataItem::new, dataItem, builder -> builder
                 .with(dto -> dto.setId(dataItem.getId()))
                 .with(dto -> dto.setKind(dataItem.getKind()))
                 .with(dto -> dto.setProject(dataItem.getProject()))

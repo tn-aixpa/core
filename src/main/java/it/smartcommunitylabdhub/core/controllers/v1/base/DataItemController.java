@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemDTO;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.services.interfaces.DataItemService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,20 +26,20 @@ public class DataItemController {
 
     @Operation(summary = "List dataItems", description = "Return a list of all dataItems")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<DataItemDTO>> getDataItems(Pageable pageable) {
+    public ResponseEntity<List<DataItem>> getDataItems(Pageable pageable) {
         return ResponseEntity.ok(this.dataItemService.getDataItems(pageable));
     }
 
     @Operation(summary = "Create dataItem", description = "Create an dataItem and return")
     @PostMapping(value = "", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<DataItemDTO> createDataItem(@Valid @RequestBody DataItemDTO dataItemDTO) {
+    public ResponseEntity<DataItem> createDataItem(@Valid @RequestBody DataItem dataItemDTO) {
         return ResponseEntity.ok(this.dataItemService.createDataItem(dataItemDTO));
     }
 
     @Operation(summary = "Get a dataItem by uuid", description = "Return an dataItem")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<DataItemDTO> getDataItem(
+    public ResponseEntity<DataItem> getDataItem(
             @ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
         return ResponseEntity.ok(this.dataItemService.getDataItem(uuid));
     }
@@ -47,8 +47,8 @@ public class DataItemController {
     @Operation(summary = "Update specific dataItem", description = "Update and return the dataItem")
     @PutMapping(path = "/{uuid}", consumes = {MediaType.APPLICATION_JSON_VALUE,
             "application/x-yaml"}, produces = "application/json; charset=UTF-8")
-    public ResponseEntity<DataItemDTO> updateDataItem(@Valid @RequestBody DataItemDTO dataItemDTO,
-                                                      @ValidateField @PathVariable String uuid) {
+    public ResponseEntity<DataItem> updateDataItem(@Valid @RequestBody DataItem dataItemDTO,
+                                                   @ValidateField @PathVariable String uuid) {
         return ResponseEntity.ok(this.dataItemService.updateDataItem(dataItemDTO, uuid));
     }
 

@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.core.models.builders.project.ProjectEntityBuilde
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
@@ -82,7 +82,7 @@ public class ProjectServiceImpl implements ProjectService {
                     List<FunctionEntity> functions = functionRepository.findByProject(project.getName());
                     List<ArtifactEntity> artifacts = artifactRepository.findByProject(project.getName());
                     List<Workflow> workflows = workflowRepository.findByProject(project.getName());
-                    List<DataItem> dataItems = dataItemRepository.findByProject(project.getName());
+                    List<DataItemEntity> dataItems = dataItemRepository.findByProject(project.getName());
 
                     return projectDTOBuilder.build(project, artifacts, functions, workflows,
                             dataItems, true);
@@ -102,7 +102,7 @@ public class ProjectServiceImpl implements ProjectService {
                         List<FunctionEntity> functions = functionRepository.findByProject(project.getName());
                         List<ArtifactEntity> artifacts = artifactRepository.findByProject(project.getName());
                         List<Workflow> workflows = workflowRepository.findByProject(project.getName());
-                        List<DataItem> dataItems = dataItemRepository.findByProject(project.getName());
+                        List<DataItemEntity> dataItems = dataItemRepository.findByProject(project.getName());
 
                         return projectDTOBuilder.build(project, artifacts, functions, workflows,
                                 dataItems, true);
@@ -160,7 +160,7 @@ public class ProjectServiceImpl implements ProjectService {
                             artifactRepository.findByProject(projectUpdated.getName());
                     List<Workflow> workflows =
                             workflowRepository.findByProject(projectUpdated.getName());
-                    List<DataItem> dataItems =
+                    List<DataItemEntity> dataItems =
                             dataItemRepository.findByProject(projectUpdated.getName());
 
                     return projectDTOBuilder.build(projectUpdated, artifacts, functions, workflows,

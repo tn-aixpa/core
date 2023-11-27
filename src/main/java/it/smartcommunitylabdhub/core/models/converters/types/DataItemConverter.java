@@ -4,15 +4,15 @@ import it.smartcommunitylabdhub.core.annotations.common.ConverterType;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemDTO;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 
 @ConverterType(type = "dataitem")
-public class DataItemConverter implements Converter<DataItemDTO, DataItem> {
+public class DataItemConverter implements Converter<DataItem, DataItemEntity> {
 
     @Override
-    public DataItem convert(DataItemDTO dataItemDTO) throws CustomException {
-        return DataItem.builder()
+    public DataItemEntity convert(DataItem dataItemDTO) throws CustomException {
+        return DataItemEntity.builder()
                 .id(dataItemDTO.getId())
                 .name(dataItemDTO.getName())
                 .kind(dataItemDTO.getKind())
@@ -24,8 +24,8 @@ public class DataItemConverter implements Converter<DataItemDTO, DataItem> {
     }
 
     @Override
-    public DataItemDTO reverseConvert(DataItem dataItem) throws CustomException {
-        return DataItemDTO.builder()
+    public DataItem reverseConvert(DataItemEntity dataItem) throws CustomException {
+        return DataItem.builder()
                 .id(dataItem.getId())
                 .name(dataItem.getName())
                 .kind(dataItem.getKind())

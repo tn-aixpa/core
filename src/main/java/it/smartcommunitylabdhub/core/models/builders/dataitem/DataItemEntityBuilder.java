@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemDTO;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.specs.DataItemBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
@@ -26,7 +26,7 @@ public class DataItemEntityBuilder {
      *
      * @return DataItemDTO
      */
-    public DataItem build(DataItemDTO dataItemDTO) {
+    public DataItemEntity build(DataItem dataItemDTO) {
 
         specRegistry.createSpec(dataItemDTO.getKind(), SpecEntity.DATAITEM, Map.of());
 
@@ -55,7 +55,7 @@ public class DataItemEntityBuilder {
      * @param dataItemDTO the Dataitem DTO to combine
      * @return Dataitem
      */
-    public DataItem update(DataItem dataItem, DataItemDTO dataItemDTO) {
+    public DataItemEntity update(DataItemEntity dataItem, DataItem dataItemDTO) {
 
         // Retrieve object spec
         // Retrieve Spec

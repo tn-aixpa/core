@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemDTO;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.DataItemService;
 import jakarta.transaction.Transactional;
@@ -33,9 +33,9 @@ public class DataItemServiceImpl implements DataItemService {
     DataItemDTOBuilder dataItemDTOBuilder;
 
     @Override
-    public List<DataItemDTO> getDataItems(Pageable pageable) {
+    public List<DataItem> getDataItems(Pageable pageable) {
         try {
-            Page<DataItem> dataItemPage = this.dataItemRepository.findAll(pageable);
+            Page<DataItemEntity> dataItemPage = this.dataItemRepository.findAll(pageable);
             return dataItemPage.getContent().stream().map((dataItem) -> {
                 return dataItemDTOBuilder.build(dataItem, false);
             }).collect(Collectors.toList());
@@ -49,12 +49,12 @@ public class DataItemServiceImpl implements DataItemService {
     }
 
     @Override
-    public DataItemDTO createDataItem(DataItemDTO dataItemDTO) {
+    public DataItem createDataItem(DataItem dataItemDTO) {
         if (dataItemDTO.getId() != null && dataItemRepository.existsById(dataItemDTO.getId())) {
             throw new CoreException("DuplicateDataItemId",
                     "Cannot create the dataItem", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Optional<DataItem> savedDataItem = Optional.of(dataItemDTO)
+        Optional<DataItemEntity> savedDataItem = Optional.of(dataItemDTO)
                 .map(dataItemEntityBuilder::build)
                 .map(this.dataItemRepository::save);
 
@@ -66,7 +66,7 @@ public class DataItemServiceImpl implements DataItemService {
     }
 
     @Override
-    public DataItemDTO getDataItem(String uuid) {
+    public DataItem getDataItem(String uuid) {
         return dataItemRepository.findById(uuid)
                 .map(dataItem -> {
                     try {
@@ -85,7 +85,7 @@ public class DataItemServiceImpl implements DataItemService {
     }
 
     @Override
-    public DataItemDTO updateDataItem(DataItemDTO dataItemDTO, String uuid) {
+    public DataItem updateDataItem(DataItem dataItemDTO, String uuid) {
         if (!dataItemDTO.getId().equals(uuid)) {
             throw new CoreException(
                     "DataItemNotMatch",
@@ -96,7 +96,7 @@ public class DataItemServiceImpl implements DataItemService {
         return dataItemRepository.findById(uuid)
                 .map(dataItem -> {
                     try {
-                        DataItem dataItemUpdated =
+                        DataItemEntity dataItemUpdated =
                                 dataItemEntityBuilder.update(dataItem, dataItemDTO);
                         dataItemRepository.save(dataItemUpdated);
                         return dataItemDTOBuilder.build(dataItemUpdated, false);

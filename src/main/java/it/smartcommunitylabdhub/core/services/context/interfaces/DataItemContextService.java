@@ -1,30 +1,30 @@
 package it.smartcommunitylabdhub.core.services.context.interfaces;
 
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemDTO;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface DataItemContextService {
 
-    DataItemDTO createDataItem(String projectName, DataItemDTO dataItemDTO);
+    DataItem createDataItem(String projectName, DataItem dataItemDTO);
 
-    Page<DataItemDTO> getByProjectNameAndDataItemName(
+    Page<DataItem> getByProjectNameAndDataItemName(
             String projectName, String dataItemName, Pageable pageable);
 
-    Page<DataItemDTO> getLatestByProjectName(
+    Page<DataItem> getLatestByProjectName(
             String projectName, Pageable pageable);
 
-    DataItemDTO getByProjectAndDataItemAndUuid(
+    DataItem getByProjectAndDataItemAndUuid(
             String projectName, String dataItemName, String uuid);
 
-    DataItemDTO getLatestByProjectNameAndDataItemName(
+    DataItem getLatestByProjectNameAndDataItemName(
             String projectName, String dataItemName);
 
-    DataItemDTO createOrUpdateDataItem(String projectName, String dataItemName,
-                                       DataItemDTO dataItemDTO);
+    DataItem createOrUpdateDataItem(String projectName, String dataItemName,
+                                    DataItem dataItemDTO);
 
-    DataItemDTO updateDataItem(String projectName, String dataItemName, String uuid,
-                               DataItemDTO dataItemDTO);
+    DataItem updateDataItem(String projectName, String dataItemName, String uuid,
+                            DataItem dataItemDTO);
 
     Boolean deleteSpecificDataItemVersion(String projectName, String dataItemName, String uuid);
 
