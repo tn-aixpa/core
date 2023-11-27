@@ -13,9 +13,7 @@ class ProjectMetadata(Metadata):
 
     def __init__(
         self,
-        project: str,
-        name: str,
-        version: str,
+        name: str | None = None,
         created: str | None = None,
         updated: str | None = None,
         description: str | None = None,
@@ -36,7 +34,6 @@ class ProjectMetadata(Metadata):
         --------
         Metadata.__init__
         """
-        super().__init__(project, created, updated)
+        super().__init__(created, updated)
         self.name = name
-        self.version = version
         self.description = description

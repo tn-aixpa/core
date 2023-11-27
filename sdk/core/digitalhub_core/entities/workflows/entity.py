@@ -29,6 +29,8 @@ class Workflow(Entity):
 
     def __init__(
         self,
+        project: str,
+        name: str,
         uuid: str,
         kind: str,
         metadata: WorkflowMetadata,
@@ -40,6 +42,10 @@ class Workflow(Entity):
 
         Parameters
         ----------
+        project : str
+            Name of the project.
+        name : str
+            Name of the object.
         uuid : str
             UUID.
         kind : str
@@ -52,16 +58,15 @@ class Workflow(Entity):
             Status of the object.
         """
         super().__init__()
+        self.project = project
+        self.name = name
         self.id = uuid
         self.kind = kind
         self.metadata = metadata
         self.spec = spec
         self.status = status
 
-        self.project = self.metadata.project
-        self.name = self.metadata.name
-        self.embedded = self.metadata.embedded
-        self._obj_attr.extend(["project", "name", "embedded"])
+        self._obj_attr.extend(["project", "name"])
 
     #############################
     #  Save / Export
@@ -84,11 +89,11 @@ class Workflow(Entity):
         obj = self.to_dict()
 
         if not update:
-            api = api_ctx_create(self.metadata.project, WKFL)
+            api = api_ctx_create(self.project, WKFL)
             return self._context().create_object(obj, api)
 
         self.metadata.updated = obj["metadata"]["updated"] = get_timestamp()
-        api = api_ctx_update(self.metadata.project, WKFL, self.metadata.name, self.id)
+        api = api_ctx_update(self.project, WKFL, self.name, self.id)
         return self._context().update_object(obj, api)
 
     def export(self, filename: str | None = None) -> None:
@@ -105,7 +110,7 @@ class Workflow(Entity):
         None
         """
         obj = self.to_dict()
-        filename = filename if filename is not None else f"workflow_{self.metadata.project}_{self.metadata.name}.yaml"
+        filename = filename if filename is not None else f"workflow_{self.project}_{self.name}.yaml"
         write_yaml(filename, obj)
 
     #############################
@@ -121,7 +126,56 @@ class Workflow(Entity):
         Context
             Context.
         """
-        return get_context(self.metadata.project)
+        return get_context(self.project)
+
+    #############################
+    #  Static interface methods
+    #############################
+
+    @staticmethod
+    def _parse_dict(
+        entity: str,
+        obj: dict,
+        ignore_validation: bool = False,
+        module_kind: str | None = None,
+    ) -> dict:
+        """
+        Get dictionary and parse it to a valid entity dictionary.
+
+        Parameters
+        ----------
+        entity : str
+            Entity type.
+        obj : dict
+            Dictionary to parse.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the attributes of the entity instance.
+        """
+        project = obj.get("project")
+        name = obj.get("name")
+        kind = obj.get("kind")
+        uuid = build_uuid(obj.get("id"))
+        metadata = build_metadata(entity, **obj.get("metadata"))
+        spec = build_spec(
+            entity,
+            kind,
+            ignore_validation=ignore_validation,
+            module_kind=module_kind,
+            **obj.get("spec"),
+        )
+        status = build_status(entity, **obj.get("status"))
+        return {
+            "project": project,
+            "name": name,
+            "uuid": uuid,
+            "kind": kind,
+            "metadata": metadata,
+            "spec": spec,
+            "status": status,
+        }
 
 
 def workflow_from_parameters(
@@ -174,6 +228,8 @@ def workflow_from_parameters(
     )
     status = build_status(WKFL)
     return Workflow(
+        project=project,
+        name=name,
         uuid=uuid,
         kind=kind,
         metadata=metadata,

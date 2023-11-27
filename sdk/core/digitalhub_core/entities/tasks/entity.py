@@ -10,7 +10,7 @@ from digitalhub_core.entities._base.entity import Entity
 from digitalhub_core.entities._builders.metadata import build_metadata
 from digitalhub_core.entities._builders.spec import build_spec
 from digitalhub_core.entities._builders.status import build_status
-from digitalhub_core.entities.runs.crud import delete_run, get_run, new_run
+from digitalhub_core.entities.runs.crud import delete_run, get_run, run_from_parameters
 from digitalhub_core.utils.api import api_base_create, api_base_update
 from digitalhub_core.utils.commons import TASK
 from digitalhub_core.utils.generic_utils import build_uuid, get_timestamp
@@ -31,6 +31,7 @@ class Task(Entity):
 
     def __init__(
         self,
+        project: str,
         uuid: str,
         kind: str,
         metadata: TaskMetadata,
@@ -42,6 +43,8 @@ class Task(Entity):
 
         Parameters
         ----------
+        project : str
+            Name of the project.
         uuid : str
             UUID.
         kind : str
@@ -54,13 +57,13 @@ class Task(Entity):
             Status of the object.
         """
         super().__init__()
+        self.project = project
         self.id = uuid
         self.kind = kind
         self.metadata = metadata
         self.spec = spec
         self.status = status
 
-        self.project = self.metadata.project
         self._obj_attr.extend(["project"])
 
     #############################
@@ -121,7 +124,7 @@ class Task(Entity):
         Context
             Context.
         """
-        return get_context(self.metadata.project)
+        return get_context(self.project)
 
     #############################
     #  Task methods
@@ -154,7 +157,7 @@ class Task(Entity):
             Run object.
         """
         return self.new_run(
-            project=self.metadata.project,
+            project=self.project,
             task=self._get_task_string(),
             task_id=self.id,
             kind="run",
@@ -194,7 +197,7 @@ class Task(Entity):
         Run
             Run object.
         """
-        return new_run(**kwargs)
+        return run_from_parameters(**kwargs)
 
     def get_run(self, uuid: str) -> Run:
         """
@@ -210,7 +213,7 @@ class Task(Entity):
         Run
             Run object.
         """
-        return get_run(self.metadata.project, uuid)
+        return get_run(self.project, uuid)
 
     def delete_run(self, uuid: str) -> None:
         """
@@ -225,14 +228,19 @@ class Task(Entity):
         -------
         None
         """
-        delete_run(self.metadata.project, uuid)
+        delete_run(self.project, uuid)
 
     #############################
-    #  Overridden Methods
+    #  Static interface methods
     #############################
 
     @staticmethod
-    def _parse_dict(entity: str, obj: dict) -> dict:
+    def _parse_dict(
+        entity: str,
+        obj: dict,
+        ignore_validation: bool = False,
+        module_kind: str | None = None,
+    ) -> dict:
         """
         Get dictionary and parse it to a valid entity dictionary.
 
@@ -248,12 +256,20 @@ class Task(Entity):
         dict
             A dictionary containing the attributes of the entity instance.
         """
+        project = obj.get("project")
+        kind = obj.get("kind")
         uuid = build_uuid(obj.get("id"))
-        kind = obj.get("kind", "")
         metadata = build_metadata(entity, **obj.get("metadata"))
-        spec = build_spec(entity, kind, ignore_validation=True, module_kind=kind, **obj.get("spec"))
+        spec = build_spec(
+            entity,
+            kind,
+            ignore_validation=ignore_validation,
+            module_kind=module_kind,
+            **obj.get("spec"),
+        )
         status = build_status(entity, **obj.get("status"))
         return {
+            "project": project,
             "uuid": uuid,
             "kind": kind,
             "metadata": metadata,
@@ -301,6 +317,7 @@ def task_from_parameters(
     )
     status = build_status(TASK)
     return Task(
+        project=project,
         uuid=uuid,
         kind=kind,
         metadata=metadata,

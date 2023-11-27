@@ -11,20 +11,21 @@ class Metadata(ModelObj):
     A class representing the metadata of an entity.
     """
 
-    def __init__(self, project: str, created: str, updated: str) -> None:
+    def __init__(
+        self,
+        created: str | None = str,
+        updated: str | None = str,
+    ) -> None:
         """
         Constructor.
 
         Parameters
         ----------
-        project : str
-            Name of the project.
         created : str
             Created date.
         updated : str
             Updated date.
         """
-        self.project = project
         self.created = created
         self.updated = updated
 

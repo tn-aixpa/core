@@ -86,7 +86,7 @@ class RuntimeNefertem(Runtime):
         # Get run specs
         LOGGER.info("Starting task.")
         spec = run.get("spec")
-        project = run.get("metadata").get("project")
+        project = run.get("project")
 
         # Get inputs and parameters
         LOGGER.info("Getting inputs and parameters.")
@@ -128,6 +128,10 @@ class RuntimeNefertem(Runtime):
         return {
             "state": State.COMPLETED.value,
             "artifacts": artifacts,
+            "timing": {
+                "start_time": nt_run["started"],
+                "end_time": nt_run["finished"],
+            },
         }
 
     ####################
@@ -412,13 +416,13 @@ class RuntimeNefertem(Runtime):
         for src_path in run_info.get("output_files", []):
             # Replace _ by - in artifact name for backend compatibility
             name = Path(src_path).stem.replace("_", "-")
-            artifact = self._create_artifact(name, project, run_info["run_id"], src_path)
-            self._upload_artifact_to_minio(name, artifact)
+            art = self._create_artifact(name, project, run_info["run_id"], src_path)
+            self._upload_artifact_to_minio(name, art)
             artifacts.append(
                 {
-                    "key": artifact.metadata.name,
+                    "key": art.name,
                     "kind": "artifact",
-                    "id": f"store://{project}/artifacts/artifact/{artifact.metadata.name}:{artifact.metadata.version}",
+                    "id": f"store://{art.project}/artifacts/{art.kind}/{art.name}:{art.id}",
                 }
             )
         return artifacts
@@ -452,7 +456,7 @@ class RuntimeNefertem(Runtime):
         try:
             # Get bucket name from env and filename from path
             LOGGER.info(f"Creating artifact new artifact '{name}'.")
-            dst = f"s3://{os.getenv('S3_BUCKET_NAME')}/{project}/artifacts/{run_id}/{Path(src_path).name}"
+            dst = f"s3://{os.getenv('S3_BUCKET_NAME')}/{project}/artifacts/ntruns/{run_id}/{Path(src_path).name}"
             return new_artifact(project, name, "artifact", src_path=src_path, target_path=dst)
         except Exception:
             msg = f"Error creating artifact '{name}'."

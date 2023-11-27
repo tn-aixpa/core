@@ -13,9 +13,9 @@ class DataitemMetadata(Metadata):
 
     def __init__(
         self,
-        project: str,
-        name: str,
-        version: str,
+        project: str | None = None,
+        name: str | None = None,
+        version: str | None = None,
         created: str | None = None,
         updated: str | None = None,
         description: str | None = None,
@@ -26,6 +26,8 @@ class DataitemMetadata(Metadata):
 
         Parameters
         ----------
+        project : str
+            Project name.
         name : str
             Name of the object.
         version : str
@@ -39,7 +41,8 @@ class DataitemMetadata(Metadata):
         --------
         Metadata.__init__
         """
-        super().__init__(project, created, updated)
+        super().__init__(created, updated)
+        self.project = project
         self.name = name
         self.version = version
         self.description = description

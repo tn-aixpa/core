@@ -105,7 +105,7 @@ class RuntimeDBT(Runtime):
         # Get run specs
         LOGGER.info("Starting task.")
         spec = run.get("spec")
-        project = run.get("metadata").get("project")
+        project = run.get("project")
 
         # Parse inputs/outputs and decode sql code
         LOGGER.info("Parsing inputs and output.")
@@ -163,7 +163,7 @@ class RuntimeDBT(Runtime):
         """
         for name in inputs:
             di = self._get_dataitem(name, project)
-            self._input_dataitems.append({"name": di.metadata.name, "id": di.metadata.version})
+            self._input_dataitems.append({"name": di.name, "id": di.id})
             table = self._materialize_dataitem(di, name)
             self._versioned_tables.append(table)
         return self._versioned_tables
@@ -395,7 +395,7 @@ class RuntimeDBT(Runtime):
                 {
                     "key": output,
                     "kind": "dataitem",
-                    "id": f"store://{project}/dataitems/dataitem/{di.metadata.name}:{di.metadata.version}",
+                    "id": f"store://{di.project}/dataitems/{di.kind}/{di.name}:{di.id}",
                 }
             ]
         except Exception:

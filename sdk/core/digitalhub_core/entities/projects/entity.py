@@ -36,7 +36,7 @@ from digitalhub_core.entities.workflows.crud import (
     get_workflow,
     new_workflow,
 )
-from digitalhub_core.utils.api import api_base_create, api_base_update
+from digitalhub_core.utils.api import api_base_create, api_base_read, api_base_update
 from digitalhub_core.utils.commons import ARTF, DTIT, FUNC, PROJ, WKFL
 from digitalhub_core.utils.exceptions import BackendError, EntityError
 from digitalhub_core.utils.generic_utils import build_uuid, get_timestamp
@@ -95,7 +95,7 @@ class Project(Entity):
 
     def __init__(
         self,
-        uuid: str,
+        name: str,
         kind: str,
         metadata: ProjectMetadata,
         spec: ProjectSpec,
@@ -107,6 +107,10 @@ class Project(Entity):
 
         Parameters
         ----------
+        project : str
+            Name of the project.
+        name : str
+            Name of the object.
         uuid : str
             UUID.
         kind : str
@@ -121,7 +125,7 @@ class Project(Entity):
             If True, export locally.
         """
         super().__init__()
-        self.id = uuid
+        self.name = name
         self.kind = kind
         self.metadata = metadata
         self.spec = spec
@@ -129,8 +133,6 @@ class Project(Entity):
 
         # Private attributes
         self._client = get_client(local)
-
-        self.name = self.metadata.name
         self._obj_attr.append("name")
 
         # Set context
@@ -162,12 +164,11 @@ class Project(Entity):
 
         if not update:
             api = api_base_create(PROJ)
-            response = self._client.create_object(obj, api)
+            return self._client.create_object(obj, api)
 
         self.metadata.updated = obj["metadata"]["updated"] = get_timestamp()
         api = api_base_update(PROJ, self.id)
-        response = self._client.update_object(obj, api)
-        return response
+        return self._client.update_object(obj, api)
 
     def export(self, filename: str | None = None) -> None:
         """
@@ -201,8 +202,7 @@ class Project(Entity):
                 if not _obj.embedded:
                     _obj.export()
 
-    @staticmethod
-    def _parse_spec(obj: dict) -> dict:
+    def _parse_spec(self, obj: dict) -> dict:
         """
         Parse spec dictionary.
 
@@ -222,7 +222,7 @@ class Project(Entity):
             new_spec[i] = []
             for j in spec[i]:
                 if not j.get("embedded", True):
-                    _dict = {k: v for k, v in j.items() if k in ["kind", "name", "id"]}
+                    _dict = {k: v for k, v in j.items() if k in self._essential_attr}
                     new_spec[i].append(_dict)
                 else:
                     new_spec[i].append(j)
@@ -239,7 +239,7 @@ class Project(Entity):
             Project object.
         """
         try:
-            api = api_base_update(PROJ, self.metadata.name)
+            api = api_base_read(PROJ, self.name)
             obj = self._client.read_object(api)
             return self.from_dict(PROJ, obj)
         except BackendError:
@@ -249,7 +249,7 @@ class Project(Entity):
     #  Generic operations for objects (artifacts, functions, workflows, dataitems)
     #############################
 
-    def _add_object(self, obj: Entities, kind: str) -> None:
+    def _add_object(self, obj: Entities, entity_type: str) -> None:
         """
         Add object to project as specification.
 
@@ -257,18 +257,18 @@ class Project(Entity):
         ----------
         obj : Entity
             Object to be added to project.
-        kind : str
-            Kind of object to be added to project.
+        entity_type : str
+            Type of object to be added to project.
 
         Returns
         -------
         None
         """
-        self._check_kind(kind)
-        attr = getattr(self.spec, kind, []) + [obj.to_dict()]
-        setattr(self.spec, kind, attr)
+        self._check_entity_type(entity_type)
+        attr = getattr(self.spec, entity_type, []) + [obj.to_dict()]
+        setattr(self.spec, entity_type, attr)
 
-    def _delete_object(self, name: str, kind: str, uuid: str | None = None) -> None:
+    def _delete_object(self, name: str, entity_type: str, uuid: str | None = None) -> None:
         """
         Delete object from project.
 
@@ -276,8 +276,8 @@ class Project(Entity):
         ----------
         name : str
             Name of object to be deleted.
-        kind : str
-            Kind of object to be deleted.
+        entity_type : str
+            Type of object to be deleted.
         uuid : str
             UUID.
 
@@ -291,41 +291,36 @@ class Project(Entity):
         else:
             attr_name = "id"
             var = uuid
-        self._check_kind(kind)
-        spec_list = getattr(self.spec, kind, [])
-        setattr(self.spec, kind, [i for i in spec_list if i.get(attr_name) != var])
+        self._check_entity_type(entity_type)
+        spec_list = getattr(self.spec, entity_type, [])
+        setattr(self.spec, entity_type, [i for i in spec_list if i.get(attr_name) != var])
 
-    def _get_objects(self, kind: str) -> list[dict]:
+    def _get_objects(self, entity_type: str) -> list[dict]:
         """
         Get dtos objects related to project.
 
         Parameters
         ----------
-        kind : str
-            Kind of object to be retrieved.
+        entity_type : str
+            Type of object to be retrieved.
 
         Returns
         -------
         list[dict]
             List of objects related to project.
-
-        Raises
-        ------
-        EntityError
-            If kind is not valid.
         """
-        self._check_kind(kind)
-        return getattr(self.spec, kind, [])
+        self._check_entity_type(entity_type)
+        return getattr(self.spec, entity_type, [])
 
     @staticmethod
-    def _check_kind(kind: str) -> None:
+    def _check_entity_type(entity_type: str) -> None:
         """
         Check if kind is valid.
 
         Parameters
         ----------
-        kind : str
-            Kind of object to be checked.
+        entity_type : str
+            Type of object to be checked.
 
         Returns
         -------
@@ -334,10 +329,10 @@ class Project(Entity):
         Raises
         ------
         EntityError
-            If kind is not valid.
+            If type is not valid.
         """
-        if kind not in LIST:
-            raise EntityError(f"Kind {kind} is not valid.")
+        if entity_type not in LIST:
+            raise EntityError(f"Kind {entity_type} is not valid.")
 
     #############################
     #  Artifacts
@@ -357,7 +352,7 @@ class Project(Entity):
         Artifact
            Object instance.
         """
-        kwargs["project"] = self.metadata.name
+        kwargs["project"] = self.name
         kwargs["kind"] = "artifact"
         obj = new_artifact(**kwargs)
         self._add_object(obj, ARTF)
@@ -380,7 +375,7 @@ class Project(Entity):
             Instance of Artifact class.
         """
         obj = get_artifact(
-            project=self.metadata.name,
+            project=self.name,
             name=name,
             uuid=uuid,
         )
@@ -402,7 +397,7 @@ class Project(Entity):
         -------
         None
         """
-        delete_artifact(self.metadata.name, name, uuid=uuid)
+        delete_artifact(self.name, name, uuid=uuid)
         self._delete_object(name, ARTF, uuid=uuid)
 
     def set_artifact(self, artifact: Artifact) -> None:
@@ -438,7 +433,7 @@ class Project(Entity):
         Function
            Object instance.
         """
-        kwargs["project"] = self.metadata.name
+        kwargs["project"] = self.name
         obj = new_function(**kwargs)
         self._add_object(obj, FUNC)
         return obj
@@ -460,7 +455,7 @@ class Project(Entity):
             Instance of Function class.
         """
         obj = get_function(
-            project=self.metadata.name,
+            project=self.name,
             name=name,
             uuid=uuid,
         )
@@ -482,7 +477,7 @@ class Project(Entity):
         -------
         None
         """
-        delete_function(self.metadata.name, name, uuid=uuid)
+        delete_function(self.name, name, uuid=uuid)
         self._delete_object(name, FUNC, uuid=uuid)
 
     def set_function(self, function: Function) -> None:
@@ -518,7 +513,7 @@ class Project(Entity):
         Workflow
             An instance of the created workflow.
         """
-        kwargs["project"] = self.metadata.name
+        kwargs["project"] = self.name
         obj = new_workflow(**kwargs)
         self._add_object(obj, WKFL)
         return obj
@@ -540,7 +535,7 @@ class Project(Entity):
             Instance of Workflow class.
         """
         obj = get_workflow(
-            project=self.metadata.name,
+            project=self.name,
             name=name,
             uuid=uuid,
         )
@@ -562,7 +557,7 @@ class Project(Entity):
         -------
         None
         """
-        delete_workflow(self.metadata.name, name, uuid=uuid)
+        delete_workflow(self.name, name, uuid=uuid)
         self._delete_object(name, WKFL, uuid=uuid)
 
     def set_workflow(self, workflow: Workflow) -> None:
@@ -598,7 +593,7 @@ class Project(Entity):
         Dataitem
            Object instance.
         """
-        kwargs["project"] = self.metadata.name
+        kwargs["project"] = self.name
         kwargs["kind"] = "dataitem"
         obj = new_dataitem(**kwargs)
         self._add_object(obj, DTIT)
@@ -621,7 +616,7 @@ class Project(Entity):
             Instance of Dataitem class.
         """
         obj = get_dataitem(
-            project=self.metadata.name,
+            project=self.name,
             name=name,
             uuid=uuid,
         )
@@ -643,7 +638,7 @@ class Project(Entity):
         -------
         None
         """
-        delete_dataitem(self.metadata.name, name, uuid=uuid)
+        delete_dataitem(self.name, name, uuid=uuid)
         self._delete_object(name, DTIT, uuid=uuid)
 
     def set_dataitem(self, dataitem: Dataitem) -> None:
@@ -661,11 +656,55 @@ class Project(Entity):
         """
         self._add_object(dataitem, DTIT)
 
+    #############################
+    #  Static interface methods
+    #############################
+
+    @staticmethod
+    def _parse_dict(
+        entity: str,
+        obj: dict,
+        ignore_validation: bool = False,
+        module_kind: str | None = None,
+    ) -> dict:
+        """
+        Get dictionary and parse it to a valid entity dictionary.
+
+        Parameters
+        ----------
+        entity : str
+            Entity type.
+        obj : dict
+            Dictionary to parse.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the attributes of the entity instance.
+        """
+        name = build_uuid(obj.get("name"))
+        kind = obj.get("kind")
+        metadata = build_metadata(entity, **obj.get("metadata"))
+        spec = build_spec(
+            entity,
+            kind,
+            ignore_validation=ignore_validation,
+            module_kind=module_kind,
+            **obj.get("spec"),
+        )
+        status = build_status(entity, **obj.get("status"))
+        return {
+            "name": name,
+            "kind": kind,
+            "metadata": metadata,
+            "spec": spec,
+            "status": status,
+        }
+
 
 def project_from_parameters(
     name: str,
     kind: str,
-    uuid: str | None = None,
     description: str | None = None,
     local: bool = False,
     context: str = "",
@@ -681,8 +720,6 @@ def project_from_parameters(
         Identifier of the project.
     kind : str
         The type of the project.
-    uuid : str
-        UUID.
     description : str
         Description of the project.
     local : bool
@@ -699,7 +736,7 @@ def project_from_parameters(
     Project
         Project object.
     """
-    uuid = build_uuid(uuid)
+    name = build_uuid(name)
     spec = build_spec(
         PROJ,
         kind,
@@ -709,14 +746,12 @@ def project_from_parameters(
     )
     metadata = build_metadata(
         PROJ,
-        project=name,
         name=name,
-        version=uuid,
         description=description,
     )
     status = build_status(PROJ)
     return Project(
-        uuid=uuid,
+        name=name,
         kind=kind,
         metadata=metadata,
         spec=spec,

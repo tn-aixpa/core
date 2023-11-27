@@ -6,10 +6,6 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 
 from digitalhub_core.entities._base.base import ModelObj
-from digitalhub_core.entities._builders.metadata import build_metadata
-from digitalhub_core.entities._builders.spec import build_spec
-from digitalhub_core.entities._builders.status import build_status
-from digitalhub_core.utils.generic_utils import build_uuid
 
 
 class Entity(ModelObj, metaclass=ABCMeta):
@@ -22,14 +18,8 @@ class Entity(ModelObj, metaclass=ABCMeta):
         Constructor.
         """
         # Attributes to render as dict
-        self._obj_attr = [
-            "id",
-            "kind",
-            "metadata",
-            "spec",
-            "status",
-        ]
-        self._essential_attr = ["kind", "metadata"]
+        self._obj_attr = ["id", "kind", "metadata", "spec", "status"]
+        self._essential_attr = ["id", "kind", "name"]
 
     @abstractmethod
     def save(self, update: bool = False) -> dict:
@@ -76,7 +66,13 @@ class Entity(ModelObj, metaclass=ABCMeta):
         return {k: v for k, v in dict_.items() if k in self._essential_attr}
 
     @classmethod
-    def from_dict(cls, entity: str, obj: dict) -> "Entity":
+    def from_dict(
+        cls,
+        entity: str,
+        obj: dict,
+        ignore_validation: bool = False,
+        module_kind: str | None = None,
+    ) -> "Entity":
         """
         Create object instance from a dictionary.
 
@@ -86,44 +82,35 @@ class Entity(ModelObj, metaclass=ABCMeta):
             Entity type.
         obj : dict
             Dictionary to create object from.
+        ignore_validation : bool
+            Flag to indicate if arguments validation must be ignored.
+        module_kind : str
+            The module to import (for some objects).
 
         Returns
         -------
-        Workflow
+        Self
             Self instance.
         """
-        parsed_dict = cls._parse_dict(entity, obj)
+        parsed_dict = cls._parse_dict(
+            entity,
+            obj,
+            ignore_validation=ignore_validation,
+            module_kind=module_kind,
+        )
         return cls(**parsed_dict)
 
     @staticmethod
-    def _parse_dict(entity: str, obj: dict) -> dict:
+    @abstractmethod
+    def _parse_dict(
+        entity: str,
+        obj: dict,
+        ignore_validation: bool = False,
+        module_kind: str | None = None,
+    ) -> dict:
         """
         Get dictionary and parse it to a valid entity dictionary.
-
-        Parameters
-        ----------
-        entity : str
-            Entity type.
-        obj : dict
-            Dictionary to parse.
-
-        Returns
-        -------
-        dict
-            A dictionary containing the attributes of the entity instance.
         """
-        uuid = build_uuid(obj.get("id"))
-        kind = obj.get("kind")
-        metadata = build_metadata(entity, **obj.get("metadata"))
-        spec = build_spec(entity, kind, ignore_validation=True, **obj.get("spec"))
-        status = build_status(entity, **obj.get("status"))
-        return {
-            "uuid": uuid,
-            "kind": kind,
-            "metadata": metadata,
-            "spec": spec,
-            "status": status,
-        }
 
     def __repr__(self) -> str:
         """

@@ -34,6 +34,8 @@ class Function(Entity):
 
     def __init__(
         self,
+        project: str,
+        name: str,
         uuid: str,
         kind: str,
         metadata: FunctionMetadata,
@@ -45,6 +47,10 @@ class Function(Entity):
 
         Parameters
         ----------
+        project : str
+            Name of the project.
+        name : str
+            Name of the object.
         uuid : str
             UUID.
         kind : str
@@ -57,6 +63,8 @@ class Function(Entity):
             Status of the object.
         """
         super().__init__()
+        self.project = project
+        self.name = name
         self.id = uuid
         self.kind = kind
         self.metadata = metadata
@@ -65,11 +73,7 @@ class Function(Entity):
 
         # Private attributes
         self._tasks: dict[str, Task] = {}
-
-        self.project = self.metadata.project
-        self.name = self.metadata.name
-        self.embedded = self.metadata.embedded
-        self._obj_attr.extend(["project", "name", "embedded"])
+        self._obj_attr.extend(["project", "name"])
 
     #############################
     #  Save / Export
@@ -92,11 +96,11 @@ class Function(Entity):
         obj = self.to_dict(include_all_non_private=True)
 
         if not update:
-            api = api_ctx_create(self.metadata.project, FUNC)
+            api = api_ctx_create(self.project, FUNC)
             return self._context().create_object(obj, api)
 
         self.metadata.updated = obj["metadata"]["updated"] = get_timestamp()
-        api = api_ctx_update(self.metadata.project, FUNC, self.metadata.name, self.id)
+        api = api_ctx_update(self.project, FUNC, self.name, self.id)
         return self._context().update_object(obj, api)
 
     def export(self, filename: str | None = None) -> None:
@@ -113,7 +117,7 @@ class Function(Entity):
         None
         """
         obj = self.to_dict()
-        filename = filename if filename is not None else f"function_{self.metadata.project}_{self.metadata.name}.yaml"
+        filename = filename if filename is not None else f"function_{self.project}_{self.name}.yaml"
         write_yaml(filename, obj)
 
     #############################
@@ -129,7 +133,7 @@ class Function(Entity):
         Context
             Context.
         """
-        return get_context(self.metadata.project)
+        return get_context(self.project)
 
     #############################
     #  Function Methods
@@ -175,12 +179,15 @@ class Function(Entity):
         # Run function from task
         run = task.run(inputs, outputs, parameters, local_execution)
 
-        # If execution is done by backend, return run
+        # If execution is done by backend,
+        # save run and return the object
         if not local_execution:
+            run.save()
             return run
 
-        # If local execution, build run and run it
+        # If local execution, build, save and launch run
         run.build()
+        run.save()
         with ThreadPoolExecutor(max_workers=1) as executor:
             result = executor.submit(run.run)
         return result.result()
@@ -194,7 +201,7 @@ class Function(Entity):
         str
             Function string.
         """
-        return f"{self.kind}://{self.metadata.project}/{self.metadata.name}:{self.id}"
+        return f"{self.kind}://{self.project}/{self.name}:{self.id}"
 
     #############################
     #  CRUD Methods for Tasks
@@ -214,7 +221,7 @@ class Function(Entity):
         Task
             New task.
         """
-        kwargs["project"] = self.metadata.project
+        kwargs["project"] = self.project
         kwargs["function"] = self._get_function_string()
         task = new_task(**kwargs)
         self._tasks[kwargs["kind"]] = task
@@ -243,7 +250,7 @@ class Function(Entity):
         self._raise_if_not_exists(kind)
 
         # Update kwargs
-        kwargs["project"] = self.metadata.project
+        kwargs["project"] = self.project
         kwargs["kind"] = kind
         kwargs["function"] = self._get_function_string()
         kwargs["uuid"] = self._tasks[kind].id
@@ -294,7 +301,7 @@ class Function(Entity):
             If task is not created.
         """
         self._raise_if_not_exists(kind)
-        delete_task(self.metadata.project, self._tasks[kind].name)
+        delete_task(self.project, self._tasks[kind].name)
         self._tasks[kind] = None
 
     def _raise_if_not_exists(self, kind: str) -> None:
@@ -319,11 +326,16 @@ class Function(Entity):
             raise EntityError("Task does not exist.")
 
     #############################
-    #  Overridden Methods
+    #  Static interface methods
     #############################
 
     @staticmethod
-    def _parse_dict(entity: str, obj: dict) -> dict:
+    def _parse_dict(
+        entity: str,
+        obj: dict,
+        ignore_validation: bool = False,
+        module_kind: str | None = None,
+    ) -> dict:
         """
         Get dictionary and parse it to a valid entity dictionary.
 
@@ -339,12 +351,16 @@ class Function(Entity):
         dict
             A dictionary containing the attributes of the entity instance.
         """
+        project = obj.get("project")
+        name = obj.get("name")
+        kind = obj.get("kind")
         uuid = build_uuid(obj.get("id"))
-        kind = obj.get("kind", "")
         metadata = build_metadata(entity, **obj.get("metadata"))
         spec = build_spec(entity, kind, ignore_validation=True, module_kind=kind, **obj.get("spec"))
         status = build_status(entity, **obj.get("status"))
         return {
+            "project": project,
+            "name": name,
             "uuid": uuid,
             "kind": kind,
             "metadata": metadata,
@@ -408,6 +424,8 @@ def function_from_parameters(
     )
     status = build_status(FUNC)
     return Function(
+        project=project,
+        name=name,
         uuid=uuid,
         kind=kind,
         metadata=metadata,

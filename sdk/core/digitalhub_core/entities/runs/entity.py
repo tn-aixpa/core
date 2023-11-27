@@ -44,6 +44,7 @@ class Run(Entity):
 
     def __init__(
         self,
+        project: str,
         uuid: str,
         kind: str,
         metadata: RunMetadata,
@@ -55,6 +56,8 @@ class Run(Entity):
 
         Parameters
         ----------
+        project : str
+            Name of the project.
         uuid : str
             UUID.
         kind : str
@@ -67,13 +70,13 @@ class Run(Entity):
             Status of the object.
         """
         super().__init__()
+        self.project = project
         self.id = uuid
         self.kind = kind
         self.metadata = metadata
         self.spec = spec
         self.status = status
 
-        self.project = self.metadata.project
         self._obj_attr.extend(["project"])
 
     #############################
@@ -118,9 +121,7 @@ class Run(Entity):
         None
         """
         obj = self.to_dict()
-        filename = (
-            filename if filename is not None else f"run_{self.metadata.project}_{self.spec.task_id}_{self.id}.yaml"
-        )
+        filename = filename if filename is not None else f"run_{self.project}_{self.spec.task_id}_{self.id}.yaml"
         write_yaml(filename, obj)
 
     #############################
@@ -136,7 +137,7 @@ class Run(Entity):
         Context
             Context.
         """
-        return get_context(self.metadata.project)
+        return get_context(self.project)
 
     #############################
     #  Run Methods
@@ -194,7 +195,7 @@ class Run(Entity):
         """
         api = api_base_read(RUNS, self.id)
         obj = self._context().read_object(api)
-        refreshed_run = self.from_dict(RUNS, obj)
+        refreshed_run = self.from_dict(RUNS, obj, ignore_validation=True)
         self.kind = refreshed_run.kind
         self.metadata = refreshed_run.metadata
         self.spec = refreshed_run.spec
@@ -341,7 +342,7 @@ class Run(Entity):
             Function from backend.
         """
         parsed = self._parse_task_string()
-        api = api_ctx_read(self.metadata.project, FUNC, parsed.function_name, parsed.function_id)
+        api = api_ctx_read(self.project, FUNC, parsed.function_name, parsed.function_id)
         return self._context().read_object(api)
 
     def _get_task(self) -> dict:
@@ -372,6 +373,53 @@ class Run(Entity):
         """
         fnc_kind = self._parse_task_string().function_kind
         return build_runtime(fnc_kind)
+
+    #############################
+    #  Static interface methods
+    #############################
+
+    @staticmethod
+    def _parse_dict(
+        entity: str,
+        obj: dict,
+        ignore_validation: bool = False,
+        module_kind: str | None = None,
+    ) -> dict:
+        """
+        Get dictionary and parse it to a valid entity dictionary.
+
+        Parameters
+        ----------
+        entity : str
+            Entity type.
+        obj : dict
+            Dictionary to parse.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the attributes of the entity instance.
+        """
+        project = obj.get("project")
+        kind = obj.get("kind")
+        uuid = build_uuid(obj.get("id"))
+        metadata = build_metadata(entity, **obj.get("metadata"))
+        spec = build_spec(
+            entity,
+            kind,
+            ignore_validation=ignore_validation,
+            module_kind=module_kind,
+            **obj.get("spec"),
+        )
+        status = build_status(entity, **obj.get("status"))
+        return {
+            "project": project,
+            "uuid": uuid,
+            "kind": kind,
+            "metadata": metadata,
+            "spec": spec,
+            "status": status,
+        }
 
 
 def run_from_parameters(
@@ -438,6 +486,7 @@ def run_from_parameters(
     )
     status = build_status(RUNS)
     return Run(
+        project=project,
         uuid=uuid,
         kind=kind,
         metadata=metadata,

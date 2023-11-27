@@ -13,8 +13,8 @@ class TaskMetadata(Metadata):
 
     def __init__(
         self,
-        project: str,
-        name: str,
+        project: str | None = None,
+        name: str | None = None,
         created: str | None = None,
         updated: str | None = None,
     ) -> None:
@@ -23,6 +23,8 @@ class TaskMetadata(Metadata):
 
         Parameters
         ----------
+        project : str
+            Project name.
         name : str
             Name (UUID) of the object.
 
@@ -30,5 +32,6 @@ class TaskMetadata(Metadata):
         --------
         Metadata.__init__
         """
-        super().__init__(project, created, updated)
+        super().__init__(created, updated)
+        self.project = project
         self.name = name
