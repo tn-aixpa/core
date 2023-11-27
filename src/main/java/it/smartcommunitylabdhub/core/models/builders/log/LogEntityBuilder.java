@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.log;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
-import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
+import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +15,7 @@ public class LogEntityBuilder {
      *
      * @return
      */
-    public Log build(LogDTO logDTO) {
+    public LogEntity build(Log logDTO) {
         return EntityFactory.combine(
                 ConversionUtils.convert(logDTO, "log"), logDTO,
                 builder -> builder
@@ -35,7 +35,7 @@ public class LogEntityBuilder {
      * @param log
      * @return
      */
-    public Log update(Log log, LogDTO logDTO) {
+    public LogEntity update(LogEntity log, Log logDTO) {
         return EntityFactory.combine(
                 log, logDTO, builder -> builder
                         .with(f -> f.setRun(logDTO.getRun()))

@@ -18,7 +18,7 @@ import it.smartcommunitylabdhub.core.components.workflows.factory.WorkflowFactor
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.StopPoller;
 import it.smartcommunitylabdhub.core.models.builders.log.LogEntityBuilder;
-import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
+import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
@@ -234,7 +234,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
 
     private void writeLog(K8sJobRunnable runnable, String log) {
-        logService.createLog(LogDTO.builder()
+        logService.createLog(Log.builder()
                 .run(runnable.getId())
                 .project(runnable.getProject())
                 .body(Map.of("content", log))

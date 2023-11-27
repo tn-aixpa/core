@@ -4,15 +4,15 @@ import it.smartcommunitylabdhub.core.annotations.common.ConverterType;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
-import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
+import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 
 @ConverterType(type = "log")
-public class LogConverter implements Converter<LogDTO, Log> {
+public class LogConverter implements Converter<Log, LogEntity> {
 
     @Override
-    public Log convert(LogDTO logDTO) throws CustomException {
-        return Log.builder()
+    public LogEntity convert(Log logDTO) throws CustomException {
+        return LogEntity.builder()
                 .id(logDTO.getId())
                 .project(logDTO.getProject())
                 .run(logDTO.getRun())
@@ -21,8 +21,8 @@ public class LogConverter implements Converter<LogDTO, Log> {
     }
 
     @Override
-    public LogDTO reverseConvert(Log log) throws CustomException {
-        return LogDTO.builder()
+    public Log reverseConvert(LogEntity log) throws CustomException {
+        return Log.builder()
                 .id(log.getId())
                 .project(log.getProject())
                 .run(log.getRun())

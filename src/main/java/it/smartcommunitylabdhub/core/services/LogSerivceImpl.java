@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.builders.log.LogDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.log.LogEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
-import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
+import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
 import it.smartcommunitylabdhub.core.repositories.LogRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import jakarta.transaction.Transactional;
@@ -33,9 +33,9 @@ public class LogSerivceImpl implements LogService {
     LogDTOBuilder logDTOBuilder;
 
     @Override
-    public List<LogDTO> getLogs(Pageable pageable) {
+    public List<Log> getLogs(Pageable pageable) {
         try {
-            Page<Log> logPage = this.logRepository.findAll(pageable);
+            Page<LogEntity> logPage = this.logRepository.findAll(pageable);
             return logPage.getContent().stream()
                     .map(log -> logDTOBuilder.build(log))
                     .collect(Collectors.toList());
@@ -49,7 +49,7 @@ public class LogSerivceImpl implements LogService {
     }
 
     @Override
-    public LogDTO getLog(String uuid) {
+    public Log getLog(String uuid) {
         return logRepository.findById(uuid)
                 .map(log -> {
                     try {
@@ -79,12 +79,12 @@ public class LogSerivceImpl implements LogService {
     }
 
     @Override
-    public LogDTO createLog(LogDTO logDTO) {
+    public Log createLog(Log logDTO) {
         if (logDTO.getId() != null && logRepository.existsById(logDTO.getId())) {
             throw new CoreException("DuplicateLogId",
                     "Cannot create the log", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Optional<Log> savedLog = Optional.ofNullable(logDTO)
+        Optional<LogEntity> savedLog = Optional.ofNullable(logDTO)
                 .map(logEntityBuilder::build)
                 .map(this.logRepository::save);
 
@@ -96,7 +96,7 @@ public class LogSerivceImpl implements LogService {
     }
 
     @Override
-    public List<LogDTO> getLogsByRunUuid(String uuid) {
+    public List<Log> getLogsByRunUuid(String uuid) {
         return logRepository.findByRun(uuid)
                 .stream()
                 .map(log -> {

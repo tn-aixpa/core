@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
+import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -22,14 +22,14 @@ public class LogController {
 
     @Operation(summary = "Get specific log", description = "Given a uuid return a specific log")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<LogDTO> getLog(
+    public ResponseEntity<Log> getLog(
             @ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
         return ResponseEntity.ok(this.logService.getLog(uuid));
     }
 
     @Operation(summary = "Log list", description = "Return the log list")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<LogDTO>> getLogs(Pageable pageable) {
+    public ResponseEntity<List<Log>> getLogs(Pageable pageable) {
         return ResponseEntity.ok(this.logService.getLogs(pageable));
     }
 

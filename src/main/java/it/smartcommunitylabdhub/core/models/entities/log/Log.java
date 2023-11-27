@@ -1,54 +1,58 @@
 package it.smartcommunitylabdhub.core.models.entities.log;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
-import it.smartcommunitylabdhub.core.models.enums.State;
-import jakarta.persistence.*;
+import it.smartcommunitylabdhub.core.models.entities.StatusFieldUtility;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Builder
-@Entity
-@Table(name = "logs")
 public class Log implements BaseEntity {
 
-    @Id
-    @Column(unique = true)
+    @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
     private String id;
 
-    @Column(nullable = false)
+    @NotNull
     private String project;
 
-    @Column(nullable = false)
+    @NotNull
     private String run;
 
-    @Lob
-    private byte[] body;
+    @Builder.Default
+    private Map<String, Object> body = new HashMap<>();
 
-    @Lob
-    private byte[] extra;
+    @Builder.Default
+    @JsonIgnore
+    private Map<String, Object> extra = new HashMap<>();
 
-    @Enumerated(EnumType.STRING)
-    private State state;
-
-    @CreationTimestamp
-    @Column(updatable = false)
     private Date created;
 
-    @UpdateTimestamp
     private Date updated;
 
-    @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            this.id = UUID.randomUUID().toString();
+    @JsonIgnore
+    private String state;
+
+    @JsonAnyGetter
+    public Map<String, Object> getExtra() {
+        return StatusFieldUtility.addStatusField(extra, state);
+    }
+
+    @JsonAnySetter
+    public void setExtra(String key, Object value) {
+        if (value != null) {
+            extra.put(key, value);
+            StatusFieldUtility.updateStateField(this);
         }
     }
 }

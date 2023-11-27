@@ -15,7 +15,7 @@ import it.smartcommunitylabdhub.core.models.accessors.enums.DataItemKind;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.DataItemFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.ArtifactUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
+import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
@@ -131,7 +131,7 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
 
                                                         // Create and store log
                                                         logService.createLog(
-                                                                LogDTO.builder().body(Map.of("content",
+                                                                Log.builder().body(Map.of("content",
                                                                                 logResponse.getBody()))
                                                                         .project(runDTO.getProject())
                                                                         .run(runDTO.getId()).build());

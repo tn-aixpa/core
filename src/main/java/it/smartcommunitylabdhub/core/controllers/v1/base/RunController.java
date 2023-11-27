@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.core.models.entities.log.LogDTO;
+import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
@@ -36,7 +36,7 @@ public class RunController {
 
     @Operation(summary = "Run log list", description = "Return the log list for a specific run")
     @GetMapping(path = "/{uuid}/log", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<LogDTO>> getRunLog(
+    public ResponseEntity<List<Log>> getRunLog(
             @ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
         return ResponseEntity.ok(this.logService.getLogsByRunUuid(uuid));
     }
