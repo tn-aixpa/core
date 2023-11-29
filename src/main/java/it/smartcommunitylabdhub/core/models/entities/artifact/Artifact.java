@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractExtractorProperties;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
-import it.smartcommunitylabdhub.core.models.entities.StatusFieldUtility;
 import it.smartcommunitylabdhub.core.models.entities.artifact.metadata.ArtifactMetadata;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -53,19 +52,19 @@ public class Artifact extends AbstractExtractorProperties implements BaseEntity 
     @Builder.Default
     private Boolean embedded = false;
 
+    @Builder.Default
     @JsonIgnore
-    private String state;
+    private Map<String, Object> status = new HashMap<>();
 
     @JsonAnyGetter
     public Map<String, Object> getExtra() {
-        return StatusFieldUtility.addStatusField(extra, state);
+        return this.extra;
     }
 
     @JsonAnySetter
     public void setExtra(String key, Object value) {
         if (value != null) {
             extra.put(key, value);
-            StatusFieldUtility.updateStateField(this);
         }
     }
 }

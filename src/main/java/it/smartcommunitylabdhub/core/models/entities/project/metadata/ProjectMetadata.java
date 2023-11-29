@@ -19,6 +19,5 @@ public class ProjectMetadata extends BaseMetadata {
 
     String description;
 
-    boolean embedded;
-
+    Boolean embedded;
 }

@@ -19,5 +19,5 @@ public class DataItemMetadata extends BaseMetadata {
 
     String description;
 
-    boolean embedded;
+    Boolean embedded;
 }

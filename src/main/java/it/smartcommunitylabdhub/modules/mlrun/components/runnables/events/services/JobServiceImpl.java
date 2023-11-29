@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.modules.mlrun.components.runnables.events.services;
 
 import it.smartcommunitylabdhub.core.components.events.services.interfaces.KindService;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.utils.TaskAccessor;
@@ -48,7 +48,7 @@ public class JobServiceImpl implements KindService<Map<String, Object>> {
 
         RunBaseSpec<?> runBaseSpec = specRegistry.createSpec(
                 runDTO.getKind(),
-                SpecEntity.RUN,
+                EntityName.RUN,
                 runDTO.getSpec()
         );
         TaskAccessor taskAccessor = TaskUtils.parseTask(runBaseSpec.getTask());

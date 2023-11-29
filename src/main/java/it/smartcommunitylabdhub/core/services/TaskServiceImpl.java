@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
@@ -82,7 +82,7 @@ public class TaskServiceImpl implements TaskService {
 
         TaskBaseSpec<?> taskSpec = specRegistry.createSpec(
                 taskDTO.getKind(),
-                SpecEntity.TASK,
+                EntityName.TASK,
                 taskDTO.getSpec());
 
         TaskAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());

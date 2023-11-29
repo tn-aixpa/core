@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.modules.mlrun.components.runnables.events.liste
 
 import it.smartcommunitylabdhub.core.components.events.messages.RunMessage;
 import it.smartcommunitylabdhub.core.components.events.services.interfaces.KindService;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -45,7 +45,7 @@ public class JobEventListener {
 
         RunBaseSpec<?> runBaseSpec = specRegistry.createSpec(
                 message.getRunDTO().getKind(),
-                SpecEntity.RUN,
+                EntityName.RUN,
                 message.getRunDTO().getSpec()
         );
 

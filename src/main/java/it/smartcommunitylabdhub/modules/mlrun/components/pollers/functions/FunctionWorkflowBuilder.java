@@ -1,14 +1,17 @@
 package it.smartcommunitylabdhub.modules.mlrun.components.pollers.functions;
 
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.workflows.factory.Workflow;
 import it.smartcommunitylabdhub.core.components.workflows.factory.WorkflowFactory;
 import it.smartcommunitylabdhub.core.components.workflows.functions.BaseWorkflowBuilder;
-import it.smartcommunitylabdhub.core.models.accessors.enums.FunctionKind;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.FunctionFieldAccessor;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.services.interfaces.FunctionService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -24,13 +27,15 @@ import java.util.stream.Collectors;
 @Component
 public class FunctionWorkflowBuilder extends BaseWorkflowBuilder {
 
+    @Autowired
+    AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
+
     @Value("${mlrun.api.function-url}")
     private String functionUrl;
-
     @Value("${mlrun.api.project-url}")
     private String projectUrl;
-
     private FunctionService functionService;
+
 
     public FunctionWorkflowBuilder(FunctionService functionService) {
         this.functionService = functionService;
@@ -66,12 +71,14 @@ public class FunctionWorkflowBuilder extends BaseWorkflowBuilder {
                             return Optional.ofNullable(
                                             response.getBody())
                                     .map(body -> {
-                                        FunctionFieldAccessor mlrunFunctionAccessor =
-                                                FunctionKind.valueOf(
-                                                                function.getKind()
-                                                                        .toUpperCase())
-                                                        .createAccessor((Map<String, Object>) body
-                                                                .get("func"));
+                                        FunctionFieldAccessor<?> mlrunFunctionAccessor =
+
+                                                accessorRegistry.createAccessor(
+                                                        function.getKind(),
+                                                        EntityName.FUNCTION,
+                                                        (Map<String, Object>) body
+                                                                .get("func")
+                                                );
 
                                         if (!mlrunFunctionAccessor
                                                 .getHash()
@@ -154,12 +161,13 @@ public class FunctionWorkflowBuilder extends BaseWorkflowBuilder {
                         Optional.ofNullable(funcResponse.getBody())
                                 .ifPresent(body -> {
                                     FunctionFieldAccessor mlrunFunctionAccessor =
-                                            FunctionKind
-                                                    .valueOf(function
-                                                            .getKind()
-                                                            .toUpperCase())
-                                                    .createAccessor((Map<String, Object>) body
-                                                            .get("func"));
+
+                                            accessorRegistry.createAccessor(
+                                                    function.getKind(),
+                                                    EntityName.FUNCTION,
+                                                    (Map<String, Object>) body
+                                                            .get("func")
+                                            );
 
                                     function.setExtra("status",
                                             mlrunFunctionAccessor

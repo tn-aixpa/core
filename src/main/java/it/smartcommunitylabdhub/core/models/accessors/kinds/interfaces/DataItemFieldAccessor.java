@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces;
 import java.util.List;
 import java.util.Map;
 
-public interface DataItemFieldAccessor extends CommonFieldAccessor {
+public interface DataItemFieldAccessor<O extends DataItemFieldAccessor<O>> extends CommonFieldAccessor<O> {
 
     @SuppressWarnings("unchecked")
     default Map<String, String> getLabels() {
@@ -32,9 +32,7 @@ public interface DataItemFieldAccessor extends CommonFieldAccessor {
     }
 
     // Status
-
     default String getState() {
         return mapHasField(getStatus(), "state") ? (String) getStatus().get("state") : null;
     }
-
 }

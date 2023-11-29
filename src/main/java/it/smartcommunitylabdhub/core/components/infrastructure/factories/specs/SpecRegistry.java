@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -30,13 +31,13 @@ public class SpecRegistry<T extends Spec> {
      * @param <S>  The generic type for the spec.
      * @return An instance of the specified spec type, or null if not found or in case of errors.
      */
-    public <S extends Spec> S createSpec(@NotNull String kind, @NotNull SpecEntity entity, Map<String, Object> data) {
+    public <S extends Spec> S createSpec(@NotNull String kind, @NotNull EntityName entity, Map<String, Object> data) {
         // Retrieve the class associated with the specified spec type.
         final String specKey = kind + "_" + entity.name().toLowerCase();
         return getSpec(data, specKey);
     }
 
-    public <S extends Spec> S createSpec(@NotNull String runtime, @NotNull String kind, @NotNull SpecEntity entity, Map<String, Object> data) {
+    public <S extends Spec> S createSpec(@NotNull String runtime, @NotNull String kind, @NotNull EntityName entity, Map<String, Object> data) {
         // Retrieve the class associated with the specified spec type.
         final String specKey = runtime + "_" + kind + "_" + entity.name().toLowerCase();
         return getSpec(data, specKey);

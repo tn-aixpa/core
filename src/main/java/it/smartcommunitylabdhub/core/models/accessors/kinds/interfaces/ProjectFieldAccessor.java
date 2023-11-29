@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces;
 
-import java.util.Date;
-
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 
-public interface ProjectFieldAccessor extends CommonFieldAccessor {
+import java.util.Date;
+
+public interface ProjectFieldAccessor<O extends ProjectFieldAccessor<O>> extends CommonFieldAccessor<O> {
 
     default String getName() {
         return mapHasField(getMetadata(), "name") ? (String) getMetadata().get("name") : null;

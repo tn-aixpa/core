@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.entities.task.specs;
 
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import lombok.Getter;
@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "job", entity = SpecEntity.TASK)
+@SpecType(kind = "job", entity = EntityName.TASK)
 public class TaskJobSpec extends TaskBaseSpec<TaskJobSpec> {
 
     List<Map<String, Object>> volumes;

@@ -45,6 +45,9 @@ public class TaskEntity implements BaseEntity {
     @Lob
     private byte[] extra;
 
+    @Lob
+    private byte[] status;
+
     @CreationTimestamp
     @Column(updatable = false)
     private Date created;

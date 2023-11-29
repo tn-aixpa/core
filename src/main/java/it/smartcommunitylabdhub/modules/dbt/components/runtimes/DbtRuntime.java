@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.core.annotations.infrastructure.RuntimeComponent
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
@@ -50,13 +50,13 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
 
             TaskTransformSpec taskTransformSpec = specRegistry.createSpec(
                     "transform",
-                    SpecEntity.TASK,
+                    EntityName.TASK,
                     taskSpec.toMap()
             );
 
             RunRunSpec runRunSpec = specRegistry.createSpec(
                     "run",
-                    SpecEntity.RUN,
+                    EntityName.RUN,
                     runSpec.toMap()
             );
 

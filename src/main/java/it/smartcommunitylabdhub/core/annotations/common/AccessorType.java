@@ -11,10 +11,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Indexed
-public @interface SpecType {
-
-    String runtime() default "";
-
+public @interface AccessorType {
     String kind();
 
     EntityName entity();

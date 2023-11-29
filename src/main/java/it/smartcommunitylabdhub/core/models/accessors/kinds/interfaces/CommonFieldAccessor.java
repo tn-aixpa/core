@@ -2,7 +2,18 @@ package it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces;
 
 import java.util.Map;
 
-public interface CommonFieldAccessor extends FieldAccessor<Object> {
+/**
+ * Define base accessor
+ */
+public interface CommonFieldAccessor<O extends CommonFieldAccessor<O>> extends Accessor<Object> {
+
+    default String getName() {
+        return (String) getField("name");
+    }
+
+    default String getProject() {
+        return (String) getField("project");
+    }
 
     default String getKind() {
         return (String) getField("kind");
@@ -21,10 +32,6 @@ public interface CommonFieldAccessor extends FieldAccessor<Object> {
     @SuppressWarnings("unchecked")
     default Map<String, Object> getStatus() {
         return (Map<String, Object>) getField("status");
-    }
-
-    default boolean getVerbose() {
-        return (boolean) getField("verbose");
     }
 
 }

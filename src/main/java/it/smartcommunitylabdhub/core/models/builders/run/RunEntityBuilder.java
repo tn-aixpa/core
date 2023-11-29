@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.run;
 
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
@@ -30,7 +30,7 @@ public class RunEntityBuilder {
      */
     public RunEntity build(Run runDTO) {
 
-        specRegistry.createSpec(runDTO.getKind(), SpecEntity.RUN, Map.of());
+        specRegistry.createSpec(runDTO.getKind(), EntityName.RUN, Map.of());
 
         // Create run Object
         RunEntity run = ConversionUtils.convert(runDTO, "run");
@@ -74,6 +74,10 @@ public class RunEntityBuilder {
                         .with(r -> r.setState(runDTO.getState() == null
                                 ? RunState.CREATED
                                 : RunState.valueOf(
-                                runDTO.getState()))));
+                                runDTO.getState())))
+                        .with(p -> p.setMetadata(
+                                ConversionUtils.convert(runDTO
+                                                .getMetadata(),
+                                        "metadata"))));
     }
 }

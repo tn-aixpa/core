@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.models.converters.types;
 
 import it.smartcommunitylabdhub.core.annotations.common.ConverterType;
-import it.smartcommunitylabdhub.core.components.fsm.enums.ArtifactState;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
@@ -18,8 +17,8 @@ public class ArtifactConverter implements Converter<Artifact, ArtifactEntity> {
                 .kind(artifactDTO.getKind())
                 .project(artifactDTO.getProject())
                 .embedded(artifactDTO.getEmbedded())
-                .state(artifactDTO.getState() == null ? ArtifactState.CREATED
-                        : ArtifactState.valueOf(artifactDTO.getState()))
+//                .state(artifactDTO.getStatus().getState() == null ? State.CREATED
+//                        : State.valueOf(artifactDTO.getStatus().getState()))
                 .build();
     }
 
@@ -31,8 +30,6 @@ public class ArtifactConverter implements Converter<Artifact, ArtifactEntity> {
                 .kind(artifact.getKind())
                 .project(artifact.getProject())
                 .embedded(artifact.getEmbedded())
-                .state(artifact.getState() == null ? ArtifactState.CREATED.name()
-                        : artifact.getState().name())
                 .created(artifact.getCreated())
                 .updated(artifact.getUpdated())
                 .build();

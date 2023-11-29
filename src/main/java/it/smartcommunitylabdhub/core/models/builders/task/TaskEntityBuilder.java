@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.task;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
@@ -30,7 +30,7 @@ public class TaskEntityBuilder {
      */
     public TaskEntity build(Task taskDTO) {
 
-        specRegistry.createSpec(taskDTO.getKind(), SpecEntity.TASK, Map.of());
+        specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, Map.of());
 
         // Retrieve the task
         TaskEntity task = ConversionUtils.convert(taskDTO, "task");
@@ -69,7 +69,7 @@ public class TaskEntityBuilder {
      */
     public TaskEntity update(TaskEntity task, Task taskDTO) {
         // Retrieve base spec
-        TaskBaseSpec spec = JacksonMapper.objectMapper
+        TaskBaseSpec<?> spec = JacksonMapper.objectMapper
                 .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
 
         return EntityFactory.combine(

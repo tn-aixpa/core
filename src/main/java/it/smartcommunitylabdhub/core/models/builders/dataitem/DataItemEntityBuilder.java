@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.dataitem;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
@@ -28,7 +28,7 @@ public class DataItemEntityBuilder {
      */
     public DataItemEntity build(DataItem dataItemDTO) {
 
-        specRegistry.createSpec(dataItemDTO.getKind(), SpecEntity.DATAITEM, Map.of());
+        specRegistry.createSpec(dataItemDTO.getKind(), EntityName.DATAITEM, Map.of());
 
         // Retrieve Spec
         DataItemBaseSpec<?> spec = JacksonMapper.objectMapper

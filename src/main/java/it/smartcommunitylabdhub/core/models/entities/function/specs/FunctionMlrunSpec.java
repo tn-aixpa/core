@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.entities.function.specs;
 
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "mlrun", entity = SpecEntity.FUNCTION)
+@SpecType(kind = "mlrun", entity = EntityName.FUNCTION)
 public class FunctionMlrunSpec extends FunctionBaseSpec<FunctionMlrunSpec> {
     private String image;
     private String tag;

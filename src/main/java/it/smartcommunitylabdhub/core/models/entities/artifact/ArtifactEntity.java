@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.entities.artifact;
 
-import it.smartcommunitylabdhub.core.components.fsm.enums.ArtifactState;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,12 +34,14 @@ public class ArtifactEntity implements BaseEntity {
     @Lob
     private byte[] metadata;
 
-
     @Lob
     private byte[] spec;
 
     @Lob
     private byte[] extra;
+
+    @Lob
+    private byte[] status;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -51,7 +53,7 @@ public class ArtifactEntity implements BaseEntity {
     private Boolean embedded;
 
     @Enumerated(EnumType.STRING)
-    private ArtifactState state;
+    private State state;
 
     @PrePersist
     public void prePersist() {

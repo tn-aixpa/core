@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.models.base.specs;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @Getter
 @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class BaseSpec<S extends Spec> implements Spec {
 
     private Map<String, Object> extraSpecs = new HashMap<>();

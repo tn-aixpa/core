@@ -20,5 +20,5 @@ public class RunMetadata extends BaseMetadata {
 
     String description;
 
-    boolean embedded;
+    Boolean embedded;
 }

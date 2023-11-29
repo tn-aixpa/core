@@ -7,7 +7,7 @@
 package it.smartcommunitylabdhub.core.components.kinds;
 
 import it.smartcommunitylabdhub.core.annotations.olders.RunBuilderComponent;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.kinds.factory.builders.KindBuilder;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
@@ -45,7 +45,7 @@ public class BuildTaskBuilder implements KindBuilder<Task, Task> {
 
         TaskBaseSpec<?> taskSpec = specRegistry.createSpec(
                 taskDTO.getKind(),
-                SpecEntity.TASK,
+                EntityName.TASK,
                 taskDTO.getSpec());
 
         return Optional.of(TaskUtils.parseTask(taskSpec.getFunction()))

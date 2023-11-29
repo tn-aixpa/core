@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.artifact;
 
-import it.smartcommunitylabdhub.core.components.fsm.enums.ArtifactState;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
@@ -29,15 +28,19 @@ public class ArtifactEntityBuilder {
      */
     public ArtifactEntity build(Artifact artifactDTO) {
 
-        specRegistry.createSpec(artifactDTO.getKind(), SpecEntity.ARTIFACT, Map.of());
+        specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
 
         // Retrieve Spec
-        ArtifactBaseSpec spec = JacksonMapper.objectMapper
+        ArtifactBaseSpec<?> spec = JacksonMapper.objectMapper
                 .convertValue(artifactDTO.getSpec(), ArtifactBaseSpec.class);
 
         return EntityFactory.combine(
                 ConversionUtils.convert(artifactDTO, "artifact"), artifactDTO,
                 builder -> builder
+                        .with(p -> p.setStatus(
+                                ConversionUtils.convert(artifactDTO
+                                                .getStatus(),
+                                        "cbor")))
                         .with(p -> p.setMetadata(
                                 ConversionUtils.convert(artifactDTO
                                                 .getMetadata(),
@@ -63,10 +66,10 @@ public class ArtifactEntityBuilder {
 
         return EntityFactory.combine(
                 artifact, artifactDTO, builder -> builder
-                        .with(a -> a.setState(artifactDTO.getState() == null
-                                ? ArtifactState.CREATED
-                                : ArtifactState.valueOf(
-                                artifactDTO.getState())))
+                        .with(a -> a.setStatus(
+                                ConversionUtils.convert(artifactDTO
+                                                .getStatus(),
+                                        "cbor")))
                         .with(a -> a.setMetadata(
                                 ConversionUtils.convert(artifactDTO
                                                 .getMetadata(),

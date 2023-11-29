@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces;
 
+import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
-
-public interface FunctionFieldAccessor extends CommonFieldAccessor {
+public interface FunctionFieldAccessor<O extends FunctionFieldAccessor<O>> extends CommonFieldAccessor<O> {
 
     // COMMENT: those below are METADATA function common fields
     // name:String, tag:String, project:String, hash:String, update:Date,

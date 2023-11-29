@@ -19,5 +19,5 @@ public class WorkflowMetadata extends BaseMetadata {
 
     String description;
 
-    boolean embedded;
+    Boolean embedded;
 }

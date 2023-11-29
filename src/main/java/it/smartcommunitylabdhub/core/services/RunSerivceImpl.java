@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.Runtime;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.kinds.factory.builders.KindBuilderFactory;
 import it.smartcommunitylabdhub.core.components.kinds.factory.publishers.KindPublisherFactory;
@@ -16,8 +16,8 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
@@ -154,7 +154,7 @@ public class RunSerivceImpl implements RunService {
         // Retrieve Run base spec
         RunBaseSpec<?> runBaseSpec = specRegistry.createSpec(
                 runDTO.getKind(),
-                SpecEntity.RUN,
+                EntityName.RUN,
                 runDTO.getSpec()
         );
 
@@ -172,7 +172,7 @@ public class RunSerivceImpl implements RunService {
                 .map(taskDTO -> {
                     TaskBaseSpec<?> taskBaseSpec = specRegistry.createSpec(
                             taskDTO.getKind(),
-                            SpecEntity.TASK,
+                            EntityName.TASK,
                             taskDTO.getSpec());
 
                     // Parse task to get accessor
@@ -211,7 +211,7 @@ public class RunSerivceImpl implements RunService {
                                             RunBaseSpec<?> runSpecBuilt = runtime.build(
                                                     specRegistry.createSpec(
                                                             functionDTO.getKind(),
-                                                            SpecEntity.FUNCTION,
+                                                            EntityName.FUNCTION,
                                                             functionDTO.getSpec()),
                                                     taskBaseSpec,
                                                     runBaseSpec,

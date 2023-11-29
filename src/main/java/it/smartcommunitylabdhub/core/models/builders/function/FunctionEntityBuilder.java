@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.function;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
@@ -30,7 +30,7 @@ public class FunctionEntityBuilder {
      */
     public FunctionEntity build(Function functionDTO) {
 
-        specRegistry.createSpec(functionDTO.getKind(), SpecEntity.FUNCTION, Map.of());
+        specRegistry.createSpec(functionDTO.getKind(), EntityName.FUNCTION, Map.of());
 
         // Retrieve Spec
         FunctionBaseSpec<?> spec = JacksonMapper.objectMapper

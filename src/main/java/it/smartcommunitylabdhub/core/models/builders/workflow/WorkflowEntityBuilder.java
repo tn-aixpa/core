@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.workflow;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
@@ -29,7 +29,7 @@ public class WorkflowEntityBuilder {
      */
     public WorkflowEntity build(Workflow workflowDTO) {
 
-        specRegistry.createSpec(workflowDTO.getKind(), SpecEntity.WORKFLOW, Map.of());
+        specRegistry.createSpec(workflowDTO.getKind(), EntityName.WORKFLOW, Map.of());
 
         // Retrieve Spec
         WorkflowBaseSpec<?> spec = JacksonMapper.objectMapper

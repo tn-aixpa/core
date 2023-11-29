@@ -6,13 +6,15 @@ import it.smartcommunitylabdhub.core.components.fsm.StateMachine;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunEvent;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
 import it.smartcommunitylabdhub.core.components.fsm.types.RunStateMachine;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.kinds.factory.workflows.KindWorkflow;
 import it.smartcommunitylabdhub.core.components.workflows.factory.Workflow;
 import it.smartcommunitylabdhub.core.components.workflows.factory.WorkflowFactory;
 import it.smartcommunitylabdhub.core.components.workflows.functions.BaseWorkflowBuilder;
 import it.smartcommunitylabdhub.core.exceptions.StopPoller;
-import it.smartcommunitylabdhub.core.models.accessors.enums.DataItemKind;
-import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.DataItemFieldAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.dataitems.DataitemDataItemFieldAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.ArtifactUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
@@ -22,6 +24,7 @@ import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 
@@ -37,6 +40,10 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
     private final LogService logService;
     private final ArtifactService artifactService;
     private final RunStateMachine runStateMachine;
+
+    @Autowired
+    AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
+
     ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${mlrun.api.run-url}")
@@ -147,15 +154,12 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
                                                         ((List<Map<String, Object>>) metadata
                                                                 .get("artifacts")).stream()
                                                                 .forEach(artifact -> {
-                                                                    DataItemFieldAccessor mlrunDataItemAccessor =
-                                                                            DataItemKind
-                                                                                    .valueOf(artifact
-                                                                                            .get("kind")
-                                                                                            .toString()
-                                                                                            .toUpperCase())
-                                                                                    .createAccessor(
-                                                                                            artifact);
-
+                                                                    DataitemDataItemFieldAccessor mlrunDataItemAccessor =
+                                                                            accessorRegistry.createAccessor(
+                                                                                    "dataitem",
+                                                                                    EntityName.ARTIFACT,
+                                                                                    artifact
+                                                                            );
                                                                     // Create artifact
                                                                     Artifact artifactDTO =
                                                                             Artifact
@@ -168,9 +172,9 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
                                                                                             .getKind())
                                                                                     .spec(mlrunDataItemAccessor
                                                                                             .getSpecs())
-                                                                                    .state(mlrunDataItemAccessor
-                                                                                            .getState()
-                                                                                            .toUpperCase())
+//                                                                                    .state(mlrunDataItemAccessor
+//                                                                                            .getState()
+//                                                                                            .toUpperCase())
                                                                                     .build();
 
                                                                     // Store artifact

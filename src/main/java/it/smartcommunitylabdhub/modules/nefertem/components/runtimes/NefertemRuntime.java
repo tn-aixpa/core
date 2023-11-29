@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.core.annotations.infrastructure.RuntimeComponent
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
@@ -76,12 +76,12 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
                         funSpec,
                         specRegistry.createSpec(
                                 "infer",
-                                SpecEntity.TASK,
+                                EntityName.TASK,
                                 taskSpec.toMap()
                         ),
                         specRegistry.createSpec(
                                 "run",
-                                SpecEntity.RUN,
+                                EntityName.RUN,
                                 runSpec.toMap()
                         ));
 
@@ -94,12 +94,12 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
                         funSpec,
                         specRegistry.createSpec(
                                 "validate",
-                                SpecEntity.TASK,
+                                EntityName.TASK,
                                 taskSpec.toMap()
                         ),
                         specRegistry.createSpec(
                                 "run",
-                                SpecEntity.RUN,
+                                EntityName.RUN,
                                 runSpec.toMap()
                         ));
 
@@ -112,12 +112,12 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
                         funSpec,
                         specRegistry.createSpec(
                                 "metric",
-                                SpecEntity.TASK,
+                                EntityName.TASK,
                                 taskSpec.toMap()
                         ),
                         specRegistry.createSpec(
                                 "run",
-                                SpecEntity.RUN,
+                                EntityName.RUN,
                                 runSpec.toMap()
                         ));
 
@@ -130,12 +130,12 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
                         funSpec,
                         specRegistry.createSpec(
                                 "profile",
-                                SpecEntity.TASK,
+                                EntityName.TASK,
                                 taskSpec.toMap()
                         ),
                         specRegistry.createSpec(
                                 "run",
-                                SpecEntity.RUN,
+                                EntityName.RUN,
                                 runSpec.toMap()
                         ));
 
@@ -173,7 +173,7 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
 
         RunRunSpec runBaseSpec = specRegistry.createSpec(
                 runDTO.getKind(),
-                SpecEntity.RUN,
+                EntityName.RUN,
                 runDTO.getSpec()
         );
         RunAccessor runAccessor = RunUtils.parseRun(runBaseSpec.getTask());

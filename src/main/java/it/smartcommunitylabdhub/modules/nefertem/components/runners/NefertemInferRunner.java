@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.modules.nefertem.components.runners;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecEntity;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
@@ -52,7 +52,7 @@ public class NefertemInferRunner implements Runner {
         // Retrieve run spec from registry
         RunRunSpec runRunSpec = specRegistry.createSpec(
                 runDTO.getKind(),
-                SpecEntity.RUN,
+                EntityName.RUN,
                 runDTO.getSpec()
         );
         // Create accessor for run
@@ -61,7 +61,7 @@ public class NefertemInferRunner implements Runner {
         // Retrieve function spec from registry
         FunctionNefertemSpec functionNefertemSpec = specRegistry.createSpec(
                 runAccessor.getRuntime(),
-                SpecEntity.FUNCTION,
+                EntityName.FUNCTION,
                 runDTO.getSpec()
         );
 
