@@ -26,7 +26,7 @@ public class ProjectControllerV2Test {
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
 
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<String> myVersioned2Json() {
+    public ResponseEntity<Map<String, Object>> myVersioned2Json() {
 
         DataitemDataItemFieldAccessor a = accessorRegistry.createAccessor(
                 "dataitem",
@@ -40,7 +40,7 @@ public class ProjectControllerV2Test {
                 EntityName.ARTIFACT,
                 Map.of("name", "Ciccio", "project", "Franco")
         );
-        return ResponseEntity.ok("hello version 2");
+        return ResponseEntity.ok(b.fields());
     }
 
 }

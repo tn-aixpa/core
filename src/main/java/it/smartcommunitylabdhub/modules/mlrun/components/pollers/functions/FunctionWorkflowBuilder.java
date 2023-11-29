@@ -113,7 +113,6 @@ public class FunctionWorkflowBuilder extends BaseWorkflowBuilder {
         };
 
         // COMMENT: For each function on list update or create a new function in mlrun.
-        @SuppressWarnings("unchecked")
         java.util.function.Function<List<Function>, List<Function>> storeFunctions = functions -> {
 
             HttpHeaders headers = new HttpHeaders();
@@ -160,8 +159,7 @@ public class FunctionWorkflowBuilder extends BaseWorkflowBuilder {
 
                         Optional.ofNullable(funcResponse.getBody())
                                 .ifPresent(body -> {
-                                    FunctionFieldAccessor mlrunFunctionAccessor =
-
+                                    FunctionFieldAccessor<?> mlrunFunctionAccessor =
                                             accessorRegistry.createAccessor(
                                                     function.getKind(),
                                                     EntityName.FUNCTION,
