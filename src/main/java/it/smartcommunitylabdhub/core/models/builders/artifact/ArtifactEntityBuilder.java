@@ -1,24 +1,38 @@
 package it.smartcommunitylabdhub.core.models.builders.artifact;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ArtifactFieldAccessor;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.artifact.specs.ArtifactBaseSpec;
+import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+/**
+ * INFORMATION:
+ * <p>
+ * Spec could be taken directly from registry
+ * <p>
+ *
+ * @Autowired SpecRegistry<? extends Spec> specRegistry;
+ * <p>
+ * specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
+ */
 @Component
 public class ArtifactEntityBuilder {
 
+
     @Autowired
-    SpecRegistry<? extends Spec> specRegistry;
+    AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
 
     /**
      * Build a artifact from a artifactDTO and store extra values as a cbor
@@ -28,7 +42,13 @@ public class ArtifactEntityBuilder {
      */
     public ArtifactEntity build(Artifact artifactDTO) {
 
-        specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
+        ArtifactFieldAccessor<?> artifactFieldAccessor =
+                accessorRegistry.createAccessor(
+                        "artifact",
+                        EntityName.ARTIFACT,
+                        JacksonMapper.objectMapper.convertValue(artifactDTO,
+                                JacksonMapper.typeRef)
+                );
 
         // Retrieve Spec
         ArtifactBaseSpec<?> spec = JacksonMapper.objectMapper
@@ -37,10 +57,26 @@ public class ArtifactEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(artifactDTO, "artifact"), artifactDTO,
                 builder -> builder
-                        .with(p -> p.setStatus(
-                                ConversionUtils.convert(artifactDTO
-                                                .getStatus(),
-                                        "cbor")))
+                        .with(p -> p.setState(
+                                State.valueOf(artifactFieldAccessor.getState())))
+                        .withIfElse(artifactFieldAccessor.getState().equals(State.NONE.name()),
+                                (dto, condition) -> {
+                                    if (condition) {
+                                        dto.setStatus(ConversionUtils.convert(
+                                                MapUtils.mergeMultipleMaps(
+                                                        artifactFieldAccessor.getStatus(),
+                                                        Map.of("state", State.CREATED.name())
+                                                ), "cbor")
+                                        );
+                                    } else {
+                                        dto.setStatus(
+                                                ConversionUtils.convert(
+                                                        artifactFieldAccessor.getStatus(),
+                                                        "cbor")
+                                        );
+                                    }
+                                }
+                        )
                         .with(p -> p.setMetadata(
                                 ConversionUtils.convert(artifactDTO
                                                 .getMetadata(),
@@ -64,12 +100,37 @@ public class ArtifactEntityBuilder {
      */
     public ArtifactEntity update(ArtifactEntity artifact, Artifact artifactDTO) {
 
+        ArtifactFieldAccessor<?> artifactFieldAccessor =
+                accessorRegistry.createAccessor(
+                        "artifact",
+                        EntityName.ARTIFACT,
+                        JacksonMapper.objectMapper.convertValue(artifactDTO,
+                                JacksonMapper.typeRef));
+
         return EntityFactory.combine(
                 artifact, artifactDTO, builder -> builder
-                        .with(a -> a.setStatus(
-                                ConversionUtils.convert(artifactDTO
-                                                .getStatus(),
-                                        "cbor")))
+                        .with(a -> a.setState(
+                                State.valueOf(artifactFieldAccessor.getState())))
+
+
+                        .withIfElse(artifactFieldAccessor.getState().equals(State.NONE.name()),
+                                (dto, condition) -> {
+                                    if (condition) {
+                                        dto.setStatus(ConversionUtils.convert(
+                                                MapUtils.mergeMultipleMaps(
+                                                        artifactFieldAccessor.getStatus(),
+                                                        Map.of("state", State.CREATED.name())
+                                                ), "cbor")
+                                        );
+                                    } else {
+                                        dto.setStatus(
+                                                ConversionUtils.convert(
+                                                        artifactFieldAccessor.getStatus(),
+                                                        "cbor")
+                                        );
+                                    }
+                                }
+                        )
                         .with(a -> a.setMetadata(
                                 ConversionUtils.convert(artifactDTO
                                                 .getMetadata(),

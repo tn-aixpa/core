@@ -1,6 +1,9 @@
 package it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces;
 
+import it.smartcommunitylabdhub.core.models.enums.State;
+
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Define base accessor
@@ -34,4 +37,10 @@ public interface CommonFieldAccessor<O extends CommonFieldAccessor<O>> extends A
         return (Map<String, Object>) getField("status");
     }
 
+    default String getState() {
+        return (String) Optional.ofNullable(this.getStatus())
+                .map(status -> status.getOrDefault("state", State.NONE.name()))
+                .orElseGet(State.NONE::name);
+
+    }
 }

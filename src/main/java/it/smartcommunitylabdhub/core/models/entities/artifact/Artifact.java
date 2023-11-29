@@ -53,7 +53,6 @@ public class Artifact extends AbstractExtractorProperties implements BaseEntity 
     private Boolean embedded = false;
 
     @Builder.Default
-    @JsonIgnore
     private Map<String, Object> status = new HashMap<>();
 
     @JsonAnyGetter

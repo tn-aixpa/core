@@ -17,8 +17,6 @@ public class ArtifactConverter implements Converter<Artifact, ArtifactEntity> {
                 .kind(artifactDTO.getKind())
                 .project(artifactDTO.getProject())
                 .embedded(artifactDTO.getEmbedded())
-//                .state(artifactDTO.getStatus().getState() == null ? State.CREATED
-//                        : State.valueOf(artifactDTO.getStatus().getState()))
                 .build();
     }
 

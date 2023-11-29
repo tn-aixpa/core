@@ -27,14 +27,14 @@ import java.util.stream.Collectors;
 @Component
 public class FunctionWorkflowBuilder extends BaseWorkflowBuilder {
 
+    private final FunctionService functionService;
     @Autowired
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
-
+    
     @Value("${mlrun.api.function-url}")
     private String functionUrl;
     @Value("${mlrun.api.project-url}")
     private String projectUrl;
-    private FunctionService functionService;
 
 
     public FunctionWorkflowBuilder(FunctionService functionService) {
@@ -44,7 +44,6 @@ public class FunctionWorkflowBuilder extends BaseWorkflowBuilder {
     public Workflow build() {
 
         // COMMENT: call /{project}/{function} api and iterate over them..try to check
-        @SuppressWarnings("unchecked")
         java.util.function.Function<String, List<Function>> compareMlrunCoreFunctions = url -> {
 
             HttpHeaders headers = new HttpHeaders();
