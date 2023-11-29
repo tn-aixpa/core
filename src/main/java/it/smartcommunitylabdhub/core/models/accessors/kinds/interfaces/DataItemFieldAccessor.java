@@ -31,8 +31,4 @@ public interface DataItemFieldAccessor<O extends DataItemFieldAccessor<O>> exten
         return mapHasField(getMetadata(), "project") ? (String) getMetadata().get("project") : null;
     }
 
-    // Status
-    default String getState() {
-        return mapHasField(getStatus(), "state") ? (String) getStatus().get("state") : null;
-    }
 }

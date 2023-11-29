@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.metadata.DataItemMetadata;
-import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -79,12 +78,14 @@ public class DataItemDTOBuilder {
                                 .filter(embedded -> !condition
                                         || (condition && embedded))
                                 .ifPresent(embedded -> dto
-                                        .setState(dataItem
-                                                .getState() == null
-                                                ? State.CREATED.name()
-                                                : dataItem.getState()
-                                                .name()))
+                                        .setStatus(ConversionUtils.reverse(
+                                                dataItem.getStatus(), "cbor")
+                                        )
+                                )
 
-                ));
+                )
+                .with(dto -> dto.setCreated(dataItem.getCreated()))
+                .with(dto -> dto.setUpdated(dataItem.getUpdated()))
+        );
     }
 }

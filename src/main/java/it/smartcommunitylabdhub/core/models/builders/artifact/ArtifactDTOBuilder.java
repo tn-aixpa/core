@@ -1,7 +1,5 @@
 package it.smartcommunitylabdhub.core.models.builders.artifact;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
-import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
@@ -19,8 +17,6 @@ public class ArtifactDTOBuilder {
     @Autowired
     MetadataConverter<ArtifactMetadata> metadataConverter;
 
-    @Autowired
-    AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
 
     public Artifact build(ArtifactEntity artifact, Boolean embeddable) {
 
@@ -81,8 +77,8 @@ public class ArtifactDTOBuilder {
                                 .filter(embedded -> !condition
                                         || (condition && embedded))
                                 .ifPresent(embedded -> dto
-                                        .setStatus(
-                                                ConversionUtils.reverse(artifact.getStatus(), "cbor")
+                                        .setStatus(ConversionUtils.reverse(
+                                                artifact.getStatus(), "cbor")
                                         )
                                 )
 

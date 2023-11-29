@@ -57,8 +57,6 @@ public class ArtifactEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(artifactDTO, "artifact"), artifactDTO,
                 builder -> builder
-                        .with(p -> p.setState(
-                                State.valueOf(artifactFieldAccessor.getState())))
                         .withIfElse(artifactFieldAccessor.getState().equals(State.NONE.name()),
                                 (dto, condition) -> {
                                     if (condition) {
@@ -68,6 +66,7 @@ public class ArtifactEntityBuilder {
                                                         Map.of("state", State.CREATED.name())
                                                 ), "cbor")
                                         );
+                                        dto.setState(State.CREATED);
                                     } else {
                                         dto.setStatus(
                                                 ConversionUtils.convert(
@@ -109,10 +108,6 @@ public class ArtifactEntityBuilder {
 
         return EntityFactory.combine(
                 artifact, artifactDTO, builder -> builder
-                        .with(a -> a.setState(
-                                State.valueOf(artifactFieldAccessor.getState())))
-
-
                         .withIfElse(artifactFieldAccessor.getState().equals(State.NONE.name()),
                                 (dto, condition) -> {
                                     if (condition) {
@@ -122,6 +117,7 @@ public class ArtifactEntityBuilder {
                                                         Map.of("state", State.CREATED.name())
                                                 ), "cbor")
                                         );
+                                        dto.setState(State.CREATED);
                                     } else {
                                         dto.setStatus(
                                                 ConversionUtils.convert(

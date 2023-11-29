@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.enums.State;
 
 @ConverterType(type = "dataitem")
 public class DataItemConverter implements Converter<DataItem, DataItemEntity> {
@@ -18,8 +17,6 @@ public class DataItemConverter implements Converter<DataItem, DataItemEntity> {
                 .kind(dataItemDTO.getKind())
                 .project(dataItemDTO.getProject())
                 .embedded(dataItemDTO.getEmbedded())
-                .state(dataItemDTO.getState() == null ? State.CREATED
-                        : State.valueOf(dataItemDTO.getState()))
                 .build();
     }
 
@@ -31,8 +28,6 @@ public class DataItemConverter implements Converter<DataItem, DataItemEntity> {
                 .kind(dataItem.getKind())
                 .project(dataItem.getProject())
                 .embedded(dataItem.getEmbedded())
-                .state(dataItem.getState() == null ? State.CREATED.name()
-                        : dataItem.getState().name())
                 .created(dataItem.getCreated())
                 .updated(dataItem.getUpdated())
                 .build();
