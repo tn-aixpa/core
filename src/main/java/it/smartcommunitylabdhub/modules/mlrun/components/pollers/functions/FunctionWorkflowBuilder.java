@@ -30,7 +30,7 @@ public class FunctionWorkflowBuilder extends BaseWorkflowBuilder {
     private final FunctionService functionService;
     @Autowired
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
-    
+
     @Value("${mlrun.api.function-url}")
     private String functionUrl;
     @Value("${mlrun.api.project-url}")

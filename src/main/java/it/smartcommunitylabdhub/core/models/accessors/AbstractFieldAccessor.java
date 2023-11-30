@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.accessors.kinds.abstracts;
+package it.smartcommunitylabdhub.core.models.accessors;
 
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.CommonFieldAccessor;
 

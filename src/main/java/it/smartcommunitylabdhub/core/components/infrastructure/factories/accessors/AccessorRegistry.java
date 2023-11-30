@@ -34,23 +34,33 @@ public class AccessorRegistry<T extends Accessor<Object>> {
     public <S extends Accessor<Object>> S createAccessor(@NotNull String kind, @NotNull EntityName entity, Map<String, Object> fields) {
         // Retrieve the class associated with the accessor type.
         final String accessorKey = kind + "_" + entity.name().toLowerCase();
-        return getAccessor(fields, accessorKey);
+        return getAccessor(fields, accessorKey, entity);
     }
 
 
     @SuppressWarnings("unchecked")
-    private <S extends Accessor<Object>> S getAccessor(Map<String, Object> fields, String accessorKey) {
+    private <S extends Accessor<Object>> S getAccessor(Map<String, Object> fields, String accessorKey, EntityName entity) {
 
         Class<? extends T> accessorClass = (Class<? extends T>) accessorTypes.get(accessorKey);
 
         if (accessorClass == null) {
-            // Fallback accessor None if no class accessor is found, avoid crash.
-            //accessorClass = (Class<? extends T>) accessorTypes.get("none_none");
-            throw new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Accessor not found: tried to extract accessor for <" + accessorKey + "> key",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            final String defaultAccessorKey = entity.name().toLowerCase() + "_" + entity.name().toLowerCase();
+
+            log.warn("Accessor not found: tried to extract accessor for <" + accessorKey + "> key." +
+                    " Get default accessor instead " + "<" + defaultAccessorKey + ">");
+
+            // Fallback accessor Default if no class accessor is found, avoid crash.
+            // Field accessor can be useful but not essential
+            accessorClass = (Class<? extends T>) accessorTypes.get(defaultAccessorKey);
+
+            if (accessorClass == null) {
+                throw new CoreException(
+                        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                        "Accessor not found: tried to extract accessor for <" + accessorKey + "> key" +
+                                "Tried to get default accessor but failed" + "<" + defaultAccessorKey + ">",
+                        HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
         }
 
         try {
