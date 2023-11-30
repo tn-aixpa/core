@@ -25,17 +25,12 @@ public class DataItemDTOBuilder {
                 .with(dto -> dto.setKind(dataItem.getKind()))
                 .with(dto -> dto.setProject(dataItem.getProject()))
                 .with(dto -> dto.setName(dataItem.getName()))
-
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(dataItem.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto.setMetadata(Optional
-                                .ofNullable(metadataConverter
-                                        .reverseByClass(dataItem
-                                                        .getMetadata(),
-                                                DataItemMetadata.class))
-                                .orElseGet(DataItemMetadata::new))))
+                .with(dto -> dto.setMetadata(Optional
+                        .ofNullable(metadataConverter
+                                .reverseByClass(dataItem
+                                                .getMetadata(),
+                                        DataItemMetadata.class))
+                        .orElseGet(DataItemMetadata::new)))
 
                 .withIfElse(embeddable, (dto, condition) -> Optional
                         .ofNullable(dataItem.getEmbedded())

@@ -21,7 +21,7 @@ public class RequestLoggingFilter implements Filter {
 
     private void logRequestBody(WrappedRequest request) {
         // Check if the request method is POST or PUT (or any other method you are interested in)
-        if (request.getMethod().equalsIgnoreCase("POST") || request.getMethod().equalsIgnoreCase("PUT")) {
+        if (request.getMethod().equalsIgnoreCase("GET") || request.getMethod().equalsIgnoreCase("POST") || request.getMethod().equalsIgnoreCase("PUT")) {
             try (BufferedReader reader = request.getReader()) {
                 String requestBody = reader.lines().collect(Collectors.joining());
                 System.out.println("Request Body: " + requestBody);

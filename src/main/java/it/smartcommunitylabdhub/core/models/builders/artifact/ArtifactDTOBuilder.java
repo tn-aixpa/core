@@ -25,16 +25,12 @@ public class ArtifactDTOBuilder {
                 .with(dto -> dto.setKind(artifact.getKind()))
                 .with(dto -> dto.setProject(artifact.getProject()))
                 .with(dto -> dto.setName(artifact.getName()))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(artifact.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto.setMetadata(Optional
-                                .ofNullable(metadataConverter
-                                        .reverseByClass(artifact
-                                                        .getMetadata(),
-                                                ArtifactMetadata.class))
-                                .orElseGet(ArtifactMetadata::new))))
+                .with(dto -> dto.setMetadata(Optional
+                        .ofNullable(metadataConverter
+                                .reverseByClass(artifact
+                                                .getMetadata(),
+                                        ArtifactMetadata.class))
+                        .orElseGet(ArtifactMetadata::new)))
                 .withIfElse(embeddable, (dto, condition) -> Optional
                         .ofNullable(artifact.getEmbedded())
                         .filter(embedded -> !condition

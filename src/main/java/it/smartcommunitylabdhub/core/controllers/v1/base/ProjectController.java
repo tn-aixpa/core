@@ -8,7 +8,9 @@ import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectService;
+import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +25,7 @@ import java.util.List;
 @RequestMapping("/projects")
 @ApiVersion("v1")
 @Validated
+@Slf4j
 public class ProjectController {
 
     @Autowired
@@ -41,10 +44,16 @@ public class ProjectController {
         return ResponseEntity.ok(this.projectService.createProject(projectDTO));
     }
 
-    @Operation(summary = "Get an project by uuid", description = "Return an project")
+    @Operation(summary = "Get an project by name", description = "Return an project")
     @GetMapping(path = "/{name}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Project> getProject(
             @ValidateField @PathVariable(name = "name", required = true) String name) {
+        try {
+            log.warn(JacksonMapper.objectMapper.writeValueAsString(this.projectService.getProject(name)));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return ResponseEntity.ok(this.projectService.getProject(name));
     }
 

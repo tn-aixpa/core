@@ -27,16 +27,12 @@ public class FunctionDTOBuilder {
                 .with(dto -> dto.setProject(function.getProject()))
                 .with(dto -> dto.setName(function.getName()))
 
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(function.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto.setMetadata(Optional
-                                .ofNullable(metadataConverter
-                                        .reverseByClass(function
-                                                        .getMetadata(),
-                                                FunctionMetadata.class))
-                                .orElseGet(FunctionMetadata::new))))
+                .with(dto -> dto.setMetadata(Optional
+                        .ofNullable(metadataConverter
+                                .reverseByClass(function
+                                                .getMetadata(),
+                                        FunctionMetadata.class))
+                        .orElseGet(FunctionMetadata::new)))
 
 
                 .withIfElse(embeddable, (dto, condition) -> Optional

@@ -25,17 +25,12 @@ public class WorkflowDTOBuilder {
                 .with(dto -> dto.setKind(workflow.getKind()))
                 .with(dto -> dto.setProject(workflow.getProject()))
                 .with(dto -> dto.setName(workflow.getName()))
-
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(workflow.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto.setMetadata(Optional
-                                .ofNullable(metadataConverter
-                                        .reverseByClass(workflow
-                                                        .getMetadata(),
-                                                WorkflowMetadata.class))
-                                .orElseGet(WorkflowMetadata::new))))
+                .with(dto -> dto.setMetadata(Optional
+                        .ofNullable(metadataConverter
+                                .reverseByClass(workflow
+                                                .getMetadata(),
+                                        WorkflowMetadata.class))
+                        .orElseGet(WorkflowMetadata::new)))
 
                 .withIfElse(embeddable, (dto, condition) -> Optional
                         .ofNullable(workflow.getEmbedded())
