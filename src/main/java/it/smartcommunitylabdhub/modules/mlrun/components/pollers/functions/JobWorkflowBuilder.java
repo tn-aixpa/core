@@ -15,6 +15,7 @@ import it.smartcommunitylabdhub.core.components.workflows.functions.BaseWorkflow
 import it.smartcommunitylabdhub.core.exceptions.StopPoller;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.dataitems.DataitemDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.RunFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.ArtifactUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
@@ -22,6 +23,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
+import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +114,7 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
                                                 () -> RunState.ERROR));
 
                         // Update run state
-                        runDTO.setState(stateMachine.getCurrentState().name());
+                        runDTO.getStatus().put("state", stateMachine.getCurrentState().name());
 
                         // Store change
                         this.runService.save(runDTO);
@@ -227,9 +229,19 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
 
         };
 
+        // Retrieve Field accessor
+        RunFieldAccessor<?> runFieldAccessor =
+                accessorRegistry.createAccessor(
+                        runDTO.getKind(),
+                        EntityName.RUN,
+                        JacksonMapper.objectMapper.convertValue(
+                                runDTO,
+                                JacksonMapper.typeRef));
+
+
         // Init run state machine considering current state and context.
         StateMachine<RunState, RunEvent, Map<String, Object>> fsm = runStateMachine
-                .create(RunState.valueOf(runDTO.getState()), Map.of("runId", runDTO.getId()));
+                .create(RunState.valueOf(runFieldAccessor.getState()), Map.of("runId", runDTO.getId()));
         fsm.goToState(RunState.READY);
 
         // Define workflow steps

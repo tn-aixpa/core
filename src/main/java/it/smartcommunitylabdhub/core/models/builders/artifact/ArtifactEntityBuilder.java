@@ -45,7 +45,8 @@ public class ArtifactEntityBuilder {
                 accessorRegistry.createAccessor(
                         artifactDTO.getKind(),
                         EntityName.ARTIFACT,
-                        JacksonMapper.objectMapper.convertValue(artifactDTO,
+                        JacksonMapper.objectMapper.convertValue(
+                                artifactDTO,
                                 JacksonMapper.typeRef)
                 );
 

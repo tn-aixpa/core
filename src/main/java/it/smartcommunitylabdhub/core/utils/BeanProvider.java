@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.core.utils;
 
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
@@ -32,9 +34,16 @@ public class BeanProvider implements ApplicationContextAware {
     }
 
 
+    @SuppressWarnings("unchecked")
     public static <T, R extends Spec> Optional<SpecRegistry<R>> getSpecRegistryBean(Class<T> type) {
-        return Optional.ofNullable(applicationContext.getBean(type))
+        return Optional.of(applicationContext.getBean(type))
                 .map(bean -> (SpecRegistry<R>) bean);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, R extends Accessor<Object>> Optional<AccessorRegistry<R>> getAccessorRegistryBean(Class<T> type) {
+        return Optional.of(applicationContext.getBean(type))
+                .map(bean -> (AccessorRegistry<R>) bean);
     }
 
 

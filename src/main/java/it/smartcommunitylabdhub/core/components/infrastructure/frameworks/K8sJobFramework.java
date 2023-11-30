@@ -190,7 +190,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                     // Update state machine and update runDTO
                     fMachine.goToState(RunState.COMPLETED);
                     Run runDTO = runService.getRun(runnable.getId());
-                    runDTO.setState(fsm.getCurrentState().name());
+                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
                     runService.updateRun(runDTO, runDTO.getId());
 
                     // Log pod status

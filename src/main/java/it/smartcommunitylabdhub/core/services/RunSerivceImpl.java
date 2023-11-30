@@ -222,7 +222,7 @@ public class RunSerivceImpl implements RunService {
                                             runDTO.setSpec(runSpecBuilt.toMap());
 
                                             // Update run state to BUILT
-                                            runDTO.setState(RunState.BUILT.toString());
+                                            runDTO.getStatus().put("state", RunState.BUILT.toString());
 
                                             // Save Run
                                             RunEntity run = runRepository.saveAndFlush(

@@ -1,16 +1,20 @@
 package it.smartcommunitylabdhub.modules.nefertem.components.runners;
 
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.utils.BeanProvider;
+import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.FunctionNefertemSpec;
 
 import java.util.List;
@@ -49,13 +53,28 @@ public class NefertemMetricRunner implements Runner {
                 BeanProvider.getSpecRegistryBean(SpecRegistry.class)
                         .orElseThrow(() -> new RuntimeException("SpecRegistry not found"));
 
-
         // Retrieve run spec from registry
         RunRunSpec runRunSpec = specRegistry.createSpec(
                 runDTO.getKind(),
                 EntityName.RUN,
                 runDTO.getSpec()
         );
+
+        // Retrieve bean accessor field
+        AccessorRegistry<? extends Accessor<Object>> accessorRegistry =
+                BeanProvider.getAccessorRegistryBean(AccessorRegistry.class)
+                        .orElseThrow(() -> new RuntimeException("AccessorRegistry not found"));
+
+
+        // Retrieve accessor fields
+        RunDefaultFieldAccessor runFieldAccessor =
+                accessorRegistry.createAccessor(
+                        runDTO.getKind(),
+                        EntityName.RUN,
+                        JacksonMapper.objectMapper.convertValue(
+                                runDTO,
+                                JacksonMapper.typeRef));
+
         // Create accessor for run
         RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
 
@@ -81,7 +100,7 @@ public class NefertemMetricRunner implements Runner {
                 .envs(Map.of(
                         "PROJECT_NAME", runDTO.getProject(),
                         "RUN_ID", runDTO.getId()))
-                .state(runDTO.getState())
+                .state(runFieldAccessor.getState())
                 .build();
 
         k8sJobRunnable.setId(runDTO.getId());
