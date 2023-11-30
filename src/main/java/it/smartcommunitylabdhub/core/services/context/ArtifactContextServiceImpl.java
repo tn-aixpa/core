@@ -57,7 +57,7 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
                     .orElseGet(() -> {
                         // Build an artifact and store it in the database
                         ArtifactEntity newArtifact = artifactEntityBuilder.build(artifactDTO);
-                        return artifactRepository.save(newArtifact);
+                        return artifactRepository.saveAndFlush(newArtifact);
                     });
 
             // Return artifact DTO
@@ -195,18 +195,18 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
                             final ArtifactEntity artifactUpdated =
                                     artifactEntityBuilder.update(existingArtifact,
                                             artifactDTO);
-                            return Optional.of(this.artifactRepository.save(artifactUpdated));
+                            return Optional.of(this.artifactRepository.saveAndFlush(artifactUpdated));
 
                         } else {
                             // Build a new artifact and store it in the database
                             ArtifactEntity newArtifact = artifactEntityBuilder.build(artifactDTO);
-                            return Optional.of(artifactRepository.save(newArtifact));
+                            return Optional.of(artifactRepository.saveAndFlush(newArtifact));
                         }
                     })
                     .orElseGet(() -> {
                         // Build a new artifact and store it in the database
                         ArtifactEntity newArtifact = artifactEntityBuilder.build(artifactDTO);
-                        return artifactRepository.save(newArtifact);
+                        return artifactRepository.saveAndFlush(newArtifact);
                     });
 
             // Return artifact DTO

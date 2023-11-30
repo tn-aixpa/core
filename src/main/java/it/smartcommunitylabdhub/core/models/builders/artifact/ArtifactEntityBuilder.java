@@ -44,7 +44,7 @@ public class ArtifactEntityBuilder {
 
         ArtifactFieldAccessor<?> artifactFieldAccessor =
                 accessorRegistry.createAccessor(
-                        "artifact",
+                        artifactDTO.getKind(),
                         EntityName.ARTIFACT,
                         JacksonMapper.objectMapper.convertValue(artifactDTO,
                                 JacksonMapper.typeRef)
@@ -73,6 +73,7 @@ public class ArtifactEntityBuilder {
                                                         artifactFieldAccessor.getStatus(),
                                                         "cbor")
                                         );
+                                        dto.setState(State.valueOf(artifactFieldAccessor.getState()));
                                     }
                                 }
                         )
@@ -101,7 +102,7 @@ public class ArtifactEntityBuilder {
 
         ArtifactFieldAccessor<?> artifactFieldAccessor =
                 accessorRegistry.createAccessor(
-                        "artifact",
+                        artifactDTO.getKind(),
                         EntityName.ARTIFACT,
                         JacksonMapper.objectMapper.convertValue(artifactDTO,
                                 JacksonMapper.typeRef));
@@ -124,6 +125,7 @@ public class ArtifactEntityBuilder {
                                                         artifactFieldAccessor.getStatus(),
                                                         "cbor")
                                         );
+                                        dto.setState(State.valueOf(artifactFieldAccessor.getState()));
                                     }
                                 }
                         )

@@ -57,7 +57,7 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
                     .orElseGet(() -> {
                         // Build an workflow and store it in the database
                         WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
-                        return workflowRepository.save(newWorkflow);
+                        return workflowRepository.saveAndFlush(newWorkflow);
                     });
 
             // Return workflow DTO
@@ -195,18 +195,18 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
                             final WorkflowEntity workflowUpdated =
                                     workflowEntityBuilder.update(existingWorkflow,
                                             workflowDTO);
-                            return Optional.of(this.workflowRepository.save(workflowUpdated));
+                            return Optional.of(this.workflowRepository.saveAndFlush(workflowUpdated));
 
                         } else {
                             // Build a new workflow and store it in the database
                             WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
-                            return Optional.of(workflowRepository.save(newWorkflow));
+                            return Optional.of(workflowRepository.saveAndFlush(newWorkflow));
                         }
                     })
                     .orElseGet(() -> {
                         // Build a new workflow and store it in the database
                         WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
-                        return workflowRepository.save(newWorkflow);
+                        return workflowRepository.saveAndFlush(newWorkflow);
                     });
 
             // Return workflow DTO

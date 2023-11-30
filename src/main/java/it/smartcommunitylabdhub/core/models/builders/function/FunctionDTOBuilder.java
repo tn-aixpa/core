@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.metadata.FunctionMetadata;
-import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -76,18 +75,18 @@ public class FunctionDTOBuilder {
                                 .setEmbedded(function
                                         .getEmbedded())))
                 .withIfElse(embeddable, (dto, condition) ->
-
                         Optional.ofNullable(function.getEmbedded())
                                 .filter(embedded -> !condition
                                         || (condition && embedded))
                                 .ifPresent(embedded -> dto
-                                        .setState(function
-                                                .getState() == null
-                                                ? State.CREATED.name()
-                                                : function.getState()
-                                                .name()))
+                                        .setStatus(ConversionUtils.reverse(
+                                                function.getStatus(), "cbor")
+                                        )
+                                )
 
                 )
+                .with(dto -> dto.setCreated(function.getCreated()))
+                .with(dto -> dto.setUpdated(function.getUpdated()))
 
         );
     }

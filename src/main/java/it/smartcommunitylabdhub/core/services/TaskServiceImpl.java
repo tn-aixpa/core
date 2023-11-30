@@ -92,7 +92,7 @@ public class TaskServiceImpl implements TaskService {
         }
 
         Optional<TaskEntity> savedTask = Optional.ofNullable(taskDTO).map(taskEntityBuilder::build)
-                .map(this.taskRepository::save);
+                .map(this.taskRepository::saveAndFlush);
 
         return savedTask.map(task -> taskDTOBuilder.build(task)).orElseThrow(
                 () -> new CoreException("InternalServerError", "Error saving task",
@@ -117,7 +117,7 @@ public class TaskServiceImpl implements TaskService {
         try {
 
             final TaskEntity taskUpdated = taskEntityBuilder.update(task, taskDTO);
-            this.taskRepository.save(taskUpdated);
+            this.taskRepository.saveAndFlush(taskUpdated);
 
             return taskDTOBuilder.build(taskUpdated);
 

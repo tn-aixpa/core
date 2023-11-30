@@ -54,9 +54,9 @@ public class ArtifactServiceImpl implements ArtifactService {
             throw new CoreException("DuplicateArtifactId",
                     "Cannot create the artifact", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Optional<ArtifactEntity> savedArtifact = Optional.ofNullable(artifactDTO)
+        Optional<ArtifactEntity> savedArtifact = Optional.of(artifactDTO)
                 .map(artifactEntityBuilder::build)
-                .map(this.artifactRepository::save);
+                .map(this.artifactRepository::saveAndFlush);
 
         return savedArtifact.map(artifact -> artifactDTOBuilder.build(artifact, false))
                 .orElseThrow(() -> new CoreException(
@@ -98,7 +98,7 @@ public class ArtifactServiceImpl implements ArtifactService {
                     try {
                         ArtifactEntity artifactUpdated =
                                 artifactEntityBuilder.update(artifact, artifactDTO);
-                        artifactRepository.save(artifactUpdated);
+                        artifactRepository.saveAndFlush(artifactUpdated);
                         return artifactDTOBuilder.build(artifactUpdated, false);
                     } catch (CustomException e) {
                         throw new CoreException(

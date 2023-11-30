@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.Runtime;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.kinds.factory.builders.KindBuilderFactory;
 import it.smartcommunitylabdhub.core.components.kinds.factory.publishers.KindPublisherFactory;
@@ -110,7 +110,7 @@ public class RunSerivceImpl implements RunService {
     @Override
     public Run save(Run runDTO) {
 
-        return Optional.of(this.runRepository.save(runEntityBuilder.build(runDTO)))
+        return Optional.of(this.runRepository.saveAndFlush(runEntityBuilder.build(runDTO)))
                 .map(run -> runDTOBuilder.build(run))
                 .orElseThrow(() -> new CoreException(
                         "RunSaveError",
@@ -138,7 +138,7 @@ public class RunSerivceImpl implements RunService {
 
         try {
             final RunEntity runUpdated = runEntityBuilder.update(run, runDTO);
-            this.runRepository.save(runUpdated);
+            this.runRepository.saveAndFlush(runUpdated);
             return runDTOBuilder.build(runUpdated);
         } catch (CustomException e) {
             throw new CoreException(
@@ -194,7 +194,7 @@ public class RunSerivceImpl implements RunService {
 
                                         .map(value -> {
                                             // Save the run and return immediately
-                                            RunEntity run = runRepository.save(
+                                            RunEntity run = runRepository.saveAndFlush(
                                                     runEntityBuilder.build(runDTO));
                                             return runDTOBuilder.build(run);
                                         })
@@ -225,7 +225,7 @@ public class RunSerivceImpl implements RunService {
                                             runDTO.setState(RunState.BUILT.toString());
 
                                             // Save Run
-                                            RunEntity run = runRepository.save(
+                                            RunEntity run = runRepository.saveAndFlush(
                                                     runEntityBuilder.build(runDTO)
                                             );
 

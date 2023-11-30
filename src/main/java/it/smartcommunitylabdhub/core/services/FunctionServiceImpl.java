@@ -10,8 +10,8 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -88,11 +88,12 @@ public class FunctionServiceImpl implements FunctionService {
                     ErrorList.DUPLICATE_FUNCTION.getReason(),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Optional<FunctionEntity> savedFunction = Optional.ofNullable(functionDTO)
+        Optional<FunctionEntity> savedFunction = Optional.of(functionDTO)
                 .map(functionEntityBuilder::build)
-                .map(this.functionRepository::save);
+                .map(this.functionRepository::saveAndFlush);
 
-        return savedFunction.map(function -> functionDTOBuilder.build(function, false))
+        return savedFunction
+                .map(function -> functionDTOBuilder.build(function, false))
                 .orElseThrow(() -> new CoreException(
                         ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                         "Error saving function",
@@ -142,7 +143,7 @@ public class FunctionServiceImpl implements FunctionService {
         try {
 
             final FunctionEntity functionUpdated = functionEntityBuilder.update(function, functionDTO);
-            this.functionRepository.save(functionUpdated);
+            this.functionRepository.saveAndFlush(functionUpdated);
 
             return functionDTOBuilder.build(functionUpdated, false);
 

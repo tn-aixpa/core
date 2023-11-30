@@ -39,7 +39,7 @@ public class DataItemEntityBuilder {
         // Retrieve field accessor
         DataItemFieldAccessor<?> dataItemFieldAccessor =
                 accessorRegistry.createAccessor(
-                        "dataitem",
+                        dataItemDTO.getKind(),
                         EntityName.DATAITEM,
                         JacksonMapper.objectMapper.convertValue(dataItemDTO,
                                 JacksonMapper.typeRef));
@@ -67,6 +67,7 @@ public class DataItemEntityBuilder {
                                                         dataItemFieldAccessor.getStatus(),
                                                         "cbor")
                                         );
+                                        dto.setState(State.valueOf(dataItemFieldAccessor.getState()));
                                     }
                                 }
                         )
@@ -94,7 +95,7 @@ public class DataItemEntityBuilder {
         // Retrieve field accessor
         DataItemFieldAccessor<?> dataItemFieldAccessor =
                 accessorRegistry.createAccessor(
-                        "dataitem",
+                        dataItemDTO.getKind(),
                         EntityName.DATAITEM,
                         JacksonMapper.objectMapper.convertValue(dataItemDTO,
                                 JacksonMapper.typeRef));
@@ -117,6 +118,7 @@ public class DataItemEntityBuilder {
                                                         dataItemFieldAccessor.getStatus(),
                                                         "cbor")
                                         );
+                                        dto.setState(State.valueOf(dataItemFieldAccessor.getState()));
                                     }
                                 }
                         )

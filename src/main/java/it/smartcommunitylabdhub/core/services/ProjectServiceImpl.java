@@ -124,7 +124,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
         return Optional.of(projectEntityBuilder.build(projectDTO))
                 .map(project -> {
-                    projectRepository.save(project);
+                    projectRepository.saveAndFlush(project);
                     return projectDTOBuilder.build(project, List.of(), List.of(), List.of(),
                             List.of(), true);
                 })
@@ -147,7 +147,7 @@ public class ProjectServiceImpl implements ProjectService {
                                 HttpStatus.NOT_FOUND)))
                 .map(project -> {
                     final ProjectEntity projectUpdated = projectEntityBuilder.update(project, projectDTO);
-                    this.projectRepository.save(projectUpdated);
+                    this.projectRepository.saveAndFlush(projectUpdated);
 
                     List<FunctionEntity> functions =
                             functionRepository.findByProject(projectUpdated.getName());

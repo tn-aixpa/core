@@ -58,7 +58,7 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
                     .orElseGet(() -> {
                         // Build an function and store it in the database
                         FunctionEntity newFunction = functionEntityBuilder.build(functionDTO);
-                        return functionRepository.save(newFunction);
+                        return functionRepository.saveAndFlush(newFunction);
                     });
 
             // Return function DTO
@@ -196,18 +196,18 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
                             final FunctionEntity functionUpdated =
                                     functionEntityBuilder.update(existingFunction,
                                             functionDTO);
-                            return Optional.of(this.functionRepository.save(functionUpdated));
+                            return Optional.of(this.functionRepository.saveAndFlush(functionUpdated));
 
                         } else {
                             // Build a new function and store it in the database
                             FunctionEntity newFunction = functionEntityBuilder.build(functionDTO);
-                            return Optional.of(functionRepository.save(newFunction));
+                            return Optional.of(functionRepository.saveAndFlush(newFunction));
                         }
                     })
                     .orElseGet(() -> {
                         // Build a new function and store it in the database
                         FunctionEntity newFunction = functionEntityBuilder.build(functionDTO);
-                        return functionRepository.save(newFunction);
+                        return functionRepository.saveAndFlush(newFunction);
                     });
 
             // Return function DTO

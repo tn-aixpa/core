@@ -73,7 +73,6 @@ public class DataItemDTOBuilder {
                                 .setEmbedded(dataItem
                                         .getEmbedded())))
                 .withIfElse(embeddable, (dto, condition) ->
-
                         Optional.ofNullable(dataItem.getEmbedded())
                                 .filter(embedded -> !condition
                                         || (condition && embedded))

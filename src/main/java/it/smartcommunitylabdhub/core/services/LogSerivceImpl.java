@@ -86,7 +86,7 @@ public class LogSerivceImpl implements LogService {
         }
         Optional<LogEntity> savedLog = Optional.ofNullable(logDTO)
                 .map(logEntityBuilder::build)
-                .map(this.logRepository::save);
+                .map(this.logRepository::saveAndFlush);
 
         return savedLog.map(log -> logDTOBuilder.build(log))
                 .orElseThrow(() -> new CoreException(

@@ -36,9 +36,8 @@ public class DataItemServiceImpl implements DataItemService {
     public List<DataItem> getDataItems(Pageable pageable) {
         try {
             Page<DataItemEntity> dataItemPage = this.dataItemRepository.findAll(pageable);
-            return dataItemPage.getContent().stream().map((dataItem) -> {
-                return dataItemDTOBuilder.build(dataItem, false);
-            }).collect(Collectors.toList());
+            return dataItemPage.getContent().stream().map((dataItem) ->
+                    dataItemDTOBuilder.build(dataItem, false)).collect(Collectors.toList());
         } catch (CustomException e) {
             throw new CoreException(
                     "InternalServerError",
@@ -56,7 +55,7 @@ public class DataItemServiceImpl implements DataItemService {
         }
         Optional<DataItemEntity> savedDataItem = Optional.of(dataItemDTO)
                 .map(dataItemEntityBuilder::build)
-                .map(this.dataItemRepository::save);
+                .map(this.dataItemRepository::saveAndFlush);
 
         return savedDataItem.map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
                 .orElseThrow(() -> new CoreException(
@@ -98,7 +97,7 @@ public class DataItemServiceImpl implements DataItemService {
                     try {
                         DataItemEntity dataItemUpdated =
                                 dataItemEntityBuilder.update(dataItem, dataItemDTO);
-                        dataItemRepository.save(dataItemUpdated);
+                        dataItemRepository.saveAndFlush(dataItemUpdated);
                         return dataItemDTOBuilder.build(dataItemUpdated, false);
                     } catch (CustomException e) {
                         throw new CoreException(

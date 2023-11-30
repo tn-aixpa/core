@@ -4,8 +4,9 @@ import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Date;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "runs")
+@EntityListeners(AuditingEntityListener.class)
 public class RunEntity implements BaseEntity {
 
     @Id
@@ -49,11 +51,11 @@ public class RunEntity implements BaseEntity {
     @Lob
     private byte[] status;
 
-    @CreationTimestamp
+    @CreatedDate
     @Column(updatable = false)
     private Date created;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     private Date updated;
 
     @Enumerated(EnumType.STRING)

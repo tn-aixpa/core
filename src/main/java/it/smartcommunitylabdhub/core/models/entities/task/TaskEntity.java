@@ -4,8 +4,9 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Date;
 import java.util.UUID;
@@ -20,6 +21,7 @@ import java.util.UUID;
         @UniqueConstraint(columnNames = {"function", "kind"})
 
 })
+@EntityListeners(AuditingEntityListener.class)
 public class TaskEntity implements BaseEntity {
 
     @Id
@@ -48,11 +50,11 @@ public class TaskEntity implements BaseEntity {
     @Lob
     private byte[] status;
 
-    @CreationTimestamp
+    @CreatedDate
     @Column(updatable = false)
     private Date created;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     private Date updated;
 
     @Enumerated(EnumType.STRING)

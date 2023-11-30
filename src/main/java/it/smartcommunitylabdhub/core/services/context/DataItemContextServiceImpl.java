@@ -57,7 +57,7 @@ public class DataItemContextServiceImpl extends ContextService implements DataIt
                     .orElseGet(() -> {
                         // Build an dataItem and store it in the database
                         DataItemEntity newDataItem = dataItemEntityBuilder.build(dataItemDTO);
-                        return dataItemRepository.save(newDataItem);
+                        return dataItemRepository.saveAndFlush(newDataItem);
                     });
 
             // Return dataItem DTO
@@ -196,18 +196,18 @@ public class DataItemContextServiceImpl extends ContextService implements DataIt
                             final DataItemEntity dataItemUpdated =
                                     dataItemEntityBuilder.update(existingDataItem,
                                             dataItemDTO);
-                            return Optional.of(this.dataItemRepository.save(dataItemUpdated));
+                            return Optional.of(this.dataItemRepository.saveAndFlush(dataItemUpdated));
 
                         } else {
                             // Build a new dataItem and store it in the database
                             DataItemEntity newDataItem = dataItemEntityBuilder.build(dataItemDTO);
-                            return Optional.of(dataItemRepository.save(newDataItem));
+                            return Optional.of(dataItemRepository.saveAndFlush(newDataItem));
                         }
                     })
                     .orElseGet(() -> {
                         // Build a new dataItem and store it in the database
                         DataItemEntity newDataItem = dataItemEntityBuilder.build(dataItemDTO);
-                        return dataItemRepository.save(newDataItem);
+                        return dataItemRepository.saveAndFlush(newDataItem);
                     });
 
             // Return dataItem DTO

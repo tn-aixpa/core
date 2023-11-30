@@ -73,7 +73,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         }
         Optional<WorkflowEntity> savedWorkflow = Optional.of(workflowDTO)
                 .map(workflowEntityBuilder::build)
-                .map(this.workflowRepository::save);
+                .map(this.workflowRepository::saveAndFlush);
 
         return savedWorkflow.map(workflow -> workflowDTOBuilder.build(workflow, false))
                 .orElseThrow(() -> new CoreException(
@@ -115,7 +115,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                     try {
                         WorkflowEntity workflowUpdated =
                                 workflowEntityBuilder.update(workflow, workflowDTO);
-                        workflowRepository.save(workflowUpdated);
+                        workflowRepository.saveAndFlush(workflowUpdated);
                         return workflowDTOBuilder.build(workflowUpdated, false);
                     } catch (CustomException e) {
                         throw new CoreException(
