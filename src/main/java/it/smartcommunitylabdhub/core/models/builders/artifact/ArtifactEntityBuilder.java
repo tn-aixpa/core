@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.core.models.builders.artifact;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ArtifactFieldAccessor;
+import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
@@ -17,19 +19,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-/**
- * INFORMATION:
- * <p>
- * Spec could be taken directly from registry
- * <p>
- *
- * @Autowired SpecRegistry<? extends Spec> specRegistry;
- * <p>
- * specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
- */
+
 @Component
 public class ArtifactEntityBuilder {
 
+    @Autowired
+    SpecRegistry<? extends Spec> specRegistry;
 
     @Autowired
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
@@ -42,6 +37,10 @@ public class ArtifactEntityBuilder {
      */
     public ArtifactEntity build(Artifact artifactDTO) {
 
+        // Validate Spec
+        specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
+
+        // Retrieve Field accessor
         ArtifactFieldAccessor<?> artifactFieldAccessor =
                 accessorRegistry.createAccessor(
                         artifactDTO.getKind(),
@@ -100,6 +99,10 @@ public class ArtifactEntityBuilder {
      */
     public ArtifactEntity update(ArtifactEntity artifact, Artifact artifactDTO) {
 
+        // Validate Spec
+        specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
+
+        // Retrieve Field accessor
         ArtifactFieldAccessor<?> artifactFieldAccessor =
                 accessorRegistry.createAccessor(
                         artifactDTO.getKind(),

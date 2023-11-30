@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.core.models.builders.task;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.TaskFieldAccessor;
+import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
@@ -21,22 +23,24 @@ import java.util.Map;
 public class TaskEntityBuilder {
 
     @Autowired
+    SpecRegistry<? extends Spec> specRegistry;
+
+    @Autowired
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
 
     /**
      * Build a Task from a TaskDTO and store extra values as a cbor
      * <p>
-     * INFORMATION spec can be got also using spec registry.
-     * <p>
-     * Autowired
-     * SpecRegistry<? extends Spec> specRegistry;
-     * specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, Map.of());
      *
-     * @param taskDTO
-     * @return Task
+     * @param taskDTO TaskDTO
+     * @return Task the task entity
      */
     public TaskEntity build(Task taskDTO) {
 
+        // Validate Spec
+        specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, Map.of());
+
+        // Retrieve Field accessor
         TaskFieldAccessor<?> taskFieldAccessor =
                 accessorRegistry.createAccessor(
                         taskDTO.getKind(),
@@ -101,6 +105,10 @@ public class TaskEntityBuilder {
      */
     public TaskEntity update(TaskEntity task, Task taskDTO) {
 
+        // Validate Spec
+        specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, Map.of());
+
+        // Retrieve Field accessor
         TaskFieldAccessor<?> taskFieldAccessor =
                 accessorRegistry.createAccessor(
                         taskDTO.getKind(),

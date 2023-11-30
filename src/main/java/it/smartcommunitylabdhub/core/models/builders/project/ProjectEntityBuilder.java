@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.core.models.builders.project;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ProjectFieldAccessor;
+import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
@@ -22,23 +24,23 @@ import java.util.Map;
 public class ProjectEntityBuilder {
 
     @Autowired
+    SpecRegistry<? extends Spec> specRegistry;
+
+    @Autowired
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
 
 
     /**
      * Build a project from a projectDTO and store extra values as a cbor
      * <p>
-     * INFORMATION spec can be got also using spec registry.
-     * <p>
-     * * Autowired
-     * * SpecRegistry<? extends Spec> specRegistry;
-     * *
-     * * specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
      *
      * @param projectDTO the Project DTO To convert
      * @return Project
      */
     public ProjectEntity build(Project projectDTO) {
+
+        // Validate Spec
+        specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
 
         // Retrieve field accessor
         ProjectFieldAccessor<?> projectFieldAccessor =
@@ -107,6 +109,10 @@ public class ProjectEntityBuilder {
      */
     public ProjectEntity update(ProjectEntity project, Project projectDTO) {
 
+        // Validate Spec
+        specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
+
+        
         // Retrieve field accessor
         ProjectFieldAccessor<?> projectFieldAccessor =
                 accessorRegistry.createAccessor(

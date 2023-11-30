@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.enums.State;
 
 @ConverterType(type = "workflow")
 public class WorkflowConverter implements Converter<Workflow, WorkflowEntity> {
@@ -18,8 +17,6 @@ public class WorkflowConverter implements Converter<Workflow, WorkflowEntity> {
                 .kind(workflowDTO.getKind())
                 .project(workflowDTO.getProject())
                 .embedded(workflowDTO.getEmbedded())
-                .state(workflowDTO.getState() == null ? State.CREATED
-                        : State.valueOf(workflowDTO.getState()))
                 .build();
     }
 
@@ -31,8 +28,6 @@ public class WorkflowConverter implements Converter<Workflow, WorkflowEntity> {
                 .kind(workflow.getKind())
                 .project(workflow.getProject())
                 .embedded(workflow.getEmbedded())
-                .state(workflow.getState() == null ? State.CREATED.name()
-                        : workflow.getState().name())
                 .created(workflow.getCreated())
                 .updated(workflow.getUpdated())
                 .build();

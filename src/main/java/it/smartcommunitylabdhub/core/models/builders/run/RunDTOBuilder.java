@@ -3,10 +3,9 @@ package it.smartcommunitylabdhub.core.models.builders.run;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.metadata.RunMetadata;
-import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,10 +36,10 @@ public class RunDTOBuilder {
                         run.getExtra(), "cbor")))
                 .with(dto -> dto.setCreated(run.getCreated()))
                 .with(dto -> dto.setUpdated(run.getUpdated()))
-                .with(dto -> dto.setState(run.getState() == null
-                        ? State.CREATED.name()
-                        : run.getState()
-                        .name()))
+                .with(dto -> dto.setStatus(
+                        ConversionUtils.reverse(
+                                run.getStatus(), "cbor")
+                ))
 
         );
     }

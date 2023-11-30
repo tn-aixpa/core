@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.core.models.builders.function;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.FunctionFieldAccessor;
+import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
@@ -21,6 +23,8 @@ import java.util.Map;
 @Component
 public class FunctionEntityBuilder {
 
+    @Autowired
+    SpecRegistry<? extends Spec> specRegistry;
 
     @Autowired
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
@@ -28,14 +32,14 @@ public class FunctionEntityBuilder {
     /**
      * Build a function from a functionDTO and store extra values as a cbor
      * <p>
-     * * Autowired
-     * * SpecRegistry<? extends Spec> specRegistry;
-     * * specRegistry.createSpec(functionDTO.getKind(), EntityName.FUNCTION, Map.of());
      *
      * @param functionDTO the functionDTO that need to be stored
      * @return Function
      */
     public FunctionEntity build(Function functionDTO) {
+
+        // Validate spec
+        specRegistry.createSpec(functionDTO.getKind(), EntityName.FUNCTION, Map.of());
 
         // Retrieve field accessor
         FunctionFieldAccessor<?> functionFieldAccessor =
@@ -92,6 +96,9 @@ public class FunctionEntityBuilder {
      * @return Function
      */
     public FunctionEntity update(FunctionEntity function, Function functionDTO) {
+
+        // Validate spec
+        specRegistry.createSpec(functionDTO.getKind(), EntityName.FUNCTION, Map.of());
 
         // Retrieve field accessor
         FunctionFieldAccessor<?> functionFieldAccessor =

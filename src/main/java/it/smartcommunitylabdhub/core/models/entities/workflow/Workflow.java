@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractExtractorProperties;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
-import it.smartcommunitylabdhub.core.models.entities.StatusFieldUtility;
 import it.smartcommunitylabdhub.core.models.entities.workflow.metadata.WorkflowMetadata;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -48,17 +47,17 @@ public class Workflow extends AbstractExtractorProperties implements BaseEntity 
     @JsonIgnore
     private Map<String, Object> extra = new HashMap<>();
 
+    @Builder.Default
+    private Map<String, Object> status = new HashMap<>();
+
     private Date created;
     private Date updated;
     @Builder.Default
     private Boolean embedded = false;
 
-    @JsonIgnore
-    private String state;
-
     @JsonAnyGetter
     public Map<String, Object> getExtra() {
-        return StatusFieldUtility.addStatusField(extra, state);
+        return this.extra;
 
     }
 
@@ -66,7 +65,6 @@ public class Workflow extends AbstractExtractorProperties implements BaseEntity 
     public void setExtra(String key, Object value) {
         if (value != null) {
             extra.put(key, value);
-            StatusFieldUtility.updateStateField(this);
         }
     }
 }

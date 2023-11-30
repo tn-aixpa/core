@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.metadata.WorkflowMetadata;
-import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -74,16 +73,19 @@ public class WorkflowDTOBuilder {
                                 .setEmbedded(workflow
                                         .getEmbedded())))
                 .withIfElse(embeddable, (dto, condition) ->
-
                         Optional.ofNullable(workflow.getEmbedded())
                                 .filter(embedded -> !condition
                                         || (condition && embedded))
                                 .ifPresent(embedded -> dto
-                                        .setState(workflow
-                                                .getState() == null
-                                                ? State.CREATED.name()
-                                                : workflow.getState()
-                                                .name())))
+                                        .setStatus(ConversionUtils.reverse(
+                                                workflow.getStatus(), "cbor")
+                                        )
+                                )
+
+                )
+                .with(dto -> dto.setCreated(workflow.getCreated()))
+                .with(dto -> dto.setUpdated(workflow.getUpdated()))
+
 
         );
     }
