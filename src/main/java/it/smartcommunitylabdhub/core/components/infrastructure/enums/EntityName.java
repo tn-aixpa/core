@@ -8,5 +8,6 @@ public enum EntityName {
     ARTIFACT,
     DATAITEM,
     TASK,
-    RUN;
+    RUN,
+    LOG;
 }

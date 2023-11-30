@@ -13,7 +13,7 @@ import it.smartcommunitylabdhub.core.components.workflows.factory.Workflow;
 import it.smartcommunitylabdhub.core.components.workflows.factory.WorkflowFactory;
 import it.smartcommunitylabdhub.core.components.workflows.functions.BaseWorkflowBuilder;
 import it.smartcommunitylabdhub.core.exceptions.StopPoller;
-import it.smartcommunitylabdhub.core.models.accessors.kinds.dataitems.DataitemDataItemFieldAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.dataitems.DataitemDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.ArtifactUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
@@ -154,7 +154,7 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
                                                         ((List<Map<String, Object>>) metadata
                                                                 .get("artifacts")).stream()
                                                                 .forEach(artifact -> {
-                                                                    DataitemDataItemFieldAccessor mlrunDataItemAccessor =
+                                                                    DataitemDefaultFieldAccessor mlrunDataItemAccessor =
                                                                             accessorRegistry.createAccessor(
                                                                                     "dataitem",
                                                                                     EntityName.ARTIFACT,

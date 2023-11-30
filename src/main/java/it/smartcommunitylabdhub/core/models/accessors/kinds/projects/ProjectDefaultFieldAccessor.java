@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ProjectFi
 
 
 @AccessorType(kind = "project", entity = EntityName.PROJECT)
-public class MlrunProjectFieldAccessor
-        extends AbstractFieldAccessor<MlrunProjectFieldAccessor>
-        implements ProjectFieldAccessor<MlrunProjectFieldAccessor> {
+public class ProjectDefaultFieldAccessor
+        extends AbstractFieldAccessor<ProjectDefaultFieldAccessor>
+        implements ProjectFieldAccessor<ProjectDefaultFieldAccessor> {
 }

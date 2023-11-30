@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
-import it.smartcommunitylabdhub.core.models.enums.State;
 
 @ConverterType(type = "log")
 public class LogConverter implements Converter<Log, LogEntity> {
@@ -16,7 +15,6 @@ public class LogConverter implements Converter<Log, LogEntity> {
                 .id(logDTO.getId())
                 .project(logDTO.getProject())
                 .run(logDTO.getRun())
-                .state(logDTO.getState() == null ? State.CREATED : State.valueOf(logDTO.getState()))
                 .build();
     }
 
@@ -26,7 +24,6 @@ public class LogConverter implements Converter<Log, LogEntity> {
                 .id(log.getId())
                 .project(log.getProject())
                 .run(log.getRun())
-                .state(log.getState() == null ? State.CREATED.name() : log.getState().name())
                 .created(log.getCreated())
                 .updated(log.getUpdated())
                 .build();

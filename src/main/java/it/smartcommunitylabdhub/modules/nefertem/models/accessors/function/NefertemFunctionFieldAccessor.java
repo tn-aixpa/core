@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.accessors.kinds.functions;
+package it.smartcommunitylabdhub.modules.nefertem.models.accessors.function;
 
 import it.smartcommunitylabdhub.core.annotations.common.AccessorType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.*;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractExtractorProperties;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
-import it.smartcommunitylabdhub.core.models.entities.StatusFieldUtility;
 import it.smartcommunitylabdhub.core.models.entities.project.metadata.ProjectMetadata;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -43,27 +42,25 @@ public class Project extends AbstractExtractorProperties implements BaseEntity {
     @JsonIgnore
     private Map<String, Object> extra = new HashMap<>();
 
+    @Builder.Default
+    private Map<String, Object> status = new HashMap<>();
+
     private Date created;
 
     private Date updated;
-
-    @JsonIgnore
-    private String state;
 
     private ProjectMetadata metadata;
 
 
     @JsonAnyGetter
     public Map<String, Object> getExtra() {
-        return StatusFieldUtility.addStatusField(extra, state);
-
+        return this.extra;
     }
 
     @JsonAnySetter
     public void setExtra(String key, Object value) {
         if (value != null) {
             extra.put(key, value);
-            StatusFieldUtility.updateStateField(this);
         }
     }
 

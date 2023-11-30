@@ -6,8 +6,8 @@ import it.smartcommunitylabdhub.core.models.accessors.kinds.abstracts.AbstractFi
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.DataItemFieldAccessor;
 
 @AccessorType(kind = "dataitem", entity = EntityName.DATAITEM)
-public class DataitemDataItemFieldAccessor
-        extends AbstractFieldAccessor<DataitemDataItemFieldAccessor>
-        implements DataItemFieldAccessor<DataitemDataItemFieldAccessor> {
+public class DataitemDefaultFieldAccessor
+        extends AbstractFieldAccessor<DataitemDefaultFieldAccessor>
+        implements DataItemFieldAccessor<DataitemDefaultFieldAccessor> {
 
 }

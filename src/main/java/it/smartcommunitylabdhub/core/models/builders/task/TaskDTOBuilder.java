@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.metadata.TaskMetadata;
-import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,12 +41,11 @@ public class TaskDTOBuilder {
                         task.getSpec(), "cbor")))
                 .with(dto -> dto.setExtra(ConversionUtils.reverse(
                         task.getExtra(), "cbor")))
+                .with(dto -> dto.setStatus(
+                        ConversionUtils.reverse(
+                                task.getStatus(), "cbor")))
                 .with(dto -> dto.setCreated(task.getCreated()))
                 .with(dto -> dto.setUpdated(task.getUpdated()))
-                .with(dto -> dto.setState(task.getState() == null
-                        ? State.CREATED.name()
-                        : task.getState()
-                        .name()))
 
         );
     }

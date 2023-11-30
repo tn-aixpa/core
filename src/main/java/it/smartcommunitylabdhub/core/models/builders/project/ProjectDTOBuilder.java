@@ -14,7 +14,6 @@ import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.metadata.ProjectMetadata;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.enums.State;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -81,9 +80,6 @@ public class ProjectDTOBuilder {
                 .with(dto -> dto.setKind(project.getKind()))
                 .with(dto -> dto.setDescription(project.getDescription()))
                 .with(dto -> dto.setSource(project.getSource()))
-                .with(dto -> dto.setState(
-                        project.getState() == null ? State.CREATED.name()
-                                : project.getState().name()))
                 .with(dto -> dto.setExtra(ConversionUtils.reverse(
                         project.getExtra(),
                         "cbor")))
@@ -94,8 +90,12 @@ public class ProjectDTOBuilder {
                                         project.getMetadata(),
                                         ProjectMetadata.class))
                         .orElseGet(ProjectMetadata::new)))
+                .with(dto -> dto.setStatus(
+                        ConversionUtils.reverse(
+                                project.getStatus(), "cbor")))
                 .with(dto -> dto.setCreated(project.getCreated()))
                 .with(dto -> dto.setUpdated(project.getUpdated()))
+
 
         );
     }

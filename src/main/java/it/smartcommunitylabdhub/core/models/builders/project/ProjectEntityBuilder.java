@@ -1,8 +1,9 @@
 package it.smartcommunitylabdhub.core.models.builders.project;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ProjectFieldAccessor;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
@@ -11,6 +12,7 @@ import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectBaseSp
 import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectProjectSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,17 +22,31 @@ import java.util.Map;
 public class ProjectEntityBuilder {
 
     @Autowired
-    SpecRegistry<? extends Spec> specRegistry;
+    AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
+
 
     /**
      * Build a project from a projectDTO and store extra values as a cbor
+     * <p>
+     * INFORMATION spec can be got also using spec registry.
+     * <p>
+     * * Autowired
+     * * SpecRegistry<? extends Spec> specRegistry;
+     * *
+     * * specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
      *
      * @param projectDTO the Project DTO To convert
      * @return Project
      */
     public ProjectEntity build(Project projectDTO) {
 
-        specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
+        // Retrieve field accessor
+        ProjectFieldAccessor<?> projectFieldAccessor =
+                accessorRegistry.createAccessor(
+                        projectDTO.getKind(),
+                        EntityName.PROJECT,
+                        JacksonMapper.objectMapper.convertValue(projectDTO,
+                                JacksonMapper.typeRef));
 
         // Retrieve object spec
         ProjectBaseSpec<?> projectSpec = JacksonMapper.objectMapper
@@ -43,6 +59,26 @@ public class ProjectEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(projectDTO, "project"), projectDTO,
                 builder -> builder
+                        .withIfElse(projectFieldAccessor.getState().equals(State.NONE.name()),
+                                (dto, condition) -> {
+                                    if (condition) {
+                                        dto.setStatus(ConversionUtils.convert(
+                                                MapUtils.mergeMultipleMaps(
+                                                        projectFieldAccessor.getStatus(),
+                                                        Map.of("state", State.CREATED.name())
+                                                ), "cbor")
+                                        );
+                                        dto.setState(State.CREATED);
+                                    } else {
+                                        dto.setStatus(
+                                                ConversionUtils.convert(
+                                                        projectFieldAccessor.getStatus(),
+                                                        "cbor")
+                                        );
+                                        dto.setState(State.valueOf(projectFieldAccessor.getState()));
+                                    }
+                                }
+                        )
                         .with(p -> p.setExtra(
                                 ConversionUtils.convert(projectDTO
                                                 .getExtra(),
@@ -71,6 +107,14 @@ public class ProjectEntityBuilder {
      */
     public ProjectEntity update(ProjectEntity project, Project projectDTO) {
 
+        // Retrieve field accessor
+        ProjectFieldAccessor<?> projectFieldAccessor =
+                accessorRegistry.createAccessor(
+                        projectDTO.getKind(),
+                        EntityName.PROJECT,
+                        JacksonMapper.objectMapper.convertValue(projectDTO,
+                                JacksonMapper.typeRef));
+
         // Retrieve object spec
         ProjectBaseSpec<?> projectSpec = JacksonMapper.objectMapper
                 .convertValue(
@@ -84,10 +128,26 @@ public class ProjectEntityBuilder {
                         .with(p -> p.setDescription(
                                 projectDTO.getDescription()))
                         .with(p -> p.setSource(projectDTO.getMetadata().getSource()))
-                        .with(p -> p.setState(projectDTO.getState() == null
-                                ? State.CREATED
-                                : State.valueOf(projectDTO
-                                .getState())))
+                        .withIfElse(projectFieldAccessor.getState().equals(State.NONE.name()),
+                                (dto, condition) -> {
+                                    if (condition) {
+                                        dto.setStatus(ConversionUtils.convert(
+                                                MapUtils.mergeMultipleMaps(
+                                                        projectFieldAccessor.getStatus(),
+                                                        Map.of("state", State.CREATED.name())
+                                                ), "cbor")
+                                        );
+                                        dto.setState(State.CREATED);
+                                    } else {
+                                        dto.setStatus(
+                                                ConversionUtils.convert(
+                                                        projectFieldAccessor.getStatus(),
+                                                        "cbor")
+                                        );
+                                        dto.setState(State.valueOf(projectFieldAccessor.getState()));
+                                    }
+                                }
+                        )
                         .with(p -> p.setExtra(
                                 ConversionUtils.convert(projectDTO
                                                 .getExtra(),

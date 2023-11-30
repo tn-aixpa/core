@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.models.accessors.kinds.abstracts.AbstractFi
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ArtifactFieldAccessor;
 
 @AccessorType(kind = "artifact", entity = EntityName.ARTIFACT)
-public class ArtifactArtifactFieldAccessor
-        extends AbstractFieldAccessor<ArtifactArtifactFieldAccessor>
-        implements ArtifactFieldAccessor<ArtifactArtifactFieldAccessor> {
+public class ArtifactDefaultFieldAccessor
+        extends AbstractFieldAccessor<ArtifactDefaultFieldAccessor>
+        implements ArtifactFieldAccessor<ArtifactDefaultFieldAccessor> {
 }

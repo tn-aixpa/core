@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.enums.State;
 
 @ConverterType(type = "project")
 public class ProjectConverter implements Converter<Project, ProjectEntity> {
@@ -18,8 +17,6 @@ public class ProjectConverter implements Converter<Project, ProjectEntity> {
                 .kind(projectDTO.getKind())
                 .description(projectDTO.getDescription())
                 .source(projectDTO.getSource())
-                .state(projectDTO.getState() == null ? State.CREATED
-                        : State.valueOf(projectDTO.getState()))
                 .build();
     }
 
@@ -31,8 +28,6 @@ public class ProjectConverter implements Converter<Project, ProjectEntity> {
                 .kind(project.getKind())
                 .description(project.getDescription())
                 .source(project.getSource())
-                .state(project.getState() == null ? State.CREATED.name()
-                        : project.getState().name())
                 .created(project.getCreated())
                 .updated(project.getUpdated())
                 .build();

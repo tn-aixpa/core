@@ -3,8 +3,8 @@ package it.smartcommunitylabdhub.core.controllers.v2;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
-import it.smartcommunitylabdhub.core.models.accessors.kinds.artifacts.ArtifactArtifactFieldAccessor;
-import it.smartcommunitylabdhub.core.models.accessors.kinds.dataitems.DataitemDataItemFieldAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.artifacts.ArtifactDefaultFieldAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.dataitems.DataitemDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +28,14 @@ public class ProjectControllerV2Test {
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Map<String, Object>> myVersioned2Json() {
 
-        DataitemDataItemFieldAccessor a = accessorRegistry.createAccessor(
+        DataitemDefaultFieldAccessor a = accessorRegistry.createAccessor(
                 "dataitem",
                 EntityName.DATAITEM,
                 Map.of()
         );
         log.info(a.getName());
 
-        ArtifactArtifactFieldAccessor b = accessorRegistry.createAccessor(
+        ArtifactDefaultFieldAccessor b = accessorRegistry.createAccessor(
                 "artifact",
                 EntityName.ARTIFACT,
                 Map.of("name", "Ciccio", "project", "Franco")
