@@ -111,7 +111,6 @@ public class ProjectEntityBuilder {
 
         // Validate Spec
         specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
-
         
         // Retrieve field accessor
         ProjectFieldAccessor<?> projectFieldAccessor =

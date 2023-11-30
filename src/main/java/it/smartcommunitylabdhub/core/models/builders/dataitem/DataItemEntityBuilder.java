@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.core.models.builders.dataitem;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.DataItemFieldAccessor;
+import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
@@ -19,6 +21,9 @@ import java.util.Map;
 
 @Component
 public class DataItemEntityBuilder {
+    
+    @Autowired
+    SpecRegistry<? extends Spec> specRegistry;
 
     @Autowired
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
@@ -26,15 +31,13 @@ public class DataItemEntityBuilder {
     /**
      * Build d dataItem from d dataItemDTO and store extra values as d cbor
      * <p>
-     * specRegistry can be also used
-     * <p>
-     * Autowired
-     * SpecRegistry<? extends Spec> specRegistry;
-     * specRegistry.createSpec(dataItemDTO.getKind(), EntityName.DATAITEM, Map.of());
      *
      * @return DataItemDTO
      */
     public DataItemEntity build(DataItem dataItemDTO) {
+
+        // Validate Spec
+        specRegistry.createSpec(dataItemDTO.getKind(), EntityName.DATAITEM, Map.of());
 
         // Retrieve field accessor
         DataItemFieldAccessor<?> dataItemFieldAccessor =
@@ -91,6 +94,9 @@ public class DataItemEntityBuilder {
      * @return Dataitem
      */
     public DataItemEntity update(DataItemEntity dataItem, DataItem dataItemDTO) {
+
+        // Validate Spec
+        specRegistry.createSpec(dataItemDTO.getKind(), EntityName.DATAITEM, Map.of());
 
         // Retrieve field accessor
         DataItemFieldAccessor<?> dataItemFieldAccessor =

@@ -43,7 +43,7 @@ public class WorkflowEntityBuilder {
         WorkflowFieldAccessor<?> workflowFieldAccessor =
                 accessorRegistry.createAccessor(
                         workflowDTO.getKind(),
-                        EntityName.FUNCTION,
+                        EntityName.WORKFLOW,
                         JacksonMapper.objectMapper.convertValue(workflowDTO,
                                 JacksonMapper.typeRef));
 
