@@ -48,25 +48,7 @@ public class WorkflowDTOBuilder {
                                 .setExtra(ConversionUtils.reverse(
                                         workflow.getExtra(),
                                         "cbor"))))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(workflow.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setCreated(workflow.getCreated())))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(workflow.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setUpdated(workflow.getUpdated())))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(workflow.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setEmbedded(workflow
-                                        .getEmbedded())))
+
                 .withIfElse(embeddable, (dto, condition) ->
                         Optional.ofNullable(workflow.getEmbedded())
                                 .filter(embedded -> !condition
@@ -78,6 +60,7 @@ public class WorkflowDTOBuilder {
                                 )
 
                 )
+                .with(dto -> dto.setEmbedded(workflow.getEmbedded()))
                 .with(dto -> dto.setCreated(workflow.getCreated()))
                 .with(dto -> dto.setUpdated(workflow.getUpdated()))
 

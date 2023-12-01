@@ -48,25 +48,6 @@ public class DataItemDTOBuilder {
                                         dataItem.getExtra(),
 
                                         "cbor"))))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(dataItem.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setCreated(dataItem.getCreated())))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(dataItem.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setUpdated(dataItem.getUpdated())))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(dataItem.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setEmbedded(dataItem
-                                        .getEmbedded())))
                 .withIfElse(embeddable, (dto, condition) ->
                         Optional.ofNullable(dataItem.getEmbedded())
                                 .filter(embedded -> !condition
@@ -78,6 +59,7 @@ public class DataItemDTOBuilder {
                                 )
 
                 )
+                .with(dto -> dto.setEmbedded(dataItem.getEmbedded()))
                 .with(dto -> dto.setCreated(dataItem.getCreated()))
                 .with(dto -> dto.setUpdated(dataItem.getUpdated()))
         );

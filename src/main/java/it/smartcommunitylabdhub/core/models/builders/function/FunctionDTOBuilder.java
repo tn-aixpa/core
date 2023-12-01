@@ -26,7 +26,6 @@ public class FunctionDTOBuilder {
                 .with(dto -> dto.setKind(function.getKind()))
                 .with(dto -> dto.setProject(function.getProject()))
                 .with(dto -> dto.setName(function.getName()))
-
                 .with(dto -> dto.setMetadata(Optional
                         .ofNullable(metadataConverter
                                 .reverseByClass(function
@@ -51,25 +50,6 @@ public class FunctionDTOBuilder {
                                         function.getExtra(),
 
                                         "cbor"))))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(function.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setCreated(function.getCreated())))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(function.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setUpdated(function.getUpdated())))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(function.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setEmbedded(function
-                                        .getEmbedded())))
                 .withIfElse(embeddable, (dto, condition) ->
                         Optional.ofNullable(function.getEmbedded())
                                 .filter(embedded -> !condition
@@ -81,6 +61,7 @@ public class FunctionDTOBuilder {
                                 )
 
                 )
+                .with(dto -> dto.setEmbedded(function.getEmbedded()))
                 .with(dto -> dto.setCreated(function.getCreated()))
                 .with(dto -> dto.setUpdated(function.getUpdated()))
 

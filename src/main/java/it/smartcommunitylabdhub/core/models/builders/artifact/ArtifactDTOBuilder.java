@@ -36,10 +36,9 @@ public class ArtifactDTOBuilder {
                         .filter(embedded -> !condition
                                 || (condition && embedded))
                         .ifPresent(embedded -> dto
-                                .setSpec(
-                                        ConversionUtils.reverse(
-                                                artifact.getSpec(),
-                                                "cbor"))))
+                                .setSpec(ConversionUtils.reverse(
+                                        artifact.getSpec(),
+                                        "cbor"))))
                 .withIfElse(embeddable, (dto, condition) -> Optional
                         .ofNullable(artifact.getEmbedded())
                         .filter(embedded -> !condition
@@ -48,27 +47,7 @@ public class ArtifactDTOBuilder {
                                 .setExtra(ConversionUtils.reverse(
                                         artifact.getExtra(),
                                         "cbor"))))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(artifact.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setCreated(artifact.getCreated())))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(artifact.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setUpdated(artifact.getUpdated())))
-                .withIfElse(embeddable, (dto, condition) -> Optional
-                        .ofNullable(artifact.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setEmbedded(artifact
-                                        .getEmbedded())))
                 .withIfElse(embeddable, (dto, condition) ->
-
                         Optional.ofNullable(artifact.getEmbedded())
                                 .filter(embedded -> !condition
                                         || (condition && embedded))
@@ -77,8 +56,8 @@ public class ArtifactDTOBuilder {
                                                 artifact.getStatus(), "cbor")
                                         )
                                 )
-
                 )
+                .with(dto -> dto.setEmbedded(artifact.getEmbedded()))
                 .with(dto -> dto.setCreated(artifact.getCreated()))
                 .with(dto -> dto.setUpdated(artifact.getUpdated()))
         );

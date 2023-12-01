@@ -19,5 +19,5 @@ public class ArtifactMetadata extends BaseMetadata {
 
     String description;
 
-    boolean embedded;
+    Boolean embedded;
 }
