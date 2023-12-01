@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectService;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,12 +47,7 @@ public class ProjectController {
     @GetMapping(path = "/{name}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Project> getProject(
             @ValidateField @PathVariable(name = "name", required = true) String name) {
-        try {
-            log.warn(JacksonMapper.objectMapper.writeValueAsString(this.projectService.getProject(name)));
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         return ResponseEntity.ok(this.projectService.getProject(name));
     }
 
