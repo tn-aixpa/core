@@ -19,8 +19,7 @@ import java.util.Map;
 @Builder
 @JsonPropertyOrder(alphabetic = true)
 public class Project extends AbstractExtractorProperties implements BaseEntity {
-
-    @JsonIgnore
+    
     private String id;
 
     @NotNull
@@ -63,16 +62,4 @@ public class Project extends AbstractExtractorProperties implements BaseEntity {
             extra.put(key, value);
         }
     }
-
-    @JsonProperty("id")
-    @JsonIgnore // Ignore during deserialization
-    private String getExposedId() {
-        return id;
-    }
-
-    // Setter for id, Jackson will use this during deserialization
-    public void setId(String id) {
-        this.id = id;
-    }
-
 }
