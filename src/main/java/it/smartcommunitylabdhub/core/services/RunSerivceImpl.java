@@ -189,7 +189,7 @@ public class RunSerivceImpl implements RunService {
                                 // Check weather the run has local set to True in that case return
                                 // immediately the run without invoke the execution.
                                 Supplier<Run> result = () -> Optional
-                                        .of(runBaseSpec.isLocalExecution()) // if true save and return
+                                        .of(runBaseSpec.getLocalExecution()) // if true save and return
                                         .filter(value -> value.equals(true))
 
                                         .map(value -> {
