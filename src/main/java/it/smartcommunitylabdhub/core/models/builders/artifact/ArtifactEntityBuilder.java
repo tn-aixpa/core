@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.artifact;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ArtifactFieldAccessor;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -12,8 +13,10 @@ import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.artifact.specs.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -57,6 +60,30 @@ public class ArtifactEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(artifactDTO, "artifact"), artifactDTO,
                 builder -> builder
+
+                        // check id
+                        .withIfElse(artifactDTO.getId() != null &&
+                                        artifactDTO.getMetadata().getVersion() != null,
+                                (a) -> {
+                                    if (artifactDTO.getId()
+                                            .equals(artifactDTO.getMetadata().getVersion())) {
+                                        a.setId(artifactDTO.getMetadata().getVersion());
+                                    } else {
+                                        throw new CoreException(
+                                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                                                "Trying to store item with which has different signature <id != version>",
+                                                HttpStatus.INTERNAL_SERVER_ERROR
+                                        );
+                                    }
+                                },
+                                (a) -> {
+                                    if (artifactDTO.getId() == null &&
+                                            artifactDTO.getMetadata().getVersion() != null) {
+                                        a.setId(artifactDTO.getMetadata().getVersion());
+                                    } else {
+                                        a.setId(artifactDTO.getId());
+                                    }
+                                })
                         .with(p -> p.setMetadata(ConversionUtils.convert(
                                 artifactDTO.getMetadata(), "metadata")))
                         .with(a -> a.setExtra(ConversionUtils.convert(

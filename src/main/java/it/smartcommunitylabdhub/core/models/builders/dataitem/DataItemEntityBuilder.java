@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.dataitem;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.DataItemFieldAccessor;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -12,8 +13,10 @@ import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.specs.DataItemBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -54,6 +57,29 @@ public class DataItemEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(dataItemDTO, "dataitem"), dataItemDTO,
                 builder -> builder
+                        // check id
+                        .withIfElse(dataItemDTO.getId() != null &&
+                                        dataItemDTO.getMetadata().getVersion() != null,
+                                (d) -> {
+                                    if (dataItemDTO.getId()
+                                            .equals(dataItemDTO.getMetadata().getVersion())) {
+                                        d.setId(dataItemDTO.getMetadata().getVersion());
+                                    } else {
+                                        throw new CoreException(
+                                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                                                "Trying to store item with which has different signature <id != version>",
+                                                HttpStatus.INTERNAL_SERVER_ERROR
+                                        );
+                                    }
+                                },
+                                (d) -> {
+                                    if (dataItemDTO.getId() == null &&
+                                            dataItemDTO.getMetadata().getVersion() != null) {
+                                        d.setId(dataItemDTO.getMetadata().getVersion());
+                                    } else {
+                                        d.setId(dataItemDTO.getId());
+                                    }
+                                })
                         .with(p -> p.setMetadata(ConversionUtils.convert(
                                 dataItemDTO.getMetadata(), "metadata")))
                         .with(d -> d.setExtra(ConversionUtils.convert(

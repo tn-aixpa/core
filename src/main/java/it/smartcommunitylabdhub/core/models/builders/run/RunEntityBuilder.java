@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.RunFieldAccessor;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -13,8 +14,10 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -57,6 +60,29 @@ public class RunEntityBuilder {
 
         return EntityFactory.combine(
                 ConversionUtils.convert(runDTO, "run"), runDTO, builder -> builder
+                        // check id
+                        .withIfElse(runDTO.getId() != null &&
+                                        runDTO.getMetadata().getVersion() != null,
+                                (r) -> {
+                                    if (runDTO.getId()
+                                            .equals(runDTO.getMetadata().getVersion())) {
+                                        r.setId(runDTO.getMetadata().getVersion());
+                                    } else {
+                                        throw new CoreException(
+                                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                                                "Trying to store item with which has different signature <id != version>",
+                                                HttpStatus.INTERNAL_SERVER_ERROR
+                                        );
+                                    }
+                                },
+                                (r) -> {
+                                    if (runDTO.getId() == null &&
+                                            runDTO.getMetadata().getVersion() != null) {
+                                        r.setId(runDTO.getMetadata().getVersion());
+                                    } else {
+                                        r.setId(runDTO.getId());
+                                    }
+                                })
                         .with(r -> r.setTask(spec.getTask()))
                         .with(r -> r.setTaskId(spec.getTaskId()))
                         .withIfElse(runFieldAccessor.getState().equals(State.NONE.name()),

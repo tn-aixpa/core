@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.project;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ProjectFieldAccessor;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -13,11 +14,14 @@ import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectProjectSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class ProjectEntityBuilder {
@@ -60,6 +64,30 @@ public class ProjectEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(projectDTO, "project"), projectDTO,
                 builder -> builder
+                        // check id
+                        .withIfElse((projectDTO.getId() != null || projectDTO.getName() != null) &&
+                                        projectDTO.getMetadata().getVersion() != null,
+                                (p) -> {
+                                    if (Optional.ofNullable(projectDTO.getId())
+                                            .orElse(projectDTO.getName())
+                                            .equals(projectDTO.getMetadata().getVersion())) {
+                                        p.setId(projectDTO.getMetadata().getVersion());
+                                    } else {
+                                        throw new CoreException(
+                                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                                                "Trying to store item with which has different signature <id != version>",
+                                                HttpStatus.INTERNAL_SERVER_ERROR
+                                        );
+                                    }
+                                },
+                                (p) -> {
+                                    if (projectDTO.getId() == null &&
+                                            projectDTO.getMetadata().getVersion() != null) {
+                                        p.setId(projectDTO.getMetadata().getVersion());
+                                    } else {
+                                        p.setId(projectDTO.getId());
+                                    }
+                                })
                         .withIfElse(projectFieldAccessor.getState().equals(State.NONE.name()),
                                 (p, condition) -> {
                                     if (condition) {
@@ -76,7 +104,7 @@ public class ProjectEntityBuilder {
                         .with(p -> p.setStatus(ConversionUtils.convert(
                                 projectDTO.getStatus(), "cbor")))
                         .with(p -> {
-                            spec.remove("functions");
+                            spec.remove("projects");
                             spec.remove("workflows");
                             spec.remove("artifacts");
                             spec.remove("dataitems");
@@ -145,7 +173,7 @@ public class ProjectEntityBuilder {
                         .with(p -> p.setStatus(ConversionUtils.convert(
                                 projectDTO.getStatus(), "cbor")))
                         .with(p -> {
-                            spec.remove("functions");
+                            spec.remove("projects");
                             spec.remove("workflows");
                             spec.remove("artifacts");
                             spec.remove("dataitems");

@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.function;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.FunctionFieldAccessor;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -12,8 +13,10 @@ import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -55,6 +58,29 @@ public class FunctionEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(functionDTO, "function"), functionDTO,
                 builder -> builder
+                        // check id
+                        .withIfElse(functionDTO.getId() != null &&
+                                        functionDTO.getMetadata().getVersion() != null,
+                                (f) -> {
+                                    if (functionDTO.getId()
+                                            .equals(functionDTO.getMetadata().getVersion())) {
+                                        f.setId(functionDTO.getMetadata().getVersion());
+                                    } else {
+                                        throw new CoreException(
+                                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                                                "Trying to store item with which has different signature <id != version>",
+                                                HttpStatus.INTERNAL_SERVER_ERROR
+                                        );
+                                    }
+                                },
+                                (f) -> {
+                                    if (functionDTO.getId() == null &&
+                                            functionDTO.getMetadata().getVersion() != null) {
+                                        f.setId(functionDTO.getMetadata().getVersion());
+                                    } else {
+                                        f.setId(functionDTO.getId());
+                                    }
+                                })
                         .with(f -> f.setMetadata(ConversionUtils.convert(
                                 functionDTO.getMetadata(), "metadata")))
                         .with(f -> f.setExtra(ConversionUtils.convert(
