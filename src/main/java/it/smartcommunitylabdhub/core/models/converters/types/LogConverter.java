@@ -13,8 +13,6 @@ public class LogConverter implements Converter<Log, LogEntity> {
     public LogEntity convert(Log logDTO) throws CustomException {
         return LogEntity.builder()
                 .id(logDTO.getId())
-                .project(logDTO.getProject())
-                .run(logDTO.getRun())
                 .build();
     }
 
@@ -22,8 +20,6 @@ public class LogConverter implements Converter<Log, LogEntity> {
     public Log reverseConvert(LogEntity log) throws CustomException {
         return Log.builder()
                 .id(log.getId())
-                .project(log.getProject())
-                .run(log.getRun())
                 .build();
     }
 

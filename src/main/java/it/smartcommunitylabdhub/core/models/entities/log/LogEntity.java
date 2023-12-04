@@ -40,6 +40,9 @@ public class LogEntity implements BaseEntity {
     @Lob
     private byte[] status;
 
+    @Lob
+    private byte[] metadata;
+
     @Enumerated(EnumType.STRING)
     private State state;
 

@@ -53,8 +53,9 @@ public class FunctionEntityBuilder {
                 .convertValue(functionDTO.getSpec(), FunctionBaseSpec.class);
 
         return EntityFactory.combine(
-                ConversionUtils.convert(functionDTO, "function"), functionDTO, builder -> builder
-                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                ConversionUtils.convert(functionDTO, "function"), functionDTO,
+                builder -> builder
+                        .with(f -> f.setMetadata(ConversionUtils.convert(
                                 functionDTO.getMetadata(), "metadata")))
                         .with(f -> f.setExtra(ConversionUtils.convert(
                                 functionDTO.getExtra(), "cbor")))

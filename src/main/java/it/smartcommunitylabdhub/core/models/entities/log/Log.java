@@ -42,7 +42,7 @@ public class Log extends AbstractExtractorProperties implements BaseEntity {
     private Map<String, Object> status = new HashMap<>();
 
     @Builder.Default
-    private LogMetadata logMetadata = new LogMetadata();
+    private LogMetadata metadata = new LogMetadata();
 
     @JsonAnyGetter
     public Map<String, Object> getExtra() {

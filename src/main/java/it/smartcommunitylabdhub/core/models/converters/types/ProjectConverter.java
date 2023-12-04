@@ -15,8 +15,6 @@ public class ProjectConverter implements Converter<Project, ProjectEntity> {
                 .id(projectDTO.getId())
                 .name(projectDTO.getName())
                 .kind(projectDTO.getKind())
-                .description(projectDTO.getDescription())
-                .source(projectDTO.getSource())
                 .build();
     }
 
@@ -26,8 +24,6 @@ public class ProjectConverter implements Converter<Project, ProjectEntity> {
                 .id(project.getId())
                 .name(project.getName())
                 .kind(project.getKind())
-                .description(project.getDescription())
-                .source(project.getSource())
                 .build();
     }
 

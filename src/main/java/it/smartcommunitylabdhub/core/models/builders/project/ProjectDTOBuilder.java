@@ -14,6 +14,7 @@ import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.metadata.ProjectMetadata;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -99,8 +100,15 @@ public class ProjectDTOBuilder {
                 .with(dto -> dto.setExtra(ConversionUtils.reverse(
                         project.getExtra(),
                         "cbor")))
-                .with(dto -> dto.setStatus(ConversionUtils.reverse(
-                        project.getStatus(), "cbor")))
+                .with(dto -> dto.setStatus(
+                        MapUtils.mergeMultipleMaps(
+                                ConversionUtils.reverse(
+                                        project.getStatus(),
+                                        "cbor"),
+                                Map.of("state",
+                                        project.getState())
+                        )
+                ))
 
         );
     }

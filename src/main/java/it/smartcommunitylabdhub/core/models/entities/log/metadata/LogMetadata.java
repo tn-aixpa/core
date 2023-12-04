@@ -16,6 +16,8 @@ import lombok.Setter;
 public class LogMetadata extends BaseMetadata {
     String name;
 
+    String run;
+
     String version;
 
     String description;
