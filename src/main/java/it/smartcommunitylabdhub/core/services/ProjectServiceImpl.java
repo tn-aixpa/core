@@ -78,10 +78,10 @@ public class ProjectServiceImpl implements ProjectService {
 
         return projectRepository.findByName(name)
                 .map(project -> {
-                    List<FunctionEntity> functions = functionRepository.findByProject(project.getName());
-                    List<ArtifactEntity> artifacts = artifactRepository.findByProject(project.getName());
-                    List<WorkflowEntity> workflows = workflowRepository.findByProject(project.getName());
-                    List<DataItemEntity> dataItems = dataItemRepository.findByProject(project.getName());
+                    List<FunctionEntity> functions = functionRepository.findAllLatestFunctionsByProject(project.getName());
+                    List<ArtifactEntity> artifacts = artifactRepository.findAllLatestArtifactsByProject(project.getName());
+                    List<WorkflowEntity> workflows = workflowRepository.findAllLatestWorkflowsByProject(project.getName());
+                    List<DataItemEntity> dataItems = dataItemRepository.findAllLatestDataItemsByProject(project.getName());
 
                     return projectDTOBuilder.build(project, artifacts, functions, workflows,
                             dataItems, true);
@@ -98,10 +98,10 @@ public class ProjectServiceImpl implements ProjectService {
             Page<ProjectEntity> projectPage = this.projectRepository.findAll(pageable);
             return new PageImpl<>(
                     projectPage.getContent().stream().map((project) -> {
-                        List<FunctionEntity> functions = functionRepository.findByProject(project.getName());
-                        List<ArtifactEntity> artifacts = artifactRepository.findByProject(project.getName());
-                        List<WorkflowEntity> workflows = workflowRepository.findByProject(project.getName());
-                        List<DataItemEntity> dataItems = dataItemRepository.findByProject(project.getName());
+                        List<FunctionEntity> functions = functionRepository.findAllLatestFunctionsByProject(project.getName());
+                        List<ArtifactEntity> artifacts = artifactRepository.findAllLatestArtifactsByProject(project.getName());
+                        List<WorkflowEntity> workflows = workflowRepository.findAllLatestWorkflowsByProject(project.getName());
+                        List<DataItemEntity> dataItems = dataItemRepository.findAllLatestDataItemsByProject(project.getName());
 
                         return projectDTOBuilder.build(project, artifacts, functions, workflows,
                                 dataItems, true);
@@ -150,13 +150,13 @@ public class ProjectServiceImpl implements ProjectService {
                     this.projectRepository.saveAndFlush(projectUpdated);
 
                     List<FunctionEntity> functions =
-                            functionRepository.findByProject(projectUpdated.getName());
+                            functionRepository.findAllLatestFunctionsByProject(projectUpdated.getName());
                     List<ArtifactEntity> artifacts =
-                            artifactRepository.findByProject(projectUpdated.getName());
+                            artifactRepository.findAllLatestArtifactsByProject(projectUpdated.getName());
                     List<WorkflowEntity> workflows =
-                            workflowRepository.findByProject(projectUpdated.getName());
+                            workflowRepository.findAllLatestWorkflowsByProject(projectUpdated.getName());
                     List<DataItemEntity> dataItems =
-                            dataItemRepository.findByProject(projectUpdated.getName());
+                            dataItemRepository.findAllLatestDataItemsByProject(projectUpdated.getName());
 
                     return projectDTOBuilder.build(projectUpdated, artifacts, functions, workflows,
                             dataItems,

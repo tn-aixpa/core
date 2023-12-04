@@ -31,6 +31,13 @@ public interface ArtifactRepository extends JpaRepository<ArtifactEntity, String
     Page<ArtifactEntity> findAllLatestArtifactsByProject(@Param("project") String project,
                                                          Pageable pageable);
 
+    @Query("SELECT a FROM ArtifactEntity a WHERE a.project = :project AND (a.name, a.project, a.created) IN "
+            +
+            "(SELECT a2.name, a2.project, MAX(a2.created) FROM ArtifactEntity a2 WHERE a2.project = :project GROUP BY a2.name, a2.project) "
+            +
+            "ORDER BY a.created DESC")
+    List<ArtifactEntity> findAllLatestArtifactsByProject(@Param("project") String project);
+
     Optional<ArtifactEntity> findByProjectAndNameAndId(@Param("project") String project,
                                                        @Param("name") String name,
                                                        @Param("id") String id);

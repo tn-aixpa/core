@@ -15,6 +15,13 @@ public interface FunctionRepository extends JpaRepository<FunctionEntity, String
 
     List<FunctionEntity> findByProject(String project);
 
+    @Query("SELECT a FROM FunctionEntity a WHERE a.project = :project AND (a.name, a.project, a.created) IN "
+            +
+            "(SELECT a2.name, a2.project, MAX(a2.created) FROM FunctionEntity a2 WHERE a2.project = :project GROUP BY a2.name, a2.project) "
+            +
+            "ORDER BY a.created DESC")
+    List<FunctionEntity> findAllLatestFunctionsByProject(@Param("project") String project);
+
     Page<FunctionEntity> findAll(Pageable pageable);
 
     @Query("SELECT a FROM FunctionEntity a WHERE (a.name, a.created) IN " +
