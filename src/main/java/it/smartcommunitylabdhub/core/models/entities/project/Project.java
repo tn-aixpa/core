@@ -28,9 +28,7 @@ public class Project extends AbstractExtractorProperties implements BaseEntity {
     @NotNull
     @ValidateField
     private String kind;
-
-    private String description;
-    private String source;
+    
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

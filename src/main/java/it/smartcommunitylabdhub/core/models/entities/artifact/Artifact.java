@@ -31,12 +31,13 @@ public class Artifact extends AbstractExtractorProperties implements BaseEntity 
     @ValidateField
     private String kind;
 
-    @Builder.Default
-    private ArtifactMetadata metadata = new ArtifactMetadata();
-
     @NotNull
     @ValidateField
     private String project;
+
+    @Builder.Default
+    private ArtifactMetadata metadata = new ArtifactMetadata();
+
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

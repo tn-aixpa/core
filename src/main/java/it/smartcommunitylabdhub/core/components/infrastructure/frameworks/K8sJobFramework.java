@@ -321,24 +321,33 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
             for (V1Pod pod : v1PodList.getItems()) {
                 if (pod.getMetadata() != null && pod.getMetadata().getName() != null) {
                     if (pod.getMetadata().getName().startsWith(jobName)) {
-//                        String podName = pod.getMetadata().getName();
-//
-//                        // Delete the Pod
-//                        V1Pod v1Pod = coreV1Api.deleteNamespacedPod(podName, namespace, null,
-//                                null, null,
-//                                null, null,
-//                                null);
-//                        log.info("Pod deleted: " + podName);
-////                        writeLog(runnable, JacksonMapper.objectMapper.writeValueAsString(v1Pod.getStatus()));
-//
-//                        // Delete the Job
-//                        V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
-//                                jobName, "default", null,
-//                                null, null, null,
-//                                null, null);
-//
-////                        writeLog(runnable, JacksonMapper.objectMapper.writeValueAsString(deleteStatus));
-//                        log.info("Job deleted: " + jobName);
+                        String podName = pod.getMetadata().getName();
+
+                        // Delete the Pod
+                        V1Pod v1Pod = coreV1Api.deleteNamespacedPod(podName, namespace, null,
+                                null, null,
+                                null, null,
+                                null);
+                        log.info("Pod deleted: " + podName);
+
+                        try {
+                            writeLog(runnable, JacksonMapper.objectMapper.writeValueAsString(v1Pod.getStatus()));
+                        } catch (JsonProcessingException e) {
+                            log.error(e.toString());
+                        }
+
+                        // Delete the Job
+                        V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
+                                jobName, "default", null,
+                                null, null, null,
+                                null, null);
+
+                        try {
+                            writeLog(runnable, JacksonMapper.objectMapper.writeValueAsString(deleteStatus));
+                        } catch (JsonProcessingException e) {
+                            log.error(e.toString());
+                        }
+                        log.info("Job deleted: " + jobName);
                     }
                 }
             }
