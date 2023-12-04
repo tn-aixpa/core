@@ -84,7 +84,7 @@ public class LogSerivceImpl implements LogService {
             throw new CoreException("DuplicateLogId",
                     "Cannot create the log", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Optional<LogEntity> savedLog = Optional.ofNullable(logDTO)
+        Optional<LogEntity> savedLog = Optional.of(logDTO)
                 .map(logEntityBuilder::build)
                 .map(this.logRepository::saveAndFlush);
 

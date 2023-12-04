@@ -19,6 +19,7 @@ import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.StopPoller;
 import it.smartcommunitylabdhub.core.models.builders.log.LogEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
+import it.smartcommunitylabdhub.core.models.entities.log.metadata.LogMetadata;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
@@ -212,7 +213,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                 } else {
                     String v1JobStatusString = JacksonMapper.objectMapper.writeValueAsString(v1JobStatus);
                     log.warn("Job is in an unknown state : " + v1JobStatusString);
-//                    writeLog(runnable, v1JobStatusString);
+                    writeLog(runnable, v1JobStatusString);
                 }
 
             } catch (ApiException | JsonProcessingException | CoreException e) {
@@ -234,11 +235,15 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
 
     private void writeLog(K8sJobRunnable runnable, String log) {
-        logService.createLog(Log.builder()
-                .run(runnable.getId())
-                .project(runnable.getProject())
+
+        LogMetadata logMetadata = new LogMetadata();
+        logMetadata.setProject(runnable.getProject());
+        logMetadata.setRun(runnable.getId());
+        Log logDTO = Log.builder()
                 .body(Map.of("content", log))
-                .build());
+                .metadata(logMetadata)
+                .build();
+        logService.createLog(logDTO);
     }
 
     // Concat command with arguments
@@ -289,8 +294,8 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
                         log.info("Logs for Pod: " + podName);
                         log.info("Log is: " + logs);
-//                        if (logs != null)
-//                            writeLog(runnable, logs);
+                        if (logs != null)
+                            writeLog(runnable, logs);
                     }
                 }
             }

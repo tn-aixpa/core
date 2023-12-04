@@ -19,6 +19,7 @@ import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.RunFieldA
 import it.smartcommunitylabdhub.core.models.accessors.utils.ArtifactUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
+import it.smartcommunitylabdhub.core.models.entities.log.metadata.LogMetadata;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
@@ -139,11 +140,15 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
                                                                         String.class);
 
                                                         // Create and store log
+                                                        LogMetadata logMetadata = new LogMetadata();
+                                                        logMetadata.setProject(runDTO.getProject());
+                                                        logMetadata.setRun(runDTO.getId());
                                                         logService.createLog(
-                                                                Log.builder().body(Map.of("content",
-                                                                                logResponse.getBody()))
-                                                                        .project(runDTO.getProject())
-                                                                        .run(runDTO.getId()).build());
+                                                                Log.builder()
+                                                                        .metadata(logMetadata)
+                                                                        .body(Map.of("content",
+                                                                                logResponse.getBody())
+                                                                        ).build());
                                                     });
 
                                             // get Artifacts from results

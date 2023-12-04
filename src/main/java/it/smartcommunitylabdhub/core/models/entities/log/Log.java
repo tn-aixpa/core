@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractExtractorProperties;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.log.metadata.LogMetadata;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.HashMap;
@@ -23,12 +22,6 @@ public class Log extends AbstractExtractorProperties implements BaseEntity {
 
     @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
     private String id;
-
-    @NotNull
-    private String project;
-
-    @NotNull
-    private String run;
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
