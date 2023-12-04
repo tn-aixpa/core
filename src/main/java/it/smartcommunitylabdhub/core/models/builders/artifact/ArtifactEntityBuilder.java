@@ -131,10 +131,10 @@ public class ArtifactEntityBuilder {
                                     }
                                 }
                         )
-                        .with(a -> a.setMetadata(ConversionUtils.convert(artifactDTO
-                                .getMetadata(), "metadata")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(artifactDTO
-                                .getExtra(), "cbor")))
+                        .with(a -> a.setMetadata(ConversionUtils.convert(
+                                artifactDTO.getMetadata(), "metadata")))
+                        .with(a -> a.setExtra(ConversionUtils.convert(
+                                artifactDTO.getExtra(), "cbor")))
                         .with(a -> a.setExtra(ConversionUtils.convert(
                                 artifactDTO.getStatus(), "cbor")))
                         // Metadata Extraction

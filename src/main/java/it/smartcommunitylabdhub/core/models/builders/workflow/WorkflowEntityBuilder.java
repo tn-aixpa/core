@@ -122,10 +122,10 @@ public class WorkflowEntityBuilder {
                                     }
                                 }
                         )
-                        .with(w -> w.setMetadata(ConversionUtils.convert(workflowDTO
-                                .getMetadata(), "metadata")))
-                        .with(w -> w.setExtra(ConversionUtils.convert(workflowDTO
-                                .getExtra(), "cbor")))
+                        .with(w -> w.setMetadata(ConversionUtils.convert(
+                                workflowDTO.getMetadata(), "metadata")))
+                        .with(w -> w.setExtra(ConversionUtils.convert(
+                                workflowDTO.getExtra(), "cbor")))
                         .with(w -> w.setStatus(ConversionUtils.convert(
                                 workflowDTO.getStatus(), "cbor")))
 

@@ -69,12 +69,12 @@ public class ProjectEntityBuilder {
                                     }
                                 }
                         )
-                        .with(p -> p.setMetadata(ConversionUtils.convert(projectDTO
-                                .getMetadata(), "metadata")))
-                        .with(p -> p.setExtra(ConversionUtils.convert(projectDTO
-                                .getExtra(), "cbor")))
-                        .with(p -> p.setStatus(ConversionUtils.convert(projectDTO
-                                .getStatus(), "cbor")))
+                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                                projectDTO.getMetadata(), "metadata")))
+                        .with(p -> p.setExtra(ConversionUtils.convert(
+                                projectDTO.getExtra(), "cbor")))
+                        .with(p -> p.setStatus(ConversionUtils.convert(
+                                projectDTO.getStatus(), "cbor")))
                         .with(p -> {
                             spec.remove("functions");
                             spec.remove("workflows");
@@ -138,12 +138,12 @@ public class ProjectEntityBuilder {
                                     }
                                 }
                         )
-                        .with(p -> p.setMetadata(ConversionUtils.convert(projectDTO
-                                .getMetadata(), "metadata")))
-                        .with(p -> p.setExtra(ConversionUtils.convert(projectDTO
-                                .getExtra(), "cbor")))
-                        .with(p -> p.setStatus(ConversionUtils.convert(projectDTO
-                                .getStatus(), "cbor")))
+                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                                projectDTO.getMetadata(), "metadata")))
+                        .with(p -> p.setExtra(ConversionUtils.convert(
+                                projectDTO.getExtra(), "cbor")))
+                        .with(p -> p.setStatus(ConversionUtils.convert(
+                                projectDTO.getStatus(), "cbor")))
                         .with(p -> {
                             spec.remove("functions");
                             spec.remove("workflows");

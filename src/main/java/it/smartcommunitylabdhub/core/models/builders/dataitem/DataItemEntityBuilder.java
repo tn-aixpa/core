@@ -124,12 +124,12 @@ public class DataItemEntityBuilder {
                                     }
                                 }
                         )
-                        .with(d -> d.setMetadata(ConversionUtils.convert(dataItemDTO
-                                .getMetadata(), "metadata")))
-                        .with(d -> d.setExtra(ConversionUtils.convert(dataItemDTO
-                                .getExtra(), "cbor")))
-                        .with(d -> d.setStatus(ConversionUtils.convert(dataItemDTO
-                                .getStatus(), "cbor")))
+                        .with(d -> d.setMetadata(ConversionUtils.convert(
+                                dataItemDTO.getMetadata(), "metadata")))
+                        .with(d -> d.setExtra(ConversionUtils.convert(
+                                dataItemDTO.getExtra(), "cbor")))
+                        .with(d -> d.setStatus(ConversionUtils.convert(
+                                dataItemDTO.getStatus(), "cbor")))
 
                         // Metadata Extraction
                         .withIfElse(dataItemDTO.getMetadata().getEmbedded() == null,

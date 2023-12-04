@@ -122,10 +122,10 @@ public class FunctionEntityBuilder {
                                     }
                                 }
                         )
-                        .with(f -> f.setMetadata(ConversionUtils.convert(functionDTO
-                                .getMetadata(), "metadata")))
-                        .with(f -> f.setExtra(ConversionUtils.convert(functionDTO
-                                .getExtra(), "cbor")))
+                        .with(f -> f.setMetadata(ConversionUtils.convert(
+                                functionDTO.getMetadata(), "metadata")))
+                        .with(f -> f.setExtra(ConversionUtils.convert(
+                                functionDTO.getExtra(), "cbor")))
                         .with(f -> f.setStatus(ConversionUtils.convert(
                                 functionDTO.getStatus(), "cbor")))
 
