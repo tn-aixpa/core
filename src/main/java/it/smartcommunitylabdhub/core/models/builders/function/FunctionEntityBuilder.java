@@ -13,7 +13,6 @@ import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -54,39 +53,40 @@ public class FunctionEntityBuilder {
                 .convertValue(functionDTO.getSpec(), FunctionBaseSpec.class);
 
         return EntityFactory.combine(
-                ConversionUtils.convert(functionDTO, "function"), functionDTO,
-                builder -> builder
+                ConversionUtils.convert(functionDTO, "function"), functionDTO, builder -> builder
+                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                                functionDTO.getMetadata(), "metadata")))
+                        .with(a -> a.setExtra(ConversionUtils.convert(
+                                functionDTO.getExtra(), "cbor")))
+                        .with(a -> a.setSpec(ConversionUtils.convert(
+                                spec.toMap(), "cbor")))
+
+                        // Store status if not present
                         .withIfElse(functionFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (a, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        functionFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        a.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        functionFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(functionFieldAccessor.getState()));
+                                        a.setState(State.valueOf(functionFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(f -> f.setMetadata(
-                                ConversionUtils.convert(functionDTO
-                                                .getMetadata(),
-                                        "metadata")))
-                        .with(f -> f.setExtra(
-                                ConversionUtils.convert(functionDTO
-                                                .getExtra(),
-                                        "cbor")))
-                        .with(f -> f.setSpec(
-                                ConversionUtils.convert(spec.toMap(),
-                                        "cbor"))));
+
+                        // Metadata Extraction
+                        .withIfElse(functionDTO.getMetadata().getEmbedded() == null,
+                                (a, condition) -> {
+                                    if (condition) {
+                                        a.setEmbedded(false);
+                                    } else {
+                                        a.setEmbedded(functionDTO.getMetadata().getEmbedded());
+                                    }
+                                }
+                        )
+                        .withIf(functionDTO.getMetadata().getCreated() != null, (a) ->
+                                a.setCreated(functionDTO.getMetadata().getCreated()))
+                        .withIf(functionDTO.getMetadata().getUpdated() != null, (a) ->
+                                a.setUpdated(functionDTO.getMetadata().getUpdated()))
+        );
     }
 
     /**
@@ -111,36 +111,29 @@ public class FunctionEntityBuilder {
         return EntityFactory.combine(
                 function, functionDTO, builder -> builder
                         .withIfElse(functionFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (a, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        functionFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        a.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        functionFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(functionFieldAccessor.getState()));
+                                        a.setState(State.valueOf(functionFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(f -> f.setMetadata(
-                                ConversionUtils.convert(functionDTO
-                                                .getMetadata(),
-                                        "metadata")))
+                        .with(a -> a.setMetadata(ConversionUtils.convert(functionDTO
+                                .getMetadata(), "metadata")))
+                        .with(a -> a.setExtra(ConversionUtils.convert(functionDTO
+                                .getExtra(), "cbor")))
 
-                        .with(f -> f.setExtra(
-                                ConversionUtils.convert(functionDTO
-                                                .getExtra(),
-
-                                        "cbor")))
-                        .with(f -> f.setEmbedded(
-                                functionDTO.getEmbedded())));
+                        // Metadata Extraction
+                        .withIfElse(functionDTO.getMetadata().getEmbedded() == null,
+                                (a, condition) -> {
+                                    if (condition) {
+                                        a.setEmbedded(false);
+                                    } else {
+                                        a.setEmbedded(functionDTO.getMetadata().getEmbedded());
+                                    }
+                                }
+                        )
+        );
     }
 }

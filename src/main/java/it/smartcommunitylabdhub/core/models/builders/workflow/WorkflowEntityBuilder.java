@@ -13,7 +13,6 @@ import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.specs.WorkflowBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -53,41 +52,40 @@ public class WorkflowEntityBuilder {
                 .convertValue(workflowDTO.getSpec(), WorkflowBaseSpec.class);
 
         return EntityFactory.combine(
-                ConversionUtils.convert(workflowDTO, "workflow"), workflowDTO,
-                builder -> builder
+                ConversionUtils.convert(workflowDTO, "workflow"), workflowDTO, builder -> builder
+                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                                workflowDTO.getMetadata(), "metadata")))
+                        .with(a -> a.setExtra(ConversionUtils.convert(
+                                workflowDTO.getExtra(), "cbor")))
+                        .with(a -> a.setSpec(ConversionUtils.convert(
+                                spec.toMap(), "cbor")))
+
+                        // Store status if not present
                         .withIfElse(workflowFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (a, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        workflowFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        a.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        workflowFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(workflowFieldAccessor.getState()));
+                                        a.setState(State.valueOf(workflowFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(w -> w.setMetadata(
-                                ConversionUtils.convert(workflowDTO
-                                                .getMetadata(),
-                                        "metadata")))
 
-                        .with(w -> w.setExtra(
-                                ConversionUtils.convert(workflowDTO
-                                                .getExtra(),
-
-                                        "cbor")))
-                        .with(w -> w.setSpec(
-                                ConversionUtils.convert(spec.toMap(),
-                                        "cbor"))));
+                        // Metadata Extraction
+                        .withIfElse(workflowDTO.getMetadata().getEmbedded() == null,
+                                (a, condition) -> {
+                                    if (condition) {
+                                        a.setEmbedded(false);
+                                    } else {
+                                        a.setEmbedded(workflowDTO.getMetadata().getEmbedded());
+                                    }
+                                }
+                        )
+                        .withIf(workflowDTO.getMetadata().getCreated() != null, (a) ->
+                                a.setCreated(workflowDTO.getMetadata().getCreated()))
+                        .withIf(workflowDTO.getMetadata().getUpdated() != null, (a) ->
+                                a.setUpdated(workflowDTO.getMetadata().getUpdated()))
+        );
 
     }
 
@@ -114,34 +112,29 @@ public class WorkflowEntityBuilder {
         return EntityFactory.combine(
                 workflow, workflowDTO, builder -> builder
                         .withIfElse(workflowFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (a, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        workflowFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        a.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        workflowFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(workflowFieldAccessor.getState()));
+                                        a.setState(State.valueOf(workflowFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(w -> w.setMetadata(
-                                ConversionUtils.convert(workflowDTO
-                                                .getMetadata(),
-                                        "metadata")))
-                        .with(w -> w.setExtra(
-                                ConversionUtils.convert(workflowDTO
-                                                .getExtra(),
-                                        "cbor")))
-                        .with(w -> w.setEmbedded(
-                                workflowDTO.getEmbedded())));
+                        .with(a -> a.setMetadata(ConversionUtils.convert(workflowDTO
+                                .getMetadata(), "metadata")))
+                        .with(a -> a.setExtra(ConversionUtils.convert(workflowDTO
+                                .getExtra(), "cbor")))
+
+                        // Metadata Extraction
+                        .withIfElse(workflowDTO.getMetadata().getEmbedded() == null,
+                                (a, condition) -> {
+                                    if (condition) {
+                                        a.setEmbedded(false);
+                                    } else {
+                                        a.setEmbedded(workflowDTO.getMetadata().getEmbedded());
+                                    }
+                                }
+                        )
+        );
     }
 }
