@@ -45,6 +45,8 @@ public class LogEntityBuilder {
                                 logDTO.getExtra(), "cbor")))
                         .with(l -> l.setBody(ConversionUtils.convert(
                                 logDTO.getBody(), "cbor")))
+                        .with(l -> l.setStatus(ConversionUtils.convert(
+                                logDTO.getStatus(), "cbor")))
 
                         // Store status if not present
                         .withIfElse(logFieldAccessor.getState().equals(State.NONE.name()),
@@ -88,6 +90,8 @@ public class LogEntityBuilder {
                                 logDTO.getMetadata(), "metadata")))
                         .with(l -> l.setExtra(ConversionUtils.convert(
                                 logDTO.getExtra(), "cbor")))
+                        .with(l -> l.setStatus(ConversionUtils.convert(
+                                logDTO.getStatus(), "cbor")))
                         .with(l -> l.setBody(ConversionUtils.convert(
                                 logDTO.getBody(), "cbor")))
 

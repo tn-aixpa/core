@@ -73,6 +73,8 @@ public class ProjectEntityBuilder {
                                 .getMetadata(), "metadata")))
                         .with(p -> p.setExtra(ConversionUtils.convert(projectDTO
                                 .getExtra(), "cbor")))
+                        .with(p -> p.setStatus(ConversionUtils.convert(projectDTO
+                                .getStatus(), "cbor")))
                         .with(p -> {
                             spec.remove("functions");
                             spec.remove("workflows");
@@ -140,6 +142,8 @@ public class ProjectEntityBuilder {
                                 .getMetadata(), "metadata")))
                         .with(p -> p.setExtra(ConversionUtils.convert(projectDTO
                                 .getExtra(), "cbor")))
+                        .with(p -> p.setStatus(ConversionUtils.convert(projectDTO
+                                .getStatus(), "cbor")))
                         .with(p -> {
                             spec.remove("functions");
                             spec.remove("workflows");

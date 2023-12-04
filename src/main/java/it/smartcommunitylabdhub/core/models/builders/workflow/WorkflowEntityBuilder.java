@@ -59,6 +59,8 @@ public class WorkflowEntityBuilder {
                                 workflowDTO.getExtra(), "cbor")))
                         .with(w -> w.setSpec(ConversionUtils.convert(
                                 spec.toMap(), "cbor")))
+                        .with(w -> w.setStatus(ConversionUtils.convert(
+                                workflowDTO.getStatus(), "cbor")))
 
                         // Store status if not present
                         .withIfElse(workflowFieldAccessor.getState().equals(State.NONE.name()),
@@ -124,6 +126,8 @@ public class WorkflowEntityBuilder {
                                 .getMetadata(), "metadata")))
                         .with(w -> w.setExtra(ConversionUtils.convert(workflowDTO
                                 .getExtra(), "cbor")))
+                        .with(w -> w.setStatus(ConversionUtils.convert(
+                                workflowDTO.getStatus(), "cbor")))
 
                         // Metadata Extraction
                         .withIfElse(workflowDTO.getMetadata().getEmbedded() == null,

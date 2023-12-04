@@ -60,6 +60,8 @@ public class DataItemEntityBuilder {
                                 dataItemDTO.getExtra(), "cbor")))
                         .with(d -> d.setSpec(ConversionUtils.convert(
                                 spec.toMap(), "cbor")))
+                        .with(d -> d.setStatus(ConversionUtils.convert(dataItemDTO
+                                .getStatus(), "cbor")))
 
                         // Store status if not present
                         .withIfElse(dataItemFieldAccessor.getState().equals(State.NONE.name()),
@@ -126,6 +128,8 @@ public class DataItemEntityBuilder {
                                 .getMetadata(), "metadata")))
                         .with(d -> d.setExtra(ConversionUtils.convert(dataItemDTO
                                 .getExtra(), "cbor")))
+                        .with(d -> d.setStatus(ConversionUtils.convert(dataItemDTO
+                                .getStatus(), "cbor")))
 
                         // Metadata Extraction
                         .withIfElse(dataItemDTO.getMetadata().getEmbedded() == null,

@@ -68,18 +68,14 @@ public class RunEntityBuilder {
                                     }
                                 }
                         )
-                        .with(r -> r.setMetadata(
-                                ConversionUtils.convert(
-                                        runDTO.getMetadata(),
-                                        "metadata")))
-                        .with(r -> r.setExtra(
-                                ConversionUtils.convert(
-                                        runDTO.getExtra(),
-                                        "cbor")))
-                        .with(r -> r.setSpec(
-                                ConversionUtils.convert(
-                                        spec.toMap(),
-                                        "cbor")))
+                        .with(r -> r.setMetadata(ConversionUtils.convert(
+                                runDTO.getMetadata(), "metadata")))
+                        .with(r -> r.setExtra(ConversionUtils.convert(
+                                runDTO.getExtra(), "cbor")))
+                        .with(r -> r.setSpec(ConversionUtils.convert(
+                                spec.toMap(), "cbor")))
+                        .with(r -> r.setStatus(ConversionUtils.convert(
+                                runDTO.getStatus(), "cbor")))
                         .withIf(runDTO.getMetadata().getCreated() != null, (r) ->
                                 r.setCreated(runDTO.getMetadata().getCreated()))
                         .withIf(runDTO.getMetadata().getUpdated() != null, (r) ->
@@ -118,9 +114,9 @@ public class RunEntityBuilder {
                                     }
                                 }
                         )
-                        .with(p -> p.setMetadata(
-                                ConversionUtils.convert(runDTO
-                                                .getMetadata(),
-                                        "metadata"))));
+                        .with(r -> r.setStatus(ConversionUtils.convert(
+                                runDTO.getStatus(), "cbor")))
+                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                                runDTO.getMetadata(), "metadata"))));
     }
 }

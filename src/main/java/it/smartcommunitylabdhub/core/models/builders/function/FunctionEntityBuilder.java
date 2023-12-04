@@ -61,6 +61,8 @@ public class FunctionEntityBuilder {
                                 functionDTO.getExtra(), "cbor")))
                         .with(f -> f.setSpec(ConversionUtils.convert(
                                 spec.toMap(), "cbor")))
+                        .with(f -> f.setStatus(ConversionUtils.convert(
+                                functionDTO.getStatus(), "cbor")))
 
                         // Store status if not present
                         .withIfElse(functionFieldAccessor.getState().equals(State.NONE.name()),
@@ -124,6 +126,8 @@ public class FunctionEntityBuilder {
                                 .getMetadata(), "metadata")))
                         .with(f -> f.setExtra(ConversionUtils.convert(functionDTO
                                 .getExtra(), "cbor")))
+                        .with(f -> f.setStatus(ConversionUtils.convert(
+                                functionDTO.getStatus(), "cbor")))
 
                         // Metadata Extraction
                         .withIfElse(functionDTO.getMetadata().getEmbedded() == null,

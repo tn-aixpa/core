@@ -13,7 +13,6 @@ import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,52 +47,39 @@ public class TaskEntityBuilder {
                         JacksonMapper.objectMapper.convertValue(taskDTO,
                                 JacksonMapper.typeRef));
 
-        // Retrieve the task
-        TaskEntity task = ConversionUtils.convert(taskDTO, "task");
 
         // Retrieve base spec
         TaskBaseSpec<?> spec = JacksonMapper.objectMapper
                 .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
 
-        // Merge function
-        task.setFunction(spec.getFunction());
 
         return EntityFactory.combine(
-                task, taskDTO,
+                ConversionUtils.convert(taskDTO, "task"), taskDTO,
                 builder -> builder
+                        .with(t -> t.setFunction(spec.getFunction()))
                         .withIfElse(taskFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (r, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        taskFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        r.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        taskFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(taskFieldAccessor.getState()));
+                                        r.setState(State.valueOf(taskFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(t -> t.setMetadata(
-                                ConversionUtils.convert(taskDTO
-                                                .getMetadata(),
-                                        "metadata")))
-
-                        .with(t -> t.setExtra(
-                                ConversionUtils.convert(
-                                        taskDTO.getExtra(),
-                                        "cbor")))
-                        .with(t -> t.setSpec(
-                                ConversionUtils.convert(
-                                        spec.toMap(),
-                                        "cbor"))));
+                        .with(t -> t.setMetadata(ConversionUtils.convert(
+                                taskDTO.getMetadata(), "metadata")))
+                        .with(t -> t.setExtra(ConversionUtils.convert(
+                                taskDTO.getExtra(), "cbor")))
+                        .with(t -> t.setSpec(ConversionUtils.convert(
+                                spec.toMap(), "cbor")))
+                        .with(t -> t.setStatus(ConversionUtils.convert(
+                                taskDTO.getStatus(), "cbor")))
+                        .withIf(taskDTO.getMetadata().getCreated() != null, (t) ->
+                                t.setCreated(taskDTO.getMetadata().getCreated()))
+                        .withIf(taskDTO.getMetadata().getUpdated() != null, (t) ->
+                                t.setUpdated(taskDTO.getMetadata().getUpdated())
+                        )
+        );
     }
 
     /**
@@ -124,37 +110,22 @@ public class TaskEntityBuilder {
                 task, taskDTO, builder -> builder
                         .with(t -> t.setFunction(spec.getFunction()))
                         .withIfElse(taskFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (r, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        taskFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        r.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        taskFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(taskFieldAccessor.getState()));
+                                        r.setState(State.valueOf(taskFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(t -> t.setMetadata(
-                                ConversionUtils.convert(taskDTO
-                                                .getMetadata(),
-                                        "metadata")))
-
-                        .with(t -> t.setExtra(
-                                ConversionUtils.convert(
-                                        taskDTO.getExtra(),
-
-                                        "cbor")))
-                        .with(t -> t.setSpec(
-                                ConversionUtils.convert(spec.toMap(),
-                                        "cbor"))));
+                        .with(t -> t.setMetadata(ConversionUtils.convert(
+                                taskDTO.getMetadata(), "metadata")))
+                        .with(t -> t.setExtra(ConversionUtils.convert(
+                                taskDTO.getExtra(), "cbor")))
+                        .with(t -> t.setSpec(ConversionUtils.convert(
+                                spec.toMap(), "cbor")))
+                        .with(t -> t.setStatus(ConversionUtils.convert(
+                                taskDTO.getStatus(), "cbor")))
+        );
     }
 }

@@ -6,9 +6,11 @@ import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.metadata.TaskMetadata;
+import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -28,24 +30,35 @@ public class TaskDTOBuilder {
 
         return EntityFactory.create(Task::new, task, builder -> builder
                 .with(dto -> dto.setId(task.getId()))
-                .with(dto -> dto.setProject(task.getProject()))
                 .with(dto -> dto.setKind(task.getKind()))
-                .with(dto -> dto.setMetadata(Optional
-                        .ofNullable(metadataConverter.reverseByClass(
-                                task.getMetadata(),
-                                TaskMetadata.class))
-                        .orElseGet(TaskMetadata::new)
-
-                ))
+                .with(dto -> dto.setProject(task.getProject()))
+                .with(dto -> {
+                    // Set Metadata for task
+                    TaskMetadata taskMetadata =
+                            Optional.ofNullable(metadataConverter.reverseByClass(
+                                    task.getMetadata(),
+                                    TaskMetadata.class)
+                            ).orElseGet(TaskMetadata::new);
+                    taskMetadata.setVersion(task.getId());
+                    taskMetadata.setProject(task.getProject());
+                    taskMetadata.setCreated(task.getCreated());
+                    taskMetadata.setUpdated(task.getUpdated());
+                    dto.setMetadata(taskMetadata);
+                })
                 .with(dto -> dto.setSpec(ConversionUtils.reverse(
                         task.getSpec(), "cbor")))
                 .with(dto -> dto.setExtra(ConversionUtils.reverse(
                         task.getExtra(), "cbor")))
                 .with(dto -> dto.setStatus(
-                        ConversionUtils.reverse(
-                                task.getStatus(), "cbor")))
-                .with(dto -> dto.setCreated(task.getCreated()))
-                .with(dto -> dto.setUpdated(task.getUpdated()))
+                        MapUtils.mergeMultipleMaps(
+                                ConversionUtils.reverse(
+                                        task.getStatus(),
+                                        "cbor"),
+                                Map.of("state",
+                                        task.getState())
+                        ))
+                )
+
 
         );
     }

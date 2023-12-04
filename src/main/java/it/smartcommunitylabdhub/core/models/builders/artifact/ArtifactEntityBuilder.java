@@ -61,6 +61,8 @@ public class ArtifactEntityBuilder {
                                 artifactDTO.getMetadata(), "metadata")))
                         .with(a -> a.setExtra(ConversionUtils.convert(
                                 artifactDTO.getExtra(), "cbor")))
+                        .with(a -> a.setExtra(ConversionUtils.convert(
+                                artifactDTO.getStatus(), "cbor")))
                         .with(a -> a.setSpec(ConversionUtils.convert(
                                 spec.toMap(), "cbor")))
 
@@ -133,7 +135,8 @@ public class ArtifactEntityBuilder {
                                 .getMetadata(), "metadata")))
                         .with(a -> a.setExtra(ConversionUtils.convert(artifactDTO
                                 .getExtra(), "cbor")))
-
+                        .with(a -> a.setExtra(ConversionUtils.convert(
+                                artifactDTO.getStatus(), "cbor")))
                         // Metadata Extraction
                         .withIfElse(artifactDTO.getMetadata().getEmbedded() == null,
                                 (a, condition) -> {
