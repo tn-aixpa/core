@@ -29,7 +29,7 @@ public class WorkflowEntityBuilder {
 
 
     /**
-     * Build a workflow from a workflowDTO and store extra values as a cbor
+     * Build w workflow from w workflowDTO and store extra values as w cbor
      *
      * @return Workflow
      */
@@ -55,42 +55,42 @@ public class WorkflowEntityBuilder {
                 ConversionUtils.convert(workflowDTO, "workflow"), workflowDTO, builder -> builder
                         .with(p -> p.setMetadata(ConversionUtils.convert(
                                 workflowDTO.getMetadata(), "metadata")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(
+                        .with(w -> w.setExtra(ConversionUtils.convert(
                                 workflowDTO.getExtra(), "cbor")))
-                        .with(a -> a.setSpec(ConversionUtils.convert(
+                        .with(w -> w.setSpec(ConversionUtils.convert(
                                 spec.toMap(), "cbor")))
 
                         // Store status if not present
                         .withIfElse(workflowFieldAccessor.getState().equals(State.NONE.name()),
-                                (a, condition) -> {
+                                (w, condition) -> {
                                     if (condition) {
-                                        a.setState(State.CREATED);
+                                        w.setState(State.CREATED);
                                     } else {
-                                        a.setState(State.valueOf(workflowFieldAccessor.getState()));
+                                        w.setState(State.valueOf(workflowFieldAccessor.getState()));
                                     }
                                 }
                         )
 
                         // Metadata Extraction
                         .withIfElse(workflowDTO.getMetadata().getEmbedded() == null,
-                                (a, condition) -> {
+                                (w, condition) -> {
                                     if (condition) {
-                                        a.setEmbedded(false);
+                                        w.setEmbedded(false);
                                     } else {
-                                        a.setEmbedded(workflowDTO.getMetadata().getEmbedded());
+                                        w.setEmbedded(workflowDTO.getMetadata().getEmbedded());
                                     }
                                 }
                         )
-                        .withIf(workflowDTO.getMetadata().getCreated() != null, (a) ->
-                                a.setCreated(workflowDTO.getMetadata().getCreated()))
-                        .withIf(workflowDTO.getMetadata().getUpdated() != null, (a) ->
-                                a.setUpdated(workflowDTO.getMetadata().getUpdated()))
+                        .withIf(workflowDTO.getMetadata().getCreated() != null, (w) ->
+                                w.setCreated(workflowDTO.getMetadata().getCreated()))
+                        .withIf(workflowDTO.getMetadata().getUpdated() != null, (w) ->
+                                w.setUpdated(workflowDTO.getMetadata().getUpdated()))
         );
 
     }
 
     /**
-     * Update a workflow if element is not passed it override causing empty field
+     * Update w workflow if element is not passed it override causing empty field
      *
      * @param workflow Workflow
      * @return WorkflowEntity
@@ -112,26 +112,26 @@ public class WorkflowEntityBuilder {
         return EntityFactory.combine(
                 workflow, workflowDTO, builder -> builder
                         .withIfElse(workflowFieldAccessor.getState().equals(State.NONE.name()),
-                                (a, condition) -> {
+                                (w, condition) -> {
                                     if (condition) {
-                                        a.setState(State.CREATED);
+                                        w.setState(State.CREATED);
                                     } else {
-                                        a.setState(State.valueOf(workflowFieldAccessor.getState()));
+                                        w.setState(State.valueOf(workflowFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(a -> a.setMetadata(ConversionUtils.convert(workflowDTO
+                        .with(w -> w.setMetadata(ConversionUtils.convert(workflowDTO
                                 .getMetadata(), "metadata")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(workflowDTO
+                        .with(w -> w.setExtra(ConversionUtils.convert(workflowDTO
                                 .getExtra(), "cbor")))
 
                         // Metadata Extraction
                         .withIfElse(workflowDTO.getMetadata().getEmbedded() == null,
-                                (a, condition) -> {
+                                (w, condition) -> {
                                     if (condition) {
-                                        a.setEmbedded(false);
+                                        w.setEmbedded(false);
                                     } else {
-                                        a.setEmbedded(workflowDTO.getMetadata().getEmbedded());
+                                        w.setEmbedded(workflowDTO.getMetadata().getEmbedded());
                                     }
                                 }
                         )

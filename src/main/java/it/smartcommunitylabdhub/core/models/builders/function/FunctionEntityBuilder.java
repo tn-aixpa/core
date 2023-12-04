@@ -29,7 +29,7 @@ public class FunctionEntityBuilder {
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
 
     /**
-     * Build a function from a functionDTO and store extra values as a cbor
+     * Build a function from a functionDTO and store extra values as f cbor
      * <p>
      *
      * @param functionDTO the functionDTO that need to be stored
@@ -56,36 +56,36 @@ public class FunctionEntityBuilder {
                 ConversionUtils.convert(functionDTO, "function"), functionDTO, builder -> builder
                         .with(p -> p.setMetadata(ConversionUtils.convert(
                                 functionDTO.getMetadata(), "metadata")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(
+                        .with(f -> f.setExtra(ConversionUtils.convert(
                                 functionDTO.getExtra(), "cbor")))
-                        .with(a -> a.setSpec(ConversionUtils.convert(
+                        .with(f -> f.setSpec(ConversionUtils.convert(
                                 spec.toMap(), "cbor")))
 
                         // Store status if not present
                         .withIfElse(functionFieldAccessor.getState().equals(State.NONE.name()),
-                                (a, condition) -> {
+                                (f, condition) -> {
                                     if (condition) {
-                                        a.setState(State.CREATED);
+                                        f.setState(State.CREATED);
                                     } else {
-                                        a.setState(State.valueOf(functionFieldAccessor.getState()));
+                                        f.setState(State.valueOf(functionFieldAccessor.getState()));
                                     }
                                 }
                         )
 
                         // Metadata Extraction
                         .withIfElse(functionDTO.getMetadata().getEmbedded() == null,
-                                (a, condition) -> {
+                                (f, condition) -> {
                                     if (condition) {
-                                        a.setEmbedded(false);
+                                        f.setEmbedded(false);
                                     } else {
-                                        a.setEmbedded(functionDTO.getMetadata().getEmbedded());
+                                        f.setEmbedded(functionDTO.getMetadata().getEmbedded());
                                     }
                                 }
                         )
-                        .withIf(functionDTO.getMetadata().getCreated() != null, (a) ->
-                                a.setCreated(functionDTO.getMetadata().getCreated()))
-                        .withIf(functionDTO.getMetadata().getUpdated() != null, (a) ->
-                                a.setUpdated(functionDTO.getMetadata().getUpdated()))
+                        .withIf(functionDTO.getMetadata().getCreated() != null, (f) ->
+                                f.setCreated(functionDTO.getMetadata().getCreated()))
+                        .withIf(functionDTO.getMetadata().getUpdated() != null, (f) ->
+                                f.setUpdated(functionDTO.getMetadata().getUpdated()))
         );
     }
 
@@ -111,26 +111,26 @@ public class FunctionEntityBuilder {
         return EntityFactory.combine(
                 function, functionDTO, builder -> builder
                         .withIfElse(functionFieldAccessor.getState().equals(State.NONE.name()),
-                                (a, condition) -> {
+                                (f, condition) -> {
                                     if (condition) {
-                                        a.setState(State.CREATED);
+                                        f.setState(State.CREATED);
                                     } else {
-                                        a.setState(State.valueOf(functionFieldAccessor.getState()));
+                                        f.setState(State.valueOf(functionFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(a -> a.setMetadata(ConversionUtils.convert(functionDTO
+                        .with(f -> f.setMetadata(ConversionUtils.convert(functionDTO
                                 .getMetadata(), "metadata")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(functionDTO
+                        .with(f -> f.setExtra(ConversionUtils.convert(functionDTO
                                 .getExtra(), "cbor")))
 
                         // Metadata Extraction
                         .withIfElse(functionDTO.getMetadata().getEmbedded() == null,
-                                (a, condition) -> {
+                                (f, condition) -> {
                                     if (condition) {
-                                        a.setEmbedded(false);
+                                        f.setEmbedded(false);
                                     } else {
-                                        a.setEmbedded(functionDTO.getMetadata().getEmbedded());
+                                        f.setEmbedded(functionDTO.getMetadata().getEmbedded());
                                     }
                                 }
                         )

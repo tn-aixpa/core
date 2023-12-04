@@ -29,7 +29,7 @@ public class ArtifactEntityBuilder {
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
 
     /**
-     * Build a artifact from a artifactDTO and store extra values as a cbor
+     * Build an artifact from an artifactDTO and store extra values as a cbor
      *
      * @param artifactDTO the artifact DTO
      * @return Artifact
@@ -97,7 +97,7 @@ public class ArtifactEntityBuilder {
     }
 
     /**
-     * Update a artifact if element is not passed it override causing empty field
+     * Update an artifact if element is not passed it override causing empty field
      *
      * @param artifact    the Artifact entity
      * @param artifactDTO the ArtifactDTO to combine with the entity

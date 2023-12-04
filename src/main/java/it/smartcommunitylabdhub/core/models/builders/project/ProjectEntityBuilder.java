@@ -14,7 +14,6 @@ import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectBaseSp
 import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectProjectSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +30,7 @@ public class ProjectEntityBuilder {
 
 
     /**
-     * Build a project from a projectDTO and store extra values as a cbor
+     * Build a project from a projectDTO and store extra values as p cbor
      * <p>
      *
      * @param projectDTO the Project DTO To convert
@@ -62,29 +61,18 @@ public class ProjectEntityBuilder {
                 ConversionUtils.convert(projectDTO, "project"), projectDTO,
                 builder -> builder
                         .withIfElse(projectFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (p, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        projectFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        p.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        projectFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(projectFieldAccessor.getState()));
+                                        p.setState(State.valueOf(projectFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(p -> p.setExtra(
-                                ConversionUtils.convert(projectDTO
-                                                .getExtra(),
-                                        "cbor")))
+                        .with(p -> p.setMetadata(ConversionUtils.convert(projectDTO
+                                .getMetadata(), "metadata")))
+                        .with(p -> p.setExtra(ConversionUtils.convert(projectDTO
+                                .getExtra(), "cbor")))
                         .with(p -> {
                             spec.remove("functions");
                             spec.remove("workflows");
@@ -92,10 +80,18 @@ public class ProjectEntityBuilder {
                             spec.remove("dataitems");
                             p.setSpec(ConversionUtils.convert(spec, "cbor"));
                         })
-                        .with(p -> p.setMetadata(
-                                ConversionUtils.convert(projectDTO
-                                                .getMetadata(),
-                                        "metadata")))
+
+                        // Metadata Extraction
+                        .withIf(projectDTO.getMetadata().getSource() != null, (p) ->
+                                p.setDescription(projectDTO.getMetadata().getSource()))
+                        .withIf(projectDTO.getMetadata().getDescription() != null, (p) ->
+                                p.setDescription(projectDTO.getMetadata().getDescription()))
+                        .withIf(projectDTO.getMetadata().getCreated() != null, (p) ->
+                                p.setCreated(projectDTO.getMetadata().getCreated()))
+                        .withIf(projectDTO.getMetadata().getUpdated() != null, (p) ->
+                                p.setUpdated(projectDTO.getMetadata().getUpdated())
+                        )
+
 
         );
     }
@@ -111,7 +107,7 @@ public class ProjectEntityBuilder {
 
         // Validate Spec
         specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
-        
+
         // Retrieve field accessor
         ProjectFieldAccessor<?> projectFieldAccessor =
                 accessorRegistry.createAccessor(
@@ -130,33 +126,20 @@ public class ProjectEntityBuilder {
 
         return EntityFactory.combine(
                 project, projectDTO, builder -> builder
-                        .with(p -> p.setDescription(
-                                projectDTO.getDescription()))
-                        .with(p -> p.setSource(projectDTO.getMetadata().getSource()))
+
                         .withIfElse(projectFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (p, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        projectFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        p.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        projectFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(projectFieldAccessor.getState()));
+                                        p.setState(State.valueOf(projectFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(p -> p.setExtra(
-                                ConversionUtils.convert(projectDTO
-                                                .getExtra(),
-                                        "cbor")))
+                        .with(p -> p.setMetadata(ConversionUtils.convert(projectDTO
+                                .getMetadata(), "metadata")))
+                        .with(p -> p.setExtra(ConversionUtils.convert(projectDTO
+                                .getExtra(), "cbor")))
                         .with(p -> {
                             spec.remove("functions");
                             spec.remove("workflows");
@@ -164,9 +147,12 @@ public class ProjectEntityBuilder {
                             spec.remove("dataitems");
                             p.setSpec(ConversionUtils.convert(spec, "cbor"));
                         })
-                        .with(p -> p.setMetadata(
-                                ConversionUtils.convert(projectDTO
-                                                .getMetadata(),
-                                        "metadata"))));
+                        .withIf(projectDTO.getMetadata().getSource() != null, (p) ->
+                                p.setDescription(projectDTO.getMetadata().getSource()))
+                        .withIf(projectDTO.getMetadata().getDescription() != null, (p) ->
+                                p.setDescription(projectDTO.getMetadata().getDescription()))
+
+
+        );
     }
 }

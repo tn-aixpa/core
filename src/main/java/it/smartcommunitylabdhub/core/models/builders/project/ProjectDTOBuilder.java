@@ -78,24 +78,29 @@ public class ProjectDTOBuilder {
                 .with(dto -> dto.setId(project.getId()))
                 .with(dto -> dto.setName(project.getName()))
                 .with(dto -> dto.setKind(project.getKind()))
-                .with(dto -> dto.setDescription(project.getDescription()))
-                .with(dto -> dto.setSource(project.getSource()))
+                .with(dto -> {
+                    // Set Metadata for project
+                    ProjectMetadata projectMetadata =
+                            Optional.ofNullable(metadataConverter.reverseByClass(
+                                    project.getMetadata(),
+                                    ProjectMetadata.class)
+                            ).orElseGet(ProjectMetadata::new);
+
+                    projectMetadata.setProject(project.getName());
+                    projectMetadata.setVersion(project.getId());
+                    projectMetadata.setDescription(project.getDescription());
+                    projectMetadata.setName(project.getName());
+                    projectMetadata.setSource(project.getSource());
+                    projectMetadata.setCreated(project.getCreated());
+                    projectMetadata.setUpdated(project.getUpdated());
+                    dto.setMetadata(projectMetadata);
+                })
+                .with(dto -> dto.setSpec(spec))
                 .with(dto -> dto.setExtra(ConversionUtils.reverse(
                         project.getExtra(),
                         "cbor")))
-                .with(dto -> dto.setSpec(spec))
-                .with(dto -> dto.setMetadata(Optional
-                        .ofNullable(
-                                metadataConverter.reverseByClass(
-                                        project.getMetadata(),
-                                        ProjectMetadata.class))
-                        .orElseGet(ProjectMetadata::new)))
-                .with(dto -> dto.setStatus(
-                        ConversionUtils.reverse(
-                                project.getStatus(), "cbor")))
-                .with(dto -> dto.setCreated(project.getCreated()))
-                .with(dto -> dto.setUpdated(project.getUpdated()))
-
+                .with(dto -> dto.setStatus(ConversionUtils.reverse(
+                        project.getStatus(), "cbor")))
 
         );
     }

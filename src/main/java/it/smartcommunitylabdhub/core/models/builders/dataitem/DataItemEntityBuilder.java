@@ -28,7 +28,7 @@ public class DataItemEntityBuilder {
     AccessorRegistry<? extends Accessor<Object>> accessorRegistry;
 
     /**
-     * Build d dataItem from d dataItemDTO and store extra values as d cbor
+     * Build a dataItem from a dataItemDTO and store extra values as d cbor
      * <p>
      *
      * @return DataItemDTO
@@ -56,43 +56,43 @@ public class DataItemEntityBuilder {
                 builder -> builder
                         .with(p -> p.setMetadata(ConversionUtils.convert(
                                 dataItemDTO.getMetadata(), "metadata")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(
+                        .with(d -> d.setExtra(ConversionUtils.convert(
                                 dataItemDTO.getExtra(), "cbor")))
-                        .with(a -> a.setSpec(ConversionUtils.convert(
+                        .with(d -> d.setSpec(ConversionUtils.convert(
                                 spec.toMap(), "cbor")))
 
                         // Store status if not present
                         .withIfElse(dataItemFieldAccessor.getState().equals(State.NONE.name()),
-                                (a, condition) -> {
+                                (d, condition) -> {
                                     if (condition) {
-                                        a.setState(State.CREATED);
+                                        d.setState(State.CREATED);
                                     } else {
-                                        a.setState(State.valueOf(dataItemFieldAccessor.getState()));
+                                        d.setState(State.valueOf(dataItemFieldAccessor.getState()));
                                     }
                                 }
                         )
 
                         // Metadata Extraction
                         .withIfElse(dataItemDTO.getMetadata().getEmbedded() == null,
-                                (a, condition) -> {
+                                (d, condition) -> {
                                     if (condition) {
-                                        a.setEmbedded(false);
+                                        d.setEmbedded(false);
                                     } else {
-                                        a.setEmbedded(dataItemDTO.getMetadata().getEmbedded());
+                                        d.setEmbedded(dataItemDTO.getMetadata().getEmbedded());
                                     }
                                 }
                         )
-                        .withIf(dataItemDTO.getMetadata().getCreated() != null, (a) ->
-                                a.setCreated(dataItemDTO.getMetadata().getCreated()))
-                        .withIf(dataItemDTO.getMetadata().getUpdated() != null, (a) ->
-                                a.setUpdated(dataItemDTO.getMetadata().getUpdated())
+                        .withIf(dataItemDTO.getMetadata().getCreated() != null, (d) ->
+                                d.setCreated(dataItemDTO.getMetadata().getCreated()))
+                        .withIf(dataItemDTO.getMetadata().getUpdated() != null, (d) ->
+                                d.setUpdated(dataItemDTO.getMetadata().getUpdated())
                         )
         );
 
     }
 
     /**
-     * Update d dataItem if element is not passed it override causing empty field
+     * Update a dataItem if element is not passed it override causing empty field
      *
      * @param dataItem    the Dataitem
      * @param dataItemDTO the Dataitem DTO to combine
@@ -114,26 +114,26 @@ public class DataItemEntityBuilder {
         return EntityFactory.combine(
                 dataItem, dataItemDTO, builder -> builder
                         .withIfElse(dataItemFieldAccessor.getState().equals(State.NONE.name()),
-                                (a, condition) -> {
+                                (d, condition) -> {
                                     if (condition) {
-                                        a.setState(State.CREATED);
+                                        d.setState(State.CREATED);
                                     } else {
-                                        a.setState(State.valueOf(dataItemFieldAccessor.getState()));
+                                        d.setState(State.valueOf(dataItemFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(a -> a.setMetadata(ConversionUtils.convert(dataItemDTO
+                        .with(d -> d.setMetadata(ConversionUtils.convert(dataItemDTO
                                 .getMetadata(), "metadata")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(dataItemDTO
+                        .with(d -> d.setExtra(ConversionUtils.convert(dataItemDTO
                                 .getExtra(), "cbor")))
 
                         // Metadata Extraction
                         .withIfElse(dataItemDTO.getMetadata().getEmbedded() == null,
-                                (a, condition) -> {
+                                (d, condition) -> {
                                     if (condition) {
-                                        a.setEmbedded(false);
+                                        d.setEmbedded(false);
                                     } else {
-                                        a.setEmbedded(dataItemDTO.getMetadata().getEmbedded());
+                                        d.setEmbedded(dataItemDTO.getMetadata().getEmbedded());
                                     }
                                 }
                         )
