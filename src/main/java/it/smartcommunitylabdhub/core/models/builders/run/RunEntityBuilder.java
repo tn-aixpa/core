@@ -14,7 +14,6 @@ import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -51,37 +50,21 @@ public class RunEntityBuilder {
                                 runDTO,
                                 JacksonMapper.typeRef));
 
-
-        // Create run Object
-        RunEntity run = ConversionUtils.convert(runDTO, "run");
         // Retrieve base spec
         RunBaseSpec<?> spec = JacksonMapper.objectMapper
                 .convertValue(runDTO.getSpec(), RunBaseSpec.class);
 
-        // Merge Task and TaskId
-        run.setTask(spec.getTask());
-        run.setTaskId(spec.getTaskId());
 
         return EntityFactory.combine(
-                run, runDTO,
-                builder -> builder
+                ConversionUtils.convert(runDTO, "run"), runDTO, builder -> builder
+                        .with(r -> r.setTask(spec.getTask()))
+                        .with(r -> r.setTaskId(spec.getTaskId()))
                         .withIfElse(runFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (r, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        runFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(RunState.CREATED);
+                                        r.setState(RunState.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        runFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(RunState.valueOf(runFieldAccessor.getState()));
+                                        r.setState(RunState.valueOf(runFieldAccessor.getState()));
                                     }
                                 }
                         )
@@ -96,7 +79,13 @@ public class RunEntityBuilder {
                         .with(r -> r.setSpec(
                                 ConversionUtils.convert(
                                         spec.toMap(),
-                                        "cbor"))));
+                                        "cbor")))
+                        .withIf(runDTO.getMetadata().getCreated() != null, (r) ->
+                                r.setCreated(runDTO.getMetadata().getCreated()))
+                        .withIf(runDTO.getMetadata().getUpdated() != null, (r) ->
+                                r.setUpdated(runDTO.getMetadata().getUpdated())
+                        )
+        );
 
     }
 
@@ -121,22 +110,11 @@ public class RunEntityBuilder {
         return EntityFactory.combine(
                 run, runDTO, builder -> builder
                         .withIfElse(runFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (r, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        runFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(RunState.CREATED);
+                                        r.setState(RunState.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        runFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(RunState.valueOf(runFieldAccessor.getState()));
+                                        r.setState(RunState.valueOf(runFieldAccessor.getState()));
                                     }
                                 }
                         )
