@@ -13,7 +13,6 @@ import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.specs.DataItemBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.JacksonMapper;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +20,7 @@ import java.util.Map;
 
 @Component
 public class DataItemEntityBuilder {
-    
+
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
 
@@ -51,38 +50,44 @@ public class DataItemEntityBuilder {
         // Retrieve Spec
         DataItemBaseSpec<?> spec = JacksonMapper.objectMapper
                 .convertValue(dataItemDTO.getSpec(), DataItemBaseSpec.class);
+
         return EntityFactory.combine(
                 ConversionUtils.convert(dataItemDTO, "dataitem"), dataItemDTO,
                 builder -> builder
+                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                                dataItemDTO.getMetadata(), "metadata")))
+                        .with(a -> a.setExtra(ConversionUtils.convert(
+                                dataItemDTO.getExtra(), "cbor")))
+                        .with(a -> a.setSpec(ConversionUtils.convert(
+                                spec.toMap(), "cbor")))
+
+                        // Store status if not present
                         .withIfElse(dataItemFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (a, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        dataItemFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        a.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        dataItemFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(dataItemFieldAccessor.getState()));
+                                        a.setState(State.valueOf(dataItemFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(d -> d.setMetadata(
-                                ConversionUtils.convert(dataItemDTO
-                                                .getMetadata(),
-                                        "metadata")))
-                        .with(d -> d.setExtra(
-                                ConversionUtils.convert(dataItemDTO
-                                                .getExtra(),
-                                        "cbor")))
-                        .with(d -> d.setSpec(ConversionUtils.convert(spec.toMap(), "cbor"))));
+
+                        // Metadata Extraction
+                        .withIfElse(dataItemDTO.getMetadata().getEmbedded() == null,
+                                (a, condition) -> {
+                                    if (condition) {
+                                        a.setEmbedded(false);
+                                    } else {
+                                        a.setEmbedded(dataItemDTO.getMetadata().getEmbedded());
+                                    }
+                                }
+                        )
+                        .withIf(dataItemDTO.getMetadata().getCreated() != null, (a) ->
+                                a.setCreated(dataItemDTO.getMetadata().getCreated()))
+                        .withIf(dataItemDTO.getMetadata().getUpdated() != null, (a) ->
+                                a.setUpdated(dataItemDTO.getMetadata().getUpdated())
+                        )
+        );
 
     }
 
@@ -109,35 +114,29 @@ public class DataItemEntityBuilder {
         return EntityFactory.combine(
                 dataItem, dataItemDTO, builder -> builder
                         .withIfElse(dataItemFieldAccessor.getState().equals(State.NONE.name()),
-                                (dto, condition) -> {
+                                (a, condition) -> {
                                     if (condition) {
-                                        dto.setStatus(ConversionUtils.convert(
-                                                MapUtils.mergeMultipleMaps(
-                                                        dataItemFieldAccessor.getStatus(),
-                                                        Map.of("state", State.CREATED.name())
-                                                ), "cbor")
-                                        );
-                                        dto.setState(State.CREATED);
+                                        a.setState(State.CREATED);
                                     } else {
-                                        dto.setStatus(
-                                                ConversionUtils.convert(
-                                                        dataItemFieldAccessor.getStatus(),
-                                                        "cbor")
-                                        );
-                                        dto.setState(State.valueOf(dataItemFieldAccessor.getState()));
+                                        a.setState(State.valueOf(dataItemFieldAccessor.getState()));
                                     }
                                 }
                         )
-                        .with(d -> d.setMetadata(
-                                ConversionUtils.convert(dataItemDTO
-                                                .getMetadata(),
-                                        "metadata")))
-                        .with(d -> d.setExtra(
-                                ConversionUtils.convert(dataItemDTO
-                                                .getExtra(),
+                        .with(a -> a.setMetadata(ConversionUtils.convert(dataItemDTO
+                                .getMetadata(), "metadata")))
+                        .with(a -> a.setExtra(ConversionUtils.convert(dataItemDTO
+                                .getExtra(), "cbor")))
 
-                                        "cbor")))
-                        .with(d -> d.setEmbedded(
-                                dataItemDTO.getEmbedded())));
+                        // Metadata Extraction
+                        .withIfElse(dataItemDTO.getMetadata().getEmbedded() == null,
+                                (a, condition) -> {
+                                    if (condition) {
+                                        a.setEmbedded(false);
+                                    } else {
+                                        a.setEmbedded(dataItemDTO.getMetadata().getEmbedded());
+                                    }
+                                }
+                        )
+        );
     }
 }

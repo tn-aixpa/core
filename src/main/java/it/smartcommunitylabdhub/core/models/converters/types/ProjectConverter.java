@@ -28,8 +28,6 @@ public class ProjectConverter implements Converter<Project, ProjectEntity> {
                 .kind(project.getKind())
                 .description(project.getDescription())
                 .source(project.getSource())
-                .created(project.getCreated())
-                .updated(project.getUpdated())
                 .build();
     }
 

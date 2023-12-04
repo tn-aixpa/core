@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.core.models.entities.workflow.metadata.WorkflowM
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +32,8 @@ public class Workflow extends AbstractExtractorProperties implements BaseEntity 
     @ValidateField
     private String kind;
 
-    private WorkflowMetadata metadata;
+    @Builder.Default
+    private WorkflowMetadata metadata = new WorkflowMetadata();
 
     @NotNull
     @ValidateField
@@ -50,15 +50,9 @@ public class Workflow extends AbstractExtractorProperties implements BaseEntity 
     @Builder.Default
     private Map<String, Object> status = new HashMap<>();
 
-    private Date created;
-    private Date updated;
-    @Builder.Default
-    private Boolean embedded = false;
-
     @JsonAnyGetter
     public Map<String, Object> getExtra() {
         return this.extra;
-
     }
 
     @JsonAnySetter

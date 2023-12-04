@@ -16,7 +16,6 @@ public class ArtifactConverter implements Converter<Artifact, ArtifactEntity> {
                 .name(artifactDTO.getName())
                 .kind(artifactDTO.getKind())
                 .project(artifactDTO.getProject())
-                .embedded(artifactDTO.getEmbedded())
                 .build();
     }
 
@@ -27,9 +26,6 @@ public class ArtifactConverter implements Converter<Artifact, ArtifactEntity> {
                 .name(artifact.getName())
                 .kind(artifact.getKind())
                 .project(artifact.getProject())
-                .embedded(artifact.getEmbedded())
-                .created(artifact.getCreated())
-                .updated(artifact.getUpdated())
                 .build();
     }
 

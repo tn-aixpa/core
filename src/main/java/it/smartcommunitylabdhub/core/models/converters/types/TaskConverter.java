@@ -24,8 +24,6 @@ public class TaskConverter implements Converter<Task, TaskEntity> {
                 .id(task.getId())
                 .kind(task.getKind())
                 .project(task.getProject())
-                .created(task.getCreated())
-                .updated(task.getUpdated())
                 .build();
     }
 

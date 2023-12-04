@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.core.models.entities.task.metadata.TaskMetadata;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +30,8 @@ public class Task extends AbstractExtractorProperties implements BaseEntity {
     @NotNull
     private String kind; // for instance build
 
-    private TaskMetadata metadata;
+    @Builder.Default
+    private TaskMetadata metadata = new TaskMetadata();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -43,9 +43,6 @@ public class Task extends AbstractExtractorProperties implements BaseEntity {
 
     @Builder.Default
     private Map<String, Object> status = new HashMap<>();
-
-    private Date created;
-    private Date updated;
 
     @JsonAnyGetter
     public Map<String, Object> getExtra() {

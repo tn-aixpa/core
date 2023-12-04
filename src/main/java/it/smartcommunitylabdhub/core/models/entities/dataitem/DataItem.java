@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.core.models.entities.dataitem.metadata.DataItemM
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +36,8 @@ public class DataItem extends AbstractExtractorProperties implements BaseEntity 
     @ValidateField
     private String project;
 
-    private DataItemMetadata metadata;
+    @Builder.Default
+    private DataItemMetadata metadata = new DataItemMetadata();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -47,12 +47,6 @@ public class DataItem extends AbstractExtractorProperties implements BaseEntity 
     @JsonIgnore
     private Map<String, Object> extra = new HashMap<>();
 
-    private Date created;
-    private Date updated;
-
-    @Builder.Default
-    private Boolean embedded = false;
-    
     @Builder.Default
     private Map<String, Object> status = new HashMap<>();
 

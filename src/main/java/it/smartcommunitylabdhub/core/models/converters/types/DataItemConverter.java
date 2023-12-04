@@ -16,7 +16,6 @@ public class DataItemConverter implements Converter<DataItem, DataItemEntity> {
                 .name(dataItemDTO.getName())
                 .kind(dataItemDTO.getKind())
                 .project(dataItemDTO.getProject())
-                .embedded(dataItemDTO.getEmbedded())
                 .build();
     }
 
@@ -27,9 +26,6 @@ public class DataItemConverter implements Converter<DataItem, DataItemEntity> {
                 .name(dataItem.getName())
                 .kind(dataItem.getKind())
                 .project(dataItem.getProject())
-                .embedded(dataItem.getEmbedded())
-                .created(dataItem.getCreated())
-                .updated(dataItem.getUpdated())
                 .build();
     }
 

@@ -7,10 +7,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.base.abstracts.AbstractExtractorProperties;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
+import it.smartcommunitylabdhub.core.models.entities.log.metadata.LogMetadata;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,9 +41,8 @@ public class Log extends AbstractExtractorProperties implements BaseEntity {
     @Builder.Default
     private Map<String, Object> status = new HashMap<>();
 
-    private Date created;
-
-    private Date updated;
+    @Builder.Default
+    private LogMetadata logMetadata = new LogMetadata();
 
     @JsonAnyGetter
     public Map<String, Object> getExtra() {

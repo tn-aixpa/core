@@ -16,7 +16,6 @@ public class FunctionConverter implements Converter<Function, FunctionEntity> {
                 .name(functionDTO.getName())
                 .kind(functionDTO.getKind())
                 .project(functionDTO.getProject())
-                .embedded(functionDTO.getEmbedded())
                 .build();
     }
 
@@ -27,9 +26,6 @@ public class FunctionConverter implements Converter<Function, FunctionEntity> {
                 .name(function.getName())
                 .kind(function.getKind())
                 .project(function.getProject())
-                .embedded(function.getEmbedded())
-                .created(function.getCreated())
-                .updated(function.getUpdated())
                 .build();
     }
 

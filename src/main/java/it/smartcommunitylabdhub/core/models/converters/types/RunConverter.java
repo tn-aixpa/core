@@ -24,8 +24,6 @@ public class RunConverter implements Converter<Run, RunEntity> {
                 .id(run.getId())
                 .project(run.getProject())
                 .kind(run.getKind())
-                .created(run.getCreated())
-                .updated(run.getUpdated())
                 .build();
     }
 

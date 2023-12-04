@@ -24,8 +24,6 @@ public class LogConverter implements Converter<Log, LogEntity> {
                 .id(log.getId())
                 .project(log.getProject())
                 .run(log.getRun())
-                .created(log.getCreated())
-                .updated(log.getUpdated())
                 .build();
     }
 

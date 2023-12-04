@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.core.models.entities.project.metadata.ProjectMet
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +18,7 @@ import java.util.Map;
 @Builder
 @JsonPropertyOrder(alphabetic = true)
 public class Project extends AbstractExtractorProperties implements BaseEntity {
-    
+
     private String id;
 
     @NotNull
@@ -44,12 +43,8 @@ public class Project extends AbstractExtractorProperties implements BaseEntity {
     @Builder.Default
     private Map<String, Object> status = new HashMap<>();
 
-    private Date created;
-
-    private Date updated;
-
-    private ProjectMetadata metadata;
-
+    @Builder.Default
+    private ProjectMetadata metadata = new ProjectMetadata();
 
     @JsonAnyGetter
     public Map<String, Object> getExtra() {

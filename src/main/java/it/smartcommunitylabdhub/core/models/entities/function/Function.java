@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.core.models.entities.function.metadata.FunctionM
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +36,8 @@ public class Function extends AbstractExtractorProperties implements BaseEntity 
     @ValidateField
     private String project;
 
-    private FunctionMetadata metadata;
+    @Builder.Default
+    private FunctionMetadata metadata = new FunctionMetadata();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -49,12 +49,6 @@ public class Function extends AbstractExtractorProperties implements BaseEntity 
 
     @Builder.Default
     private Map<String, Object> status = new HashMap<>();
-
-    private Date created;
-    private Date updated;
-
-    @Builder.Default
-    private Boolean embedded = false;
 
     @JsonAnyGetter
     public Map<String, Object> getExtra() {

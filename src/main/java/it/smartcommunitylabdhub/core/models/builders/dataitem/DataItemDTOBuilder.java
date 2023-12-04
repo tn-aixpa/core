@@ -6,9 +6,11 @@ import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.metadata.DataItemMetadata;
+import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -25,43 +27,49 @@ public class DataItemDTOBuilder {
                 .with(dto -> dto.setKind(dataItem.getKind()))
                 .with(dto -> dto.setProject(dataItem.getProject()))
                 .with(dto -> dto.setName(dataItem.getName()))
-                .with(dto -> dto.setMetadata(Optional
-                        .ofNullable(metadataConverter
-                                .reverseByClass(dataItem
-                                                .getMetadata(),
-                                        DataItemMetadata.class))
-                        .orElseGet(DataItemMetadata::new)))
+                .with(dto -> {
+                    // Set Metadata for dataItem
+                    DataItemMetadata dataItemMetadata =
+                            Optional.ofNullable(metadataConverter.reverseByClass(
+                                    dataItem.getMetadata(),
+                                    DataItemMetadata.class)
+                            ).orElseGet(DataItemMetadata::new);
 
+                    dataItemMetadata.setVersion(dataItem.getId());
+                    dataItemMetadata.setProject(dataItem.getProject());
+                    dataItemMetadata.setName(dataItem.getName());
+                    dataItemMetadata.setEmbedded(dataItem.getEmbedded());
+                    dataItemMetadata.setCreated(dataItem.getCreated());
+                    dataItemMetadata.setUpdated(dataItem.getUpdated());
+                    dto.setMetadata(dataItemMetadata);
+                })
                 .withIfElse(embeddable, (dto, condition) -> Optional
                         .ofNullable(dataItem.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
+                        .filter(embedded -> !condition || embedded)
                         .ifPresent(embedded -> dto
                                 .setSpec(ConversionUtils.reverse(
-                                        dataItem.getSpec(), "cbor"))))
+                                        dataItem.getSpec(),
+                                        "cbor"))))
                 .withIfElse(embeddable, (dto, condition) -> Optional
                         .ofNullable(dataItem.getEmbedded())
-                        .filter(embedded -> !condition
-                                || (condition && embedded))
-                        .ifPresent(embedded -> dto
-                                .setExtra(ConversionUtils.reverse(
+                        .filter(embedded -> !condition || embedded)
+                        .ifPresent(embedded -> dto.setExtra(
+                                ConversionUtils.reverse(
                                         dataItem.getExtra(),
-
                                         "cbor"))))
-                .withIfElse(embeddable, (dto, condition) ->
-                        Optional.ofNullable(dataItem.getEmbedded())
-                                .filter(embedded -> !condition
-                                        || (condition && embedded))
-                                .ifPresent(embedded -> dto
-                                        .setStatus(ConversionUtils.reverse(
-                                                dataItem.getStatus(), "cbor")
-                                        )
-                                )
-
+                .withIfElse(embeddable, (dto, condition) -> Optional
+                        .ofNullable(dataItem.getEmbedded())
+                        .filter(embedded -> !condition || embedded)
+                        .ifPresent(embedded -> dto.setStatus(
+                                MapUtils.mergeMultipleMaps(
+                                        ConversionUtils.reverse(
+                                                dataItem.getStatus(),
+                                                "cbor"),
+                                        Map.of("state",
+                                                dataItem.getState())
+                                ))
+                        )
                 )
-                .with(dto -> dto.setEmbedded(dataItem.getEmbedded()))
-                .with(dto -> dto.setCreated(dataItem.getCreated()))
-                .with(dto -> dto.setUpdated(dataItem.getUpdated()))
         );
     }
 }

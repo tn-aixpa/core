@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.core.models.entities.run.metadata.RunMetadata;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +32,8 @@ public class Run extends AbstractExtractorProperties implements BaseEntity {
     @ValidateField
     private String kind;
 
-    private RunMetadata metadata;
+    @Builder.Default
+    private RunMetadata metadata = new RunMetadata();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -45,10 +45,6 @@ public class Run extends AbstractExtractorProperties implements BaseEntity {
 
     @Builder.Default
     private Map<String, Object> status = new HashMap<>();
-
-    private Date created;
-
-    private Date updated;
 
     @JsonAnyGetter
     public Map<String, Object> getExtra() {

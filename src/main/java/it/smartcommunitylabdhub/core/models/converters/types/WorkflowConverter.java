@@ -16,7 +16,6 @@ public class WorkflowConverter implements Converter<Workflow, WorkflowEntity> {
                 .name(workflowDTO.getName())
                 .kind(workflowDTO.getKind())
                 .project(workflowDTO.getProject())
-                .embedded(workflowDTO.getEmbedded())
                 .build();
     }
 
@@ -27,9 +26,6 @@ public class WorkflowConverter implements Converter<Workflow, WorkflowEntity> {
                 .name(workflow.getName())
                 .kind(workflow.getKind())
                 .project(workflow.getProject())
-                .embedded(workflow.getEmbedded())
-                .created(workflow.getCreated())
-                .updated(workflow.getUpdated())
                 .build();
     }
 

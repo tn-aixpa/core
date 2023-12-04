@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.core.models.entities.artifact.metadata.ArtifactM
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +31,8 @@ public class Artifact extends AbstractExtractorProperties implements BaseEntity 
     @ValidateField
     private String kind;
 
-    private ArtifactMetadata metadata;
+    @Builder.Default
+    private ArtifactMetadata metadata = new ArtifactMetadata();
 
     @NotNull
     @ValidateField
@@ -45,12 +45,6 @@ public class Artifact extends AbstractExtractorProperties implements BaseEntity 
     @Builder.Default
     @JsonIgnore
     private Map<String, Object> extra = new HashMap<>();
-
-    private Date created;
-    private Date updated;
-
-    @Builder.Default
-    private Boolean embedded = false;
 
     @Builder.Default
     private Map<String, Object> status = new HashMap<>();
