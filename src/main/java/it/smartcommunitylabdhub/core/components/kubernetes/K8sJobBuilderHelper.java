@@ -1,12 +1,15 @@
 package it.smartcommunitylabdhub.core.components.kubernetes;
 
+import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
+import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1SecretEnvSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Helper class for building Kubernetes job environment variables.
@@ -18,6 +21,13 @@ public class K8sJobBuilderHelper {
 
     @Value("${application.endpoint}")
     private String DH_ENDPOINT;
+
+    @Value("${kubernates.config.secret}")
+    private List<String> SECRET;
+
+    @Value("${kubernetes.config.config-map}")
+    private List<String> CONFIG_MAP;
+
 
     /**
      * A helper method to get an environment variable with a default value if not present.
@@ -35,49 +45,38 @@ public class K8sJobBuilderHelper {
         return (value != null && !value.isEmpty()) ? value : defaultValue;
     }
 
+
     /**
-     * Method to retrieve a list of V1EnvVar containing environment variables for a Kubernetes job.
+     * Retrieve the dh end point variable
+     *
+     * @return V1EnvVar
+     */
+    public List<V1EnvVar> getV1EnvVar() {
+        List<V1EnvVar> v1EnvVars = new ArrayList<>();
+        v1EnvVars.add(
+                new V1EnvVar().name("DHUB_CORE_ENDPOINT")
+                        .value(DH_ENDPOINT));
+        return v1EnvVars;
+    }
+
+    /**
+     * Method to retrieve a list of V1EnvFromSource containing environment variables for a Kubernetes job.
+     * It retrieve env from Config Map and Secret
      *
      * @return A list of V1EnvVar objects representing environment variables for a Kubernetes job.
      */
 
-    public List<V1EnvVar> getEnvV1() {
+    public List<V1EnvFromSource> getV1EnvFromSource() {
 
-        List<V1EnvVar> envVarList = new ArrayList<>();
-
-        // Iterate over all environment variables
-        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
-            String variableName = entry.getKey();
-            String variableValue = entry.getValue();
-
-            // Check if the variable has the "DH_" prefix
-            if (variableName.startsWith("DH_")) {
-
-                // Remove the "DH_" prefix and add to the list
-                String strippedName = variableName.substring("DH_".length());
-                envVarList.add(new V1EnvVar().name(strippedName).value(variableValue));
-            }
-        }
-
-        // Add extra envs
-        envVarList.add(new V1EnvVar().name("DHUB_CORE_ENDPOINT")
-                .value(DH_ENDPOINT));
-
-        return envVarList;
-
-
-//                DHCORE_AWS_ACCESS_KEY_ID"="minio"
-//                DHCORE_AWS_SECRET_ACCESS_KEY="minio123"
-//                DHCORE_S3_ENDPOINT_URL="http://192.168.49.2:30080"
-//                DHCORE_S3_ACCESS_KEY_ID="minio"
-//                DHCORE_S3_SECRET_ACCESS_KEY="minio123"
-//                DHCORE_S3_BUCKET_NAME="mlrun"
-//                DHCORE_POSTGRES_HOST="192.168.49.1"
-//                DHCORE_POSTGRES_PORT="5433"
-//                DHCORE_POSTGRES_DATABASE="dbt"
-//                DHCORE_POSTGRES_USER="testuser"
-//                DHCORE_POSTGRES_PASSWORD="testpassword"
-//                DHCORE_POSTGRES_SCHEMA="public"
+        // Get Env var from secret and config map
+        return Stream.concat(
+                CONFIG_MAP.stream().map(value -> new V1EnvFromSource().configMapRef(
+                        new V1ConfigMapEnvSource().name(value)
+                )),
+                SECRET.stream().map(secret -> new V1EnvFromSource().secretRef(
+                        new V1SecretEnvSource().name(secret)
+                ))
+        ).toList();
 
     }
 }

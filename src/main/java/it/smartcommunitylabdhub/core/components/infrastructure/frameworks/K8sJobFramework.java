@@ -101,7 +101,10 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
 
         // Prepare environment variables for the Kubernetes job
-        List<V1EnvVar> envVars = k8sJobBuilderHelper.getEnvV1();
+        List<V1EnvFromSource> envVarsFromSource = k8sJobBuilderHelper.getV1EnvFromSource();
+
+        List<V1EnvVar> envVars = k8sJobBuilderHelper.getV1EnvVar();
+
 
         // Merge function specific envs
         runnable.getEnvs().forEach((key, value) -> envVars.add(
@@ -113,7 +116,9 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                 .image(runnable.getImage())
                 .command(getCommand(runnable))
                 .imagePullPolicy("IfNotPresent")
+                .envFrom(envVarsFromSource)
                 .env(envVars);
+
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
