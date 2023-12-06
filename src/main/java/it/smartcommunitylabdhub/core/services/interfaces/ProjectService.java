@@ -19,7 +19,7 @@ public interface ProjectService {
 
     Project updateProject(Project projectDTO, String name);
 
-    boolean deleteProject(String name);
+    boolean deleteProject(String name, Boolean cascade);
 
     boolean deleteProjectByName(String name);
 

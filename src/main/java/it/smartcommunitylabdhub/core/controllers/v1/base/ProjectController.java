@@ -63,8 +63,9 @@ public class ProjectController {
     @Operation(summary = "Delete a project", description = "Delete a specific project")
     @DeleteMapping(path = "/{name}")
     public ResponseEntity<Boolean> deleteProject(
-            @ValidateField @PathVariable(name = "name", required = true) String name) {
-        return ResponseEntity.ok(this.projectService.deleteProject(name));
+            @ValidateField @PathVariable(name = "name", required = true) String name,
+            @RequestParam(name = "cascade") Boolean cascade) {
+        return ResponseEntity.ok(this.projectService.deleteProject(name, cascade));
     }
 
     @Operation(summary = "List project functions", description = "Get all project function list")

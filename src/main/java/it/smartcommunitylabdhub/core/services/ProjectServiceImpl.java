@@ -171,22 +171,24 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public boolean deleteProject(String name) {
+    public boolean deleteProject(String name, Boolean cascade) {
         return Optional.ofNullable(name)
                 .map(projectName -> {
                     boolean deleted = false;
                     if (projectRepository.existsByName(projectName)) {
-                        projectRepository.findByName(projectName).ifPresent(project -> {
-                            // delete functions, artifacts, workflow, dataitems
-                            this.artifactRepository.deleteByProjectName(project.getName());
-                            this.dataItemRepository.deleteByProjectName(project.getName());
-                            this.workflowRepository.deleteByProjectName(project.getName());
-                            this.functionRepository.deleteByProjectName(project.getName());
-                            this.dataItemRepository.deleteByProjectName(project.getName());
-                            this.logRepository.deleteByProjectName(project.getName());
-                            this.runRepository.deleteByProjectName(project.getName());
-                            this.taskRepository.deleteByProjectName(project.getName());
-                        });
+                        if (cascade) {
+                            projectRepository.findByName(projectName).ifPresent(project -> {
+                                // delete functions, artifacts, workflow, dataitems
+                                this.artifactRepository.deleteByProjectName(project.getName());
+                                this.dataItemRepository.deleteByProjectName(project.getName());
+                                this.workflowRepository.deleteByProjectName(project.getName());
+                                this.functionRepository.deleteByProjectName(project.getName());
+                                this.dataItemRepository.deleteByProjectName(project.getName());
+                                this.logRepository.deleteByProjectName(project.getName());
+                                this.runRepository.deleteByProjectName(project.getName());
+                                this.taskRepository.deleteByProjectName(project.getName());
+                            });
+                        }
                         projectRepository.deleteByName(projectName);
                         deleted = true;
                     }
@@ -196,7 +198,7 @@ public class ProjectServiceImpl implements ProjectService {
                                 ErrorList.PROJECT_NOT_FOUND.getReason(),
                                 HttpStatus.NOT_FOUND);
                     }
-                    return deleted;
+                    return true;
                 })
                 .orElseThrow(() -> new CoreException(
                         ErrorList.INTERNAL_SERVER_ERROR.getValue(),
