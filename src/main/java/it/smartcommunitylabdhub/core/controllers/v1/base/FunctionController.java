@@ -55,8 +55,9 @@ public class FunctionController {
 
     @Operation(summary = "Delete a function", description = "Delete a specific function")
     @DeleteMapping(path = "/{uuid}")
-    public ResponseEntity<Boolean> deleteFunction(@ValidateField @PathVariable String uuid) {
-        return ResponseEntity.ok(this.functionService.deleteFunction(uuid));
+    public ResponseEntity<Boolean> deleteFunction(@ValidateField @PathVariable String uuid,
+                                                  @RequestParam(value = "cascade", defaultValue = "false") Boolean cascade) {
+        return ResponseEntity.ok(this.functionService.deleteFunction(uuid, cascade));
     }
 
     @Operation(summary = "Get function runs", description = "Given a function return the run list")

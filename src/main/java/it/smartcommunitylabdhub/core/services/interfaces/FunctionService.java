@@ -17,7 +17,7 @@ public interface FunctionService {
 
     Function updateFunction(Function functionDTO, String uuid);
 
-    boolean deleteFunction(String uuid);
+    boolean deleteFunction(String uuid, Boolean cascade);
 
     List<Run> getFunctionRuns(String uuid);
 

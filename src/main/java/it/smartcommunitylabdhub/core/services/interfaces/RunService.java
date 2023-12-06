@@ -13,7 +13,7 @@ public interface RunService {
 
     Run getRun(String uuid);
 
-    boolean deleteRun(String uuid);
+    boolean deleteRun(String uuid, Boolean cascade);
 
     boolean deleteRunByTaskId(String uuid);
 

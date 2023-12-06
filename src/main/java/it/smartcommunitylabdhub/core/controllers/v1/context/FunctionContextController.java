@@ -143,7 +143,7 @@ public class FunctionContextController implements ContextController {
             this.runService.deleteRunByTaskId(task.getId());
 
             // remove task
-            this.taskService.deleteTask(task.getId());
+            this.taskService.deleteTask(task.getId(), false);
 
         });
 
@@ -175,7 +175,7 @@ public class FunctionContextController implements ContextController {
                 this.runService.deleteRunByTaskId(task.getId());
 
                 // remove task
-                this.taskService.deleteTask(task.getId());
+                this.taskService.deleteTask(task.getId(), false);
 
             });
         });

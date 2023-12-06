@@ -13,7 +13,7 @@ public interface TaskService {
 
     List<Task> getTasksByFunction(String function);
 
-    boolean deleteTask(String uuid);
+    boolean deleteTask(String uuid, Boolean cascade);
 
     Task createTask(Task TaskDTO);
 

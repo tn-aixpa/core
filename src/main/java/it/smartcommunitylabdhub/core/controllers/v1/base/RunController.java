@@ -68,7 +68,8 @@ public class RunController {
     @Operation(summary = "Delete a run", description = "Delete a specific run")
     @DeleteMapping(path = "/{uuid}")
     public ResponseEntity<Boolean> deleteRun(
-            @ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
-        return ResponseEntity.ok(this.runService.deleteRun(uuid));
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
+            @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade) {
+        return ResponseEntity.ok(this.runService.deleteRun(uuid, cascade));
     }
 }

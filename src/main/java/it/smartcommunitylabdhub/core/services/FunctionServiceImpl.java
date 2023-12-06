@@ -12,6 +12,7 @@ import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -49,6 +50,7 @@ public class FunctionServiceImpl implements FunctionService {
 
     @Autowired
     TaskDTOBuilder taskDTOBuilder;
+
 
     @Override
     public List<Function> getFunctions(Pageable pageable) {
@@ -156,9 +158,28 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     @Override
-    public boolean deleteFunction(String uuid) {
+    public boolean deleteFunction(String uuid, Boolean cascade) {
         try {
             if (this.functionRepository.existsById(uuid)) {
+                if (cascade) {
+                    Function function = getFunction(uuid);
+
+                    // Remove Task
+                    List<Task> taskList = this.taskRepository.findByFunction(
+                            TaskUtils.buildTaskString(function)
+                    ).stream().map(taskDTOBuilder::build).toList();
+                    //Delete all related object
+                    taskList.forEach(task -> {
+
+                        // remove run
+                        this.runRepository.deleteByTaskId(task.getId());
+
+                        // remove task
+                        this.taskRepository.deleteById(task.getId());
+
+                    });
+
+                }
                 this.functionRepository.deleteById(uuid);
                 return true;
             }

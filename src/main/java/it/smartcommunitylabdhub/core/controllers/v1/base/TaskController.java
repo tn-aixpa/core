@@ -53,7 +53,8 @@ public class TaskController {
     @Operation(summary = "Delete a task", description = "Delete a specific task")
     @DeleteMapping(path = "/{uuid}")
     public ResponseEntity<Boolean> deleteTask(
-            @ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
-        return ResponseEntity.ok(this.taskService.deleteTask(uuid));
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
+            @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade) {
+        return ResponseEntity.ok(this.taskService.deleteTask(uuid, cascade));
     }
 }

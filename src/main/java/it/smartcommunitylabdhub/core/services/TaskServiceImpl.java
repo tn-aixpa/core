@@ -12,8 +12,10 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.TaskService;
+import it.smartcommunitylabdhub.core.utils.ErrorList;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,6 +33,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     TaskRepository taskRepository;
+
+    @Autowired
+    RunRepository runRepository;
 
     @Autowired
     TaskDTOBuilder taskDTOBuilder;
@@ -70,12 +75,23 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public boolean deleteTask(String uuid) {
+    public boolean deleteTask(String uuid, Boolean cascade) {
         try {
-            this.taskRepository.deleteById(uuid);
-            return true;
+            if (this.taskRepository.existsById(uuid)) {
+                if (cascade) {
+                    this.runRepository.deleteByTaskId(uuid);
+                }
+                this.taskRepository.deleteById(uuid);
+                return true;
+            }
+            throw new CoreException(
+                    ErrorList.TASK_NOT_FOUND.getValue(),
+                    ErrorList.TASK_NOT_FOUND.getReason(),
+                    HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            throw new CoreException("InternalServerError", "cannot delete artifact",
+            throw new CoreException(
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Cannot delete task",
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

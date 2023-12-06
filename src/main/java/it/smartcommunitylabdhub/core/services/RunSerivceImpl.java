@@ -96,7 +96,7 @@ public class RunSerivceImpl implements RunService {
     }
 
     @Override
-    public boolean deleteRun(String uuid) {
+    public boolean deleteRun(String uuid, Boolean cascade) {
         try {
             this.runRepository.deleteById(uuid);
             return true;
