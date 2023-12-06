@@ -38,6 +38,7 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     TaskEntityBuilder taskEntityBuilder;
 
+
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
 
@@ -60,6 +61,12 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new CoreException("TaskNotFound",
                         "The Task you are searching for does not exist.",
                         HttpStatus.NOT_FOUND));
+    }
+
+    @Override
+    public List<Task> getTasksByFunction(String function) {
+        return taskRepository.findByFunction(function).stream()
+                .map(taskDTOBuilder::build).toList();
     }
 
     @Override

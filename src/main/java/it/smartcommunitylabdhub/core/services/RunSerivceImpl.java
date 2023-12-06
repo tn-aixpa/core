@@ -108,6 +108,18 @@ public class RunSerivceImpl implements RunService {
     }
 
     @Override
+    public boolean deleteRunByTaskId(String uuid) {
+        try {
+            this.runRepository.deleteByTaskId(uuid);
+            return true;
+        } catch (Exception e) {
+            throw new CoreException(ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "cannot delete artifact",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
     public Run save(Run runDTO) {
 
         return Optional.of(this.runRepository.saveAndFlush(runEntityBuilder.build(runDTO)))

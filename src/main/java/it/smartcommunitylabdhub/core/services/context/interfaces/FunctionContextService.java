@@ -4,12 +4,19 @@ import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface FunctionContextService {
 
     Function createFunction(String projectName, Function functionDTO);
 
+    Function getByUuid(String projectName, String uuid);
+
     Page<Function> getByProjectNameAndFunctionName(
             String projectName, String functionName, Pageable pageable);
+
+    List<Function> listByProjectNameAndFunctionName(
+            String projectName, String functionName);
 
     Page<Function> getLatestByProjectName(
             String projectName, Pageable pageable);

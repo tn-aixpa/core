@@ -15,6 +15,8 @@ public interface RunService {
 
     boolean deleteRun(String uuid);
 
+    boolean deleteRunByTaskId(String uuid);
+
     Run save(Run runDTO);
 
     <F extends FunctionBaseSpec<F>> Run createRun(Run inputRunDTO);

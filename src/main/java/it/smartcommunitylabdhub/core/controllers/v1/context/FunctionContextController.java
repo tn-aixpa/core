@@ -3,8 +3,12 @@ package it.smartcommunitylabdhub.core.controllers.v1.context;
 import io.swagger.v3.oas.annotations.Operation;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.core.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
+import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.services.context.interfaces.FunctionContextService;
+import it.smartcommunitylabdhub.core.services.interfaces.RunService;
+import it.smartcommunitylabdhub.core.services.interfaces.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @ApiVersion("v1")
 @Validated
@@ -21,6 +27,12 @@ public class FunctionContextController implements ContextController {
 
     @Autowired
     FunctionContextService functionContextService;
+
+    @Autowired
+    TaskService taskService;
+
+    @Autowired
+    RunService runService;
 
     @Operation(summary = "Create an function in a project context",
             description = "First check if project exist and then create the function for the project (context)")
@@ -116,6 +128,26 @@ public class FunctionContextController implements ContextController {
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
             @ValidateField @PathVariable String uuid) {
+
+        // Get function
+        Function function = this.functionContextService.getByUuid(project, uuid);
+
+        // Remove Task
+        List<Task> taskList = this.taskService.getTasksByFunction(
+                TaskUtils.buildTaskString(function)
+        );
+        //Delete all related object
+        taskList.forEach(task -> {
+
+            // remove run
+            this.runService.deleteRunByTaskId(task.getId());
+
+            // remove task
+            this.taskService.deleteTask(task.getId());
+
+        });
+
+        // Remove function and return
         return ResponseEntity
                 .ok(this.functionContextService.deleteSpecificFunctionVersion(
                         project, name, uuid));
@@ -127,6 +159,27 @@ public class FunctionContextController implements ContextController {
     public ResponseEntity<Boolean> deleteFunction(
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name) {
+
+
+        this.functionContextService.listByProjectNameAndFunctionName(
+                project, name
+        ).forEach(function -> {
+            // Remove Task
+            List<Task> taskList = this.taskService.getTasksByFunction(
+                    TaskUtils.buildTaskString(function)
+            );
+            //Delete all related object
+            taskList.forEach(task -> {
+
+                // remove run
+                this.runService.deleteRunByTaskId(task.getId());
+
+                // remove task
+                this.taskService.deleteTask(task.getId());
+
+            });
+        });
+
         return ResponseEntity.ok(this.functionContextService
                 .deleteAllFunctionVersions(project, name));
     }

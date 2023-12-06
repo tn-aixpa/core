@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -73,6 +74,27 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
     }
 
     @Override
+    public Function getByUuid(String projectName, String uuid) {
+        checkContext(projectName);
+
+        return functionRepository.findById(uuid)
+                .map(function -> {
+                    try {
+                        return functionDTOBuilder.build(function, false);
+                    } catch (CustomException e) {
+                        throw new CoreException(
+                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                                e.getMessage(),
+                                HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                })
+                .orElseThrow(() -> new CoreException(
+                        ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                        ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                        HttpStatus.NOT_FOUND));
+    }
+
+    @Override
     public Page<Function> getLatestByProjectName(String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
@@ -119,6 +141,24 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+    }
+
+    @Override
+    public List<Function> listByProjectNameAndFunctionName(String projectName, String functionName) {
+        try {
+            checkContext(projectName);
+
+            return this.functionRepository
+                    .findAllByProjectAndNameOrderByCreatedDesc(projectName, functionName)
+                    .stream().map(f -> functionDTOBuilder.build(f, false))
+                    .toList();
+
+        } catch (CustomException e) {
+            throw new CoreException(
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Override

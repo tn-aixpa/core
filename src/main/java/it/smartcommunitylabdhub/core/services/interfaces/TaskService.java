@@ -11,6 +11,8 @@ public interface TaskService {
 
     Task getTask(String uuid);
 
+    List<Task> getTasksByFunction(String function);
+
     boolean deleteTask(String uuid);
 
     Task createTask(Task TaskDTO);
