@@ -18,8 +18,10 @@ import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class TaskEntityBuilder {
@@ -82,7 +84,13 @@ public class TaskEntityBuilder {
                                         t.setId(taskDTO.getId());
                                     }
                                 })
-                        .with(t -> t.setFunction(spec.getFunction()))
+                        .with(r -> r.setFunction(Optional.ofNullable(
+                                StringUtils.hasText(spec.getFunction()) ? spec.getFunction() : null
+                        ).orElseThrow(() -> new CoreException(
+                                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                                ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                                HttpStatus.INTERNAL_SERVER_ERROR
+                        ))))
                         .withIfElse(taskFieldAccessor.getState().equals(State.NONE.name()),
                                 (r, condition) -> {
                                     if (condition) {

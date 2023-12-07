@@ -19,8 +19,10 @@ import it.smartcommunitylabdhub.core.utils.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class RunEntityBuilder {
@@ -83,7 +85,13 @@ public class RunEntityBuilder {
                                         r.setId(runDTO.getId());
                                     }
                                 })
-                        .with(r -> r.setTask(spec.getTask()))
+                        .with(r -> r.setTask(Optional.ofNullable(
+                                StringUtils.hasText(spec.getTask()) ? spec.getTask() : null
+                        ).orElseThrow(() -> new CoreException(
+                                ErrorList.TASK_NOT_FOUND.getValue(),
+                                ErrorList.TASK_NOT_FOUND.getReason(),
+                                HttpStatus.INTERNAL_SERVER_ERROR
+                        ))))
                         .with(r -> r.setTaskId(spec.getTaskId()))
                         .withIfElse(runFieldAccessor.getState().equals(State.NONE.name()),
                                 (r, condition) -> {
