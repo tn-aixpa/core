@@ -2,11 +2,15 @@ package it.smartcommunitylabdhub.core.services.context;
 
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
+import it.smartcommunitylabdhub.core.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
+import it.smartcommunitylabdhub.core.repositories.RunRepository;
+import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.FunctionContextService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import jakarta.transaction.Transactional;
@@ -33,6 +37,12 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
 
     @Autowired
     FunctionEntityBuilder functionEntityBuilder;
+
+    @Autowired
+    TaskRepository taskRepository;
+
+    @Autowired
+    RunRepository runRepository;
 
     @Override
     public Function createFunction(String projectName, Function functionDTO) {
@@ -302,10 +312,29 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
     public Boolean deleteSpecificFunctionVersion(String projectName, String functionName,
                                                  String uuid) {
         try {
-            if (this.functionRepository.existsByProjectAndNameAndId(projectName, functionName,
-                    uuid)) {
-                this.functionRepository.deleteByProjectAndNameAndId(projectName, functionName,
-                        uuid);
+            if (this.functionRepository.existsByProjectAndNameAndId(projectName, functionName, uuid)) {
+
+
+                // Cascade deletion of all dependencies
+                Function function = getByProjectAndFunctionAndUuid(projectName, functionName, uuid);
+
+                // Remove Task
+                List<TaskEntity> taskList = this.taskRepository.findByFunction(
+                        TaskUtils.buildTaskString(function)
+                );
+                //Delete all related object
+                taskList.forEach(task -> {
+
+                    // remove run
+                    this.runRepository.deleteByTaskId(task.getId());
+
+                    // remove task
+                    this.taskRepository.deleteById(task.getId());
+
+                });
+
+                this.functionRepository.deleteByProjectAndNameAndId(projectName, functionName, uuid);
+
                 return true;
             }
             throw new CoreException(
@@ -325,7 +354,28 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
     public Boolean deleteAllFunctionVersions(String projectName, String functionName) {
         try {
             if (functionRepository.existsByProjectAndName(projectName, functionName)) {
+
+                // Cascade delete
+                listByProjectNameAndFunctionName(projectName, functionName).forEach(function -> {
+
+                    // Remove Task
+                    List<TaskEntity> taskList = this.taskRepository.findByFunction(
+                            TaskUtils.buildTaskString(function)
+                    );
+                    //Delete all related object
+                    taskList.forEach(task -> {
+
+                        // remove run
+                        this.runRepository.deleteByTaskId(task.getId());
+
+                        // remove task
+                        this.taskRepository.deleteById(task.getId());
+
+                    });
+                });
+
                 this.functionRepository.deleteByProjectAndName(projectName, functionName);
+
                 return true;
             }
             throw new CoreException(

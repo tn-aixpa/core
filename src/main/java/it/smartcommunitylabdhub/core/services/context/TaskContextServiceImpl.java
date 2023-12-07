@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.TaskContextService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -32,6 +33,9 @@ public class TaskContextServiceImpl extends ContextService implements TaskContex
 
     @Autowired
     TaskEntityBuilder taskEntityBuilder;
+
+    @Autowired
+    RunRepository runRepository;
 
     @Override
     public Task createTask(String projectName, Task taskDTO) {
@@ -167,7 +171,12 @@ public class TaskContextServiceImpl extends ContextService implements TaskContex
     public Boolean deleteSpecificTaskVersion(String projectName, String uuid) {
         try {
             if (this.taskRepository.existsByProjectAndId(projectName, uuid)) {
+                
+                // Delete Task
                 this.taskRepository.deleteByProjectAndId(projectName, uuid);
+
+                // Delete Run
+                this.runRepository.deleteByTaskId(uuid);
                 return true;
             }
             throw new CoreException(
