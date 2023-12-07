@@ -7,11 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class FunctionBaseSpec<S extends FunctionBaseSpec<S>> extends BaseSpec<S> {
-    private String source;
 
     @Override
     protected void configureSpec(S concreteSpec) {
-        this.setSource(concreteSpec.getSource());
         this.setExtraSpecs(concreteSpec.getExtraSpecs());
     }
 }
