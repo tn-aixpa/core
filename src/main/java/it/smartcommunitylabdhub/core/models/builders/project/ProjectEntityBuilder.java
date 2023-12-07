@@ -113,7 +113,7 @@ public class ProjectEntityBuilder {
 
                         // Metadata Extraction
                         .withIf(projectDTO.getMetadata().getSource() != null, (p) ->
-                                p.setDescription(projectDTO.getMetadata().getSource()))
+                                p.setSource(projectDTO.getMetadata().getSource()))
                         .withIf(projectDTO.getMetadata().getDescription() != null, (p) ->
                                 p.setDescription(projectDTO.getMetadata().getDescription()))
                         .withIf(projectDTO.getMetadata().getCreated() != null, (p) ->
@@ -180,7 +180,7 @@ public class ProjectEntityBuilder {
                             p.setSpec(ConversionUtils.convert(spec, "cbor"));
                         })
                         .withIf(projectDTO.getMetadata().getSource() != null, (p) ->
-                                p.setDescription(projectDTO.getMetadata().getSource()))
+                                p.setSource(projectDTO.getMetadata().getSource()))
                         .withIf(projectDTO.getMetadata().getDescription() != null, (p) ->
                                 p.setDescription(projectDTO.getMetadata().getDescription()))
 
