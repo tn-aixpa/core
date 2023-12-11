@@ -10,4 +10,4 @@ ENV APP=core-0.0.8.jar
 LABEL org.opencontainers.image.source=https://github.com/scc-digitalhub/digitalhub-core
 COPY --from=build /tmp/target/*.jar /app/${APP}
 EXPOSE 8080
-CMD ["/app/core-0.0.3-SNAPSHOT.jar"]
+CMD ["/app/core-0.0.8.jar"]
