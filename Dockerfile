@@ -6,7 +6,7 @@ RUN --mount=type=cache,target=/root/.m2,source=/root/.m2,from=ghcr.io/scc-digita
     mvn package -DskipTests
 
 FROM gcr.io/distroless/java17-debian12:nonroot
-ENV APP=core-0.0.3-SNAPSHOT.jar
+ENV APP=core-0.0.8.jar
 LABEL org.opencontainers.image.source=https://github.com/scc-digitalhub/digitalhub-core
 COPY --from=build /tmp/target/*.jar /app/${APP}
 EXPOSE 8080
