@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 public class K8sJobBuilderHelper {
 
     @Value("${application.endpoint}")
-    private String DH_ENDPOINT;
+    private String DIGITALHUB_CORE_ENDPOINT;
 
     @Value("${kubernates.config.secret}")
     private List<String> SECRET;
@@ -54,8 +54,8 @@ public class K8sJobBuilderHelper {
     public List<V1EnvVar> getV1EnvVar() {
         List<V1EnvVar> v1EnvVars = new ArrayList<>();
         v1EnvVars.add(
-                new V1EnvVar().name("DHUB_CORE_ENDPOINT")
-                        .value(DH_ENDPOINT));
+                new V1EnvVar().name("DIGITALHUB_CORE_ENDPOINT")
+                        .value(DIGITALHUB_CORE_ENDPOINT));
         return v1EnvVars;
     }
 
