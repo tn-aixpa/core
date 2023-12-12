@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface FunctionContextService {
 
@@ -13,13 +14,13 @@ public interface FunctionContextService {
     Function getByUuid(String projectName, String uuid);
 
     Page<Function> getByProjectNameAndFunctionName(
-            String projectName, String functionName, Pageable pageable);
+            Map<String, String> filter, String projectName, String functionName, Pageable pageable);
 
     List<Function> listByProjectNameAndFunctionName(
             String projectName, String functionName);
 
     Page<Function> getLatestByProjectName(
-            String projectName, Pageable pageable);
+            Map<String, String> filter, String projectName, Pageable pageable);
 
     Function getByProjectAndFunctionAndUuid(
             String projectName, String functionName, String uuid);

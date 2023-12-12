@@ -19,6 +19,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @ApiVersion("v1")
@@ -49,23 +50,25 @@ public class FunctionContextController implements ContextController {
             description = "First check if project exist and then return a list of the latest version of each function related to a project)")
     @GetMapping(path = "/functions", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Function>> getLatestFunctions(
+            @RequestParam Map<String, String> filter,
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.functionContextService
-                .getLatestByProjectName(project, pageable));
+                .getLatestByProjectName(filter, project, pageable));
     }
 
     @Operation(summary = "Retrieve all versions of the function sort by creation",
             description = "First check if project exist and then return a list of all version of the function sort by creation)")
     @GetMapping(path = "/functions/{name}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Function>> getAllFunctions(
+            @RequestParam Map<String, String> filter,
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.functionContextService
-                .getByProjectNameAndFunctionName(project, name, pageable));
+                .getByProjectNameAndFunctionName(filter, project, name, pageable));
 
     }
 

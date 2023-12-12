@@ -8,6 +8,8 @@ import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.entities.FunctionEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -18,16 +20,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class FunctionContextServiceImpl extends ContextService implements FunctionContextService {
+public class FunctionContextServiceImpl extends ContextService<FunctionEntity, FunctionEntityFilter>
+        implements FunctionContextService {
 
     @Autowired
     FunctionRepository functionRepository;
@@ -37,6 +43,9 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
 
     @Autowired
     FunctionEntityBuilder functionEntityBuilder;
+
+    @Autowired
+    FunctionEntityFilter functionEntityFilter;
 
     @Autowired
     TaskRepository taskRepository;
@@ -105,13 +114,28 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
     }
 
     @Override
-    public Page<Function> getLatestByProjectName(String projectName, Pageable pageable) {
+    public Page<Function> getLatestByProjectName(Map<String, String> filter, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<FunctionEntity> functionPage = this.functionRepository
-                    .findAllLatestFunctionsByProject(projectName,
-                            pageable);
+
+            functionEntityFilter.setCreatedDate(filter.get("created"));
+            functionEntityFilter.setName(filter.get("name"));
+            functionEntityFilter.setKind(filter.get("kind"));
+
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+
+            functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter);
+
+            Page<FunctionEntity> functionPage = functionRepository.findAll(
+                    Specification.where(specification).and((root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(root.get("project"), projectName)), pageable);
+
+
             return new PageImpl<>(
                     functionPage.getContent()
                             .stream()
@@ -128,15 +152,30 @@ public class FunctionContextServiceImpl extends ContextService implements Functi
     }
 
     @Override
-    public Page<Function> getByProjectNameAndFunctionName(String projectName,
+    public Page<Function> getByProjectNameAndFunctionName(Map<String, String> filter, String projectName,
                                                           String functionName,
                                                           Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<FunctionEntity> functionPage = this.functionRepository
-                    .findAllByProjectAndNameOrderByCreatedDesc(projectName, functionName,
-                            pageable);
+            functionEntityFilter.setCreatedDate(filter.get("created"));
+            functionEntityFilter.setKind(filter.get("kind"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+
+            functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter);
+
+            Page<FunctionEntity> functionPage = functionRepository.findAll(
+                    Specification.where(specification)
+                            .and((root, query, criteriaBuilder) ->
+                                    criteriaBuilder.and(
+                                            criteriaBuilder.equal(root.get("project"), projectName),
+                                            criteriaBuilder.equal(root.get("name"), functionName))),
+                    pageable);
+
             return new PageImpl<>(
                     functionPage.getContent()
                             .stream()
