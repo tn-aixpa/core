@@ -72,9 +72,11 @@ public class K8sJobBuilderHelper {
                 CONFIG_MAP.stream().map(value -> new V1EnvFromSource().configMapRef(
                         new V1ConfigMapEnvSource().name(value)
                 )),
-                SECRET.stream().map(secret -> new V1EnvFromSource().secretRef(
-                        new V1SecretEnvSource().name(secret)
-                ))
+                SECRET.stream()
+                        //.filter(secret -> !secret.equals("")) // skip postgres
+                        .map(secret -> new V1EnvFromSource().secretRef(
+                                new V1SecretEnvSource().name(secret)
+                        ))
         ).toList();
 
     }

@@ -114,6 +114,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
         V1Container container = new V1Container()
                 .name(containerName)
                 .image(runnable.getImage())
+                .imagePullPolicy("Always")
                 .command(getCommand(runnable))
                 .imagePullPolicy("IfNotPresent")
                 .envFrom(envVarsFromSource)

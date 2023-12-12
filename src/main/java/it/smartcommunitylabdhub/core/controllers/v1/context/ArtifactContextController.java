@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @ApiVersion("v1")
 @Validated
@@ -37,23 +39,25 @@ public class ArtifactContextController implements ContextController {
             description = "First check if project exist and then return a list of the latest version of each artifact related to a project)")
     @GetMapping(path = "/artifacts", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Artifact>> getLatestArtifacts(
+            @RequestParam Map<String, String> filters,
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.artifactContextService
-                .getLatestByProjectName(project, pageable));
+                .getLatestByProjectName(filters, project, pageable));
     }
 
     @Operation(summary = "Retrieve all versions of the artifact sort by creation",
             description = "First check if project exist and then return a list of all version of the artifact sort by creation)")
     @GetMapping(path = "/artifacts/{name}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Artifact>> getAllArtifacts(
+            @RequestParam Map<String, String> filters,
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.artifactContextService
-                .getByProjectNameAndArtifactName(project, name, pageable));
+                .getByProjectNameAndArtifactName(filters, project, name, pageable));
 
     }
 

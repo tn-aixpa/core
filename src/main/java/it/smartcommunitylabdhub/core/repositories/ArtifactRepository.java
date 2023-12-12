@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface ArtifactRepository extends JpaRepository<ArtifactEntity, String> {
+public interface ArtifactRepository extends JpaRepository<ArtifactEntity, String>, JpaSpecificationExecutor<ArtifactEntity> {
     List<ArtifactEntity> findByProject(String project);
 
     Page<ArtifactEntity> findAll(Pageable pageable);

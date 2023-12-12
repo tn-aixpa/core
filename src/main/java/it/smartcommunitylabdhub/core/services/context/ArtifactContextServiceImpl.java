@@ -6,6 +6,8 @@ import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.ArtifactContextService;
 import jakarta.transaction.Transactional;
@@ -13,21 +15,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class ArtifactContextServiceImpl extends ContextService implements ArtifactContextService {
+public class ArtifactContextServiceImpl extends ContextService<ArtifactEntity, ArtifactEntityFilter> implements ArtifactContextService {
 
     @Autowired
     ArtifactRepository artifactRepository;
 
     @Autowired
     ArtifactEntityBuilder artifactEntityBuilder;
+
+    @Autowired
+    ArtifactEntityFilter artifactEntityFilter;
 
     @Autowired
     ArtifactDTOBuilder artifactDTOBuilder;
@@ -72,19 +80,30 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public Page<Artifact> getLatestByProjectName(String projectName, Pageable pageable) {
+    public Page<Artifact> getLatestByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<ArtifactEntity> artifactPage = this.artifactRepository
-                    .findAllLatestArtifactsByProject(projectName,
-                            pageable);
+            artifactEntityFilter.setCreatedDate(filters.get("created"));
+            artifactEntityFilter.setName(filters.get("name"));
+            artifactEntityFilter.setKind(filters.get("kind"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filters.get("state")))
+                    .findAny();
+
+            artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<ArtifactEntity> specification = createSpecification(filters, artifactEntityFilter);
+
+            Page<ArtifactEntity> artifactPage = artifactRepository.findAll(
+                    Specification.where(specification).and((root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(root.get("project"), projectName)), pageable);
+
             return new PageImpl<>(
                     artifactPage.getContent()
                             .stream()
-                            .map((artifact) -> {
-                                return artifactDTOBuilder.build(artifact, false);
-                            }).collect(Collectors.toList()),
+                            .map((artifact) -> artifactDTOBuilder.build(artifact, false))
+                            .collect(Collectors.toList()),
                     pageable, artifactPage.getContent().size()
             );
         } catch (CustomException e) {
@@ -96,15 +115,32 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public Page<Artifact> getByProjectNameAndArtifactName(String projectName,
+    public Page<Artifact> getByProjectNameAndArtifactName(Map<String, String> filters,
+                                                          String projectName,
                                                           String artifactName,
                                                           Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<ArtifactEntity> artifactPage = this.artifactRepository
-                    .findAllByProjectAndNameOrderByCreatedDesc(projectName, artifactName,
-                            pageable);
+            artifactEntityFilter.setCreatedDate(filters.get("created"));
+            artifactEntityFilter.setKind(filters.get("kind"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filters.get("state")))
+                    .findAny();
+
+            artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<ArtifactEntity> specification = createSpecification(filters, artifactEntityFilter);
+
+            Page<ArtifactEntity> artifactPage = artifactRepository.findAll(
+                    Specification.where(specification)
+                            .and((root, query, criteriaBuilder) ->
+                                    criteriaBuilder.and(
+                                            criteriaBuilder.equal(root.get("project"), projectName),
+                                            criteriaBuilder.equal(root.get("name"), artifactName))),
+                    pageable);
+
+
             return new PageImpl<>(
                     artifactPage.getContent()
                             .stream()
@@ -123,7 +159,8 @@ public class ArtifactContextServiceImpl extends ContextService implements Artifa
     }
 
     @Override
-    public Artifact getByProjectAndArtifactAndUuid(String projectName, String artifactName,
+    public Artifact getByProjectAndArtifactAndUuid(String projectName,
+                                                   String artifactName,
                                                    String uuid) {
         try {
             // Check project context

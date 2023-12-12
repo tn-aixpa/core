@@ -6,6 +6,8 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.entities.DataItemEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.DataItemContextService;
 import jakarta.transaction.Transactional;
@@ -13,21 +15,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class DataItemContextServiceImpl extends ContextService implements DataItemContextService {
+public class DataItemContextServiceImpl extends ContextService<DataItemEntity, DataItemEntityFilter> implements DataItemContextService {
 
     @Autowired
     DataItemRepository dataItemRepository;
 
     @Autowired
     DataItemDTOBuilder dataItemDTOBuilder;
+
+    @Autowired
+    DataItemEntityFilter dataItemEntityFilter;
 
     @Autowired
     DataItemEntityBuilder dataItemEntityBuilder;
@@ -72,13 +80,26 @@ public class DataItemContextServiceImpl extends ContextService implements DataIt
     }
 
     @Override
-    public Page<DataItem> getLatestByProjectName(String projectName, Pageable pageable) {
+    public Page<DataItem> getLatestByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<DataItemEntity> dataItemPage = this.dataItemRepository
-                    .findAllLatestDataItemsByProject(projectName,
-                            pageable);
+            dataItemEntityFilter.setCreatedDate(filters.get("created"));
+            dataItemEntityFilter.setName(filters.get("name"));
+            dataItemEntityFilter.setKind(filters.get("kind"));
+
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filters.get("state")))
+                    .findAny();
+
+            dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<DataItemEntity> specification = createSpecification(filters, dataItemEntityFilter);
+
+            Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
+                    Specification.where(specification).and((root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(root.get("project"), projectName)), pageable);
+
             return new PageImpl<>(
                     dataItemPage.getContent()
                             .stream()
@@ -96,15 +117,31 @@ public class DataItemContextServiceImpl extends ContextService implements DataIt
     }
 
     @Override
-    public Page<DataItem> getByProjectNameAndDataItemName(String projectName,
+    public Page<DataItem> getByProjectNameAndDataItemName(Map<String, String> filters, String projectName,
                                                           String dataItemName,
                                                           Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<DataItemEntity> dataItemPage = this.dataItemRepository
-                    .findAllByProjectAndNameOrderByCreatedDesc(projectName, dataItemName,
-                            pageable);
+            dataItemEntityFilter.setCreatedDate(filters.get("created"));
+            dataItemEntityFilter.setKind(filters.get("kind"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filters.get("state")))
+                    .findAny();
+
+            dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<DataItemEntity> specification = createSpecification(filters, dataItemEntityFilter);
+
+            Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
+                    Specification.where(specification)
+                            .and((root, query, criteriaBuilder) ->
+                                    criteriaBuilder.and(
+                                            criteriaBuilder.equal(root.get("project"), projectName),
+                                            criteriaBuilder.equal(root.get("name"), dataItemName))),
+                    pageable);
+
+
             return new PageImpl<>(
                     dataItemPage.getContent()
                             .stream()

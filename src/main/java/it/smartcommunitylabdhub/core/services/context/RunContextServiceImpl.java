@@ -70,8 +70,7 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
     public Page<Run> getAllRunsByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
-
-
+            
             runEntityFilter.setTask(filters.get("task"));
             runEntityFilter.setTaskId(filters.get("task_id"));
 

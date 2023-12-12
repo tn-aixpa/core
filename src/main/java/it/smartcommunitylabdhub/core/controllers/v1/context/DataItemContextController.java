@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @ApiVersion("v1")
 @Validated
@@ -37,23 +39,25 @@ public class DataItemContextController implements ContextController {
             description = "First check if project exist and then return a list of the latest version of each dataItem related to a project)")
     @GetMapping(path = "/dataitems", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<DataItem>> getLatestDataItems(
+            @RequestParam Map<String, String> filters,
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.dataItemContextService
-                .getLatestByProjectName(project, pageable));
+                .getLatestByProjectName(filters, project, pageable));
     }
 
     @Operation(summary = "Retrieve all versions of the dataItem sort by creation",
             description = "First check if project exist and then return a list of all version of the dataItem sort by creation)")
     @GetMapping(path = "/dataitems/{name}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<DataItem>> getAllDataItems(
+            @RequestParam Map<String, String> filters,
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.dataItemContextService
-                .getByProjectNameAndDataItemName(project, name, pageable));
+                .getByProjectNameAndDataItemName(filters, project, name, pageable));
 
     }
 

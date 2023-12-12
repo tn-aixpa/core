@@ -4,15 +4,17 @@ import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
+
 public interface ArtifactContextService {
 
     Artifact createArtifact(String projectName, Artifact artifactDTO);
 
     Page<Artifact> getByProjectNameAndArtifactName(
-            String projectName, String artifactName, Pageable pageable);
+            Map<String, String> filters, String projectName, String artifactName, Pageable pageable);
 
     Page<Artifact> getLatestByProjectName(
-            String projectName, Pageable pageable);
+            Map<String, String> filters, String projectName, Pageable pageable);
 
     Artifact getByProjectAndArtifactAndUuid(
             String projectName, String artifactName, String uuid);

@@ -4,15 +4,17 @@ import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
+
 public interface DataItemContextService {
 
     DataItem createDataItem(String projectName, DataItem dataItemDTO);
 
     Page<DataItem> getByProjectNameAndDataItemName(
-            String projectName, String dataItemName, Pageable pageable);
+            Map<String, String> filters, String projectName, String dataItemName, Pageable pageable);
 
     Page<DataItem> getLatestByProjectName(
-            String projectName, Pageable pageable);
+            Map<String, String> filters, String projectName, Pageable pageable);
 
     DataItem getByProjectAndDataItemAndUuid(
             String projectName, String dataItemName, String uuid);
