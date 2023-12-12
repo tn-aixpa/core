@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services.context;
 
+import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
@@ -21,7 +22,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -73,6 +76,13 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
 
             runEntityFilter.setTask(filter.get("task"));
             runEntityFilter.setTaskId(filter.get("task_id"));
+            runEntityFilter.setKind(filter.get("kind"));
+            runEntityFilter.setCreatedDate(filter.get("created"));
+            Optional<RunState> stateOptional = Stream.of(RunState.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+            runEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
 
             Specification<RunEntity> specification = createSpecification(filter, runEntityFilter);
 

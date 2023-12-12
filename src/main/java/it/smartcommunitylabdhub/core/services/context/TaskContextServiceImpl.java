@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.models.filters.entities.TaskEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -92,6 +94,12 @@ public class TaskContextServiceImpl
             checkContext(projectName);
 
             taskEntityFilter.setFunction(filter.get("function"));
+            taskEntityFilter.setKind(filter.get("kind"));
+            taskEntityFilter.setCreatedDate(filter.get("created"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+            taskEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
             Specification<TaskEntity> specification = createSpecification(filter, taskEntityFilter);
 

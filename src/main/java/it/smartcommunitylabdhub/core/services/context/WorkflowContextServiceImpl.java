@@ -6,6 +6,8 @@ import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.entities.WorkflowEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.WorkflowRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.WorkflowContextService;
 import jakarta.transaction.Transactional;
@@ -13,21 +15,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class WorkflowContextServiceImpl extends ContextService implements WorkflowContextService {
+public class WorkflowContextServiceImpl extends ContextService<WorkflowEntity, WorkflowEntityFilter>
+        implements WorkflowContextService {
 
     @Autowired
     WorkflowRepository workflowRepository;
 
     @Autowired
     WorkflowEntityBuilder workflowEntityBuilder;
+
+    @Autowired
+    WorkflowEntityFilter workflowEntityFilter;
 
     @Autowired
     WorkflowDTOBuilder workflowDTOBuilder;
@@ -72,13 +81,28 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     }
 
     @Override
-    public Page<Workflow> getLatestByProjectName(String projectName, Pageable pageable) {
+    public Page<Workflow> getLatestByProjectName(Map<String, String> filter, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<WorkflowEntity> workflowPage = this.workflowRepository
-                    .findAllLatestWorkflowsByProject(projectName,
-                            pageable);
+
+            workflowEntityFilter.setCreatedDate(filter.get("created"));
+            workflowEntityFilter.setName(filter.get("name"));
+            workflowEntityFilter.setKind(filter.get("kind"));
+
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+
+            workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter);
+
+            Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
+                    Specification.where(specification).and((root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(root.get("project"), projectName)), pageable);
+
+
             return new PageImpl<>(
                     workflowPage.getContent()
                             .stream()
@@ -96,15 +120,30 @@ public class WorkflowContextServiceImpl extends ContextService implements Workfl
     }
 
     @Override
-    public Page<Workflow> getByProjectNameAndWorkflowName(String projectName,
+    public Page<Workflow> getByProjectNameAndWorkflowName(Map<String, String> filter, String projectName,
                                                           String workflowName,
                                                           Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<WorkflowEntity> workflowPage = this.workflowRepository
-                    .findAllByProjectAndNameOrderByCreatedDesc(projectName, workflowName,
-                            pageable);
+            workflowEntityFilter.setCreatedDate(filter.get("created"));
+            workflowEntityFilter.setKind(filter.get("kind"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+
+            workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter);
+
+            Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
+                    Specification.where(specification)
+                            .and((root, query, criteriaBuilder) ->
+                                    criteriaBuilder.and(
+                                            criteriaBuilder.equal(root.get("project"), projectName),
+                                            criteriaBuilder.equal(root.get("name"), workflowName))),
+                    pageable);
+
             return new PageImpl<>(
                     workflowPage.getContent()
                             .stream()
