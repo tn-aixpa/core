@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.filters.entities.TaskEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.TaskContextService;
@@ -15,15 +16,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class TaskContextServiceImpl extends ContextService implements TaskContextService {
+public class TaskContextServiceImpl
+        extends ContextService<TaskEntity, TaskEntityFilter>
+        implements TaskContextService {
 
     @Autowired
     TaskRepository taskRepository;
@@ -33,6 +38,9 @@ public class TaskContextServiceImpl extends ContextService implements TaskContex
 
     @Autowired
     TaskEntityBuilder taskEntityBuilder;
+
+    @Autowired
+    TaskEntityFilter taskEntityFilter;
 
     @Autowired
     RunRepository runRepository;
@@ -79,13 +87,18 @@ public class TaskContextServiceImpl extends ContextService implements TaskContex
 
 
     @Override
-    public Page<Task> getAllTasksByProjectName(String projectName, Pageable pageable) {
+    public Page<Task> getAllTasksByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<TaskEntity> taskPage = this.taskRepository
-                    .findAllByProjectOrderByCreatedDesc(projectName,
-                            pageable);
+            taskEntityFilter.setFunction(filters.get("function"));
+
+            Specification<TaskEntity> specification = createSpecification(filters, taskEntityFilter);
+
+            Page<TaskEntity> taskPage = taskRepository.findAll(
+                    Specification.where(specification).and((root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(root.get("project"), projectName)), pageable);
+            
             return new PageImpl<>(
                     taskPage.getContent()
                             .stream()
@@ -171,7 +184,7 @@ public class TaskContextServiceImpl extends ContextService implements TaskContex
     public Boolean deleteSpecificTaskVersion(String projectName, String uuid) {
         try {
             if (this.taskRepository.existsByProjectAndId(projectName, uuid)) {
-                
+
                 // Delete Task
                 this.taskRepository.deleteByProjectAndId(projectName, uuid);
 

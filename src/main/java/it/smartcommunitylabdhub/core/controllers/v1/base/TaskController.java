@@ -31,7 +31,8 @@ public class TaskController {
 
     @Operation(summary = "List of tasks", description = "Return the list of all tasks")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Task>> getTasks(Pageable pageable) {
+    public ResponseEntity<List<Task>> getTasks(
+            Pageable pageable) {
         return ResponseEntity.ok(this.taskService.getTasks(pageable));
     }
 

@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @ApiVersion("v1")
 @Validated
@@ -44,11 +46,12 @@ public class RunContextController implements ContextController {
             description = "First check if project exist and then return a list of Runs related with the project)")
     @GetMapping(path = "/runs", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Run>> getLatestRuns(
+            @RequestParam Map<String, String> filters,
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.RunContextService
-                .getAllRunsByProjectName(project, pageable));
+                .getAllRunsByProjectName(filters, project, pageable));
     }
 
 

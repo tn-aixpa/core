@@ -4,11 +4,14 @@ import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
+
 public interface TaskContextService {
 
     Task createTask(String projectName, Task taskDTO);
 
     Page<Task> getAllTasksByProjectName(
+            Map<String, String> filters,
             String projectName, Pageable pageable);
 
     Task getByProjectAndTaskUuid(

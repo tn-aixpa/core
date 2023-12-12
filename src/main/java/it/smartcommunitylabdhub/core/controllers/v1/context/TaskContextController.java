@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @ApiVersion("v1")
 @Validated
@@ -45,11 +47,12 @@ public class TaskContextController implements ContextController {
             description = "First check if project exist and then return a list of tasks related with the project)")
     @GetMapping(path = "/tasks", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Task>> getLatestTasks(
+            @RequestParam Map<String, String> filters,
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.taskContextService
-                .getAllTasksByProjectName(project, pageable));
+                .getAllTasksByProjectName(filters, project, pageable));
     }
 
 

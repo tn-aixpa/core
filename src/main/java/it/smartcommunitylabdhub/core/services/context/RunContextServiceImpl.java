@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.RunContextService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
@@ -15,14 +16,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
-public class RunContextServiceImpl extends ContextService implements RunContextService {
+public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFilter> implements RunContextService {
 
     @Autowired
     RunRepository runRepository;
@@ -32,6 +35,9 @@ public class RunContextServiceImpl extends ContextService implements RunContextS
 
     @Autowired
     RunEntityBuilder runEntityBuilder;
+
+    @Autowired
+    RunEntityFilter runEntityFilter;
 
     @Autowired
     RunService runService;
@@ -61,13 +67,20 @@ public class RunContextServiceImpl extends ContextService implements RunContextS
 
 
     @Override
-    public Page<Run> getAllRunsByProjectName(String projectName, Pageable pageable) {
+    public Page<Run> getAllRunsByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            Page<RunEntity> runPage = this.runRepository
-                    .findAllByProjectOrderByCreatedDesc(projectName,
-                            pageable);
+
+            runEntityFilter.setTask(filters.get("task"));
+            runEntityFilter.setTaskId(filters.get("task_id"));
+
+            Specification<RunEntity> specification = createSpecification(filters, runEntityFilter);
+
+            Page<RunEntity> runPage = runRepository.findAll(
+                    Specification.where(specification).and((root, query, criteriaBuilder) ->
+                            criteriaBuilder.equal(root.get("project"), projectName)), pageable);
+
             return new PageImpl<>(
                     runPage.getContent()
                             .stream()
