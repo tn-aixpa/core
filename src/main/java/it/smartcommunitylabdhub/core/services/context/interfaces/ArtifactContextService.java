@@ -11,10 +11,10 @@ public interface ArtifactContextService {
     Artifact createArtifact(String projectName, Artifact artifactDTO);
 
     Page<Artifact> getByProjectNameAndArtifactName(
-            Map<String, String> filters, String projectName, String artifactName, Pageable pageable);
+            Map<String, String> filter, String projectName, String artifactName, Pageable pageable);
 
     Page<Artifact> getLatestByProjectName(
-            Map<String, String> filters, String projectName, Pageable pageable);
+            Map<String, String> filter, String projectName, Pageable pageable);
 
     Artifact getByProjectAndArtifactAndUuid(
             String projectName, String artifactName, String uuid);

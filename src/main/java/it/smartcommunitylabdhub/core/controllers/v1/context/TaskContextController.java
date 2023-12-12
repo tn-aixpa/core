@@ -47,12 +47,12 @@ public class TaskContextController implements ContextController {
             description = "First check if project exist and then return a list of tasks related with the project)")
     @GetMapping(path = "/tasks", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Task>> getLatestTasks(
-            @RequestParam Map<String, String> filters,
+            @RequestParam Map<String, String> filter,
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.taskContextService
-                .getAllTasksByProjectName(filters, project, pageable));
+                .getAllTasksByProjectName(filter, project, pageable));
     }
 
 

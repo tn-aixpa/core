@@ -23,7 +23,7 @@ public class RunEntityFilter extends BaseEntityFilter implements SpecificationFi
     @Override
     public Predicate toPredicate(Root<RunEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         Predicate predicate = criteriaBuilder.conjunction();
-        
+
         if (task != null) {
             predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("task"), "%" + task + "%"));
         }

@@ -67,14 +67,14 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
 
 
     @Override
-    public Page<Run> getAllRunsByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
+    public Page<Run> getAllRunsByProjectName(Map<String, String> filter, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
-            
-            runEntityFilter.setTask(filters.get("task"));
-            runEntityFilter.setTaskId(filters.get("task_id"));
 
-            Specification<RunEntity> specification = createSpecification(filters, runEntityFilter);
+            runEntityFilter.setTask(filter.get("task"));
+            runEntityFilter.setTaskId(filter.get("task_id"));
+
+            Specification<RunEntity> specification = createSpecification(filter, runEntityFilter);
 
             Page<RunEntity> runPage = runRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->

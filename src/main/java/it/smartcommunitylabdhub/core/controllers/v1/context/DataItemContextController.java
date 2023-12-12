@@ -39,25 +39,25 @@ public class DataItemContextController implements ContextController {
             description = "First check if project exist and then return a list of the latest version of each dataItem related to a project)")
     @GetMapping(path = "/dataitems", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<DataItem>> getLatestDataItems(
-            @RequestParam Map<String, String> filters,
+            @RequestParam Map<String, String> filter,
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.dataItemContextService
-                .getLatestByProjectName(filters, project, pageable));
+                .getLatestByProjectName(filter, project, pageable));
     }
 
     @Operation(summary = "Retrieve all versions of the dataItem sort by creation",
             description = "First check if project exist and then return a list of all version of the dataItem sort by creation)")
     @GetMapping(path = "/dataitems/{name}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<DataItem>> getAllDataItems(
-            @RequestParam Map<String, String> filters,
+            @RequestParam Map<String, String> filter,
             @ValidateField @PathVariable String project,
             @ValidateField @PathVariable String name,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.dataItemContextService
-                .getByProjectNameAndDataItemName(filters, project, name, pageable));
+                .getByProjectNameAndDataItemName(filter, project, name, pageable));
 
     }
 

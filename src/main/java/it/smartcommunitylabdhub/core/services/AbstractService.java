@@ -7,18 +7,18 @@ import java.util.Map;
 
 public class AbstractService<T> {
 
-    private Specification<T> createSpecification(Map<String, String> filters) {
+    private Specification<T> createSpecification(Map<String, String> filter) {
         return (root, query, criteriaBuilder) -> {
             Predicate predicate = criteriaBuilder.conjunction();
 
-//            // Add your custom filters based on the provided map
-//            if (filters.containsKey("functionName")) {
+//            // Add your custom filter based on the provided map
+//            if (filter.containsKey("functionName")) {
 //                predicate = criteriaBuilder.and(predicate,
-//                        new FunctionEntityFilter(filters.get("functionName"))
+//                        new FunctionEntityFilter(filter.get("functionName"))
 //                                .toPredicate(root, query, criteriaBuilder));
 //            }
 
-            // Add more conditions for other filters if needed
+            // Add more conditions for other filter if needed
 
             return predicate;
         };

@@ -46,12 +46,12 @@ public class RunContextController implements ContextController {
             description = "First check if project exist and then return a list of Runs related with the project)")
     @GetMapping(path = "/runs", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Run>> getLatestRuns(
-            @RequestParam Map<String, String> filters,
+            @RequestParam Map<String, String> filter,
             @ValidateField @PathVariable String project,
             Pageable pageable) {
 
         return ResponseEntity.ok(this.RunContextService
-                .getAllRunsByProjectName(filters, project, pageable));
+                .getAllRunsByProjectName(filter, project, pageable));
     }
 
 

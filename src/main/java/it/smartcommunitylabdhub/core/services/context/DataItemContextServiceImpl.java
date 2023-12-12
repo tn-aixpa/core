@@ -80,21 +80,21 @@ public class DataItemContextServiceImpl extends ContextService<DataItemEntity, D
     }
 
     @Override
-    public Page<DataItem> getLatestByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
+    public Page<DataItem> getLatestByProjectName(Map<String, String> filter, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            dataItemEntityFilter.setCreatedDate(filters.get("created"));
-            dataItemEntityFilter.setName(filters.get("name"));
-            dataItemEntityFilter.setKind(filters.get("kind"));
+            dataItemEntityFilter.setCreatedDate(filter.get("created"));
+            dataItemEntityFilter.setName(filter.get("name"));
+            dataItemEntityFilter.setKind(filter.get("kind"));
 
             Optional<State> stateOptional = Stream.of(State.values())
-                    .filter(state -> state.name().equals(filters.get("state")))
+                    .filter(state -> state.name().equals(filter.get("state")))
                     .findAny();
 
             dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<DataItemEntity> specification = createSpecification(filters, dataItemEntityFilter);
+            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
 
             Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->
@@ -117,21 +117,21 @@ public class DataItemContextServiceImpl extends ContextService<DataItemEntity, D
     }
 
     @Override
-    public Page<DataItem> getByProjectNameAndDataItemName(Map<String, String> filters, String projectName,
+    public Page<DataItem> getByProjectNameAndDataItemName(Map<String, String> filter, String projectName,
                                                           String dataItemName,
                                                           Pageable pageable) {
         try {
             checkContext(projectName);
 
-            dataItemEntityFilter.setCreatedDate(filters.get("created"));
-            dataItemEntityFilter.setKind(filters.get("kind"));
+            dataItemEntityFilter.setCreatedDate(filter.get("created"));
+            dataItemEntityFilter.setKind(filter.get("kind"));
             Optional<State> stateOptional = Stream.of(State.values())
-                    .filter(state -> state.name().equals(filters.get("state")))
+                    .filter(state -> state.name().equals(filter.get("state")))
                     .findAny();
 
             dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<DataItemEntity> specification = createSpecification(filters, dataItemEntityFilter);
+            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
 
             Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
                     Specification.where(specification)

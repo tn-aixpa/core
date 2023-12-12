@@ -11,7 +11,7 @@ public interface TaskContextService {
     Task createTask(String projectName, Task taskDTO);
 
     Page<Task> getAllTasksByProjectName(
-            Map<String, String> filters,
+            Map<String, String> filter,
             String projectName, Pageable pageable);
 
     Task getByProjectAndTaskUuid(

@@ -11,10 +11,10 @@ public interface DataItemContextService {
     DataItem createDataItem(String projectName, DataItem dataItemDTO);
 
     Page<DataItem> getByProjectNameAndDataItemName(
-            Map<String, String> filters, String projectName, String dataItemName, Pageable pageable);
+            Map<String, String> filter, String projectName, String dataItemName, Pageable pageable);
 
     Page<DataItem> getLatestByProjectName(
-            Map<String, String> filters, String projectName, Pageable pageable);
+            Map<String, String> filter, String projectName, Pageable pageable);
 
     DataItem getByProjectAndDataItemAndUuid(
             String projectName, String dataItemName, String uuid);

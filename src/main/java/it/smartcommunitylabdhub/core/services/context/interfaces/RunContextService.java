@@ -11,7 +11,7 @@ public interface RunContextService {
     Run createRun(String projectName, Run runDTO);
 
     Page<Run> getAllRunsByProjectName(
-            Map<String, String> filters, String projectName, Pageable pageable);
+            Map<String, String> filter, String projectName, Pageable pageable);
 
     Run getByProjectAndRunUuid(
             String projectName, String uuid);

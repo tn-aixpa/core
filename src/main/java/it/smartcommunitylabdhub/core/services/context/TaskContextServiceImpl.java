@@ -87,18 +87,18 @@ public class TaskContextServiceImpl
 
 
     @Override
-    public Page<Task> getAllTasksByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
+    public Page<Task> getAllTasksByProjectName(Map<String, String> filter, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            taskEntityFilter.setFunction(filters.get("function"));
+            taskEntityFilter.setFunction(filter.get("function"));
 
-            Specification<TaskEntity> specification = createSpecification(filters, taskEntityFilter);
+            Specification<TaskEntity> specification = createSpecification(filter, taskEntityFilter);
 
             Page<TaskEntity> taskPage = taskRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->
                             criteriaBuilder.equal(root.get("project"), projectName)), pageable);
-            
+
             return new PageImpl<>(
                     taskPage.getContent()
                             .stream()

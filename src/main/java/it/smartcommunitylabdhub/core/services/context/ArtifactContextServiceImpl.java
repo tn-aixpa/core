@@ -80,20 +80,20 @@ public class ArtifactContextServiceImpl extends ContextService<ArtifactEntity, A
     }
 
     @Override
-    public Page<Artifact> getLatestByProjectName(Map<String, String> filters, String projectName, Pageable pageable) {
+    public Page<Artifact> getLatestByProjectName(Map<String, String> filter, String projectName, Pageable pageable) {
         try {
             checkContext(projectName);
 
-            artifactEntityFilter.setCreatedDate(filters.get("created"));
-            artifactEntityFilter.setName(filters.get("name"));
-            artifactEntityFilter.setKind(filters.get("kind"));
+            artifactEntityFilter.setCreatedDate(filter.get("created"));
+            artifactEntityFilter.setName(filter.get("name"));
+            artifactEntityFilter.setKind(filter.get("kind"));
             Optional<State> stateOptional = Stream.of(State.values())
-                    .filter(state -> state.name().equals(filters.get("state")))
+                    .filter(state -> state.name().equals(filter.get("state")))
                     .findAny();
 
             artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<ArtifactEntity> specification = createSpecification(filters, artifactEntityFilter);
+            Specification<ArtifactEntity> specification = createSpecification(filter, artifactEntityFilter);
 
             Page<ArtifactEntity> artifactPage = artifactRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->
@@ -115,22 +115,22 @@ public class ArtifactContextServiceImpl extends ContextService<ArtifactEntity, A
     }
 
     @Override
-    public Page<Artifact> getByProjectNameAndArtifactName(Map<String, String> filters,
+    public Page<Artifact> getByProjectNameAndArtifactName(Map<String, String> filter,
                                                           String projectName,
                                                           String artifactName,
                                                           Pageable pageable) {
         try {
             checkContext(projectName);
 
-            artifactEntityFilter.setCreatedDate(filters.get("created"));
-            artifactEntityFilter.setKind(filters.get("kind"));
+            artifactEntityFilter.setCreatedDate(filter.get("created"));
+            artifactEntityFilter.setKind(filter.get("kind"));
             Optional<State> stateOptional = Stream.of(State.values())
-                    .filter(state -> state.name().equals(filters.get("state")))
+                    .filter(state -> state.name().equals(filter.get("state")))
                     .findAny();
 
             artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<ArtifactEntity> specification = createSpecification(filters, artifactEntityFilter);
+            Specification<ArtifactEntity> specification = createSpecification(filter, artifactEntityFilter);
 
             Page<ArtifactEntity> artifactPage = artifactRepository.findAll(
                     Specification.where(specification)
