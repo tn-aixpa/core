@@ -19,6 +19,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/projects")
@@ -32,8 +33,10 @@ public class ProjectController {
 
     @Operation(summary = "List project", description = "Return a list of all projects")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<Project>> getProjects(Pageable pageable) {
-        return ResponseEntity.ok(this.projectService.getProjects(pageable));
+    public ResponseEntity<Page<Project>> getProjects(
+            @RequestParam Map<String, String> filter,
+            Pageable pageable) {
+        return ResponseEntity.ok(this.projectService.getProjects(filter, pageable));
     }
 
     @Operation(summary = "Create project", description = "Create an project and return")

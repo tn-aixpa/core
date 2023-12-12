@@ -9,12 +9,14 @@ import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/runs")
@@ -43,8 +45,10 @@ public class RunController {
 
     @Operation(summary = "Run list", description = "Return a list of all runs")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Run>> getRuns(Pageable pageable) {
-        return ResponseEntity.ok(this.runService.getRuns(pageable));
+    public ResponseEntity<Page<Run>> getRuns(
+            @RequestParam Map<String, String> filter,
+            Pageable pageable) {
+        return ResponseEntity.ok(this.runService.getRuns(filter, pageable));
     }
 
     @Operation(summary = "Create and execute a run",

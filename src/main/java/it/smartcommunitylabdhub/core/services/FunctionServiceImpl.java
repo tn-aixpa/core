@@ -13,6 +13,9 @@ import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.abstracts.AbstractSpecificationService;
+import it.smartcommunitylabdhub.core.models.filters.entities.FunctionEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -21,17 +24,22 @@ import it.smartcommunitylabdhub.core.utils.ErrorList;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class FunctionServiceImpl implements FunctionService {
+public class FunctionServiceImpl extends AbstractSpecificationService<FunctionEntity, FunctionEntityFilter>
+        implements FunctionService {
 
     @Autowired
     FunctionRepository functionRepository;
@@ -49,16 +57,34 @@ public class FunctionServiceImpl implements FunctionService {
     FunctionEntityBuilder functionEntityBuilder;
 
     @Autowired
+    FunctionEntityFilter functionEntityFilter;
+
+    @Autowired
     TaskDTOBuilder taskDTOBuilder;
 
 
     @Override
-    public List<Function> getFunctions(Pageable pageable) {
+    public Page<Function> getFunctions(Map<String, String> filter, Pageable pageable) {
         try {
-            Page<FunctionEntity> functionPage = this.functionRepository.findAll(pageable);
-            return functionPage.getContent().stream()
-                    .map(function -> functionDTOBuilder.build(function, false))
-                    .collect(Collectors.toList());
+
+            functionEntityFilter.setCreatedDate(filter.get("created"));
+            functionEntityFilter.setName(filter.get("name"));
+            functionEntityFilter.setKind(filter.get("kind"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+            functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter);
+
+            Page<FunctionEntity> functionPage = this.functionRepository.findAll(specification, pageable);
+
+            return new PageImpl<>(
+                    functionPage.getContent().stream()
+                            .map(function -> functionDTOBuilder.build(function, false))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    functionPage.getContent().size());
         } catch (CustomException e) {
             throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),

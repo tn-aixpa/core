@@ -7,13 +7,14 @@ import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.services.interfaces.DataItemService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/dataitems")
@@ -26,8 +27,10 @@ public class DataItemController {
 
     @Operation(summary = "List dataItems", description = "Return a list of all dataItems")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<DataItem>> getDataItems(Pageable pageable) {
-        return ResponseEntity.ok(this.dataItemService.getDataItems(pageable));
+    public ResponseEntity<Page<DataItem>> getDataItems(
+            @RequestParam Map<String, String> filter,
+            Pageable pageable) {
+        return ResponseEntity.ok(this.dataItemService.getDataItems(filter, pageable));
     }
 
     @Operation(summary = "Create dataItem", description = "Create an dataItem and return")

@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.services.interfaces.WorkflowService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/workflows")
@@ -27,8 +29,10 @@ public class WorkflowController {
 
     @Operation(summary = "List workflows", description = "Return a list of all workflows")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Workflow>> getWorkflows(Pageable pageable) {
-        return ResponseEntity.ok(this.workflowService.getWorkflows(pageable));
+    public ResponseEntity<Page<Workflow>> getWorkflows(
+            @RequestParam Map<String, String> filter,
+            Pageable pageable) {
+        return ResponseEntity.ok(this.workflowService.getWorkflows(filter, pageable));
     }
 
     @Operation(summary = "Create workflow", description = "Create an workflow and return")

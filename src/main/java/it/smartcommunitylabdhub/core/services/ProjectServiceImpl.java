@@ -16,6 +16,9 @@ import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.abstracts.AbstractSpecificationService;
+import it.smartcommunitylabdhub.core.models.filters.entities.ProjectEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.*;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -24,16 +27,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class ProjectServiceImpl implements ProjectService {
+public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEntity, ProjectEntityFilter>
+        implements ProjectService {
     @Autowired
     ProjectRepository projectRepository;
 
@@ -73,6 +80,9 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     WorkflowDTOBuilder workflowDTOBuilder;
 
+    @Autowired
+    ProjectEntityFilter projectEntityFilter;
+
     @Override
     public Project getProject(String name) {
 
@@ -93,9 +103,21 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Page<Project> getProjects(Pageable pageable) {
+    public Page<Project> getProjects(Map<String, String> filter, Pageable pageable) {
         try {
-            Page<ProjectEntity> projectPage = this.projectRepository.findAll(pageable);
+
+            projectEntityFilter.setKind(filter.get("kind"));
+            projectEntityFilter.setCreatedDate(filter.get("created"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+
+            projectEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<ProjectEntity> specification = createSpecification(filter, projectEntityFilter);
+
+            Page<ProjectEntity> projectPage = this.projectRepository.findAll(specification, pageable);
+
             return new PageImpl<>(
                     projectPage.getContent().stream().map((project) -> {
                         List<FunctionEntity> functions = functionRepository.findAllLatestFunctionsByProject(project.getName());

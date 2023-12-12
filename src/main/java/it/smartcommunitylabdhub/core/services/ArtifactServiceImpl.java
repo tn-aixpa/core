@@ -6,22 +6,29 @@ import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.abstracts.AbstractSpecificationService;
+import it.smartcommunitylabdhub.core.models.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class ArtifactServiceImpl implements ArtifactService {
+public class ArtifactServiceImpl extends AbstractSpecificationService<ArtifactEntity, ArtifactEntityFilter>
+        implements ArtifactService {
 
     @Autowired
     ArtifactRepository artifactRepository;
@@ -30,15 +37,36 @@ public class ArtifactServiceImpl implements ArtifactService {
     ArtifactEntityBuilder artifactEntityBuilder;
 
     @Autowired
+    ArtifactEntityFilter artifactEntityFilter;
+
+    @Autowired
     ArtifactDTOBuilder artifactDTOBuilder;
 
     @Override
-    public List<Artifact> getArtifacts(Pageable pageable) {
+    public Page<Artifact> getArtifacts(Map<String, String> filter, Pageable pageable) {
         try {
-            Page<ArtifactEntity> artifactPage = this.artifactRepository.findAll(pageable);
-            return artifactPage.getContent().stream().map((artifact) -> {
-                return artifactDTOBuilder.build(artifact, false);
-            }).collect(Collectors.toList());
+
+            artifactEntityFilter.setName(filter.get("name"));
+            artifactEntityFilter.setKind(filter.get("kind"));
+            artifactEntityFilter.setCreatedDate(filter.get("created"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+            artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<ArtifactEntity> specification = createSpecification(filter, artifactEntityFilter);
+
+            Page<ArtifactEntity> artifactPage = this.artifactRepository.findAll(specification, pageable);
+
+            return new PageImpl<>(
+                    artifactPage.getContent()
+                            .stream()
+                            .map((artifact) -> artifactDTOBuilder.build(artifact, false))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    artifactPage.getContent().size()
+            );
+
         } catch (CustomException e) {
             throw new CoreException(
                     "InternalServerError",

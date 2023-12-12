@@ -7,12 +7,13 @@ import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.services.interfaces.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tasks")
@@ -31,9 +32,10 @@ public class TaskController {
 
     @Operation(summary = "List of tasks", description = "Return the list of all tasks")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Task>> getTasks(
+    public ResponseEntity<Page<Task>> getTasks(
+            @RequestParam Map<String, String> filter,
             Pageable pageable) {
-        return ResponseEntity.ok(this.taskService.getTasks(pageable));
+        return ResponseEntity.ok(this.taskService.getTasks(filter, pageable));
     }
 
     @Operation(summary = "Create a task", description = "Create and return a new task")

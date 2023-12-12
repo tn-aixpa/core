@@ -2,12 +2,14 @@ package it.smartcommunitylabdhub.core.services.interfaces;
 
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface WorkflowService {
-    List<Workflow> getWorkflows(Pageable pageable);
+    Page<Workflow> getWorkflows(Map<String, String> filter, Pageable pageable);
 
     Workflow createWorkflow(Workflow workflowDTO);
 

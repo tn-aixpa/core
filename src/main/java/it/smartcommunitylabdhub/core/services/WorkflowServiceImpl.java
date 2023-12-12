@@ -12,6 +12,9 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.abstracts.AbstractSpecificationService;
+import it.smartcommunitylabdhub.core.models.filters.entities.WorkflowEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.repositories.WorkflowRepository;
@@ -19,17 +22,22 @@ import it.smartcommunitylabdhub.core.services.interfaces.WorkflowService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class WorkflowServiceImpl implements WorkflowService {
+public class WorkflowServiceImpl extends AbstractSpecificationService<WorkflowEntity, WorkflowEntityFilter>
+        implements WorkflowService {
 
     @Autowired
     WorkflowRepository workflowRepository;
@@ -44,18 +52,38 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowEntityBuilder workflowEntityBuilder;
 
     @Autowired
+    WorkflowEntityFilter workflowEntityFilter;
+
+    @Autowired
     WorkflowDTOBuilder workflowDTOBuilder;
 
     @Autowired
     TaskDTOBuilder taskDTOBuilder;
 
     @Override
-    public List<Workflow> getWorkflows(Pageable pageable) {
+    public Page<Workflow> getWorkflows(Map<String, String> filter, Pageable pageable) {
         try {
-            Page<WorkflowEntity> workflowPage = this.workflowRepository.findAll(pageable);
-            return workflowPage.getContent().stream().map((workflow) -> {
-                return workflowDTOBuilder.build(workflow, false);
-            }).collect(Collectors.toList());
+            workflowEntityFilter.setCreatedDate(filter.get("created"));
+            workflowEntityFilter.setName(filter.get("name"));
+            workflowEntityFilter.setKind(filter.get("kind"));
+
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+
+            workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter);
+
+            Page<WorkflowEntity> workflowPage = this.workflowRepository.findAll(specification, pageable);
+
+            return new PageImpl<>(
+                    workflowPage.getContent()
+                            .stream()
+                            .map((workflow) -> workflowDTOBuilder.build(workflow, false))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    workflowPage.getContent().size());
         } catch (CustomException e) {
             throw new CoreException(
                     "InternalServerError",

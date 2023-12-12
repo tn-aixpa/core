@@ -6,22 +6,29 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.abstracts.AbstractSpecificationService;
+import it.smartcommunitylabdhub.core.models.filters.entities.DataItemEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.DataItemService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class DataItemServiceImpl implements DataItemService {
+public class DataItemServiceImpl extends AbstractSpecificationService<DataItemEntity, DataItemEntityFilter>
+        implements DataItemService {
 
     @Autowired
     DataItemRepository dataItemRepository;
@@ -30,14 +37,34 @@ public class DataItemServiceImpl implements DataItemService {
     DataItemEntityBuilder dataItemEntityBuilder;
 
     @Autowired
+    DataItemEntityFilter dataItemEntityFilter;
+
+    @Autowired
     DataItemDTOBuilder dataItemDTOBuilder;
 
     @Override
-    public List<DataItem> getDataItems(Pageable pageable) {
+    public Page<DataItem> getDataItems(Map<String, String> filter, Pageable pageable) {
         try {
-            Page<DataItemEntity> dataItemPage = this.dataItemRepository.findAll(pageable);
-            return dataItemPage.getContent().stream().map((dataItem) ->
-                    dataItemDTOBuilder.build(dataItem, false)).collect(Collectors.toList());
+
+            dataItemEntityFilter.setCreatedDate(filter.get("created"));
+            dataItemEntityFilter.setName(filter.get("name"));
+            dataItemEntityFilter.setKind(filter.get("kind"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+            dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
+
+            Page<DataItemEntity> dataItemPage = this.dataItemRepository.findAll(specification, pageable);
+
+            return new PageImpl<>(
+                    dataItemPage.getContent().stream().map((dataItem) ->
+                                    dataItemDTOBuilder.build(dataItem, false))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    dataItemPage.getContent().size());
+
         } catch (CustomException e) {
             throw new CoreException(
                     "InternalServerError",

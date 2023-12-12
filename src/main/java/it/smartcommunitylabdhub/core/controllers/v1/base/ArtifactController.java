@@ -7,13 +7,14 @@ import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/artifacts")
@@ -26,8 +27,10 @@ public class ArtifactController {
 
     @Operation(summary = "List artifacts", description = "Return a list of all artifacts")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Artifact>> getArtifacts(Pageable pageable) {
-        return ResponseEntity.ok(this.artifactService.getArtifacts(pageable));
+    public ResponseEntity<Page<Artifact>> getArtifacts(
+            @RequestParam Map<String, String> filter,
+            Pageable pageable) {
+        return ResponseEntity.ok(this.artifactService.getArtifacts(filter, pageable));
     }
 
     @Operation(summary = "Create artifact", description = "Create an artifact and return")

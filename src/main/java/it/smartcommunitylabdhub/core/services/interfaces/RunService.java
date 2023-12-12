@@ -3,13 +3,14 @@ package it.smartcommunitylabdhub.core.services.interfaces;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import java.util.Map;
 
 public interface RunService {
 
-    List<Run> getRuns(Pageable pageable);
+    Page<Run> getRuns(Map<String, String> filter, Pageable pageable);
 
     Run getRun(String uuid);
 

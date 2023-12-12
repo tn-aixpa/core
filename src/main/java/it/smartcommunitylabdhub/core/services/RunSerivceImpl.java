@@ -20,6 +20,8 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.filters.abstracts.AbstractSpecificationService;
+import it.smartcommunitylabdhub.core.models.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.FunctionService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
@@ -29,18 +31,22 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class RunSerivceImpl implements RunService {
+public class RunSerivceImpl extends AbstractSpecificationService<RunEntity, RunEntityFilter>
+        implements RunService {
 
     @Autowired
     RunDTOBuilder runDTOBuilder;
@@ -61,6 +67,9 @@ public class RunSerivceImpl implements RunService {
     KindBuilderFactory runBuilderFactory;
 
     @Autowired
+    RunEntityFilter runEntityFilter;
+
+    @Autowired
     KindPublisherFactory runPublisherFactory;
 
     @Autowired
@@ -73,11 +82,26 @@ public class RunSerivceImpl implements RunService {
     SpecRegistry<? extends Spec> specRegistry;
 
     @Override
-    public List<Run> getRuns(Pageable pageable) {
+    public Page<Run> getRuns(Map<String, String> filter, Pageable pageable) {
         try {
-            Page<RunEntity> runPage = this.runRepository.findAll(pageable);
-            return runPage.getContent().stream().map(run -> runDTOBuilder.build(run))
-                    .collect(Collectors.toList());
+            runEntityFilter.setTask(filter.get("task"));
+            runEntityFilter.setTaskId(filter.get("task_id"));
+            runEntityFilter.setKind(filter.get("kind"));
+            runEntityFilter.setCreatedDate(filter.get("created"));
+            Optional<RunState> stateOptional = Stream.of(RunState.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+            runEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<RunEntity> specification = createSpecification(filter, runEntityFilter);
+
+            Page<RunEntity> runPage = this.runRepository.findAll(specification, pageable);
+
+            return new PageImpl<>(
+                    runPage.getContent().stream().map(run -> runDTOBuilder.build(run))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    runPage.getContent().size());
 
         } catch (CustomException e) {
             throw new CoreException(ErrorList.INTERNAL_SERVER_ERROR.getValue(),

@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.FunctionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/functions")
@@ -27,8 +29,10 @@ public class FunctionController {
 
     @Operation(summary = "List functions", description = "Return a list of all functions")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Function>> getFunctions(Pageable pageable) {
-        return ResponseEntity.ok(this.functionService.getFunctions(pageable));
+    public ResponseEntity<Page<Function>> getFunctions(
+            @RequestParam Map<String, String> filter,
+            Pageable pageable) {
+        return ResponseEntity.ok(this.functionService.getFunctions(filter, pageable));
     }
 
     @Operation(summary = "Create function", description = "Create an function and return")

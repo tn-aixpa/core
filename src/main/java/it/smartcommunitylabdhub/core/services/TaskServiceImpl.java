@@ -12,6 +12,9 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.enums.State;
+import it.smartcommunitylabdhub.core.models.filters.abstracts.AbstractSpecificationService;
+import it.smartcommunitylabdhub.core.models.filters.entities.TaskEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.TaskService;
@@ -19,17 +22,22 @@ import it.smartcommunitylabdhub.core.utils.ErrorList;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class TaskServiceImpl implements TaskService {
+public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, TaskEntityFilter>
+        implements TaskService {
 
     @Autowired
     TaskRepository taskRepository;
@@ -43,16 +51,34 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     TaskEntityBuilder taskEntityBuilder;
 
+    @Autowired
+    TaskEntityFilter taskEntityFilter;
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
 
     @Override
-    public List<Task> getTasks(Pageable pageable) {
+    public Page<Task> getTasks(Map<String, String> filter, Pageable pageable) {
         try {
-            Page<TaskEntity> TaskPage = this.taskRepository.findAll(pageable);
-            return TaskPage.getContent().stream().map(task -> taskDTOBuilder.build(task))
-                    .collect(Collectors.toList());
+            taskEntityFilter.setFunction(filter.get("function"));
+            taskEntityFilter.setKind(filter.get("kind"));
+            taskEntityFilter.setCreatedDate(filter.get("created"));
+            Optional<State> stateOptional = Stream.of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
+            taskEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<TaskEntity> specification = createSpecification(filter, taskEntityFilter);
+
+            Page<TaskEntity> taskPage = this.taskRepository.findAll(specification, pageable);
+
+            return new PageImpl<>(
+                    taskPage.getContent()
+                            .stream()
+                            .map(task -> taskDTOBuilder.build(task))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    taskPage.getContent().size());
 
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(),

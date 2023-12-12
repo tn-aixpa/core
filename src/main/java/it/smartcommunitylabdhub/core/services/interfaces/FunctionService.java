@@ -2,12 +2,14 @@ package it.smartcommunitylabdhub.core.services.interfaces;
 
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface FunctionService {
-    List<Function> getFunctions(Pageable pageable);
+    Page<Function> getFunctions(Map<String, String> filter, Pageable pageable);
 
     List<Function> getFunctions();
 
