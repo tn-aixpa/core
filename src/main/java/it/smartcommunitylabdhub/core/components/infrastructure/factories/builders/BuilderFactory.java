@@ -6,7 +6,6 @@
 
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.builders;
 
-
 import it.smartcommunitylabdhub.core.annotations.infrastructure.BuilderComponent;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;

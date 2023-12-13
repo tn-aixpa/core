@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
@@ -20,6 +21,7 @@ import java.util.Map;
 @RequestMapping("/artifacts")
 @ApiVersion("v1")
 @Validated
+@Tag(name = "Artifact base API", description = "Endpoints related to artifacts management out of the Context")
 public class ArtifactController {
 
     @Autowired

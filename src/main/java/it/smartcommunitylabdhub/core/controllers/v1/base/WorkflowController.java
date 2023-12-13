@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
@@ -22,6 +23,7 @@ import java.util.Map;
 @RequestMapping("/workflows")
 @ApiVersion("v1")
 @Validated
+@Tag(name = "Workflow base API", description = "Endpoints related to workflows management out of the Context")
 public class WorkflowController {
 
     @Autowired

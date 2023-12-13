@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
@@ -19,6 +20,7 @@ import java.util.Map;
 @RestController
 @ApiVersion("v1")
 @Validated
+@Tag(name = "DataItem context API", description = "Endpoints related to dataitems management in Context")
 public class DataItemContextController implements ContextController {
 
     @Autowired

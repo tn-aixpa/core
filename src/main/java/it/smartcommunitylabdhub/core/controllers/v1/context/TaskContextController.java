@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
@@ -21,6 +22,7 @@ import java.util.Map;
 @RestController
 @ApiVersion("v1")
 @Validated
+@Tag(name = "Task context API", description = "Endpoints related to tasks management in Context")
 public class TaskContextController implements ContextController {
 
     @Autowired
