@@ -15,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,9 +37,10 @@ public class RunController {
 
     @Operation(summary = "Run log list", description = "Return the log list for a specific run")
     @GetMapping(path = "/{uuid}/log", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Log>> getRunLog(
-            @ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
-        return ResponseEntity.ok(this.logService.getLogsByRunUuid(uuid));
+    public ResponseEntity<Page<Log>> getRunLog(
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
+            Pageable pageable) {
+        return ResponseEntity.ok(this.logService.getLogsByRunUuid(uuid, pageable));
     }
 
     @Operation(summary = "Run list", description = "Return a list of all runs")

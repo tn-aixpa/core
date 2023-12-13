@@ -1,17 +1,16 @@
 package it.smartcommunitylabdhub.core.services.interfaces;
 
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 public interface LogService {
 
-    List<Log> getLogs(Pageable pageable);
+    Page<Log> getLogs(Pageable pageable);
 
     Log getLog(String uuid);
 
-    List<Log> getLogsByRunUuid(String uuid);
+    Page<Log> getLogsByRunUuid(String uuid, Pageable pageable);
 
     boolean deleteLog(String uuid);
 

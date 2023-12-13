@@ -110,6 +110,12 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
         runnable.getEnvs().forEach((key, value) -> envVars.add(
                 new V1EnvVar().name(key).value(value)));
 
+
+        // Create the Job metadata
+        V1ObjectMeta metadata = new V1ObjectMeta()
+                .name(jobName)
+                .labels(labels);
+
         // Build Container
         V1Container container = new V1Container()
                 .name(containerName)
@@ -128,6 +134,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec()
+                .metadata(metadata)
                 .spec(podSpec);
 
         // Create the JobSpec with the PodTemplateSpec
@@ -135,12 +142,6 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                 // .completions(1)
                 // .backoffLimit(6)    // is the default value
                 .template(podTemplateSpec);
-
-        // Create the Job metadata
-        V1ObjectMeta metadata = new V1ObjectMeta()
-                .name(jobName)
-                .labels(labels);
-
 
         // Create the V1Job object with metadata and JobSpec
         V1Job job = new V1Job()

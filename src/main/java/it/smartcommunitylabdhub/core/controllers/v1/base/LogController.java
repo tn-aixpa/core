@@ -6,11 +6,10 @@ import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/logs")
@@ -29,7 +28,7 @@ public class LogController {
 
     @Operation(summary = "Log list", description = "Return the log list")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Log>> getLogs(Pageable pageable) {
+    public ResponseEntity<Page<Log>> getLogs(Pageable pageable) {
         return ResponseEntity.ok(this.logService.getLogs(pageable));
     }
 

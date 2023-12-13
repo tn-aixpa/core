@@ -11,11 +11,11 @@ import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,12 +33,16 @@ public class LogSerivceImpl implements LogService {
     LogDTOBuilder logDTOBuilder;
 
     @Override
-    public List<Log> getLogs(Pageable pageable) {
+    public Page<Log> getLogs(Pageable pageable) {
         try {
             Page<LogEntity> logPage = this.logRepository.findAll(pageable);
-            return logPage.getContent().stream()
-                    .map(log -> logDTOBuilder.build(log))
-                    .collect(Collectors.toList());
+
+            return new PageImpl<>(
+                    logPage.getContent().stream()
+                            .map(log -> logDTOBuilder.build(log))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    logPage.getContent().size());
 
         } catch (CustomException e) {
             throw new CoreException(
@@ -96,17 +100,21 @@ public class LogSerivceImpl implements LogService {
     }
 
     @Override
-    public List<Log> getLogsByRunUuid(String uuid) {
-        return logRepository.findByRun(uuid)
-                .stream()
-                .map(log -> {
-                    try {
-                        return logDTOBuilder.build(log);
-                    } catch (CustomException e) {
-                        throw new CoreException("InternalServerError", e.getMessage(),
-                                HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
-                }).collect(Collectors.toList());
+    public Page<Log> getLogsByRunUuid(String uuid, Pageable pageable) {
+        Page<LogEntity> logPage = logRepository.findByRun(uuid, pageable);
+        return new PageImpl<>(
+                logPage.getContent().stream()
+                        .map(log -> {
+                            try {
+                                return logDTOBuilder.build(log);
+                            } catch (CustomException e) {
+                                throw new CoreException("InternalServerError", e.getMessage(),
+                                        HttpStatus.INTERNAL_SERVER_ERROR);
+                            }
+                        }).collect(Collectors.toList()),
+                pageable,
+                logPage.getContent().size()
+        );
     }
 
 }
