@@ -21,7 +21,7 @@ import java.util.Map;
 @ApiVersion("v1")
 @Validated
 @Tag(name = "DataItem context API", description = "Endpoints related to dataitems management in Context")
-public class DataItemContextController implements ContextController {
+public class DataItemContextController extends AbstractContextController {
 
     @Autowired
     DataItemContextService dataItemContextService;

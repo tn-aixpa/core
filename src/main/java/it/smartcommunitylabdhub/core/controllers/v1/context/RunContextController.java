@@ -22,7 +22,7 @@ import java.util.Map;
 @ApiVersion("v1")
 @Validated
 @Tag(name = "Run context API", description = "Endpoints related to runs management in Context")
-public class RunContextController implements ContextController {
+public class RunContextController extends AbstractContextController {
 
     @Autowired
     RunContextService RunContextService;

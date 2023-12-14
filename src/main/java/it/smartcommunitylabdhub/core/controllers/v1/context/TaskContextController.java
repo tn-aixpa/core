@@ -23,7 +23,7 @@ import java.util.Map;
 @ApiVersion("v1")
 @Validated
 @Tag(name = "Task context API", description = "Endpoints related to tasks management in Context")
-public class TaskContextController implements ContextController {
+public class TaskContextController extends AbstractContextController {
 
     @Autowired
     TaskContextService taskContextService;

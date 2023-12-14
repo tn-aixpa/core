@@ -26,7 +26,7 @@ import java.util.Map;
 @ApiVersion("v1")
 @Validated
 @Tag(name = "Function context API", description = "Endpoints related to functions management in Context")
-public class FunctionContextController implements ContextController {
+public class FunctionContextController extends AbstractContextController {
 
     @Autowired
     FunctionContextService functionContextService;

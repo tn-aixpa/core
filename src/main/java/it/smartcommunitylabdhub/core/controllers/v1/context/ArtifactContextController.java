@@ -21,7 +21,7 @@ import java.util.Map;
 @ApiVersion("v1")
 @Validated
 @Tag(name = "Artifact context API", description = "Endpoints related to artifacts management in Context")
-public class ArtifactContextController implements ContextController {
+public class ArtifactContextController extends AbstractContextController {
 
     @Autowired
     ArtifactContextService artifactContextService;

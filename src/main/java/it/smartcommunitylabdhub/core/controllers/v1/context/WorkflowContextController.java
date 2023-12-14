@@ -21,7 +21,7 @@ import java.util.Map;
 @ApiVersion("v1")
 @Validated
 @Tag(name = "Workflow context API", description = "Endpoints related to workflows management in Context")
-public class WorkflowContextController implements ContextController {
+public class WorkflowContextController extends AbstractContextController {
 
     @Autowired
     WorkflowContextService workflowContextService;
