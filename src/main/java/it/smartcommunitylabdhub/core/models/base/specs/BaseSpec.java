@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,7 +22,7 @@ public abstract class BaseSpec<S extends Spec> implements Spec {
     @Override
     public void configure(Map<String, Object> data) {
         // Retrieve concreteSpec
-        S concreteSpec = JacksonMapper.objectMapper.convertValue(
+        S concreteSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                 data, JacksonMapper.extractJavaType(this.getClass()));
         configureSpec(concreteSpec);
     }
@@ -35,11 +35,11 @@ public abstract class BaseSpec<S extends Spec> implements Spec {
 
         // Serialize all fields (including extraSpecs) to a JSON map
         try {
-            String json = JacksonMapper.objectMapper.writeValueAsString(this);
+            String json = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(this);
 
             // Convert the JSON string to a map
             Map<String, Object> serializedMap =
-                    JacksonMapper.objectMapper.readValue(json, JacksonMapper.typeRef);
+                    JacksonMapper.CUSTOM_OBJECT_MAPPER.readValue(json, JacksonMapper.typeRef);
 
             // Include extra properties in the result map
             result.putAll(serializedMap);

@@ -15,7 +15,7 @@ import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectBaseSp
 import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectProjectSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -50,11 +50,11 @@ public class ProjectEntityBuilder {
                 accessorRegistry.createAccessor(
                         projectDTO.getKind(),
                         EntityName.PROJECT,
-                        JacksonMapper.objectMapper.convertValue(projectDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(projectDTO,
                                 JacksonMapper.typeRef));
 
         // Retrieve object spec
-        ProjectBaseSpec<?> projectSpec = JacksonMapper.objectMapper
+        ProjectBaseSpec<?> projectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(
                         projectDTO.getSpec(),
                         ProjectBaseSpec.class
@@ -143,11 +143,11 @@ public class ProjectEntityBuilder {
                 accessorRegistry.createAccessor(
                         projectDTO.getKind(),
                         EntityName.PROJECT,
-                        JacksonMapper.objectMapper.convertValue(projectDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(projectDTO,
                                 JacksonMapper.typeRef));
 
         // Retrieve object spec
-        ProjectBaseSpec<?> projectSpec = JacksonMapper.objectMapper
+        ProjectBaseSpec<?> projectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(
                         projectDTO.getSpec(),
                         ProjectProjectSpec.class

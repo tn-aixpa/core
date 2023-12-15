@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -49,12 +49,12 @@ public class TaskEntityBuilder {
                 accessorRegistry.createAccessor(
                         taskDTO.getKind(),
                         EntityName.TASK,
-                        JacksonMapper.objectMapper.convertValue(taskDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(taskDTO,
                                 JacksonMapper.typeRef));
 
 
         // Retrieve base spec
-        TaskBaseSpec<?> spec = JacksonMapper.objectMapper
+        TaskBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
 
 
@@ -133,11 +133,11 @@ public class TaskEntityBuilder {
                 accessorRegistry.createAccessor(
                         taskDTO.getKind(),
                         EntityName.TASK,
-                        JacksonMapper.objectMapper.convertValue(taskDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(taskDTO,
                                 JacksonMapper.typeRef));
 
         // Retrieve base spec
-        TaskBaseSpec<?> spec = JacksonMapper.objectMapper
+        TaskBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
 
         return EntityFactory.combine(

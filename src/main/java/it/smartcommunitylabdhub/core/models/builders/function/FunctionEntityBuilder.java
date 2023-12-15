@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -48,11 +48,11 @@ public class FunctionEntityBuilder {
                 accessorRegistry.createAccessor(
                         functionDTO.getKind(),
                         EntityName.FUNCTION,
-                        JacksonMapper.objectMapper.convertValue(functionDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(functionDTO,
                                 JacksonMapper.typeRef));
 
         // Retrieve Spec
-        FunctionBaseSpec<?> spec = JacksonMapper.objectMapper
+        FunctionBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(functionDTO.getSpec(), FunctionBaseSpec.class);
 
         return EntityFactory.combine(
@@ -134,7 +134,7 @@ public class FunctionEntityBuilder {
                 accessorRegistry.createAccessor(
                         functionDTO.getKind(),
                         EntityName.FUNCTION,
-                        JacksonMapper.objectMapper.convertValue(functionDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(functionDTO,
                                 JacksonMapper.typeRef));
 
         return EntityFactory.combine(

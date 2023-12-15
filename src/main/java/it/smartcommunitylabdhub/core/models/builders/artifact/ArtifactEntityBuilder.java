@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.artifact.specs.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -47,13 +47,13 @@ public class ArtifactEntityBuilder {
                 accessorRegistry.createAccessor(
                         artifactDTO.getKind(),
                         EntityName.ARTIFACT,
-                        JacksonMapper.objectMapper.convertValue(
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                                 artifactDTO,
                                 JacksonMapper.typeRef)
                 );
 
         // Retrieve Spec
-        ArtifactBaseSpec<?> spec = JacksonMapper.objectMapper
+        ArtifactBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(artifactDTO.getSpec(), ArtifactBaseSpec.class);
 
 
@@ -142,7 +142,7 @@ public class ArtifactEntityBuilder {
                 accessorRegistry.createAccessor(
                         artifactDTO.getKind(),
                         EntityName.ARTIFACT,
-                        JacksonMapper.objectMapper.convertValue(
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                                 artifactDTO,
                                 JacksonMapper.typeRef)
                 );

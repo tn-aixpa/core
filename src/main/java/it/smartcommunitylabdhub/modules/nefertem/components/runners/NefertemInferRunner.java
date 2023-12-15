@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.utils.BeanProvider;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.FunctionNefertemSpec;
 
 import java.util.List;
@@ -70,7 +70,7 @@ public class NefertemInferRunner implements Runner {
                 accessorRegistry.createAccessor(
                         runDTO.getKind(),
                         EntityName.RUN,
-                        JacksonMapper.objectMapper.convertValue(
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                                 runDTO,
                                 JacksonMapper.typeRef));
 

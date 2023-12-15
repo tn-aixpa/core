@@ -1,5 +1,7 @@
 package it.smartcommunitylabdhub.core.models.entities.project;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import it.smartcommunitylabdhub.core.components.listeners.EntityEventListener;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import jakarta.persistence.*;
@@ -17,7 +19,8 @@ import java.util.Date;
 @Builder
 @Entity
 @Table(name = "projects")
-@EntityListeners(AuditingEntityListener.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
+@EntityListeners({AuditingEntityListener.class, EntityEventListener.class})
 public class ProjectEntity implements BaseEntity {
 
     @Id

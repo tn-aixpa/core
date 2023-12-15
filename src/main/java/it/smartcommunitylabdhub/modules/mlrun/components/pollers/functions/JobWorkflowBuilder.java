@@ -24,7 +24,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -239,7 +239,7 @@ public class JobWorkflowBuilder extends BaseWorkflowBuilder
                 accessorRegistry.createAccessor(
                         runDTO.getKind(),
                         EntityName.RUN,
-                        JacksonMapper.objectMapper.convertValue(
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                                 runDTO,
                                 JacksonMapper.typeRef));
 

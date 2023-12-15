@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.specs.DataItemBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -46,12 +46,12 @@ public class DataItemEntityBuilder {
                 accessorRegistry.createAccessor(
                         dataItemDTO.getKind(),
                         EntityName.DATAITEM,
-                        JacksonMapper.objectMapper.convertValue(dataItemDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(dataItemDTO,
                                 JacksonMapper.typeRef));
 
 
         // Retrieve Spec
-        DataItemBaseSpec<?> spec = JacksonMapper.objectMapper
+        DataItemBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(dataItemDTO.getSpec(), DataItemBaseSpec.class);
 
         return EntityFactory.combine(
@@ -136,7 +136,7 @@ public class DataItemEntityBuilder {
                 accessorRegistry.createAccessor(
                         dataItemDTO.getKind(),
                         EntityName.DATAITEM,
-                        JacksonMapper.objectMapper.convertValue(dataItemDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(dataItemDTO,
                                 JacksonMapper.typeRef));
 
         return EntityFactory.combine(

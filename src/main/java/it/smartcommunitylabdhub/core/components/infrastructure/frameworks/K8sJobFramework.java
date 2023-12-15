@@ -24,7 +24,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -218,7 +218,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                     log.warn("Job is running...");
                     logPod(jName, cName, namespace, runnable);
                 } else {
-                    String v1JobStatusString = JacksonMapper.objectMapper.writeValueAsString(v1JobStatus);
+                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1JobStatus);
                     log.warn("Job is in an unknown state : " + v1JobStatusString);
                     writeLog(runnable, v1JobStatusString);
                 }
@@ -343,7 +343,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                         log.info("Pod deleted: " + podName);
 
                         try {
-                            writeLog(runnable, JacksonMapper.objectMapper.writeValueAsString(v1Pod.getStatus()));
+                            writeLog(runnable, JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus()));
                         } catch (JsonProcessingException e) {
                             log.error(e.toString());
                         }
@@ -355,7 +355,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                                 null, null);
 
                         try {
-                            writeLog(runnable, JacksonMapper.objectMapper.writeValueAsString(deleteStatus));
+                            writeLog(runnable, JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(deleteStatus));
                         } catch (JsonProcessingException e) {
                             log.error(e.toString());
                         }

@@ -15,7 +15,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -51,12 +51,12 @@ public class RunEntityBuilder {
                 accessorRegistry.createAccessor(
                         runDTO.getKind(),
                         EntityName.RUN,
-                        JacksonMapper.objectMapper.convertValue(
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                                 runDTO,
                                 JacksonMapper.typeRef));
 
         // Retrieve base spec
-        RunBaseSpec<?> spec = JacksonMapper.objectMapper
+        RunBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(runDTO.getSpec(), RunBaseSpec.class);
 
 
@@ -133,7 +133,7 @@ public class RunEntityBuilder {
                 accessorRegistry.createAccessor(
                         runDTO.getKind(),
                         EntityName.RUN,
-                        JacksonMapper.objectMapper.convertValue(
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                                 runDTO,
                                 JacksonMapper.typeRef));
 

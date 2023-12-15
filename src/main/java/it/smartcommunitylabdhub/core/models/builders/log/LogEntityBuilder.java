@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -36,7 +36,7 @@ public class LogEntityBuilder {
                 accessorRegistry.createAccessor(
                         "log",
                         EntityName.LOG,
-                        JacksonMapper.objectMapper.convertValue(logDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(logDTO,
                                 JacksonMapper.typeRef));
 
         return EntityFactory.combine(
@@ -107,7 +107,7 @@ public class LogEntityBuilder {
                 accessorRegistry.createAccessor(
                         "log",
                         EntityName.LOG,
-                        JacksonMapper.objectMapper.convertValue(logDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(logDTO,
                                 JacksonMapper.typeRef));
 
         return EntityFactory.combine(

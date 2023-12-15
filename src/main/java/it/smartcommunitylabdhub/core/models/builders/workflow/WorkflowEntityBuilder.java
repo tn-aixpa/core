@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.specs.WorkflowBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
-import it.smartcommunitylabdhub.core.utils.JacksonMapper;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -46,12 +46,12 @@ public class WorkflowEntityBuilder {
                 accessorRegistry.createAccessor(
                         workflowDTO.getKind(),
                         EntityName.WORKFLOW,
-                        JacksonMapper.objectMapper.convertValue(workflowDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(workflowDTO,
                                 JacksonMapper.typeRef));
 
 
         // Retrieve Spec
-        WorkflowBaseSpec<?> spec = JacksonMapper.objectMapper
+        WorkflowBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(workflowDTO.getSpec(), WorkflowBaseSpec.class);
 
         return EntityFactory.combine(
@@ -133,7 +133,7 @@ public class WorkflowEntityBuilder {
                 accessorRegistry.createAccessor(
                         workflowDTO.getKind(),
                         EntityName.WORKFLOW,
-                        JacksonMapper.objectMapper.convertValue(workflowDTO,
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(workflowDTO,
                                 JacksonMapper.typeRef));
 
 
