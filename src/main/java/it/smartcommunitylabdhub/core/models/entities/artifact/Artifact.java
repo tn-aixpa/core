@@ -38,7 +38,6 @@ public class Artifact extends AbstractExtractorProperties implements BaseEntity 
     @Builder.Default
     private ArtifactMetadata metadata = new ArtifactMetadata();
 
-
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Object> spec = new HashMap<>();

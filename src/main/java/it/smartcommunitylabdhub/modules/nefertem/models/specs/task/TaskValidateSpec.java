@@ -14,14 +14,24 @@ import java.util.Map;
 @SpecType(kind = "validate", entity = EntityName.TASK)
 public class TaskValidateSpec extends TaskBaseSpec<TaskValidateSpec> {
 
-    @JsonProperty("run_config")
-    private Map<String, Object> runConfig;
+    private String framework;
+
+    @JsonProperty("exec_args")
+    private Map<String, Object> execArgs;
+
+    private Boolean parallel;
+
+    @JsonProperty("num_worker")
+    private Integer numWorker;
 
     @Override
     protected void configureSpec(TaskValidateSpec taskValidateSpec) {
         super.configureSpec(taskValidateSpec);
 
-        this.setRunConfig(taskValidateSpec.getRunConfig());
+        this.setFramework(taskValidateSpec.getFramework());
+        this.setExecArgs(taskValidateSpec.getExecArgs());
+        this.setParallel(taskValidateSpec.getParallel());
+        this.setNumWorker(taskValidateSpec.getNumWorker());
 
     }
 }

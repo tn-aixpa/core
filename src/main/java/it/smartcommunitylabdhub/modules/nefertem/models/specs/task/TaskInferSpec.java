@@ -14,15 +14,23 @@ import java.util.Map;
 @SpecType(kind = "infer", entity = EntityName.TASK)
 public class TaskInferSpec extends TaskBaseSpec<TaskInferSpec> {
 
-    @JsonProperty("run_config")
-    private Map<String, Object> runConfig;
+    private String framework;
 
-    private String pippo;
+    @JsonProperty("exec_args")
+    private Map<String, Object> execArgs;
+
+    private Boolean parallel;
+
+    @JsonProperty("num_worker")
+    private Integer numWorker;
 
     @Override
     protected void configureSpec(TaskInferSpec taskInferSpec) {
         super.configureSpec(taskInferSpec);
 
-        this.setRunConfig(taskInferSpec.getRunConfig());
+        this.setFramework(taskInferSpec.getFramework());
+        this.setExecArgs(taskInferSpec.getExecArgs());
+        this.setParallel(taskInferSpec.getParallel());
+        this.setNumWorker(taskInferSpec.getNumWorker());
     }
 }

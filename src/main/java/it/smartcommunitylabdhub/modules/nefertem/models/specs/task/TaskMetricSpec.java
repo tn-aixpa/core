@@ -14,15 +14,25 @@ import java.util.Map;
 @SpecType(kind = "metric", entity = EntityName.TASK)
 public class TaskMetricSpec extends TaskBaseSpec<TaskMetricSpec> {
 
-    @JsonProperty("run_config")
-    private Map<String, Object> runConfig;
+    private String framework;
+
+    @JsonProperty("exec_args")
+    private Map<String, Object> execArgs;
+
+    private Boolean parallel;
+
+    @JsonProperty("num_worker")
+    private Integer numWorker;
 
     @Override
     protected void configureSpec(TaskMetricSpec taskMetricSpec) {
 
         super.configureSpec(taskMetricSpec);
 
-        this.setRunConfig(taskMetricSpec.getRunConfig());
+        this.setFramework(taskMetricSpec.getFramework());
+        this.setExecArgs(taskMetricSpec.getExecArgs());
+        this.setParallel(taskMetricSpec.getParallel());
+        this.setNumWorker(taskMetricSpec.getNumWorker());
 
     }
 }

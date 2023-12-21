@@ -14,13 +14,23 @@ import java.util.Map;
 @SpecType(kind = "profile", entity = EntityName.TASK)
 public class TaskProfileSpec extends TaskBaseSpec<TaskProfileSpec> {
 
-    @JsonProperty("run_config")
-    private Map<String, Object> runConfig;
+    private String framework;
+
+    @JsonProperty("exec_args")
+    private Map<String, Object> execArgs;
+
+    private Boolean parallel;
+
+    @JsonProperty("num_worker")
+    private Integer numWorker;
 
     @Override
     protected void configureSpec(TaskProfileSpec taskProfileSpec) {
         super.configureSpec(taskProfileSpec);
 
-        this.setRunConfig(taskProfileSpec.getRunConfig());
+        this.setFramework(taskProfileSpec.getFramework());
+        this.setExecArgs(taskProfileSpec.getExecArgs());
+        this.setParallel(taskProfileSpec.getParallel());
+        this.setNumWorker(taskProfileSpec.getNumWorker());
     }
 }
