@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.config;
 
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.util.ClientBuilder;
@@ -23,6 +24,11 @@ public class KubernetesConfig {
     @Bean
     BatchV1Api batchV1Api(ApiClient apiClient) {
         return new BatchV1Api(apiClient);
+    }
+
+    @Bean
+    AppsV1Api appsV1Api(ApiClient apiClient) {
+        return new AppsV1Api(apiClient);
     }
 
     @Bean

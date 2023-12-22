@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.frameworks;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
@@ -11,7 +12,7 @@ import it.smartcommunitylabdhub.core.components.fsm.enums.RunEvent;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
 import it.smartcommunitylabdhub.core.components.fsm.types.RunStateMachine;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.frameworks.Framework;
-import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
+import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.core.components.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.core.components.pollers.PollingService;
 import it.smartcommunitylabdhub.core.components.workflows.factory.WorkflowFactory;
@@ -20,7 +21,6 @@ import it.smartcommunitylabdhub.core.exceptions.StopPoller;
 import it.smartcommunitylabdhub.core.models.builders.log.LogEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.models.entities.log.metadata.LogMetadata;
-import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -35,11 +35,14 @@ import java.util.*;
 import java.util.stream.Stream;
 
 @Slf4j
-@FrameworkComponent(framework = "k8sjob")
-public class K8sJobFramework implements Framework<K8sJobRunnable> {
+@FrameworkComponent(framework = "k8sdeployment")
+public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> {
 
     @Autowired
     BatchV1Api batchV1Api;
+
+    @Autowired
+    AppsV1Api appsV1Api;
 
     @Autowired
     CoreV1Api coreV1Api;
@@ -70,16 +73,16 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
-    public void execute(K8sJobRunnable runnable) throws CoreException {
+    public void execute(K8sDeploymentRunnable runnable) throws CoreException {
         // FIXME: DELETE THIS IS ONLY FOR DEBUG
         String threadName = Thread.currentThread().getName();
         //String placeholder = "-" + RandomStringGenerator.generateRandomString(3);
 
         // Log service execution initiation
-        log.info("----------------- PREPARE KUBERNETES JOB ----------------");
+        log.info("----------------- PREPARE KUBERNETES Deployment ----------------");
 
-        // Generate jobName and ContainerName
-        String jobName = getJobName(
+        // Generate deploymentName and ContainerName
+        String deploymentName = getDeploymentName(
                 runnable.getRuntime(),
                 runnable.getTask(),
                 runnable.getId()
@@ -93,10 +96,10 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
         // Create labels for job
         Map<String, String> labels = Map.of(
-                "app.kubernetes.io/instance", "dhcore-" + jobName,
+                "app.kubernetes.io/instance", "dhcore-" + deploymentName,
                 "app.kubernetes.io/version", "0.0.3",
-                "app.kubernetes.io/component", "job",
-                "app.kubernetes.io/part-of", "dhcore-k8sjob",
+                "app.kubernetes.io/component", "deployment",
+                "app.kubernetes.io/part-of", "dhcore-k8sdeployment",
                 "app.kubernetes.io/managed-by", "dhcore");
 
 
@@ -111,9 +114,9 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                 new V1EnvVar().name(key).value(value)));
 
 
-        // Create the Job metadata
+        // Create the Deployment metadata
         V1ObjectMeta metadata = new V1ObjectMeta()
-                .name(jobName)
+                .name(deploymentName)
                 .labels(labels);
 
         // Build Container
@@ -138,19 +141,29 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                 .spec(podSpec);
 
         // Create the JobSpec with the PodTemplateSpec
-        V1JobSpec jobSpec = new V1JobSpec()
+        V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
                 // .completions(1)
                 // .backoffLimit(6)    // is the default value
                 .template(podTemplateSpec);
 
-        // Create the V1Job object with metadata and JobSpec
-        V1Job job = new V1Job()
+        // Create the V1Deployment object with metadata and JobSpec
+
+        V1Deployment deployment
+                = new V1Deployment()
                 .metadata(metadata)
-                .spec(jobSpec);
+                .spec(deploymentSpec);
 
         try {
-            V1Job createdJob = batchV1Api.createNamespacedJob(namespace, job, null, null, null, null);
-            log.info("Job created: " + Objects.requireNonNull(createdJob.getMetadata()).getName());
+
+            V1Deployment createdDeployment = appsV1Api.createNamespacedDeployment(
+                    namespace,
+                    deployment,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+            log.info("Deployment created: " + Objects.requireNonNull(createdDeployment.getMetadata()).getName());
         } catch (Exception e) {
             log.error("====== K8s FATAL ERROR =====");
             log.error(String.valueOf(e));
@@ -171,7 +184,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
         // Log the initiation of Dbt Kubernetes Listener
         log.info("Dbt Kubernetes Listener [" + threadName + "] "
-                + jobName
+                + deploymentName
                 + "@"
                 + namespace);
 
@@ -182,48 +195,53 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                         RunState,
                         RunEvent,
                         Map<String, Object>>,
-                Void> checkJobStatus = (jName, cName, fMachine) -> {
+                Void> checkDeploymentStatus = (dName, cName, fMachine) -> {
             try {
-                V1Job v1Job = batchV1Api.readNamespacedJob(jName, namespace, null);
-                V1JobStatus v1JobStatus = v1Job.getStatus();
 
-                // Check the Job status
-                if (Objects.requireNonNull(v1JobStatus).getSucceeded() != null
-                        && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
+                V1Deployment v1Deployment = appsV1Api.readNamespacedDeployment(dName, namespace, null);
+                V1DeploymentStatus v1DeploymentStatus = v1Deployment.getStatus();
 
+                assert v1DeploymentStatus != null;
+                Objects.requireNonNull(v1DeploymentStatus.getConditions()).forEach(
+                        v -> log.info(v.getStatus())
+                );
+//                // Check the Deployment status
+//                if (Objects.requireNonNull(v1DeploymentStatus).getReadyReplicas() != null
+//                        && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
+//
+//
+//                    // Deployment has completed successfully
+//                    log.info("Deployment completed successfully.");
+//                    // Update state machine and update runDTO
+//                    fMachine.goToState(RunState.COMPLETED);
+//                    Run runDTO = runService.getRun(runnable.getId());
+//                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
+//                    runService.updateRun(runDTO, runDTO.getId());
+//
+//                    // Log pod status
+//                    logPod(dName, cName, namespace, runnable);
+//                    // Delete job and pod
+//                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
+//
+//                } else if (Objects.requireNonNull(v1DeploymentStatus).getFailed() != null) {
+//                    // Deployment has failed delete job and pod
+//                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
+//
+//                } else if (v1DeploymentStatus.getActive() != null && v1DeploymentStatus.getActive() > 0) {
+//                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
+//                        fMachine.goToState(RunState.READY);
+//                        fMachine.goToState(RunState.RUNNING);
+//                    }
+//                    log.warn("Deployment is running...");
+//                    logPod(dName, cName, namespace, runnable);
+//                } else {
+//                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1DeploymentStatus);
+//                    log.warn("Deployment is in an unknown state : " + v1JobStatusString);
+//                    writeLog(runnable, v1JobStatusString);
+//                }
 
-                    // Job has completed successfully
-                    log.info("Job completed successfully.");
-                    // Update state machine and update runDTO
-                    fMachine.goToState(RunState.COMPLETED);
-                    Run runDTO = runService.getRun(runnable.getId());
-                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
-                    runService.updateRun(runDTO, runDTO.getId());
-
-                    // Log pod status
-                    logPod(jName, cName, namespace, runnable);
-                    // Delete job and pod
-                    deleteAssociatedPodAndJob(jName, namespace, runnable);
-
-                } else if (Objects.requireNonNull(v1JobStatus).getFailed() != null) {
-                    // Job has failed delete job and pod
-                    deleteAssociatedPodAndJob(jName, namespace, runnable);
-
-                } else if (v1JobStatus.getActive() != null && v1JobStatus.getActive() > 0) {
-                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
-                        fMachine.goToState(RunState.READY);
-                        fMachine.goToState(RunState.RUNNING);
-                    }
-                    log.warn("Job is running...");
-                    logPod(jName, cName, namespace, runnable);
-                } else {
-                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1JobStatus);
-                    log.warn("Job is in an unknown state : " + v1JobStatusString);
-                    writeLog(runnable, v1JobStatusString);
-                }
-
-            } catch (ApiException | JsonProcessingException | CoreException e) {
-                deleteAssociatedPodAndJob(jName, namespace, runnable);
+            } catch (ApiException | CoreException e) {
+                deleteAssociatedPodAndJob(dName, namespace, runnable);
                 throw new StopPoller(e.getMessage());
             }
 
@@ -231,16 +249,33 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
         };
 
         // Using the step method with explicit arguments
-        pollingService.createPoller(jobName, List.of(
-                WorkflowFactory.builder().step(checkJobStatus, jobName, containerName, fsm).build()
+        pollingService.createPoller(deploymentName, List.of(
+                WorkflowFactory.builder().step(checkDeploymentStatus, deploymentName, containerName, fsm).build()
         ), 1, true, false);
 
         // Start job poller
-        pollingService.startOne(jobName);
+        pollingService.startOne(deploymentName);
+    }
+
+    // Concat command with arguments
+    private List<String> getCommand(K8sDeploymentRunnable runnable) {
+        return List.of(Stream.concat(
+                Stream.of(runnable.getCommand()),
+                Arrays.stream(runnable.getArgs())).toArray(String[]::new));
+    }
+
+    // Generate and return job name
+    private String getDeploymentName(String runtime, String task, String id) {
+        return "j" + "-" + runtime + "-" + task + "-" + id;
+    }
+
+    // Generate and return container name
+    private String getContainerName(String runtime, String task, String id) {
+        return "c" + "-" + runtime + "-" + task + "-" + id;
     }
 
 
-    private void writeLog(K8sJobRunnable runnable, String log) {
+    private void writeLog(K8sDeploymentRunnable runnable, String log) {
 
         LogMetadata logMetadata = new LogMetadata();
         logMetadata.setProject(runnable.getProject());
@@ -252,30 +287,13 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
         logService.createLog(logDTO);
     }
 
-    // Concat command with arguments
-    private List<String> getCommand(K8sJobRunnable runnable) {
-        return List.of(Stream.concat(
-                Stream.of(runnable.getCommand()),
-                Arrays.stream(runnable.getArgs())).toArray(String[]::new));
-    }
-
-    // Generate and return job name
-    private String getJobName(String runtime, String task, String id) {
-        return "j" + "-" + runtime + "-" + task + "-" + id;
-    }
-
-    // Generate and return container name
-    private String getContainerName(String runtime, String task, String id) {
-        return "c" + "-" + runtime + "-" + task + "-" + id;
-    }
-
     /**
      * Logging pod
      *
-     * @param jobName  the name of the Job
+     * @param jobName  the name of the Deployment
      * @param runnable the runnable Type in this case K8SJobRunnable
      */
-    private void logPod(String jobName, String cName, String namespace, K8sJobRunnable runnable) {
+    private void logPod(String jobName, String cName, String namespace, K8sDeploymentRunnable runnable) {
         try {
 
             // Retrieve and print the logs of the associated Pod
@@ -314,11 +332,11 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
     /**
      * Delete job
      *
-     * @param jobName  the name of the Job
+     * @param jobName  the name of the Deployment
      * @param runnable the runnable Type in this case K8SJobRunnable
      */
-    private void deleteAssociatedPodAndJob(String jobName, String namespace, K8sJobRunnable runnable) {
-        // Delete the Pod associated with the Job
+    private void deleteAssociatedPodAndJob(String jobName, String namespace, K8sDeploymentRunnable runnable) {
+        // Delete the Pod associated with the Deployment
         try {
             V1PodList v1PodList = coreV1Api.listNamespacedPod(
                     namespace, null,
@@ -347,7 +365,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                             log.error(e.toString());
                         }
 
-                        // Delete the Job
+                        // Delete the Deployment
                         V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
                                 jobName, "default", null,
                                 null, null, null,
@@ -358,7 +376,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
                         } catch (JsonProcessingException e) {
                             log.error(e.toString());
                         }
-                        log.info("Job deleted: " + jobName);
+                        log.info("Deployment deleted: " + jobName);
                     }
                 }
             }

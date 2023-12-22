@@ -90,7 +90,7 @@ kaniko:
 kubernetes:
   namespace: ${K8S_NAMESPACE:default}
   config:
-    config-map: '${DH_CONFIG_COMMON_MAPS: digitalhub-common-env}'
+    config-map: ${DH_CONFIG_COMMON_MAPS:digitalhub-common-env}
     secret: ${DH_CONFIG_COMMON_SECRETS:}
 
 # Application endpoint

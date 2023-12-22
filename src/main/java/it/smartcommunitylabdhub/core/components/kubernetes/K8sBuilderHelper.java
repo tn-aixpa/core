@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Helper class for building Kubernetes job environment variables.
+ * Helper class for building Kubernetes  environment variables.
  * This class provides methods to retrieve environment variables with fallback values
- * and constructs a list of V1EnvVar objects for use in Kubernetes job specifications.
+ * and constructs a list of V1EnvVar objects for use in Kubernetes  specifications.
  */
 @Component
-public class K8sJobBuilderHelper {
+public class K8sBuilderHelper {
 
     @Value("${application.endpoint}")
     private String DH_ENDPOINT;
@@ -59,10 +59,10 @@ public class K8sJobBuilderHelper {
     }
 
     /**
-     * Method to retrieve a list of V1EnvFromSource containing environment variables for a Kubernetes job.
+     * Method to retrieve a list of V1EnvFromSource containing environment variables for a Kubernetes .
      * It retrieve env from Config Map and Secret
      *
-     * @return A list of V1EnvVar objects representing environment variables for a Kubernetes job.
+     * @return A list of V1EnvVar objects representing environment variables for a Kubernetes .
      */
 
     public List<V1EnvFromSource> getV1EnvFromSource() {
