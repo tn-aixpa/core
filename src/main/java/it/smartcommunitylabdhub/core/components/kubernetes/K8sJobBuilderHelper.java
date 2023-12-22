@@ -22,7 +22,7 @@ public class K8sJobBuilderHelper {
     @Value("${application.endpoint}")
     private String DH_ENDPOINT;
 
-    @Value("${kubernates.config.secret}")
+    @Value("${kubernetes.config.secret}")
     private List<String> SECRET;
 
     @Value("${kubernetes.config.config-map}")
