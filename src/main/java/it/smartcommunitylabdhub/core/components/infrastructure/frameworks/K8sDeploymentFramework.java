@@ -124,7 +124,6 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
                 .name(containerName)
                 .image(runnable.getImage())
                 .imagePullPolicy("Always")
-                .command(getCommand(runnable))
                 .imagePullPolicy("IfNotPresent")
                 .envFrom(envVarsFromSource)
                 .env(envVars);
@@ -260,7 +259,7 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
     // Concat command with arguments
     private List<String> getCommand(K8sDeploymentRunnable runnable) {
         return List.of(Stream.concat(
-                Stream.of(runnable.getCommand()),
+                Stream.of(runnable.getEntrypoint()),
                 Arrays.stream(runnable.getArgs())).toArray(String[]::new));
     }
 

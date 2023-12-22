@@ -75,6 +75,8 @@ mlrun:
     project-url: http://192.168.49.2:30070/api/v1/projects/{project}
     log-url: http://192.168.49.2:30060/mlrun/api/v1/log/{project}/{uid}
     run-url: http://192.168.49.2:30070/api/v1/run/{project}/{uid}
+
+# Spring Docs
 springdoc:
   api-docs:
     path: /v1/api-docs
@@ -86,7 +88,7 @@ kaniko:
   source:
     path: kubernetes/source
 
-# Kubernates
+# Kubernetes
 kubernetes:
   namespace: ${K8S_NAMESPACE:default}
   config:
