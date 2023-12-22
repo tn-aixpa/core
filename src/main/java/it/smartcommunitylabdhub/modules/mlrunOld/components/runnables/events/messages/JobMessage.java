@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.modules.mlrun.components.runnables.events.messages;
+package it.smartcommunitylabdhub.modules.mlrunOld.components.runnables.events.messages;
 
 import it.smartcommunitylabdhub.core.components.events.messages.interfaces.Message;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;

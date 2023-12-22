@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.modules.mlrun.components.accessors;
+package it.smartcommunitylabdhub.modules.mlrunOld.components.accessors;
 
 import it.smartcommunitylabdhub.core.annotations.common.AccessorType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;

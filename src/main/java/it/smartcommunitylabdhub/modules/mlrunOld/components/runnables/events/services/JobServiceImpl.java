@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.modules.mlrun.components.runnables.events.services;
+package it.smartcommunitylabdhub.modules.mlrunOld.components.runnables.events.services;
 
 import it.smartcommunitylabdhub.core.components.events.services.interfaces.KindService;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;

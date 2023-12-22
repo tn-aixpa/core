@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.modules.mlrun.components.pollers.functions;
+package it.smartcommunitylabdhub.modules.mlrunOld.components.pollers.functions;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;

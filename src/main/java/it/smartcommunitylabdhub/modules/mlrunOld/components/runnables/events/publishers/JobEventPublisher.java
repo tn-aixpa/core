@@ -1,9 +1,9 @@
-package it.smartcommunitylabdhub.modules.mlrun.components.runnables.events.publishers;
+package it.smartcommunitylabdhub.modules.mlrunOld.components.runnables.events.publishers;
 
 import it.smartcommunitylabdhub.core.annotations.olders.RunPublisherComponent;
 import it.smartcommunitylabdhub.core.components.kinds.factory.publishers.KindPublisher;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
-import it.smartcommunitylabdhub.modules.mlrun.components.runnables.events.messages.JobMessage;
+import it.smartcommunitylabdhub.modules.mlrunOld.components.runnables.events.messages.JobMessage;
 import org.springframework.context.ApplicationEventPublisher;
 
 @RunPublisherComponent(platform = "job", perform = "perform")

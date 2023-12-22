@@ -1,8 +1,8 @@
-package it.smartcommunitylabdhub.modules.mlrun.config;
+package it.smartcommunitylabdhub.modules.mlrunOld.config;
 
 import it.smartcommunitylabdhub.core.components.pollers.PollingService;
 import it.smartcommunitylabdhub.core.components.workflows.factory.Workflow;
-import it.smartcommunitylabdhub.modules.mlrun.components.pollers.functions.FunctionWorkflowBuilder;
+import it.smartcommunitylabdhub.modules.mlrunOld.components.pollers.functions.FunctionWorkflowBuilder;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

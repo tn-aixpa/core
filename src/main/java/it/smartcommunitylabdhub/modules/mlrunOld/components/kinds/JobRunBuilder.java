@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.modules.mlrun.components.kinds;
+package it.smartcommunitylabdhub.modules.mlrunOld.components.kinds;
 
 import it.smartcommunitylabdhub.core.annotations.olders.RunBuilderComponent;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;

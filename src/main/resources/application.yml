@@ -19,7 +19,7 @@ spring:
             spring:
               rabbitmq:
                 password: guest
-                host: localhost
+                host: 192.168.49.1
                 port: '5672'
                 username: guest
       bindings:
@@ -93,7 +93,7 @@ kubernetes:
   namespace: ${K8S_NAMESPACE:default}
   config:
     config-map: ${DH_CONFIG_COMMON_MAPS:digitalhub-common-env}
-    secret: ${DH_CONFIG_COMMON_SECRETS:}
+    secret: ${DH_CONFIG_COMMON_SECRETS:digitalhub-common-creds}
 
 # Application endpoint
 application:

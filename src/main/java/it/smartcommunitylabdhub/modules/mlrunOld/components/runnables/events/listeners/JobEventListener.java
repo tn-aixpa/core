@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.modules.mlrun.components.runnables.events.listeners;
+package it.smartcommunitylabdhub.modules.mlrunOld.components.runnables.events.listeners;
 
 import it.smartcommunitylabdhub.core.components.events.messages.RunMessage;
 import it.smartcommunitylabdhub.core.components.events.services.interfaces.KindService;
@@ -10,7 +10,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
-import it.smartcommunitylabdhub.modules.mlrun.components.runnables.events.messages.JobMessage;
+import it.smartcommunitylabdhub.modules.mlrunOld.components.runnables.events.messages.JobMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
