@@ -12,37 +12,50 @@ spring:
     url: ${JDBC_URL:jdbc:h2:file:./data/db}
   cloud:
     stream:
-      binders:
-        rabbit:
-          type: rabbit
-          environment:
-            spring:
-              rabbitmq:
-                password: guest
-                host: 192.168.49.1
-                port: '5672'
-                username: guest
       bindings:
-        entityEvent-rabbit-in-0:
+        serializeEntity-in-0:
           destination: entity-topic
-          group: dh_core
-        entityEvent-rabbit-out-0:
-          destination: entity-topic
-          group: dh_core
-      rabbit:
-        bindings:
-          entityEvent-rabbit-in-0:
-            consumer:
-              declare-exchange: false
-              bind-queue: false
-              queue-name-group-only: true
-          entityEvent-rabbit-out-0:
-            producer:
-              declare-exchange: false
-              bind-queue: false
-              queue-name-group-only: true
+          group: processor
+        serializeEntity-out-0:
+          destination: entity-topic-serialized
+    #        onReceive-in-0:
+    #          destination: entity-topic-serialized
+    #          group: consumer
     function:
-      definition: logEntityEvent
+      definition: serializeEntity #;onReceive
+  #  cloud:
+  #    stream:
+  #      binders:
+  #        rabbit:
+  #          type: rabbit
+  #          environment:
+  #            spring:
+  #              rabbitmq:
+  #                password: guest
+  #                host: 192.168.49.1
+  #                port: '5672'
+  #                username: guest
+  #      bindings:
+  #        entityEvent-rabbit-in-0:
+  #          destination: entity-topic
+  #          group: dh_core
+  #        entityEvent-rabbit-out-0:
+  #          destination: entity-topic
+  #          group: dh_core
+  #      rabbit:
+  #        bindings:
+  #          entityEvent-rabbit-in-0:
+  #            consumer:
+  #              declare-exchange: false
+  #              bind-queue: false
+  #              queue-name-group-only: true
+  #          entityEvent-rabbit-out-0:
+  #            producer:
+  #              declare-exchange: false
+  #              bind-queue: false
+  #              queue-name-group-only: true
+  #    function:
+  #      definition: logEntityEvent
   data:
     web:
       pageable:

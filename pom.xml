@@ -67,11 +67,11 @@
             <artifactId>spring-cloud-starter-stream-kafka</artifactId>
         </dependency> -->
 
-        <!-- Spring Cloud Bus with RabbitMQ -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-bus-amqp</artifactId>
-        </dependency>
+        <!--        &lt;!&ndash; Spring Cloud Bus with RabbitMQ &ndash;&gt;-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.cloud</groupId>-->
+        <!--            <artifactId>spring-cloud-starter-bus-amqp</artifactId>-->
+        <!--        </dependency>-->
 
 
         <dependency>
