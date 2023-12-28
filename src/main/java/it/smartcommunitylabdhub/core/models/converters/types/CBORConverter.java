@@ -29,7 +29,7 @@ public class CBORConverter implements Converter<Map<String, Object>, byte[]> {
             if (cborBytes == null) {
                 return new HashMap<>();
             }
-            return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(cborBytes, new TypeReference<Map<String, Object>>() {
+            return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(cborBytes, new TypeReference<>() {
             });
         } catch (IOException e) {
             throw new CustomException(null, e);

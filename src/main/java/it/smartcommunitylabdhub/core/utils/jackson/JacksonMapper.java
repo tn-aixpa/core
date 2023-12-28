@@ -9,10 +9,8 @@ import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.smartcommunitylabdhub.core.models.base.specs.BaseSpec;
 import it.smartcommunitylabdhub.core.models.base.specs.ConcreteSpecMixin;
-import it.smartcommunitylabdhub.core.utils.jackson.mixins.MetadataMixin;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class JacksonMapper {
     public static final ObjectMapper CUSTOM_OBJECT_MAPPER = new ObjectMapper();
@@ -20,8 +18,13 @@ public class JacksonMapper {
             new TypeReference<>() {
             };
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    public static final ObjectMapper CBOR_OBJECT_MAPPER = new ObjectMapper(new CBORFactory());
-    public static final ObjectMapper CBOR_QUEUE_MAPPER = new ObjectMapper(new CBORFactory());
+    public static final ObjectMapper CBOR_OBJECT_MAPPER = new ObjectMapper(
+            new CBORFactory());
+
+    static {
+        OBJECT_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     static {
         // Configure the ObjectMapper to not fail on unknown properties
@@ -35,7 +38,6 @@ public class JacksonMapper {
     static {
         CBOR_OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         CBOR_OBJECT_MAPPER.registerModule(new JavaTimeModule());
-        CBOR_OBJECT_MAPPER.addMixIn(Map.class, MetadataMixin.class);
     }
 
     public static JavaType extractJavaType(Class<?> clazz) {
