@@ -8,12 +8,6 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.Runtime;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
-import it.smartcommunitylabdhub.core.components.kinds.factory.builders.KindBuilder;
-import it.smartcommunitylabdhub.core.components.kinds.factory.builders.KindBuilderFactory;
-import it.smartcommunitylabdhub.core.components.kinds.factory.publishers.KindPublisher;
-import it.smartcommunitylabdhub.core.components.kinds.factory.publishers.KindPublisherFactory;
-import it.smartcommunitylabdhub.core.components.kinds.factory.workflows.KindWorkflow;
-import it.smartcommunitylabdhub.core.components.kinds.factory.workflows.KindWorkflowFactory;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
@@ -24,21 +18,6 @@ import java.util.List;
 
 @Configuration
 public class InfrastructureConfig {
-
-    @Bean
-    protected KindBuilderFactory runBuilderFactory(List<KindBuilder<?, ?>> builders) {
-        return new KindBuilderFactory(builders);
-    }
-
-    @Bean
-    protected KindPublisherFactory runPublisherFactory(List<KindPublisher<?, ?>> builders) {
-        return new KindPublisherFactory(builders);
-    }
-
-    @Bean
-    protected KindWorkflowFactory runWorkflowFactory(List<KindWorkflow<?, ?>> builders) {
-        return new KindWorkflowFactory(builders);
-    }
 
     @Bean
     protected FrameworkFactory frameworkFactory(

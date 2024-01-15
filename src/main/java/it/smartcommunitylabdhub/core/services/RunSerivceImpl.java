@@ -6,8 +6,6 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnabl
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.Runtime;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.core.components.kinds.factory.builders.KindBuilderFactory;
-import it.smartcommunitylabdhub.core.components.kinds.factory.publishers.KindPublisherFactory;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.accessors.utils.TaskAccessor;
@@ -64,13 +62,8 @@ public class RunSerivceImpl extends AbstractSpecificationService<RunEntity, RunE
     RuntimeFactory runtimeFactory;
 
     @Autowired
-    KindBuilderFactory runBuilderFactory;
-
-    @Autowired
     RunEntityFilter runEntityFilter;
 
-    @Autowired
-    KindPublisherFactory runPublisherFactory;
 
     @Autowired
     RunEntityBuilder runEntityBuilder;

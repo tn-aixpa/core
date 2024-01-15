@@ -15,4 +15,12 @@ public class EntitySavedEvent<T> extends ApplicationEvent implements Serializabl
         this.entity = entity;
     }
 
+    public Class<?> getEventClass() {
+        return this.entity.getClass();
+    }
+
+    public String getEventClassName() {
+        return this.entity.getClass().getName();
+    }
+
 }
