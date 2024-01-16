@@ -6,14 +6,16 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 
 @Configuration
-@ConditionalOnProperty(name = "cloud-stream.services.rabbit.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(name = "event-queue.services.rabbit.enabled", havingValue = "true", matchIfMissing = false)
+@Import(RabbitAutoConfiguration.class)
 public class RabbitMQConfig {
 
     @Bean
@@ -36,7 +38,7 @@ public class RabbitMQConfig {
     @Bean
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-        connectionFactory.setHost("192.168.49.1");  // Replace with your RabbitMQ server's IP address
+        connectionFactory.setHost("192.168.49.1");
         connectionFactory.setPort(5672);
         connectionFactory.setUsername("guest");
         connectionFactory.setPassword("guest");
@@ -45,12 +47,4 @@ public class RabbitMQConfig {
         return connectionFactory;
     }
 
-    // Create RabbitTemplate to send messages
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, TopicExchange topicExchange) {
-        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setExchange(topicExchange.toString());
-        rabbitTemplate.setRoutingKey("example-routing-key");
-        return rabbitTemplate;
-    }
 }

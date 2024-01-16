@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.entities.artifact;
 
+import it.smartcommunitylabdhub.core.components.cloud.listeners.EntitySavedListener;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import jakarta.persistence.*;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "artifacts")
-@EntityListeners(AuditingEntityListener.class)
+@EntityListeners({AuditingEntityListener.class, EntitySavedListener.class})
 public class ArtifactEntity implements BaseEntity {
     @Id
     @Column(unique = true)

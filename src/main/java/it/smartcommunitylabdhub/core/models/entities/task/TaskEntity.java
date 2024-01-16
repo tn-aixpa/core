@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.entities.task;
 
+import it.smartcommunitylabdhub.core.components.cloud.listeners.EntitySavedListener;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import jakarta.persistence.*;
@@ -21,7 +22,7 @@ import java.util.UUID;
         @UniqueConstraint(columnNames = {"function", "kind"})
 
 })
-@EntityListeners(AuditingEntityListener.class)
+@EntityListeners({AuditingEntityListener.class, EntitySavedListener.class})
 public class TaskEntity implements BaseEntity {
 
     @Id

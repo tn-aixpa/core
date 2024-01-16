@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.entities.workflow;
 
+import it.smartcommunitylabdhub.core.components.cloud.listeners.EntitySavedListener;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import jakarta.persistence.*;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "workflows")
-@EntityListeners(AuditingEntityListener.class)
+@EntityListeners({AuditingEntityListener.class, EntitySavedListener.class})
 public class WorkflowEntity implements BaseEntity {
 
     @Id

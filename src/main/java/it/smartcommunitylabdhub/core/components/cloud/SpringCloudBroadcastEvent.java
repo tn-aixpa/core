@@ -13,7 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "cloud-stream.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(name = "event-queue.enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class SpringCloudBroadcastEvent {
 
@@ -25,22 +25,18 @@ public class SpringCloudBroadcastEvent {
         // Broadcast event on rabbit amqp
         try {
             JacksonMapper.OBJECT_MAPPER.addMixIn(event.getEventClass(), CborMixin.class);
-            String serializedEntity = JacksonMapper.OBJECT_MAPPER
-                    .writeValueAsString(event.getEntity());
+            String serializedEntity = JacksonMapper.OBJECT_MAPPER.writeValueAsString(event.getEntity());
 
 
-            rabbitTemplate.convertAndSend(serializedEntity);
+            rabbitTemplate.convertAndSend(
+                    "entityTopic",
+                    "entityRoutingKey",
+                    serializedEntity);
+            
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
-
-        ////      Was used for spring cloud
-        //        @Autowired
-        //        private StreamBridge streamBridge;
-        //
-        //        streamBridge.send("entity-out-0", serializedEntity);
-        //        streamBridge.send("entityOutput-kafka-out-0", message);
     }
 
 }

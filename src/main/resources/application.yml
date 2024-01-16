@@ -63,11 +63,13 @@ application:
 
 
 # Conditional Configuration Cloud
-cloud-stream:
+event-queue:
   enabled: true
   services:
     rabbit:
       enabled: true
+
+
 
 
 # OLD SPRING CLOUD CONFIG
