@@ -1,7 +1,9 @@
 # Spring configuration
 spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
   jpa:
-    generate-ddl: 'true'
+    generate-ddl: true
     hibernate:
       ddl-auto: update
     database-platform: ${JDBC_DIALECT:org.hibernate.dialect.H2Dialect}
@@ -10,52 +12,7 @@ spring:
     password: ${JDBC_PASS:password}
     username: ${JDBC_USER:sa}
     url: ${JDBC_URL:jdbc:h2:file:./data/db}
-  cloud:
-    stream:
-      bindings:
-        serializeEntity-in-0:
-          destination: entity-topic
-          group: processor
-        serializeEntity-out-0:
-          destination: entity-topic-serialized
-    #        onReceive-in-0:
-    #          destination: entity-topic-serialized
-    #          group: consumer
-    function:
-      definition: serializeEntity #;onReceive
-  #  cloud:
-  #    stream:
-  #      binders:
-  #        rabbit:
-  #          type: rabbit
-  #          environment:
-  #            spring:
-  #              rabbitmq:
-  #                password: guest
-  #                host: 192.168.49.1
-  #                port: '5672'
-  #                username: guest
-  #      bindings:
-  #        entityEvent-rabbit-in-0:
-  #          destination: entity-topic
-  #          group: dh_core
-  #        entityEvent-rabbit-out-0:
-  #          destination: entity-topic
-  #          group: dh_core
-  #      rabbit:
-  #        bindings:
-  #          entityEvent-rabbit-in-0:
-  #            consumer:
-  #              declare-exchange: false
-  #              bind-queue: false
-  #              queue-name-group-only: true
-  #          entityEvent-rabbit-out-0:
-  #            producer:
-  #              declare-exchange: false
-  #              bind-queue: false
-  #              queue-name-group-only: true
-  #    function:
-  #      definition: logEntityEvent
+
   data:
     web:
       pageable:
@@ -80,14 +37,6 @@ runtime:
   dbt:
     image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-dbt:latest}
 
-# Mlrun config
-mlrun:
-  api:
-    function-url: http://192.168.49.2:30070/api/v1/func/{project}/{function}?versioned=true
-    submit-job: http://192.168.49.2:30060/mlrun/api/v1/submit_job
-    project-url: http://192.168.49.2:30070/api/v1/projects/{project}
-    log-url: http://192.168.49.2:30060/mlrun/api/v1/log/{project}/{uid}
-    run-url: http://192.168.49.2:30070/api/v1/run/{project}/{uid}
 
 # Spring Docs
 springdoc:
@@ -111,3 +60,32 @@ kubernetes:
 # Application endpoint
 application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
+
+
+# Conditional Configuration Cloud
+cloud-stream:
+  enabled: true
+  services:
+    rabbit:
+      enabled: true
+
+
+# OLD SPRING CLOUD CONFIG
+#
+#  cloud:
+#    stream:
+#      bindings:
+#        entity-out-0:
+#          destination: entityTopic
+#          group: dhCoreQueue
+#          content-type: application/json
+#          binder: rabbit
+#      rabbit:
+#        bindings:
+#          entity-out-0:
+#            producer:
+#              bind-queue: true
+#              declare-exchange: true
+#              exchange-durable: true
+#              routing-key: 'entityRoutingKey'
+#              exchangeType: topic     # Set the exchange type (e.g., topic, direct, fanout)

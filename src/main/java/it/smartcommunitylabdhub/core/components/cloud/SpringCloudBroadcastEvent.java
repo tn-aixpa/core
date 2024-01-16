@@ -6,19 +6,19 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.core.utils.jackson.mixins.CborMixin;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-//@ConditionalOnBean
 @Component
+@ConditionalOnProperty(name = "cloud-stream.enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class SpringCloudBroadcastEvent {
 
     @Autowired
-    private StreamBridge streamBridge;
-
+    RabbitTemplate rabbitTemplate;
 
     @EventListener
     public <T extends BaseEntity> void handleEntitySavedEvent(EntitySavedEvent<T> event) {
@@ -29,14 +29,18 @@ public class SpringCloudBroadcastEvent {
                     .writeValueAsString(event.getEntity());
 
 
-            streamBridge.send("entity-topic", serializedEntity);
+            rabbitTemplate.convertAndSend(serializedEntity);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
 
-//        Other services
-//        streamBridge.send("entityOutput-kafka-out-0", message);
+        ////      Was used for spring cloud
+        //        @Autowired
+        //        private StreamBridge streamBridge;
+        //
+        //        streamBridge.send("entity-out-0", serializedEntity);
+        //        streamBridge.send("entityOutput-kafka-out-0", message);
     }
 
 }
