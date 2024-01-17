@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.core.models.builders.workflow;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors.AccessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.WorkflowFieldAccessor;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -13,10 +12,8 @@ import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.specs.WorkflowBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
-import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -57,29 +54,9 @@ public class WorkflowEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(workflowDTO, "workflow"), workflowDTO, builder -> builder
                         // check id
-                        .withIfElse(workflowDTO.getId() != null &&
-                                        workflowDTO.getMetadata().getVersion() != null,
-                                (w) -> {
-                                    if (workflowDTO.getId()
-                                            .equals(workflowDTO.getMetadata().getVersion())) {
-                                        w.setId(workflowDTO.getMetadata().getVersion());
-                                    } else {
-                                        throw new CoreException(
-                                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                                                "Trying to store item with which has different signature <id != version>",
-                                                HttpStatus.INTERNAL_SERVER_ERROR
-                                        );
-                                    }
-                                },
-                                (w) -> {
-                                    if (workflowDTO.getId() == null &&
-                                            workflowDTO.getMetadata().getVersion() != null) {
-                                        w.setId(workflowDTO.getMetadata().getVersion());
-                                    } else {
-                                        w.setId(workflowDTO.getId());
-                                    }
-                                })
-                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                        .withIf(workflowDTO.getId() != null,
+                                (w) -> w.setId(workflowDTO.getId()))
+                        .with(w -> w.setMetadata(ConversionUtils.convert(
                                 workflowDTO.getMetadata(), "metadata")))
                         .with(w -> w.setExtra(ConversionUtils.convert(
                                 workflowDTO.getExtra(), "cbor")))

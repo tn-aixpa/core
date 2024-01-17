@@ -62,28 +62,8 @@ public class TaskEntityBuilder {
                 ConversionUtils.convert(taskDTO, "task"), taskDTO,
                 builder -> builder
                         // check id
-                        .withIfElse(taskDTO.getId() != null &&
-                                        taskDTO.getMetadata().getVersion() != null,
-                                (t) -> {
-                                    if (taskDTO.getId()
-                                            .equals(taskDTO.getMetadata().getVersion())) {
-                                        t.setId(taskDTO.getMetadata().getVersion());
-                                    } else {
-                                        throw new CoreException(
-                                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                                                "Trying to store item with which has different signature <id != version>",
-                                                HttpStatus.INTERNAL_SERVER_ERROR
-                                        );
-                                    }
-                                },
-                                (t) -> {
-                                    if (taskDTO.getId() == null &&
-                                            taskDTO.getMetadata().getVersion() != null) {
-                                        t.setId(taskDTO.getMetadata().getVersion());
-                                    } else {
-                                        t.setId(taskDTO.getId());
-                                    }
-                                })
+                        .withIf(taskDTO.getId() != null,
+                                (t) -> t.setId(taskDTO.getId()))
                         .with(r -> r.setFunction(Optional.ofNullable(
                                 StringUtils.hasText(spec.getFunction()) ? spec.getFunction() : null
                         ).orElseThrow(() -> new CoreException(

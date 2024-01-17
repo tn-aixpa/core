@@ -63,28 +63,8 @@ public class RunEntityBuilder {
         return EntityFactory.combine(
                 ConversionUtils.convert(runDTO, "run"), runDTO, builder -> builder
                         // check id
-                        .withIfElse(runDTO.getId() != null &&
-                                        runDTO.getMetadata().getVersion() != null,
-                                (r) -> {
-                                    if (runDTO.getId()
-                                            .equals(runDTO.getMetadata().getVersion())) {
-                                        r.setId(runDTO.getMetadata().getVersion());
-                                    } else {
-                                        throw new CoreException(
-                                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                                                "Trying to store item with which has different signature <id != version>",
-                                                HttpStatus.INTERNAL_SERVER_ERROR
-                                        );
-                                    }
-                                },
-                                (r) -> {
-                                    if (runDTO.getId() == null &&
-                                            runDTO.getMetadata().getVersion() != null) {
-                                        r.setId(runDTO.getMetadata().getVersion());
-                                    } else {
-                                        r.setId(runDTO.getId());
-                                    }
-                                })
+                        .withIf(runDTO.getId() != null,
+                                (r) -> r.setId(runDTO.getId()))
                         .with(r -> r.setTask(Optional.ofNullable(
                                 StringUtils.hasText(spec.getTask()) ? spec.getTask() : null
                         ).orElseThrow(() -> new CoreException(
