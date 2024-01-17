@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.core.models.entities.function.metadata.FunctionM
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -36,9 +37,14 @@ public class FunctionDTOBuilder {
                                     FunctionMetadata.class)
                             ).orElseGet(FunctionMetadata::new);
 
-                    functionMetadata.setVersion(function.getId());
+                    if (!StringUtils.hasText(functionMetadata.getVersion())) {
+                        functionMetadata.setVersion(function.getId());
+                    }
+                    if (!StringUtils.hasText(functionMetadata.getName())) {
+                        functionMetadata.setName(function.getName());
+                    }
+
                     functionMetadata.setProject(function.getProject());
-                    functionMetadata.setName(function.getName());
                     functionMetadata.setEmbedded(function.getEmbedded());
                     functionMetadata.setCreated(function.getCreated());
                     functionMetadata.setUpdated(function.getUpdated());

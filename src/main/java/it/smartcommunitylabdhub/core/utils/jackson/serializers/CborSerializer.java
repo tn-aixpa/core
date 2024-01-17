@@ -23,7 +23,7 @@ public class CborSerializer extends StdSerializer<byte[]> {
     public void serialize(byte[] bytes, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
         Map<String, Object> value = JacksonMapper.CBOR_OBJECT_MAPPER.readValue(bytes, new TypeReference<>() {
         });
-        jsonGenerator.writeString(JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(value));
+        jsonGenerator.writeObject(value);
     }
 
 

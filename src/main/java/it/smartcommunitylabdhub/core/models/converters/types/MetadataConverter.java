@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @ConverterType(type = "metadata")
@@ -35,7 +36,7 @@ public class MetadataConverter<M extends BaseMetadata>
             }
 
             // Deserialize CBOR bytes into a Map<String, Object>
-            Map<String, Object> cborMap = JacksonMapper.CBOR_OBJECT_MAPPER.readValue(cborBytes, Map.class);
+            Map<String, Object> cborMap = JacksonMapper.CBOR_OBJECT_MAPPER.readValue(cborBytes, HashMap.class);
 
             // Convert the map to the target class
             return JacksonMapper.OBJECT_MAPPER.convertValue(cborMap, targetClass);

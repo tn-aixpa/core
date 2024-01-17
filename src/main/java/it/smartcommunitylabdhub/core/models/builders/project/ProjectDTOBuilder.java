@@ -17,6 +17,7 @@ import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -87,10 +88,14 @@ public class ProjectDTOBuilder {
                                     ProjectMetadata.class)
                             ).orElseGet(ProjectMetadata::new);
 
+                    if (!StringUtils.hasText(projectMetadata.getVersion())) {
+                        projectMetadata.setVersion(project.getId());
+                    }
+                    if (!StringUtils.hasText(projectMetadata.getName())) {
+                        projectMetadata.setName(project.getName());
+                    }
                     projectMetadata.setProject(project.getName());
-                    projectMetadata.setVersion(project.getId());
                     projectMetadata.setDescription(project.getDescription());
-                    projectMetadata.setName(project.getName());
                     projectMetadata.setSource(project.getSource());
                     projectMetadata.setCreated(project.getCreated());
                     projectMetadata.setUpdated(project.getUpdated());

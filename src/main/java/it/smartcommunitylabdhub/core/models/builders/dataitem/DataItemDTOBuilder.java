@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.core.models.entities.dataitem.metadata.DataItemM
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -35,9 +36,15 @@ public class DataItemDTOBuilder {
                                     DataItemMetadata.class)
                             ).orElseGet(DataItemMetadata::new);
 
-                    dataItemMetadata.setVersion(dataItem.getId());
+                    if (!StringUtils.hasText(dataItemMetadata.getVersion())) {
+                        dataItemMetadata.setVersion(dataItem.getId());
+                    }
+                    if (!StringUtils.hasText(dataItemMetadata.getName())) {
+                        dataItemMetadata.setName(dataItem.getName());
+                    }
+
+
                     dataItemMetadata.setProject(dataItem.getProject());
-                    dataItemMetadata.setName(dataItem.getName());
                     dataItemMetadata.setEmbedded(dataItem.getEmbedded());
                     dataItemMetadata.setCreated(dataItem.getCreated());
                     dataItemMetadata.setUpdated(dataItem.getUpdated());

@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.core.models.entities.artifact.metadata.ArtifactM
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -35,9 +36,15 @@ public class ArtifactDTOBuilder {
                                     ArtifactMetadata.class)
                             ).orElseGet(ArtifactMetadata::new);
 
-                    artifactMetadata.setVersion(artifact.getId());
+
+                    if (!StringUtils.hasText(artifactMetadata.getVersion())) {
+                        artifactMetadata.setVersion(artifact.getId());
+                    }
+                    if (!StringUtils.hasText(artifactMetadata.getName())) {
+                        artifactMetadata.setName(artifact.getName());
+                    }
+
                     artifactMetadata.setProject(artifact.getProject());
-                    artifactMetadata.setName(artifact.getName());
                     artifactMetadata.setEmbedded(artifact.getEmbedded());
                     artifactMetadata.setCreated(artifact.getCreated());
                     artifactMetadata.setUpdated(artifact.getUpdated());

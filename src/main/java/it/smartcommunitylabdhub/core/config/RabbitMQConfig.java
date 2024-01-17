@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.util.Map;
+
 
 @Configuration
 @ConditionalOnProperty(name = "event-queue.services.rabbit.enabled", havingValue = "true", matchIfMissing = false)
@@ -46,7 +48,8 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue myQueue() {
-        return new Queue(QUEUE_NAME, true); // Set the durable option here
+        
+        return new Queue(QUEUE_NAME, true, false, false, Map.of("x-queue-type", "quorum")); // Set the durable option here
     }
 
     @Bean

@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.core.models.entities.workflow.metadata.WorkflowM
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -35,9 +36,13 @@ public class WorkflowDTOBuilder {
                                     WorkflowMetadata.class)
                             ).orElseGet(WorkflowMetadata::new);
 
-                    workflowMetadata.setVersion(workflow.getId());
+                    if (!StringUtils.hasText(workflowMetadata.getVersion())) {
+                        workflowMetadata.setVersion(workflow.getId());
+                    }
+                    if (!StringUtils.hasText(workflowMetadata.getName())) {
+                        workflowMetadata.setName(workflow.getName());
+                    }
                     workflowMetadata.setProject(workflow.getProject());
-                    workflowMetadata.setName(workflow.getName());
                     workflowMetadata.setEmbedded(workflow.getEmbedded());
                     workflowMetadata.setCreated(workflow.getCreated());
                     workflowMetadata.setUpdated(workflow.getUpdated());
