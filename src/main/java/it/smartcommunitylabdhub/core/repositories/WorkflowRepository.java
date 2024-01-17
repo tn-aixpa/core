@@ -22,16 +22,6 @@ public interface WorkflowRepository extends JpaRepository<WorkflowEntity, String
     // CONTEXT SPECIFIC QUERY //
     ////////////////////////////
 
-    Page<WorkflowEntity> findAllByProjectAndNameOrderByCreatedDesc(String project, String name,
-                                                                   Pageable pageable);
-
-    @Query("SELECT a FROM WorkflowEntity a WHERE a.project = :project AND (a.name, a.project, a.created) IN "
-            +
-            "(SELECT a2.name, a2.project, MAX(a2.created) FROM WorkflowEntity a2 WHERE a2.project = :project GROUP BY a2.name, a2.project) "
-            +
-            "ORDER BY a.created DESC")
-    Page<WorkflowEntity> findAllLatestWorkflowsByProject(@Param("project") String project,
-                                                         Pageable pageable);
 
     @Query("SELECT a FROM WorkflowEntity a WHERE a.project = :project AND (a.name, a.project, a.created) IN "
             +

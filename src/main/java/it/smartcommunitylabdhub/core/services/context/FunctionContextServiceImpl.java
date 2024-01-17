@@ -9,7 +9,8 @@ import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
-import it.smartcommunitylabdhub.core.models.filters.entities.FunctionEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -118,7 +119,6 @@ public class FunctionContextServiceImpl extends ContextService<FunctionEntity, F
         try {
             checkContext(projectName);
 
-
             functionEntityFilter.setCreatedDate(filter.get("created"));
             functionEntityFilter.setName(filter.get("name"));
             functionEntityFilter.setKind(filter.get("kind"));
@@ -129,7 +129,8 @@ public class FunctionContextServiceImpl extends ContextService<FunctionEntity, F
 
             functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter);
+            Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter)
+                    .and(CommonSpecification.latestByProject(projectName));
 
             Page<FunctionEntity> functionPage = functionRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->

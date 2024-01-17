@@ -7,7 +7,8 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
-import it.smartcommunitylabdhub.core.models.filters.entities.DataItemEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.DataItemContextService;
 import jakarta.transaction.Transactional;
@@ -26,7 +27,8 @@ import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class DataItemContextServiceImpl extends ContextService<DataItemEntity, DataItemEntityFilter> implements DataItemContextService {
+public class DataItemContextServiceImpl extends ContextService<DataItemEntity, DataItemEntityFilter>
+        implements DataItemContextService {
 
     @Autowired
     DataItemRepository dataItemRepository;
@@ -94,7 +96,8 @@ public class DataItemContextServiceImpl extends ContextService<DataItemEntity, D
 
             dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
+            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter)
+                    .and(CommonSpecification.latestByProject(projectName));
 
             Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->

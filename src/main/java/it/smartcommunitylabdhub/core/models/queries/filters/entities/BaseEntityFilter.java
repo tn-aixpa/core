@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.filters.entities;
+package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
 
 import lombok.Getter;

@@ -7,7 +7,8 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
-import it.smartcommunitylabdhub.core.models.filters.entities.TaskEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.TaskEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.TaskContextService;
@@ -101,7 +102,8 @@ public class TaskContextServiceImpl
                     .findAny();
             taskEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<TaskEntity> specification = createSpecification(filter, taskEntityFilter);
+            Specification<TaskEntity> specification = createSpecification(filter, taskEntityFilter)
+                    .and(CommonSpecification.latestByProject(projectName));
 
             Page<TaskEntity> taskPage = taskRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->

@@ -1,7 +1,7 @@
-package it.smartcommunitylabdhub.core.models.filters.entities;
+package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.filters.interfaces.SpecificationFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
 import it.smartcommunitylabdhub.core.utils.DateUtils;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

@@ -1,8 +1,6 @@
 package it.smartcommunitylabdhub.core.repositories;
 
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,9 +22,7 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
     ////////////////////////////
     // CONTEXT SPECIFIC QUERY //
     ////////////////////////////
-
-    Page<TaskEntity> findAllByProjectOrderByCreatedDesc(String project, Pageable pageable);
-
+    
 
     Optional<TaskEntity> findByProjectAndId(@Param("project") String project,
                                             @Param("id") String id);

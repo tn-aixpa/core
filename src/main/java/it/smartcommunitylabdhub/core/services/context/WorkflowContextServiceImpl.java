@@ -7,7 +7,8 @@ import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
-import it.smartcommunitylabdhub.core.models.filters.entities.WorkflowEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.WorkflowEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.repositories.WorkflowRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.WorkflowContextService;
 import jakarta.transaction.Transactional;
@@ -96,7 +97,8 @@ public class WorkflowContextServiceImpl extends ContextService<WorkflowEntity, W
 
             workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter);
+            Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter)
+                    .and(CommonSpecification.latestByProject(projectName));
 
             Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->

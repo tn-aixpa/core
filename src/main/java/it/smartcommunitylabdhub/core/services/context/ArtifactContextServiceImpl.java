@@ -7,7 +7,8 @@ import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
-import it.smartcommunitylabdhub.core.models.filters.entities.ArtifactEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.ArtifactContextService;
 import jakarta.transaction.Transactional;
@@ -26,7 +27,8 @@ import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class ArtifactContextServiceImpl extends ContextService<ArtifactEntity, ArtifactEntityFilter> implements ArtifactContextService {
+public class ArtifactContextServiceImpl extends ContextService<ArtifactEntity, ArtifactEntityFilter>
+        implements ArtifactContextService {
 
     @Autowired
     ArtifactRepository artifactRepository;
@@ -93,7 +95,8 @@ public class ArtifactContextServiceImpl extends ContextService<ArtifactEntity, A
 
             artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<ArtifactEntity> specification = createSpecification(filter, artifactEntityFilter);
+            Specification<ArtifactEntity> specification = createSpecification(filter, artifactEntityFilter)
+                    .and(CommonSpecification.latestByProject(projectName));
 
             Page<ArtifactEntity> artifactPage = artifactRepository.findAll(
                     Specification.where(specification).and((root, query, criteriaBuilder) ->

@@ -21,18 +21,7 @@ public interface DataItemRepository extends JpaRepository<DataItemEntity, String
     ////////////////////////////
     // CONTEXT SPECIFIC QUERY //
     ////////////////////////////
-
-    Page<DataItemEntity> findAllByProjectAndNameOrderByCreatedDesc(String project, String name,
-                                                                   Pageable pageable);
-
-    @Query("SELECT a FROM DataItemEntity a WHERE a.project = :project AND (a.name, a.project, a.created) IN "
-            +
-            "(SELECT a2.name, a2.project, MAX(a2.created) FROM DataItemEntity a2 WHERE a2.project = :project GROUP BY a2.name, a2.project) "
-            +
-            "ORDER BY a.created DESC")
-    Page<DataItemEntity> findAllLatestDataItemsByProject(@Param("project") String project,
-                                                         Pageable pageable);
-
+    
     @Query("SELECT a FROM DataItemEntity a WHERE a.project = :project AND (a.name, a.project, a.created) IN "
             +
             "(SELECT a2.name, a2.project, MAX(a2.created) FROM DataItemEntity a2 WHERE a2.project = :project GROUP BY a2.name, a2.project) "

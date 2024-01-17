@@ -1,6 +1,6 @@
-package it.smartcommunitylabdhub.core.models.filters.abstracts;
+package it.smartcommunitylabdhub.core.models.queries.filters.abstracts;
 
-import it.smartcommunitylabdhub.core.models.filters.interfaces.SpecificationFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 

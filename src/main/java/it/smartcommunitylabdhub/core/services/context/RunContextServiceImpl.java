@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.filters.entities.RunEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.RunContextService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
@@ -28,7 +28,8 @@ import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFilter> implements RunContextService {
+public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFilter>
+        implements RunContextService {
 
     @Autowired
     RunRepository runRepository;

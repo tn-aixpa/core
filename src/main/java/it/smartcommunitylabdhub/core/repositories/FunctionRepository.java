@@ -35,19 +35,8 @@ public interface FunctionRepository extends JpaRepository<FunctionEntity, String
     // CONTEXT SPECIFIC QUERY //
     ////////////////////////////
 
-    Page<FunctionEntity> findAllByProjectAndNameOrderByCreatedDesc(String project, String name,
-                                                                   Pageable pageable);
-
     List<FunctionEntity> findAllByProjectAndNameOrderByCreatedDesc(String project, String name);
-
-    @Query("SELECT a FROM FunctionEntity a WHERE a.project = :project AND (a.name, a.project, a.created) IN "
-            +
-            "(SELECT a2.name, a2.project, MAX(a2.created) FROM FunctionEntity a2 WHERE a2.project = :project GROUP BY a2.name, a2.project) "
-            +
-            "ORDER BY a.created DESC")
-    Page<FunctionEntity> findAllLatestFunctionsByProject(@Param("project") String project,
-                                                         Pageable pageable);
-
+    
     Optional<FunctionEntity> findByProjectAndNameAndId(@Param("project") String project,
                                                        @Param("name") String name,
                                                        @Param("id") String id);

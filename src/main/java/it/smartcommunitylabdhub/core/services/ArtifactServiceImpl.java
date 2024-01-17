@@ -7,8 +7,8 @@ import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
-import it.smartcommunitylabdhub.core.models.filters.abstracts.AbstractSpecificationService;
-import it.smartcommunitylabdhub.core.models.filters.entities.ArtifactEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.ArtifactService;
 import jakarta.transaction.Transactional;

@@ -1,7 +1,7 @@
-package it.smartcommunitylabdhub.core.models.filters.entities;
+package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.filters.interfaces.SpecificationFilter;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
 import it.smartcommunitylabdhub.core.utils.DateUtils;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -15,11 +15,11 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 @Setter
-public class WorkflowEntityFilter extends BaseEntityFilter implements SpecificationFilter<WorkflowEntity> {
+public class ArtifactEntityFilter extends BaseEntityFilter implements SpecificationFilter<ArtifactEntity> {
 
 
     @Override
-    public Predicate toPredicate(Root<WorkflowEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+    public Predicate toPredicate(Root<ArtifactEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         Predicate predicate = criteriaBuilder.conjunction();
         if (getName() != null) {
             predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("name"), "%" + getName() + "%"));

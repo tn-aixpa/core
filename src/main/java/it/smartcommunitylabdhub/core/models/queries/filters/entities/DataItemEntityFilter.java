@@ -1,7 +1,7 @@
-package it.smartcommunitylabdhub.core.models.filters.entities;
+package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
-import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.filters.interfaces.SpecificationFilter;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
 import it.smartcommunitylabdhub.core.utils.DateUtils;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -15,11 +15,11 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 @Setter
-public class FunctionEntityFilter extends BaseEntityFilter implements SpecificationFilter<FunctionEntity> {
+public class DataItemEntityFilter extends BaseEntityFilter implements SpecificationFilter<DataItemEntity> {
 
 
     @Override
-    public Predicate toPredicate(Root<FunctionEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+    public Predicate toPredicate(Root<DataItemEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         Predicate predicate = criteriaBuilder.conjunction();
         if (getName() != null) {
             predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("name"), "%" + getName() + "%"));

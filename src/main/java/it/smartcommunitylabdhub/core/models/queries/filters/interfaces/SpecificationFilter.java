@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.filters.interfaces;
+package it.smartcommunitylabdhub.core.models.queries.filters.interfaces;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
