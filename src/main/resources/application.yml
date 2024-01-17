@@ -67,6 +67,15 @@ event-queue:
   enabled: true
   services:
     rabbit:
+      connection:
+        host: 192.168.49.1
+        port: 5672
+        username: guest
+        password: guest
+        virtual-host: /
+      queue-name: dhCoreQueue
+      entity-topic: entityTopic
+      entity-routing-key: entityRoutingKey
       enabled: true
 
 

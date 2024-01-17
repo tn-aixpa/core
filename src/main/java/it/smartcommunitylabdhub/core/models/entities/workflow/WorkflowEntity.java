@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.entities.workflow;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.EntitySavedListener;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "workflows")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @EntityListeners({AuditingEntityListener.class, EntitySavedListener.class})
 public class WorkflowEntity implements BaseEntity {
 

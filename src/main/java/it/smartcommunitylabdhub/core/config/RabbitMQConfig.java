@@ -6,6 +6,7 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -18,31 +19,56 @@ import org.springframework.context.annotation.Import;
 @Import(RabbitAutoConfiguration.class)
 public class RabbitMQConfig {
 
+    @Value("${event-queue.services.rabbit.queue-name}")
+    private String QUEUE_NAME;
+
+    @Value("${event-queue.services.rabbit.entity-topic}")
+    private String ENTITY_TOPIC;
+
+    @Value("${event-queue.services.rabbit.entity-routing-key}")
+    private String ENTITY_ROUTING_KEY;
+
+    @Value("${event-queue.services.rabbit.connection.host}")
+    private String HOST;
+
+    @Value("${event-queue.services.rabbit.connection.port}")
+    private Integer PORT;
+
+    @Value("${event-queue.services.rabbit.connection.username}")
+    private String USERNAME;
+
+    @Value("${event-queue.services.rabbit.connection.password}")
+    private String PASSWORD;
+
+    @Value("${event-queue.services.rabbit.connection.virtual-host}")
+    private String VIRTUAL_HOST;
+
+
     @Bean
     public Queue myQueue() {
-        return new Queue("dhCoreQueue", true); // Set the durable option here
+        return new Queue(QUEUE_NAME, true); // Set the durable option here
     }
 
     @Bean
     public TopicExchange topicExchange() {
-        return new TopicExchange("entityTopic", true, false);
+        return new TopicExchange(ENTITY_TOPIC, true, false);
     }
 
     @Bean
     public Binding binding(Queue myQueue, TopicExchange topicExchange) {
         //return BindingBuilder.bind(myQueue).to(myExchange).with("myRoutingKey");
-        return BindingBuilder.bind(myQueue).to(topicExchange).with("entityRoutingKey");
+        return BindingBuilder.bind(myQueue).to(topicExchange).with(ENTITY_ROUTING_KEY);
     }
 
 
     @Bean
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-        connectionFactory.setHost("192.168.49.1");
-        connectionFactory.setPort(5672);
-        connectionFactory.setUsername("guest");
-        connectionFactory.setPassword("guest");
-        connectionFactory.setVirtualHost("/");
+        connectionFactory.setHost(HOST);
+        connectionFactory.setPort(PORT);
+        connectionFactory.setUsername(USERNAME);
+        connectionFactory.setPassword(PASSWORD);
+        connectionFactory.setVirtualHost(VIRTUAL_HOST);
 
         return connectionFactory;
     }

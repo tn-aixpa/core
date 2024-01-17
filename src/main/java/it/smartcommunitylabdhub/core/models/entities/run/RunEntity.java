@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.entities.run;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.EntitySavedListener;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
 import it.smartcommunitylabdhub.core.models.base.interfaces.BaseEntity;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "runs")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @EntityListeners({AuditingEntityListener.class, EntitySavedListener.class})
 public class RunEntity implements BaseEntity {
 
