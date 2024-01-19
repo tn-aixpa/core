@@ -71,10 +71,10 @@ public class AccessorTypeFactory {
     }
 
     /**
-     * Automatically detects the base packages by inaccessorting the ComponentScan annotation
+     * Automatically detects the base packages by accessorizing the ComponentScan annotation
      * in the CoreApplication class.
      *
-     * @return A list of base packages accessorified in the ComponentScan annotation.
+     * @return A list of base packages accessorized in the ComponentScan annotation.
      */
     private List<String> getBasePackages() {
         List<String> basePackages = new ArrayList<>();

@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBase
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
@@ -16,7 +17,7 @@ public class FunctionMlrunSpec extends FunctionBaseSpec<FunctionMlrunSpec> {
     private String tag;
     private String handler;
     private String command;
-    private List<Object> requirements;
+    private List<Serializable> requirements;
 
     @Override
     protected void configureSpec(FunctionMlrunSpec functionMlrunSpec) {

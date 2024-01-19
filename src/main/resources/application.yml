@@ -36,6 +36,8 @@ runtime:
     image: ${RUNTIME_NEFERTEM_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-nefertem:latest}
   dbt:
     image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-dbt:latest}
+  mlrun:
+    image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
 
 
 # Spring Docs
