@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "artifact", entity = EntityName.ARTIFACT)
+@SpecType(kind = "artifact", entity = EntityName.ARTIFACT, factory = ArtifactArtifactSpec.class)
 public class ArtifactArtifactSpec extends ArtifactBaseSpec<ArtifactArtifactSpec> {
     @Override
     protected void configureSpec(ArtifactArtifactSpec artifactArtifactSpec) {

@@ -23,7 +23,7 @@ public class K8sDeploymentRunnable extends BaseRunnable {
 
     String image;
 
-    String[] entrypoint;
+    String entrypoint;
 
     String state;
 

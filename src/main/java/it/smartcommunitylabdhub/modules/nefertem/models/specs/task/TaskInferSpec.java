@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "infer", entity = EntityName.TASK)
+@SpecType(kind = "infer", entity = EntityName.TASK, factory = TaskInferSpec.class)
 public class TaskInferSpec extends TaskBaseSpec<TaskInferSpec> {
 
     private String framework;

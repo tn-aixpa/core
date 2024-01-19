@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "transform", entity = EntityName.TASK)
+@SpecType(kind = "transform", entity = EntityName.TASK, factory = TaskTransformSpec.class)
 public class TaskTransformSpec extends TaskBaseSpec<TaskTransformSpec> {
 
     @Override

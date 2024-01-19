@@ -18,4 +18,6 @@ public @interface SpecType {
     String kind();
 
     EntityName entity();
+
+    Class<?> factory();
 }

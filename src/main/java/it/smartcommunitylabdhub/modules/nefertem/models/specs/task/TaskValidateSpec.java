@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "validate", entity = EntityName.TASK)
+@SpecType(kind = "validate", entity = EntityName.TASK, factory = TaskValidateSpec.class)
 public class TaskValidateSpec extends TaskBaseSpec<TaskValidateSpec> {
 
     private String framework;

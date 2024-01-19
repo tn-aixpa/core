@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "nefertem", entity = EntityName.FUNCTION)
+@SpecType(kind = "nefertem", entity = EntityName.FUNCTION, factory = FunctionNefertemSpec.class)
 public class FunctionNefertemSpec extends FunctionBaseSpec<FunctionNefertemSpec> {
 
     private List<Map<String, Object>> constraints;

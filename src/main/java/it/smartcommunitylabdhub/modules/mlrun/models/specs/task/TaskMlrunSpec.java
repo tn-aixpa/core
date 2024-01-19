@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "mlrun", entity = EntityName.TASK)
+@SpecType(kind = "mlrun", entity = EntityName.TASK, factory = TaskMlrunSpec.class)
 public class TaskMlrunSpec extends TaskBaseSpec<TaskMlrunSpec> {
 
     @Override

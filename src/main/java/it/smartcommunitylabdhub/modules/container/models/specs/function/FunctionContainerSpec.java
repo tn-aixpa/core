@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.modules.streamlit.models.specs.function;
+package it.smartcommunitylabdhub.modules.container.models.specs.function;
 
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
@@ -6,26 +6,26 @@ import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBase
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
 @Setter
-@SpecType(kind = "python", entity = EntityName.FUNCTION)
-public class StreamlitPythonSpec extends FunctionBaseSpec<StreamlitPythonSpec> {
+@SpecType(kind = "container", entity = EntityName.FUNCTION, factory = FunctionContainerSpec.class)
+public class FunctionContainerSpec extends FunctionBaseSpec<FunctionContainerSpec> {
 
     private String handler;
     private String image;
-    private String command;
-    private List<Object> args;
-    private List<Object> requirements;
+    private String entrypoint;
+    private List<Serializable> args;
 
     @Override
-    protected void configureSpec(StreamlitPythonSpec functionPythonSpec) {
+    protected void configureSpec(FunctionContainerSpec functionPythonSpec) {
         super.configureSpec(functionPythonSpec);
 
         this.setHandler(functionPythonSpec.getHandler());
         this.setImage(functionPythonSpec.getImage());
         this.setArgs(functionPythonSpec.getArgs());
-        this.setRequirements(functionPythonSpec.getRequirements());
+        this.setEntrypoint(functionPythonSpec.getEntrypoint());
     }
 }

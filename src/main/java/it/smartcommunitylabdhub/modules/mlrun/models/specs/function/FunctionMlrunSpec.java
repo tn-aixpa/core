@@ -11,7 +11,7 @@ import java.util.List;
 
 @Getter
 @Setter
-@SpecType(kind = "mlrun", entity = EntityName.FUNCTION)
+@SpecType(kind = "mlrun", entity = EntityName.FUNCTION, factory = FunctionMlrunSpec.class)
 public class FunctionMlrunSpec extends FunctionBaseSpec<FunctionMlrunSpec> {
     private String image;
     private String tag;

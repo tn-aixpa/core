@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "profile", entity = EntityName.TASK)
+@SpecType(kind = "profile", entity = EntityName.TASK, factory = TaskProfileSpec.class)
 public class TaskProfileSpec extends TaskBaseSpec<TaskProfileSpec> {
 
     private String framework;

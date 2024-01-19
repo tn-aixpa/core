@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "none", entity = EntityName.NONE)
+@SpecType(kind = "none", entity = EntityName.NONE, factory = NoneNoneSpec.class)
 public class NoneNoneSpec extends NoneBaseSpec<NoneNoneSpec> {
     @Override
     protected void configureSpec(NoneNoneSpec noneNoneSpec) {

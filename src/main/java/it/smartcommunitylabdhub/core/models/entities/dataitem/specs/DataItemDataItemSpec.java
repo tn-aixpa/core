@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "dataitem", entity = EntityName.DATAITEM)
+@SpecType(kind = "dataitem", entity = EntityName.DATAITEM, factory = DataItemDataItemSpec.class)
 public class DataItemDataItemSpec extends DataItemBaseSpec<DataItemDataItemSpec> {
     @JsonProperty("raw_code")
     private String rawCode;

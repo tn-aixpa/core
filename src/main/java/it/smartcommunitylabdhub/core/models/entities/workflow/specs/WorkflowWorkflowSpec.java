@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "workflow", entity = EntityName.WORKFLOW)
+@SpecType(kind = "workflow", entity = EntityName.WORKFLOW, factory = WorkflowWorkflowSpec.class)
 public class WorkflowWorkflowSpec extends WorkflowBaseSpec<WorkflowWorkflowSpec> {
     @Override
     protected void configureSpec(WorkflowWorkflowSpec workflowJobSpec) {

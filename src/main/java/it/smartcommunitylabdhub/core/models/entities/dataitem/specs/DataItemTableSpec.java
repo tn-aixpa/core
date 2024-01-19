@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @Setter
-@SpecType(kind = "table", entity = EntityName.DATAITEM)
+@SpecType(kind = "table", entity = EntityName.DATAITEM, factory = DataItemTableSpec.class)
 public class DataItemTableSpec extends DataItemBaseSpec<DataItemTableSpec> {
     @Override
     protected void configureSpec(DataItemTableSpec dataItemTableSpec) {
