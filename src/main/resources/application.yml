@@ -64,19 +64,19 @@ application:
 
 # Conditional Configuration Cloud
 event-queue:
-  enabled: true
+  enabled: ${ENABLE_EVENTS:false}
   services:
     rabbit:
       connection:
-        host: 192.168.49.1
-        port: 5672
-        username: guest
-        password: guest
-        virtual-host: /
-      queue-name: dhCoreQueue
-      entity-topic: entityTopic
-      entity-routing-key: entityRoutingKey
-      enabled: true
+        host: ${RABBITMQ_HOST:192.168.49.1}
+        port: ${RABBITMQ_PORT:5672 }
+        username: ${RABBITMQ_USER:guest}
+        password: ${RABBITMQ_PASSWORD:guest}
+        virtual-host: ${RABBITMQ_VHOST:/}
+      queue-name: ${RABBITMQ_QUEUE:dhCoreQueue}
+      entity-topic: ${RABBITMQ_TOPIC:entityTopic}
+      entity-routing-key: ${RABBITMQ_ROUTING_KEY:entityRoutingKey}
+      enabled: ${RABBITMQ_ENABLE:false}
 
 
 

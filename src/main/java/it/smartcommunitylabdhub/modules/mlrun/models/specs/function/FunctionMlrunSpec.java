@@ -1,18 +1,15 @@
-package it.smartcommunitylabdhub.core.models.entities.function.specs;
+package it.smartcommunitylabdhub.modules.mlrun.models.specs.function;
 
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
-import lombok.AllArgsConstructor;
+import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @SpecType(kind = "mlrun", entity = EntityName.FUNCTION)
 public class FunctionMlrunSpec extends FunctionBaseSpec<FunctionMlrunSpec> {
     private String image;
