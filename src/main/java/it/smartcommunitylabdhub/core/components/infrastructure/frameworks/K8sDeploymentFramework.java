@@ -148,8 +148,7 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
 
         // Create the V1Deployment object with metadata and JobSpec
 
-        V1Deployment deployment
-                = new V1Deployment()
+        V1Deployment deployment = new V1Deployment()
                 .metadata(metadata)
                 .spec(deploymentSpec);
 
