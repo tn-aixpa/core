@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.models.accessors.AbstractFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.ProjectFieldAccessor;
 
 
-@AccessorType(kind = "project", entity = EntityName.PROJECT)
+@AccessorType(kind = "project", entity = EntityName.PROJECT, factory = ProjectDefaultFieldAccessor.class)
 public class ProjectDefaultFieldAccessor
         extends AbstractFieldAccessor<ProjectDefaultFieldAccessor>
         implements ProjectFieldAccessor<ProjectDefaultFieldAccessor> {

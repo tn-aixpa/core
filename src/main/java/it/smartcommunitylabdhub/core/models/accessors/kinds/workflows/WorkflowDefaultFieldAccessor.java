@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.models.accessors.AbstractFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.WorkflowFieldAccessor;
 
 
-@AccessorType(kind = "workflow", entity = EntityName.WORKFLOW)
+@AccessorType(kind = "workflow", entity = EntityName.WORKFLOW, factory = WorkflowDefaultFieldAccessor.class)
 public class WorkflowDefaultFieldAccessor
         extends AbstractFieldAccessor<WorkflowDefaultFieldAccessor>
         implements WorkflowFieldAccessor<WorkflowDefaultFieldAccessor> {

@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.accessors.AbstractFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.FunctionFieldAccessor;
 
-@AccessorType(kind = "function", entity = EntityName.FUNCTION)
+@AccessorType(kind = "function", entity = EntityName.FUNCTION, factory = FunctionDefaultFieldAccessor.class)
 public class FunctionDefaultFieldAccessor
         extends AbstractFieldAccessor<FunctionDefaultFieldAccessor>
         implements FunctionFieldAccessor<FunctionDefaultFieldAccessor> {

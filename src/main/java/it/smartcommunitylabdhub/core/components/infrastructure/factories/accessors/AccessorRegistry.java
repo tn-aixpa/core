@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.accessors;
 
+import it.smartcommunitylabdhub.core.annotations.common.AccessorType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.FactoryUtils;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -17,6 +20,11 @@ import java.util.Map;
 public class AccessorRegistry<T extends Accessor<Object>> {
     // A map to store accessor types and their corresponding classes.
     private final Map<String, Class<? extends Accessor<Object>>> accessorTypes = new HashMap<>();
+    private final List<AccessorFactory<? extends Accessor<Object>>> accessorFactories;
+
+    public AccessorRegistry(List<AccessorFactory<? extends Accessor<Object>>> accessorFactories) {
+        this.accessorFactories = accessorFactories;
+    }
 
     // Register accessor types along with their corresponding classes.
     public void registerAccessorTypes(Map<String, Class<? extends Accessor<Object>>> accessorTypeMap) {
@@ -64,13 +72,30 @@ public class AccessorRegistry<T extends Accessor<Object>> {
         }
 
         try {
-            // Create a new instance of the accessor class.
-            S accessor = (S) accessorClass.getDeclaredConstructor().newInstance();
-            // Configure the accessor instance with the provided data.
-            if (fields != null) {
-                accessor.build(fields);
+
+            // Find the corresponding SpecFactory using the SpecType annotation.
+            AccessorType accessorTypeAnnotation = accessorClass.getAnnotation(AccessorType.class);
+            if (accessorTypeAnnotation != null) {
+                Class<?> factoryClass = accessorTypeAnnotation.factory();
+                for (AccessorFactory<? extends Accessor<Object>> accessorFactory : accessorFactories) {
+                    // Check if the generic type of SpecFactory matches accessorClass.
+                    if (FactoryUtils.isFactoryTypeMatch(factoryClass, accessorFactory.getClass())) {
+                        // Call the create method of the accessor factory to get a new instance.
+                        S accessor = (S) accessorFactory.create();
+                        if (fields != null) {
+                            accessor.build(fields);
+                        }
+                        return accessor;
+                    }
+                }
+
             }
-            return accessor;
+
+            log.error("Cannot configure accessor for type @AccessorType('" + accessorKey + "') no way to recover error.");
+            throw new CoreException(
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Cannot configure accessor for type @AccessorType('" + accessorKey + "')",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             // Handle any exceptions that may occur during instance creation.
             log.error("Cannot configure accessor for type @AccessorType('" + accessorKey + "') no way to recover error.");

@@ -15,4 +15,6 @@ public @interface AccessorType {
     String kind();
 
     EntityName entity();
+
+    Class<?> factory();
 }

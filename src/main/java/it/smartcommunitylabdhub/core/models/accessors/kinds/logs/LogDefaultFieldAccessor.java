@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.accessors.AbstractFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.LogFieldAccessor;
 
-@AccessorType(kind = "log", entity = EntityName.LOG)
+@AccessorType(kind = "log", entity = EntityName.LOG, factory = LogDefaultFieldAccessor.class)
 public class LogDefaultFieldAccessor
         extends AbstractFieldAccessor<LogDefaultFieldAccessor>
         implements LogFieldAccessor<LogDefaultFieldAccessor> {

@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.models.accessors.AbstractFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.RunFieldAccessor;
 
 
-@AccessorType(kind = "run", entity = EntityName.RUN)
+@AccessorType(kind = "run", entity = EntityName.RUN, factory = RunDefaultFieldAccessor.class)
 public class RunDefaultFieldAccessor
         extends AbstractFieldAccessor<RunDefaultFieldAccessor>
         implements RunFieldAccessor<RunDefaultFieldAccessor> {
