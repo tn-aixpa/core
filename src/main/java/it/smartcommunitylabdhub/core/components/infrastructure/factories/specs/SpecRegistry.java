@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
+import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -9,7 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -17,6 +21,13 @@ import java.util.Map;
 public class SpecRegistry<T extends Spec> {
     // A map to store spec types and their corresponding classes.
     private final Map<String, Class<? extends Spec>> specTypes = new HashMap<>();
+
+    private final List<SpecFactory<? extends Spec>> specFactories;
+
+    public SpecRegistry(List<SpecFactory<? extends Spec>> specFactories) {
+        this.specFactories = specFactories;
+    }
+
 
     // Register spec types along with their corresponding classes.
     public void registerSpecTypes(Map<String, Class<? extends Spec>> specTypeMap) {
@@ -60,13 +71,28 @@ public class SpecRegistry<T extends Spec> {
         }
 
         try {
-            // Create a new instance of the spec class.
-            S spec = (S) specClass.getDeclaredConstructor().newInstance();
-            // Configure the spec instance with the provided data.
-            if (data != null) {
-                spec.configure(data);
+            // Find the corresponding SpecFactory using the SpecType annotation.
+            SpecType specTypeAnnotation = specClass.getAnnotation(SpecType.class);
+            if (specTypeAnnotation != null) {
+                Class<?> factoryClass = specTypeAnnotation.factory();
+                for (SpecFactory<? extends Spec> specFactory : specFactories) {
+                    // Check if the generic type of SpecFactory matches specClass.
+                    if (isFactoryTypeMatch(factoryClass, specFactory.getClass())) {
+                        // Call the create method of the spec factory to get a new instance.
+                        S spec = (S) specFactory.create();
+                        if (data != null) {
+                            spec.configure(data);
+                        }
+                        return spec;
+                    }
+                }
+
             }
-            return spec;
+            log.error("Cannot configure spec for type @SpecType('" + specKey + "') no way to recover error.");
+            throw new CoreException(
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Cannot configure spec for type @SpecType('" + specKey + "')",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             // Handle any exceptions that may occur during instance creation.
             log.error("Cannot configure spec for type @SpecType('" + specKey + "') no way to recover error.");
@@ -76,5 +102,27 @@ public class SpecRegistry<T extends Spec> {
                     HttpStatus.INTERNAL_SERVER_ERROR);
 
         }
+    }
+
+    /**
+     * Checks if the generic type argument of a given SpecFactory matches a specified factoryClass.
+     *
+     * @param factoryClass     The factory class to be checked against the SpecFactory.
+     * @param specFactoryClass The SpecFactory class containing the generic type argument.
+     * @return True if the generic type argument of SpecFactory matches factoryClass;
+     * otherwise, false.
+     */
+    private Boolean isFactoryTypeMatch(Class<?> factoryClass, Class<?> specFactoryClass) {
+        // Check if the generic type argument of SpecFactory matches specClass.
+        Type[] interfaceTypes = specFactoryClass.getGenericInterfaces();
+        for (Type type : interfaceTypes) {
+            if (type instanceof ParameterizedType parameterizedType) {
+                Type[] typeArguments = parameterizedType.getActualTypeArguments();
+                if (typeArguments.length == 1 && typeArguments[0] instanceof Class<?> factoryTypeArgument) {
+                    return factoryTypeArgument.isAssignableFrom(factoryClass);
+                }
+            }
+        }
+        return false;
     }
 }
