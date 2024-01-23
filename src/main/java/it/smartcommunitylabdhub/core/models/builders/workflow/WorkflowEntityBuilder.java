@@ -48,7 +48,7 @@ public class WorkflowEntityBuilder {
 
 
         // Retrieve Spec
-        WorkflowBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        WorkflowBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(workflowDTO.getSpec(), WorkflowBaseSpec.class);
 
         return EntityFactory.combine(

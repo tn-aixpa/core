@@ -38,10 +38,10 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
     }
 
     @Override
-    public RunBaseSpec<?> build(
+    public RunBaseSpec build(
             FunctionDbtSpec funSpec,
-            TaskBaseSpec<?> taskSpec,
-            RunBaseSpec<?> runSpec,
+            TaskBaseSpec taskSpec,
+            RunBaseSpec runSpec,
             String kind) {
 
         // Retrieve builder using task kind

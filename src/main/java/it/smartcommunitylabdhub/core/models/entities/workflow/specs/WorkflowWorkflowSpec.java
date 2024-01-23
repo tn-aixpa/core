@@ -6,18 +6,14 @@ import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @SpecType(kind = "workflow", entity = EntityName.WORKFLOW, factory = WorkflowWorkflowSpec.class)
-public class WorkflowWorkflowSpec extends WorkflowBaseSpec<WorkflowWorkflowSpec> {
+public class WorkflowWorkflowSpec extends WorkflowBaseSpec {
     @Override
-    protected void configureSpec(WorkflowWorkflowSpec workflowJobSpec) {
-        super.configureSpec(workflowJobSpec);
-
-//        throw new CoreException(
-//                ErrorList.METHOD_NOT_IMPLEMENTED.getValue(),
-//                ErrorList.METHOD_NOT_IMPLEMENTED.getReason(),
-//                HttpStatus.INTERNAL_SERVER_ERROR
-//        );
+    public void configure(Map<String, Object> data) {
+        super.configure(data);
     }
 }

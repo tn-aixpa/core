@@ -50,7 +50,7 @@ public class ProjectEntityBuilder {
                                 JacksonMapper.typeRef));
 
         // Retrieve object spec
-        ProjectBaseSpec<?> projectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        ProjectBaseSpec projectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(
                         projectDTO.getSpec(),
                         ProjectBaseSpec.class
@@ -122,7 +122,7 @@ public class ProjectEntityBuilder {
                                 JacksonMapper.typeRef));
 
         // Retrieve object spec
-        ProjectBaseSpec<?> projectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        ProjectBaseSpec projectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(
                         projectDTO.getSpec(),
                         ProjectProjectSpec.class

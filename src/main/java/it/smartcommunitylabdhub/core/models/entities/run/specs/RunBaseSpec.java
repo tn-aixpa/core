@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.models.entities.run.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.core.models.base.specs.BaseSpec;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +16,7 @@ import java.util.Map;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RunBaseSpec<S extends RunBaseSpec<S>> extends BaseSpec<S> {
+public class RunBaseSpec extends BaseSpec {
 
     @NotEmpty
     private String task;
@@ -34,15 +35,21 @@ public class RunBaseSpec<S extends RunBaseSpec<S>> extends BaseSpec<S> {
     private Boolean localExecution = false;
 
     @Override
-    protected void configureSpec(S concreteSpec) {
+    public void configure(Map<String, Object> data) {
 
-        this.setTask(concreteSpec.getTask());
-        this.setTaskId(concreteSpec.getTaskId());
-        this.setInputs(concreteSpec.getInputs());
-        this.setOutputs(concreteSpec.getOutputs());
-        this.setParameters(concreteSpec.getParameters());
-        this.setLocalExecution(concreteSpec.getLocalExecution());
-        this.setExtraSpecs(concreteSpec.getExtraSpecs());
+        RunBaseSpec runBaseSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+                data, RunBaseSpec.class);
+
+        this.setTask(runBaseSpec.getTask());
+        this.setTaskId(runBaseSpec.getTaskId());
+        this.setInputs(runBaseSpec.getInputs());
+        this.setOutputs(runBaseSpec.getOutputs());
+        this.setParameters(runBaseSpec.getParameters());
+        this.setLocalExecution(runBaseSpec.getLocalExecution());
+
+        super.configure(data);
+        this.setExtraSpecs(runBaseSpec.getExtraSpecs());
+
 
     }
 }

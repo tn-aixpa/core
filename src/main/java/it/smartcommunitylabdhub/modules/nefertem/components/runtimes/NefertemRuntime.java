@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.modules.nefertem.components.runtimes;
 
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
@@ -46,10 +46,10 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
     }
 
     @Override
-    public RunBaseSpec<?> build(
+    public RunBaseSpec build(
             FunctionNefertemSpec funSpec,
-            TaskBaseSpec<?> taskSpec,
-            RunBaseSpec<?> runSpec,
+            TaskBaseSpec taskSpec,
+            RunBaseSpec runSpec,
             String kind) {
 
         /**

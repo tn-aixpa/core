@@ -20,7 +20,7 @@ public interface RunService {
 
     Run save(Run runDTO);
 
-    <F extends FunctionBaseSpec<F>> Run createRun(Run inputRunDTO);
+    <F extends FunctionBaseSpec> Run createRun(Run inputRunDTO);
 
     Run updateRun(@Valid Run runDTO, String uuid);
 

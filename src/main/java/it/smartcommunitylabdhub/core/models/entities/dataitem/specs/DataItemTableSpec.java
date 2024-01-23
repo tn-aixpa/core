@@ -3,24 +3,22 @@ package it.smartcommunitylabdhub.core.models.entities.dataitem.specs;
 
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
-import it.smartcommunitylabdhub.core.utils.ErrorList;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.http.HttpStatus;
+
+import java.util.Map;
 
 @Getter
 @Setter
 @SpecType(kind = "table", entity = EntityName.DATAITEM, factory = DataItemTableSpec.class)
-public class DataItemTableSpec extends DataItemBaseSpec<DataItemTableSpec> {
+public class DataItemTableSpec extends DataItemBaseSpec {
     @Override
-    protected void configureSpec(DataItemTableSpec dataItemTableSpec) {
-        super.configureSpec(dataItemTableSpec);
+    public void configure(Map<String, Object> data) {
+        DataItemTableSpec dataItemTableSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+                data, DataItemTableSpec.class);
+        super.configure(data);
 
-        throw new CoreException(
-                ErrorList.METHOD_NOT_IMPLEMENTED.getValue(),
-                ErrorList.METHOD_NOT_IMPLEMENTED.getReason(),
-                HttpStatus.INTERNAL_SERVER_ERROR
-        );
+        this.setExtraSpecs(dataItemTableSpec.getExtraSpecs());
     }
 }

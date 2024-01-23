@@ -11,12 +11,12 @@ import jakarta.validation.constraints.NotNull;
 /**
  * Runtime expose builder, run and parse method
  */
-public interface Runtime<F extends FunctionBaseSpec<?>> {
+public interface Runtime<F extends FunctionBaseSpec> {
 
-    RunBaseSpec<?> build(
+    RunBaseSpec build(
             F funcSpec,
-            TaskBaseSpec<?> taskSpec,
-            RunBaseSpec<?> runSpec,
+            TaskBaseSpec taskSpec,
+            RunBaseSpec runSpec,
             @NotNull String kind
     );
 

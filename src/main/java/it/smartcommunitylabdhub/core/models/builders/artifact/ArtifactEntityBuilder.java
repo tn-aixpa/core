@@ -50,7 +50,7 @@ public class ArtifactEntityBuilder {
                 );
 
         // Retrieve Spec
-        ArtifactBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        ArtifactBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(artifactDTO.getSpec(), ArtifactBaseSpec.class);
 
 

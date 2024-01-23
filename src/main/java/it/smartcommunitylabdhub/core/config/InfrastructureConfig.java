@@ -27,16 +27,16 @@ public class InfrastructureConfig {
 
     @Bean
     protected RuntimeFactory runtimeFactory(
-            List<Runtime<? extends FunctionBaseSpec<?>>> runtimes) {
+            List<Runtime<? extends FunctionBaseSpec>> runtimes) {
         return new RuntimeFactory(runtimes);
     }
 
     @Bean
     protected BuilderFactory builderFactory(
             List<Builder<
-                    ? extends FunctionBaseSpec<?>,
-                    ? extends TaskBaseSpec<?>,
-                    ? extends RunBaseSpec<?>>> builders) {
+                    ? extends FunctionBaseSpec,
+                    ? extends TaskBaseSpec,
+                    ? extends RunBaseSpec>> builders) {
         return new BuilderFactory(builders);
     }
 

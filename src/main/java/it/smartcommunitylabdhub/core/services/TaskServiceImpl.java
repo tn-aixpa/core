@@ -129,7 +129,7 @@ public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, Ta
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        TaskBaseSpec<?> taskSpec = specRegistry.createSpec(
+        TaskBaseSpec taskSpec = specRegistry.createSpec(
                 taskDTO.getKind(),
                 EntityName.TASK,
                 taskDTO.getSpec());

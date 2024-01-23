@@ -56,7 +56,7 @@ public class RunEntityBuilder {
                                 JacksonMapper.typeRef));
 
         // Retrieve base spec
-        RunBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        RunBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(runDTO.getSpec(), RunBaseSpec.class);
 
 

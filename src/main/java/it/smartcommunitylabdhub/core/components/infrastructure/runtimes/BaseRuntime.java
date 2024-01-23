@@ -20,15 +20,15 @@ import java.util.Optional;
 
 @Slf4j
 @Getter
-public abstract class BaseRuntime<F extends FunctionBaseSpec<?>> implements Runtime<F> {
+public abstract class BaseRuntime<F extends FunctionBaseSpec> implements Runtime<F> {
 
     protected final BuilderFactory builderFactory;
     protected final RunnerFactory runnerFactory;
     protected Map<String, ? extends Runner> runners;
     protected Map<String, ? extends Builder<
-            ? extends FunctionBaseSpec<?>,
-            ? extends TaskBaseSpec<?>,
-            ? extends RunBaseSpec<?>>> builders;
+            ? extends FunctionBaseSpec,
+            ? extends TaskBaseSpec,
+            ? extends RunBaseSpec>> builders;
     private String runtime;
 
     protected BaseRuntime(BuilderFactory builderFactory, RunnerFactory runnerFactory) {
@@ -66,9 +66,9 @@ public abstract class BaseRuntime<F extends FunctionBaseSpec<?>> implements Runt
 
     @SuppressWarnings("unchecked")
     public <B extends Builder<
-            ? extends FunctionBaseSpec<?>,
-            ? extends TaskBaseSpec<?>,
-            ? extends RunBaseSpec<?>>> B getBuilder(String task) {
+            ? extends FunctionBaseSpec,
+            ? extends TaskBaseSpec,
+            ? extends RunBaseSpec>> B getBuilder(String task) {
 
         return Optional.ofNullable((B) builders.get(runtime + "+" + task))
                 .orElseThrow(() -> new CoreException(

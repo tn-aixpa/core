@@ -43,7 +43,7 @@ import java.util.stream.Stream;
 
 @Service
 @Transactional
-public class RunSerivceImpl extends AbstractSpecificationService<RunEntity, RunEntityFilter>
+public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunEntityFilter>
         implements RunService {
 
     @Autowired
@@ -178,10 +178,10 @@ public class RunSerivceImpl extends AbstractSpecificationService<RunEntity, RunE
     }
 
     @Override
-    public <F extends FunctionBaseSpec<F>> Run createRun(Run runDTO) {
+    public <F extends FunctionBaseSpec> Run createRun(Run runDTO) {
 
         // Retrieve Run base spec
-        RunBaseSpec<?> runBaseSpec = specRegistry.createSpec(
+        RunBaseSpec runBaseSpec = specRegistry.createSpec(
                 runDTO.getKind(),
                 EntityName.RUN,
                 runDTO.getSpec()
@@ -199,7 +199,7 @@ public class RunSerivceImpl extends AbstractSpecificationService<RunEntity, RunE
         // Retrieve task
         return Optional.ofNullable(this.taskService.getTask(runBaseSpec.getTaskId()))
                 .map(taskDTO -> {
-                    TaskBaseSpec<?> taskBaseSpec = specRegistry.createSpec(
+                    TaskBaseSpec taskBaseSpec = specRegistry.createSpec(
                             taskDTO.getKind(),
                             EntityName.TASK,
                             taskDTO.getSpec());
@@ -231,13 +231,13 @@ public class RunSerivceImpl extends AbstractSpecificationService<RunEntity, RunE
                                         .orElseGet(() -> {
 
                                             // Retrieve Runtime and build run
-                                            Runtime<? extends FunctionBaseSpec<?>> runtime =
+                                            Runtime<? extends FunctionBaseSpec> runtime =
                                                     runtimeFactory.getRuntime(taskAccessor.getRuntime());
 
 
                                             // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
                                             // an exception occur! for.
-                                            RunBaseSpec<?> runSpecBuilt = runtime.build(
+                                            RunBaseSpec runSpecBuilt = runtime.build(
                                                     specRegistry.createSpec(
                                                             functionDTO.getKind(),
                                                             EntityName.FUNCTION,

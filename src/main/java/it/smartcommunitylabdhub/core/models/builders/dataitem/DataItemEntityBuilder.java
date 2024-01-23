@@ -48,7 +48,7 @@ public class DataItemEntityBuilder {
 
 
         // Retrieve Spec
-        DataItemBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        DataItemBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(dataItemDTO.getSpec(), DataItemBaseSpec.class);
 
         return EntityFactory.combine(

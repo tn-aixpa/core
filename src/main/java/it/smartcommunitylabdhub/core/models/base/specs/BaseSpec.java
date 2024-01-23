@@ -15,19 +15,13 @@ import java.util.Map;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public abstract class BaseSpec<S extends Spec> implements Spec {
+public class BaseSpec implements Spec {
 
     private Map<String, Object> extraSpecs = new HashMap<>();
 
     @Override
     public void configure(Map<String, Object> data) {
-        // Retrieve concreteSpec
-        S concreteSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-                data, JacksonMapper.extractJavaType(this.getClass()));
-        configureSpec(concreteSpec);
     }
-
-    protected abstract void configureSpec(S concreteSpec);
 
     @Override
     public Map<String, Object> toMap() {

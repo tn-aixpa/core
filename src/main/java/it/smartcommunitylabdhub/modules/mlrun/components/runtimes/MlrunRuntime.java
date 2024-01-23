@@ -38,10 +38,10 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec> {
     }
 
     @Override
-    public RunBaseSpec<?> build(
+    public RunBaseSpec build(
             FunctionMlrunSpec funSpec,
-            TaskBaseSpec<?> taskSpec,
-            RunBaseSpec<?> runSpec,
+            TaskBaseSpec taskSpec,
+            RunBaseSpec runSpec,
             String kind) {
 
         // Retrieve builder using task kind

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +13,7 @@ import java.util.Map;
 @Getter
 @Setter
 @SpecType(kind = "metric", entity = EntityName.TASK, factory = TaskMetricSpec.class)
-public class TaskMetricSpec extends TaskBaseSpec<TaskMetricSpec> {
+public class TaskMetricSpec extends TaskBaseSpec {
 
     private String framework;
 
@@ -25,14 +26,20 @@ public class TaskMetricSpec extends TaskBaseSpec<TaskMetricSpec> {
     private Integer numWorker;
 
     @Override
-    protected void configureSpec(TaskMetricSpec taskMetricSpec) {
+    public void configure(Map<String, Object> data) {
 
-        super.configureSpec(taskMetricSpec);
+        TaskMetricSpec taskMetricSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+                data, TaskMetricSpec.class);
+
 
         this.setFramework(taskMetricSpec.getFramework());
         this.setExecArgs(taskMetricSpec.getExecArgs());
         this.setParallel(taskMetricSpec.getParallel());
         this.setNumWorker(taskMetricSpec.getNumWorker());
+
+        super.configure(data);
+        this.setExtraSpecs(taskMetricSpec.getExtraSpecs());
+
 
     }
 }

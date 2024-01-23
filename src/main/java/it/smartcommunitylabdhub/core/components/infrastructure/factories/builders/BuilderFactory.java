@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 
 public class BuilderFactory {
     private final Map<String, ? extends Builder<
-            ? extends FunctionBaseSpec<?>,
-            ? extends TaskBaseSpec<?>,
-            ? extends RunBaseSpec<?>>> builderMap;
+            ? extends FunctionBaseSpec,
+            ? extends TaskBaseSpec,
+            ? extends RunBaseSpec>> builderMap;
 
     /**
      * Constructor to create the BuilderFactory with a list of Builders.
@@ -28,9 +28,9 @@ public class BuilderFactory {
      * @param builders The list of Builders to be managed by the factory.
      */
     public BuilderFactory(List<? extends Builder<
-            ? extends FunctionBaseSpec<?>,
-            ? extends TaskBaseSpec<?>,
-            ? extends RunBaseSpec<?>>> builders) {
+            ? extends FunctionBaseSpec,
+            ? extends TaskBaseSpec,
+            ? extends RunBaseSpec>> builders) {
         builderMap = builders.stream()
                 .collect(Collectors.toMap(this::getBuilderFromAnnotation,
                         Function.identity()));
@@ -45,9 +45,9 @@ public class BuilderFactory {
      *                                  builder.
      */
     private <B extends Builder<
-            ? extends FunctionBaseSpec<?>,
-            ? extends TaskBaseSpec<?>,
-            ? extends RunBaseSpec<?>>> String getBuilderFromAnnotation(B builder) {
+            ? extends FunctionBaseSpec,
+            ? extends TaskBaseSpec,
+            ? extends RunBaseSpec>> String getBuilderFromAnnotation(B builder) {
         Class<?> builderClass = builder.getClass();
         if (builderClass.isAnnotationPresent(BuilderComponent.class)) {
             BuilderComponent annotation =
@@ -69,9 +69,9 @@ public class BuilderFactory {
      */
     @SuppressWarnings("unchecked")
     public <B extends Builder<
-            ? extends FunctionBaseSpec<?>,
-            ? extends TaskBaseSpec<?>,
-            ? extends RunBaseSpec<?>>> B getBuilder(String runtime, String task) {
+            ? extends FunctionBaseSpec,
+            ? extends TaskBaseSpec,
+            ? extends RunBaseSpec>> B getBuilder(String runtime, String task) {
 
         B concreteBuilder =
                 (B) builderMap.get(runtime + "+" + task);
@@ -84,9 +84,9 @@ public class BuilderFactory {
 
 
     public Map<String, ? extends Builder<
-            ? extends FunctionBaseSpec<?>,
-            ? extends TaskBaseSpec<?>,
-            ? extends RunBaseSpec<?>>> getBuilders(String runtime) {
+            ? extends FunctionBaseSpec,
+            ? extends TaskBaseSpec,
+            ? extends RunBaseSpec>> getBuilders(String runtime) {
         return builderMap.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith(runtime))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

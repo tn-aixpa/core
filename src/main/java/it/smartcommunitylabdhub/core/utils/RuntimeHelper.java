@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBase
 
 public class RuntimeHelper {
     @SuppressWarnings("unchecked")
-    public static <F extends FunctionBaseSpec<?>> Runtime<F> castRuntime(Runtime<?> runtime) {
+    public static <F extends FunctionBaseSpec> Runtime<F> castRuntime(Runtime<?> runtime) {
         return (Runtime<F>) runtime;
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +13,7 @@ import java.util.Map;
 @Getter
 @Setter
 @SpecType(kind = "validate", entity = EntityName.TASK, factory = TaskValidateSpec.class)
-public class TaskValidateSpec extends TaskBaseSpec<TaskValidateSpec> {
+public class TaskValidateSpec extends TaskBaseSpec {
 
     private String framework;
 
@@ -25,13 +26,18 @@ public class TaskValidateSpec extends TaskBaseSpec<TaskValidateSpec> {
     private Integer numWorker;
 
     @Override
-    protected void configureSpec(TaskValidateSpec taskValidateSpec) {
-        super.configureSpec(taskValidateSpec);
+    public void configure(Map<String, Object> data) {
+
+        TaskValidateSpec taskValidateSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+                data, TaskValidateSpec.class);
 
         this.setFramework(taskValidateSpec.getFramework());
         this.setExecArgs(taskValidateSpec.getExecArgs());
         this.setParallel(taskValidateSpec.getParallel());
         this.setNumWorker(taskValidateSpec.getNumWorker());
+
+        super.configure(data);
+        this.setExtraSpecs(taskValidateSpec.getExtraSpecs());
 
     }
 }

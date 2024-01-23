@@ -4,11 +4,13 @@ import it.smartcommunitylabdhub.core.models.base.specs.BaseSpec;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
-public class WorkflowBaseSpec<S extends WorkflowBaseSpec<S>> extends BaseSpec<S> {
+public class WorkflowBaseSpec extends BaseSpec {
     @Override
-    protected void configureSpec(S concreteSpec) {
-
+    public void configure(Map<String, Object> data) {
+        super.configure(data);
     }
 }

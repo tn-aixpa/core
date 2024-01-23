@@ -54,7 +54,7 @@ public class TaskEntityBuilder {
 
 
         // Retrieve base spec
-        TaskBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        TaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
 
 
@@ -117,7 +117,7 @@ public class TaskEntityBuilder {
                                 JacksonMapper.typeRef));
 
         // Retrieve base spec
-        TaskBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        TaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
 
         return EntityFactory.combine(

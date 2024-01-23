@@ -49,7 +49,7 @@ public class FunctionEntityBuilder {
                                 JacksonMapper.typeRef));
 
         // Retrieve Spec
-        FunctionBaseSpec<?> spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        FunctionBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
                 .convertValue(functionDTO.getSpec(), FunctionBaseSpec.class);
 
         return EntityFactory.combine(
