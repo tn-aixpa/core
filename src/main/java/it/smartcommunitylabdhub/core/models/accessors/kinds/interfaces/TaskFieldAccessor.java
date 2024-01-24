@@ -11,7 +11,7 @@ public interface TaskFieldAccessor<O extends TaskFieldAccessor<O>> extends Commo
     }
 
     @SuppressWarnings("unchecked")
-    default Map<String, Object> getVolumeMounts() {
+    default Map<String, Object> getNodeSelector() {
         return mapHasField(getSpecs(), "node_selector")
                 ? (Map<String, Object>) getSpecs().get("node_selector")
                 : null;
