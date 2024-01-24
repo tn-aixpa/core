@@ -44,16 +44,6 @@ public interface FunctionFieldAccessor<O extends FunctionFieldAccessor<O>> exten
                 getMetadata().get("update"), "datetime") : null;
     }
 
-    // COMMENT: those below are SPEC fuction common fields
-    // command:string,
-    // args:List<String>????,
-    // build: Map<String, Object> -> {..... , commands:List<String>}
-    // image:string,
-    // description:string ,
-    // volumes:List<Map<String, Object>> ->
-    // [{name:{'secret':{'secretName':"Username"}}}],
-    // volume_mounts:List<Map<String, String>>,
-    // env:List<Map<String, String>>
 
     default String getCommand() {
         return mapHasField(getSpecs(), "command") ? (String) getSpecs().get("command") : null;
@@ -79,24 +69,5 @@ public interface FunctionFieldAccessor<O extends FunctionFieldAccessor<O>> exten
 
     default String getDefaultHandler() {
         return mapHasField(getSpecs(), "default_handler") ? (String) getSpecs().get("default_handler") : null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default List<Map<String, Object>> getVolumes() {
-        return mapHasField(getSpecs(), "volumes") ? (List<Map<String, Object>>) getSpecs().get("volumes") : null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default List<Map<String, Object>> getVolumeMounts() {
-        return mapHasField(getSpecs(), "volume_mounts")
-                ? (List<Map<String, Object>>) getSpecs().get("volume_mounts")
-                : null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default List<Map<String, String>> getEnv() {
-        return mapHasField(getSpecs(), "env")
-                ? (List<Map<String, String>>) getSpecs().get("env")
-                : null;
     }
 }

@@ -16,8 +16,8 @@ public class TaskBaseSpec extends BaseSpec {
 
     List<Map<String, Object>> volumes;
 
-    @JsonProperty("volume_mounts")
-    List<Map<String, Object>> volumeMounts;
+    @JsonProperty("node_selector")
+    Map<String, Object> nodeSelector;
 
     List<Map<String, Object>> env;
 
@@ -31,7 +31,7 @@ public class TaskBaseSpec extends BaseSpec {
 
         this.setFunction(concreteSpec.getFunction());
         this.setVolumes(concreteSpec.getVolumes());
-        this.setVolumeMounts(concreteSpec.getVolumeMounts());
+        this.setNodeSelector(concreteSpec.getNodeSelector());
         this.setEnv(concreteSpec.getEnv());
         this.setResources(concreteSpec.getResources());
         super.configure(data);

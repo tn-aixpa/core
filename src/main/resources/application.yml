@@ -38,7 +38,8 @@ runtime:
     image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-dbt:latest}
   mlrun:
     image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
-
+  container:
+    image: ${RUNTIME_CONTAINER_IMAGE:python:3.9-slim}
 
 # Spring Docs
 springdoc:

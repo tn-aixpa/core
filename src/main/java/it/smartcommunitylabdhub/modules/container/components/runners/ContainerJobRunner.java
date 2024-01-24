@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.accesso
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sDeploymentRunnable;
+import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.Accessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
@@ -29,14 +29,14 @@ import java.util.Optional;
  * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
  * you have to register it using the following annotation:
  *
- * @RunnerComponent(runtime = "container", task = "deploy")
+ * @RunnerComponent(runtime = "container", task = "job")
  */
-public class ContainerDeployRunner implements Runner {
+public class ContainerJobRunner implements Runner {
 
     private String image;
     private SpecRegistry<? extends Spec> specRegistry;
 
-    public ContainerDeployRunner(String image) {
+    public ContainerJobRunner(String image) {
 
         this.image = image;
         this.specRegistry = BeanProvider.getSpecRegistryBean(SpecRegistry.class)
@@ -54,19 +54,19 @@ public class ContainerDeployRunner implements Runner {
         RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
 
         return Optional.of(runDTO)
-                .map(r -> this.validateDeployRunDTO(r, runAccessor))
+                .map(r -> this.validateJobRunDTO(r, runAccessor))
                 .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
-
     }
 
     /**
-     * Return a K8sDeploymentRunnable
+     * Return a runnable of type K8sJobRunnable
      *
      * @param runDTO
      * @param runAccessor
-     * @return
+     * @return K8sJobRunnable
      */
-    private K8sDeploymentRunnable validateDeployRunDTO(Run runDTO, RunAccessor runAccessor) {
+    private K8sJobRunnable validateJobRunDTO(Run runDTO, RunAccessor runAccessor) {
+
 
         // Retrieve bean accessor field
         AccessorRegistry<? extends Accessor<Object>> accessorRegistry =
@@ -102,12 +102,11 @@ public class ContainerDeployRunner implements Runner {
                 .map(Object::toString)
                 .toArray(String[]::new);
 
-        // se e' un deployment
-        K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable.builder()
+        K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(runAccessor.getRuntime())
                 .task(runAccessor.getTask())
                 .image(image)
-                .entrypoint(functionContainerSpec.getEntrypoint())
+                .command(functionContainerSpec.getEntrypoint())
                 .args(args)
                 .envs(Map.of(
                         "PROJECT_NAME", runDTO.getProject(),
@@ -115,12 +114,10 @@ public class ContainerDeployRunner implements Runner {
                 .state(runFieldAccessor.getState())
                 .build();
 
-        // se e' un job do K8sJob
+        k8sJobRunnable.setId(runDTO.getId());
+        k8sJobRunnable.setProject(runDTO.getProject());
 
-        k8sDeploymentRunnable.setId(runDTO.getId());
-        k8sDeploymentRunnable.setProject(runDTO.getProject());
-
-        return k8sDeploymentRunnable;
+        return k8sJobRunnable;
 
     }
 }
