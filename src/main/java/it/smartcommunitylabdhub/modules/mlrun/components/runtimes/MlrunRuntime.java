@@ -13,7 +13,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.modules.mlrun.components.builders.MlrunMlrunBuilder;
 import it.smartcommunitylabdhub.modules.mlrun.components.runners.MlrunMlrunRunner;
@@ -40,7 +40,7 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec> {
     @Override
     public RunBaseSpec build(
             FunctionMlrunSpec funSpec,
-            TaskBaseSpec taskSpec,
+            K8sTaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
             String kind) {
 

@@ -15,6 +15,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.utils.BeanProvider;
+import it.smartcommunitylabdhub.core.utils.MapUtils;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 
@@ -33,12 +34,10 @@ import java.util.Optional;
  */
 public class ContainerDeployRunner implements Runner {
 
-    private String image;
     private SpecRegistry<? extends Spec> specRegistry;
 
     public ContainerDeployRunner(String image) {
 
-        this.image = image;
         this.specRegistry = BeanProvider.getSpecRegistryBean(SpecRegistry.class)
                 .orElseThrow(() -> new RuntimeException("SpecRegistry not found"));
     }
@@ -101,19 +100,23 @@ public class ContainerDeployRunner implements Runner {
                 .filter(Objects::nonNull)
                 .map(Object::toString)
                 .toArray(String[]::new);
-
-        // se e' un deployment
+        
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable.builder()
                 .runtime(runAccessor.getRuntime())
                 .task(runAccessor.getTask())
-                .image(image)
-                .entrypoint(functionContainerSpec.getEntrypoint())
                 .args(args)
-                .envs(Map.of(
-                        "PROJECT_NAME", runDTO.getProject(),
-                        "RUN_ID", runDTO.getId()))
+                .image(functionContainerSpec.getImage())
                 .state(runFieldAccessor.getState())
+                .envs(MapUtils.mergeMultipleMaps(Map.of(
+                                "PROJECT_NAME", runDTO.getProject(),
+                                "RUN_ID", runDTO.getId()),
+                        functionContainerSpec.getEnvs()))
                 .build();
+
+
+        Optional.of(functionContainerSpec.getEntrypoint())
+                .ifPresent(k8sDeploymentRunnable::setEntrypoint);
+
 
         // se e' un job do K8sJob
 

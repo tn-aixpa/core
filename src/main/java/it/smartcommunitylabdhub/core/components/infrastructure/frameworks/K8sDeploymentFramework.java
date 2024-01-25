@@ -124,7 +124,7 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
                 .name(containerName)
                 .image(runnable.getImage())
                 .imagePullPolicy("Always")
-                .command(getEntryPoint(runnable))
+                .command(getEntryPoint(runnable)) //TODO se c'e' il comando lo setto se no uso l'entrypoint se no niente.
                 .imagePullPolicy("IfNotPresent")
                 .envFrom(envVarsFromSource)
                 .env(envVars);

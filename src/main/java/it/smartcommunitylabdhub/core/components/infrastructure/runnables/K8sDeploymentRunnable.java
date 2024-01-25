@@ -2,10 +2,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.runnables;
 
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RunnableComponent;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.BaseRunnable;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Map;
 
@@ -13,6 +10,7 @@ import java.util.Map;
 @RunnableComponent(framework = "k8sdeployment")
 @Builder
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class K8sDeploymentRunnable extends BaseRunnable {

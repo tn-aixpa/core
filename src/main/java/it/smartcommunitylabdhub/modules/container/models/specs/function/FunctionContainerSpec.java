@@ -1,9 +1,11 @@
 package it.smartcommunitylabdhub.modules.container.models.specs.function;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,24 +18,31 @@ import java.util.Map;
 @SpecType(kind = "container", entity = EntityName.FUNCTION, factory = FunctionContainerSpec.class)
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
-    private String handler;
+    @NotBlank
     private String image;
+
+    @JsonProperty("base_image")
+    private String baseImage;
+    private String command;
     private String entrypoint;
     private List<Serializable> args;
+    private Map<String, String> envs;
 
     @Override
     public void configure(Map<String, Object> data) {
 
 
-        FunctionContainerSpec functionPythonSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+        FunctionContainerSpec functionContainerSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                 data, FunctionContainerSpec.class);
 
-        this.setHandler(functionPythonSpec.getHandler());
-        this.setImage(functionPythonSpec.getImage());
-        this.setArgs(functionPythonSpec.getArgs());
-        this.setEntrypoint(functionPythonSpec.getEntrypoint());
+        this.setCommand(functionContainerSpec.getCommand());
+        this.setImage(functionContainerSpec.getImage());
+        this.setBaseImage(functionContainerSpec.getBaseImage());
+        this.setArgs(functionContainerSpec.getArgs());
+        this.setEnvs(functionContainerSpec.getEnvs());
+        this.setEntrypoint(functionContainerSpec.getEntrypoint());
         super.configure(data);
 
-        this.setExtraSpecs(functionPythonSpec.getExtraSpecs());
+        this.setExtraSpecs(functionContainerSpec.getExtraSpecs());
     }
 }

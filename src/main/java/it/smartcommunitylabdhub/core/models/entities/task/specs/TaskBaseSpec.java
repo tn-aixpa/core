@@ -1,28 +1,17 @@
 package it.smartcommunitylabdhub.core.models.entities.task.specs;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.core.models.base.specs.BaseSpec;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.Map;
 
 @Getter
 @Setter
 public class TaskBaseSpec extends BaseSpec {
+
     String function;
-
-    List<Map<String, Object>> volumes;
-
-    @JsonProperty("node_selector")
-    Map<String, Object> nodeSelector;
-
-    List<Map<String, Object>> env;
-
-    Map<String, Object> resources;
-
 
     @Override
     public void configure(Map<String, Object> data) {
@@ -30,12 +19,10 @@ public class TaskBaseSpec extends BaseSpec {
                 data, TaskBaseSpec.class);
 
         this.setFunction(concreteSpec.getFunction());
-        this.setVolumes(concreteSpec.getVolumes());
-        this.setNodeSelector(concreteSpec.getNodeSelector());
-        this.setEnv(concreteSpec.getEnv());
-        this.setResources(concreteSpec.getResources());
+
         super.configure(data);
 
         this.setExtraSpecs(concreteSpec.getExtraSpecs());
     }
+
 }

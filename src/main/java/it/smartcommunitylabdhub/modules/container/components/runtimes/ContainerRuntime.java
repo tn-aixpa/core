@@ -15,7 +15,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.modules.container.components.builders.ContainerDeployBuilder;
 import it.smartcommunitylabdhub.modules.container.components.builders.ContainerJobBuilder;
@@ -25,7 +25,6 @@ import it.smartcommunitylabdhub.modules.container.models.specs.function.Function
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 @RuntimeComponent(runtime = "container")
@@ -34,7 +33,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
 
-    @Value("${runtime.container.image}")
     private String image;
 
     public ContainerRuntime(BuilderFactory builderFactory,
@@ -45,12 +43,14 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
     @Override
     public RunBaseSpec build(
             FunctionContainerSpec funSpec,
-            TaskBaseSpec taskSpec,
+            K8sTaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
             String kind) {
 
-        // Retrieve builder using task kind
+        // The image here will be used to deploy container
+        this.image = funSpec.getImage();
 
+        // Retrieve builder using task kind
         switch (kind) {
             case "deploy" -> {
 
@@ -88,7 +88,7 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
             }
 
             case "job" -> {
-                
+
                 TaskJobSpec taskJobSpec = specRegistry.createSpec(
                         "job",
                         EntityName.TASK,

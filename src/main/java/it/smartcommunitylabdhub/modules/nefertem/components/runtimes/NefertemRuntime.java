@@ -15,7 +15,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.modules.nefertem.components.builders.NefertemInferBuilder;
 import it.smartcommunitylabdhub.modules.nefertem.components.builders.NefertemMetricBuilder;
@@ -48,7 +48,7 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
     @Override
     public RunBaseSpec build(
             FunctionNefertemSpec funSpec,
-            TaskBaseSpec taskSpec,
+            K8sTaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
             String kind) {
 

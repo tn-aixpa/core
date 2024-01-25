@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.TaskEntityFilter;
@@ -129,7 +129,7 @@ public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, Ta
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        TaskBaseSpec taskSpec = specRegistry.createSpec(
+        K8sTaskBaseSpec taskSpec = specRegistry.createSpec(
                 taskDTO.getKind(),
                 EntityName.TASK,
                 taskDTO.getSpec());

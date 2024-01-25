@@ -9,7 +9,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.builde
 import it.smartcommunitylabdhub.core.annotations.infrastructure.BuilderComponent;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class BuilderFactory {
     private final Map<String, ? extends Builder<
             ? extends FunctionBaseSpec,
-            ? extends TaskBaseSpec,
+            ? extends K8sTaskBaseSpec,
             ? extends RunBaseSpec>> builderMap;
 
     /**
@@ -29,7 +29,7 @@ public class BuilderFactory {
      */
     public BuilderFactory(List<? extends Builder<
             ? extends FunctionBaseSpec,
-            ? extends TaskBaseSpec,
+            ? extends K8sTaskBaseSpec,
             ? extends RunBaseSpec>> builders) {
         builderMap = builders.stream()
                 .collect(Collectors.toMap(this::getBuilderFromAnnotation,
@@ -46,7 +46,7 @@ public class BuilderFactory {
      */
     private <B extends Builder<
             ? extends FunctionBaseSpec,
-            ? extends TaskBaseSpec,
+            ? extends K8sTaskBaseSpec,
             ? extends RunBaseSpec>> String getBuilderFromAnnotation(B builder) {
         Class<?> builderClass = builder.getClass();
         if (builderClass.isAnnotationPresent(BuilderComponent.class)) {
@@ -70,7 +70,7 @@ public class BuilderFactory {
     @SuppressWarnings("unchecked")
     public <B extends Builder<
             ? extends FunctionBaseSpec,
-            ? extends TaskBaseSpec,
+            ? extends K8sTaskBaseSpec,
             ? extends RunBaseSpec>> B getBuilder(String runtime, String task) {
 
         B concreteBuilder =
@@ -85,7 +85,7 @@ public class BuilderFactory {
 
     public Map<String, ? extends Builder<
             ? extends FunctionBaseSpec,
-            ? extends TaskBaseSpec,
+            ? extends K8sTaskBaseSpec,
             ? extends RunBaseSpec>> getBuilders(String runtime) {
         return builderMap.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith(runtime))

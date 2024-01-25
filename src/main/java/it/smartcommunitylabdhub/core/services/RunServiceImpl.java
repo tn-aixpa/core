@@ -17,7 +17,7 @@ import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBase
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
@@ -199,7 +199,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
         // Retrieve task
         return Optional.ofNullable(this.taskService.getTask(runBaseSpec.getTaskId()))
                 .map(taskDTO -> {
-                    TaskBaseSpec taskBaseSpec = specRegistry.createSpec(
+                    K8sTaskBaseSpec taskBaseSpec = specRegistry.createSpec(
                             taskDTO.getKind(),
                             EntityName.TASK,
                             taskDTO.getSpec());

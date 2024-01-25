@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtime
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ public abstract class BaseRuntime<F extends FunctionBaseSpec> implements Runtime
     protected Map<String, ? extends Runner> runners;
     protected Map<String, ? extends Builder<
             ? extends FunctionBaseSpec,
-            ? extends TaskBaseSpec,
+            ? extends K8sTaskBaseSpec,
             ? extends RunBaseSpec>> builders;
     private String runtime;
 
@@ -67,7 +67,7 @@ public abstract class BaseRuntime<F extends FunctionBaseSpec> implements Runtime
     @SuppressWarnings("unchecked")
     public <B extends Builder<
             ? extends FunctionBaseSpec,
-            ? extends TaskBaseSpec,
+            ? extends K8sTaskBaseSpec,
             ? extends RunBaseSpec>> B getBuilder(String task) {
 
         return Optional.ofNullable((B) builders.get(runtime + "+" + task))

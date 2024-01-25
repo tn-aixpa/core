@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
@@ -54,8 +54,8 @@ public class TaskEntityBuilder {
 
 
         // Retrieve base spec
-        TaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
-                .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
+        K8sTaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+                .convertValue(taskDTO.getSpec(), K8sTaskBaseSpec.class);
 
 
         return EntityFactory.combine(
@@ -117,8 +117,8 @@ public class TaskEntityBuilder {
                                 JacksonMapper.typeRef));
 
         // Retrieve base spec
-        TaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
-                .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
+        K8sTaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+                .convertValue(taskDTO.getSpec(), K8sTaskBaseSpec.class);
 
         return EntityFactory.combine(
                 task, taskDTO, builder -> builder

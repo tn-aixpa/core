@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -15,7 +15,7 @@ public interface Runtime<F extends FunctionBaseSpec> {
 
     RunBaseSpec build(
             F funcSpec,
-            TaskBaseSpec taskSpec,
+            K8sTaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
             @NotNull String kind
     );

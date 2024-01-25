@@ -10,7 +10,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtime
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,7 +35,7 @@ public class InfrastructureConfig {
     protected BuilderFactory builderFactory(
             List<Builder<
                     ? extends FunctionBaseSpec,
-                    ? extends TaskBaseSpec,
+                    ? extends K8sTaskBaseSpec,
                     ? extends RunBaseSpec>> builders) {
         return new BuilderFactory(builders);
     }
