@@ -113,7 +113,7 @@ public class LogSerivceImpl implements LogService {
                             }
                         }).collect(Collectors.toList()),
                 pageable,
-                logPage.getContent().size()
+                logPage.getTotalElements()
         );
     }
 

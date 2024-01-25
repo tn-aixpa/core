@@ -182,7 +182,7 @@ public class FunctionContextServiceImpl extends ContextService<FunctionEntity, F
                             .stream()
                             .map(function -> functionDTOBuilder.build(function, false))
                             .collect(Collectors.toList()),
-                    pageable, functionPage.getContent().size()
+                    pageable, functionPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(

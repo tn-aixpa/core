@@ -150,7 +150,7 @@ public class ArtifactContextServiceImpl extends ContextService<ArtifactEntity, A
                             .map((artifact) -> {
                                 return artifactDTOBuilder.build(artifact, false);
                             }).collect(Collectors.toList()),
-                    pageable, artifactPage.getContent().size()
+                    pageable, artifactPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(
