@@ -96,7 +96,7 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
                             .stream()
                             .map(run -> runDTOBuilder.build(run))
                             .collect(Collectors.toList()),
-                    pageable, runPage.getContent().size()
+                    pageable, runPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(

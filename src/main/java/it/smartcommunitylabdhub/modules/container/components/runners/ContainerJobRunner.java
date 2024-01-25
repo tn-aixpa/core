@@ -15,6 +15,7 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.utils.BeanProvider;
+import it.smartcommunitylabdhub.core.utils.MapUtils;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 
@@ -33,12 +34,10 @@ import java.util.Optional;
  */
 public class ContainerJobRunner implements Runner {
 
-    private String image;
     private SpecRegistry<? extends Spec> specRegistry;
 
     public ContainerJobRunner(String image) {
 
-        this.image = image;
         this.specRegistry = BeanProvider.getSpecRegistryBean(SpecRegistry.class)
                 .orElseThrow(() -> new RuntimeException("SpecRegistry not found"));
     }
@@ -97,22 +96,28 @@ public class ContainerJobRunner implements Runner {
                     "Invalid argument: args not found in runDTO spec");
         }
 
-        String[] args = functionContainerSpec.getArgs().stream()
-                .filter(Objects::nonNull)
-                .map(Object::toString)
-                .toArray(String[]::new);
-
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(runAccessor.getRuntime())
                 .task(runAccessor.getTask())
-                .image(image)
-                .command(functionContainerSpec.getEntrypoint())
-                .args(args)
-                .envs(Map.of(
-                        "PROJECT_NAME", runDTO.getProject(),
-                        "RUN_ID", runDTO.getId()))
+                .image(functionContainerSpec.getImage())
                 .state(runFieldAccessor.getState())
+                .envs(MapUtils.mergeMultipleMaps(Map.of(
+                                "PROJECT_NAME", runDTO.getProject(),
+                                "RUN_ID", runDTO.getId()),
+                        Optional.ofNullable(functionContainerSpec.getEnvs()).orElse(Map.of())))
                 .build();
+
+        Optional.ofNullable(functionContainerSpec.getArgs())
+                .ifPresent(args -> k8sJobRunnable.setArgs(
+                                args.stream()
+                                        .filter(Objects::nonNull)
+                                        .map(Object::toString)
+                                        .toArray(String[]::new)
+                        )
+                );
+
+        Optional.ofNullable(functionContainerSpec.getCommand())
+                .ifPresent(k8sJobRunnable::setCommand);
 
         k8sJobRunnable.setId(runDTO.getId());
         k8sJobRunnable.setProject(runDTO.getProject());

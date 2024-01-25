@@ -127,7 +127,7 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
 
                         return projectDTOBuilder.build(project, artifacts, functions, workflows,
                                 dataItems, true);
-                    }).collect(Collectors.toList()), pageable, projectPage.getContent().size());
+                    }).collect(Collectors.toList()), pageable, projectPage.getTotalElements());
         } catch (CustomException e) {
             throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),

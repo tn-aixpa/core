@@ -9,7 +9,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +24,7 @@ public class FunctionContainerSpec extends FunctionBaseSpec {
     private String baseImage;
     private String command;
     private String entrypoint;
-    private List<Serializable> args;
+    private List<String> args;
     private Map<String, String> envs;
 
     @Override

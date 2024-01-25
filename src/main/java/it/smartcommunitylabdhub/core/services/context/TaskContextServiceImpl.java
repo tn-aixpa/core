@@ -112,7 +112,7 @@ public class TaskContextServiceImpl
                             .stream()
                             .map(task -> taskDTOBuilder.build(task))
                             .collect(Collectors.toList()),
-                    pageable, taskPage.getContent().size()
+                    pageable, taskPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(

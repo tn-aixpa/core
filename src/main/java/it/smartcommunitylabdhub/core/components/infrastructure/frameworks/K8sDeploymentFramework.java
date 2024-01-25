@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -124,16 +125,19 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
                 .name(containerName)
                 .image(runnable.getImage())
                 .imagePullPolicy("Always")
-                .command(getEntryPoint(runnable)) //TODO se c'e' il comando lo setto se no uso l'entrypoint se no niente.
                 .imagePullPolicy("IfNotPresent")
                 .envFrom(envVarsFromSource)
                 .env(envVars);
+
+//        if present entry point set it
+        Optional.ofNullable(runnable.getEntrypoint())
+                .ifPresent(entrypoint -> container.command(getEntryPoint(runnable)));
 
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
                 .containers(Collections.singletonList(container))
-                .restartPolicy("Never");
+                .restartPolicy("Always");
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec()
@@ -144,6 +148,8 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
         V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
                 // .completions(1)
                 // .backoffLimit(6)    // is the default value
+                .selector(new V1LabelSelector()
+                        .matchLabels(labels))
                 .template(podTemplateSpec);
 
         // Create the V1Deployment object with metadata and JobSpec
@@ -258,9 +264,10 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
 
     // Concat command with arguments
     private List<String> getEntryPoint(K8sDeploymentRunnable runnable) {
-        return List.of(Stream.concat(
-                Stream.of(runnable.getEntrypoint()),
-                Arrays.stream(runnable.getArgs())).toArray(String[]::new));
+        return Stream.concat(
+                Stream.of(Optional.ofNullable(runnable.getEntrypoint()).orElse("")),
+                Optional.ofNullable(runnable.getArgs()).stream().flatMap(Arrays::stream)
+        ).collect(Collectors.toList());
     }
 
     // Generate and return job name

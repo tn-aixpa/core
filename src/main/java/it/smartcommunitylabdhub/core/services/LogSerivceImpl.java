@@ -42,7 +42,7 @@ public class LogSerivceImpl implements LogService {
                             .map(log -> logDTOBuilder.build(log))
                             .collect(Collectors.toList()),
                     pageable,
-                    logPage.getContent().size());
+                    logPage.getTotalElements());
 
         } catch (CustomException e) {
             throw new CoreException(

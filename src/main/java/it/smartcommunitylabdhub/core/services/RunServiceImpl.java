@@ -94,7 +94,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                     runPage.getContent().stream().map(run -> runDTOBuilder.build(run))
                             .collect(Collectors.toList()),
                     pageable,
-                    runPage.getContent().size());
+                    runPage.getTotalElements());
 
         } catch (CustomException e) {
             throw new CoreException(ErrorList.INTERNAL_SERVER_ERROR.getValue(),

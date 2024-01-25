@@ -109,7 +109,7 @@ public class DataItemContextServiceImpl extends ContextService<DataItemEntity, D
                             .map((dataItem) -> {
                                 return dataItemDTOBuilder.build(dataItem, false);
                             }).collect(Collectors.toList()),
-                    pageable, dataItemPage.getContent().size()
+                    pageable, dataItemPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(

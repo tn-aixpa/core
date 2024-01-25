@@ -63,7 +63,7 @@ public class DataItemServiceImpl extends AbstractSpecificationService<DataItemEn
                                     dataItemDTOBuilder.build(dataItem, false))
                             .collect(Collectors.toList()),
                     pageable,
-                    dataItemPage.getContent().size());
+                    dataItemPage.getTotalElements());
 
         } catch (CustomException e) {
             throw new CoreException(

@@ -83,7 +83,7 @@ public class WorkflowServiceImpl extends AbstractSpecificationService<WorkflowEn
                             .map((workflow) -> workflowDTOBuilder.build(workflow, false))
                             .collect(Collectors.toList()),
                     pageable,
-                    workflowPage.getContent().size());
+                    workflowPage.getTotalElements());
         } catch (CustomException e) {
             throw new CoreException(
                     "InternalServerError",

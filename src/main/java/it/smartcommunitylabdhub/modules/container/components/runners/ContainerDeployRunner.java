@@ -96,29 +96,29 @@ public class ContainerDeployRunner implements Runner {
                     "Invalid argument: args not found in runDTO spec");
         }
 
-        String[] args = functionContainerSpec.getArgs().stream()
-                .filter(Objects::nonNull)
-                .map(Object::toString)
-                .toArray(String[]::new);
-        
+
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable.builder()
                 .runtime(runAccessor.getRuntime())
                 .task(runAccessor.getTask())
-                .args(args)
                 .image(functionContainerSpec.getImage())
                 .state(runFieldAccessor.getState())
                 .envs(MapUtils.mergeMultipleMaps(Map.of(
                                 "PROJECT_NAME", runDTO.getProject(),
                                 "RUN_ID", runDTO.getId()),
-                        functionContainerSpec.getEnvs()))
+                        Optional.ofNullable(functionContainerSpec.getEnvs()).orElse(Map.of())))
                 .build();
 
+        Optional.ofNullable(functionContainerSpec.getArgs())
+                .ifPresent(args -> k8sDeploymentRunnable.setArgs(
+                                args.stream()
+                                        .filter(Objects::nonNull)
+                                        .map(Object::toString)
+                                        .toArray(String[]::new)
+                        )
+                );
 
-        Optional.of(functionContainerSpec.getEntrypoint())
+        Optional.ofNullable(functionContainerSpec.getEntrypoint())
                 .ifPresent(k8sDeploymentRunnable::setEntrypoint);
-
-
-        // se e' un job do K8sJob
 
         k8sDeploymentRunnable.setId(runDTO.getId());
         k8sDeploymentRunnable.setProject(runDTO.getProject());

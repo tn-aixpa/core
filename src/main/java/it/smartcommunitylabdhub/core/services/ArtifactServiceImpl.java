@@ -64,7 +64,7 @@ public class ArtifactServiceImpl extends AbstractSpecificationService<ArtifactEn
                             .map((artifact) -> artifactDTOBuilder.build(artifact, false))
                             .collect(Collectors.toList()),
                     pageable,
-                    artifactPage.getContent().size()
+                    artifactPage.getTotalElements()
             );
 
         } catch (CustomException e) {

@@ -111,7 +111,7 @@ public class WorkflowContextServiceImpl extends ContextService<WorkflowEntity, W
                             .map((workflow) -> {
                                 return workflowDTOBuilder.build(workflow, false);
                             }).collect(Collectors.toList()),
-                    pageable, workflowPage.getContent().size()
+                    pageable, workflowPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(

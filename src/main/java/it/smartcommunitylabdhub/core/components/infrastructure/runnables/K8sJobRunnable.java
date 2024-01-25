@@ -1,38 +1,37 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.runnables;
 
-import java.util.Map;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RunnableComponent;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.BaseRunnable;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.Map;
 
 
 @RunnableComponent(framework = "k8sjob")
 @Builder
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class K8sJobRunnable extends BaseRunnable {
 
-	String runtime;
+    String runtime;
 
-	String task;
+    String task;
 
-	String image;
+    String image;
 
-	String command;
+    String command;
 
-	String state;
+    String state;
 
-	String[] args;
+    String[] args;
 
-	Map<String, String> envs;
+    Map<String, String> envs;
 
-	@Override
-	public String framework() {
-		return "k8sjob";
-	}
+    @Override
+    public String framework() {
+        return "k8sjob";
+    }
 
 }

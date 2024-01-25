@@ -84,7 +84,7 @@ public class FunctionServiceImpl extends AbstractSpecificationService<FunctionEn
                             .map(function -> functionDTOBuilder.build(function, false))
                             .collect(Collectors.toList()),
                     pageable,
-                    functionPage.getContent().size());
+                    functionPage.getTotalElements());
         } catch (CustomException e) {
             throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),

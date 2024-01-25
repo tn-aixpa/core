@@ -78,7 +78,7 @@ public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, Ta
                             .map(task -> taskDTOBuilder.build(task))
                             .collect(Collectors.toList()),
                     pageable,
-                    taskPage.getContent().size());
+                    taskPage.getTotalElements());
 
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(),
