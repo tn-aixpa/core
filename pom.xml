@@ -11,7 +11,7 @@
     </parent>
     <groupId>it.smartcommunitylabdhub</groupId>
     <artifactId>core</artifactId>
-    <version>0.0.21</version>
+    <version>0.0.22</version>
     <name>core</name>
     <description>Digital Hub Core</description>
     <properties>
