@@ -26,12 +26,12 @@ import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -177,62 +177,60 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
 
         // Define a function with parameters
-        TriFunction<String, String,
-                StateMachine<
-                        RunState,
-                        RunEvent,
-                        Map<String, Object>>,
-                Void> checkJobStatus = (jName, cName, fMachine) -> {
-            try {
-                V1Job v1Job = batchV1Api.readNamespacedJob(jName, namespace, null);
-                V1JobStatus v1JobStatus = v1Job.getStatus();
+        Function<String, Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>> checkJobStatus =
+                jName -> cName -> fMachine -> {
+                    try {
+                        V1Job v1Job = batchV1Api.readNamespacedJob(jName, namespace, null);
+                        V1JobStatus v1JobStatus = v1Job.getStatus();
 
-                // Check the Job status
-                if (Objects.requireNonNull(v1JobStatus).getSucceeded() != null
-                        && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
+                        // Check the Job status
+                        if (Objects.requireNonNull(v1JobStatus).getSucceeded() != null
+                                && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
 
 
-                    // Job has completed successfully
-                    log.info("Job completed successfully.");
-                    // Update state machine and update runDTO
-                    fMachine.goToState(RunState.COMPLETED);
-                    Run runDTO = runService.getRun(runnable.getId());
-                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
-                    runService.updateRun(runDTO, runDTO.getId());
+                            // Job has completed successfully
+                            log.info("Job completed successfully.");
+                            // Update state machine and update runDTO
+                            fMachine.goToState(RunState.COMPLETED);
+                            Run runDTO = runService.getRun(runnable.getId());
+                            runDTO.getStatus().put("state", fsm.getCurrentState().name());
+                            runService.updateRun(runDTO, runDTO.getId());
 
-                    // Log pod status
-                    logPod(jName, cName, namespace, runnable);
-                    // Delete job and pod
-                    deleteAssociatedPodAndJob(jName, namespace, runnable);
+                            // Log pod status
+                            logPod(jName, cName, namespace, runnable);
+                            // Delete job and pod
+                            deleteAssociatedPodAndJob(jName, namespace, runnable);
 
-                } else if (Objects.requireNonNull(v1JobStatus).getFailed() != null) {
-                    // Job has failed delete job and pod
-                    deleteAssociatedPodAndJob(jName, namespace, runnable);
+                        } else if (Objects.requireNonNull(v1JobStatus).getFailed() != null) {
+                            // Job has failed delete job and pod
+                            deleteAssociatedPodAndJob(jName, namespace, runnable);
 
-                } else if (v1JobStatus.getActive() != null && v1JobStatus.getActive() > 0) {
-                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
-                        fMachine.goToState(RunState.READY);
-                        fMachine.goToState(RunState.RUNNING);
+                        } else if (v1JobStatus.getActive() != null && v1JobStatus.getActive() > 0) {
+                            if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
+                                fMachine.goToState(RunState.READY);
+                                fMachine.goToState(RunState.RUNNING);
+                            }
+                            log.warn("Job is running...");
+                            logPod(jName, cName, namespace, runnable);
+                        } else {
+                            String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1JobStatus);
+                            log.warn("Job is in an unknown state : " + v1JobStatusString);
+                            writeLog(runnable, v1JobStatusString);
+                        }
+
+                    } catch (ApiException | JsonProcessingException | CoreException e) {
+                        deleteAssociatedPodAndJob(jName, namespace, runnable);
+                        throw new StopPoller(e.getMessage());
                     }
-                    log.warn("Job is running...");
-                    logPod(jName, cName, namespace, runnable);
-                } else {
-                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1JobStatus);
-                    log.warn("Job is in an unknown state : " + v1JobStatusString);
-                    writeLog(runnable, v1JobStatusString);
-                }
 
-            } catch (ApiException | JsonProcessingException | CoreException e) {
-                deleteAssociatedPodAndJob(jName, namespace, runnable);
-                throw new StopPoller(e.getMessage());
-            }
-
-            return null;
-        };
+                    return null;
+                };
 
         // Using the step method with explicit arguments
         pollingService.createPoller(jobName, List.of(
-                WorkflowFactory.builder().step(checkJobStatus, jobName, containerName, fsm).build()
+                WorkflowFactory.builder().step((Function<?, ?>) i ->
+                        checkJobStatus.apply(jobName).apply(containerName).apply(fsm)
+                ).build()
         ), 1, true, false);
 
         // Start job poller

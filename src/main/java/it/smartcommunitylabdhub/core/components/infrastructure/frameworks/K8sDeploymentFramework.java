@@ -26,12 +26,12 @@ import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -195,21 +195,17 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
 
 
         // Define a function with parameters
-        TriFunction<String, String,
-                StateMachine<
-                        RunState,
-                        RunEvent,
-                        Map<String, Object>>,
-                Void> checkDeploymentStatus = (dName, cName, fMachine) -> {
-            try {
+        Function<String, Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>> checkDeploymentStatus =
+                dName -> cName -> fMachine -> {
+                    try {
 
-                V1Deployment v1Deployment = appsV1Api.readNamespacedDeployment(dName, namespace, null);
-                V1DeploymentStatus v1DeploymentStatus = v1Deployment.getStatus();
+                        V1Deployment v1Deployment = appsV1Api.readNamespacedDeployment(dName, namespace, null);
+                        V1DeploymentStatus v1DeploymentStatus = v1Deployment.getStatus();
 
-                assert v1DeploymentStatus != null;
-                Objects.requireNonNull(v1DeploymentStatus.getConditions()).forEach(
-                        v -> log.info(v.getStatus())
-                );
+                        assert v1DeploymentStatus != null;
+                        Objects.requireNonNull(v1DeploymentStatus.getConditions()).forEach(
+                                v -> log.info(v.getStatus())
+                        );
 //                // Check the Deployment status
 //                if (Objects.requireNonNull(v1DeploymentStatus).getReadyReplicas() != null
 //                        && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
@@ -245,17 +241,19 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
 //                    writeLog(runnable, v1JobStatusString);
 //                }
 
-            } catch (ApiException | CoreException e) {
-                deleteAssociatedPodAndJob(dName, namespace, runnable);
-                throw new StopPoller(e.getMessage());
-            }
+                    } catch (ApiException | CoreException e) {
+                        deleteAssociatedPodAndJob(dName, namespace, runnable);
+                        throw new StopPoller(e.getMessage());
+                    }
 
-            return null;
-        };
+                    return null;
+                };
 
         // Using the step method with explicit arguments
         pollingService.createPoller(deploymentName, List.of(
-                WorkflowFactory.builder().step(checkDeploymentStatus, deploymentName, containerName, fsm).build()
+                WorkflowFactory.builder().step((Function<?, ?>) i ->
+                        checkDeploymentStatus.apply(deploymentName).apply(containerName).apply(fsm)
+                ).build()
         ), 1, true, false);
 
         // Start job poller

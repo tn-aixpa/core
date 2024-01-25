@@ -10,8 +10,6 @@
 
 package it.smartcommunitylabdhub.core.components.workflows.factory;
 
-import org.apache.commons.lang3.function.TriFunction;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -66,11 +64,6 @@ public class WorkflowFactory {
     @SuppressWarnings("unchecked")
     public <I, O> WorkflowFactory step(Function<I[], O> step, I... argument) {
         steps.add(input -> step.apply(argument));
-        return this;
-    }
-
-    public <A, B, C, O> WorkflowFactory step(TriFunction<A, B, C, O> step, A a, B b, C c) {
-        steps.add(input -> step.apply(a, b, c));
         return this;
     }
 

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
 import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.core.components.pollers.PollingService;
 import it.smartcommunitylabdhub.core.models.entities.log.Log;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.services.interfaces.LogService;
@@ -29,6 +30,9 @@ public class RunController {
 
     @Autowired
     LogService logService;
+
+    @Autowired
+    PollingService pollingService;
 
     @Operation(summary = "Get a run", description = "Given an uuid return the related Run")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
@@ -77,5 +81,16 @@ public class RunController {
             @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
             @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade) {
         return ResponseEntity.ok(this.runService.deleteRun(uuid, cascade));
+    }
+
+    @Operation(summary = "Stop a run", description = "Stop a specific run")
+    @PostMapping(path = "/{uuid}/stop", consumes = {MediaType.APPLICATION_JSON_VALUE,
+            "application/x-yaml"}, produces = "application/json; charset=UTF-8")
+    public ResponseEntity<Boolean> stopRun(@ValidateField @PathVariable String uuid,
+                                           @RequestBody Map<String, String> obj) {
+        System.out.println("Stop polling...");
+
+        pollingService.stopOne(obj.get("name"));
+        return ResponseEntity.ok(true);
     }
 }
