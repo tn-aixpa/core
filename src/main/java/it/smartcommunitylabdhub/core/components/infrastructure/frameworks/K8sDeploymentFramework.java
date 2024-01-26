@@ -1,9 +1,10 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.frameworks;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
-import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.FrameworkComponent;
@@ -26,9 +27,13 @@ import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.Assert;
 
 import java.util.*;
 import java.util.function.Function;
@@ -37,16 +42,16 @@ import java.util.stream.Stream;
 
 @Slf4j
 @FrameworkComponent(framework = "k8sdeployment")
-public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> {
+@ConditionalOnBean(ApiClient.class)
+public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>, InitializingBean {
+
+//     @Autowired
+//     BatchV1Api batchV1Api;
 
     @Autowired
-    BatchV1Api batchV1Api;
-
-    @Autowired
-    AppsV1Api appsV1Api;
-
-    @Autowired
-    CoreV1Api coreV1Api;
+    private ApiClient apiClient;
+    private AppsV1Api appsV1Api;
+    private CoreV1Api coreV1Api;
 
     @Autowired
     PollingService pollingService;
@@ -71,7 +76,16 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
     private String namespace;
 
 
-    // TODO: instead of void define a Result object that have to be merged with the run from the
+    
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.notNull(apiClient, "k8s api client is required");
+        appsV1Api = new AppsV1Api(apiClient);
+        coreV1Api = new CoreV1Api(apiClient);        
+    }
+
+// TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
     public void execute(K8sDeploymentRunnable runnable) throws CoreException {
@@ -369,17 +383,17 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
                             log.error(e.toString());
                         }
 
-                        // Delete the Deployment
-                        V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
-                                jobName, "default", null,
-                                null, null, null,
-                                null, null);
+                        // // Delete the Deployment
+                        // V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
+                        //         jobName, "default", null,
+                        //         null, null, null,
+                        //         null, null);
 
-                        try {
-                            writeLog(runnable, JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(deleteStatus));
-                        } catch (JsonProcessingException e) {
-                            log.error(e.toString());
-                        }
+                        // try {
+                        //     writeLog(runnable, JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(deleteStatus));
+                        // } catch (JsonProcessingException e) {
+                        //     log.error(e.toString());
+                        // }
                         log.info("Deployment deleted: " + jobName);
                     }
                 }
