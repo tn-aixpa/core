@@ -21,7 +21,7 @@ spring:
         default-page-size: '10'
   h2:
     console:
-      enabled: ${H2_CONSOLE:true}
+      enabled: ${H2_CONSOLE:false}
 
 # Management Endpoints
 management:
@@ -55,8 +55,8 @@ kaniko:
 kubernetes:
   namespace: ${K8S_NAMESPACE:default}
   config:
-    config-map: ${DH_CONFIG_COMMON_MAPS:digitalhub-common-env}
-    secret: ${DH_CONFIG_COMMON_SECRETS:digitalhub-common-creds}
+    config-map: ${DH_CONFIG_COMMON_MAPS:}
+    secret: ${DH_CONFIG_COMMON_SECRETS:}
 
 # Application endpoint
 application:
@@ -69,35 +69,12 @@ event-queue:
   services:
     rabbit:
       connection:
-        host: ${RABBITMQ_HOST:192.168.49.1}
-        port: ${RABBITMQ_PORT:5672 }
-        username: ${RABBITMQ_USER:guest}
-        password: ${RABBITMQ_PASSWORD:guest}
+        host: ${RABBITMQ_HOST:}
+        port: ${RABBITMQ_PORT:}
+        username: ${RABBITMQ_USER:}
+        password: ${RABBITMQ_PASSWORD:}
         virtual-host: ${RABBITMQ_VHOST:/}
-      queue-name: ${RABBITMQ_QUEUE:dhCoreQueue}
+      queue-name: ${RABBITMQ_QUEUE:}
       entity-topic: ${RABBITMQ_TOPIC:entityTopic}
       entity-routing-key: ${RABBITMQ_ROUTING_KEY:entityRoutingKey}
       enabled: ${RABBITMQ_ENABLE:false}
-
-
-
-
-# OLD SPRING CLOUD CONFIG
-#
-#  cloud:
-#    stream:
-#      bindings:
-#        entity-out-0:
-#          destination: entityTopic
-#          group: dhCoreQueue
-#          content-type: application/json
-#          binder: rabbit
-#      rabbit:
-#        bindings:
-#          entity-out-0:
-#            producer:
-#              bind-queue: true
-#              declare-exchange: true
-#              exchange-durable: true
-#              routing-key: 'entityRoutingKey'
-#              exchangeType: topic     # Set the exchange type (e.g., topic, direct, fanout)
