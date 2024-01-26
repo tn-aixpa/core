@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.frameworks;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -26,9 +28,13 @@ import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.Assert;
 
 import java.util.*;
 import java.util.function.Function;
@@ -36,12 +42,13 @@ import java.util.stream.Stream;
 
 @Slf4j
 @FrameworkComponent(framework = "k8sjob")
-public class K8sJobFramework implements Framework<K8sJobRunnable> {
+@ConditionalOnBean(ApiClient.class)
+public class K8sJobFramework implements Framework<K8sJobRunnable>,InitializingBean {
+
 
     @Autowired
+    private ApiClient apiClient;
     BatchV1Api batchV1Api;
-
-    @Autowired
     CoreV1Api coreV1Api;
 
     @Autowired
@@ -65,6 +72,13 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
 
     @Value("${kubernetes.namespace}")
     private String namespace;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.notNull(apiClient, "k8s api client is required");
+        coreV1Api = new CoreV1Api(apiClient);       
+        batchV1Api = new BatchV1Api(apiClient); 
+    }
 
 
     // TODO: instead of void define a Result object that have to be merged with the run from the
