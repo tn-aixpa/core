@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.runnab
 import java.io.Serializable;
 
 public interface Runnable extends Serializable {
-    String framework();
+    String getFramework();
 
     String getProject();
 

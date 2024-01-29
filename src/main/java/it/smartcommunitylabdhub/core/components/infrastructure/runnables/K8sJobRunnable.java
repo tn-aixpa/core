@@ -30,7 +30,7 @@ public class K8sJobRunnable extends BaseRunnable {
     Map<String, String> envs;
 
     @Override
-    public String framework() {
+    public String getFramework() {
         return "k8sjob";
     }
 

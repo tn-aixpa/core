@@ -23,6 +23,7 @@ import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFi
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.FunctionService;
 import it.smartcommunitylabdhub.core.services.interfaces.RunService;
+import it.smartcommunitylabdhub.core.services.interfaces.RunnableStoreService;
 import it.smartcommunitylabdhub.core.services.interfaces.TaskService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import jakarta.transaction.Transactional;
@@ -64,7 +65,6 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
     @Autowired
     RunEntityFilter runEntityFilter;
 
-
     @Autowired
     RunEntityBuilder runEntityBuilder;
 
@@ -73,6 +73,9 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
+
+    @Autowired
+    RunnableStoreService<Runnable> runnableStoreService;
 
     @Override
     public Page<Run> getRuns(Map<String, String> filter, Pageable pageable) {
@@ -261,6 +264,12 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                                             // Create Runnable
                                             Runnable runnable = runtime.run(
                                                     runDTOBuilder.build(run)
+                                            );
+
+                                            // Store runnable
+                                            runnableStoreService.store(
+                                                    runnable.getId(),
+                                                    runnable
                                             );
 
                                             // Dispatch Runnable

@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.frameworks;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
@@ -27,11 +26,9 @@ import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
 
@@ -42,50 +39,40 @@ import java.util.stream.Stream;
 
 @Slf4j
 @FrameworkComponent(framework = "k8sdeployment")
-@ConditionalOnBean(ApiClient.class)
+//@ConditionalOnBean(ApiClient.class)
 public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>, InitializingBean {
 
 //     @Autowired
 //     BatchV1Api batchV1Api;
 
     @Autowired
+    PollingService pollingService;
+    @Autowired
+    RunStateMachine runStateMachine;
+    @Autowired
+    LogEntityBuilder logEntityBuilder;
+    @Autowired
+    LogService logService;
+    @Autowired
+    RunService runService;
+    @Autowired
+    K8sBuilderHelper k8sBuilderHelper;
+    @Autowired
     private ApiClient apiClient;
     private AppsV1Api appsV1Api;
     private CoreV1Api coreV1Api;
-
-    @Autowired
-    PollingService pollingService;
-
-    @Autowired
-    RunStateMachine runStateMachine;
-
-    @Autowired
-    LogEntityBuilder logEntityBuilder;
-
-    @Autowired
-    LogService logService;
-
-    @Autowired
-    RunService runService;
-
-    @Autowired
-    K8sBuilderHelper k8sBuilderHelper;
-
-
     @Value("${kubernetes.namespace}")
     private String namespace;
 
-
-    
 
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(apiClient, "k8s api client is required");
         appsV1Api = new AppsV1Api(apiClient);
-        coreV1Api = new CoreV1Api(apiClient);        
+        coreV1Api = new CoreV1Api(apiClient);
     }
 
-// TODO: instead of void define a Result object that have to be merged with the run from the
+    // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
     public void execute(K8sDeploymentRunnable runnable) throws CoreException {
@@ -264,14 +251,14 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
                 };
 
         // Using the step method with explicit arguments
-        pollingService.createPoller(deploymentName, List.of(
+        pollingService.createPoller(runnable.getId(), List.of(
                 WorkflowFactory.builder().step((Function<?, ?>) i ->
                         checkDeploymentStatus.apply(deploymentName).apply(containerName).apply(fsm)
                 ).build()
         ), 1, true, false);
 
         // Start job poller
-        pollingService.startOne(deploymentName);
+        pollingService.startOne(runnable.getId());
     }
 
     // Concat command with arguments
