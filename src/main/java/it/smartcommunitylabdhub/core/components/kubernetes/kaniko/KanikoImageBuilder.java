@@ -2,12 +2,12 @@ package it.smartcommunitylabdhub.core.components.kubernetes.kaniko;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.batch.v1.Job;
-import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.ScalableResource;
 import io.github.cdimascio.dotenv.Dotenv;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.BatchV1Api;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 
@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -54,148 +55,170 @@ public class KanikoImageBuilder {
     // [x]: DONE! this builder work for FOLDER strategy building.
     @Async
     public static CompletableFuture<?> buildDockerImage(
-            KubernetesClient kubernetesClient,
+            ApiClient apiClient,
             DockerBuildConfig buildConfig,
-            JobBuildConfig jobBuildConfig)
-            throws IOException {
+            JobBuildConfig jobBuildConfig) {
 
-        // Generate the Dockerfile
-        String dockerFileContent = DockerfileGenerator.generateDockerfile(buildConfig);
-        String javaFile = Files.readString(
-                Path.of("/home/ltrubbiani/Labs/digitalhub-core/kubernetes/target/HelloWorld.java"));
-        // Create config map
-        ConfigMap configMap = new ConfigMapBuilder()
-                .addToData("Dockerfile", dockerFileContent)
-                .addToData("HelloWorld.java", javaFile) // Test purpose
-                .withNewMetadata()
-                .withName("config-map" + jobBuildConfig.getIdentifier())
-                .endMetadata()
-                .build();
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+        BatchV1Api batchV1Api = new BatchV1Api(apiClient);
 
-        kubernetesClient.resource(configMap).inNamespace("default").create();
-
-        Secret dockerHubSecret = new SecretBuilder().withNewMetadata()
-                .withName("secret" + jobBuildConfig.getIdentifier())
-                .endMetadata()
-                .withType("kubernetes.io/dockerconfigjson")
-                .addToData(".dockerconfigjson", getDockerConfigJson())
-                .build();
-
-        kubernetesClient.resource(dockerHubSecret).inNamespace("default").create();
-
-        KeyToPath keyToPath = new KeyToPath();
-        keyToPath.setKey(".dockerconfigjson");
-        keyToPath.setPath("config.json");
-
-        // Configure Kaniko build
-        Job job = new JobBuilder()
-                .withNewMetadata()
-                .withName("job" + jobBuildConfig.getIdentifier()).endMetadata()
-                .withNewSpec()
-                .withNewTemplate()
-                .withNewSpec()
-
-                // COMMENT: Add init container to do all init operations.
-                // Add Init container alpine
-                .addNewInitContainer()
-                .withName("kaniko-init" + jobBuildConfig.getIdentifier())
-                .withImage("alpine:latest")
-                .withVolumeMounts(
-                        new VolumeMountBuilder()
-                                .withName("shared-dir")
-                                .withMountPath("/shared")
-                                .build())
-                .withCommand("sh")
-                .withArgs("-c", "wget " + buildConfig.getSharedData()
-                        + " -O /shared/data.tgz && tar xf /shared/data.tgz -C /shared")
-                .endInitContainer()
-
-                // COMMENT: Kaniko container
-                // Add Kaniko container
-                .addNewContainer()
-                .withName("kaniko-container" + jobBuildConfig.getIdentifier())
-                .withImage("gcr.io/kaniko-project/executor:latest")
-                .withVolumeMounts(
-                        new VolumeMountBuilder()
-                                .withName("kaniko-config")
-                                .withMountPath("/build").build(),
-                        new VolumeMountBuilder()
-                                .withName("kaniko-secret")
-                                .withMountPath("/kaniko/.docker").build(),
-                        new VolumeMountBuilder()
-                                .withName("shared-dir")
-                                .withMountPath("/shared")
-                                .build())
-                .withEnv(new EnvVarBuilder().withName("DOCKER_CONFIG")
-                        .withValue("/kaniko/.docker")
-                        .build())
-
-                .withCommand("/kaniko/executor")
-                .withArgs("--dockerfile=/build/Dockerfile",
-                        "--context=/build",
-                        "--destination=ltrubbianifbk/dh" + jobBuildConfig.getIdentifier()
-                                + ":latest")
-                .endContainer()
-
-                // COMMENT: SHARED VOLUME
-                .addNewVolume().withName("shared-dir")
-                .endVolume()
-
-                // Kaniko Config
-                .addNewVolume().withName("kaniko-config")
-                .withNewConfigMap()
-                .withName("config-map" + jobBuildConfig.getIdentifier())
-                .endConfigMap()
-                .endVolume()
-
-                // Kaniko Secret
-                .addNewVolume().withName("kaniko-secret")
-                .withNewSecret()
-                .withSecretName("secret" + jobBuildConfig.getIdentifier())
-                .withItems(keyToPath)
-                .endSecret()
-                .endVolume()
-
-                // Restart Policy
-                .withRestartPolicy("Never")
-                .endSpec()
-                .endTemplate()
-                .endSpec()
-                .build();
-
-        // Create the Pod
-        kubernetesClient.resource(job).inNamespace("default").create();
-
-        // Wait for the build to complete
-        ScalableResource<Job> jobResource = kubernetesClient.batch().v1().jobs()
-                .inNamespace("default")
-                .withName("job" + jobBuildConfig.getIdentifier());
-
-        // HACK: delay execution to check pod activities
-        // try {
-        // Thread.sleep(15000); // Adjust the delay as needed
-        // } catch (InterruptedException e) {
-        // e.printStackTrace();
-        // }
         try {
-            jobResource.waitUntilCondition(
-                    j -> j.getStatus().getSucceeded() != null &&
-                            job.getStatus().getSucceeded() > 0,
-                    10, TimeUnit.MINUTES);
-            log.info("Docker image build completed successfully.");
-        } catch (Exception e) {
-            log.info("Docker image build failed or timed out: " + e.getMessage());
+            // Generate the Dockerfile
+            String dockerFileContent = DockerfileGenerator.generateDockerfile(buildConfig);
+            String javaFile = Files.readString(
+                    Path.of("/home/ltrubbiani/Labs/digitalhub-core/kubernetes/target/HelloWorld.java"));
+            // Create ConfigMap
+            V1ConfigMap configMap = new V1ConfigMap().data(Map.of(
+                            "Dockerfile", dockerFileContent,
+                            "HelloWorld.java", javaFile
+                    ))
+                    .metadata(new V1ObjectMeta().name("config-map" + jobBuildConfig.getIdentifier()));
+
+            coreV1Api.createNamespacedConfigMap(
+                    "default",
+                    configMap, null, null, null, null);
+
+            // Create Secret
+            V1Secret dockerHubSecret = new V1Secret()
+                    .metadata(new V1ObjectMeta().name("secret" + jobBuildConfig.getIdentifier()))
+                    .type("kubernetes.io/dockerconfigjson")
+                    .data(Map.of(
+                            ".dockerconfigjson", getDockerConfigJson()
+                    ));
+
+            coreV1Api.createNamespacedSecret(
+                    "default", dockerHubSecret,
+                    null,
+                    null,
+                    null,
+                    null);
+
+
+            // Construct keyToPath
+            V1KeyToPath keyToPath = new V1KeyToPath();
+            keyToPath.setKey(".dockerconfigjson");
+            keyToPath.setPath("config.json");
+
+            // Configure Kaniko build
+            V1Job job = new V1Job()
+                    .metadata(new V1ObjectMeta().name("job" + jobBuildConfig.getIdentifier()))
+                    .spec(new V1JobSpec()
+                            .template(new V1PodTemplateSpec()
+                                    .spec(new V1PodSpec()
+                                            .initContainers(
+                                                    List.of(new V1Container()
+                                                            .name("kaniko-init" + jobBuildConfig.getIdentifier())
+                                                            .image("alpine:latest")
+                                                            .volumeMounts(List.of(
+                                                                            new V1VolumeMount()
+                                                                                    .name("shared-dir")
+                                                                                    .mountPath("/shared")
+                                                                    )
+                                                            )
+                                                            .command(List.of("sh", "-c", "wget " + buildConfig.getSharedData()
+                                                                            + " -O /shared/data.tgz && tar xf /shared/data.tgz -C /shared"
+                                                                    )
+                                                            )
+
+                                                    )
+                                            )
+                                            .containers(List.of(
+                                                    new V1Container()
+                                                            .name("kaniko-container" + jobBuildConfig.getIdentifier())
+                                                            .image("gcr.io/kaniko-project/executor:latest")
+                                                            .volumeMounts(List.of(
+                                                                    new V1VolumeMount()
+                                                                            .name("kaniko-config")
+                                                                            .mountPath("/build"),
+                                                                    new V1VolumeMount()
+                                                                            .name("kaniko-secret")
+                                                                            .mountPath("/kaniko/.docker"),
+                                                                    new V1VolumeMount()
+                                                                            .name("shared-dir")
+                                                                            .mountPath("/shared")
+                                                            ))
+                                                            .env(List.of(
+                                                                    new V1EnvVar()
+                                                                            .name("DOCKER_CONFIG")
+                                                                            .value("/kaniko/.docker")
+                                                            ))
+                                                            .command(List.of(
+                                                                    "/kaniko/executor",
+                                                                    "--dockerfile=/build/Dockerfile",
+                                                                    "--context=/build",
+                                                                    "--destination=ltrubbianifbk/dh" + jobBuildConfig.getIdentifier()
+                                                                            + ":latest"
+                                                            ))
+                                            ))
+                                            .volumes(List.of(
+                                                    new V1Volume()
+                                                            .name("shared-dir"),
+                                                    new V1Volume()
+                                                            .name("kaniko-config")
+                                                            .configMap(
+                                                                    new V1ConfigMapVolumeSource()
+                                                                            .name("config-map" + jobBuildConfig.getIdentifier())
+                                                            ),
+                                                    new V1Volume()
+                                                            .name("kaniko-secret")
+                                                            .secret(new V1SecretVolumeSource()
+                                                                    .secretName("secret" + jobBuildConfig.getIdentifier())
+                                                                    .items(List.of(keyToPath))
+                                                            )
+                                            ))
+                                            .restartPolicy("Never")
+                                    )
+                            )
+                    );
+
+            batchV1Api.createNamespacedJob("default",
+                    job,
+                    null,
+                    null,
+                    null,
+                    null);
+
+            try {
+                // Wait for the build to complete
+                batchV1Api.readNamespacedJobStatus("job" + jobBuildConfig.getIdentifier(), "default", null);
+                boolean jobCompleted = false;
+                long startTime = System.currentTimeMillis();
+                long timeoutMillis = TimeUnit.MINUTES.toMillis(10);
+                while (!jobCompleted && System.currentTimeMillis() - startTime < timeoutMillis) {
+                    Thread.sleep(5000); // Adjust the delay as needed
+                    V1Job v1Job = batchV1Api.readNamespacedJobStatus("job" + jobBuildConfig.getIdentifier(), "default", null);
+                    if (v1Job != null && v1Job.getStatus() != null && v1Job.getStatus().getSucceeded() != null && v1Job.getStatus().getSucceeded() > 0) {
+                        jobCompleted = true;
+                    }
+                }
+                if (!jobCompleted) {
+                    log.info("Docker image build failed or timed out.");
+                } else {
+                    log.info("Docker image build completed successfully.");
+                }
+            } catch (ApiException | InterruptedException e) {
+                log.error("Error while waiting for the build to complete: " + e.getMessage());
+            }
+
+            try {
+                // Cleanup the resources
+                batchV1Api.deleteNamespacedJob("job" + jobBuildConfig.getIdentifier(), "default", null, null, null, null, null, null);
+
+                coreV1Api.deleteNamespacedConfigMap("config-map" + jobBuildConfig.getIdentifier(), "default", null, null, null, null, null, null);
+                coreV1Api.deleteNamespacedSecret("secret" + jobBuildConfig.getIdentifier(), "default", null, null, null, null, null, null);
+            } catch (ApiException e) {
+                log.error("Error while cleaning up resources: " + e.getMessage());
+            }
+
+
+            future.complete(null); // Indicate successful completion
+        } catch (IOException | ApiException e) {
+            log.error("Error occurred during Docker image build: " + e.getMessage());
+            future.completeExceptionally(e); // Indicate completion with an exception
         }
 
-        // Cleanup the Pod, ConfigMap, and Secret
-        jobResource.delete();
-        kubernetesClient.configMaps().inNamespace("default")
-                .withName("config-map" + jobBuildConfig.getIdentifier()).delete();
-        kubernetesClient.secrets().inNamespace("default").withName("secret" + jobBuildConfig.getIdentifier())
-                .delete();
-
-        // FIXME: FOR NOW RETURN COMPLETABLE FUTURE OF NULL
-        return null;
+        return future;
 
     }
 
@@ -205,7 +228,7 @@ public class KanikoImageBuilder {
      *
      * @return String
      */
-    private static String getDockerConfigJson() {
+    private static byte[] getDockerConfigJson() {
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         // Replace with your Docker Hub credentials
@@ -234,7 +257,7 @@ public class KanikoImageBuilder {
         }
 
         // Base64 encode the JSON
-        return Base64.getEncoder().encodeToString(json.getBytes());
+        return json.getBytes();
     }
 
 }

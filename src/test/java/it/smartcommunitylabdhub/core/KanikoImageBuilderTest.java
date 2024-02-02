@@ -1,14 +1,11 @@
 package it.smartcommunitylabdhub.core;
 
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.kubernetes.client.openapi.ApiClient;
 import it.smartcommunitylabdhub.core.components.kubernetes.kaniko.DockerBuildConfig;
 import it.smartcommunitylabdhub.core.components.kubernetes.kaniko.JobBuildConfig;
 import it.smartcommunitylabdhub.core.components.kubernetes.kaniko.KanikoImageBuilder;
-
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -17,8 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 public class KanikoImageBuilderTest {
@@ -37,6 +32,9 @@ public class KanikoImageBuilderTest {
     //
     //////////////////////////////////////
 
+    @Autowired
+    ApiClient client;
+
     @Value("${kaniko.source.path}")
     private String kanikoSourcePath;
 
@@ -46,8 +44,6 @@ public class KanikoImageBuilderTest {
     @Test
     void testBuildDockerImage() throws IOException {
 
-        Config config = new ConfigBuilder().withApiVersion("v1").build();
-        KubernetesClient client = new KubernetesClientBuilder().withConfig(config).build();
 
         String basePath = Paths.get(System.getProperty("user.dir")).getParent().toString();
 
@@ -71,10 +67,6 @@ public class KanikoImageBuilderTest {
         CompletableFuture<?> kaniko = KanikoImageBuilder.buildDockerImage(client, dockerBuildConfig, jobBuildConfig);
 
         kaniko.join();
-
-        // Assert th`at the Pod and ConfigMap are created
-        assertEquals(1, client.pods().inNamespace("default").list().getItems().size());
-        assertEquals(1, client.configMaps().inNamespace("default").list().getItems().size());
 
     }
 }

@@ -37,8 +37,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Slf4j
-@FrameworkComponent(framework = "k8sjob")
-public class K8sJobFramework implements Framework<K8sJobRunnable> {
+@FrameworkComponent(framework = "k8sserve")
+public class K8sServeFramework implements Framework<K8sJobRunnable> {
 
     BatchV1Api batchV1Api;
     CoreV1Api coreV1Api;
@@ -54,16 +54,15 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
     RunService runService;
     @Autowired
     K8sBuilderHelper k8sBuilderHelper;
+
     @Value("${kubernetes.namespace}")
     private String namespace;
 
-
-    public K8sJobFramework(ApiClient apiClient) {
+    public K8sServeFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
         coreV1Api = new CoreV1Api(apiClient);
         batchV1Api = new BatchV1Api(apiClient);
     }
-
 
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
@@ -372,5 +371,4 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
             throw new RuntimeException(e);
         }
     }
-
 }

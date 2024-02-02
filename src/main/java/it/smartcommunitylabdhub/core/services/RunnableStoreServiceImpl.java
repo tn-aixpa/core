@@ -19,9 +19,8 @@ public class RunnableStoreServiceImpl<T> implements RunnableStoreService<T> {
     @Autowired
     private RunnableRepository runnableRepository;
 
-    @Override
     public T find(String id) {
-        RunnableEntity entity = runnableRepository.findById(id).orElse(null);
+        RunnableEntity entity = runnableRepository.findById(id);
         if (entity != null) {
             try {
                 return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), getRunnableClass());
@@ -32,9 +31,7 @@ public class RunnableStoreServiceImpl<T> implements RunnableStoreService<T> {
         return null;
     }
 
-    @Override
     public void store(String id, T e) {
-
         try {
             byte[] data = JacksonMapper.CBOR_OBJECT_MAPPER.writeValueAsBytes(e);
 
@@ -48,9 +45,9 @@ public class RunnableStoreServiceImpl<T> implements RunnableStoreService<T> {
         }
     }
 
-    @Override
     public List<T> findAll() {
-        return runnableRepository.findAll().stream()
+        List<RunnableEntity> entities = runnableRepository.findAll();
+        return entities.stream()
                 .map(entity -> {
                     try {
                         return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), getRunnableClass());
@@ -63,6 +60,9 @@ public class RunnableStoreServiceImpl<T> implements RunnableStoreService<T> {
                 .collect(Collectors.toList());
     }
 
+    public void delete(String id) {
+        runnableRepository.delete(id);
+    }
 
     @SuppressWarnings("unchecked")
     private Class<T> getRunnableClass() {
