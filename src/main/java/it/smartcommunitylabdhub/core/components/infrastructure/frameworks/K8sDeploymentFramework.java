@@ -6,6 +6,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
+import it.smartcommunitylabdhub.core.annotations.config.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.core.components.fsm.StateMachine;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunEvent;
@@ -26,6 +27,8 @@ import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -39,11 +42,9 @@ import java.util.stream.Stream;
 
 //TODO: le operazioni di clean del deployment vanno fatte nel framework
 @Slf4j
+@ConditionalOnKubernetes
 @FrameworkComponent(framework = "k8sdeployment")
-public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> {
-
-    //     @Autowired
-    //     BatchV1Api batchV1Api;
+public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>, InitializingBean {
 
     @Autowired
     PollingService pollingService;
@@ -57,18 +58,24 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable> 
     RunService runService;
     @Autowired
     K8sBuilderHelper k8sBuilderHelper;
-    private AppsV1Api appsV1Api;
-
-    private CoreV1Api coreV1Api;
 
     @Value("${kubernetes.namespace}")
     private String namespace;
 
+    private final CoreV1Api coreV1Api;
+    private final AppsV1Api appsV1Api;
+
     public K8sDeploymentFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
-        appsV1Api = new AppsV1Api(apiClient);
+
         coreV1Api = new CoreV1Api(apiClient);
+        appsV1Api = new AppsV1Api(apiClient);
     }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.notNull(k8sBuilderHelper, "k8s helper is required");
+    }   
 
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
