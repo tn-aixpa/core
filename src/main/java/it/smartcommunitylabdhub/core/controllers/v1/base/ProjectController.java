@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.core.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
+import it.smartcommunitylabdhub.core.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectService;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/projects")
@@ -94,4 +96,28 @@ public class ProjectController {
         return ResponseEntity.ok(this.projectService.getProjectArtifacts(name));
     }
 
+    @Operation(summary = "List project secrets", description = "Get all project secrets list")
+    @GetMapping(path = "/{name}/secrets", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<List<Secret>> projectSecrets(
+            @ValidateField @PathVariable String name) {
+        return ResponseEntity.ok(this.projectService.getProjectSecrets(name));
+    }
+
+    @Operation(summary = "Read project secret data", description = "Get project secrets data for the specified keys")
+    @GetMapping(path = "/{name}/secrets/data", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<Map<String, String>> projectSecretData(
+            @ValidateField @PathVariable String name,
+            @RequestParam Set<String> keys) {
+        return ResponseEntity.ok(this.projectService.getProjectSecretData(name, keys));
+    }
+
+    @Operation(summary = "Store project secret data", description = "Store project secrets data")
+    @PutMapping(path = "/{name}/secrets/data", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<Void> storeProjectSecretData(
+            @ValidateField @PathVariable String name,
+            @RequestBody Map<String, String> values) {
+
+        this.projectService.storeProjectSecretData(name, values);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -5,6 +5,7 @@ public enum EntityName {
     PROJECT,
     WORKFLOW,
     FUNCTION,
+    SECRET,
     ARTIFACT,
     DATAITEM,
     TASK,

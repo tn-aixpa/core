@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
+import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
@@ -13,6 +14,7 @@ import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.metadata.ProjectMetadata;
+import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,9 @@ public class ProjectDTOBuilder {
     DataItemDTOBuilder dataItemDTOBuilder;
 
     @Autowired
+    SecretDTOBuilder secretDTOBuilder;
+
+    @Autowired
     MetadataConverter<ProjectMetadata> metadataConverter;
 
     public Project build(
@@ -48,6 +53,7 @@ public class ProjectDTOBuilder {
             List<FunctionEntity> functions,
             List<WorkflowEntity> workflows,
             List<DataItemEntity> dataItems,
+            List<SecretEntity> secrets,
             boolean embeddable) {
 
         // Retrieve spec
@@ -74,7 +80,12 @@ public class ProjectDTOBuilder {
                         .map(d -> dataItemDTOBuilder.build(
                                 d, embeddable))
                         .collect(Collectors.toList()));
-
+        spec.put("secrets",
+                secrets.stream()
+                        .map(d -> secretDTOBuilder.build(
+                                d, embeddable))
+                        .collect(Collectors.toList()));
+        
         // Find base run spec
         return EntityFactory.create(Project::new, project, builder -> builder
                 .with(dto -> dto.setId(project.getId()))
