@@ -137,8 +137,8 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
             SecretEntity secret = secretRepository.findById(uuid).orElse(null);
             if (secret != null) {
                 Secret secretDTO = secretDTOBuilder.build(secret, false);
-                secretHelper.deleteSecretKeys(getProjectSecretName(secret.getProject()), Collections.singleton((String)secretDTO.getSpec().get("path")));
                 this.secretRepository.deleteById(uuid);
+                secretHelper.deleteSecretKeys(getProjectSecretName(secret.getProject()), Collections.singleton((String)secretDTO.getSpec().get("path")));
                 return true;
             }
             throw new CoreException(
@@ -194,7 +194,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
                 
                 SecretMetadata secretMetadata = new SecretMetadata();
                 secretMetadata.setCreated(new Date());
-                secretMetadata.setEmbedded(false);
+                secretMetadata.setEmbedded(true);
                 secretMetadata.setName(entry.getKey());
                 secretMetadata.setProject(project);
                 secretMetadata.setUpdated(secretMetadata.getCreated());
@@ -209,7 +209,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
             }
         }
         try {
-            secretHelper.storeSecretData(project, values);
+            secretHelper.storeSecretData(getProjectSecretName(project), values);
         } catch (Exception e) {
             throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),

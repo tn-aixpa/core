@@ -82,8 +82,8 @@ public class ProjectDTOBuilder {
                         .collect(Collectors.toList()));
         spec.put("secrets",
                 secrets.stream()
-                        .map(d -> secretDTOBuilder.build(
-                                d, embeddable))
+                        .map(s -> secretDTOBuilder.build(
+                                s, embeddable))
                         .collect(Collectors.toList()));
         
         // Find base run spec

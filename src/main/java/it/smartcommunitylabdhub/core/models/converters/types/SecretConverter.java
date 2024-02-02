@@ -14,6 +14,7 @@ public class SecretConverter implements Converter<Secret, SecretEntity> {
         return SecretEntity.builder()
                 .id(secretDTO.getId())
                 .kind(secretDTO.getKind())
+                .name(secretDTO.getName())
                 .project(secretDTO.getProject())
                 .build();
     }
@@ -23,6 +24,7 @@ public class SecretConverter implements Converter<Secret, SecretEntity> {
         return Secret.builder()
                 .id(secret.getId())
                 .kind(secret.getKind())
+                .name(secret.getName())
                 .project(secret.getProject())
                 .build();
     }

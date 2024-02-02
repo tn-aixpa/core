@@ -70,8 +70,7 @@ public class K8sSecretHelper {
             });
             Map<String, String> writeData = new HashMap<>();
             for (String key: secretData.keySet()) {
-                String enc = new String(secretData.get(key), StandardCharsets.UTF_8);
-                writeData.put(key, enc);
+                if (!writeData.containsKey(key)) writeData.put(key, Base64.getEncoder().encodeToString(secretData.get(key)));
             }
             PatchBody pathchData = new PatchBody(writeData, "/data");
             V1Patch patch = new V1Patch(mapper.writeValueAsString(Collections.singleton(pathchData)));
@@ -97,7 +96,7 @@ public class K8sSecretHelper {
                 if (data.containsKey(key)) writeData.put(key, Base64.getEncoder().encodeToString(data.get(key).getBytes(StandardCharsets.UTF_8)));
             }
             for (String key: secretData.keySet()) {
-                if (!writeData.containsKey(key)) writeData.put(key, new String(secretData.get(key), StandardCharsets.UTF_8));
+                if (!writeData.containsKey(key)) writeData.put(key, Base64.getEncoder().encodeToString(secretData.get(key)));
             }
             PatchBody pathchData = new PatchBody(writeData, "/data");
             V1Patch patch = new V1Patch(mapper.writeValueAsString(Collections.singleton(pathchData)));
