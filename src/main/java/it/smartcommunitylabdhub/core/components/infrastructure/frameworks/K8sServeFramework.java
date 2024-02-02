@@ -7,6 +7,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
+import it.smartcommunitylabdhub.core.annotations.config.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.core.components.fsm.StateMachine;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunEvent;
@@ -40,6 +41,7 @@ import java.util.stream.Stream;
 
 //TODO: le operazioni di clean del deployment vanno fatte nel framework
 @Slf4j
+@ConditionalOnKubernetes
 @FrameworkComponent(framework = "k8sserve")
 public class K8sServeFramework implements Framework<K8sServeRunnable> {
 

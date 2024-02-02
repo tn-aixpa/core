@@ -1,5 +1,7 @@
 package it.smartcommunitylabdhub.core.annotations.infrastructure;
 
+import org.springframework.stereotype.Component;
+
 import java.lang.annotation.*;
 
 /**
@@ -9,7 +11,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-//@Component
+@Component
 public @interface FrameworkComponent {
 
     /**
