@@ -2,41 +2,39 @@ package it.smartcommunitylabdhub.core.config;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.util.ClientBuilder;
+import it.smartcommunitylabdhub.core.annotations.config.ConditionalOnKubernetes;
+import java.io.IOException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnCloudPlatform;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.cloud.CloudPlatform;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
-
-import java.io.IOException;
-import java.util.function.Supplier;
 
 @Configuration
 public class KubernetesConfig {
-    @Bean
-    Supplier<ApiClient> kubeApiClientSupplier() {
-        return () -> {
-            try {
-                try {
-                    return ClientBuilder.standard().build();
-                } catch (IOException e) {
-                    return ClientBuilder.cluster().build();
-                }
-            } catch (Exception e1) {
-                return null;
-            }
-        };
-    }
 
-    @Bean
-    @Nullable
-    ApiClient kubeApiClient() {
-        try {
-            try {
-                return ClientBuilder.standard().build();
-            } catch (IOException e) {
-                return ClientBuilder.cluster().build();
-            }
-        } catch (Exception e1) {
-            return null;
-        }
+  @Bean
+  @ConditionalOnCloudPlatform(CloudPlatform.KUBERNETES)
+  public ApiClient kubeApiClusterClient() {
+    try {
+      return ClientBuilder.cluster().build();
+    } catch (IOException e1) {
+      throw new UnsupportedOperationException(
+        "Could not initialize connection to kubernetes."
+      );
     }
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(ApiClient.class)
+  @ConditionalOnKubernetes
+  public ApiClient kubeApiStandardClient() {
+    try {
+      return ClientBuilder.standard().build();
+    } catch (IOException e1) {
+      throw new UnsupportedOperationException(
+        "Could not initialize connection to kubernetes."
+      );
+    }
+  }
 }

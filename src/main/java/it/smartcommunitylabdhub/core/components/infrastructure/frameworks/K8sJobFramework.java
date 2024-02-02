@@ -6,6 +6,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
+import it.smartcommunitylabdhub.core.annotations.config.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.core.components.fsm.StateMachine;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunEvent;
@@ -27,6 +28,8 @@ import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -37,11 +40,10 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Slf4j
+@ConditionalOnKubernetes
 @FrameworkComponent(framework = "k8sjob")
-public class K8sJobFramework implements Framework<K8sJobRunnable> {
-
-    BatchV1Api batchV1Api;
-    CoreV1Api coreV1Api;
+public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingBean {
+  
     @Autowired
     PollingService pollingService;
     @Autowired
@@ -54,14 +56,24 @@ public class K8sJobFramework implements Framework<K8sJobRunnable> {
     RunService runService;
     @Autowired
     K8sBuilderHelper k8sBuilderHelper;
+
     @Value("${kubernetes.namespace}")
     private String namespace;
 
+    private final BatchV1Api batchV1Api;
+    private final CoreV1Api coreV1Api;
 
     public K8sJobFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
+
         coreV1Api = new CoreV1Api(apiClient);
         batchV1Api = new BatchV1Api(apiClient);
+    }
+
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.notNull(k8sBuilderHelper, "k8s helper is required");
     }
 
 
