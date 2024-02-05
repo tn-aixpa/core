@@ -10,8 +10,6 @@ import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRunt
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.factories.RunDefaultFieldAccessorFactory;
-import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
-import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
@@ -130,9 +128,6 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec> {
         RunRunSpec runRunSpec = runRunSpecFactory.create();
         runRunSpec.configure(runDTO.getSpec());
 
-        // Create string run accessor from task
-        RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
-
         // Create and configure function mlrun spec
         FunctionMlrunSpec functionMlrunSpec = functionMlrunSpecFactory.create();
         functionMlrunSpec.configure(runDTO.getSpec());
@@ -150,7 +145,7 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec> {
                         JacksonMapper.typeRef)
         );
 
-        MlrunMlrunRunner runner = new MlrunMlrunRunner(image, runDefaultFieldAccessor, runAccessor);
+        MlrunMlrunRunner runner = new MlrunMlrunRunner(image, runDefaultFieldAccessor);
 
         return runner.produce(runDTO);
     }

@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.builde
 
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 
 
 /**
@@ -10,9 +10,10 @@ import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
  */
 public interface Builder<
         F extends FunctionBaseSpec,
-        T extends K8sTaskBaseSpec,
-        R extends RunBaseSpec> {
-    R build(F funSpec,
+        T extends TaskBaseSpec,
+        R extends RunBaseSpec,
+        O extends RunBaseSpec> {
+    O build(F funSpec,
             T taskSpec,
             R runSpec
     );

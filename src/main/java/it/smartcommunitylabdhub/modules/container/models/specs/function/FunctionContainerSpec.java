@@ -25,7 +25,6 @@ public class FunctionContainerSpec extends FunctionBaseSpec {
     private String command;
     private String entrypoint;
     private List<String> args;
-    private Map<String, String> envs;
 
     @Override
     public void configure(Map<String, Object> data) {
@@ -38,7 +37,6 @@ public class FunctionContainerSpec extends FunctionBaseSpec {
         this.setImage(functionContainerSpec.getImage());
         this.setBaseImage(functionContainerSpec.getBaseImage());
         this.setArgs(functionContainerSpec.getArgs());
-        this.setEnvs(functionContainerSpec.getEnvs());
         this.setEntrypoint(functionContainerSpec.getEntrypoint());
         super.configure(data);
 

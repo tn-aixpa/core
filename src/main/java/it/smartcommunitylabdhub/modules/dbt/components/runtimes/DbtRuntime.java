@@ -3,9 +3,9 @@ package it.smartcommunitylabdhub.modules.dbt.components.runtimes;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
@@ -25,13 +25,16 @@ import it.smartcommunitylabdhub.modules.dbt.components.builders.DbtTransformBuil
 import it.smartcommunitylabdhub.modules.dbt.components.runners.DbtTransformRunner;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.function.factories.FunctionDbtSpecFactory;
+import it.smartcommunitylabdhub.modules.dbt.models.specs.run.RunDbtSpec;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.task.TaskTransformSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
-@RuntimeComponent(runtime = "dbt")
-public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
+@RuntimeComponent(runtime = DbtRuntime.RUNTIME)
+public class DbtRuntime extends BaseRuntime<FunctionDbtSpec, RunDbtSpec, K8sJobRunnable> {
+
+    public static final String RUNTIME = "dbt";
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
@@ -55,7 +58,7 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
     }
 
     @Override
-    public RunBaseSpec build(
+    public RunDbtSpec build(
             FunctionDbtSpec funSpec,
             TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
@@ -106,7 +109,7 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
 
 
     @Override
-    public Runnable run(Run runDTO) {
+    public K8sJobRunnable run(Run runDTO) {
 
         /**
          *  As an alternative, you can use the code below to retrieve the correct runner.
@@ -152,8 +155,7 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
 
         DbtTransformRunner runner = new DbtTransformRunner(
                 image,
-                runDefaultFieldAccessor,
-                runAccessor);
+                runDefaultFieldAccessor);
 
         return runner.produce(runDTO);
     }

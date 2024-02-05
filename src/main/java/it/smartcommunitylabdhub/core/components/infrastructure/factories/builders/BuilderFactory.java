@@ -20,6 +20,7 @@ public class BuilderFactory {
     private final Map<String, ? extends Builder<
             ? extends FunctionBaseSpec,
             ? extends K8sTaskBaseSpec,
+            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> builderMap;
 
     /**
@@ -30,6 +31,7 @@ public class BuilderFactory {
     public BuilderFactory(List<? extends Builder<
             ? extends FunctionBaseSpec,
             ? extends K8sTaskBaseSpec,
+            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> builders) {
         builderMap = builders.stream()
                 .collect(Collectors.toMap(this::getBuilderFromAnnotation,
@@ -47,6 +49,7 @@ public class BuilderFactory {
     private <B extends Builder<
             ? extends FunctionBaseSpec,
             ? extends K8sTaskBaseSpec,
+            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> String getBuilderFromAnnotation(B builder) {
         Class<?> builderClass = builder.getClass();
         if (builderClass.isAnnotationPresent(BuilderComponent.class)) {
@@ -71,6 +74,7 @@ public class BuilderFactory {
     public <B extends Builder<
             ? extends FunctionBaseSpec,
             ? extends K8sTaskBaseSpec,
+            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> B getBuilder(String runtime, String task) {
 
         B concreteBuilder =
@@ -86,6 +90,7 @@ public class BuilderFactory {
     public Map<String, ? extends Builder<
             ? extends FunctionBaseSpec,
             ? extends K8sTaskBaseSpec,
+            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> getBuilders(String runtime) {
         return builderMap.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith(runtime))

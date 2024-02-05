@@ -2,11 +2,9 @@ package it.smartcommunitylabdhub.modules.dbt.components.builders;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.function.FunctionDbtSpec;
+import it.smartcommunitylabdhub.modules.dbt.models.specs.run.RunDbtSpec;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.task.TaskTransformSpec;
-
-import java.util.Map;
 
 /**
  * DbtTransformBuilder
@@ -20,25 +18,22 @@ import java.util.Map;
 public class DbtTransformBuilder implements Builder<
         FunctionDbtSpec,
         TaskTransformSpec,
-        RunRunSpec> {
-
+        RunRunSpec,
+        RunDbtSpec> {
     @Override
-    public RunRunSpec build(
+    public RunDbtSpec build(
             FunctionDbtSpec funSpec,
             TaskTransformSpec taskSpec,
             RunRunSpec runSpec) {
 
-        // Merge spec
-        Map<String, Object> extraSpecs = MapUtils.mergeMultipleMaps(
-                funSpec.toMap(),
-                taskSpec.toMap()
-        );
+        RunDbtSpec runDbtSpec = RunDbtSpec
+                .builder()
+                .k8sTaskBaseSpec(taskSpec)
+                .functionDbtSpec(funSpec)
+                .build();
 
-        // Update run specific spec
-        runSpec.getExtraSpecs()
-                .putAll(extraSpecs);
+        runDbtSpec.configure(runSpec.toMap());
 
-        // Return a run spec
-        return runSpec;
+        return runDbtSpec;
     }
 }

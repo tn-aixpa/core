@@ -11,16 +11,17 @@ import jakarta.validation.constraints.NotNull;
 /**
  * Runtime expose builder, run and parse method
  */
-public interface Runtime<F extends FunctionBaseSpec> {
+public interface Runtime<F extends FunctionBaseSpec, S extends RunBaseSpec, R extends Runnable> {
 
-    RunBaseSpec build(
-            F funcSpec,
-            TaskBaseSpec taskSpec,
-            RunBaseSpec runSpec,
+    S build(
+
+            @NotNull F funcSpec,
+            @NotNull TaskBaseSpec taskSpec,
+            @NotNull RunBaseSpec runSpec,
             @NotNull String kind
     );
 
-    Runnable run(Run runDTO);
+    R run(@NotNull Run runDTO);
 
     // TODO: parse should get and parse result job for the given runtime.
     RunStatus parse();

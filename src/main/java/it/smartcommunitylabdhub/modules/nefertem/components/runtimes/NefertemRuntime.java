@@ -212,20 +212,16 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
         return switch (runAccessor.getTask()) {
             case "infer" -> new NefertemInferRunner(
                     image,
-                    runDefaultFieldAccessor,
-                    runAccessor).produce(runDTO);
+                    runDefaultFieldAccessor).produce(runDTO);
             case "validate" -> new NefertemValidateRunner(
                     image,
-                    runDefaultFieldAccessor,
-                    runAccessor).produce(runDTO);
+                    runDefaultFieldAccessor).produce(runDTO);
             case "profile" -> new NefertemProfileRunner(
                     image,
-                    runDefaultFieldAccessor,
-                    runAccessor).produce(runDTO);
+                    runDefaultFieldAccessor).produce(runDTO);
             case "metric" -> new NefertemMetricRunner(
                     image,
-                    runDefaultFieldAccessor,
-                    runAccessor).produce(runDTO);
+                    runDefaultFieldAccessor).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",

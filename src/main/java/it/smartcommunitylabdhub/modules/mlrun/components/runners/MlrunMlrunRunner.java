@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnabl
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
-import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 
 import java.util.List;
@@ -24,14 +23,11 @@ public class MlrunMlrunRunner implements Runner {
 
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
-    private final RunAccessor runAccessor;
 
     public MlrunMlrunRunner(String image,
-                            RunDefaultFieldAccessor runDefaultFieldAccessor,
-                            RunAccessor runAccessor) {
+                            RunDefaultFieldAccessor runDefaultFieldAccessor) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
-        this.runAccessor = runAccessor;
     }
 
     @Override
@@ -47,8 +43,8 @@ public class MlrunMlrunRunner implements Runner {
 
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
-                .runtime(runAccessor.getRuntime())
-                .task(runAccessor.getTask())
+                .runtime("mlrun")
+                .task("mlrun")
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))

@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnabl
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
-import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
@@ -28,22 +27,19 @@ public class ContainerJobRunner implements Runner {
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
-    private final RunAccessor runAccessor;
 
     public ContainerJobRunner(String image,
                               FunctionContainerSpec functionContainerSpec,
-                              RunDefaultFieldAccessor runDefaultFieldAccessor,
-                              RunAccessor runAccessor) {
+                              RunDefaultFieldAccessor runDefaultFieldAccessor) {
         this.image = image;
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
-        this.runAccessor = runAccessor;
     }
 
     @Override
     public Runnable produce(Run runDTO) {
         return Optional.of(runDTO)
-                .map(r -> this.validateJobRunDTO(r, runAccessor))
+                .map(this::validateJobRunDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
     }
 
@@ -51,15 +47,14 @@ public class ContainerJobRunner implements Runner {
      * Return a runnable of type K8sJobRunnable
      *
      * @param runDTO
-     * @param runAccessor
      * @return K8sJobRunnable
      */
-    private K8sJobRunnable validateJobRunDTO(Run runDTO, RunAccessor runAccessor) {
+    private K8sJobRunnable validateJobRunDTO(Run runDTO) {
 
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
-                .runtime(runAccessor.getRuntime())
-                .task(runAccessor.getTask())
+                .runtime("container")
+                .task("job")
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
                 .envs(MapUtils.mergeMultipleMaps(Map.of(

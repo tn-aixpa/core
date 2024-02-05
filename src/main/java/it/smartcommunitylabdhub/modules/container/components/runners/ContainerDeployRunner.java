@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnabl
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
-import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
@@ -28,23 +27,20 @@ public class ContainerDeployRunner implements Runner {
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
-    private final RunAccessor runAccessor;
 
     public ContainerDeployRunner(String image,
                                  FunctionContainerSpec functionContainerSpec,
-                                 RunDefaultFieldAccessor runDefaultFieldAccessor,
-                                 RunAccessor runAccessor) {
+                                 RunDefaultFieldAccessor runDefaultFieldAccessor) {
         this.image = image;
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
-        this.runAccessor = runAccessor;
     }
 
     @Override
     public Runnable produce(Run runDTO) {
 
         return Optional.of(runDTO)
-                .map(r -> this.validateDeployRunDTO(r, runAccessor))
+                .map(this::validateDeployRunDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
 
     }
@@ -53,15 +49,14 @@ public class ContainerDeployRunner implements Runner {
      * Return a K8sDeploymentRunnable
      *
      * @param runDTO
-     * @param runAccessor
      * @return
      */
-    private K8sDeploymentRunnable validateDeployRunDTO(Run runDTO, RunAccessor runAccessor) {
+    private K8sDeploymentRunnable validateDeployRunDTO(Run runDTO) {
 
 
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable.builder()
-                .runtime(runAccessor.getRuntime())
-                .task(runAccessor.getTask())
+                .runtime("container") //TODO: delete accessor.
+                .task("deploy")
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
                 .envs(MapUtils.mergeMultipleMaps(Map.of(

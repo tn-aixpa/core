@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.runtimes;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.Runtime;
@@ -20,7 +21,7 @@ import java.util.Optional;
 
 @Slf4j
 @Getter
-public abstract class BaseRuntime<F extends FunctionBaseSpec> implements Runtime<F> {
+public abstract class BaseRuntime<F extends FunctionBaseSpec, S extends RunBaseSpec, R extends Runnable> implements Runtime<F, S, R> {
 
     protected final BuilderFactory builderFactory;
     protected final RunnerFactory runnerFactory;
@@ -28,6 +29,7 @@ public abstract class BaseRuntime<F extends FunctionBaseSpec> implements Runtime
     protected Map<String, ? extends Builder<
             ? extends FunctionBaseSpec,
             ? extends K8sTaskBaseSpec,
+            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> builders;
     private String runtime;
 
@@ -68,6 +70,7 @@ public abstract class BaseRuntime<F extends FunctionBaseSpec> implements Runtime
     public <B extends Builder<
             ? extends FunctionBaseSpec,
             ? extends K8sTaskBaseSpec,
+            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> B getBuilder(String task) {
 
         return Optional.ofNullable((B) builders.get(runtime + "+" + task))

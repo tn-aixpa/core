@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 @RuntimeComponent(runtime = "container")
-public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
+public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, TaskBaseSpec, Runnable> {
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
@@ -232,18 +232,15 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
             case "deploy" -> new ContainerDeployRunner(
                     image,
                     functionContainerSpec,
-                    runDefaultFieldAccessor,
-                    runAccessor).produce(runDTO);
+                    runDefaultFieldAccessor).produce(runDTO);
             case "job" -> new ContainerJobRunner(
                     image,
                     functionContainerSpec,
-                    runDefaultFieldAccessor,
-                    runAccessor).produce(runDTO);
+                    runDefaultFieldAccessor).produce(runDTO);
             case "serve" -> new ContainerServeRunner(
                     image,
                     functionContainerSpec,
-                    runDefaultFieldAccessor,
-                    runAccessor).produce(runDTO);
+                    runDefaultFieldAccessor).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",
