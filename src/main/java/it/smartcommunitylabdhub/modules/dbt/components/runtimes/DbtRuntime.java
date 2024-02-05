@@ -18,7 +18,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.dbt.components.builders.DbtTransformBuilder;
@@ -57,7 +57,7 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
     @Override
     public RunBaseSpec build(
             FunctionDbtSpec funSpec,
-            K8sTaskBaseSpec taskSpec,
+            TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
             String kind) {
 
