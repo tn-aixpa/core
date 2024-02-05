@@ -19,7 +19,7 @@ public interface Accessor<T> {
      *
      * @param fields {@code Map} of claims
      */
-    void build(Map<String, Object> fields);
+    void configure(Map<String, Object> fields);
 
     /**
      * Returns the claim value as a {@code T} type. The claim value is expected to be of type

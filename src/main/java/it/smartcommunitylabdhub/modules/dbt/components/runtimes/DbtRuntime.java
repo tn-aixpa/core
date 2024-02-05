@@ -8,16 +8,23 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.factories.RunDefaultFieldAccessorFactory;
+import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
+import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.dbt.components.builders.DbtTransformBuilder;
 import it.smartcommunitylabdhub.modules.dbt.components.runners.DbtTransformRunner;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.function.FunctionDbtSpec;
+import it.smartcommunitylabdhub.modules.dbt.models.specs.function.factories.FunctionDbtSpecFactory;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.task.TaskTransformSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +35,16 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
+
+    @Autowired
+    FunctionDbtSpecFactory functionDbtSpecFactory;
+
+    @Autowired
+    RunDefaultFieldAccessorFactory runDefaultFieldAccessorFactory;
+
+    @Autowired
+    RunRunSpecFactory runRunSpecFactory;
+
 
     @Value("${runtime.dbt.image}")
     private String image;
@@ -108,7 +125,35 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec> {
          *      RunAccessor runAccessor = RunUtils.parseRun(runBaseSpec.getTask());
          *      Runner runner = getRunner(runAccessor.getTask());
          */
-        DbtTransformRunner runner = new DbtTransformRunner(image);
+
+        // Crete spec for run
+        RunRunSpec runRunSpec = runRunSpecFactory.create();
+        runRunSpec.configure(runDTO.getSpec());
+
+        // Create string run accessor from task
+        RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
+
+        // Create and configure function dbt spec
+        FunctionDbtSpec functionDbtSpec = functionDbtSpecFactory.create();
+        functionDbtSpec.configure(runDTO.getSpec());
+
+        if (functionDbtSpec.getExtraSpecs() == null) {
+            throw new IllegalArgumentException(
+                    "Invalid argument: args not found in runDTO spec");
+        }
+
+        // Create and configure default run field accessor
+        RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
+        runDefaultFieldAccessor.configure(
+                JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+                        runDTO,
+                        JacksonMapper.typeRef)
+        );
+
+        DbtTransformRunner runner = new DbtTransformRunner(
+                image,
+                runDefaultFieldAccessor,
+                runAccessor);
 
         return runner.produce(runDTO);
     }

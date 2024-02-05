@@ -14,7 +14,7 @@ public abstract class AbstractFieldAccessor<O extends AbstractFieldAccessor<O>> 
     }
 
     @Override
-    public void build(Map<String, Object> fields) {
+    public void configure(Map<String, Object> fields) {
         this.fields.clear();
         this.fields.putAll(fields);
     }

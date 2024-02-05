@@ -1,8 +1,9 @@
 package it.smartcommunitylabdhub.core.annotations.validators;
 
-import java.util.UUID;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+
+import java.util.UUID;
 
 public class ValidFieldValidator implements ConstraintValidator<ValidateField, String> {
 
@@ -28,7 +29,7 @@ public class ValidFieldValidator implements ConstraintValidator<ValidateField, S
         }
 
         // Standard string field validation
-        if (fieldType.equals("")) {
+        if (fieldType.isEmpty()) {
             isValid = value.matches(regex);
         }
 
@@ -36,11 +37,7 @@ public class ValidFieldValidator implements ConstraintValidator<ValidateField, S
         if (fieldType.equals("uuid")) {
             try {
                 UUID uuid = UUID.fromString(value);
-                if (uuid.version() == 4) {
-                    isValid = true;
-                } else {
-                    isValid = false;
-                }
+                isValid = uuid.version() == 4;
             } catch (IllegalArgumentException e) {
                 isValid = false;
             }
