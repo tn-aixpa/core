@@ -1,7 +1,13 @@
 # Spring configuration
 spring:
+  sql:
+    init:
+      schema-locations: classpath:db/schema-h2.sql
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+  batch:
+    jdbc:
+      initialize-schema: always
   jpa:
     generate-ddl: true
     hibernate:

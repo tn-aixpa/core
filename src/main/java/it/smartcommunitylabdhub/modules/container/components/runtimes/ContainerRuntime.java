@@ -23,6 +23,7 @@ import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.container.components.builders.ContainerDeployBuilder;
 import it.smartcommunitylabdhub.modules.container.components.builders.ContainerJobBuilder;
+import it.smartcommunitylabdhub.modules.container.components.builders.ContainerServeBuilder;
 import it.smartcommunitylabdhub.modules.container.components.runners.ContainerDeployRunner;
 import it.smartcommunitylabdhub.modules.container.components.runners.ContainerJobRunner;
 import it.smartcommunitylabdhub.modules.container.components.runners.ContainerServeRunner;
@@ -30,6 +31,7 @@ import it.smartcommunitylabdhub.modules.container.models.specs.function.Function
 import it.smartcommunitylabdhub.modules.container.models.specs.function.factories.FunctionContainerSpecFactory;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskServeSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
@@ -138,6 +140,41 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
 
             }
 
+            case "serve" -> {
+
+                TaskServeSpec taskServeSpec = specRegistry.createSpec(
+                        "serve",
+                        EntityName.TASK,
+                        taskSpec.toMap()
+                );
+
+                RunRunSpec runRunSpec = specRegistry.createSpec(
+                        "run",
+                        EntityName.RUN,
+                        runSpec.toMap()
+                );
+
+
+                /**
+                 *  As an alternative, you can use the code below to retrieve the correct builder.
+                 *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
+                 *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
+                 *  the builder in this way remember also that you have to register the builder as
+                 *  a component using the follow annotation: `@BuilderComponent(runtime = "container", task = "transform")`
+                 *  Only by doing this you can get the bean related
+                 * <p>
+                 *      ContainerJobBuilder b = getBuilder("transform");
+                 */
+
+                ContainerServeBuilder builder = new ContainerServeBuilder();
+
+                return builder.build(
+                        funSpec,
+                        taskServeSpec,
+                        runRunSpec);
+
+            }
+
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
@@ -190,6 +227,7 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
                         runDTO,
                         JacksonMapper.typeRef)
         );
+
         return switch (runAccessor.getTask()) {
             case "deploy" -> new ContainerDeployRunner(
                     image,

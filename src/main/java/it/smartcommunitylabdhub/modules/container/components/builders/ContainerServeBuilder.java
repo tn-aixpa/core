@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.builder
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.utils.MapUtils;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskServeSpec;
 
 import java.util.Map;
 
@@ -19,13 +19,13 @@ import java.util.Map;
 
 public class ContainerServeBuilder implements Builder<
         FunctionContainerSpec,
-        TaskDeploySpec,
+        TaskServeSpec,
         RunRunSpec> {
 
     @Override
     public RunRunSpec build(
             FunctionContainerSpec funSpec,
-            TaskDeploySpec taskSpec,
+            TaskServeSpec taskSpec,
             RunRunSpec runSpec) {
 
         // Merge spec
