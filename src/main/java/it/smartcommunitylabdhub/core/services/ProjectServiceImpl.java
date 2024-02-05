@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.project.ProjectDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.project.ProjectEntityBuilder;
+import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
@@ -14,12 +15,15 @@ import it.smartcommunitylabdhub.core.models.entities.function.Function;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.secret.Secret;
+import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ProjectEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.*;
+import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import jakarta.transaction.Transactional;
@@ -31,9 +35,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,6 +72,9 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
     TaskRepository taskRepository;
 
     @Autowired
+    SecretRepository secretRepository;
+
+    @Autowired
     ProjectDTOBuilder projectDTOBuilder;
 
     @Autowired
@@ -81,7 +90,13 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
     WorkflowDTOBuilder workflowDTOBuilder;
 
     @Autowired
-    ProjectEntityFilter projectEntityFilter;
+    SecretDTOBuilder secretDTOBuilder;
+
+    @Autowired
+    ProjectEntityFilter projectEntityFilter;    
+
+    @Autowired
+    ProjectSecretService secretService;
 
     @Override
     public Project getProject(String name) {
@@ -92,9 +107,10 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
                     List<ArtifactEntity> artifacts = artifactRepository.findAllLatestArtifactsByProject(project.getName());
                     List<WorkflowEntity> workflows = workflowRepository.findAllLatestWorkflowsByProject(project.getName());
                     List<DataItemEntity> dataItems = dataItemRepository.findAllLatestDataItemsByProject(project.getName());
+                    List<SecretEntity> secrets = secretRepository.findByProject(project.getName());
 
                     return projectDTOBuilder.build(project, artifacts, functions, workflows,
-                            dataItems, true);
+                            dataItems, secrets, true);
                 })
                 .orElseThrow(() -> new CoreException(
                         ErrorList.PROJECT_NOT_FOUND.getValue(),
@@ -126,7 +142,7 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
                         List<DataItemEntity> dataItems = dataItemRepository.findAllLatestDataItemsByProject(project.getName());
 
                         return projectDTOBuilder.build(project, artifacts, functions, workflows,
-                                dataItems, true);
+                                dataItems, Collections.emptyList(), true);
                     }).collect(Collectors.toList()), pageable, projectPage.getTotalElements());
         } catch (CustomException e) {
             throw new CoreException(
@@ -148,7 +164,7 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
                 .map(project -> {
                     projectRepository.saveAndFlush(project);
                     return projectDTOBuilder.build(project, List.of(), List.of(), List.of(),
-                            List.of(), true);
+                            List.of(), List.of(), true);
                 })
                 .orElseThrow(() -> new CoreException(
                         ErrorList.INTERNAL_SERVER_ERROR.getValue(),
@@ -179,9 +195,11 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
                             workflowRepository.findAllLatestWorkflowsByProject(projectUpdated.getName());
                     List<DataItemEntity> dataItems =
                             dataItemRepository.findAllLatestDataItemsByProject(projectUpdated.getName());
+                    List<SecretEntity> secrets = 
+                            secretRepository.findByProject(project.getName());
 
                     return projectDTOBuilder.build(projectUpdated, artifacts, functions, workflows,
-                            dataItems,
+                            dataItems, secrets,
                             true);
                 })
                 .orElseThrow(() -> new CoreException(
@@ -209,6 +227,7 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
                                 this.logRepository.deleteByProjectName(project.getName());
                                 this.runRepository.deleteByProjectName(project.getName());
                                 this.taskRepository.deleteByProjectName(project.getName());
+                                this.secretRepository.deleteByProjectName(project.getName());
                             });
                         }
                         projectRepository.deleteByName(projectName);
@@ -315,6 +334,35 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
                         HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
+
+    @Override
+    public List<Secret> getProjectSecrets(String name) {
+        return Optional.of(projectRepository.findByName(name))
+                .orElseThrow(() -> new CoreException(
+                        ErrorList.PROJECT_NOT_FOUND.getValue(),
+                        ErrorList.PROJECT_NOT_FOUND.getReason(),
+                        HttpStatus.NOT_FOUND))
+                .map(ProjectEntity::getName)
+                .flatMap(projectName -> {
+                    try {
+                        List<SecretEntity> secrets = secretRepository.findByProject(projectName);
+                        return Optional.of(
+                                secrets.stream()
+                                        .map(secret -> secretDTOBuilder.build(secret, false))
+                                        .collect(Collectors.toList()));
+                    } catch (CustomException e) {
+                        throw new CoreException(
+                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                                e.getMessage(),
+                                HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                })
+                .orElseThrow(() -> new CoreException(
+                        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                        "Error occurred while retrieving secrets.",
+                        HttpStatus.INTERNAL_SERVER_ERROR));
+
+    }
     @Override
     public boolean deleteProjectByName(String name) {
         try {
@@ -331,4 +379,14 @@ public class ProjectServiceImpl extends AbstractSpecificationService<ProjectEnti
         }
     }
 
+    @Override
+    public Map<String, String> getProjectSecretData(String name, Set<String> keys) {
+        return secretService.getProjectSecretData(name, keys);
+    }
+
+    @Override
+    public void storeProjectSecretData(String name, Map<String, String> values) {
+        secretService.storeProjectSecretData(name, values);
+    }
+    
 }

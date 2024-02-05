@@ -63,6 +63,15 @@ public enum ErrorList {
     RUN_JOB_ERROR("K8sJobError", "Cannot execute job in Kubernetes"),
 
     /**
+     * SECRET
+     */
+    SECRET_NOT_FOUND("SecretNotFound", "The secret you are searching for does not exist."),
+    DUPLICATE_SECRET("DuplicateSecret", "Cannot create secret."),
+    SECRET_NOT_MATCH("SecretNotMatch",
+    "Trying to create/update a secret with an uuid different from the one passed in the request."),
+
+
+    /**
      *
      */
     METHOD_NOT_IMPLEMENTED("MethodNotImplemented", "Method not implemented!!!");
