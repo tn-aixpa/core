@@ -16,11 +16,18 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
     List<Map<String, Object>> volumes;
 
     @JsonProperty("node_selector")
-    Map<String, Object> nodeSelector;
+    Map<String, String> nodeSelector;
 
     List<Map<String, Object>> envs;
 
-    Map<String, Object> resources;
+    /**
+     * K8S resource requests: <resource>:<value>
+     */
+    Map<String, String> requests;
+    /**
+     * K8S resource limits: <resource>:<value>
+     */
+    Map<String, String> limits;
 
     Set<String> secrets;
 
@@ -32,7 +39,8 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
         this.setVolumes(concreteSpec.getVolumes());
         this.setNodeSelector(concreteSpec.getNodeSelector());
         this.setEnvs(concreteSpec.getEnvs());
-        this.setResources(concreteSpec.getResources());
+        this.setRequests(concreteSpec.getRequests());
+        this.setLimits(concreteSpec.getLimits());
         this.setSecrets(concreteSpec.getSecrets());
         super.configure(data);
 

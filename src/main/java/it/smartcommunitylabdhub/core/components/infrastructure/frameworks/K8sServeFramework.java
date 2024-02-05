@@ -123,6 +123,21 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
         runnable.getEnvs().forEach((key, value) -> envVars.add(
                 new V1EnvVar().name(key).value(value)));
 
+        // Volumes to attach to the pod based on the volume spec with the additional volume_type 
+        List<V1Volume> volumes = new LinkedList<>();
+        if(runnable.getVolumes() != null) {
+            runnable.getVolumes().forEach(volumeMap -> {
+                V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
+                if (volume != null) {
+                    volumes.add(volume);
+                }
+            });
+        }
+
+        // resources
+        V1ResourceRequirements resources = new V1ResourceRequirements();
+        if (runnable.getRequests() != null) resources.setRequests(k8sBuilderHelper.convertResources(runnable.getRequests()));
+        if (runnable.getLimits() != null) resources.setLimits(k8sBuilderHelper.convertResources(runnable.getLimits()));
 
         // Create the Serve metadata
         V1ObjectMeta metadata = new V1ObjectMeta()
@@ -135,6 +150,7 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
                 .image(runnable.getImage())
                 .imagePullPolicy("Always")
                 .imagePullPolicy("IfNotPresent")
+                .resources(resources)
                 .envFrom(envVarsFromSource)
                 .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
 
@@ -146,6 +162,8 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
                 .containers(Collections.singletonList(container))
+                .nodeSelector(runnable.getNodeSelector())
+                .volumes(volumes)
                 .restartPolicy("Always");
 
         // Create a PodTemplateSpec with the PodSpec
