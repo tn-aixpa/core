@@ -3,12 +3,18 @@ package it.smartcommunitylabdhub.core.components.kubernetes;
 import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1EnvVarSource;
 import io.kubernetes.client.openapi.models.V1SecretEnvSource;
+import io.kubernetes.client.openapi.models.V1SecretKeySelector;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -80,4 +86,19 @@ public class K8sBuilderHelper {
         ).toList();
 
     }
+
+    public List<V1EnvVar> geEnvVarsFromSecrets(Map<String, Set<String>> secrets) {
+        if (secrets != null) {
+            return secrets.entrySet().stream()
+                .filter(entry -> entry.getValue() != null)
+                .flatMap(entry -> entry.getValue().stream()
+                        .map(key -> new V1EnvVar()
+                                    .name(key)
+                                    .valueFrom(new V1EnvVarSource().secretKeyRef(new V1SecretKeySelector().name(entry.getKey()).key(key))))
+                )
+                .toList();
+        }
+        return Collections.emptyList();
+    }
+
 }

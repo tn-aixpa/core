@@ -46,6 +46,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
     SecretEntityBuilder secretEntityBuilder;
 
     private static final String K8S_PROVIDER = "kubernetes";
+    
 
     @Override
     public Secret createProjectSecret(Secret secretDTO) {
@@ -185,6 +186,8 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
     public void storeProjectSecretData(String project, Map<String, String> values) {
         if (values == null || values.isEmpty()) return;
 
+        String secretName = getProjectSecretName(project);
+
         for (Entry<String,String> entry : values.entrySet()) {
             if (!secretRepository.existsByProjectAndName(project, entry.getKey())) {
                 Secret secret = new Secret();
@@ -202,14 +205,14 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
 
                 SecretBaseSpec spec = new SecretBaseSpec();
                 spec.setProvider(K8S_PROVIDER);
-                spec.setPath(entry.getKey());
+                spec.setPath(getSecretPath(K8S_PROVIDER, secretName, entry.getKey()));
                 secret.setSpec(spec.toMap());
                 
                 secretRepository.saveAndFlush(secretEntityBuilder.build(secret));
             }
         }
         try {
-            secretHelper.storeSecretData(getProjectSecretName(project), values);
+            secretHelper.storeSecretData(secretName, values);
         } catch (Exception e) {
             throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
@@ -221,6 +224,10 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
 
     private String getProjectSecretName(String project) {
         return String.format("dhcore-proj-secrets-%s", project);
+    }
+
+    private String getSecretPath( String provider, String secret, String key) {
+        return String.format("%s://%s/%s", provider, secret, key);
     }
 
 

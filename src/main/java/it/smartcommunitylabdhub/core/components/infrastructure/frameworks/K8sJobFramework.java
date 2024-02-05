@@ -114,6 +114,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         List<V1EnvFromSource> envVarsFromSource = k8sBuilderHelper.getV1EnvFromSource();
 
         List<V1EnvVar> envVars = k8sBuilderHelper.getV1EnvVar();
+        List<V1EnvVar> runEnvFromSource = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
 
 
         // Merge function specific envs
@@ -134,7 +135,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
                 .command(getCommand(runnable))
                 .imagePullPolicy("IfNotPresent")
                 .envFrom(envVarsFromSource)
-                .env(envVars);
+                .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
 
 
         // Create a PodSpec for the container

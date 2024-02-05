@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -21,6 +22,7 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
 
     Map<String, Object> resources;
 
+    Set<String> secrets;
 
     @Override
     public void configure(Map<String, Object> data) {
@@ -31,6 +33,7 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
         this.setNodeSelector(concreteSpec.getNodeSelector());
         this.setEnvs(concreteSpec.getEnvs());
         this.setResources(concreteSpec.getResources());
+        this.setSecrets(concreteSpec.getSecrets());
         super.configure(data);
 
         this.setExtraSpecs(concreteSpec.getExtraSpecs());

@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface TaskFieldAccessor<O extends TaskFieldAccessor<O>> extends CommonFieldAccessor<O> {
 
@@ -28,6 +29,13 @@ public interface TaskFieldAccessor<O extends TaskFieldAccessor<O>> extends Commo
     default Map<String, Object> getResources() {
         return mapHasField(getSpecs(), "resources")
                 ? (Map<String, Object>) getSpecs().get("resources")
+                : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    default Set<String> getSecrets() {
+        return mapHasField(getSpecs(), "secrets")
+                ? (Set<String>) getSpecs().get("secrets")
                 : null;
     }
 }

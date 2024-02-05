@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnabl
 import lombok.*;
 
 import java.util.Map;
+import java.util.Set;
 
 
 @RunnableComponent(framework = "k8sdeployment")
@@ -28,6 +29,9 @@ public class K8sDeploymentRunnable extends BaseRunnable {
     String[] args;
 
     Map<String, String> envs;
+
+    // mapping secret name to the list of keys to of the secret to use
+    Map<String, Set<String>> secrets;
 
     @Override
     public String getFramework() {

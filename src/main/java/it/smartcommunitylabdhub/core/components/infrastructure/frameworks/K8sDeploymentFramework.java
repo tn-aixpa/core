@@ -114,7 +114,7 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
         List<V1EnvFromSource> envVarsFromSource = k8sBuilderHelper.getV1EnvFromSource();
 
         List<V1EnvVar> envVars = k8sBuilderHelper.getV1EnvVar();
-
+        List<V1EnvVar> runEnvFromSource = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
 
         // Merge function specific envs
         runnable.getEnvs().forEach((key, value) -> envVars.add(
@@ -133,7 +133,7 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
                 .imagePullPolicy("Always")
                 .imagePullPolicy("IfNotPresent")
                 .envFrom(envVarsFromSource)
-                .env(envVars);
+                .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
 
 //        if present entry point set it
         Optional.ofNullable(runnable.getEntrypoint())

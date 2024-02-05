@@ -116,6 +116,7 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
         List<V1EnvFromSource> envVarsFromSource = k8sBuilderHelper.getV1EnvFromSource();
 
         List<V1EnvVar> envVars = k8sBuilderHelper.getV1EnvVar();
+        List<V1EnvVar> runEnvFromSource = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
 
 
         // Merge function specific envs
@@ -135,7 +136,7 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
                 .imagePullPolicy("Always")
                 .imagePullPolicy("IfNotPresent")
                 .envFrom(envVarsFromSource)
-                .env(envVars);
+                .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
 
 //        if present entry point set it
         Optional.ofNullable(runnable.getEntrypoint())
