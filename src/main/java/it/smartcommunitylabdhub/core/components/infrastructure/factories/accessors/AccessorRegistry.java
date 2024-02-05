@@ -83,7 +83,7 @@ public class AccessorRegistry<T extends Accessor<Object>> {
                         // Call the create method of the accessor factory to get a new instance.
                         S accessor = (S) accessorFactory.create();
                         if (fields != null) {
-                            accessor.build(fields);
+                            accessor.configure(fields);
                         }
                         return accessor;
                     }

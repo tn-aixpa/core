@@ -168,14 +168,15 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
 
         // Create the V1 service
+        // TODO: the service definition contains a list of ports. service: { ports:[xxx,xxx,,xxx],.....}
         V1ServicePort servicePort = new V1ServicePort()
                 .port(8501)  // The port exposed by your deployment
                 .targetPort(new IntOrString(8501))
                 .protocol("TCP");
 
         V1ServiceSpec serviceSpec = new V1ServiceSpec()
-                .type("NodePort")
-                .addPortsItem(servicePort)
+                .type("NodePort") // or ClusterIP
+                .ports(List.of(servicePort))
                 .selector(labels);
 
         V1ObjectMeta serviceMetadata = new V1ObjectMeta().name(serviceName);

@@ -8,6 +8,8 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.factories.RunDefaultFieldAccessorFactory;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.base.RunStatus;
@@ -15,8 +17,10 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
+import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.nefertem.components.builders.NefertemInferBuilder;
 import it.smartcommunitylabdhub.modules.nefertem.components.builders.NefertemMetricBuilder;
 import it.smartcommunitylabdhub.modules.nefertem.components.builders.NefertemProfileBuilder;
@@ -26,6 +30,7 @@ import it.smartcommunitylabdhub.modules.nefertem.components.runners.NefertemMetr
 import it.smartcommunitylabdhub.modules.nefertem.components.runners.NefertemProfileRunner;
 import it.smartcommunitylabdhub.modules.nefertem.components.runners.NefertemValidateRunner;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.FunctionNefertemSpec;
+import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.factories.FunctionNefertemSpecFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -35,6 +40,15 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
+
+    @Autowired
+    FunctionNefertemSpecFactory functionNefertemSpecFactory;
+
+    @Autowired
+    RunDefaultFieldAccessorFactory runDefaultFieldAccessorFactory;
+
+    @Autowired
+    RunRunSpecFactory runRunSpecFactory;
 
 
     @Value("${runtime.nefertem.image}")
@@ -171,18 +185,47 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
          */
 
 
-        RunRunSpec runBaseSpec = specRegistry.createSpec(
-                runDTO.getKind(),
-                EntityName.RUN,
-                runDTO.getSpec()
+        // Crete spec for run
+        RunRunSpec runRunSpec = runRunSpecFactory.create();
+        runRunSpec.configure(runDTO.getSpec());
+
+        // Create string run accessor from task
+        RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
+
+        // Create and configure function nefertem spec
+        FunctionNefertemSpec functionNefertemSpec = functionNefertemSpecFactory.create();
+        functionNefertemSpec.configure(runDTO.getSpec());
+
+        if (functionNefertemSpec.getExtraSpecs() == null) {
+            throw new IllegalArgumentException(
+                    "Invalid argument: args not found in runDTO spec");
+        }
+
+        // Create and configure default run field accessor
+        RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
+        runDefaultFieldAccessor.configure(
+                JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+                        runDTO,
+                        JacksonMapper.typeRef)
         );
-        RunAccessor runAccessor = RunUtils.parseRun(runBaseSpec.getTask());
 
         return switch (runAccessor.getTask()) {
-            case "infer" -> new NefertemInferRunner(image).produce(runDTO);
-            case "validate" -> new NefertemValidateRunner(image).produce(runDTO);
-            case "profile" -> new NefertemProfileRunner(image).produce(runDTO);
-            case "metric" -> new NefertemMetricRunner(image).produce(runDTO);
+            case "infer" -> new NefertemInferRunner(
+                    image,
+                    runDefaultFieldAccessor,
+                    runAccessor).produce(runDTO);
+            case "validate" -> new NefertemValidateRunner(
+                    image,
+                    runDefaultFieldAccessor,
+                    runAccessor).produce(runDTO);
+            case "profile" -> new NefertemProfileRunner(
+                    image,
+                    runDefaultFieldAccessor,
+                    runAccessor).produce(runDTO);
+            case "metric" -> new NefertemMetricRunner(
+                    image,
+                    runDefaultFieldAccessor,
+                    runAccessor).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",

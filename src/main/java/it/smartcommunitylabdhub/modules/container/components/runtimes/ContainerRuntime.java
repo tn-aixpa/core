@@ -8,6 +8,8 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.factories.RunDefaultFieldAccessorFactory;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.base.RunStatus;
@@ -15,13 +17,17 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
+import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
+import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.container.components.builders.ContainerDeployBuilder;
 import it.smartcommunitylabdhub.modules.container.components.builders.ContainerJobBuilder;
 import it.smartcommunitylabdhub.modules.container.components.runners.ContainerDeployRunner;
 import it.smartcommunitylabdhub.modules.container.components.runners.ContainerJobRunner;
+import it.smartcommunitylabdhub.modules.container.components.runners.ContainerServeRunner;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.function.factories.FunctionContainerSpecFactory;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +38,16 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
+
+
+    @Autowired
+    FunctionContainerSpecFactory functionContainerSpecFactory;
+
+    @Autowired
+    RunDefaultFieldAccessorFactory runDefaultFieldAccessorFactory;
+
+    @Autowired
+    RunRunSpecFactory runRunSpecFactory;
 
     private String image;
 
@@ -151,16 +167,45 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
          *      RunAccessor runAccessor = RunUtils.parseRun(runBaseSpec.getTask());
          *      Runner runner = getRunner(runAccessor.getTask());
          */
-        RunRunSpec runBaseSpec = specRegistry.createSpec(
-                runDTO.getKind(),
-                EntityName.RUN,
-                runDTO.getSpec()
-        );
-        RunAccessor runAccessor = RunUtils.parseRun(runBaseSpec.getTask());
+        // Crete spec for run
+        RunRunSpec runRunSpec = runRunSpecFactory.create();
+        runRunSpec.configure(runDTO.getSpec());
 
+        // Create string run accessor from task
+        RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
+
+        // Create and configure function dbt spec
+        FunctionContainerSpec functionContainerSpec = functionContainerSpecFactory.create();
+        functionContainerSpec.configure(runDTO.getSpec());
+
+        if (functionContainerSpec.getExtraSpecs() == null) {
+            throw new IllegalArgumentException(
+                    "Invalid argument: args not found in runDTO spec");
+        }
+
+        // Create and configure default run field accessor
+        RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
+        runDefaultFieldAccessor.configure(
+                JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+                        runDTO,
+                        JacksonMapper.typeRef)
+        );
         return switch (runAccessor.getTask()) {
-            case "deploy" -> new ContainerDeployRunner(image).produce(runDTO);
-            case "job" -> new ContainerJobRunner(image).produce(runDTO);
+            case "deploy" -> new ContainerDeployRunner(
+                    image,
+                    functionContainerSpec,
+                    runDefaultFieldAccessor,
+                    runAccessor).produce(runDTO);
+            case "job" -> new ContainerJobRunner(
+                    image,
+                    functionContainerSpec,
+                    runDefaultFieldAccessor,
+                    runAccessor).produce(runDTO);
+            case "serve" -> new ContainerServeRunner(
+                    image,
+                    functionContainerSpec,
+                    runDefaultFieldAccessor,
+                    runAccessor).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",
@@ -168,7 +213,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec> {
             );
         };
     }
-
 
     @Override
     public RunStatus parse() {
