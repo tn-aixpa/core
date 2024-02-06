@@ -53,11 +53,14 @@ public class SecretEntityBuilder {
                 .convertValue(secretDTO.getSpec(), SecretBaseSpec.class);
 
         return EntityFactory.combine(
-                ConversionUtils.convert(secretDTO, "secret"), secretDTO,
+                SecretEntity.builder().build(), secretDTO,
                 builder -> builder
                         // check id
                         .withIf(secretDTO.getId() != null,
                                 (f) -> f.setId(secretDTO.getId()))
+                        .with(f -> f.setKind(secretDTO.getKind()))
+                        .with(f -> f.setName(secretDTO.getName()))
+                        .with(f -> f.setProject(secretDTO.getProject()))
                         .with(f -> f.setMetadata(ConversionUtils.convert(
                                 secretDTO.getMetadata(), "metadata")))
                         .with(f -> f.setExtra(ConversionUtils.convert(
@@ -103,42 +106,41 @@ public class SecretEntityBuilder {
      */
     public SecretEntity update(SecretEntity secret, Secret secretDTO) {
 
-        // Validate spec
-        specRegistry.createSpec(secretDTO.getKind(), EntityName.SECRET, Map.of());
+        SecretEntity newSecret = build(secretDTO);
+        return doUpdate(secret, newSecret);
+    }
 
-        // Retrieve field accessor
-        SecretFieldAccessor<?> secretFieldAccessor =
-                accessorRegistry.createAccessor(
-                        secretDTO.getKind(),
-                        EntityName.SECRET,
-                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(secretDTO,
-                                JacksonMapper.typeRef));
+    /**
+     * Updates the secret entity with the new secret entity and returns the combined entity.
+     *
+     * @param secret    the original secret entity
+     * @param newSecret the new secret entity to update with
+     * @return the combined entity after the update
+     */
+    private SecretEntity doUpdate(SecretEntity secret, SecretEntity newSecret) {
 
         return EntityFactory.combine(
-                secret, secretDTO, builder -> builder
-                        .withIfElse(secretFieldAccessor.getState().equals(State.NONE.name()),
+                secret, newSecret, builder -> builder
+                        .withIfElse(newSecret.getState().name().equals(State.NONE.name()),
                                 (f, condition) -> {
                                     if (condition) {
                                         f.setState(State.CREATED);
                                     } else {
-                                        f.setState(State.valueOf(secretFieldAccessor.getState()));
+                                        f.setState(newSecret.getState());
                                     }
                                 }
                         )
-                        .with(f -> f.setMetadata(ConversionUtils.convert(
-                                secretDTO.getMetadata(), "metadata")))
-                        .with(f -> f.setExtra(ConversionUtils.convert(
-                                secretDTO.getExtra(), "cbor")))
-                        .with(f -> f.setStatus(ConversionUtils.convert(
-                                secretDTO.getStatus(), "cbor")))
+                        .with(f -> f.setMetadata(newSecret.getMetadata()))
+                        .with(f -> f.setExtra(newSecret.getExtra()))
+                        .with(f -> f.setStatus(newSecret.getStatus()))
 
                         // Metadata Extraction
-                        .withIfElse(secretDTO.getMetadata().getEmbedded() == null,
+                        .withIfElse(newSecret.getEmbedded() == null,
                                 (f, condition) -> {
                                     if (condition) {
                                         f.setEmbedded(false);
                                     } else {
-                                        f.setEmbedded(secretDTO.getMetadata().getEmbedded());
+                                        f.setEmbedded(newSecret.getEmbedded());
                                     }
                                 }
                         )
