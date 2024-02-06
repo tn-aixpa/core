@@ -45,7 +45,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
 
-
     @Autowired
     FunctionContainerSpecFactory functionContainerSpecFactory;
 
@@ -54,8 +53,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
 
     @Autowired
     RunContainerSpecFactory runContainerSpecFactory;
-
-    private String image;
 
     public ContainerRuntime(BuilderFactory builderFactory,
                             RunnerFactory runnerFactory) {
@@ -68,9 +65,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
             TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
             String kind) {
-
-        // The image here will be used to deploy container
-        this.image = funSpec.getImage();
 
         // Retrieve builder using task kind
         switch (kind) {
@@ -230,15 +224,15 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
 
         return switch (runAccessor.getTask()) {
             case "deploy" -> new ContainerDeployRunner(
-                    image,
+                    functionContainerSpec.getImage(),
                     functionContainerSpec,
                     runDefaultFieldAccessor).produce(runDTO);
             case "job" -> new ContainerJobRunner(
-                    image,
+                    functionContainerSpec.getImage(),
                     functionContainerSpec,
                     runDefaultFieldAccessor).produce(runDTO);
             case "serve" -> new ContainerServeRunner(
-                    image,
+                    functionContainerSpec.getImage(),
                     functionContainerSpec,
                     runDefaultFieldAccessor).produce(runDTO);
             default -> throw new CoreException(
