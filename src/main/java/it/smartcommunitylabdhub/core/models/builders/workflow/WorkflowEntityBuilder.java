@@ -52,10 +52,13 @@ public class WorkflowEntityBuilder {
                 .convertValue(workflowDTO.getSpec(), WorkflowBaseSpec.class);
 
         return EntityFactory.combine(
-                ConversionUtils.convert(workflowDTO, "workflow"), workflowDTO, builder -> builder
+                WorkflowEntity.builder().build(), workflowDTO, builder -> builder
                         // check id
                         .withIf(workflowDTO.getId() != null,
                                 (w) -> w.setId(workflowDTO.getId()))
+                        .with(w -> w.setName(workflowDTO.getName()))
+                        .with(w -> w.setKind(workflowDTO.getKind()))
+                        .with(w -> w.setProject(workflowDTO.getProject()))
                         .with(w -> w.setMetadata(ConversionUtils.convert(
                                 workflowDTO.getMetadata(), "metadata")))
                         .with(w -> w.setExtra(ConversionUtils.convert(
@@ -95,50 +98,50 @@ public class WorkflowEntityBuilder {
     }
 
     /**
-     * Update w workflow if element is not passed it override causing empty field
+     * Updates a WorkflowEntity with the provided WorkflowDTO.
      *
-     * @param workflow Workflow
-     * @return WorkflowEntity
+     * @param workflow    the original WorkflowEntity to be updated
+     * @param workflowDTO the new WorkflowDTO to update the WorkflowEntity with
+     * @return the updated WorkflowEntity
      */
+
     public WorkflowEntity update(WorkflowEntity workflow, Workflow workflowDTO) {
 
-        // Validate Spec
-        specRegistry.createSpec(workflowDTO.getKind(), EntityName.WORKFLOW, Map.of());
+        WorkflowEntity newWorkflow = build(workflowDTO);
+        return doUpdate(workflow, newWorkflow);
+    }
 
-        // Retrieve Field accessor
-        WorkflowFieldAccessor<?> workflowFieldAccessor =
-                accessorRegistry.createAccessor(
-                        workflowDTO.getKind(),
-                        EntityName.WORKFLOW,
-                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(workflowDTO,
-                                JacksonMapper.typeRef));
-
+    /**
+     * Updates the given workflow entity with the provided workflow DTO.
+     *
+     * @param workflow    the original workflow entity
+     * @param newWorkflow the new workflow entity
+     * @return the updated workflow entity
+     */
+    private WorkflowEntity doUpdate(WorkflowEntity workflow, WorkflowEntity newWorkflow) {
 
         return EntityFactory.combine(
-                workflow, workflowDTO, builder -> builder
-                        .withIfElse(workflowFieldAccessor.getState().equals(State.NONE.name()),
+                workflow, newWorkflow, builder -> builder
+                        .withIfElse(newWorkflow.getState().name().equals(State.NONE.name()),
                                 (w, condition) -> {
                                     if (condition) {
                                         w.setState(State.CREATED);
                                     } else {
-                                        w.setState(State.valueOf(workflowFieldAccessor.getState()));
+                                        w.setState(newWorkflow.getState());
                                     }
                                 }
                         )
-                        .with(w -> w.setMetadata(ConversionUtils.convert(
-                                workflowDTO.getMetadata(), "metadata")))
-                        .with(w -> w.setExtra(ConversionUtils.convert(
-                                workflowDTO.getExtra(), "cbor")))
-                        .with(w -> w.setStatus(ConversionUtils.convert(
-                                workflowDTO.getStatus(), "cbor")))
+                        .with(w -> w.setMetadata(newWorkflow.getMetadata()))
+                        .with(w -> w.setExtra(newWorkflow.getExtra()))
+                        .with(w -> w.setStatus(newWorkflow.getStatus()))
 
                         // Metadata Extraction
-                        .withIfElse(workflowDTO.getMetadata().getEmbedded() == null,
+                        .withIfElse(newWorkflow.getEmbedded() == null,
                                 (w, condition) -> {
                                     if (condition) {
                                         w.setEmbedded(false);
                                     } else {
-                                        w.setEmbedded(workflowDTO.getMetadata().getEmbedded());
+                                        w.setEmbedded(newWorkflow.getEmbedded());
                                     }
                                 }
                         )

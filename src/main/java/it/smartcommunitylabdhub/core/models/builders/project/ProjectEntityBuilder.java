@@ -111,10 +111,6 @@ public class ProjectEntityBuilder {
      */
     public ProjectEntity update(ProjectEntity project, Project projectDTO) {
 
-        // Validate Spec
-        specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
-
-
         ProjectEntity newProject = build(projectDTO);
         return doUpdate(project, newProject);
 

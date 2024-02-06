@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.task.Task;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
@@ -54,16 +54,18 @@ public class TaskEntityBuilder {
 
 
         // Retrieve base spec
-        K8sTaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
-                .convertValue(taskDTO.getSpec(), K8sTaskBaseSpec.class);
+        TaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
+                .convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
 
 
         return EntityFactory.combine(
-                ConversionUtils.convert(taskDTO, "task"), taskDTO,
+                TaskEntity.builder().build(), taskDTO,
                 builder -> builder
                         // check id
                         .withIf(taskDTO.getId() != null,
                                 (t) -> t.setId(taskDTO.getId()))
+                        .with(t -> t.setProject(taskDTO.getProject()))
+                        .with(t -> t.setKind(taskDTO.getKind()))
                         .with(r -> r.setFunction(Optional.ofNullable(
                                 StringUtils.hasText(spec.getFunction()) ? spec.getFunction() : null
                         ).orElseThrow(() -> new CoreException(
@@ -105,41 +107,35 @@ public class TaskEntityBuilder {
      */
     public TaskEntity update(TaskEntity task, Task taskDTO) {
 
-        // Validate Spec
-        specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, Map.of());
+        TaskEntity newTask = build(taskDTO);
+        return doUpdate(task, newTask);
+    }
 
-        // Retrieve Field accessor
-        TaskFieldAccessor<?> taskFieldAccessor =
-                accessorRegistry.createAccessor(
-                        taskDTO.getKind(),
-                        EntityName.TASK,
-                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(taskDTO,
-                                JacksonMapper.typeRef));
-
-        // Retrieve base spec
-        K8sTaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER
-                .convertValue(taskDTO.getSpec(), K8sTaskBaseSpec.class);
+    /**
+     * Updates a TaskEntity with the values from a newTask object.
+     *
+     * @param task    the original TaskEntity to be updated
+     * @param newTask the TaskEntity containing the updated values
+     * @return the updated TaskEntity
+     */
+    public TaskEntity doUpdate(TaskEntity task, TaskEntity newTask) {
 
         return EntityFactory.combine(
-                task, taskDTO, builder -> builder
-                        .with(t -> t.setFunction(spec.getFunction()))
-                        .withIfElse(taskFieldAccessor.getState().equals(State.NONE.name()),
+                task, newTask, builder -> builder
+                        .with(t -> t.setFunction(newTask.getFunction()))
+                        .withIfElse(newTask.getState().name().equals(State.NONE.name()),
                                 (r, condition) -> {
                                     if (condition) {
                                         r.setState(State.CREATED);
                                     } else {
-                                        r.setState(State.valueOf(taskFieldAccessor.getState()));
+                                        r.setState(newTask.getState());
                                     }
                                 }
                         )
-                        .with(t -> t.setMetadata(ConversionUtils.convert(
-                                taskDTO.getMetadata(), "metadata")))
-                        .with(t -> t.setExtra(ConversionUtils.convert(
-                                taskDTO.getExtra(), "cbor")))
-                        .with(t -> t.setSpec(ConversionUtils.convert(
-                                spec.toMap(), "cbor")))
-                        .with(t -> t.setStatus(ConversionUtils.convert(
-                                taskDTO.getStatus(), "cbor")))
+                        .with(t -> t.setMetadata(newTask.getMetadata()))
+                        .with(t -> t.setExtra(newTask.getExtra()))
+                        .with(t -> t.setSpec(newTask.getSpec()))
+                        .with(t -> t.setStatus(newTask.getStatus()))
         );
     }
 }

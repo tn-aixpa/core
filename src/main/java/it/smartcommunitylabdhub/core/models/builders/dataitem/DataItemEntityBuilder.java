@@ -107,10 +107,7 @@ public class DataItemEntityBuilder {
      * @return Dataitem
      */
     public DataItemEntity update(DataItemEntity dataItem, DataItem dataItemDTO) {
-
-        // Validate Spec
-        specRegistry.createSpec(dataItemDTO.getKind(), EntityName.DATAITEM, Map.of());
-
+        
         DataItemEntity newDataItem = build(dataItemDTO);
         return doUpdate(dataItem, newDataItem);
 

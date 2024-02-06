@@ -105,10 +105,7 @@ public class FunctionEntityBuilder {
      * @return Function
      */
     public FunctionEntity update(FunctionEntity function, Function functionDTO) {
-
-        // Validate spec
-        specRegistry.createSpec(functionDTO.getKind(), EntityName.FUNCTION, Map.of());
-
+        
         FunctionEntity newFunction = build(functionDTO);
         return doUpdate(function, newFunction);
     }

@@ -61,10 +61,12 @@ public class RunEntityBuilder {
 
 
         return EntityFactory.combine(
-                ConversionUtils.convert(runDTO, "run"), runDTO, builder -> builder
+                RunEntity.builder().build(), runDTO, builder -> builder
                         // check id
                         .withIf(runDTO.getId() != null,
                                 (r) -> r.setId(runDTO.getId()))
+                        .with(r -> r.setProject(runDTO.getProject()))
+                        .with(r -> r.setKind(runDTO.getKind()))
                         .with(r -> r.setTask(Optional.ofNullable(
                                 StringUtils.hasText(spec.getTask()) ? spec.getTask() : null
                         ).orElseThrow(() -> new CoreException(
@@ -108,29 +110,31 @@ public class RunEntityBuilder {
      */
     public RunEntity update(RunEntity run, Run runDTO) {
 
-        // Retrieve Field accessor
-        RunFieldAccessor<?> runFieldAccessor =
-                accessorRegistry.createAccessor(
-                        runDTO.getKind(),
-                        EntityName.RUN,
-                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-                                runDTO,
-                                JacksonMapper.typeRef));
+        RunEntity newRun = build(runDTO);
+        return doUpdate(run, newRun);
+    }
+
+    /**
+     * Updates the given RunEntity with the properties of the newRun entity.
+     *
+     * @param run    the original RunEntity to be updated
+     * @param newRun the new RunEntity containing the updated properties
+     * @return the updated RunEntity after the merge operation
+     */
+    public RunEntity doUpdate(RunEntity run, RunEntity newRun) {
 
         return EntityFactory.combine(
-                run, runDTO, builder -> builder
-                        .withIfElse(runFieldAccessor.getState().equals(State.NONE.name()),
+                run, newRun, builder -> builder
+                        .withIfElse(newRun.getState().name().equals(State.NONE.name()),
                                 (r, condition) -> {
                                     if (condition) {
                                         r.setState(RunState.CREATED);
                                     } else {
-                                        r.setState(RunState.valueOf(runFieldAccessor.getState()));
+                                        r.setState(newRun.getState());
                                     }
                                 }
                         )
-                        .with(r -> r.setStatus(ConversionUtils.convert(
-                                runDTO.getStatus(), "cbor")))
-                        .with(p -> p.setMetadata(ConversionUtils.convert(
-                                runDTO.getMetadata(), "metadata"))));
+                        .with(r -> r.setStatus(newRun.getStatus()))
+                        .with(p -> p.setMetadata(newRun.getMetadata())));
     }
 }

@@ -113,10 +113,7 @@ public class ArtifactEntityBuilder {
      * @return Artifact
      */
     public ArtifactEntity update(ArtifactEntity artifact, Artifact artifactDTO) {
-
-        // Validate Spec
-        specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
-
+        
         ArtifactEntity newArtifact = build(artifactDTO);
 
         return doUpdate(artifact, newArtifact);
