@@ -11,6 +11,8 @@ import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskProfileSp
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -27,11 +29,13 @@ public class NefertemProfileRunner implements Runner {
     private final String image;
 
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public NefertemProfileRunner(String image,
-                                 RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                                 RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
     }
 
     @Override
@@ -59,7 +63,7 @@ public class NefertemProfileRunner implements Runner {
                 .resources(runNefertemSpec.getK8sTaskBaseSpec().getResources())
                 .nodeSelector(runNefertemSpec.getK8sTaskBaseSpec().getNodeSelector())
                 .volumes(runNefertemSpec.getK8sTaskBaseSpec().getVolumes())
-                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

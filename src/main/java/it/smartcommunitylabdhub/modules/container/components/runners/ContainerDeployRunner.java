@@ -13,8 +13,10 @@ import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySp
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 
 /**
@@ -32,13 +34,15 @@ public class ContainerDeployRunner implements Runner {
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public ContainerDeployRunner(String image,
                                  FunctionContainerSpec functionContainerSpec,
-                                 RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                                 RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
     }
 
     @Override
@@ -67,7 +71,7 @@ public class ContainerDeployRunner implements Runner {
                 .resources(runContainerSpec.getK8sTaskBaseSpec().getResources())
                 .nodeSelector(runContainerSpec.getK8sTaskBaseSpec().getNodeSelector())
                 .volumes(runContainerSpec.getK8sTaskBaseSpec().getVolumes())
-                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .build();
 

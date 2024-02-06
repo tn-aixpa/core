@@ -11,6 +11,8 @@ import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskValidateS
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -26,11 +28,13 @@ public class NefertemValidateRunner implements Runner {
     private final static String TASK = "validate";
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public NefertemValidateRunner(String image,
-                                  RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                                  RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
     }
 
     @Override
@@ -57,7 +61,7 @@ public class NefertemValidateRunner implements Runner {
                 .resources(runNefertemSpec.getK8sTaskBaseSpec().getResources())
                 .nodeSelector(runNefertemSpec.getK8sTaskBaseSpec().getNodeSelector())
                 .volumes(runNefertemSpec.getK8sTaskBaseSpec().getVolumes())
-                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

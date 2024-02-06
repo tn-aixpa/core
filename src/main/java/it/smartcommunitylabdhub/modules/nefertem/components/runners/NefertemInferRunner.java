@@ -11,6 +11,8 @@ import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskInferSpec
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -26,12 +28,14 @@ public class NefertemInferRunner implements Runner {
     private static final String TASK = "infer";
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
+    private final Map<String, Set<String>> groupedSecrets;
 
 
     public NefertemInferRunner(String image,
-                               RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                               RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
     }
 
     @Override
@@ -60,7 +64,7 @@ public class NefertemInferRunner implements Runner {
                 .resources(runNefertemSpec.getK8sTaskBaseSpec().getResources())
                 .nodeSelector(runNefertemSpec.getK8sTaskBaseSpec().getNodeSelector())
                 .volumes(runNefertemSpec.getK8sTaskBaseSpec().getVolumes())
-                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

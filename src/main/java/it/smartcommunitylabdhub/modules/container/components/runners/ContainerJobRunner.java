@@ -13,8 +13,10 @@ import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 
 /**
@@ -31,14 +33,16 @@ public class ContainerJobRunner implements Runner {
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public ContainerJobRunner(String image,
                               FunctionContainerSpec functionContainerSpec,
-                              RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                              RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
-    }
+        this.groupedSecrets = groupedSecrets;
+ }
 
     @Override
     public K8sJobRunnable produce(Run runDTO) {
@@ -60,6 +64,10 @@ public class ContainerJobRunner implements Runner {
                 .task(TASK)
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
+                .resources(runContainerSpec.getK8sTaskBaseSpec().getResources())
+                .nodeSelector(runContainerSpec.getK8sTaskBaseSpec().getNodeSelector())
+                .volumes(runContainerSpec.getK8sTaskBaseSpec().getVolumes())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .build();
 

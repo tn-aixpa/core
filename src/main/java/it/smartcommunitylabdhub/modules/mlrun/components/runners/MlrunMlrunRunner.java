@@ -10,6 +10,8 @@ import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.RunMlrunSpec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -26,11 +28,14 @@ public class MlrunMlrunRunner implements Runner {
 
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public MlrunMlrunRunner(String image,
-                            RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                            RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
+
     }
 
     @Override
@@ -58,7 +63,7 @@ public class MlrunMlrunRunner implements Runner {
                 .resources(runMlrunSpec.getTaskMlrunSpec().getResources())
                 .nodeSelector(runMlrunSpec.getTaskMlrunSpec().getNodeSelector())
                 .volumes(runMlrunSpec.getTaskMlrunSpec().getVolumes())
-                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

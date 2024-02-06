@@ -10,6 +10,8 @@ import it.smartcommunitylabdhub.modules.dbt.models.specs.run.RunDbtSpec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -25,11 +27,12 @@ public class DbtTransformRunner implements Runner {
 
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
+    private final Map<String, Set<String>> groupedSecrets;
 
-    public DbtTransformRunner(String image,
-                              RunDefaultFieldAccessor runDefaultFieldAccessor) {
+    public DbtTransformRunner(String image, RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
     }
 
     @Override
@@ -57,7 +60,7 @@ public class DbtTransformRunner implements Runner {
                 .resources(runDbtSpec.getTaskTransformSpec().getResources())
                 .nodeSelector(runDbtSpec.getTaskTransformSpec().getNodeSelector())
                 .volumes(runDbtSpec.getTaskTransformSpec().getVolumes())
-                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

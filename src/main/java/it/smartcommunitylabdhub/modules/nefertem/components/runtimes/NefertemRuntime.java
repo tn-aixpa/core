@@ -20,6 +20,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.nefertem.components.builders.NefertemInferBuilder;
@@ -33,6 +34,8 @@ import it.smartcommunitylabdhub.modules.nefertem.components.runners.NefertemVali
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.factories.FunctionNefertemSpecFactory;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.run.RunNefertemSpec;
+import it.smartcommunitylabdhub.modules.nefertem.models.specs.run.factories.RunNefertemSpecFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -53,8 +56,10 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
     RunDefaultFieldAccessorFactory runDefaultFieldAccessorFactory;
 
     @Autowired
-    RunRunSpecFactory runRunSpecFactory;
+    RunNefertemSpecFactory runNefertemSpecFactory;
 
+    @Autowired
+    ProjectSecretService secretService;
 
     @Value("${runtime.nefertem.image}")
     private String image;
@@ -191,7 +196,7 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
 
 
         // Crete spec for run
-        RunRunSpec runRunSpec = runRunSpecFactory.create();
+        RunNefertemSpec<? extends K8sTaskBaseSpec> runRunSpec = runNefertemSpecFactory.create();
         runRunSpec.configure(runDTO.getSpec());
 
         // Create string run accessor from task
@@ -213,16 +218,24 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
         return switch (runAccessor.getTask()) {
             case "infer" -> new NefertemInferRunner(
                     image,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())
+                    ).produce(runDTO);
             case "validate" -> new NefertemValidateRunner(
                     image,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())
+                    ).produce(runDTO);
             case "profile" -> new NefertemProfileRunner(
                     image,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())
+                    ).produce(runDTO);
             case "metric" -> new NefertemMetricRunner(
                     image,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())
+                    ).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",

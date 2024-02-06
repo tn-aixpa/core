@@ -264,10 +264,10 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
                         }
                     });
             }
-            return result;
+            return result.isEmpty() ? null : result;
 
         }
-        return Collections.emptyMap();
+        return null;
     }
 
 

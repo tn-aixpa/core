@@ -19,6 +19,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.container.components.builders.ContainerDeployBuilder;
@@ -53,6 +54,9 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
 
     @Autowired
     RunContainerSpecFactory runContainerSpecFactory;
+
+    @Autowired
+    ProjectSecretService secretService;
 
     public ContainerRuntime(BuilderFactory builderFactory,
                             RunnerFactory runnerFactory) {
@@ -226,15 +230,19 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
             case "deploy" -> new ContainerDeployRunner(
                     functionContainerSpec.getImage(),
                     functionContainerSpec,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())
+                    ).produce(runDTO);
             case "job" -> new ContainerJobRunner(
                     functionContainerSpec.getImage(),
                     functionContainerSpec,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())).produce(runDTO);
             case "serve" -> new ContainerServeRunner(
                     functionContainerSpec.getImage(),
                     functionContainerSpec,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",

@@ -17,6 +17,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.mlrun.components.builders.MlrunMlrunBuilder;
@@ -24,6 +25,7 @@ import it.smartcommunitylabdhub.modules.mlrun.components.runners.MlrunMlrunRunne
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.function.factories.FunctionMlrunSpecFactory;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.RunMlrunSpec;
+import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.factories.RunMlrunSpecFactory;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.task.TaskMlrunSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +46,10 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
     RunDefaultFieldAccessorFactory runDefaultFieldAccessorFactory;
 
     @Autowired
-    RunRunSpecFactory runRunSpecFactory;
+    RunMlrunSpecFactory runMlrunSpecFactory;
+
+    @Autowired
+    ProjectSecretService secretService;
 
 
     @Value("${runtime.mlrun.image}")
@@ -128,7 +133,7 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
          */
 
         // Crete spec for run
-        RunRunSpec runRunSpec = runRunSpecFactory.create();
+        RunMlrunSpec runRunSpec = runMlrunSpecFactory.create();
         runRunSpec.configure(runDTO.getSpec());
 
         // Create and configure function mlrun spec
@@ -144,7 +149,10 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
                         JacksonMapper.typeRef)
         );
 
-        MlrunMlrunRunner runner = new MlrunMlrunRunner(image, runDefaultFieldAccessor);
+        MlrunMlrunRunner runner = new MlrunMlrunRunner(
+            image, 
+            runDefaultFieldAccessor,
+            secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskMlrunSpec().getSecrets()));
 
         return runner.produce(runDTO);
     }
