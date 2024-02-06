@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectProjectSpec;
 import it.smartcommunitylabdhub.core.models.enums.State;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,11 +57,13 @@ public class ProjectEntityBuilder {
         Map<String, Object> spec = projectSpec.toMap();
 
         return EntityFactory.combine(
-                ConversionUtils.convert(projectDTO, "project"), projectDTO,
+                ProjectEntity.builder().build(), projectDTO,
                 builder -> builder
                         // check id
                         .withIf(projectDTO.getId() != null,
                                 (p) -> p.setId(projectDTO.getId()))
+                        .with(p -> p.setName(projectDTO.getName()))
+                        .with(p -> p.setKind(projectDTO.getKind()))
                         .withIfElse(projectFieldAccessor.getState().equals(State.NONE.name()),
                                 (p, condition) -> {
                                     if (condition) {
@@ -113,51 +114,34 @@ public class ProjectEntityBuilder {
         // Validate Spec
         specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
 
-        // Retrieve field accessor
-        ProjectFieldAccessor<?> projectFieldAccessor =
-                accessorRegistry.createAccessor(
-                        projectDTO.getKind(),
-                        EntityName.PROJECT,
-                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(projectDTO,
-                                JacksonMapper.typeRef));
 
-        // Retrieve object spec
-        ProjectBaseSpec projectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER
-                .convertValue(
-                        projectDTO.getSpec(),
-                        ProjectProjectSpec.class
-                );
-        Map<String, Object> spec = projectSpec.toMap();
+        ProjectEntity newProject = build(projectDTO);
+        return doUpdate(project, newProject);
+
+    }
+
+    private ProjectEntity doUpdate(ProjectEntity project, ProjectEntity newProject) {
 
         return EntityFactory.combine(
-                project, projectDTO, builder -> builder
+                project, newProject, builder -> builder
 
-                        .withIfElse(projectFieldAccessor.getState().equals(State.NONE.name()),
+                        .withIfElse(newProject.getState().name().equals(State.NONE.name()),
                                 (p, condition) -> {
                                     if (condition) {
                                         p.setState(State.CREATED);
                                     } else {
-                                        p.setState(State.valueOf(projectFieldAccessor.getState()));
+                                        p.setState(newProject.getState());
                                     }
                                 }
                         )
-                        .with(p -> p.setMetadata(ConversionUtils.convert(
-                                projectDTO.getMetadata(), "metadata")))
-                        .with(p -> p.setExtra(ConversionUtils.convert(
-                                projectDTO.getExtra(), "cbor")))
-                        .with(p -> p.setStatus(ConversionUtils.convert(
-                                projectDTO.getStatus(), "cbor")))
-                        .with(p -> {
-                            spec.remove("projects");
-                            spec.remove("workflows");
-                            spec.remove("artifacts");
-                            spec.remove("dataitems");
-                            p.setSpec(ConversionUtils.convert(spec, "cbor"));
-                        })
-                        .withIf(projectDTO.getMetadata().getSource() != null, (p) ->
-                                p.setSource(projectDTO.getMetadata().getSource()))
-                        .withIf(projectDTO.getMetadata().getDescription() != null, (p) ->
-                                p.setDescription(projectDTO.getMetadata().getDescription()))
+                        .with(p -> p.setMetadata(newProject.getMetadata()))
+                        .with(p -> p.setExtra(newProject.getExtra()))
+                        .with(p -> p.setStatus(newProject.getStatus()))
+                        .with(p -> p.setSpec(newProject.getSpec()))
+                        .withIf(newProject.getSource() != null, (p) ->
+                                p.setSource(newProject.getSource()))
+                        .withIf(newProject.getDescription() != null, (p) ->
+                                p.setDescription(newProject.getDescription()))
 
 
         );
