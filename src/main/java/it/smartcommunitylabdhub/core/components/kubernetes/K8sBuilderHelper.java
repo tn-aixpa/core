@@ -1,20 +1,29 @@
 package it.smartcommunitylabdhub.core.components.kubernetes;
 
+import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
+import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
 import io.kubernetes.client.openapi.models.V1SecretEnvSource;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
+import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
+import io.kubernetes.client.openapi.models.V1Volume;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -99,6 +108,26 @@ public class K8sBuilderHelper {
                 .toList();
         }
         return Collections.emptyList();
+    }
+
+
+    public V1Volume getVolume(Map<String, Object> map) {
+        V1Volume volume = new V1Volume();
+        String type = (String)map.getOrDefault("volume_type", "");
+        map.remove("volume_type");
+        switch (type) {
+            case "config_map": return volume.configMap(new ObjectMapper().convertValue(map, V1ConfigMapVolumeSource.class));        
+            case "secret": return volume.secret(new ObjectMapper().convertValue(map, V1SecretVolumeSource.class));        
+            case "persistent_volume_claim": return volume.persistentVolumeClaim(new ObjectMapper().convertValue(map, V1PersistentVolumeClaimVolumeSource.class));        
+            default: return null;
+        }
+    }
+
+
+    public Map<String, Quantity> convertResources(Map<String, String> map) {
+        return map.entrySet().stream()
+        .map(entry -> Map.entry(entry.getKey(), Quantity.fromString(entry.getValue())))
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
 }

@@ -122,6 +122,21 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
                 new V1EnvVar().name(key).value(value)));
 
 
+        // Volumes to attach to the pod based on the volume spec with the additional volume_type 
+        List<V1Volume> volumes = new LinkedList<>();
+        if(runnable.getVolumes() != null) {
+            runnable.getVolumes().forEach(volumeMap -> {
+                V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
+                if (volume != null) {
+                    volumes.add(volume);
+                }
+            });
+        }
+
+        // resources
+        V1ResourceRequirements resources = new V1ResourceRequirements();
+        if (runnable.getRequests() != null) resources.setRequests(k8sBuilderHelper.convertResources(runnable.getRequests()));
+        if (runnable.getLimits() != null) resources.setLimits(k8sBuilderHelper.convertResources(runnable.getLimits()));
         // Create the Job metadata
         V1ObjectMeta metadata = new V1ObjectMeta()
                 .name(jobName)
@@ -134,6 +149,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
                 .imagePullPolicy("Always")
                 .command(getCommand(runnable))
                 .imagePullPolicy("IfNotPresent")
+                .resources(resources)
                 .envFrom(envVarsFromSource)
                 .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
 
@@ -141,6 +157,8 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
                 .containers(Collections.singletonList(container))
+                .nodeSelector(runnable.getNodeSelector())
+                .volumes(volumes)
                 .restartPolicy("Never");
 
         // Create a PodTemplateSpec with the PodSpec
