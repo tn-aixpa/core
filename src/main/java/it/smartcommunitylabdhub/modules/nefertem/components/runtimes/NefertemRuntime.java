@@ -3,9 +3,9 @@ package it.smartcommunitylabdhub.modules.nefertem.components.runtimes;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
@@ -18,6 +18,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
@@ -31,12 +32,13 @@ import it.smartcommunitylabdhub.modules.nefertem.components.runners.NefertemProf
 import it.smartcommunitylabdhub.modules.nefertem.components.runners.NefertemValidateRunner;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.factories.FunctionNefertemSpecFactory;
+import it.smartcommunitylabdhub.modules.nefertem.models.specs.run.RunNefertemSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 @RuntimeComponent(runtime = "nefertem")
-public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
+public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefertemSpec<? extends K8sTaskBaseSpec>, K8sJobRunnable> {
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
@@ -60,7 +62,7 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
     }
 
     @Override
-    public RunBaseSpec build(
+    public RunNefertemSpec<? extends K8sTaskBaseSpec> build(
             FunctionNefertemSpec funSpec,
             TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
@@ -164,7 +166,7 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec> {
 
 
     @Override
-    public Runnable run(Run runDTO) {
+    public K8sJobRunnable run(Run runDTO) {
 
         /**
          *  As an alternative, you can use the code below to retrieve the correct runner.

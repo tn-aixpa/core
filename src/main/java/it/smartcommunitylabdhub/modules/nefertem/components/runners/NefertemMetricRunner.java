@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.modules.nefertem.components.runners;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
@@ -8,7 +7,6 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 
 /**
@@ -33,16 +31,7 @@ public class NefertemMetricRunner implements Runner {
     }
 
     @Override
-    public Runnable produce(Run runDTO) {
-
-        return Optional.ofNullable(runDTO)
-                .map(this::validateRunDTO)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
-
-    }
-
-    private K8sJobRunnable validateRunDTO(Run runDTO) {
-
+    public K8sJobRunnable produce(Run runDTO) {
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime("nefertem")
