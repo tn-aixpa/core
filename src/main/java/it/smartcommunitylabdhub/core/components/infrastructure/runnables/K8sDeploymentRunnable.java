@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.runnables;
 
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RunnableComponent;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.BaseRunnable;
+import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreEnv;
 import lombok.*;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class K8sDeploymentRunnable extends BaseRunnable {
 
     String[] args;
 
-    Map<String, String> envs;
+    List<CoreEnv> envs;
 
     // mapping secret name to the list of keys to of the secret to use
     Map<String, Set<String>> secrets;

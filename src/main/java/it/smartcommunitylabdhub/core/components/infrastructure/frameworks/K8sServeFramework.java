@@ -120,12 +120,12 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
 
         // Merge function specific envs
-        runnable.getEnvs().forEach((key, value) -> envVars.add(
-                new V1EnvVar().name(key).value(value)));
+        runnable.getEnvs().forEach((env) -> envVars.add(
+                new V1EnvVar().name(env.name()).value(env.value())));
 
         // Volumes to attach to the pod based on the volume spec with the additional volume_type 
         List<V1Volume> volumes = new LinkedList<>();
-        if(runnable.getVolumes() != null) {
+        if (runnable.getVolumes() != null) {
             runnable.getVolumes().forEach(volumeMap -> {
                 V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
                 if (volume != null) {
@@ -136,7 +136,8 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
         // resources
         V1ResourceRequirements resources = new V1ResourceRequirements();
-        if (runnable.getRequests() != null) resources.setRequests(k8sBuilderHelper.convertResources(runnable.getRequests()));
+        if (runnable.getRequests() != null)
+            resources.setRequests(k8sBuilderHelper.convertResources(runnable.getRequests()));
         if (runnable.getLimits() != null) resources.setLimits(k8sBuilderHelper.convertResources(runnable.getLimits()));
 
         // Create the Serve metadata

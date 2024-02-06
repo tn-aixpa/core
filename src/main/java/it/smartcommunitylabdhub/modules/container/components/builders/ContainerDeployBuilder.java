@@ -2,11 +2,9 @@ package it.smartcommunitylabdhub.modules.container.components.builders;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
-
-import java.util.Map;
 
 /**
  * ContainerDeployBuilder
@@ -20,26 +18,24 @@ import java.util.Map;
 public class ContainerDeployBuilder implements Builder<
         FunctionContainerSpec,
         TaskDeploySpec,
-        RunRunSpec> {
+        RunRunSpec,
+        RunContainerSpec<TaskDeploySpec>> {
 
     @Override
-    public RunRunSpec build(
+    public RunContainerSpec<TaskDeploySpec> build(
             FunctionContainerSpec funSpec,
             TaskDeploySpec taskSpec,
             RunRunSpec runSpec) {
 
-        // Merge spec
-        Map<String, Object> extraSpecs = MapUtils.mergeMultipleMaps(
-                funSpec.toMap(),
-                taskSpec.toMap()
-        );
+        RunContainerSpec<TaskDeploySpec> taskDeploySpecRunContainerSpec =
+                RunContainerSpec.<TaskDeploySpec>builder()
+                        .k8sTaskBaseSpec(taskSpec)
+                        .functionContainerSpec(funSpec)
+                        .build();
 
-        // Update run specific spec
-        runSpec.getExtraSpecs()
-                .putAll(extraSpecs);
+        taskDeploySpecRunContainerSpec.configure(runSpec.toMap());
 
-        // Return a run spec
-        return runSpec;
+        return taskDeploySpecRunContainerSpec;
     }
 }
 

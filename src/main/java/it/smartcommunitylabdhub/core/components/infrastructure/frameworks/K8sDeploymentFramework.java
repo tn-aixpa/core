@@ -27,7 +27,6 @@ import it.smartcommunitylabdhub.core.services.interfaces.RunService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +45,8 @@ import java.util.stream.Stream;
 @FrameworkComponent(framework = "k8sdeployment")
 public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>, InitializingBean {
 
+    private final CoreV1Api coreV1Api;
+    private final AppsV1Api appsV1Api;
     @Autowired
     PollingService pollingService;
     @Autowired
@@ -58,12 +59,8 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
     RunService runService;
     @Autowired
     K8sBuilderHelper k8sBuilderHelper;
-
     @Value("${kubernetes.namespace}")
     private String namespace;
-
-    private final CoreV1Api coreV1Api;
-    private final AppsV1Api appsV1Api;
 
     public K8sDeploymentFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
@@ -75,7 +72,7 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(k8sBuilderHelper, "k8s helper is required");
-    }   
+    }
 
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
@@ -116,12 +113,12 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
         List<V1EnvVar> envVars = k8sBuilderHelper.getV1EnvVar();
         List<V1EnvVar> runEnvFromSource = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
         // Merge runnable specific envs
-        runnable.getEnvs().forEach((key, value) -> envVars.add(
-                new V1EnvVar().name(key).value(value)));
+        runnable.getEnvs().forEach((env) -> envVars.add(
+                new V1EnvVar().name(env.name()).value(env.value())));
 
         // Volumes to attach to the pod based on the volume spec with the additional volume_type 
         List<V1Volume> volumes = new LinkedList<>();
-        if(runnable.getVolumes() != null) {
+        if (runnable.getVolumes() != null) {
             runnable.getVolumes().forEach(volumeMap -> {
                 V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
                 if (volume != null) {
@@ -132,7 +129,8 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
 
         // resources
         V1ResourceRequirements resources = new V1ResourceRequirements();
-        if (runnable.getRequests() != null) resources.setRequests(k8sBuilderHelper.convertResources(runnable.getRequests()));
+        if (runnable.getRequests() != null)
+            resources.setRequests(k8sBuilderHelper.convertResources(runnable.getRequests()));
         if (runnable.getLimits() != null) resources.setLimits(k8sBuilderHelper.convertResources(runnable.getLimits()));
 
         // Create the Deployment metadata

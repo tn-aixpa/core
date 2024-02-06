@@ -1,21 +1,24 @@
 package it.smartcommunitylabdhub.modules.container.components.runners;
 
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
+import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreEnv;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
+import it.smartcommunitylabdhub.modules.container.components.runtimes.ContainerRuntime;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 
 /**
- * ContainerDeployRunner
+ * ContainerJobRunner
  * <p>
  * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
  * you have to register it using the following annotation:
@@ -24,6 +27,7 @@ import java.util.Optional;
  */
 public class ContainerJobRunner implements Runner {
 
+    private final static String TASK = "job";
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
@@ -37,30 +41,25 @@ public class ContainerJobRunner implements Runner {
     }
 
     @Override
-    public Runnable produce(Run runDTO) {
-        return Optional.of(runDTO)
-                .map(this::validateJobRunDTO)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
-    }
+    public K8sJobRunnable produce(Run runDTO) {
 
-    /**
-     * Return a runnable of type K8sJobRunnable
-     *
-     * @param runDTO
-     * @return K8sJobRunnable
-     */
-    private K8sJobRunnable validateJobRunDTO(Run runDTO) {
+        RunContainerSpec<TaskJobSpec> runContainerSpec = RunContainerSpec.<TaskJobSpec>builder().build();
+        runContainerSpec.configure(runDTO.getSpec());
 
+
+        List<CoreEnv> coreEnvList = new ArrayList<>(List.of(
+                new CoreEnv("PROJECT_NAME", runDTO.getProject()),
+                new CoreEnv("RUN_ID", runDTO.getId())
+        ));
+
+        coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
-                .runtime("container")
-                .task("job")
+                .runtime(ContainerRuntime.RUNTIME)
+                .task(TASK)
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
-                .envs(MapUtils.mergeMultipleMaps(Map.of(
-                                "PROJECT_NAME", runDTO.getProject(),
-                                "RUN_ID", runDTO.getId()),
-                        Optional.ofNullable(functionContainerSpec.getEnvs()).orElse(Map.of())))
+                .envs(coreEnvList)
                 .build();
 
         Optional.ofNullable(functionContainerSpec.getArgs())
@@ -79,6 +78,6 @@ public class ContainerJobRunner implements Runner {
         k8sJobRunnable.setProject(runDTO.getProject());
 
         return k8sJobRunnable;
-
     }
+
 }

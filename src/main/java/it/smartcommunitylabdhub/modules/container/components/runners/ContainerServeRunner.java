@@ -1,15 +1,18 @@
 package it.smartcommunitylabdhub.modules.container.components.runners;
 
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
+import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreEnv;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
+import it.smartcommunitylabdhub.modules.container.components.runtimes.ContainerRuntime;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskServeSpec;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,6 +27,7 @@ import java.util.Optional;
  */
 public class ContainerServeRunner implements Runner {
 
+    private final static String TASK = "serve";
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
@@ -37,32 +41,25 @@ public class ContainerServeRunner implements Runner {
     }
 
     @Override
-    public Runnable produce(Run runDTO) {
+    public K8sServeRunnable produce(Run runDTO) {
 
-        return Optional.of(runDTO)
-                .map(this::validateDeployRunDTO)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
+        RunContainerSpec<TaskServeSpec> runContainerSpec = RunContainerSpec.<TaskServeSpec>builder().build();
+        runContainerSpec.configure(runDTO.getSpec());
 
-    }
+        List<CoreEnv> coreEnvList = new ArrayList<>(List.of(
+                new CoreEnv("PROJECT_NAME", runDTO.getProject()),
+                new CoreEnv("RUN_ID", runDTO.getId())
+        ));
 
-    /**
-     * Return a K8sServeRunnable
-     *
-     * @param runDTO
-     * @return
-     */
-    private K8sServeRunnable validateDeployRunDTO(Run runDTO) {
+        coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
 
 
         K8sServeRunnable k8sServeRunnable = K8sServeRunnable.builder()
-                .runtime("container")
-                .task("serve")
+                .runtime(ContainerRuntime.RUNTIME)
+                .task(TASK)
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
-                .envs(MapUtils.mergeMultipleMaps(Map.of(
-                                "PROJECT_NAME", runDTO.getProject(),
-                                "RUN_ID", runDTO.getId()),
-                        Optional.ofNullable(functionContainerSpec.getEnvs()).orElse(Map.of())))
+                .envs(coreEnvList)
                 .build();
 
         Optional.ofNullable(functionContainerSpec.getArgs())
@@ -83,4 +80,5 @@ public class ContainerServeRunner implements Runner {
         return k8sServeRunnable;
 
     }
+
 }

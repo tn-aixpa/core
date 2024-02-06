@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.models.entities.task.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreEnv;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +19,7 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
     @JsonProperty("node_selector")
     Map<String, String> nodeSelector;
 
-    List<Map<String, Object>> envs;
+    List<CoreEnv> envs;
 
     /**
      * K8S resource requests: <resource>:<value>
@@ -35,7 +36,7 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
     public void configure(Map<String, Object> data) {
         K8sTaskBaseSpec concreteSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                 data, K8sTaskBaseSpec.class);
-        
+
         this.setVolumes(concreteSpec.getVolumes());
         this.setNodeSelector(concreteSpec.getNodeSelector());
         this.setEnvs(concreteSpec.getEnvs());

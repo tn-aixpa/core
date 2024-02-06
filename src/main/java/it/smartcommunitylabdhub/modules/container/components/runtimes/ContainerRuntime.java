@@ -18,6 +18,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
@@ -29,14 +30,17 @@ import it.smartcommunitylabdhub.modules.container.components.runners.ContainerJo
 import it.smartcommunitylabdhub.modules.container.components.runners.ContainerServeRunner;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.factories.FunctionContainerSpecFactory;
+import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskServeSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
-@RuntimeComponent(runtime = "container")
-public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, TaskBaseSpec, Runnable> {
+@RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
+public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunContainerSpec<? extends K8sTaskBaseSpec>, Runnable> {
+
+    public static final String RUNTIME = "container";
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
@@ -59,7 +63,7 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, TaskBas
     }
 
     @Override
-    public RunBaseSpec build(
+    public RunContainerSpec<? extends K8sTaskBaseSpec> build(
             FunctionContainerSpec funSpec,
             TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,

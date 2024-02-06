@@ -1,15 +1,18 @@
 package it.smartcommunitylabdhub.modules.container.components.runners;
 
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
+import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreEnv;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
+import it.smartcommunitylabdhub.modules.container.components.runtimes.ContainerRuntime;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,6 +27,8 @@ import java.util.Optional;
  */
 public class ContainerDeployRunner implements Runner {
 
+    private final static String TASK = "deploy";
+
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
@@ -37,32 +42,28 @@ public class ContainerDeployRunner implements Runner {
     }
 
     @Override
-    public Runnable produce(Run runDTO) {
+    public K8sDeploymentRunnable produce(Run runDTO) {
 
-        return Optional.of(runDTO)
-                .map(this::validateDeployRunDTO)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
+        // Retrieve information about RunDbtSpec
 
-    }
+        RunContainerSpec<TaskDeploySpec> runContainerSpec = RunContainerSpec.<TaskDeploySpec>builder().build();
+        runContainerSpec.configure(runDTO.getSpec());
 
-    /**
-     * Return a K8sDeploymentRunnable
-     *
-     * @param runDTO
-     * @return
-     */
-    private K8sDeploymentRunnable validateDeployRunDTO(Run runDTO) {
+
+        List<CoreEnv> coreEnvList = new ArrayList<>(List.of(
+                new CoreEnv("PROJECT_NAME", runDTO.getProject()),
+                new CoreEnv("RUN_ID", runDTO.getId())
+        ));
+
+        coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
 
 
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable.builder()
-                .runtime("container") //TODO: delete accessor.
-                .task("deploy")
+                .runtime(ContainerRuntime.RUNTIME) //TODO: delete accessor.
+                .task(TASK)
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
-                .envs(MapUtils.mergeMultipleMaps(Map.of(
-                                "PROJECT_NAME", runDTO.getProject(),
-                                "RUN_ID", runDTO.getId()),
-                        Optional.ofNullable(functionContainerSpec.getEnvs()).orElse(Map.of())))
+                .envs(coreEnvList)
                 .build();
 
         Optional.ofNullable(functionContainerSpec.getArgs())

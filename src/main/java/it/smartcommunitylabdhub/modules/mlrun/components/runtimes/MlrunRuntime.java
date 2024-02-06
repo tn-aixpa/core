@@ -29,8 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
-@RuntimeComponent(runtime = "mlrun")
+@RuntimeComponent(runtime = MlrunRuntime.RUNTIME)
 public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K8sJobRunnable> {
+
+    public static final String RUNTIME = "mlrun";
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
