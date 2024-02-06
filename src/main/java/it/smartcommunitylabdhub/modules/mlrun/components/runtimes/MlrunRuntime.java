@@ -134,11 +134,7 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
         // Create and configure function mlrun spec
         FunctionMlrunSpec functionMlrunSpec = functionMlrunSpecFactory.create();
         functionMlrunSpec.configure(runDTO.getSpec());
-
-        if (functionMlrunSpec.getExtraSpecs() == null) {
-            throw new IllegalArgumentException(
-                    "Invalid argument: args not found in runDTO spec");
-        }
+        
 
         // Create and configure default run field accessor
         RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();

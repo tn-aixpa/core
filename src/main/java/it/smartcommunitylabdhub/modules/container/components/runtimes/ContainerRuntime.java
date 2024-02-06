@@ -17,7 +17,6 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -31,6 +30,7 @@ import it.smartcommunitylabdhub.modules.container.components.runners.ContainerSe
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.factories.FunctionContainerSpecFactory;
 import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.modules.container.models.specs.run.factories.RunContainerSpecFactory;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskServeSpec;
@@ -53,7 +53,7 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
     RunDefaultFieldAccessorFactory runDefaultFieldAccessorFactory;
 
     @Autowired
-    RunRunSpecFactory runRunSpecFactory;
+    RunContainerSpecFactory runContainerSpecFactory;
 
     private String image;
 
@@ -209,7 +209,7 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
          *      Runner runner = getRunner(runAccessor.getTask());
          */
         // Crete spec for run
-        RunRunSpec runRunSpec = runRunSpecFactory.create();
+        RunContainerSpec<? extends K8sTaskBaseSpec> runRunSpec = runContainerSpecFactory.create();
         runRunSpec.configure(runDTO.getSpec());
 
         // Create string run accessor from task
@@ -219,10 +219,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
         FunctionContainerSpec functionContainerSpec = functionContainerSpecFactory.create();
         functionContainerSpec.configure(runDTO.getSpec());
 
-        if (functionContainerSpec.getExtraSpecs() == null) {
-            throw new IllegalArgumentException(
-                    "Invalid argument: args not found in runDTO spec");
-        }
 
         // Create and configure default run field accessor
         RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();

@@ -8,15 +8,15 @@ import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Map;
 
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @SpecType(kind = "run+container", entity = EntityName.RUN, factory = RunContainerSpec.class)
 public class RunContainerSpec<T extends K8sTaskBaseSpec> extends RunBaseSpec {
 

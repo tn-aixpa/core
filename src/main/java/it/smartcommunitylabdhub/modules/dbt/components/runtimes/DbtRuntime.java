@@ -140,11 +140,6 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec, RunDbtSpec, K8sJobR
         FunctionDbtSpec functionDbtSpec = functionDbtSpecFactory.create();
         functionDbtSpec.configure(runDTO.getSpec());
 
-        if (functionDbtSpec.getExtraSpecs() == null) {
-            throw new IllegalArgumentException(
-                    "Invalid argument: args not found in runDTO spec");
-        }
-
         // Create and configure default run field accessor
         RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
         runDefaultFieldAccessor.configure(
