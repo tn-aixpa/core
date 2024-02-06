@@ -53,11 +53,14 @@ public class FunctionEntityBuilder {
                 .convertValue(functionDTO.getSpec(), FunctionBaseSpec.class);
 
         return EntityFactory.combine(
-                ConversionUtils.convert(functionDTO, "function"), functionDTO,
+                FunctionEntity.builder().build(), functionDTO,
                 builder -> builder
                         // check id
                         .withIf(functionDTO.getId() != null,
                                 (f) -> f.setId(functionDTO.getId()))
+                        .with(f -> f.setName(functionDTO.getName()))
+                        .with(f -> f.setKind(functionDTO.getKind()))
+                        .with(f -> f.setProject(functionDTO.getProject()))
                         .with(f -> f.setMetadata(ConversionUtils.convert(
                                 functionDTO.getMetadata(), "metadata")))
                         .with(f -> f.setExtra(ConversionUtils.convert(
@@ -106,39 +109,34 @@ public class FunctionEntityBuilder {
         // Validate spec
         specRegistry.createSpec(functionDTO.getKind(), EntityName.FUNCTION, Map.of());
 
-        // Retrieve field accessor
-        FunctionFieldAccessor<?> functionFieldAccessor =
-                accessorRegistry.createAccessor(
-                        functionDTO.getKind(),
-                        EntityName.FUNCTION,
-                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(functionDTO,
-                                JacksonMapper.typeRef));
+        FunctionEntity newFunction = build(functionDTO);
+        return doUpdate(function, newFunction);
+    }
+
+    private FunctionEntity doUpdate(FunctionEntity function, FunctionEntity newFunction) {
 
         return EntityFactory.combine(
-                function, functionDTO, builder -> builder
-                        .withIfElse(functionFieldAccessor.getState().equals(State.NONE.name()),
+                function, newFunction, builder -> builder
+                        .withIfElse(newFunction.getState().name().equals(State.NONE.name()),
                                 (f, condition) -> {
                                     if (condition) {
                                         f.setState(State.CREATED);
                                     } else {
-                                        f.setState(State.valueOf(functionFieldAccessor.getState()));
+                                        f.setState(newFunction.getState());
                                     }
                                 }
                         )
-                        .with(f -> f.setMetadata(ConversionUtils.convert(
-                                functionDTO.getMetadata(), "metadata")))
-                        .with(f -> f.setExtra(ConversionUtils.convert(
-                                functionDTO.getExtra(), "cbor")))
-                        .with(f -> f.setStatus(ConversionUtils.convert(
-                                functionDTO.getStatus(), "cbor")))
+                        .with(f -> f.setMetadata(newFunction.getMetadata()))
+                        .with(f -> f.setExtra(newFunction.getExtra()))
+                        .with(f -> f.setStatus(newFunction.getStatus()))
 
                         // Metadata Extraction
-                        .withIfElse(functionDTO.getMetadata().getEmbedded() == null,
+                        .withIfElse(newFunction.getEmbedded() == null,
                                 (f, condition) -> {
                                     if (condition) {
                                         f.setEmbedded(false);
                                     } else {
-                                        f.setEmbedded(functionDTO.getMetadata().getEmbedded());
+                                        f.setEmbedded(newFunction.getEmbedded());
                                     }
                                 }
                         )

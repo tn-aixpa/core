@@ -52,13 +52,15 @@ public class DataItemEntityBuilder {
                 .convertValue(dataItemDTO.getSpec(), DataItemBaseSpec.class);
 
         return EntityFactory.combine(
-                ConversionUtils.convert(dataItemDTO, "dataitem"), dataItemDTO,
+                DataItemEntity.builder().build(), dataItemDTO,
                 builder -> builder
 
-                        // check id
                         .withIf(dataItemDTO.getId() != null,
                                 (d) -> d.setId(dataItemDTO.getId()))
-                        .with(p -> p.setMetadata(ConversionUtils.convert(
+                        .with(d -> d.setName(dataItemDTO.getName()))
+                        .with(d -> d.setKind(dataItemDTO.getKind()))
+                        .with(d -> d.setProject(dataItemDTO.getProject()))
+                        .with(d -> d.setMetadata(ConversionUtils.convert(
                                 dataItemDTO.getMetadata(), "metadata")))
                         .with(d -> d.setExtra(ConversionUtils.convert(
                                 dataItemDTO.getExtra(), "cbor")))
@@ -109,39 +111,34 @@ public class DataItemEntityBuilder {
         // Validate Spec
         specRegistry.createSpec(dataItemDTO.getKind(), EntityName.DATAITEM, Map.of());
 
-        // Retrieve field accessor
-        DataItemFieldAccessor<?> dataItemFieldAccessor =
-                accessorRegistry.createAccessor(
-                        dataItemDTO.getKind(),
-                        EntityName.DATAITEM,
-                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(dataItemDTO,
-                                JacksonMapper.typeRef));
+        DataItemEntity newDataItem = build(dataItemDTO);
+        return doUpdate(dataItem, newDataItem);
 
+    }
+
+    private DataItemEntity doUpdate(DataItemEntity dataItem, DataItemEntity newDataItem) {
         return EntityFactory.combine(
-                dataItem, dataItemDTO, builder -> builder
-                        .withIfElse(dataItemFieldAccessor.getState().equals(State.NONE.name()),
+                dataItem, newDataItem, builder -> builder
+                        .withIfElse(newDataItem.getState().name().equals(State.NONE.name()),
                                 (d, condition) -> {
                                     if (condition) {
                                         d.setState(State.CREATED);
                                     } else {
-                                        d.setState(State.valueOf(dataItemFieldAccessor.getState()));
+                                        d.setState(newDataItem.getState());
                                     }
                                 }
                         )
-                        .with(d -> d.setMetadata(ConversionUtils.convert(
-                                dataItemDTO.getMetadata(), "metadata")))
-                        .with(d -> d.setExtra(ConversionUtils.convert(
-                                dataItemDTO.getExtra(), "cbor")))
-                        .with(d -> d.setStatus(ConversionUtils.convert(
-                                dataItemDTO.getStatus(), "cbor")))
+                        .with(d -> d.setMetadata(newDataItem.getMetadata()))
+                        .with(d -> d.setExtra(newDataItem.getExtra()))
+                        .with(d -> d.setStatus(newDataItem.getStatus()))
 
                         // Metadata Extraction
-                        .withIfElse(dataItemDTO.getMetadata().getEmbedded() == null,
+                        .withIfElse(newDataItem.getEmbedded() == null,
                                 (d, condition) -> {
                                     if (condition) {
                                         d.setEmbedded(false);
                                     } else {
-                                        d.setEmbedded(dataItemDTO.getMetadata().getEmbedded());
+                                        d.setEmbedded(newDataItem.getEmbedded());
                                     }
                                 }
                         )

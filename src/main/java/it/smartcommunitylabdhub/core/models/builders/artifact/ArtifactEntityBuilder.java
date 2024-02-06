@@ -55,12 +55,15 @@ public class ArtifactEntityBuilder {
 
 
         return EntityFactory.combine(
-                ConversionUtils.convert(artifactDTO, "artifact"), artifactDTO,
+                ArtifactEntity.builder().build(), artifactDTO,
                 builder -> builder
 
                         // check id
                         .withIf(artifactDTO.getId() != null,
                                 (a) -> a.setId(artifactDTO.getId()))
+                        .with(a -> a.setName(artifactDTO.getName()))
+                        .with(a -> a.setKind(artifactDTO.getKind()))
+                        .with(a -> a.setProject(artifactDTO.getProject()))
                         .with(a -> a.setMetadata(ConversionUtils.convert(
                                 artifactDTO.getMetadata(), "metadata")))
                         .with(a -> a.setExtra(ConversionUtils.convert(
@@ -114,40 +117,37 @@ public class ArtifactEntityBuilder {
         // Validate Spec
         specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
 
-        // Retrieve Field accessor
-        ArtifactFieldAccessor<?> artifactFieldAccessor =
-                accessorRegistry.createAccessor(
-                        artifactDTO.getKind(),
-                        EntityName.ARTIFACT,
-                        JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-                                artifactDTO,
-                                JacksonMapper.typeRef)
-                );
+        ArtifactEntity newArtifact = build(artifactDTO);
+
+        return doUpdate(artifact, newArtifact);
+    }
+
+    private ArtifactEntity doUpdate(ArtifactEntity artifact,
+                                    ArtifactEntity newArtifact) {
+
 
         return EntityFactory.combine(
-                artifact, artifactDTO, builder -> builder
-                        .withIfElse(artifactFieldAccessor.getState().equals(State.NONE.name()),
+                artifact, newArtifact, builder -> builder
+                        .withIfElse(newArtifact.getState().name().equals(State.NONE.name()),
                                 (a, condition) -> {
                                     if (condition) {
                                         a.setState(State.CREATED);
                                     } else {
-                                        a.setState(State.valueOf(artifactFieldAccessor.getState()));
+                                        a.setState(newArtifact.getState());
                                     }
                                 }
                         )
-                        .with(a -> a.setMetadata(ConversionUtils.convert(
-                                artifactDTO.getMetadata(), "metadata")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(
-                                artifactDTO.getExtra(), "cbor")))
-                        .with(a -> a.setExtra(ConversionUtils.convert(
-                                artifactDTO.getStatus(), "cbor")))
+                        .with(a -> a.setMetadata(newArtifact.getMetadata()))
+                        .with(a -> a.setExtra(newArtifact.getExtra()))
+                        .with(a -> a.setExtra(newArtifact.getStatus()))
+                        .with(a -> a.setMetadata(newArtifact.getMetadata()))
                         // Metadata Extraction
-                        .withIfElse(artifactDTO.getMetadata().getEmbedded() == null,
+                        .withIfElse(newArtifact.getEmbedded() == null,
                                 (a, condition) -> {
                                     if (condition) {
                                         a.setEmbedded(false);
                                     } else {
-                                        a.setEmbedded(artifactDTO.getMetadata().getEmbedded());
+                                        a.setEmbedded(newArtifact.getEmbedded());
                                     }
                                 }
                         )
