@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services.interfaces;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +22,9 @@ public interface ProjectSecretService {
 
     boolean deleteProjectSecret(String uuid);
 
-    Map<String, String> getProjectSecretData(String project, Set<String> names);
+    Map<String, String> getProjectSecretData(String projectName, Set<String> names);
 
-    void storeProjectSecretData(String project, Map<String, String> values);
+    void storeProjectSecretData(String projectName, Map<String, String> values);
+
+    Map<String, Set<String>> groupSecrets(String projectId, Collection<String> secrets);
 }

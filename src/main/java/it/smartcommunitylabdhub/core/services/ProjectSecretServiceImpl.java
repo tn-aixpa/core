@@ -1,13 +1,17 @@
 package it.smartcommunitylabdhub.core.services;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +24,12 @@ import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
 import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.secret.SecretEntityBuilder;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
 import it.smartcommunitylabdhub.core.models.entities.secret.metadata.SecretMetadata;
 import it.smartcommunitylabdhub.core.models.entities.secret.specs.SecretBaseSpec;
+import it.smartcommunitylabdhub.core.repositories.ProjectRepository;
 import it.smartcommunitylabdhub.core.repositories.SecretRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -38,6 +44,8 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
 
     @Autowired
     private SecretRepository secretRepository;
+    @Autowired
+    private ProjectRepository projectRepository;
 
     @Autowired
     SecretDTOBuilder secretDTOBuilder;
@@ -46,6 +54,10 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
     SecretEntityBuilder secretEntityBuilder;
 
     private static final String K8S_PROVIDER = "kubernetes";
+
+    private static final String PATH_FORMAT = "%s://%s/%s";
+    
+    private static final Pattern PATH_PATTERN = Pattern.compile("\\w+)://(\\w+)/(\\w+)");
     
 
     @Override
@@ -125,8 +137,8 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
 
 
     @Override
-    public List<Secret> getProjectSecrets(String project) {
-        return secretRepository.findByProject(project).stream().map(secretEntity -> {
+    public List<Secret> getProjectSecrets(String projectName) {
+        return secretRepository.findByProject(projectName).stream().map(secretEntity -> {
             return secretDTOBuilder.build(secretEntity, false);
         }).collect(Collectors.toList());
     }
@@ -156,16 +168,16 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
 
 
     @Override
-    public Map<String, String> getProjectSecretData(String project, Set<String> names) {
+    public Map<String, String> getProjectSecretData(String projectName, Set<String> names) {
         if (names == null || names.isEmpty()) return Collections.emptyMap();
         
         Map<String, String> data = new HashMap<>();
         Map<String, String> secretData;
         try {
-            secretData = secretHelper.getSecretData(getProjectSecretName(project));
+            secretData = secretHelper.getSecretData(getProjectSecretName(projectName));
             if (secretData != null) {
                 names.forEach(n -> {
-                    SecretEntity secret = secretRepository.findByProjectAndName(project, n).orElse(null);
+                    SecretEntity secret = secretRepository.findByProjectAndName(projectName, n).orElse(null);
                     if (secret != null) {
                         Secret secretDTO = secretDTOBuilder.build(secret, false);
                         data.put(n, secretData.get((String)secretDTO.getSpec().get("path")));
@@ -183,23 +195,23 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
 
 
     @Override
-    public void storeProjectSecretData(String project, Map<String, String> values) {
+    public void storeProjectSecretData(String projectName, Map<String, String> values) {
         if (values == null || values.isEmpty()) return;
 
-        String secretName = getProjectSecretName(project);
+        String secretName = getProjectSecretName(projectName);
 
         for (Entry<String,String> entry : values.entrySet()) {
-            if (!secretRepository.existsByProjectAndName(project, entry.getKey())) {
+            if (!secretRepository.existsByProjectAndName(projectName, entry.getKey())) {
                 Secret secret = new Secret();
                 secret.setKind("secret");
                 secret.setName(entry.getKey());
-                secret.setProject(project);
+                secret.setProject(projectName);
                 
                 SecretMetadata secretMetadata = new SecretMetadata();
                 secretMetadata.setCreated(new Date());
                 secretMetadata.setEmbedded(true);
                 secretMetadata.setName(entry.getKey());
-                secretMetadata.setProject(project);
+                secretMetadata.setProject(projectName);
                 secretMetadata.setUpdated(secretMetadata.getCreated());
                 secret.setMetadata(secretMetadata);
 
@@ -221,13 +233,50 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
         }
     }
 
+    
+
+    /**
+     * Group secrets by secret name as stored in provider. Only Kubernetes provider is supported at this moment.
+     */
+    @Override
+    public Map<String, Set<String>> groupSecrets(String projectId, Collection<String> secrets) {
+        Optional<ProjectEntity> project = projectRepository.findById(projectId);
+        if (project.isPresent()) {
+            Map<String, Set<String>> result = new HashMap<>();
+            if (secrets != null && !secrets.isEmpty()) {
+                secretRepository.findByProject(project.get().getName())
+                    .stream()
+                    .filter(s -> secrets.contains(s.getName()))
+                    .forEach(secret -> {
+                        Secret secretDTO = secretDTOBuilder.build(secret, false);
+                        String path = (String) secretDTO.getSpec().get("path");
+                        Matcher matcher = PATH_PATTERN.matcher(path);
+                        if (matcher.matches()) {
+                            String provider = matcher.group(1);
+                            String secretName = matcher.group(2);
+                            String key = matcher.group(3);
+                            if (K8S_PROVIDER.equals(provider)) {
+                                if (!result.containsKey(secretName)) {
+                                    result.put(secretName, new HashSet<>());
+                                }
+                                result.get(secretName).add(key);
+                            }
+                        }
+                    });
+            }
+            return result;
+
+        }
+        return Collections.emptyMap();
+    }
+
 
     private String getProjectSecretName(String project) {
         return String.format("dhcore-proj-secrets-%s", project);
     }
 
     private String getSecretPath( String provider, String secret, String key) {
-        return String.format("%s://%s/%s", provider, secret, key);
+        return String.format(PATH_FORMAT, provider, secret, key);
     }
 
 

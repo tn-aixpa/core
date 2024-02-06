@@ -51,7 +51,8 @@ public class ContainerServeRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
-        coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
+        if (runContainerSpec.getK8sTaskBaseSpec().getEnvs() != null)
+                coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
 
 
         K8sServeRunnable k8sServeRunnable = K8sServeRunnable.builder()
@@ -59,6 +60,10 @@ public class ContainerServeRunner implements Runner {
                 .task(TASK)
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
+                .resources(runContainerSpec.getK8sTaskBaseSpec().getResources())
+                .nodeSelector(runContainerSpec.getK8sTaskBaseSpec().getNodeSelector())
+                .volumes(runContainerSpec.getK8sTaskBaseSpec().getVolumes())
+                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
                 .envs(coreEnvList)
                 .build();
 

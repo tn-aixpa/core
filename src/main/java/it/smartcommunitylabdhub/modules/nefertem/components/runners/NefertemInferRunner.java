@@ -47,6 +47,8 @@ public class NefertemInferRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
+        if (runNefertemSpec.getK8sTaskBaseSpec().getEnvs() != null)
+                coreEnvList.addAll(runNefertemSpec.getK8sTaskBaseSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
@@ -55,6 +57,10 @@ public class NefertemInferRunner implements Runner {
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
+                .resources(runNefertemSpec.getK8sTaskBaseSpec().getResources())
+                .nodeSelector(runNefertemSpec.getK8sTaskBaseSpec().getNodeSelector())
+                .volumes(runNefertemSpec.getK8sTaskBaseSpec().getVolumes())
+                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

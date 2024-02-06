@@ -45,6 +45,8 @@ public class MlrunMlrunRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
+        if (runMlrunSpec.getTaskMlrunSpec().getEnvs() != null)
+                coreEnvList.addAll(runMlrunSpec.getTaskMlrunSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
@@ -53,6 +55,10 @@ public class MlrunMlrunRunner implements Runner {
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
+                .resources(runMlrunSpec.getTaskMlrunSpec().getResources())
+                .nodeSelector(runMlrunSpec.getTaskMlrunSpec().getNodeSelector())
+                .volumes(runMlrunSpec.getTaskMlrunSpec().getVolumes())
+                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

@@ -12,9 +12,9 @@ public interface TaskFieldAccessor<O extends TaskFieldAccessor<O>> extends Commo
     }
 
     @SuppressWarnings("unchecked")
-    default Map<String, Object> getNodeSelector() {
+    default List<Map<String, Object>> getNodeSelector() {
         return mapHasField(getSpecs(), "node_selector")
-                ? (Map<String, Object>) getSpecs().get("node_selector")
+                ? (List<Map<String, Object>>) getSpecs().get("node_selector")
                 : null;
     }
 
@@ -26,9 +26,9 @@ public interface TaskFieldAccessor<O extends TaskFieldAccessor<O>> extends Commo
     }
 
     @SuppressWarnings("unchecked")
-    default Map<String, Object> getResources() {
+    default List<Map<String, Object>> getResources() {
         return mapHasField(getSpecs(), "resources")
-                ? (Map<String, Object>) getSpecs().get("resources")
+                ? (List<Map<String, Object>>) getSpecs().get("resources")
                 : null;
     }
 

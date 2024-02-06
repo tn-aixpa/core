@@ -52,7 +52,8 @@ public class ContainerJobRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
-        coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
+        if (runContainerSpec.getK8sTaskBaseSpec().getEnvs() != null)
+                coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(ContainerRuntime.RUNTIME)

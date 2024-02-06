@@ -44,6 +44,8 @@ public class DbtTransformRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
+        if (runDbtSpec.getTaskTransformSpec().getEnvs() != null) 
+                coreEnvList.addAll(runDbtSpec.getTaskTransformSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
@@ -52,6 +54,10 @@ public class DbtTransformRunner implements Runner {
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
+                .resources(runDbtSpec.getTaskTransformSpec().getResources())
+                .nodeSelector(runDbtSpec.getTaskTransformSpec().getNodeSelector())
+                .volumes(runDbtSpec.getTaskTransformSpec().getVolumes())
+                //.secrets(runDbtSpec.getTaskTransformSpec().getSecrets())
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

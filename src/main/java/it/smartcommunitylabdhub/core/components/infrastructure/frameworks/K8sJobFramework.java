@@ -13,6 +13,8 @@ import it.smartcommunitylabdhub.core.components.fsm.enums.RunEvent;
 import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
 import it.smartcommunitylabdhub.core.components.fsm.types.RunStateMachine;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.frameworks.Framework;
+import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreNodeSelector;
+import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreResource;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.components.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.core.components.pollers.PollingService;
@@ -36,6 +38,7 @@ import org.springframework.util.Assert;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -112,8 +115,6 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
         List<V1EnvVar> envVars = k8sBuilderHelper.getV1EnvVar();
         List<V1EnvVar> runEnvFromSource = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
-
-
         // Merge function specific envs
         runnable.getEnvs().forEach((env) -> envVars.add(
                 new V1EnvVar().name(env.name()).value(env.value())));
@@ -121,20 +122,30 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
         // Volumes to attach to the pod based on the volume spec with the additional volume_type 
         List<V1Volume> volumes = new LinkedList<>();
+        List<V1VolumeMount> volumeMounts = new LinkedList<>();
         if (runnable.getVolumes() != null) {
             runnable.getVolumes().forEach(volumeMap -> {
-                V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
+                V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);                
                 if (volume != null) {
                     volumes.add(volume);
+                }
+                V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
+                if (mount != null) {
+                    volumeMounts.add(mount);
                 }
             });
         }
 
         // resources
         V1ResourceRequirements resources = new V1ResourceRequirements();
-        if (runnable.getRequests() != null)
-            resources.setRequests(k8sBuilderHelper.convertResources(runnable.getRequests()));
-        if (runnable.getLimits() != null) resources.setLimits(k8sBuilderHelper.convertResources(runnable.getLimits()));
+        if (runnable.getResources() != null) {
+            resources.setRequests(k8sBuilderHelper.convertResources(
+                runnable.getResources().stream().filter(r -> r.requests() != null).collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
+            ));
+            resources.setLimits(k8sBuilderHelper.convertResources(
+                runnable.getResources().stream().filter(r -> r.limits() != null).collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
+            ));
+        }
         // Create the Job metadata
         V1ObjectMeta metadata = new V1ObjectMeta()
                 .name(jobName)
@@ -148,6 +159,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
                 .command(getCommand(runnable))
                 .imagePullPolicy("IfNotPresent")
                 .resources(resources)
+                .volumeMounts(volumeMounts)
                 .envFrom(envVarsFromSource)
                 .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
 
@@ -155,7 +167,8 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
                 .containers(Collections.singletonList(container))
-                .nodeSelector(runnable.getNodeSelector())
+                .nodeSelector(Optional.ofNullable(runnable.getNodeSelector()).orElse(Collections.emptyList())
+                              .stream().collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value)))
                 .volumes(volumes)
                 .restartPolicy("Never");
 
