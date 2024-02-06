@@ -234,7 +234,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                                         .orElseGet(() -> {
 
                                             // Retrieve Runtime and build run
-                                            Runtime<? extends FunctionBaseSpec> runtime =
+                                            Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime =
                                                     runtimeFactory.getRuntime(taskAccessor.getRuntime());
 
 

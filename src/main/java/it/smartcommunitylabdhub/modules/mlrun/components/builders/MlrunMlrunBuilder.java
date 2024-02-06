@@ -2,11 +2,9 @@ package it.smartcommunitylabdhub.modules.mlrun.components.builders;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.utils.MapUtils;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.function.FunctionMlrunSpec;
+import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.RunMlrunSpec;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.task.TaskMlrunSpec;
-
-import java.util.Map;
 
 /**
  * MlrunMlrunBuilder
@@ -20,25 +18,23 @@ import java.util.Map;
 public class MlrunMlrunBuilder implements Builder<
         FunctionMlrunSpec,
         TaskMlrunSpec,
-        RunRunSpec> {
+        RunRunSpec,
+        RunMlrunSpec> {
 
     @Override
-    public RunRunSpec build(
+    public RunMlrunSpec build(
             FunctionMlrunSpec funSpec,
             TaskMlrunSpec taskSpec,
             RunRunSpec runSpec) {
 
-        // Merge spec
-        Map<String, Object> extraSpecs = MapUtils.mergeMultipleMaps(
-                funSpec.toMap(),
-                taskSpec.toMap()
-        );
+        RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder()
+                .taskMlrunSpec(taskSpec)
+                .functionMlrunSpec(funSpec)
+                .build();
 
-        // Update run specific spec
-        runSpec.getExtraSpecs()
-                .putAll(extraSpecs);
+        runMlrunSpec.configure(runSpec.toMap());
 
         // Return a run spec
-        return runSpec;
+        return runMlrunSpec;
     }
 }

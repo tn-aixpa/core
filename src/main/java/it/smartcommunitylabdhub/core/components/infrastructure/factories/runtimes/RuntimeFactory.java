@@ -8,7 +8,9 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.runtim
 
 
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 
 import java.util.List;
 import java.util.Map;
@@ -16,14 +18,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class RuntimeFactory {
-    private final Map<String, Runtime<? extends FunctionBaseSpec>> runtimeMap;
+    private final Map<String, Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable>> runtimeMap;
 
     /**
      * Constructor to create the RuntimeFactory with a list of Runtimes.
      *
      * @param runtimes The list of Runtimes to be managed by the factory.
      */
-    public RuntimeFactory(List<Runtime<? extends FunctionBaseSpec>> runtimes) {
+    public RuntimeFactory(List<Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable>> runtimes) {
         runtimeMap = runtimes.stream()
                 .collect(Collectors.toMap(this::getRuntimeFromAnnotation,
                         Function.identity()));
@@ -37,7 +39,7 @@ public class RuntimeFactory {
      * @throws IllegalArgumentException If no @RuntimeComponent annotation is found for the
      *                                  runtime.
      */
-    private String getRuntimeFromAnnotation(Runtime<? extends FunctionBaseSpec> runtime) {
+    private String getRuntimeFromAnnotation(Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime) {
         Class<?> runtimeClass = runtime.getClass();
         if (runtimeClass.isAnnotationPresent(RuntimeComponent.class)) {
             RuntimeComponent annotation =
@@ -56,9 +58,9 @@ public class RuntimeFactory {
      * @return The Runtime for the specified platform.
      * @throws IllegalArgumentException If no Runtime is found for the given platform.
      */
-    public Runtime<? extends FunctionBaseSpec> getRuntime(String runtime) {
+    public Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> getRuntime(String runtime) {
 
-        Runtime<? extends FunctionBaseSpec> concreteRuntime = runtimeMap.get(runtime);
+        Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> concreteRuntime = runtimeMap.get(runtime);
         if (concreteRuntime == null) {
             throw new IllegalArgumentException(
                     "No runtime found for name: " + runtime);

@@ -1,14 +1,13 @@
 package it.smartcommunitylabdhub.modules.mlrun.components.runners;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.RunMlrunSpec;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 
 /**
@@ -31,16 +30,14 @@ public class MlrunMlrunRunner implements Runner {
     }
 
     @Override
-    public Runnable produce(Run runDTO) {
+    public K8sJobRunnable produce(Run runDTO) {
 
-        return Optional.ofNullable(runDTO)
-                .map(this::validateRunDTO)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid runDTO"));
+        // Retrieve information about RunMlrunSpec
+        RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
+        runMlrunSpec.configure(runDTO.getSpec());
 
-    }
 
-    private K8sJobRunnable validateRunDTO(Run runDTO) {
-
+        //TODO: Create runnable using information from Run completed spec.
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime("mlrun")
@@ -58,6 +55,7 @@ public class MlrunMlrunRunner implements Runner {
         k8sJobRunnable.setProject(runDTO.getProject());
 
         return k8sJobRunnable;
+
 
     }
 }

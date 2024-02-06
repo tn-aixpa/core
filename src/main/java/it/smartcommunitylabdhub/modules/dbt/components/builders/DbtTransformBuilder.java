@@ -28,7 +28,7 @@ public class DbtTransformBuilder implements Builder<
 
         RunDbtSpec runDbtSpec = RunDbtSpec
                 .builder()
-                .k8sTaskBaseSpec(taskSpec)
+                .taskTransformSpec(taskSpec)
                 .functionDbtSpec(funSpec)
                 .build();
 

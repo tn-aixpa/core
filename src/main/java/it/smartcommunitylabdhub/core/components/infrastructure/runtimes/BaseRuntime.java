@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public abstract class BaseRuntime<F extends FunctionBaseSpec, S extends RunBaseS
     protected Map<String, ? extends Runner> runners;
     protected Map<String, ? extends Builder<
             ? extends FunctionBaseSpec,
-            ? extends K8sTaskBaseSpec,
+            ? extends TaskBaseSpec,
             ? extends RunBaseSpec,
             ? extends RunBaseSpec>> builders;
     private String runtime;

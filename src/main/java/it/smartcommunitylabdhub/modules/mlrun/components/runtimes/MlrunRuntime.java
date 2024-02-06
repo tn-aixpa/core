@@ -3,9 +3,9 @@ package it.smartcommunitylabdhub.modules.mlrun.components.runtimes;
 import it.smartcommunitylabdhub.core.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRuntime;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
@@ -23,13 +23,14 @@ import it.smartcommunitylabdhub.modules.mlrun.components.builders.MlrunMlrunBuil
 import it.smartcommunitylabdhub.modules.mlrun.components.runners.MlrunMlrunRunner;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.function.factories.FunctionMlrunSpecFactory;
+import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.RunMlrunSpec;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.task.TaskMlrunSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 @RuntimeComponent(runtime = "mlrun")
-public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec> {
+public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K8sJobRunnable> {
 
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
@@ -53,7 +54,7 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec> {
     }
 
     @Override
-    public RunBaseSpec build(
+    public RunMlrunSpec build(
             FunctionMlrunSpec funSpec,
             TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
@@ -104,7 +105,7 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec> {
 
 
     @Override
-    public Runnable run(Run runDTO) {
+    public K8sJobRunnable run(Run runDTO) {
 
         /**
          *  As an alternative, you can use the code below to retrieve the correct runner.

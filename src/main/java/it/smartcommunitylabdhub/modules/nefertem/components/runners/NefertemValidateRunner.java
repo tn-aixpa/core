@@ -4,6 +4,8 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners
 import it.smartcommunitylabdhub.core.components.infrastructure.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.modules.nefertem.models.specs.run.RunNefertemSpec;
+import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskValidateSpec;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,12 @@ public class NefertemValidateRunner implements Runner {
 
     @Override
     public K8sJobRunnable produce(Run runDTO) {
+
+        // Retrieve information spec
+        RunNefertemSpec<TaskValidateSpec> runNefertemSpec = RunNefertemSpec.<TaskValidateSpec>builder().build();
+        runNefertemSpec.configure(runDTO.getSpec());
+
+        //TODO: Create runnable using information from Run completed spec.
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime("nefertem")

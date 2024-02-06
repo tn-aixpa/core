@@ -3,9 +3,9 @@ package it.smartcommunitylabdhub.modules.dbt.models.specs.run;
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.function.FunctionDbtSpec;
+import it.smartcommunitylabdhub.modules.dbt.models.specs.task.TaskTransformSpec;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +18,7 @@ import java.util.Map;
 @SpecType(kind = "run+dbt", entity = EntityName.RUN, factory = RunDbtSpec.class)
 public class RunDbtSpec extends RunBaseSpec {
 
-    private K8sTaskBaseSpec k8sTaskBaseSpec;
+    private TaskTransformSpec taskTransformSpec;
 
     private FunctionDbtSpec functionDbtSpec;
 

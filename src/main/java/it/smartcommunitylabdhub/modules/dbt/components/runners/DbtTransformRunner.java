@@ -33,10 +33,13 @@ public class DbtTransformRunner implements Runner {
 
     @Override
     public K8sJobRunnable produce(Run runDTO) {
-        
+
+        // Retrieve information about RunDbtSpec
+
         RunDbtSpec runDbtSpec = RunDbtSpec.builder().build();
         runDbtSpec.configure(runDTO.getSpec());
 
+        //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(DbtRuntime.RUNTIME)
                 .task("transform")
