@@ -11,6 +11,9 @@ import io.kubernetes.client.openapi.models.V1SecretEnvSource;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Volume;
+import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.proto.V1;
+import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreVolume;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -111,14 +115,14 @@ public class K8sBuilderHelper {
     }
 
 
-    public V1Volume getVolume(Map<String, Object> map) {
-        V1Volume volume = new V1Volume();
-        String type = (String)map.getOrDefault("volume_type", "");
-        map.remove("volume_type");
+    public V1Volume getVolume(CoreVolume coreVolume) {
+        V1Volume volume = new V1Volume().name(coreVolume.name());
+        String type = coreVolume.volumeType();
         switch (type) {
-            case "config_map": return volume.configMap(new ObjectMapper().convertValue(map, V1ConfigMapVolumeSource.class));        
-            case "secret": return volume.secret(new ObjectMapper().convertValue(map, V1SecretVolumeSource.class));        
-            case "persistent_volume_claim": return volume.persistentVolumeClaim(new ObjectMapper().convertValue(map, V1PersistentVolumeClaimVolumeSource.class));        
+            // TODO: support items
+            case "config_map": return volume.configMap(new V1ConfigMapVolumeSource().name((String)coreVolume.spec().getOrDefault("name", coreVolume.name())));        
+            case "secret": return volume.secret(new V1SecretVolumeSource().secretName((String)coreVolume.spec().getOrDefault("secret_name", coreVolume.name())).items(null));        
+            case "persistent_volume_claim": return volume.persistentVolumeClaim(new V1PersistentVolumeClaimVolumeSource().claimName((String)coreVolume.spec().getOrDefault("claim_name", coreVolume.name())));        
             default: return null;
         }
     }
@@ -128,6 +132,12 @@ public class K8sBuilderHelper {
         return map.entrySet().stream()
         .map(entry -> Map.entry(entry.getKey(), Quantity.fromString(entry.getValue())))
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    }
+
+
+    public V1VolumeMount getVolumeMount(CoreVolume coreVolume) {
+        V1VolumeMount mount = new V1VolumeMount().name(coreVolume.name()).mountPath(coreVolume.mountPath());
+        return mount;
     }
 
 }

@@ -10,6 +10,8 @@ import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.RunMlrunSpec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -25,11 +27,14 @@ public class MlrunMlrunRunner implements Runner {
     private final static String TASK = "mlrun";
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public MlrunMlrunRunner(String image,
-                            RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                            RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
+
     }
 
     @Override
@@ -44,6 +49,8 @@ public class MlrunMlrunRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
+        if (runMlrunSpec.getTaskMlrunSpec().getEnvs() != null)
+                coreEnvList.addAll(runMlrunSpec.getTaskMlrunSpec().getEnvs());
 
         coreEnvList.addAll(runMlrunSpec.getTaskMlrunSpec().getEnvs());
 
@@ -54,6 +61,10 @@ public class MlrunMlrunRunner implements Runner {
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
+                .resources(runMlrunSpec.getTaskMlrunSpec().getResources())
+                .nodeSelector(runMlrunSpec.getTaskMlrunSpec().getNodeSelector())
+                .volumes(runMlrunSpec.getTaskMlrunSpec().getVolumes())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

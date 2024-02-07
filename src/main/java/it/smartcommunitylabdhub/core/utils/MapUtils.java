@@ -56,7 +56,7 @@ public class MapUtils {
         Map<K, V> mergedMap = new HashMap<>();
 
         for (Map<K, V> map : maps) {
-            mergedMap.putAll(map);
+            if (map != null) mergedMap.putAll(map);
         }
         return mergedMap;
     }

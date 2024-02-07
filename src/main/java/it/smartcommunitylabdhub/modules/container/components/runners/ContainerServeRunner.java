@@ -13,8 +13,10 @@ import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskServeSpe
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 
 /**
@@ -31,13 +33,15 @@ public class ContainerServeRunner implements Runner {
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public ContainerServeRunner(String image,
                                 FunctionContainerSpec functionContainerSpec,
-                                RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                                RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
     }
 
     @Override
@@ -51,7 +55,8 @@ public class ContainerServeRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
-        coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
+        if (runContainerSpec.getK8sTaskBaseSpec().getEnvs() != null)
+                coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
 
 
         K8sServeRunnable k8sServeRunnable = K8sServeRunnable.builder()
@@ -59,6 +64,10 @@ public class ContainerServeRunner implements Runner {
                 .task(TASK)
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
+                .resources(runContainerSpec.getK8sTaskBaseSpec().getResources())
+                .nodeSelector(runContainerSpec.getK8sTaskBaseSpec().getNodeSelector())
+                .volumes(runContainerSpec.getK8sTaskBaseSpec().getVolumes())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .build();
 

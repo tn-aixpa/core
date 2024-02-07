@@ -11,6 +11,8 @@ import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskValidateS
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -26,11 +28,13 @@ public class NefertemValidateRunner implements Runner {
     private final static String TASK = "validate";
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public NefertemValidateRunner(String image,
-                                  RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                                  RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
     }
 
     @Override
@@ -44,9 +48,10 @@ public class NefertemValidateRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
+        if (runNefertemSpec.getTaskNefertemSpec().getEnvs() != null)
+            coreEnvList.addAll(runNefertemSpec.getTaskNefertemSpec().getEnvs());
 
-        coreEnvList.addAll(runNefertemSpec.getTaskNefertemSpec().getEnvs());
-        
+
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(NefertemRuntime.RUNTIME)
@@ -54,6 +59,10 @@ public class NefertemValidateRunner implements Runner {
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
+                .resources(runNefertemSpec.getTaskNefertemSpec().getResources())
+                .nodeSelector(runNefertemSpec.getTaskNefertemSpec().getNodeSelector())
+                .volumes(runNefertemSpec.getTaskNefertemSpec().getVolumes())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();

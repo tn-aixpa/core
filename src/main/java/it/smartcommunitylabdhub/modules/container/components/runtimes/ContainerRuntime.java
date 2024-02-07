@@ -19,6 +19,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.container.components.builders.ContainerDeployBuilder;
@@ -45,7 +46,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
     @Autowired
     SpecRegistry<? extends Spec> specRegistry;
 
-
     @Autowired
     FunctionContainerSpecFactory functionContainerSpecFactory;
 
@@ -55,7 +55,8 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
     @Autowired
     RunContainerSpecFactory runContainerSpecFactory;
 
-    private String image;
+    @Autowired
+    ProjectSecretService secretService;
 
     public ContainerRuntime(BuilderFactory builderFactory,
                             RunnerFactory runnerFactory) {
@@ -68,9 +69,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
             TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
             String kind) {
-
-        // The image here will be used to deploy container
-        this.image = funSpec.getImage();
 
         // Retrieve builder using task kind
         switch (kind) {
@@ -230,17 +228,21 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
 
         return switch (runAccessor.getTask()) {
             case "deploy" -> new ContainerDeployRunner(
-                    image,
+                    functionContainerSpec.getImage(),
                     functionContainerSpec,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())
+                    ).produce(runDTO);
             case "job" -> new ContainerJobRunner(
-                    image,
+                    functionContainerSpec.getImage(),
                     functionContainerSpec,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())).produce(runDTO);
             case "serve" -> new ContainerServeRunner(
-                    image,
+                    functionContainerSpec.getImage(),
                     functionContainerSpec,
-                    runDefaultFieldAccessor).produce(runDTO);
+                    runDefaultFieldAccessor,
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",

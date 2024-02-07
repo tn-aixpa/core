@@ -19,6 +19,7 @@ import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import it.smartcommunitylabdhub.core.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.modules.dbt.components.builders.DbtTransformBuilder;
@@ -26,6 +27,7 @@ import it.smartcommunitylabdhub.modules.dbt.components.runners.DbtTransformRunne
 import it.smartcommunitylabdhub.modules.dbt.models.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.function.factories.FunctionDbtSpecFactory;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.run.RunDbtSpec;
+import it.smartcommunitylabdhub.modules.dbt.models.specs.run.factories.RunDbtSpecFactory;
 import it.smartcommunitylabdhub.modules.dbt.models.specs.task.TaskTransformSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,8 +48,10 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec, RunDbtSpec, K8sJobR
     RunDefaultFieldAccessorFactory runDefaultFieldAccessorFactory;
 
     @Autowired
-    RunRunSpecFactory runRunSpecFactory;
+    RunDbtSpecFactory runDbtSpecFactory;
 
+    @Autowired
+    ProjectSecretService secretService;
 
     @Value("${runtime.dbt.image}")
     private String image;
@@ -130,11 +134,11 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec, RunDbtSpec, K8sJobR
          */
 
         // Crete spec for run
-        RunRunSpec runRunSpec = runRunSpecFactory.create();
-        runRunSpec.configure(runDTO.getSpec());
+        RunDbtSpec runDbtSpec = runDbtSpecFactory.create();
+        runDbtSpec.configure(runDTO.getSpec());
 
         // Create string run accessor from task
-        RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
+        RunAccessor runAccessor = RunUtils.parseRun(runDbtSpec.getTask());
 
         // Create and configure function dbt spec
         FunctionDbtSpec functionDbtSpec = functionDbtSpecFactory.create();
@@ -150,7 +154,8 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec, RunDbtSpec, K8sJobR
 
         DbtTransformRunner runner = new DbtTransformRunner(
                 image,
-                runDefaultFieldAccessor);
+                runDefaultFieldAccessor,
+                secretService.groupSecrets(runDTO.getProject(), runDbtSpec.getTaskTransformSpec().getSecrets()));
 
         return runner.produce(runDTO);
     }

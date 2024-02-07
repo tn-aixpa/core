@@ -11,6 +11,8 @@ import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskProfileSp
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -25,12 +27,15 @@ public class NefertemProfileRunner implements Runner {
 
     private static final String TASK = "profile";
     private final String image;
+
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
+    private final Map<String, Set<String>> groupedSecrets;
 
     public NefertemProfileRunner(String image,
-                                 RunDefaultFieldAccessor runDefaultFieldAccessor) {
+                                 RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
+        this.groupedSecrets = groupedSecrets;
     }
 
     @Override
@@ -45,8 +50,8 @@ public class NefertemProfileRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
-        
-        coreEnvList.addAll(runNefertemSpec.getTaskNefertemSpec().getEnvs());
+        if (runNefertemSpec.getTaskNefertemSpec().getEnvs() != null)
+            coreEnvList.addAll(runNefertemSpec.getTaskNefertemSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
@@ -55,6 +60,10 @@ public class NefertemProfileRunner implements Runner {
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
+                .resources(runNefertemSpec.getTaskNefertemSpec().getResources())
+                .nodeSelector(runNefertemSpec.getTaskNefertemSpec().getNodeSelector())
+                .volumes(runNefertemSpec.getTaskNefertemSpec().getVolumes())
+                .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())
                 .build();
