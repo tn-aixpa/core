@@ -32,7 +32,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
 
     private static final String K8S_PROVIDER = "kubernetes";
     private static final String PATH_FORMAT = "%s://%s/%s";
-    private static final Pattern PATH_PATTERN = Pattern.compile("(\\w+)://(\\w+)/(\\w+)");
+    private static final Pattern PATH_PATTERN = Pattern.compile("(\\w+)://([\\w-]+)/([\\w-]+)");
     @Autowired
     SecretDTOBuilder secretDTOBuilder;
 
