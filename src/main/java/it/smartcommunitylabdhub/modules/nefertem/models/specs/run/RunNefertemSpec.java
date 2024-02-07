@@ -20,7 +20,7 @@ import java.util.Map;
 @SpecType(kind = "run+nefertem", entity = EntityName.RUN, factory = RunNefertemSpec.class)
 public class RunNefertemSpec<T extends K8sTaskBaseSpec> extends RunBaseSpec {
 
-    private T k8sTaskBaseSpec;
+    private T taskNefertemSpec;
 
     private FunctionNefertemSpec functionNefertemSpec;
 

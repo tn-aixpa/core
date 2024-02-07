@@ -25,7 +25,6 @@ public class NefertemProfileRunner implements Runner {
 
     private static final String TASK = "profile";
     private final String image;
-
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
 
     public NefertemProfileRunner(String image,
@@ -46,6 +45,8 @@ public class NefertemProfileRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
+        
+        coreEnvList.addAll(runNefertemSpec.getTaskNefertemSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
@@ -55,6 +56,7 @@ public class NefertemProfileRunner implements Runner {
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
                 .envs(coreEnvList)
+                .state(runDefaultFieldAccessor.getState())
                 .build();
 
         k8sJobRunnable.setId(runDTO.getId());

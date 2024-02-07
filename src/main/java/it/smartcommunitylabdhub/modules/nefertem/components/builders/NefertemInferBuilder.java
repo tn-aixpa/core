@@ -29,7 +29,7 @@ public class NefertemInferBuilder implements Builder<
 
         RunNefertemSpec<TaskInferSpec> runNefertemSpec =
                 RunNefertemSpec.<TaskInferSpec>builder()
-                        .k8sTaskBaseSpec(taskSpec)
+                        .taskNefertemSpec(taskSpec)
                         .functionNefertemSpec(funSpec)
                         .build();
 

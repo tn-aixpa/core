@@ -24,7 +24,6 @@ import java.util.List;
 public class NefertemMetricRunner implements Runner {
 
     private static final String TASK = "metric";
-
     private final String image;
 
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
@@ -57,6 +56,7 @@ public class NefertemMetricRunner implements Runner {
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
                 .envs(coreEnvList)
+                .state(runDefaultFieldAccessor.getState())
                 .build();
 
         k8sJobRunnable.setId(runDTO.getId());

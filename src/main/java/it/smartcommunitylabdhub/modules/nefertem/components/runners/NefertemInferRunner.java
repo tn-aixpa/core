@@ -22,11 +22,9 @@ import java.util.List;
  * @RunnerComponent(runtime = "dbt", task = "infer")
  */
 public class NefertemInferRunner implements Runner {
-
     private static final String TASK = "infer";
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
-
 
     public NefertemInferRunner(String image,
                                RunDefaultFieldAccessor runDefaultFieldAccessor) {
@@ -47,6 +45,8 @@ public class NefertemInferRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
+
+        coreEnvList.addAll(runNefertemSpec.getTaskNefertemSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()

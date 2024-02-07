@@ -23,7 +23,6 @@ import java.util.List;
 public class MlrunMlrunRunner implements Runner {
 
     private final static String TASK = "mlrun";
-
     private final String image;
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
 
@@ -45,6 +44,8 @@ public class MlrunMlrunRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
+
+        coreEnvList.addAll(runMlrunSpec.getTaskMlrunSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()

@@ -45,6 +45,8 @@ public class NefertemValidateRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
+        coreEnvList.addAll(runNefertemSpec.getTaskNefertemSpec().getEnvs());
+        
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(NefertemRuntime.RUNTIME)
