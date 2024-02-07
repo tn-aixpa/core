@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.base.interfaces;
 import java.util.Map;
 
 /**
- * Base spec interface. Should be implemented by all specific Spec Ojbect.
+ * Base spec interface. Should be implemented by all specific Spec Object.
  */
 public interface Spec {
 
