@@ -224,7 +224,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
 
         return switch (runAccessor.getTask()) {
             case "deploy" -> new ContainerDeployRunner(
-                    runRunSpec.getFuncSpec().getImage(),
                     runRunSpec.getFuncSpec(),
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
@@ -233,7 +232,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
                     )
             ).produce(runDTO);
             case "job" -> new ContainerJobRunner(
-                    runRunSpec.getFuncSpec().getImage(),
                     runRunSpec.getFuncSpec(),
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
@@ -241,7 +239,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
                             runRunSpec.getTaskSpec().getSecrets())
             ).produce(runDTO);
             case "serve" -> new ContainerServeRunner(
-                    runRunSpec.getFuncSpec().getImage(),
                     runRunSpec.getFuncSpec(),
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(

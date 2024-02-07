@@ -25,16 +25,15 @@ import java.util.*;
 public class ContainerJobRunner implements Runner {
 
     private final static String TASK = "job";
-    private final String image;
+
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public ContainerJobRunner(String image,
-                              FunctionContainerSpec functionContainerSpec,
-                              RunDefaultFieldAccessor runDefaultFieldAccessor,
-                              Map<String, Set<String>> groupedSecrets) {
-        this.image = image;
+    public ContainerJobRunner(
+            FunctionContainerSpec functionContainerSpec,
+            RunDefaultFieldAccessor runDefaultFieldAccessor,
+            Map<String, Set<String>> groupedSecrets) {
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
         this.groupedSecrets = groupedSecrets;
@@ -58,7 +57,7 @@ public class ContainerJobRunner implements Runner {
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(ContainerRuntime.RUNTIME)
                 .task(TASK)
-                .image(image)
+                .image(functionContainerSpec.getImage())
                 .state(runDefaultFieldAccessor.getState())
                 .resources(runContainerSpec.getTaskSpec().getResources())
                 .nodeSelector(runContainerSpec.getTaskSpec().getNodeSelector())

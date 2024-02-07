@@ -1,23 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import io.kubernetes.client.openapi.ApiException;
 import it.smartcommunitylabdhub.core.components.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
@@ -34,31 +16,34 @@ import it.smartcommunitylabdhub.core.repositories.SecretRepository;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class ProjectSecretServiceImpl implements ProjectSecretService {
-    
-    @Autowired
-    private K8sSecretHelper secretHelper;
 
-    @Autowired
-    private SecretRepository secretRepository;
-    @Autowired
-    private ProjectRepository projectRepository;
-
+    private static final String K8S_PROVIDER = "kubernetes";
+    private static final String PATH_FORMAT = "%s://%s/%s";
+    private static final Pattern PATH_PATTERN = Pattern.compile("(\\w+)://(\\w+)/(\\w+)");
     @Autowired
     SecretDTOBuilder secretDTOBuilder;
 
     @Autowired
     SecretEntityBuilder secretEntityBuilder;
-
-    private static final String K8S_PROVIDER = "kubernetes";
-
-    private static final String PATH_FORMAT = "%s://%s/%s";
-    
-    private static final Pattern PATH_PATTERN = Pattern.compile("(\\w+)://(\\w+)/(\\w+)");
-    
+    @Autowired
+    private K8sSecretHelper secretHelper;
+    @Autowired
+    private SecretRepository secretRepository;
+    @Autowired
+    private ProjectRepository projectRepository;
 
     @Override
     public Secret createProjectSecret(Secret secretDTO) {
@@ -111,7 +96,8 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR);
-        }    }
+        }
+    }
 
 
     @Override
@@ -151,7 +137,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
             if (secret != null) {
                 Secret secretDTO = secretDTOBuilder.build(secret, false);
                 this.secretRepository.deleteById(uuid);
-                secretHelper.deleteSecretKeys(getProjectSecretName(secret.getProject()), Collections.singleton((String)secretDTO.getSpec().get("path")));
+                secretHelper.deleteSecretKeys(getProjectSecretName(secret.getProject()), Collections.singleton((String) secretDTO.getSpec().get("path")));
                 return true;
             }
             throw new CoreException(
@@ -170,7 +156,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
     @Override
     public Map<String, String> getProjectSecretData(String projectName, Set<String> names) {
         if (names == null || names.isEmpty()) return Collections.emptyMap();
-        
+
         Map<String, String> data = new HashMap<>();
         Map<String, String> secretData;
         try {
@@ -183,7 +169,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
                     }
                 });
             }
-            } catch (ApiException e) {
+        } catch (ApiException e) {
             throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Cannot read secret",
@@ -199,13 +185,13 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
 
         String secretName = getProjectSecretName(projectName);
 
-        for (Entry<String,String> entry : values.entrySet()) {
+        for (Entry<String, String> entry : values.entrySet()) {
             if (!secretRepository.existsByProjectAndName(projectName, entry.getKey())) {
                 Secret secret = new Secret();
                 secret.setKind("secret");
                 secret.setName(entry.getKey());
                 secret.setProject(projectName);
-                
+
                 SecretMetadata secretMetadata = new SecretMetadata();
                 secretMetadata.setCreated(new Date());
                 secretMetadata.setEmbedded(true);
@@ -218,7 +204,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
                 spec.setProvider(K8S_PROVIDER);
                 spec.setPath(getSecretPath(K8S_PROVIDER, secretName, entry.getKey()));
                 secret.setSpec(spec.toMap());
-                
+
                 secretRepository.saveAndFlush(secretEntityBuilder.build(secret));
             }
         }
@@ -232,7 +218,6 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
         }
     }
 
-    
 
     /**
      * Group secrets by secret name as stored in provider. Only Kubernetes provider is supported at this moment.
@@ -244,29 +229,29 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
             Map<String, Set<String>> result = new HashMap<>();
             if (secrets != null && !secrets.isEmpty()) {
                 secretRepository.findByProject(project.get().getName())
-                    .stream()
-                    .filter(s -> secrets.contains(s.getName()))
-                    .forEach(secret -> {
-                        Secret secretDTO = secretDTOBuilder.build(secret, false);
-                        String path = (String) secretDTO.getSpec().get("path");
-                        Matcher matcher = PATH_PATTERN.matcher(path);
-                        if (matcher.matches()) {
-                            String provider = matcher.group(1);
-                            String secretName = matcher.group(2);
-                            String key = matcher.group(3);
-                            if (K8S_PROVIDER.equals(provider)) {
-                                if (!result.containsKey(secretName)) {
-                                    result.put(secretName, new HashSet<>());
+                        .stream()
+                        .filter(s -> secrets.contains(s.getName()))
+                        .forEach(secret -> {
+                            Secret secretDTO = secretDTOBuilder.build(secret, false);
+                            String path = (String) secretDTO.getSpec().get("path");
+                            Matcher matcher = PATH_PATTERN.matcher(path);
+                            if (matcher.matches()) {
+                                String provider = matcher.group(1);
+                                String secretName = matcher.group(2);
+                                String key = matcher.group(3);
+                                if (K8S_PROVIDER.equals(provider)) {
+                                    if (!result.containsKey(secretName)) {
+                                        result.put(secretName, new HashSet<>());
+                                    }
+                                    result.get(secretName).add(key);
                                 }
-                                result.get(secretName).add(key);
                             }
-                        }
-                    });
+                        });
             }
-            return result.isEmpty() ? null : result;
+            return result.isEmpty() ? Map.of() : result;
 
         }
-        return null;
+        return Map.of();
     }
 
 
@@ -274,7 +259,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
         return String.format("dhcore-proj-secrets-%s", project);
     }
 
-    private String getSecretPath( String provider, String secret, String key) {
+    private String getSecretPath(String provider, String secret, String key) {
         return String.format(PATH_FORMAT, provider, secret, key);
     }
 

@@ -26,15 +26,15 @@ public class ContainerDeployRunner implements Runner {
 
     private final static String TASK = "deploy";
 
-    private final String image;
+
     private final RunDefaultFieldAccessor runDefaultFieldAccessor;
     private final FunctionContainerSpec functionContainerSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public ContainerDeployRunner(String image,
-                                 FunctionContainerSpec functionContainerSpec,
-                                 RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
-        this.image = image;
+    public ContainerDeployRunner(
+            FunctionContainerSpec functionContainerSpec,
+            RunDefaultFieldAccessor runDefaultFieldAccessor,
+            Map<String, Set<String>> groupedSecrets) {
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
         this.groupedSecrets = groupedSecrets;
@@ -45,7 +45,8 @@ public class ContainerDeployRunner implements Runner {
 
         // Retrieve information about RunDbtSpec
 
-        RunContainerSpec<TaskDeploySpec> runContainerSpec = RunContainerSpec.<TaskDeploySpec>builder().build();
+        RunContainerSpec<TaskDeploySpec> runContainerSpec =
+                RunContainerSpec.<TaskDeploySpec>builder().build();
         runContainerSpec.configure(runDTO.getSpec());
 
 
@@ -61,7 +62,7 @@ public class ContainerDeployRunner implements Runner {
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable.builder()
                 .runtime(ContainerRuntime.RUNTIME) //TODO: delete accessor.
                 .task(TASK)
-                .image(image)
+                .image(functionContainerSpec.getImage())
                 .state(runDefaultFieldAccessor.getState())
                 .resources(runContainerSpec.getTaskSpec().getResources())
                 .nodeSelector(runContainerSpec.getTaskSpec().getNodeSelector())
