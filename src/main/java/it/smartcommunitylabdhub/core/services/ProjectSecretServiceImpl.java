@@ -179,8 +179,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
                 names.forEach(n -> {
                     SecretEntity secret = secretRepository.findByProjectAndName(projectName, n).orElse(null);
                     if (secret != null) {
-                        Secret secretDTO = secretDTOBuilder.build(secret, false);
-                        data.put(n, secretData.get((String)secretDTO.getSpec().get("path")));
+                        data.put(n, secretData.get(n));
                     }
                 });
             }
