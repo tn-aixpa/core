@@ -29,7 +29,7 @@ public class ContainerDeployBuilder implements Builder<
 
         RunContainerSpec<TaskDeploySpec> taskDeploySpecRunContainerSpec =
                 RunContainerSpec.<TaskDeploySpec>builder()
-                        .k8sTaskBaseSpec(taskSpec)
+                        .taskContainerSpec(taskSpec)
                         .functionContainerSpec(funSpec)
                         .build();
 

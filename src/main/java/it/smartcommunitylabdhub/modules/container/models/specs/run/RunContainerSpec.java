@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.modules.container.models.specs.run;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
@@ -20,8 +21,10 @@ import java.util.Map;
 @SpecType(kind = "run+container", entity = EntityName.RUN, factory = RunContainerSpec.class)
 public class RunContainerSpec<T extends K8sTaskBaseSpec> extends RunBaseSpec {
 
-    private T k8sTaskBaseSpec;
+    @JsonProperty("task_spec")
+    private T taskContainerSpec;
 
+    @JsonProperty("func_spec")
     private FunctionContainerSpec functionContainerSpec;
 
     @Override

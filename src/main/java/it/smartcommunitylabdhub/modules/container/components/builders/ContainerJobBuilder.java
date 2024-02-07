@@ -28,7 +28,7 @@ public class ContainerJobBuilder implements Builder<
 
         RunContainerSpec<TaskJobSpec> taskJobSpecRunContainerSpec =
                 RunContainerSpec.<TaskJobSpec>builder()
-                        .k8sTaskBaseSpec(taskSpec)
+                        .taskContainerSpec(taskSpec)
                         .functionContainerSpec(funSpec)
                         .build();
 

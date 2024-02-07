@@ -29,7 +29,7 @@ public class ContainerServeBuilder implements Builder<
 
         RunContainerSpec<TaskServeSpec> taskServeSpecRunContainerSpec =
                 RunContainerSpec.<TaskServeSpec>builder()
-                        .k8sTaskBaseSpec(taskSpec)
+                        .taskContainerSpec(taskSpec)
                         .functionContainerSpec(funSpec)
                         .build();
 

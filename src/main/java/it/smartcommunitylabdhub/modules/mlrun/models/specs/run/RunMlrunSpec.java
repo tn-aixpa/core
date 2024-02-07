@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.modules.mlrun.models.specs.run;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
@@ -19,8 +20,10 @@ import java.util.Map;
 @SpecType(kind = "run+mlrun", entity = EntityName.RUN, factory = RunMlrunSpec.class)
 public class RunMlrunSpec extends RunBaseSpec {
 
+    @JsonProperty("task_spec")
     private TaskMlrunSpec taskMlrunSpec;
 
+    @JsonProperty("func_spec")
     private FunctionMlrunSpec functionMlrunSpec;
 
     @Override

@@ -11,12 +11,7 @@ import it.smartcommunitylabdhub.modules.container.models.specs.function.Function
 import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -42,7 +37,7 @@ public class ContainerJobRunner implements Runner {
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;
         this.groupedSecrets = groupedSecrets;
- }
+    }
 
     @Override
     public K8sJobRunnable produce(Run runDTO) {
@@ -56,17 +51,17 @@ public class ContainerJobRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
-        if (runContainerSpec.getK8sTaskBaseSpec().getEnvs() != null)
-                coreEnvList.addAll(runContainerSpec.getK8sTaskBaseSpec().getEnvs());
+        if (runContainerSpec.getTaskContainerSpec().getEnvs() != null)
+            coreEnvList.addAll(runContainerSpec.getTaskContainerSpec().getEnvs());
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(ContainerRuntime.RUNTIME)
                 .task(TASK)
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
-                .resources(runContainerSpec.getK8sTaskBaseSpec().getResources())
-                .nodeSelector(runContainerSpec.getK8sTaskBaseSpec().getNodeSelector())
-                .volumes(runContainerSpec.getK8sTaskBaseSpec().getVolumes())
+                .resources(runContainerSpec.getTaskContainerSpec().getResources())
+                .nodeSelector(runContainerSpec.getTaskContainerSpec().getNodeSelector())
+                .volumes(runContainerSpec.getTaskContainerSpec().getVolumes())
                 .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .build();

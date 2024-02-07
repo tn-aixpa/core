@@ -231,18 +231,18 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
                     functionContainerSpec.getImage(),
                     functionContainerSpec,
                     runDefaultFieldAccessor,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())
-                    ).produce(runDTO);
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskContainerSpec().getSecrets())
+            ).produce(runDTO);
             case "job" -> new ContainerJobRunner(
                     functionContainerSpec.getImage(),
                     functionContainerSpec,
                     runDefaultFieldAccessor,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())).produce(runDTO);
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskContainerSpec().getSecrets())).produce(runDTO);
             case "serve" -> new ContainerServeRunner(
                     functionContainerSpec.getImage(),
                     functionContainerSpec,
                     runDefaultFieldAccessor,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getK8sTaskBaseSpec().getSecrets())).produce(runDTO);
+                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskContainerSpec().getSecrets())).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",

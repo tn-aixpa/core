@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.modules.dbt.models.specs.run;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.core.annotations.common.SpecType;
 import it.smartcommunitylabdhub.core.components.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
@@ -18,8 +19,10 @@ import java.util.Map;
 @SpecType(kind = "run+dbt", entity = EntityName.RUN, factory = RunDbtSpec.class)
 public class RunDbtSpec extends RunBaseSpec {
 
+    @JsonProperty("task_spec")
     private TaskTransformSpec taskTransformSpec;
 
+    @JsonProperty("func_spec")
     private FunctionDbtSpec functionDbtSpec;
 
     @Override
