@@ -135,10 +135,6 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
         RunMlrunSpec runRunSpec = runMlrunSpecFactory.create();
         runRunSpec.configure(runDTO.getSpec());
 
-        // Create and configure function mlrun spec
-        FunctionMlrunSpec functionMlrunSpec = functionMlrunSpecFactory.create();
-        functionMlrunSpec.configure(runDTO.getSpec());
-
 
         // Create and configure default run field accessor
         RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
@@ -151,7 +147,10 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
         MlrunMlrunRunner runner = new MlrunMlrunRunner(
                 image,
                 runDefaultFieldAccessor,
-                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskSpec().getSecrets()));
+                secretService.groupSecrets(
+                        runDTO.getProject(),
+                        runRunSpec.getTaskSpec().getSecrets()
+                ));
 
         return runner.produce(runDTO);
     }

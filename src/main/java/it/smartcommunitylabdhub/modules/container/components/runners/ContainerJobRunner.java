@@ -32,7 +32,8 @@ public class ContainerJobRunner implements Runner {
 
     public ContainerJobRunner(String image,
                               FunctionContainerSpec functionContainerSpec,
-                              RunDefaultFieldAccessor runDefaultFieldAccessor, Map<String, Set<String>> groupedSecrets) {
+                              RunDefaultFieldAccessor runDefaultFieldAccessor,
+                              Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.functionContainerSpec = functionContainerSpec;
         this.runDefaultFieldAccessor = runDefaultFieldAccessor;

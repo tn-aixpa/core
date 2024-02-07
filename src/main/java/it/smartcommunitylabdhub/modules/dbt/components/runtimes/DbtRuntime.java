@@ -10,8 +10,6 @@ import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.BaseRunt
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.factories.RunDefaultFieldAccessorFactory;
-import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
-import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
@@ -136,12 +134,6 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec, RunDbtSpec, K8sJobR
         RunDbtSpec runDbtSpec = runDbtSpecFactory.create();
         runDbtSpec.configure(runDTO.getSpec());
 
-        // Create string run accessor from task
-        RunAccessor runAccessor = RunUtils.parseRun(runDbtSpec.getTask());
-
-        // Create and configure function dbt spec
-        FunctionDbtSpec functionDbtSpec = functionDbtSpecFactory.create();
-        functionDbtSpec.configure(runDTO.getSpec());
 
         // Create and configure default run field accessor
         RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
@@ -154,7 +146,10 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec, RunDbtSpec, K8sJobR
         DbtTransformRunner runner = new DbtTransformRunner(
                 image,
                 runDefaultFieldAccessor,
-                secretService.groupSecrets(runDTO.getProject(), runDbtSpec.getTaskSpec().getSecrets()));
+                secretService.groupSecrets(
+                        runDTO.getProject(),
+                        runDbtSpec.getTaskSpec().getSecrets()
+                ));
 
         return runner.produce(runDTO);
     }

@@ -199,11 +199,6 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
         // Create string run accessor from task
         RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
 
-        // Create and configure function nefertem spec
-        FunctionNefertemSpec functionNefertemSpec = functionNefertemSpecFactory.create();
-        functionNefertemSpec.configure(runDTO.getSpec());
-
-
         // Create and configure default run field accessor
         RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
         runDefaultFieldAccessor.configure(

@@ -213,10 +213,6 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
         // Create string run accessor from task
         RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
 
-        // Create and configure function dbt spec
-        FunctionContainerSpec functionContainerSpec = functionContainerSpecFactory.create();
-        functionContainerSpec.configure(runDTO.getSpec());
-
 
         // Create and configure default run field accessor
         RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
@@ -228,21 +224,30 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
 
         return switch (runAccessor.getTask()) {
             case "deploy" -> new ContainerDeployRunner(
-                    functionContainerSpec.getImage(),
-                    functionContainerSpec,
+                    runRunSpec.getFuncSpec().getImage(),
+                    runRunSpec.getFuncSpec(),
                     runDefaultFieldAccessor,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskSpec().getSecrets())
+                    secretService.groupSecrets(
+                            runDTO.getProject(),
+                            runRunSpec.getTaskSpec().getSecrets()
+                    )
             ).produce(runDTO);
             case "job" -> new ContainerJobRunner(
-                    functionContainerSpec.getImage(),
-                    functionContainerSpec,
+                    runRunSpec.getFuncSpec().getImage(),
+                    runRunSpec.getFuncSpec(),
                     runDefaultFieldAccessor,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskSpec().getSecrets())).produce(runDTO);
+                    secretService.groupSecrets(
+                            runDTO.getProject(),
+                            runRunSpec.getTaskSpec().getSecrets())
+            ).produce(runDTO);
             case "serve" -> new ContainerServeRunner(
-                    functionContainerSpec.getImage(),
-                    functionContainerSpec,
+                    runRunSpec.getFuncSpec().getImage(),
+                    runRunSpec.getFuncSpec(),
                     runDefaultFieldAccessor,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskSpec().getSecrets())).produce(runDTO);
+                    secretService.groupSecrets(
+                            runDTO.getProject(),
+                            runRunSpec.getTaskSpec().getSecrets())
+            ).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),
                     "Kind not recognized. Cannot retrieve the right Runner",
