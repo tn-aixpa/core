@@ -29,11 +29,11 @@ public class NefertemValidateBuilder implements Builder<
 
         RunNefertemSpec<TaskValidateSpec> runNefertemSpec =
                 RunNefertemSpec.<TaskValidateSpec>builder()
-                        .taskSpec(taskSpec)
-                        .funcSpec(funSpec)
                         .build();
 
         runNefertemSpec.configure(runSpec.toMap());
+        runNefertemSpec.setFuncSpec(funSpec);
+        runNefertemSpec.setTaskSpec(taskSpec);
 
         // Return a run spec
         return runNefertemSpec;

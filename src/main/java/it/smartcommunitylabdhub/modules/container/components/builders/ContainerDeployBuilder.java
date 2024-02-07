@@ -29,11 +29,11 @@ public class ContainerDeployBuilder implements Builder<
 
         RunContainerSpec<TaskDeploySpec> taskDeploySpecRunContainerSpec =
                 RunContainerSpec.<TaskDeploySpec>builder()
-                        .taskSpec(taskSpec)
-                        .funcSpec(funSpec)
                         .build();
 
         taskDeploySpecRunContainerSpec.configure(runSpec.toMap());
+        taskDeploySpecRunContainerSpec.setFuncSpec(funSpec);
+        taskDeploySpecRunContainerSpec.setTaskSpec(taskSpec);
 
         return taskDeploySpecRunContainerSpec;
     }

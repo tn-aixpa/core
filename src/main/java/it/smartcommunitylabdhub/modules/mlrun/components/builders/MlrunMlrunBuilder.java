@@ -28,11 +28,11 @@ public class MlrunMlrunBuilder implements Builder<
             RunRunSpec runSpec) {
 
         RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder()
-                .taskSpec(taskSpec)
-                .funcSpec(funSpec)
                 .build();
 
         runMlrunSpec.configure(runSpec.toMap());
+        runMlrunSpec.setTaskSpec(taskSpec);
+        runMlrunSpec.setFuncSpec(funSpec);
 
         // Return a run spec
         return runMlrunSpec;

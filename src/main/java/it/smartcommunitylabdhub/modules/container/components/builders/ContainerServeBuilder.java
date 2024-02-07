@@ -29,11 +29,11 @@ public class ContainerServeBuilder implements Builder<
 
         RunContainerSpec<TaskServeSpec> taskServeSpecRunContainerSpec =
                 RunContainerSpec.<TaskServeSpec>builder()
-                        .taskSpec(taskSpec)
-                        .funcSpec(funSpec)
                         .build();
 
         taskServeSpecRunContainerSpec.configure(runSpec.toMap());
+        taskServeSpecRunContainerSpec.setFuncSpec(funSpec);
+        taskServeSpecRunContainerSpec.setTaskSpec(taskSpec);
 
         return taskServeSpecRunContainerSpec;
     }

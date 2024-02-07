@@ -28,11 +28,11 @@ public class ContainerJobBuilder implements Builder<
 
         RunContainerSpec<TaskJobSpec> taskJobSpecRunContainerSpec =
                 RunContainerSpec.<TaskJobSpec>builder()
-                        .taskSpec(taskSpec)
-                        .funcSpec(funSpec)
                         .build();
 
         taskJobSpecRunContainerSpec.configure(runSpec.toMap());
+        taskJobSpecRunContainerSpec.setFuncSpec(funSpec);
+        taskJobSpecRunContainerSpec.setTaskSpec(taskSpec);
 
         return taskJobSpecRunContainerSpec;
     }
