@@ -22,10 +22,10 @@ import java.util.Map;
 public class RunContainerSpec<T extends K8sTaskBaseSpec> extends RunBaseSpec {
 
     @JsonProperty("task_spec")
-    private T taskContainerSpec;
+    private T taskSpec;
 
     @JsonProperty("func_spec")
-    private FunctionContainerSpec functionContainerSpec;
+    private FunctionContainerSpec funcSpec;
 
     @Override
     public void configure(Map<String, Object> data) {
@@ -34,6 +34,9 @@ public class RunContainerSpec<T extends K8sTaskBaseSpec> extends RunBaseSpec {
         };
         RunContainerSpec<T> runContainerSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, typeReference);
 
+
+        this.setTaskSpec(runContainerSpec.getTaskSpec());
+        this.setFuncSpec(runContainerSpec.getFuncSpec());
 
         super.configure(data);
         this.setExtraSpecs(runContainerSpec.getExtraSpecs());

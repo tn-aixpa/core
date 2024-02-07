@@ -218,28 +218,28 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskNefertemSpec().getSecrets())
+                            runRunSpec.getTaskSpec().getSecrets())
             ).produce(runDTO);
             case "validate" -> new NefertemValidateRunner(
                     image,
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskNefertemSpec().getSecrets())
+                            runRunSpec.getTaskSpec().getSecrets())
             ).produce(runDTO);
             case "profile" -> new NefertemProfileRunner(
                     image,
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskNefertemSpec().getSecrets())
+                            runRunSpec.getTaskSpec().getSecrets())
             ).produce(runDTO);
             case "metric" -> new NefertemMetricRunner(
                     image,
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskNefertemSpec().getSecrets())
+                            runRunSpec.getTaskSpec().getSecrets())
             ).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),

@@ -22,10 +22,10 @@ import java.util.Map;
 public class RunNefertemSpec<T extends K8sTaskBaseSpec> extends RunBaseSpec {
 
     @JsonProperty("task_spec")
-    private T taskNefertemSpec;
+    private T taskSpec;
 
     @JsonProperty("func_spec")
-    private FunctionNefertemSpec functionNefertemSpec;
+    private FunctionNefertemSpec funcSpec;
 
     @Override
     public void configure(Map<String, Object> data) {
@@ -34,6 +34,8 @@ public class RunNefertemSpec<T extends K8sTaskBaseSpec> extends RunBaseSpec {
         };
         RunNefertemSpec<T> runNefertemSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, typeReference);
 
+        this.setTaskSpec(runNefertemSpec.getTaskSpec());
+        this.setFuncSpec(runNefertemSpec.getFuncSpec());
 
         super.configure(data);
         this.setExtraSpecs(runNefertemSpec.getExtraSpecs());

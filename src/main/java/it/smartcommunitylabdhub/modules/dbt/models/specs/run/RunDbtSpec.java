@@ -20,16 +20,19 @@ import java.util.Map;
 public class RunDbtSpec extends RunBaseSpec {
 
     @JsonProperty("task_spec")
-    private TaskTransformSpec taskTransformSpec;
+    private TaskTransformSpec taskSpec;
 
     @JsonProperty("func_spec")
-    private FunctionDbtSpec functionDbtSpec;
+    private FunctionDbtSpec funcSpec;
 
     @Override
     public void configure(Map<String, Object> data) {
 
         RunDbtSpec runDbtSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                 data, RunDbtSpec.class);
+
+        this.setTaskSpec(runDbtSpec.getTaskSpec());
+        this.setFuncSpec(runDbtSpec.getFuncSpec());
 
         super.configure(data);
         this.setExtraSpecs(runDbtSpec.getExtraSpecs());

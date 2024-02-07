@@ -21,16 +21,19 @@ import java.util.Map;
 public class RunMlrunSpec extends RunBaseSpec {
 
     @JsonProperty("task_spec")
-    private TaskMlrunSpec taskMlrunSpec;
+    private TaskMlrunSpec taskSpec;
 
     @JsonProperty("func_spec")
-    private FunctionMlrunSpec functionMlrunSpec;
+    private FunctionMlrunSpec funcSpec;
 
     @Override
     public void configure(Map<String, Object> data) {
 
         RunMlrunSpec runMlrunSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
                 data, RunMlrunSpec.class);
+
+        this.setTaskSpec(runMlrunSpec.getTaskSpec());
+        this.setFuncSpec(runMlrunSpec.getFuncSpec());
 
         super.configure(data);
         this.setExtraSpecs(runMlrunSpec.getExtraSpecs());

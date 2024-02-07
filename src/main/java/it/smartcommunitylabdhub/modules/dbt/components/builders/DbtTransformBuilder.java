@@ -28,8 +28,8 @@ public class DbtTransformBuilder implements Builder<
 
         RunDbtSpec runDbtSpec = RunDbtSpec
                 .builder()
-                .taskTransformSpec(taskSpec)
-                .functionDbtSpec(funSpec)
+                .taskSpec(taskSpec)
+                .funcSpec(funSpec)
                 .build();
 
         runDbtSpec.configure(runSpec.toMap());

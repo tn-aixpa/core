@@ -28,8 +28,8 @@ public class ContainerJobBuilder implements Builder<
 
         RunContainerSpec<TaskJobSpec> taskJobSpecRunContainerSpec =
                 RunContainerSpec.<TaskJobSpec>builder()
-                        .taskContainerSpec(taskSpec)
-                        .functionContainerSpec(funSpec)
+                        .taskSpec(taskSpec)
+                        .funcSpec(funSpec)
                         .build();
 
         taskJobSpecRunContainerSpec.configure(runSpec.toMap());

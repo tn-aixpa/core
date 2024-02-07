@@ -51,17 +51,17 @@ public class ContainerJobRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
-        if (runContainerSpec.getTaskContainerSpec().getEnvs() != null)
-            coreEnvList.addAll(runContainerSpec.getTaskContainerSpec().getEnvs());
+        if (runContainerSpec.getTaskSpec().getEnvs() != null)
+            coreEnvList.addAll(runContainerSpec.getTaskSpec().getEnvs());
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(ContainerRuntime.RUNTIME)
                 .task(TASK)
                 .image(image)
                 .state(runDefaultFieldAccessor.getState())
-                .resources(runContainerSpec.getTaskContainerSpec().getResources())
-                .nodeSelector(runContainerSpec.getTaskContainerSpec().getNodeSelector())
-                .volumes(runContainerSpec.getTaskContainerSpec().getVolumes())
+                .resources(runContainerSpec.getTaskSpec().getResources())
+                .nodeSelector(runContainerSpec.getTaskSpec().getNodeSelector())
+                .volumes(runContainerSpec.getTaskSpec().getVolumes())
                 .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .build();

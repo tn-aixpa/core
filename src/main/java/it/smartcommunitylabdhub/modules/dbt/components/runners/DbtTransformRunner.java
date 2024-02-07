@@ -47,10 +47,10 @@ public class DbtTransformRunner implements Runner {
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
-        if (runDbtSpec.getTaskTransformSpec().getEnvs() != null) 
-                coreEnvList.addAll(runDbtSpec.getTaskTransformSpec().getEnvs());
+        if (runDbtSpec.getTaskSpec().getEnvs() != null)
+            coreEnvList.addAll(runDbtSpec.getTaskSpec().getEnvs());
 
-        coreEnvList.addAll(runDbtSpec.getTaskTransformSpec().getEnvs());
+        coreEnvList.addAll(runDbtSpec.getTaskSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
@@ -59,9 +59,9 @@ public class DbtTransformRunner implements Runner {
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
-                .resources(runDbtSpec.getTaskTransformSpec().getResources())
-                .nodeSelector(runDbtSpec.getTaskTransformSpec().getNodeSelector())
-                .volumes(runDbtSpec.getTaskTransformSpec().getVolumes())
+                .resources(runDbtSpec.getTaskSpec().getResources())
+                .nodeSelector(runDbtSpec.getTaskSpec().getNodeSelector())
+                .volumes(runDbtSpec.getTaskSpec().getVolumes())
                 .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())

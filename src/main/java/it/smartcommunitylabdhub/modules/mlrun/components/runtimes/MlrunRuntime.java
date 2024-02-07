@@ -15,7 +15,6 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -139,7 +138,7 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
         // Create and configure function mlrun spec
         FunctionMlrunSpec functionMlrunSpec = functionMlrunSpecFactory.create();
         functionMlrunSpec.configure(runDTO.getSpec());
-        
+
 
         // Create and configure default run field accessor
         RunDefaultFieldAccessor runDefaultFieldAccessor = runDefaultFieldAccessorFactory.create();
@@ -150,9 +149,9 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
         );
 
         MlrunMlrunRunner runner = new MlrunMlrunRunner(
-            image, 
-            runDefaultFieldAccessor,
-            secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskMlrunSpec().getSecrets()));
+                image,
+                runDefaultFieldAccessor,
+                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskSpec().getSecrets()));
 
         return runner.produce(runDTO);
     }

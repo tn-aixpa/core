@@ -17,7 +17,6 @@ import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.factories.RunRunSpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -155,7 +154,7 @@ public class DbtRuntime extends BaseRuntime<FunctionDbtSpec, RunDbtSpec, K8sJobR
         DbtTransformRunner runner = new DbtTransformRunner(
                 image,
                 runDefaultFieldAccessor,
-                secretService.groupSecrets(runDTO.getProject(), runDbtSpec.getTaskTransformSpec().getSecrets()));
+                secretService.groupSecrets(runDTO.getProject(), runDbtSpec.getTaskSpec().getSecrets()));
 
         return runner.produce(runDTO);
     }
