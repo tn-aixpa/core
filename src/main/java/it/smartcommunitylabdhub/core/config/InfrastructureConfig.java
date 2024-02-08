@@ -37,7 +37,6 @@ public class InfrastructureConfig {
             List<Builder<
                     ? extends FunctionBaseSpec,
                     ? extends TaskBaseSpec,
-                    ? extends RunBaseSpec,
                     ? extends RunBaseSpec>> builders) {
         return new BuilderFactory(builders);
     }

@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "dbt", entity = EntityName.FUNCTION, factory = FunctionDbtSpec.class)
+@SpecType(kind = "dbt", runtime = "dbt", entity = EntityName.FUNCTION, factory = FunctionDbtSpec.class)
 public class FunctionDbtSpec extends FunctionBaseSpec {
     private String sql;
 

@@ -8,6 +8,8 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtime
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.CustomException;
+import it.smartcommunitylabdhub.core.models.accessors.utils.RunAccessor;
+import it.smartcommunitylabdhub.core.models.accessors.utils.RunUtils;
 import it.smartcommunitylabdhub.core.models.accessors.utils.TaskAccessor;
 import it.smartcommunitylabdhub.core.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
@@ -202,7 +204,10 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
         // Retrieve task
         return Optional.ofNullable(this.taskService.getTask(runBaseSpec.getTaskId()))
                 .map(taskDTO -> {
+                    RunAccessor runAccessor = RunUtils.parseRun(runBaseSpec.getTask());
+
                     TaskBaseSpec taskBaseSpec = specRegistry.createSpec(
+                            runAccessor.getRuntime(),
                             taskDTO.getKind(),
                             EntityName.TASK,
                             taskDTO.getSpec());
@@ -242,6 +247,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                                             // an exception occur! for.
                                             RunBaseSpec runSpecBuilt = runtime.build(
                                                     specRegistry.createSpec(
+                                                            taskAccessor.getRuntime(),
                                                             functionDTO.getKind(),
                                                             EntityName.FUNCTION,
                                                             functionDTO.getSpec()),

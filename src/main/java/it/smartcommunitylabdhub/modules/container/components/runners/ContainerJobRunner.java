@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.modules.container.components.runtimes.ContainerRuntime;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
 
 import java.util.*;
 
@@ -42,7 +41,7 @@ public class ContainerJobRunner implements Runner {
     @Override
     public K8sJobRunnable produce(Run runDTO) {
 
-        RunContainerSpec<TaskJobSpec> runContainerSpec = RunContainerSpec.<TaskJobSpec>builder().build();
+        RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
         runContainerSpec.configure(runDTO.getSpec());
 
 
@@ -51,17 +50,17 @@ public class ContainerJobRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
-        if (runContainerSpec.getTaskSpec().getEnvs() != null)
-            coreEnvList.addAll(runContainerSpec.getTaskSpec().getEnvs());
+        if (runContainerSpec.getTaskJobSpec().getEnvs() != null)
+            coreEnvList.addAll(runContainerSpec.getTaskJobSpec().getEnvs());
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
                 .runtime(ContainerRuntime.RUNTIME)
                 .task(TASK)
                 .image(functionContainerSpec.getImage())
                 .state(runDefaultFieldAccessor.getState())
-                .resources(runContainerSpec.getTaskSpec().getResources())
-                .nodeSelector(runContainerSpec.getTaskSpec().getNodeSelector())
-                .volumes(runContainerSpec.getTaskSpec().getVolumes())
+                .resources(runContainerSpec.getTaskJobSpec().getResources())
+                .nodeSelector(runContainerSpec.getTaskJobSpec().getNodeSelector())
+                .volumes(runContainerSpec.getTaskJobSpec().getVolumes())
                 .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .build();

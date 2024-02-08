@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "serve", entity = EntityName.TASK, factory = TaskServeSpec.class)
+@SpecType(kind = "serve", runtime = "container", entity = EntityName.TASK, factory = TaskServeSpec.class)
 public class TaskServeSpec extends TaskDeploySpec {
 
     /// TODO: Service parameters port list...ClusterIP or NodePort

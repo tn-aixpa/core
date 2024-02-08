@@ -17,13 +17,13 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "run+mlrun", entity = EntityName.RUN, factory = RunMlrunSpec.class)
+@SpecType(kind = "run", runtime = "mlrun", entity = EntityName.RUN, factory = RunMlrunSpec.class)
 public class RunMlrunSpec extends RunBaseSpec {
 
-    @JsonProperty("task_spec")
+    @JsonProperty("task_mlrun_spec")
     private TaskMlrunSpec taskSpec;
 
-    @JsonProperty("func_spec")
+    @JsonProperty("func_mlrun_spec")
     private FunctionMlrunSpec funcSpec;
 
     @Override

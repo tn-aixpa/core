@@ -16,7 +16,6 @@ import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -38,7 +37,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 
 @RuntimeComponent(runtime = NefertemRuntime.RUNTIME)
-public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefertemSpec<? extends K8sTaskBaseSpec>, K8sJobRunnable> {
+public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefertemSpec, K8sJobRunnable> {
 
 
     public static final String RUNTIME = "nefertem";
@@ -67,7 +66,7 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
     }
 
     @Override
-    public RunNefertemSpec<? extends K8sTaskBaseSpec> build(
+    public RunNefertemSpec build(
             FunctionNefertemSpec funSpec,
             TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
@@ -96,11 +95,13 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
                 return builder.build(
                         funSpec,
                         specRegistry.createSpec(
+                                "nefertem",
                                 "infer",
                                 EntityName.TASK,
                                 taskSpec.toMap()
                         ),
                         specRegistry.createSpec(
+                                "nefertem",
                                 "run",
                                 EntityName.RUN,
                                 runSpec.toMap()
@@ -114,11 +115,13 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
                 return builder.build(
                         funSpec,
                         specRegistry.createSpec(
+                                "nefertem",
                                 "validate",
                                 EntityName.TASK,
                                 taskSpec.toMap()
                         ),
                         specRegistry.createSpec(
+                                "nefertem",
                                 "run",
                                 EntityName.RUN,
                                 runSpec.toMap()
@@ -132,11 +135,13 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
                 return builder.build(
                         funSpec,
                         specRegistry.createSpec(
+                                "nefertem",
                                 "metric",
                                 EntityName.TASK,
                                 taskSpec.toMap()
                         ),
                         specRegistry.createSpec(
+                                "nefertem",
                                 "run",
                                 EntityName.RUN,
                                 runSpec.toMap()
@@ -150,11 +155,13 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
                 return builder.build(
                         funSpec,
                         specRegistry.createSpec(
+                                "nefertem",
                                 "profile",
                                 EntityName.TASK,
                                 taskSpec.toMap()
                         ),
                         specRegistry.createSpec(
+                                "nefertem",
                                 "run",
                                 EntityName.RUN,
                                 runSpec.toMap()
@@ -193,7 +200,7 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
 
 
         // Crete spec for run
-        RunNefertemSpec<? extends K8sTaskBaseSpec> runRunSpec = runNefertemSpecFactory.create();
+        RunNefertemSpec runRunSpec = runNefertemSpecFactory.create();
         runRunSpec.configure(runDTO.getSpec());
 
         // Create string run accessor from task
@@ -213,28 +220,28 @@ public class NefertemRuntime extends BaseRuntime<FunctionNefertemSpec, RunNefert
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskSpec().getSecrets())
+                            runRunSpec.getTaskInferSpec().getSecrets())
             ).produce(runDTO);
             case "validate" -> new NefertemValidateRunner(
                     image,
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskSpec().getSecrets())
+                            runRunSpec.getTaskValidateSpec().getSecrets())
             ).produce(runDTO);
             case "profile" -> new NefertemProfileRunner(
                     image,
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskSpec().getSecrets())
+                            runRunSpec.getTaskProfileSpec().getSecrets())
             ).produce(runDTO);
             case "metric" -> new NefertemMetricRunner(
                     image,
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskSpec().getSecrets())
+                            runRunSpec.getTaskMetricSpec().getSecrets())
             ).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),

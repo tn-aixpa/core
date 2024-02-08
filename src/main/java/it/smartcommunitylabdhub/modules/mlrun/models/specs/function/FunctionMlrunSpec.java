@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "mlrun", entity = EntityName.FUNCTION, factory = FunctionMlrunSpec.class)
+@SpecType(kind = "mlrun", runtime = "mlrun", entity = EntityName.FUNCTION, factory = FunctionMlrunSpec.class)
 public class FunctionMlrunSpec extends FunctionBaseSpec {
     private String image;
     private String tag;
@@ -34,7 +34,7 @@ public class FunctionMlrunSpec extends FunctionBaseSpec {
         this.setCommand(functionMlrunSpec.getCommand());
         this.setRequirements(functionMlrunSpec.getRequirements());
         super.configure(data);
-        
+
         this.setExtraSpecs(functionMlrunSpec.getExtraSpecs());
     }
 }

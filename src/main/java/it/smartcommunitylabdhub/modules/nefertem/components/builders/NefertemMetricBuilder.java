@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.modules.nefertem.components.builders;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.run.RunNefertemSpec;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskMetricSpec;
@@ -18,22 +17,21 @@ import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskMetricSpe
 public class NefertemMetricBuilder implements Builder<
         FunctionNefertemSpec,
         TaskMetricSpec,
-        RunRunSpec,
-        RunNefertemSpec<TaskMetricSpec>> {
+        RunNefertemSpec> {
 
     @Override
-    public RunNefertemSpec<TaskMetricSpec> build(
+    public RunNefertemSpec build(
             FunctionNefertemSpec funSpec,
             TaskMetricSpec taskSpec,
-            RunRunSpec runSpec) {
+            RunNefertemSpec runSpec) {
 
-        RunNefertemSpec<TaskMetricSpec> runNefertemSpec =
-                RunNefertemSpec.<TaskMetricSpec>builder()
+        RunNefertemSpec runNefertemSpec =
+                RunNefertemSpec.builder()
                         .build();
 
         runNefertemSpec.configure(runSpec.toMap());
         runNefertemSpec.setFuncSpec(funSpec);
-        runNefertemSpec.setTaskSpec(taskSpec);
+        runNefertemSpec.setTaskMetricSpec(taskSpec);
 
         // Return a run spec
         return runNefertemSpec;

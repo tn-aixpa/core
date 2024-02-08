@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "mlrun", entity = EntityName.TASK, factory = TaskMlrunSpec.class)
+@SpecType(kind = "mlrun", runtime = "mlrun", entity = EntityName.TASK, factory = TaskMlrunSpec.class)
 public class TaskMlrunSpec extends K8sTaskBaseSpec {
 
     @Override

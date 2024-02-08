@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.modules.container.components.builders;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
@@ -18,24 +17,19 @@ import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySp
 public class ContainerDeployBuilder implements Builder<
         FunctionContainerSpec,
         TaskDeploySpec,
-        RunRunSpec,
-        RunContainerSpec<TaskDeploySpec>> {
+        RunContainerSpec> {
 
     @Override
-    public RunContainerSpec<TaskDeploySpec> build(
+    public RunContainerSpec build(
             FunctionContainerSpec funSpec,
             TaskDeploySpec taskSpec,
-            RunRunSpec runSpec) {
+            RunContainerSpec runSpec) {
 
-        RunContainerSpec<TaskDeploySpec> taskDeploySpecRunContainerSpec =
-                RunContainerSpec.<TaskDeploySpec>builder()
-                        .build();
+        runSpec.setTaskDeploySpec(taskSpec);
+        runSpec.setFuncSpec(funSpec);
 
-        taskDeploySpecRunContainerSpec.configure(runSpec.toMap());
-        taskDeploySpecRunContainerSpec.setFuncSpec(funSpec);
-        taskDeploySpecRunContainerSpec.setTaskSpec(taskSpec);
 
-        return taskDeploySpecRunContainerSpec;
+        return runSpec;
     }
 }
 

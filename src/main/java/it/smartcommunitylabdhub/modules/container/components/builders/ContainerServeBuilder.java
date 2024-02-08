@@ -1,42 +1,34 @@
 package it.smartcommunitylabdhub.modules.container.components.builders;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskServeSpec;
 
 /**
- * ContainerServeBuilder
+ * ContainerJobBuilder
  * <p>
  * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from BuilderFactory
  * you have to register it using the following annotation:
  *
- * @BuilderComponent(runtime = "container", task = "serve")
+ * @BuilderComponent(runtime = "container", task = "job")
  */
 
 public class ContainerServeBuilder implements Builder<
         FunctionContainerSpec,
         TaskServeSpec,
-        RunRunSpec,
-        RunContainerSpec<TaskServeSpec>> {
+        RunContainerSpec> {
 
     @Override
-    public RunContainerSpec<TaskServeSpec> build(
+    public RunContainerSpec build(
             FunctionContainerSpec funSpec,
             TaskServeSpec taskSpec,
-            RunRunSpec runSpec) {
+            RunContainerSpec runSpec) {
 
-        RunContainerSpec<TaskServeSpec> taskServeSpecRunContainerSpec =
-                RunContainerSpec.<TaskServeSpec>builder()
-                        .build();
+        runSpec.setTaskServeSpec(taskSpec);
+        runSpec.setFuncSpec(funSpec);
 
-        taskServeSpecRunContainerSpec.configure(runSpec.toMap());
-        taskServeSpecRunContainerSpec.setFuncSpec(funSpec);
-        taskServeSpecRunContainerSpec.setTaskSpec(taskSpec);
 
-        return taskServeSpecRunContainerSpec;
+        return runSpec;
     }
 }
-
-

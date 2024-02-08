@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.modules.container.components.runtimes.ContainerRuntime;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
 
 import java.util.*;
 
@@ -45,8 +44,9 @@ public class ContainerDeployRunner implements Runner {
 
         // Retrieve information about RunDbtSpec
 
-        RunContainerSpec<TaskDeploySpec> runContainerSpec =
-                RunContainerSpec.<TaskDeploySpec>builder().build();
+        RunContainerSpec runContainerSpec =
+                RunContainerSpec.builder()
+                        .build();
         runContainerSpec.configure(runDTO.getSpec());
 
 
@@ -55,8 +55,8 @@ public class ContainerDeployRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
-        if (runContainerSpec.getTaskSpec().getEnvs() != null)
-            coreEnvList.addAll(runContainerSpec.getTaskSpec().getEnvs());
+        if (runContainerSpec.getTaskDeploySpec().getEnvs() != null)
+            coreEnvList.addAll(runContainerSpec.getTaskDeploySpec().getEnvs());
 
 
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable.builder()
@@ -64,9 +64,9 @@ public class ContainerDeployRunner implements Runner {
                 .task(TASK)
                 .image(functionContainerSpec.getImage())
                 .state(runDefaultFieldAccessor.getState())
-                .resources(runContainerSpec.getTaskSpec().getResources())
-                .nodeSelector(runContainerSpec.getTaskSpec().getNodeSelector())
-                .volumes(runContainerSpec.getTaskSpec().getVolumes())
+                .resources(runContainerSpec.getTaskDeploySpec().getResources())
+                .nodeSelector(runContainerSpec.getTaskDeploySpec().getNodeSelector())
+                .volumes(runContainerSpec.getTaskDeploySpec().getVolumes())
                 .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .build();

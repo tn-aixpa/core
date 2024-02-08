@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "metric", entity = EntityName.TASK, factory = TaskMetricSpec.class)
+@SpecType(kind = "metric", runtime = "nefertem", entity = EntityName.TASK, factory = TaskMetricSpec.class)
 public class TaskMetricSpec extends K8sTaskBaseSpec {
 
     private String framework;

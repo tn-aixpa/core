@@ -7,7 +7,6 @@ import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultField
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.modules.nefertem.components.runtimes.NefertemRuntime;
 import it.smartcommunitylabdhub.modules.nefertem.models.specs.run.RunNefertemSpec;
-import it.smartcommunitylabdhub.modules.nefertem.models.specs.task.TaskProfileSpec;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,15 +42,15 @@ public class NefertemProfileRunner implements Runner {
 
 
         // Retrieve information about Spec
-        RunNefertemSpec<TaskProfileSpec> runNefertemSpec = RunNefertemSpec.<TaskProfileSpec>builder().build();
+        RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
         runNefertemSpec.configure(runDTO.getSpec());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(List.of(
                 new CoreEnv("PROJECT_NAME", runDTO.getProject()),
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
-        if (runNefertemSpec.getTaskSpec().getEnvs() != null)
-            coreEnvList.addAll(runNefertemSpec.getTaskSpec().getEnvs());
+        if (runNefertemSpec.getTaskProfileSpec().getEnvs() != null)
+            coreEnvList.addAll(runNefertemSpec.getTaskProfileSpec().getEnvs());
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
@@ -60,9 +59,9 @@ public class NefertemProfileRunner implements Runner {
                 .image(image)
                 .command("python")
                 .args(List.of("wrapper.py").toArray(String[]::new))
-                .resources(runNefertemSpec.getTaskSpec().getResources())
-                .nodeSelector(runNefertemSpec.getTaskSpec().getNodeSelector())
-                .volumes(runNefertemSpec.getTaskSpec().getVolumes())
+                .resources(runNefertemSpec.getTaskProfileSpec().getResources())
+                .nodeSelector(runNefertemSpec.getTaskProfileSpec().getNodeSelector())
+                .volumes(runNefertemSpec.getTaskProfileSpec().getVolumes())
                 .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .state(runDefaultFieldAccessor.getState())

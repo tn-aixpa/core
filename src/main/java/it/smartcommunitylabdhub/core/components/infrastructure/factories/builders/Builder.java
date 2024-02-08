@@ -11,9 +11,8 @@ import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 public interface Builder<
         F extends FunctionBaseSpec,
         T extends TaskBaseSpec,
-        R extends RunBaseSpec,
-        O extends RunBaseSpec> {
-    O build(F funSpec,
+        R extends RunBaseSpec> {
+    R build(F funSpec,
             T taskSpec,
             R runSpec
     );

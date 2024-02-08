@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "infer", entity = EntityName.TASK, factory = TaskInferSpec.class)
+@SpecType(kind = "infer", runtime = "nefertem", entity = EntityName.TASK, factory = TaskInferSpec.class)
 public class TaskInferSpec extends K8sTaskBaseSpec {
 
     private String framework;

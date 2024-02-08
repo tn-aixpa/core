@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "container", entity = EntityName.FUNCTION, factory = FunctionContainerSpec.class)
+@SpecType(kind = "container", runtime = "container", entity = EntityName.FUNCTION, factory = FunctionContainerSpec.class)
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
     @NotBlank

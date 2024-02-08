@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "deploy", entity = EntityName.TASK, factory = TaskDeploySpec.class)
+@SpecType(kind = "deploy", runtime = "container", entity = EntityName.TASK, factory = TaskDeploySpec.class)
 public class TaskDeploySpec extends K8sTaskBaseSpec {
 
     @Override

@@ -10,4 +10,6 @@ import it.smartcommunitylabdhub.core.models.accessors.kinds.interfaces.RunFieldA
 public class RunDefaultFieldAccessor
         extends AbstractFieldAccessor<RunDefaultFieldAccessor>
         implements RunFieldAccessor<RunDefaultFieldAccessor> {
+
+
 }

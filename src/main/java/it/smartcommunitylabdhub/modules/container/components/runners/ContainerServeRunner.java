@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.modules.container.components.runtimes.ContainerRuntime;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskServeSpec;
 
 import java.util.*;
 
@@ -41,7 +40,7 @@ public class ContainerServeRunner implements Runner {
     @Override
     public K8sServeRunnable produce(Run runDTO) {
 
-        RunContainerSpec<TaskServeSpec> runContainerSpec = RunContainerSpec.<TaskServeSpec>builder().build();
+        RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
         runContainerSpec.configure(runDTO.getSpec());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(List.of(
@@ -49,8 +48,8 @@ public class ContainerServeRunner implements Runner {
                 new CoreEnv("RUN_ID", runDTO.getId())
         ));
 
-        if (runContainerSpec.getTaskSpec().getEnvs() != null)
-            coreEnvList.addAll(runContainerSpec.getTaskSpec().getEnvs());
+        if (runContainerSpec.getTaskServeSpec().getEnvs() != null)
+            coreEnvList.addAll(runContainerSpec.getTaskServeSpec().getEnvs());
 
 
         K8sServeRunnable k8sServeRunnable = K8sServeRunnable.builder()
@@ -58,9 +57,9 @@ public class ContainerServeRunner implements Runner {
                 .task(TASK)
                 .image(functionContainerSpec.getImage())
                 .state(runDefaultFieldAccessor.getState())
-                .resources(runContainerSpec.getTaskSpec().getResources())
-                .nodeSelector(runContainerSpec.getTaskSpec().getNodeSelector())
-                .volumes(runContainerSpec.getTaskSpec().getVolumes())
+                .resources(runContainerSpec.getTaskServeSpec().getResources())
+                .nodeSelector(runContainerSpec.getTaskServeSpec().getNodeSelector())
+                .volumes(runContainerSpec.getTaskServeSpec().getVolumes())
                 .secrets(groupedSecrets)
                 .envs(coreEnvList)
                 .build();

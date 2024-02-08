@@ -16,8 +16,6 @@ import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
-import it.smartcommunitylabdhub.core.models.entities.task.specs.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -39,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 @RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
-public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunContainerSpec<? extends K8sTaskBaseSpec>, Runnable> {
+public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunContainerSpec, Runnable> {
 
     public static final String RUNTIME = "container";
 
@@ -64,7 +62,7 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
     }
 
     @Override
-    public RunContainerSpec<? extends K8sTaskBaseSpec> build(
+    public RunContainerSpec build(
             FunctionContainerSpec funSpec,
             TaskBaseSpec taskSpec,
             RunBaseSpec runSpec,
@@ -75,12 +73,14 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
             case "deploy" -> {
 
                 TaskDeploySpec taskDeploySpec = specRegistry.createSpec(
+                        "container",
                         "deploy",
                         EntityName.TASK,
                         taskSpec.toMap()
                 );
 
-                RunRunSpec runRunSpec = specRegistry.createSpec(
+                RunContainerSpec runRunSpec = specRegistry.createSpec(
+                        "container",
                         "run",
                         EntityName.RUN,
                         runSpec.toMap()
@@ -110,12 +110,14 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
             case "job" -> {
 
                 TaskJobSpec taskJobSpec = specRegistry.createSpec(
+                        "container",
                         "job",
                         EntityName.TASK,
                         taskSpec.toMap()
                 );
 
-                RunRunSpec runRunSpec = specRegistry.createSpec(
+                RunContainerSpec runRunSpec = specRegistry.createSpec(
+                        "container",
                         "run",
                         EntityName.RUN,
                         runSpec.toMap()
@@ -145,12 +147,14 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
             case "serve" -> {
 
                 TaskServeSpec taskServeSpec = specRegistry.createSpec(
+                        "container",
                         "serve",
                         EntityName.TASK,
                         taskSpec.toMap()
                 );
 
-                RunRunSpec runRunSpec = specRegistry.createSpec(
+                RunContainerSpec runRunSpec = specRegistry.createSpec(
+                        "container",
                         "run",
                         EntityName.RUN,
                         runSpec.toMap()
@@ -206,12 +210,12 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
          *      RunAccessor runAccessor = RunUtils.parseRun(runBaseSpec.getTask());
          *      Runner runner = getRunner(runAccessor.getTask());
          */
-        // Crete spec for run
-        RunContainerSpec<? extends K8sTaskBaseSpec> runRunSpec = runContainerSpecFactory.create();
-        runRunSpec.configure(runDTO.getSpec());
+
+        RunContainerSpec runContainerSpec = runContainerSpecFactory.create();
+        runContainerSpec.configure(runDTO.getSpec());
 
         // Create string run accessor from task
-        RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
+        RunAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
 
 
         // Create and configure default run field accessor
@@ -222,28 +226,30 @@ public class ContainerRuntime extends BaseRuntime<FunctionContainerSpec, RunCont
                         JacksonMapper.typeRef)
         );
 
+
         return switch (runAccessor.getTask()) {
-            case "deploy" -> new ContainerDeployRunner(
-                    runRunSpec.getFuncSpec(),
-                    runDefaultFieldAccessor,
-                    secretService.groupSecrets(
-                            runDTO.getProject(),
-                            runRunSpec.getTaskSpec().getSecrets()
-                    )
-            ).produce(runDTO);
+            case "deploy" -> // Crete spec for run
+                    new ContainerDeployRunner(
+                            runContainerSpec.getFuncSpec(),
+                            runDefaultFieldAccessor,
+                            secretService.groupSecrets(
+                                    runDTO.getProject(),
+                                    runContainerSpec.getTaskDeploySpec().getSecrets()
+                            )
+                    ).produce(runDTO);
             case "job" -> new ContainerJobRunner(
-                    runRunSpec.getFuncSpec(),
+                    runContainerSpec.getFuncSpec(),
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskSpec().getSecrets())
+                            runContainerSpec.getTaskJobSpec().getSecrets())
             ).produce(runDTO);
             case "serve" -> new ContainerServeRunner(
-                    runRunSpec.getFuncSpec(),
+                    runContainerSpec.getFuncSpec(),
                     runDefaultFieldAccessor,
                     secretService.groupSecrets(
                             runDTO.getProject(),
-                            runRunSpec.getTaskSpec().getSecrets())
+                            runContainerSpec.getTaskServeSpec().getSecrets())
             ).produce(runDTO);
             default -> throw new CoreException(
                     ErrorList.INTERNAL_SERVER_ERROR.getValue(),

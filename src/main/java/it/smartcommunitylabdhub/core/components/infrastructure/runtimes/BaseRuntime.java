@@ -30,7 +30,6 @@ public abstract class BaseRuntime<F extends FunctionBaseSpec, S extends RunBaseS
     protected Map<String, ? extends Builder<
             ? extends FunctionBaseSpec,
             ? extends TaskBaseSpec,
-            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> builders;
     private String runtime;
 
@@ -71,7 +70,6 @@ public abstract class BaseRuntime<F extends FunctionBaseSpec, S extends RunBaseS
     public <B extends Builder<
             ? extends FunctionBaseSpec,
             ? extends K8sTaskBaseSpec,
-            ? extends RunBaseSpec,
             ? extends RunBaseSpec>> B getBuilder(String task) {
 
         return Optional.ofNullable((B) builders.get(runtime + "+" + task))

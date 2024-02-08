@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.modules.mlrun.components.builders;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.RunMlrunSpec;
 import it.smartcommunitylabdhub.modules.mlrun.models.specs.task.TaskMlrunSpec;
@@ -18,14 +17,13 @@ import it.smartcommunitylabdhub.modules.mlrun.models.specs.task.TaskMlrunSpec;
 public class MlrunMlrunBuilder implements Builder<
         FunctionMlrunSpec,
         TaskMlrunSpec,
-        RunRunSpec,
         RunMlrunSpec> {
 
     @Override
     public RunMlrunSpec build(
             FunctionMlrunSpec funSpec,
             TaskMlrunSpec taskSpec,
-            RunRunSpec runSpec) {
+            RunMlrunSpec runSpec) {
 
         RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder()
                 .build();

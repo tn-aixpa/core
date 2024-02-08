@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "transform", entity = EntityName.TASK, factory = TaskTransformSpec.class)
+@SpecType(kind = "transform", runtime = "dbt", entity = EntityName.TASK, factory = TaskTransformSpec.class)
 public class TaskTransformSpec extends K8sTaskBaseSpec {
 
     @Override

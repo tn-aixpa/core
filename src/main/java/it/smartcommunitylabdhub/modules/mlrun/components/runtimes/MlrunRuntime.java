@@ -14,7 +14,6 @@ import it.smartcommunitylabdhub.core.models.base.RunStatus;
 import it.smartcommunitylabdhub.core.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.core.models.entities.run.Run;
 import it.smartcommunitylabdhub.core.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.core.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.core.utils.ErrorList;
@@ -71,11 +70,13 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
 
             TaskMlrunSpec taskMlrunSpec = specRegistry.createSpec(
                     "mlrun",
+                    "mlrun",
                     EntityName.TASK,
                     taskSpec.toMap()
             );
 
-            RunRunSpec runRunSpec = specRegistry.createSpec(
+            RunMlrunSpec runMlrunSpec = specRegistry.createSpec(
+                    "mlrun",
                     "run",
                     EntityName.RUN,
                     runSpec.toMap()
@@ -98,7 +99,7 @@ public class MlrunRuntime extends BaseRuntime<FunctionMlrunSpec, RunMlrunSpec, K
             return builder.build(
                     funSpec,
                     taskMlrunSpec,
-                    runRunSpec);
+                    runMlrunSpec);
 
         }
 

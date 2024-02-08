@@ -16,13 +16,13 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "run+dbt", entity = EntityName.RUN, factory = RunDbtSpec.class)
+@SpecType(kind = "run", runtime = "dbt", entity = EntityName.RUN, factory = RunDbtSpec.class)
 public class RunDbtSpec extends RunBaseSpec {
 
-    @JsonProperty("task_spec")
+    @JsonProperty("task_transform_spec")
     private TaskTransformSpec taskSpec;
 
-    @JsonProperty("func_spec")
+    @JsonProperty("func_dbt_spec")
     private FunctionDbtSpec funcSpec;
 
     @Override

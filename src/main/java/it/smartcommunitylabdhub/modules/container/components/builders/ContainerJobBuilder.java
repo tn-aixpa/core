@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.modules.container.components.builders;
 
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.core.models.entities.run.specs.RunRunSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
@@ -14,27 +13,22 @@ import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskJobSpec;
  *
  * @BuilderComponent(runtime = "container", task = "job")
  */
+
 public class ContainerJobBuilder implements Builder<
         FunctionContainerSpec,
         TaskJobSpec,
-        RunRunSpec,
-        RunContainerSpec<TaskJobSpec>> {
+        RunContainerSpec> {
 
     @Override
-    public RunContainerSpec<TaskJobSpec> build(
+    public RunContainerSpec build(
             FunctionContainerSpec funSpec,
             TaskJobSpec taskSpec,
-            RunRunSpec runSpec) {
+            RunContainerSpec runSpec) {
 
-        RunContainerSpec<TaskJobSpec> taskJobSpecRunContainerSpec =
-                RunContainerSpec.<TaskJobSpec>builder()
-                        .build();
+        runSpec.setTaskJobSpec(taskSpec);
+        runSpec.setFuncSpec(funSpec);
 
-        taskJobSpecRunContainerSpec.configure(runSpec.toMap());
-        taskJobSpecRunContainerSpec.setFuncSpec(funSpec);
-        taskJobSpecRunContainerSpec.setTaskSpec(taskSpec);
 
-        return taskJobSpecRunContainerSpec;
+        return runSpec;
     }
 }
-

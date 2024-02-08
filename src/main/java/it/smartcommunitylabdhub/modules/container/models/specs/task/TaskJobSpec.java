@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "job", entity = EntityName.TASK, factory = TaskJobSpec.class)
+@SpecType(kind = "job", runtime = "container", entity = EntityName.TASK, factory = TaskJobSpec.class)
 public class TaskJobSpec extends K8sTaskBaseSpec {
 
     @Override

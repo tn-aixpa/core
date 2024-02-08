@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SpecType(kind = "validate", entity = EntityName.TASK, factory = TaskValidateSpec.class)
+@SpecType(kind = "validate", runtime = "nefertem", entity = EntityName.TASK, factory = TaskValidateSpec.class)
 public class TaskValidateSpec extends K8sTaskBaseSpec {
 
     private String framework;
