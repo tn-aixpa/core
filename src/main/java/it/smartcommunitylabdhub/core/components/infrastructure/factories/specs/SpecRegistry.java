@@ -76,7 +76,7 @@ public class SpecRegistry<T extends Spec> {
                 Class<?> factoryClass = specTypeAnnotation.factory();
                 for (SpecFactory<? extends Spec> specFactory : specFactories) {
                     // Check if the generic type of SpecFactory matches specClass.
-                    if (FactoryUtils.isTypeMatch(factoryClass, specFactory.getClass())) {
+                    if (FactoryUtils.isFactoryTypeMatch(factoryClass, specFactory.getClass())) {
                         // Call the create method of the spec factory to get a new instance.
                         S spec = (S) specFactory.create();
                         if (data != null) {

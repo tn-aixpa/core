@@ -27,6 +27,14 @@ public class FactoryUtils {
         return false;
     }
 
+
+    /**
+     * Check if the generic type argument of SpecFactory matches specClass.
+     *
+     * @param factoryClass     the factory class
+     * @param specFactoryClass the spec factory class
+     * @return true if the type matches, false otherwise
+     */
     public static Boolean isTypeMatch(Class<?> factoryClass, Class<?> specFactoryClass) {
         // Check if the generic type argument of SpecFactory matches specClass.
         Type[] interfaceTypes = specFactoryClass.getGenericInterfaces();
