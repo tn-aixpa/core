@@ -5,9 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = { "it.smartcommunitylabdhub" })
 @EnableJpaAuditing
-@ComponentScan(basePackages = { "it.smartcommunitylabdhub.core", "it.smartcommunitylabdhub.modules" })
+@ComponentScan(basePackages = { "it.smartcommunitylabdhub" })
 public class CoreApplication {
 
     public static void main(String[] args) {
