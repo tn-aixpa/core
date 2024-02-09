@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.Mapping;
 @Documented
 @Mapping
 public @interface ApiVersion {
-  String value() default "v1";
+    String value() default "v1";
 }

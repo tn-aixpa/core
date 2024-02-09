@@ -14,22 +14,17 @@ import it.smartcommunitylabdhub.runtime.mlrun.models.specs.task.TaskMlrunSpec;
  * @BuilderComponent(runtime = "mlrun", task = "mlrun")
  */
 
-public class MlrunMlrunBuilder
-  implements Builder<FunctionMlrunSpec, TaskMlrunSpec, RunMlrunSpec> {
+public class MlrunMlrunBuilder implements Builder<FunctionMlrunSpec, TaskMlrunSpec, RunMlrunSpec> {
 
-  @Override
-  public RunMlrunSpec build(
-    FunctionMlrunSpec funSpec,
-    TaskMlrunSpec taskSpec,
-    RunMlrunSpec runSpec
-  ) {
-    RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
+    @Override
+    public RunMlrunSpec build(FunctionMlrunSpec funSpec, TaskMlrunSpec taskSpec, RunMlrunSpec runSpec) {
+        RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
 
-    runMlrunSpec.configure(runSpec.toMap());
-    runMlrunSpec.setTaskSpec(taskSpec);
-    runMlrunSpec.setFuncSpec(funSpec);
+        runMlrunSpec.configure(runSpec.toMap());
+        runMlrunSpec.setTaskSpec(taskSpec);
+        runMlrunSpec.setFuncSpec(funSpec);
 
-    // Return a run spec
-    return runMlrunSpec;
-  }
+        // Return a run spec
+        return runMlrunSpec;
+    }
 }

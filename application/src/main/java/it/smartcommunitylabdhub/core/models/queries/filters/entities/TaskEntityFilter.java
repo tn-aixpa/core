@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
-
 @Component
 @Getter
 @Setter
@@ -24,7 +23,8 @@ public class TaskEntityFilter extends BaseEntityFilter implements SpecificationF
         Predicate predicate = criteriaBuilder.conjunction();
 
         if (function != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("function"), "%" + function + "%"));
+            predicate =
+                criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("function"), "%" + function + "%"));
         }
 
         if (getKind() != null) {
@@ -36,10 +36,12 @@ public class TaskEntityFilter extends BaseEntityFilter implements SpecificationF
         }
 
         if (getCreatedDate() != null) {
-
             DateUtils.DateInterval dateInterval = DateUtils.parseDateIntervalFromTimestamps(getCreatedDate(), true);
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate()));
-
+            predicate =
+                criteriaBuilder.and(
+                    predicate,
+                    criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate())
+                );
         }
 
         return predicate;

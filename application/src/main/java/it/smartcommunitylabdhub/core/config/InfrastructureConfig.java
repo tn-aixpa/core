@@ -19,27 +19,27 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class InfrastructureConfig {
 
-  @Bean
-  protected FrameworkFactory frameworkFactory(List<Framework<?>> frameworks) {
-    return new FrameworkFactory(frameworks);
-  }
+    @Bean
+    protected FrameworkFactory frameworkFactory(List<Framework<?>> frameworks) {
+        return new FrameworkFactory(frameworks);
+    }
 
-  @Bean
-  protected RuntimeFactory runtimeFactory(
-    List<Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable>> runtimes
-  ) {
-    return new RuntimeFactory(runtimes);
-  }
+    @Bean
+    protected RuntimeFactory runtimeFactory(
+        List<Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable>> runtimes
+    ) {
+        return new RuntimeFactory(runtimes);
+    }
 
-  @Bean
-  protected BuilderFactory builderFactory(
-    List<Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
-  ) {
-    return new BuilderFactory(builders);
-  }
+    @Bean
+    protected BuilderFactory builderFactory(
+        List<Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
+    ) {
+        return new BuilderFactory(builders);
+    }
 
-  @Bean
-  protected RunnerFactory runnerFactory(List<Runner> runners) {
-    return new RunnerFactory(runners);
-  }
+    @Bean
+    protected RunnerFactory runnerFactory(List<Runner> runners) {
+        return new RunnerFactory(runners);
+    }
 }

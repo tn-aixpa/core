@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
-
 import lombok.Getter;
 import lombok.Setter;
 

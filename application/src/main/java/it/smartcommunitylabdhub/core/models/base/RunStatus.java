@@ -1,5 +1,3 @@
 package it.smartcommunitylabdhub.core.models.base;
 
-public class RunStatus {
-
-}
+public class RunStatus {}

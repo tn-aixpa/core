@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TaskProfileSpecFactory implements SpecFactory<TaskProfileSpec> {
 
-  @Override
-  public TaskProfileSpec create() {
-    return new TaskProfileSpec();
-  }
+    @Override
+    public TaskProfileSpec create() {
+        return new TaskProfileSpec();
+    }
 }

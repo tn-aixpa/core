@@ -14,22 +14,17 @@ import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskValidateS
  * @BuilderComponent(runtime = "nefertem", task = "validate")
  */
 
-public class NefertemValidateBuilder
-  implements Builder<FunctionNefertemSpec, TaskValidateSpec, RunNefertemSpec> {
+public class NefertemValidateBuilder implements Builder<FunctionNefertemSpec, TaskValidateSpec, RunNefertemSpec> {
 
-  @Override
-  public RunNefertemSpec build(
-    FunctionNefertemSpec funSpec,
-    TaskValidateSpec taskSpec,
-    RunNefertemSpec runSpec
-  ) {
-    RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
+    @Override
+    public RunNefertemSpec build(FunctionNefertemSpec funSpec, TaskValidateSpec taskSpec, RunNefertemSpec runSpec) {
+        RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
 
-    runNefertemSpec.configure(runSpec.toMap());
-    runNefertemSpec.setFuncSpec(funSpec);
-    runNefertemSpec.setTaskValidateSpec(taskSpec);
+        runNefertemSpec.configure(runSpec.toMap());
+        runNefertemSpec.setFuncSpec(funSpec);
+        runNefertemSpec.setTaskValidateSpec(taskSpec);
 
-    // Return a run spec
-    return runNefertemSpec;
-  }
+        // Return a run spec
+        return runNefertemSpec;
+    }
 }

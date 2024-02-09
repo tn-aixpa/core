@@ -12,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class JobBuildConfig {
+
     private String type;
     private String uuid;
     private String name;

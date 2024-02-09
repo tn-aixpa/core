@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TaskDeploySpecFactory implements SpecFactory<TaskDeploySpec> {
 
-  @Override
-  public TaskDeploySpec create() {
-    return new TaskDeploySpec();
-  }
+    @Override
+    public TaskDeploySpec create() {
+        return new TaskDeploySpec();
+    }
 }

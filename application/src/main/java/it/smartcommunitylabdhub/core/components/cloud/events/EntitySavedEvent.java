@@ -1,9 +1,8 @@
 package it.smartcommunitylabdhub.core.components.cloud.events;
 
+import java.io.Serializable;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
-
-import java.io.Serializable;
 
 @Getter
 public class EntitySavedEvent<T> extends ApplicationEvent implements Serializable {
@@ -22,5 +21,4 @@ public class EntitySavedEvent<T> extends ApplicationEvent implements Serializabl
     public String getEventClassName() {
         return this.entity.getClass().getName();
     }
-
 }

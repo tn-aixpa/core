@@ -11,15 +11,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class RunnableListener {
 
-  @Autowired
-  FrameworkFactory frameworkFactory;
+    @Autowired
+    FrameworkFactory frameworkFactory;
 
-  @Async
-  @EventListener
-  public <R extends Runnable> void listen(R runnable) {
-    Framework<Runnable> framework = frameworkFactory.getFramework(
-      runnable.getFramework()
-    );
-    framework.execute(runnable);
-  }
+    @Async
+    @EventListener
+    public <R extends Runnable> void listen(R runnable) {
+        Framework<Runnable> framework = frameworkFactory.getFramework(runnable.getFramework());
+        framework.execute(runnable);
+    }
 }

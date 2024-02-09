@@ -12,25 +12,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ProjectService {
-  Page<Project> getProjects(Map<String, String> filter, Pageable pageable);
+    Page<Project> getProjects(Map<String, String> filter, Pageable pageable);
 
-  Project createProject(Project projectDTO);
+    Project createProject(Project projectDTO);
 
-  Project getProject(String name);
+    Project getProject(String name);
 
-  Project updateProject(Project projectDTO, String name);
+    Project updateProject(Project projectDTO, String name);
 
-  boolean deleteProject(String name, Boolean cascade);
+    boolean deleteProject(String name, Boolean cascade);
 
-  boolean deleteProjectByName(String name);
+    boolean deleteProjectByName(String name);
 
-  List<Function> getProjectFunctions(String name);
+    List<Function> getProjectFunctions(String name);
 
-  List<Artifact> getProjectArtifacts(String name);
+    List<Artifact> getProjectArtifacts(String name);
 
-  List<Workflow> getProjectWorkflows(String name);
+    List<Workflow> getProjectWorkflows(String name);
 
-  List<Secret> getProjectSecrets(String name);
-  Map<String, String> getProjectSecretData(String name, Set<String> keys);
-  void storeProjectSecretData(String name, Map<String, String> values);
+    List<Secret> getProjectSecrets(String name);
+    Map<String, String> getProjectSecretData(String name, Set<String> keys);
+    void storeProjectSecretData(String name, Map<String, String> values);
 }

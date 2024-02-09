@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TaskValidateSpecFactory implements SpecFactory<TaskValidateSpec> {
 
-  @Override
-  public TaskValidateSpec create() {
-    return new TaskValidateSpec();
-  }
+    @Override
+    public TaskValidateSpec create() {
+        return new TaskValidateSpec();
+    }
 }

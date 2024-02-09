@@ -6,50 +6,26 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ArtifactContextService {
-  Artifact createArtifact(String projectName, Artifact artifactDTO);
+    Artifact createArtifact(String projectName, Artifact artifactDTO);
 
-  Page<Artifact> getByProjectNameAndArtifactName(
-    Map<String, String> filter,
-    String projectName,
-    String artifactName,
-    Pageable pageable
-  );
+    Page<Artifact> getByProjectNameAndArtifactName(
+        Map<String, String> filter,
+        String projectName,
+        String artifactName,
+        Pageable pageable
+    );
 
-  Page<Artifact> getLatestByProjectName(
-    Map<String, String> filter,
-    String projectName,
-    Pageable pageable
-  );
+    Page<Artifact> getLatestByProjectName(Map<String, String> filter, String projectName, Pageable pageable);
 
-  Artifact getByProjectAndArtifactAndUuid(
-    String projectName,
-    String artifactName,
-    String uuid
-  );
+    Artifact getByProjectAndArtifactAndUuid(String projectName, String artifactName, String uuid);
 
-  Artifact getLatestByProjectNameAndArtifactName(
-    String projectName,
-    String artifactName
-  );
+    Artifact getLatestByProjectNameAndArtifactName(String projectName, String artifactName);
 
-  Artifact createOrUpdateArtifact(
-    String projectName,
-    String artifactName,
-    Artifact artifactDTO
-  );
+    Artifact createOrUpdateArtifact(String projectName, String artifactName, Artifact artifactDTO);
 
-  Artifact updateArtifact(
-    String projectName,
-    String artifactName,
-    String uuid,
-    Artifact artifactDTO
-  );
+    Artifact updateArtifact(String projectName, String artifactName, String uuid, Artifact artifactDTO);
 
-  Boolean deleteSpecificArtifactVersion(
-    String projectName,
-    String artifactName,
-    String uuid
-  );
+    Boolean deleteSpecificArtifactVersion(String projectName, String artifactName, String uuid);
 
-  Boolean deleteAllArtifactVersions(String projectName, String artifactName);
+    Boolean deleteAllArtifactVersions(String projectName, String artifactName);
 }

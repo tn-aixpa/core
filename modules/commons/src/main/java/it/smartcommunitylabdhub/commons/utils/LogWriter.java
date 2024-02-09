@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class LogWriter {
+
     private static final String LOG_DIRECTORY = "<logs/path>";
 
     public static void writeLog(String fileName, String logMessage) {

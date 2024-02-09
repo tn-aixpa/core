@@ -2,9 +2,8 @@ package it.smartcommunitylabdhub.core.models.queries.filters.abstracts;
 
 import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.jpa.domain.Specification;
-
 import java.util.Map;
+import org.springframework.data.jpa.domain.Specification;
 
 public abstract class AbstractSpecificationService<T, F extends SpecificationFilter<T>> {
 

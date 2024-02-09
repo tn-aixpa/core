@@ -1,15 +1,14 @@
 package it.smartcommunitylabdhub.core.models.entities.log;
 
-import it.smartcommunitylabdhub.commons.models.base.interfaces.BaseEntity;
+import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import jakarta.persistence.*;
+import java.util.Date;
+import java.util.UUID;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.util.Date;
-import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor

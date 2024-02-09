@@ -14,22 +14,17 @@ import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskInferSpec
  * @BuilderComponent(runtime = "nefertem", task = "infer")
  */
 
-public class NefertemInferBuilder
-  implements Builder<FunctionNefertemSpec, TaskInferSpec, RunNefertemSpec> {
+public class NefertemInferBuilder implements Builder<FunctionNefertemSpec, TaskInferSpec, RunNefertemSpec> {
 
-  @Override
-  public RunNefertemSpec build(
-    FunctionNefertemSpec funSpec,
-    TaskInferSpec taskSpec,
-    RunNefertemSpec runSpec
-  ) {
-    RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
+    @Override
+    public RunNefertemSpec build(FunctionNefertemSpec funSpec, TaskInferSpec taskSpec, RunNefertemSpec runSpec) {
+        RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
 
-    runNefertemSpec.configure(runSpec.toMap());
-    runNefertemSpec.setFuncSpec(funSpec);
-    runNefertemSpec.setTaskInferSpec(taskSpec);
+        runNefertemSpec.configure(runSpec.toMap());
+        runNefertemSpec.setFuncSpec(funSpec);
+        runNefertemSpec.setTaskInferSpec(taskSpec);
 
-    // Return a run spec
-    return runNefertemSpec;
-  }
+        // Return a run spec
+        return runNefertemSpec;
+    }
 }

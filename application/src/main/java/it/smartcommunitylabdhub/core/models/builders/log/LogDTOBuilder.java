@@ -15,48 +15,39 @@ import org.springframework.stereotype.Component;
 @Component
 public class LogDTOBuilder {
 
-  @Autowired
-  MetadataConverter<LogMetadata> metadataConverter;
+    @Autowired
+    MetadataConverter<LogMetadata> metadataConverter;
 
-  public Log build(LogEntity log) {
-    return EntityFactory.create(
-      Log::new,
-      log,
-      builder ->
-        builder
-          .with(dto -> dto.setId(log.getId()))
-          .with(dto -> {
-            // Set Metadata for log
-            LogMetadata logMetadata = Optional
-              .ofNullable(
-                metadataConverter.reverseByClass(
-                  log.getMetadata(),
-                  LogMetadata.class
-                )
-              )
-              .orElseGet(LogMetadata::new);
+    public Log build(LogEntity log) {
+        return EntityFactory.create(
+            Log::new,
+            log,
+            builder ->
+                builder
+                    .with(dto -> dto.setId(log.getId()))
+                    .with(dto -> {
+                        // Set Metadata for log
+                        LogMetadata logMetadata = Optional
+                            .ofNullable(metadataConverter.reverseByClass(log.getMetadata(), LogMetadata.class))
+                            .orElseGet(LogMetadata::new);
 
-            logMetadata.setRun(log.getRun());
-            logMetadata.setVersion(log.getId());
-            logMetadata.setProject(log.getProject());
-            logMetadata.setCreated(log.getCreated());
-            logMetadata.setUpdated(log.getUpdated());
-            dto.setMetadata(logMetadata);
-          })
-          .with(dto ->
-            dto.setBody(ConversionUtils.reverse(log.getBody(), "cbor"))
-          )
-          .with(dto ->
-            dto.setExtra(ConversionUtils.reverse(log.getExtra(), "cbor"))
-          )
-          .with(dto ->
-            dto.setStatus(
-              MapUtils.mergeMultipleMaps(
-                ConversionUtils.reverse(log.getStatus(), "cbor"),
-                Map.of("state", log.getState())
-              )
-            )
-          )
-    );
-  }
+                        logMetadata.setRun(log.getRun());
+                        logMetadata.setVersion(log.getId());
+                        logMetadata.setProject(log.getProject());
+                        logMetadata.setCreated(log.getCreated());
+                        logMetadata.setUpdated(log.getUpdated());
+                        dto.setMetadata(logMetadata);
+                    })
+                    .with(dto -> dto.setBody(ConversionUtils.reverse(log.getBody(), "cbor")))
+                    .with(dto -> dto.setExtra(ConversionUtils.reverse(log.getExtra(), "cbor")))
+                    .with(dto ->
+                        dto.setStatus(
+                            MapUtils.mergeMultipleMaps(
+                                ConversionUtils.reverse(log.getStatus(), "cbor"),
+                                Map.of("state", log.getState())
+                            )
+                        )
+                    )
+        );
+    }
 }

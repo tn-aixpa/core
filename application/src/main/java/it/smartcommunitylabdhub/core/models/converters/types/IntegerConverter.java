@@ -16,5 +16,4 @@ public class IntegerConverter implements Converter<String, Integer> {
     public String reverseConvert(Integer input) throws CustomException {
         return input.toString();
     }
-
 }

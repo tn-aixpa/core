@@ -8,17 +8,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface RunService {
-  Page<Run> getRuns(Map<String, String> filter, Pageable pageable);
+    Page<Run> getRuns(Map<String, String> filter, Pageable pageable);
 
-  Run getRun(String uuid);
+    Run getRun(String uuid);
 
-  boolean deleteRun(String uuid, Boolean cascade);
+    boolean deleteRun(String uuid, Boolean cascade);
 
-  boolean deleteRunByTaskId(String uuid);
+    boolean deleteRunByTaskId(String uuid);
 
-  Run save(Run runDTO);
+    Run save(Run runDTO);
 
-  <F extends FunctionBaseSpec> Run createRun(Run inputRunDTO);
+    <F extends FunctionBaseSpec> Run createRun(Run inputRunDTO);
 
-  Run updateRun(@Valid Run runDTO, String uuid);
+    Run updateRun(@Valid Run runDTO, String uuid);
 }

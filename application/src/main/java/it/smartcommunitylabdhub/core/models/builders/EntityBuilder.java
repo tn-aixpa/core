@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.models.builders;
 
+import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import it.smartcommunitylabdhub.commons.models.base.interfaces.BaseEntity;
-
 public class EntityBuilder<T extends BaseEntity, U extends BaseEntity> {
+
     private T result;
 
     public EntityBuilder(Supplier<T> entitySupplier) {

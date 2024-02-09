@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.base.interfaces.Spec;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.FactoryUtils;
 import jakarta.validation.constraints.NotNull;
@@ -20,112 +20,92 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class SpecRegistryImpl implements SpecRegistry {
 
-  // A map to store spec types and their corresponding classes.
-  private final Map<String, Class<? extends Spec>> specTypes = new HashMap<>();
+    // A map to store spec types and their corresponding classes.
+    private final Map<String, Class<? extends Spec>> specTypes = new HashMap<>();
 
-  private final List<SpecFactory<? extends Spec>> specFactories;
+    private final List<SpecFactory<? extends Spec>> specFactories;
 
-  public SpecRegistryImpl(List<SpecFactory<? extends Spec>> specFactories) {
-    this.specFactories = specFactories;
-  }
-
-  // Register spec types along with their corresponding classes.
-  public void registerSpecTypes(
-    Map<String, Class<? extends Spec>> specTypeMap
-  ) {
-    specTypes.putAll(specTypeMap);
-  }
-
-  /**
-   * Create an instance of a spec based on its type and configure it with data.
-   *
-   * @param kind The type of the spec to create.
-   * @param data The data used to configure the spec.
-   * @param <S>  The generic type for the spec.
-   * @return An instance of the specified spec type, or null if not found or in case of errors.
-   */
-  @Override
-  public <S extends Spec> S createSpec(
-    @NotNull String kind,
-    @NotNull EntityName entity,
-    Map<String, Object> data
-  ) {
-    // Retrieve the class associated with the specified spec type.
-    final String specKey = kind + "_" + entity.name().toLowerCase();
-    return getSpec(data, specKey);
-  }
-
-  @Override
-  public <S extends Spec> S createSpec(
-    @NotNull String runtime,
-    @NotNull String kind,
-    @NotNull EntityName entity,
-    Map<String, Object> data
-  ) {
-    // Retrieve the class associated with the specified spec type.
-    final String specKey =
-      runtime + "_" + kind + "_" + entity.name().toLowerCase();
-    return getSpec(data, specKey);
-  }
-
-  @SuppressWarnings("unchecked")
-  private <S extends Spec> S getSpec(Map<String, Object> data, String specKey) {
-    Class<?> specClass = (Class<?>) specTypes.get(specKey);
-
-    if (specClass == null) {
-      // Fallback spec None if no class specific is found, avoid crash.
-      //specClass = (Class<? extends T>) specTypes.get("none_none");
-      throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        "Spec not found: tried to extract spec for <" + specKey + "> key",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+    public SpecRegistryImpl(List<SpecFactory<? extends Spec>> specFactories) {
+        this.specFactories = specFactories;
     }
 
-    try {
-      // Find the corresponding SpecFactory using the SpecType annotation.
-      SpecType specTypeAnnotation = specClass.getAnnotation(SpecType.class);
-      if (specTypeAnnotation != null) {
-        Class<?> factoryClass = specTypeAnnotation.factory();
-        for (SpecFactory<? extends Spec> specFactory : specFactories) {
-          // Check if the generic type of SpecFactory matches specClass.
-          if (
-            FactoryUtils.isFactoryTypeMatch(
-              factoryClass,
-              specFactory.getClass()
-            )
-          ) {
-            // Call the create method of the spec factory to get a new instance.
-            S spec = (S) specFactory.create();
-            if (data != null) {
-              spec.configure(data);
-            }
-            return spec;
-          }
+    // Register spec types along with their corresponding classes.
+    public void registerSpecTypes(Map<String, Class<? extends Spec>> specTypeMap) {
+        specTypes.putAll(specTypeMap);
+    }
+
+    /**
+     * Create an instance of a spec based on its type and configure it with data.
+     *
+     * @param kind The type of the spec to create.
+     * @param data The data used to configure the spec.
+     * @param <S>  The generic type for the spec.
+     * @return An instance of the specified spec type, or null if not found or in case of errors.
+     */
+    @Override
+    public <S extends Spec> S createSpec(@NotNull String kind, @NotNull EntityName entity, Map<String, Object> data) {
+        // Retrieve the class associated with the specified spec type.
+        final String specKey = kind + "_" + entity.name().toLowerCase();
+        return getSpec(data, specKey);
+    }
+
+    @Override
+    public <S extends Spec> S createSpec(
+        @NotNull String runtime,
+        @NotNull String kind,
+        @NotNull EntityName entity,
+        Map<String, Object> data
+    ) {
+        // Retrieve the class associated with the specified spec type.
+        final String specKey = runtime + "_" + kind + "_" + entity.name().toLowerCase();
+        return getSpec(data, specKey);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S extends Spec> S getSpec(Map<String, Object> data, String specKey) {
+        Class<?> specClass = (Class<?>) specTypes.get(specKey);
+
+        if (specClass == null) {
+            // Fallback spec None if no class specific is found, avoid crash.
+            //specClass = (Class<? extends T>) specTypes.get("none_none");
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Spec not found: tried to extract spec for <" + specKey + "> key",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
-      }
-      log.error(
-        "Cannot configure spec for type @SpecType('" +
-        specKey +
-        "') no way to recover error."
-      );
-      throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        "Cannot configure spec for type @SpecType('" + specKey + "')",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    } catch (Exception e) {
-      // Handle any exceptions that may occur during instance creation.
-      log.error(
-        "Cannot configure spec for type @SpecType('" +
-        specKey +
-        "') no way to recover error."
-      );
-      throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        "Cannot configure spec for type @SpecType('" + specKey + "')",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+
+        try {
+            // Find the corresponding SpecFactory using the SpecType annotation.
+            SpecType specTypeAnnotation = specClass.getAnnotation(SpecType.class);
+            if (specTypeAnnotation != null) {
+                Class<?> factoryClass = specTypeAnnotation.factory();
+                for (SpecFactory<? extends Spec> specFactory : specFactories) {
+                    // Check if the generic type of SpecFactory matches specClass.
+                    if (FactoryUtils.isFactoryTypeMatch(factoryClass, specFactory.getClass())) {
+                        // Call the create method of the spec factory to get a new instance.
+                        S spec = (S) specFactory.create();
+                        if (data != null) {
+                            spec.configure(data);
+                        }
+                        return spec;
+                    }
+                }
+            }
+            log.error("Cannot configure spec for type @SpecType('" + specKey + "') no way to recover error.");
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Cannot configure spec for type @SpecType('" + specKey + "')",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        } catch (Exception e) {
+            // Handle any exceptions that may occur during instance creation.
+            log.error("Cannot configure spec for type @SpecType('" + specKey + "') no way to recover error.");
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Cannot configure spec for type @SpecType('" + specKey + "')",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
-  }
 }

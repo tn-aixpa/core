@@ -7,15 +7,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TaskService {
-  Page<Task> getTasks(Map<String, String> filter, Pageable pageable);
+    Page<Task> getTasks(Map<String, String> filter, Pageable pageable);
 
-  Task getTask(String uuid);
+    Task getTask(String uuid);
 
-  List<Task> getTasksByFunction(String function);
+    List<Task> getTasksByFunction(String function);
 
-  boolean deleteTask(String uuid, Boolean cascade);
+    boolean deleteTask(String uuid, Boolean cascade);
 
-  Task createTask(Task TaskDTO);
+    Task createTask(Task TaskDTO);
 
-  Task updateTask(Task TaskDTO, String uuid);
+    Task updateTask(Task TaskDTO, String uuid);
 }

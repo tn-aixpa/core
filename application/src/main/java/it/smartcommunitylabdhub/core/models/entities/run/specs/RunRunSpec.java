@@ -13,14 +13,11 @@ import lombok.Setter;
 @SpecType(kind = "run", entity = EntityName.RUN, factory = RunRunSpec.class)
 public class RunRunSpec extends RunBaseSpec {
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    RunRunSpec runRunSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-      data,
-      RunRunSpec.class
-    );
+    @Override
+    public void configure(Map<String, Object> data) {
+        RunRunSpec runRunSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, RunRunSpec.class);
 
-    super.configure(data);
-    this.setExtraSpecs(runRunSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(runRunSpec.getExtraSpecs());
+    }
 }

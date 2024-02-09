@@ -22,98 +22,61 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/functions")
 @ApiVersion("v1")
 @Validated
-@Tag(
-  name = "Function base API",
-  description = "Endpoints related to functions management out of the Context"
-)
+@Tag(name = "Function base API", description = "Endpoints related to functions management out of the Context")
 public class FunctionController {
 
-  @Autowired
-  FunctionService functionService;
+    @Autowired
+    FunctionService functionService;
 
-  @Operation(
-    summary = "List functions",
-    description = "Return a list of all functions"
-  )
-  @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Page<Function>> getFunctions(
-    @RequestParam Map<String, String> filter,
-    Pageable pageable
-  ) {
-    return ResponseEntity.ok(
-      this.functionService.getFunctions(filter, pageable)
-    );
-  }
+    @Operation(summary = "List functions", description = "Return a list of all functions")
+    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<Page<Function>> getFunctions(@RequestParam Map<String, String> filter, Pageable pageable) {
+        return ResponseEntity.ok(this.functionService.getFunctions(filter, pageable));
+    }
 
-  @Operation(
-    summary = "Create function",
-    description = "Create an function and return"
-  )
-  @PostMapping(
-    value = "",
-    consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-    produces = "application/json; charset=UTF-8"
-  )
-  public ResponseEntity<Function> createFunction(
-    @Valid @RequestBody Function functionDTO
-  ) {
-    return ResponseEntity.ok(this.functionService.createFunction(functionDTO));
-  }
+    @Operation(summary = "Create function", description = "Create an function and return")
+    @PostMapping(
+        value = "",
+        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
+        produces = "application/json; charset=UTF-8"
+    )
+    public ResponseEntity<Function> createFunction(@Valid @RequestBody Function functionDTO) {
+        return ResponseEntity.ok(this.functionService.createFunction(functionDTO));
+    }
 
-  @Operation(
-    summary = "Get a function by uuid",
-    description = "Return an function"
-  )
-  @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-  public ResponseEntity<Function> getFunction(
-    @ValidateField @PathVariable(name = "uuid", required = true) String uuid
-  ) {
-    return ResponseEntity.ok(this.functionService.getFunction(uuid));
-  }
+    @Operation(summary = "Get a function by uuid", description = "Return an function")
+    @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<Function> getFunction(
+        @ValidateField @PathVariable(name = "uuid", required = true) String uuid
+    ) {
+        return ResponseEntity.ok(this.functionService.getFunction(uuid));
+    }
 
-  @Operation(
-    summary = "Update specific function",
-    description = "Update and return the function"
-  )
-  @PutMapping(
-    path = "/{uuid}",
-    consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-    produces = "application/json; charset=UTF-8"
-  )
-  public ResponseEntity<Function> updateFunction(
-    @Valid @RequestBody Function functionDTO,
-    @ValidateField @PathVariable String uuid
-  ) {
-    return ResponseEntity.ok(
-      this.functionService.updateFunction(functionDTO, uuid)
-    );
-  }
+    @Operation(summary = "Update specific function", description = "Update and return the function")
+    @PutMapping(
+        path = "/{uuid}",
+        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
+        produces = "application/json; charset=UTF-8"
+    )
+    public ResponseEntity<Function> updateFunction(
+        @Valid @RequestBody Function functionDTO,
+        @ValidateField @PathVariable String uuid
+    ) {
+        return ResponseEntity.ok(this.functionService.updateFunction(functionDTO, uuid));
+    }
 
-  @Operation(
-    summary = "Delete a function",
-    description = "Delete a specific function"
-  )
-  @DeleteMapping(path = "/{uuid}")
-  public ResponseEntity<Boolean> deleteFunction(
-    @ValidateField @PathVariable String uuid,
-    @RequestParam(value = "cascade", defaultValue = "false") Boolean cascade
-  ) {
-    return ResponseEntity.ok(
-      this.functionService.deleteFunction(uuid, cascade)
-    );
-  }
+    @Operation(summary = "Delete a function", description = "Delete a specific function")
+    @DeleteMapping(path = "/{uuid}")
+    public ResponseEntity<Boolean> deleteFunction(
+        @ValidateField @PathVariable String uuid,
+        @RequestParam(value = "cascade", defaultValue = "false") Boolean cascade
+    ) {
+        return ResponseEntity.ok(this.functionService.deleteFunction(uuid, cascade));
+    }
 
-  @Operation(
-    summary = "Get function runs",
-    description = "Given a function return the run list"
-  )
-  @GetMapping(
-    path = "/{uuid}/runs",
-    produces = "application/json; charset=UTF-8"
-  )
-  public ResponseEntity<List<Run>> functionRuns(
-    @ValidateField @PathVariable String uuid
-  ) {
-    return ResponseEntity.ok(this.functionService.getFunctionRuns(uuid));
-  }
+    @Operation(summary = "Get function runs", description = "Given a function return the run list")
+    @GetMapping(path = "/{uuid}/runs", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<List<Run>> functionRuns(@ValidateField @PathVariable String uuid) {
+        return ResponseEntity.ok(this.functionService.getFunctionRuns(uuid));
+    }
 }

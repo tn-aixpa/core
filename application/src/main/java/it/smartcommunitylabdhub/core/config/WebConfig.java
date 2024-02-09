@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.config;
 
 import java.util.List;
-
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;

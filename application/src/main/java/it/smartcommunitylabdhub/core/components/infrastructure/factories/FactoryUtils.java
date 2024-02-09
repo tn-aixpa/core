@@ -27,7 +27,6 @@ public class FactoryUtils {
         return false;
     }
 
-
     /**
      * Check if the generic type argument of SpecFactory matches specClass.
      *
@@ -49,7 +48,10 @@ public class FactoryUtils {
                 } else if (typeArguments.length == 1 && typeArguments[0] instanceof ParameterizedType) {
                     // Case: SpecFactory<GenericTypeX<T>>
                     Type rawTypeArgument = ((ParameterizedType) typeArguments[0]).getRawType();
-                    if (rawTypeArgument.equals(factoryClass) || factoryClass.isAssignableFrom((Class<?>) rawTypeArgument)) {
+                    if (
+                        rawTypeArgument.equals(factoryClass) ||
+                        factoryClass.isAssignableFrom((Class<?>) rawTypeArgument)
+                    ) {
                         return true;
                     }
                 }

@@ -23,61 +23,52 @@ import java.util.Set;
  */
 public class NefertemMetricRunner implements Runner {
 
-  private static final String TASK = "metric";
-  private final String image;
+    private static final String TASK = "metric";
+    private final String image;
 
-  private final Map<String, Set<String>> groupedSecrets;
+    private final Map<String, Set<String>> groupedSecrets;
 
-  public NefertemMetricRunner(
-    String image,
-    Map<String, Set<String>> groupedSecrets
-  ) {
-    this.image = image;
-    this.groupedSecrets = groupedSecrets;
-  }
+    public NefertemMetricRunner(String image, Map<String, Set<String>> groupedSecrets) {
+        this.image = image;
+        this.groupedSecrets = groupedSecrets;
+    }
 
-  @Override
-  public K8sJobRunnable produce(Run runDTO) {
-    // Retrieve information about Spec
-    RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
-    runNefertemSpec.configure(runDTO.getSpec());
+    @Override
+    public K8sJobRunnable produce(Run runDTO) {
+        // Retrieve information about Spec
+        RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
+        runNefertemSpec.configure(runDTO.getSpec());
 
-    RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        runDTO,
-        JacksonMapper.typeRef
-      )
-    );
+        RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
+            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+        );
 
-    List<CoreEnv> coreEnvList = new ArrayList<>(
-      List.of(
-        new CoreEnv("PROJECT_NAME", runDTO.getProject()),
-        new CoreEnv("RUN_ID", runDTO.getId())
-      )
-    );
-    if (
-      runNefertemSpec.getTaskMetricSpec().getEnvs() != null
-    ) coreEnvList.addAll(runNefertemSpec.getTaskMetricSpec().getEnvs());
+        List<CoreEnv> coreEnvList = new ArrayList<>(
+            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+        );
+        if (runNefertemSpec.getTaskMetricSpec().getEnvs() != null) coreEnvList.addAll(
+            runNefertemSpec.getTaskMetricSpec().getEnvs()
+        );
 
-    //TODO: Create runnable using information from Run completed spec.
-    K8sJobRunnable k8sJobRunnable = K8sJobRunnable
-      .builder()
-      .runtime(NefertemRuntime.RUNTIME)
-      .task(TASK)
-      .image(image)
-      .command("python")
-      .args(List.of("wrapper.py").toArray(String[]::new))
-      .resources(runNefertemSpec.getTaskMetricSpec().getResources())
-      .nodeSelector(runNefertemSpec.getTaskMetricSpec().getNodeSelector())
-      .volumes(runNefertemSpec.getTaskMetricSpec().getVolumes())
-      .secrets(groupedSecrets)
-      .envs(coreEnvList)
-      .state(runDefaultFieldAccessor.getState())
-      .build();
+        //TODO: Create runnable using information from Run completed spec.
+        K8sJobRunnable k8sJobRunnable = K8sJobRunnable
+            .builder()
+            .runtime(NefertemRuntime.RUNTIME)
+            .task(TASK)
+            .image(image)
+            .command("python")
+            .args(List.of("wrapper.py").toArray(String[]::new))
+            .resources(runNefertemSpec.getTaskMetricSpec().getResources())
+            .nodeSelector(runNefertemSpec.getTaskMetricSpec().getNodeSelector())
+            .volumes(runNefertemSpec.getTaskMetricSpec().getVolumes())
+            .secrets(groupedSecrets)
+            .envs(coreEnvList)
+            .state(runDefaultFieldAccessor.getState())
+            .build();
 
-    k8sJobRunnable.setId(runDTO.getId());
-    k8sJobRunnable.setProject(runDTO.getProject());
+        k8sJobRunnable.setId(runDTO.getId());
+        k8sJobRunnable.setProject(runDTO.getProject());
 
-    return k8sJobRunnable;
-  }
+        return k8sJobRunnable;
+    }
 }

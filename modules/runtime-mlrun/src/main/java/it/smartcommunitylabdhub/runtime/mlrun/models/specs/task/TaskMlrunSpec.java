@@ -10,23 +10,14 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "mlrun",
-  runtime = "mlrun",
-  entity = EntityName.TASK,
-  factory = TaskMlrunSpec.class
-)
+@SpecType(kind = "mlrun", runtime = "mlrun", entity = EntityName.TASK, factory = TaskMlrunSpec.class)
 public class TaskMlrunSpec extends K8sTaskBaseSpec {
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    TaskMlrunSpec taskMlrunSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        TaskMlrunSpec.class
-      );
-    super.configure(data);
+    @Override
+    public void configure(Map<String, Object> data) {
+        TaskMlrunSpec taskMlrunSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, TaskMlrunSpec.class);
+        super.configure(data);
 
-    this.setExtraSpecs(taskMlrunSpec.getExtraSpecs());
-  }
+        this.setExtraSpecs(taskMlrunSpec.getExtraSpecs());
+    }
 }

@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.core.models.converters.interfaces.ConverterComma
 import it.smartcommunitylabdhub.core.models.converters.interfaces.ConverterFactory;
 
 public class CommandFactory {
+
     private final ConverterFactory converterFactory;
 
     public CommandFactory(ConverterFactory converterFactory) {

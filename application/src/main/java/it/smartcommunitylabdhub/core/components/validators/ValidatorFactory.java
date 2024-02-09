@@ -2,13 +2,13 @@ package it.smartcommunitylabdhub.core.components.validators;
 
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidatorComponent;
 import it.smartcommunitylabdhub.core.models.validators.interfaces.BaseValidator;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ValidatorFactory {
+
     private final Map<String, ? extends BaseValidator> validatorMap;
 
     /**
@@ -17,9 +17,8 @@ public class ValidatorFactory {
      * @param builders The list of Validators to be managed by the factory.
      */
     public ValidatorFactory(List<? extends BaseValidator> builders) {
-        validatorMap = builders.stream()
-                .collect(Collectors.toMap(this::getValidatorFromAnnotation,
-                        Function.identity()));
+        validatorMap =
+            builders.stream().collect(Collectors.toMap(this::getValidatorFromAnnotation, Function.identity()));
     }
 
     /**
@@ -33,13 +32,12 @@ public class ValidatorFactory {
     private <R extends BaseValidator> String getValidatorFromAnnotation(R validator) {
         Class<?> runnerClass = validator.getClass();
         if (runnerClass.isAnnotationPresent(ValidatorComponent.class)) {
-            ValidatorComponent annotation =
-                    runnerClass.getAnnotation(ValidatorComponent.class);
+            ValidatorComponent annotation = runnerClass.getAnnotation(ValidatorComponent.class);
             return annotation.runtime() + "+" + annotation.task();
         }
         throw new IllegalArgumentException(
-                "No @ValidatorComponent annotation found for runner: "
-                        + runnerClass.getName());
+            "No @ValidatorComponent annotation found for runner: " + runnerClass.getName()
+        );
     }
 
     /**
@@ -53,14 +51,11 @@ public class ValidatorFactory {
      * @throws IllegalArgumentException If no Validator is found for the given Validator.
      */
     public <R extends BaseValidator> R getValidator(String runtime, String task) {
-
         @SuppressWarnings("unchecked")
         R builder = (R) validatorMap.get(runtime + "+" + task);
         if (builder == null) {
-            throw new IllegalArgumentException(
-                    "No builder found for name: " + runtime + "+" + task);
+            throw new IllegalArgumentException("No builder found for name: " + runtime + "+" + task);
         }
         return builder;
-
     }
 }

@@ -1,11 +1,10 @@
 package it.smartcommunitylabdhub.commons.utils.jackson.mixins;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import it.smartcommunitylabdhub.commons.utils.jackson.serializers.CborSerializer;
 
 public abstract class CborMixin {
-    
+
     @JsonSerialize(using = CborSerializer.class)
     private byte[] metadata;
 

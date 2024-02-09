@@ -5,11 +5,10 @@ import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectProjec
 import org.springframework.stereotype.Component;
 
 @Component
-public class ProjectProjectSpecFactory
-  implements SpecFactory<ProjectProjectSpec> {
+public class ProjectProjectSpecFactory implements SpecFactory<ProjectProjectSpec> {
 
-  @Override
-  public ProjectProjectSpec create() {
-    return new ProjectProjectSpec();
-  }
+    @Override
+    public ProjectProjectSpec create() {
+        return new ProjectProjectSpec();
+    }
 }

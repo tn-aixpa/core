@@ -1,9 +1,8 @@
 package it.smartcommunitylabdhub.commons.models.entities.task.specs;
 
-import java.util.Map;
-
-import it.smartcommunitylabdhub.commons.models.base.specs.BaseSpec;
+import it.smartcommunitylabdhub.commons.models.specs.BaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,19 +10,16 @@ import lombok.Setter;
 @Setter
 public class TaskBaseSpec extends BaseSpec {
 
-  String function;
+    String function;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    TaskBaseSpec concreteSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-      data,
-      TaskBaseSpec.class
-    );
+    @Override
+    public void configure(Map<String, Object> data) {
+        TaskBaseSpec concreteSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, TaskBaseSpec.class);
 
-    this.setFunction(concreteSpec.getFunction());
+        this.setFunction(concreteSpec.getFunction());
 
-    super.configure(data);
+        super.configure(data);
 
-    this.setExtraSpecs(concreteSpec.getExtraSpecs());
-  }
+        this.setExtraSpecs(concreteSpec.getExtraSpecs());
+    }
 }

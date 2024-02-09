@@ -12,35 +12,29 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "mlrun",
-  runtime = "mlrun",
-  entity = EntityName.FUNCTION,
-  factory = FunctionMlrunSpec.class
-)
+@SpecType(kind = "mlrun", runtime = "mlrun", entity = EntityName.FUNCTION, factory = FunctionMlrunSpec.class)
 public class FunctionMlrunSpec extends FunctionBaseSpec {
 
-  private String image;
-  private String tag;
-  private String handler;
-  private String command;
-  private List<Serializable> requirements;
+    private String image;
+    private String tag;
+    private String handler;
+    private String command;
+    private List<Serializable> requirements;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    FunctionMlrunSpec functionMlrunSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        FunctionMlrunSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        FunctionMlrunSpec functionMlrunSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            FunctionMlrunSpec.class
+        );
 
-    this.setImage(functionMlrunSpec.getImage());
-    this.setTag(functionMlrunSpec.getTag());
-    this.setHandler(functionMlrunSpec.getHandler());
-    this.setCommand(functionMlrunSpec.getCommand());
-    this.setRequirements(functionMlrunSpec.getRequirements());
-    super.configure(data);
+        this.setImage(functionMlrunSpec.getImage());
+        this.setTag(functionMlrunSpec.getTag());
+        this.setHandler(functionMlrunSpec.getHandler());
+        this.setCommand(functionMlrunSpec.getCommand());
+        this.setRequirements(functionMlrunSpec.getRequirements());
+        super.configure(data);
 
-    this.setExtraSpecs(functionMlrunSpec.getExtraSpecs());
-  }
+        this.setExtraSpecs(functionMlrunSpec.getExtraSpecs());
+    }
 }

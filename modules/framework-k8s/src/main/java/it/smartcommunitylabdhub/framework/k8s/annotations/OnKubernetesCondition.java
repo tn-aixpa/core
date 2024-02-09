@@ -8,22 +8,19 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 
 public class OnKubernetesCondition implements Condition {
 
-  @Override
-  public boolean matches(
-    ConditionContext context,
-    AnnotatedTypeMetadata metadata
-  ) {
-    //check if auto-detected first
-    if (CloudPlatform.KUBERNETES.isActive(context.getEnvironment())) {
-      return true;
-    }
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        //check if auto-detected first
+        if (CloudPlatform.KUBERNETES.isActive(context.getEnvironment())) {
+            return true;
+        }
 
-    //fall back to local client creation
-    try {
-      ClientBuilder.standard().build();
-      return true;
-    } catch (Exception e1) {
-      return false;
+        //fall back to local client creation
+        try {
+            ClientBuilder.standard().build();
+            return true;
+        } catch (Exception e1) {
+            return false;
+        }
     }
-  }
 }

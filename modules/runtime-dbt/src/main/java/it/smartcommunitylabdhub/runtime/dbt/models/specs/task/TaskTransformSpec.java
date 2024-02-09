@@ -10,23 +10,17 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "transform",
-  runtime = "dbt",
-  entity = EntityName.TASK,
-  factory = TaskTransformSpec.class
-)
+@SpecType(kind = "transform", runtime = "dbt", entity = EntityName.TASK, factory = TaskTransformSpec.class)
 public class TaskTransformSpec extends K8sTaskBaseSpec {
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    TaskTransformSpec taskTransformSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        TaskTransformSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        TaskTransformSpec taskTransformSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            TaskTransformSpec.class
+        );
 
-    super.configure(data);
-    this.setExtraSpecs(taskTransformSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(taskTransformSpec.getExtraSpecs());
+    }
 }

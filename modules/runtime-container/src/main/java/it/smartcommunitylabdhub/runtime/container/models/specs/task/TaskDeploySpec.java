@@ -10,23 +10,14 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "deploy",
-  runtime = "container",
-  entity = EntityName.TASK,
-  factory = TaskDeploySpec.class
-)
+@SpecType(kind = "deploy", runtime = "container", entity = EntityName.TASK, factory = TaskDeploySpec.class)
 public class TaskDeploySpec extends K8sTaskBaseSpec {
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    TaskDeploySpec taskDeploySpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        TaskDeploySpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        TaskDeploySpec taskDeploySpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, TaskDeploySpec.class);
 
-    super.configure(data);
-    this.setExtraSpecs(taskDeploySpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(taskDeploySpec.getExtraSpecs());
+    }
 }

@@ -4,11 +4,10 @@ import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFacto
 import org.springframework.stereotype.Component;
 
 @Component
-public class FunctionMlrunSpecFactory
-  implements SpecFactory<FunctionMlrunSpec> {
+public class FunctionMlrunSpecFactory implements SpecFactory<FunctionMlrunSpec> {
 
-  @Override
-  public FunctionMlrunSpec create() {
-    return new FunctionMlrunSpec();
-  }
+    @Override
+    public FunctionMlrunSpec create() {
+        return new FunctionMlrunSpec();
+    }
 }

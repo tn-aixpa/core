@@ -5,11 +5,10 @@ import it.smartcommunitylabdhub.core.models.entities.workflow.specs.WorkflowWork
 import org.springframework.stereotype.Component;
 
 @Component
-public class WorkflowWorkflowSpecFactory
-  implements SpecFactory<WorkflowWorkflowSpec> {
+public class WorkflowWorkflowSpecFactory implements SpecFactory<WorkflowWorkflowSpec> {
 
-  @Override
-  public WorkflowWorkflowSpec create() {
-    return new WorkflowWorkflowSpec();
-  }
+    @Override
+    public WorkflowWorkflowSpec create() {
+        return new WorkflowWorkflowSpec();
+    }
 }

@@ -1,10 +1,9 @@
 package it.smartcommunitylabdhub.commons.utils;
 
-import lombok.SneakyThrows;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import lombok.SneakyThrows;
 
 /**
  * Utility class for handling date-related operations.
@@ -32,7 +31,7 @@ public class DateUtils {
      * @throws IllegalArgumentException if the date interval format is invalid.
      */
     public static DateInterval parseDateIntervalFromTimestamps(String intervalStr, boolean isMilliseconds)
-            throws IllegalArgumentException {
+        throws IllegalArgumentException {
         String[] timestampArray = intervalStr.split(",");
 
         if (timestampArray.length != 2) {
@@ -87,6 +86,5 @@ public class DateUtils {
     /**
      * A record representing a date interval with start and end dates.
      */
-    public record DateInterval(Date startDate, Date endDate) {
-    }
+    public record DateInterval(Date startDate, Date endDate) {}
 }

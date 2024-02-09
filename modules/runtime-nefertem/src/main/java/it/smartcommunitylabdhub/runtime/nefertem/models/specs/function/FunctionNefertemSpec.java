@@ -12,34 +12,28 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "nefertem",
-  runtime = "nefertem",
-  entity = EntityName.FUNCTION,
-  factory = FunctionNefertemSpec.class
-)
+@SpecType(kind = "nefertem", runtime = "nefertem", entity = EntityName.FUNCTION, factory = FunctionNefertemSpec.class)
 public class FunctionNefertemSpec extends FunctionBaseSpec {
 
-  private List<Map<String, Object>> constraints;
+    private List<Map<String, Object>> constraints;
 
-  private List<Map<String, Object>> metrics;
+    private List<Map<String, Object>> metrics;
 
-  @JsonProperty("error_report")
-  private String errorReport;
+    @JsonProperty("error_report")
+    private String errorReport;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    FunctionNefertemSpec functionNefertemSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        FunctionNefertemSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        FunctionNefertemSpec functionNefertemSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            FunctionNefertemSpec.class
+        );
 
-    this.setConstraints(functionNefertemSpec.getConstraints());
-    this.setMetrics(functionNefertemSpec.getMetrics());
-    this.setErrorReport(functionNefertemSpec.getErrorReport());
+        this.setConstraints(functionNefertemSpec.getConstraints());
+        this.setMetrics(functionNefertemSpec.getMetrics());
+        this.setErrorReport(functionNefertemSpec.getErrorReport());
 
-    super.configure(data);
-    this.setExtraSpecs(functionNefertemSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(functionNefertemSpec.getExtraSpecs());
+    }
 }

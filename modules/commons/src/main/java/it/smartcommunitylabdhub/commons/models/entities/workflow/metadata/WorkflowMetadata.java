@@ -1,8 +1,7 @@
 package it.smartcommunitylabdhub.commons.models.entities.workflow.metadata;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import it.smartcommunitylabdhub.commons.models.base.metadata.BaseMetadata;
+import it.smartcommunitylabdhub.commons.models.base.BaseMetadata;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,11 +14,11 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WorkflowMetadata extends BaseMetadata {
 
-  String name;
+    String name;
 
-  String version;
+    String version;
 
-  String description;
+    String description;
 
-  Boolean embedded;
+    Boolean embedded;
 }

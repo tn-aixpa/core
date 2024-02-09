@@ -1,8 +1,7 @@
 package it.smartcommunitylabdhub.commons.models.entities.workflow.specs;
 
+import it.smartcommunitylabdhub.commons.models.specs.BaseSpec;
 import java.util.Map;
-
-import it.smartcommunitylabdhub.commons.models.base.specs.BaseSpec;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,8 +9,8 @@ import lombok.Setter;
 @Setter
 public class WorkflowBaseSpec extends BaseSpec {
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    super.configure(data);
-  }
+    @Override
+    public void configure(Map<String, Object> data) {
+        super.configure(data);
+    }
 }

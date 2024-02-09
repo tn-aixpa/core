@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.commons.annotations.validators;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-
 import java.util.UUID;
 
 public class ValidFieldValidator implements ConstraintValidator<ValidateField, String> {
@@ -13,7 +12,9 @@ public class ValidFieldValidator implements ConstraintValidator<ValidateField, S
 
     @Override
     public void initialize(ValidateField constraintAnnotation) {
-        regex = constraintAnnotation.regex().isEmpty() ? "^[a-z0-9+-]([-a-z0-9+-]*[a-z0-9+-])?$"
+        regex =
+            constraintAnnotation.regex().isEmpty()
+                ? "^[a-z0-9+-]([-a-z0-9+-]*[a-z0-9+-])?$"
                 : constraintAnnotation.regex();
 
         allowNull = constraintAnnotation.allowNull();

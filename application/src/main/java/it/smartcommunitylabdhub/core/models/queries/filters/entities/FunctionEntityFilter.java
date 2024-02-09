@@ -11,12 +11,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
-
 @Component
 @Getter
 @Setter
 public class FunctionEntityFilter extends BaseEntityFilter implements SpecificationFilter<FunctionEntity> {
-
 
     @Override
     public Predicate toPredicate(Root<FunctionEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
@@ -30,7 +28,8 @@ public class FunctionEntityFilter extends BaseEntityFilter implements Specificat
         }
 
         if (getProject() != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("project"), "%" + getProject() + "%"));
+            predicate =
+                criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("project"), "%" + getProject() + "%"));
         }
 
         if (getState() != null) {
@@ -38,10 +37,12 @@ public class FunctionEntityFilter extends BaseEntityFilter implements Specificat
         }
 
         if (getCreatedDate() != null) {
-
             DateUtils.DateInterval dateInterval = DateUtils.parseDateIntervalFromTimestamps(getCreatedDate(), true);
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate()));
-
+            predicate =
+                criteriaBuilder.and(
+                    predicate,
+                    criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate())
+                );
         }
 
         return predicate;

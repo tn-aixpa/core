@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 @Documented
 @Component
 public @interface BuilderComponent {
-  String runtime(); // runtime can be dbt, nefertem, dss, kfp...
+    String runtime(); // runtime can be dbt, nefertem, dss, kfp...
 
-  String task(); // define the task type that have to be executed by the framework for
+    String task(); // define the task type that have to be executed by the framework for
 // a specific runtime
 }

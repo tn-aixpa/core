@@ -14,38 +14,37 @@ import lombok.Setter;
 @Getter
 @Setter
 @SpecType(
-  kind = "container",
-  runtime = "container",
-  entity = EntityName.FUNCTION,
-  factory = FunctionContainerSpec.class
+    kind = "container",
+    runtime = "container",
+    entity = EntityName.FUNCTION,
+    factory = FunctionContainerSpec.class
 )
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
-  @NotBlank
-  private String image;
+    @NotBlank
+    private String image;
 
-  @JsonProperty("base_image")
-  private String baseImage;
+    @JsonProperty("base_image")
+    private String baseImage;
 
-  private String command;
-  private String entrypoint;
-  private List<String> args;
+    private String command;
+    private String entrypoint;
+    private List<String> args;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    FunctionContainerSpec functionContainerSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        FunctionContainerSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        FunctionContainerSpec functionContainerSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            FunctionContainerSpec.class
+        );
 
-    this.setCommand(functionContainerSpec.getCommand());
-    this.setImage(functionContainerSpec.getImage());
-    this.setBaseImage(functionContainerSpec.getBaseImage());
-    this.setArgs(functionContainerSpec.getArgs());
-    this.setEntrypoint(functionContainerSpec.getEntrypoint());
-    super.configure(data);
+        this.setCommand(functionContainerSpec.getCommand());
+        this.setImage(functionContainerSpec.getImage());
+        this.setBaseImage(functionContainerSpec.getBaseImage());
+        this.setArgs(functionContainerSpec.getArgs());
+        this.setEntrypoint(functionContainerSpec.getEntrypoint());
+        super.configure(data);
 
-    this.setExtraSpecs(functionContainerSpec.getExtraSpecs());
-  }
+        this.setExtraSpecs(functionContainerSpec.getExtraSpecs());
+    }
 }

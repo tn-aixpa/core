@@ -27,409 +27,296 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 public class DataItemContextServiceImpl
-  extends ContextService<DataItemEntity, DataItemEntityFilter>
-  implements DataItemContextService {
+    extends ContextService<DataItemEntity, DataItemEntityFilter>
+    implements DataItemContextService {
 
-  @Autowired
-  DataItemRepository dataItemRepository;
+    @Autowired
+    DataItemRepository dataItemRepository;
 
-  @Autowired
-  DataItemDTOBuilder dataItemDTOBuilder;
+    @Autowired
+    DataItemDTOBuilder dataItemDTOBuilder;
 
-  @Autowired
-  DataItemEntityFilter dataItemEntityFilter;
+    @Autowired
+    DataItemEntityFilter dataItemEntityFilter;
 
-  @Autowired
-  DataItemEntityBuilder dataItemEntityBuilder;
+    @Autowired
+    DataItemEntityBuilder dataItemEntityBuilder;
 
-  @Override
-  public DataItem createDataItem(String projectName, DataItem dataItemDTO) {
-    try {
-      // Check that project context is the same as the project passed to the
-      // dataItemDTO
-      if (!projectName.equals(dataItemDTO.getProject())) {
-        throw new CustomException(
-          "Project Context and DataItem Project does not match",
-          null
-        );
-      }
+    @Override
+    public DataItem createDataItem(String projectName, DataItem dataItemDTO) {
+        try {
+            // Check that project context is the same as the project passed to the
+            // dataItemDTO
+            if (!projectName.equals(dataItemDTO.getProject())) {
+                throw new CustomException("Project Context and DataItem Project does not match", null);
+            }
 
-      // Check project context
-      checkContext(dataItemDTO.getProject());
+            // Check project context
+            checkContext(dataItemDTO.getProject());
 
-      // Check if dataItem already exist if exist throw exception otherwise create a
-      // new one
-      DataItemEntity dataItem = (DataItemEntity) Optional
-        .ofNullable(dataItemDTO.getId())
-        .flatMap(id ->
-          dataItemRepository
-            .findById(id)
-            .map(a -> {
-              throw new CustomException(
-                "The project already contains an dataItem with the specified UUID.",
-                null
-              );
-            })
-        )
-        .orElseGet(() -> {
-          // Build an dataItem and store it in the database
-          DataItemEntity newDataItem = dataItemEntityBuilder.build(dataItemDTO);
-          return dataItemRepository.saveAndFlush(newDataItem);
-        });
+            // Check if dataItem already exist if exist throw exception otherwise create a
+            // new one
+            DataItemEntity dataItem = (DataItemEntity) Optional
+                .ofNullable(dataItemDTO.getId())
+                .flatMap(id ->
+                    dataItemRepository
+                        .findById(id)
+                        .map(a -> {
+                            throw new CustomException(
+                                "The project already contains an dataItem with the specified UUID.",
+                                null
+                            );
+                        })
+                )
+                .orElseGet(() -> {
+                    // Build an dataItem and store it in the database
+                    DataItemEntity newDataItem = dataItemEntityBuilder.build(dataItemDTO);
+                    return dataItemRepository.saveAndFlush(newDataItem);
+                });
 
-      // Return dataItem DTO
-      return dataItemDTOBuilder.build(dataItem, false);
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public Page<DataItem> getLatestByProjectName(
-    Map<String, String> filter,
-    String projectName,
-    Pageable pageable
-  ) {
-    try {
-      checkContext(projectName);
-
-      dataItemEntityFilter.setCreatedDate(filter.get("created"));
-      dataItemEntityFilter.setName(filter.get("name"));
-      dataItemEntityFilter.setKind(filter.get("kind"));
-
-      Optional<State> stateOptional = Stream
-        .of(State.values())
-        .filter(state -> state.name().equals(filter.get("state")))
-        .findAny();
-
-      dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
-
-      Specification<DataItemEntity> specification = createSpecification(
-        filter,
-        dataItemEntityFilter
-      )
-        .and(CommonSpecification.latestByProject(projectName));
-
-      Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
-        Specification
-          .where(specification)
-          .and((root, query, criteriaBuilder) ->
-            criteriaBuilder.equal(root.get("project"), projectName)
-          ),
-        pageable
-      );
-
-      return new PageImpl<>(
-        dataItemPage
-          .getContent()
-          .stream()
-          .map(dataItem -> {
+            // Return dataItem DTO
             return dataItemDTOBuilder.build(dataItem, false);
-          })
-          .collect(Collectors.toList()),
-        pageable,
-        dataItemPage.getTotalElements()
-      );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
 
-  @Override
-  public Page<DataItem> getByProjectNameAndDataItemName(
-    Map<String, String> filter,
-    String projectName,
-    String dataItemName,
-    Pageable pageable
-  ) {
-    try {
-      checkContext(projectName);
+    @Override
+    public Page<DataItem> getLatestByProjectName(Map<String, String> filter, String projectName, Pageable pageable) {
+        try {
+            checkContext(projectName);
 
-      dataItemEntityFilter.setCreatedDate(filter.get("created"));
-      dataItemEntityFilter.setKind(filter.get("kind"));
-      Optional<State> stateOptional = Stream
-        .of(State.values())
-        .filter(state -> state.name().equals(filter.get("state")))
-        .findAny();
+            dataItemEntityFilter.setCreatedDate(filter.get("created"));
+            dataItemEntityFilter.setName(filter.get("name"));
+            dataItemEntityFilter.setKind(filter.get("kind"));
 
-      dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+            Optional<State> stateOptional = Stream
+                .of(State.values())
+                .filter(state -> state.name().equals(filter.get("state")))
+                .findAny();
 
-      Specification<DataItemEntity> specification = createSpecification(
-        filter,
-        dataItemEntityFilter
-      );
+            dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-      Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
-        Specification
-          .where(specification)
-          .and((root, query, criteriaBuilder) ->
-            criteriaBuilder.and(
-              criteriaBuilder.equal(root.get("project"), projectName),
-              criteriaBuilder.equal(root.get("name"), dataItemName)
-            )
-          ),
-        pageable
-      );
+            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter)
+                .and(CommonSpecification.latestByProject(projectName));
 
-      return new PageImpl<>(
-        dataItemPage
-          .getContent()
-          .stream()
-          .map(dataItem -> {
+            Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
+                Specification
+                    .where(specification)
+                    .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
+                pageable
+            );
+
+            return new PageImpl<>(
+                dataItemPage
+                    .getContent()
+                    .stream()
+                    .map(dataItem -> {
+                        return dataItemDTOBuilder.build(dataItem, false);
+                    })
+                    .collect(Collectors.toList()),
+                pageable,
+                dataItemPage.getTotalElements()
+            );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public Page<DataItem> getByProjectNameAndDataItemName(
+        Map<String, String> filter,
+        String projectName,
+        String dataItemName,
+        Pageable pageable
+    ) {
+        try {
+            checkContext(projectName);
+
+            dataItemEntityFilter.setCreatedDate(filter.get("created"));
+            dataItemEntityFilter.setKind(filter.get("kind"));
+            Optional<State> stateOptional = Stream
+                .of(State.values())
+                .filter(state -> state.name().equals(filter.get("state")))
+                .findAny();
+
+            dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
+
+            Page<DataItemEntity> dataItemPage = dataItemRepository.findAll(
+                Specification
+                    .where(specification)
+                    .and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.and(
+                            criteriaBuilder.equal(root.get("project"), projectName),
+                            criteriaBuilder.equal(root.get("name"), dataItemName)
+                        )
+                    ),
+                pageable
+            );
+
+            return new PageImpl<>(
+                dataItemPage
+                    .getContent()
+                    .stream()
+                    .map(dataItem -> {
+                        return dataItemDTOBuilder.build(dataItem, false);
+                    })
+                    .collect(Collectors.toList()),
+                pageable,
+                dataItemPage.getTotalElements()
+            );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public DataItem getByProjectAndDataItemAndUuid(String projectName, String dataItemName, String uuid) {
+        try {
+            // Check project context
+            checkContext(projectName);
+
+            return this.dataItemRepository.findByProjectAndNameAndId(projectName, dataItemName, uuid)
+                .map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
+                .orElseThrow(() -> new CustomException("The dataItem does not exist.", null));
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public DataItem getLatestByProjectNameAndDataItemName(String projectName, String dataItemName) {
+        try {
+            // Check project context
+            checkContext(projectName);
+
+            return this.dataItemRepository.findLatestDataItemByProjectAndName(projectName, dataItemName)
+                .map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
+                .orElseThrow(() -> new CustomException("The dataItem does not exist.", null));
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public DataItem createOrUpdateDataItem(String projectName, String dataItemName, DataItem dataItemDTO) {
+        try {
+            // Check that project context is the same as the project passed to the
+            // dataItemDTO
+            if (!projectName.equals(dataItemDTO.getProject())) {
+                throw new CustomException("Project Context and DataItem Project does not match.", null);
+            }
+            if (!dataItemName.equals(dataItemDTO.getName())) {
+                throw new CustomException(
+                    "Trying to create/update an dataItem with name different from the one passed in the request.",
+                    null
+                );
+            }
+
+            // Check project context
+            checkContext(dataItemDTO.getProject());
+
+            // Check if dataItem already exist if exist throw exception otherwise create a
+            // new one
+            DataItemEntity dataItem = Optional
+                .ofNullable(dataItemDTO.getId())
+                .flatMap(id -> {
+                    Optional<DataItemEntity> optionalDataItem = dataItemRepository.findById(id);
+                    if (optionalDataItem.isPresent()) {
+                        DataItemEntity existingDataItem = optionalDataItem.get();
+
+                        // Update the existing dataItem version
+                        final DataItemEntity dataItemUpdated = dataItemEntityBuilder.update(
+                            existingDataItem,
+                            dataItemDTO
+                        );
+                        return Optional.of(this.dataItemRepository.saveAndFlush(dataItemUpdated));
+                    } else {
+                        // Build a new dataItem and store it in the database
+                        DataItemEntity newDataItem = dataItemEntityBuilder.build(dataItemDTO);
+                        return Optional.of(dataItemRepository.saveAndFlush(newDataItem));
+                    }
+                })
+                .orElseGet(() -> {
+                    // Build a new dataItem and store it in the database
+                    DataItemEntity newDataItem = dataItemEntityBuilder.build(dataItemDTO);
+                    return dataItemRepository.saveAndFlush(newDataItem);
+                });
+
+            // Return dataItem DTO
             return dataItemDTOBuilder.build(dataItem, false);
-          })
-          .collect(Collectors.toList()),
-        pageable,
-        dataItemPage.getTotalElements()
-      );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
 
-  @Override
-  public DataItem getByProjectAndDataItemAndUuid(
-    String projectName,
-    String dataItemName,
-    String uuid
-  ) {
-    try {
-      // Check project context
-      checkContext(projectName);
+    @Override
+    public DataItem updateDataItem(String projectName, String dataItemName, String uuid, DataItem dataItemDTO) {
+        try {
+            // Check that project context is the same as the project passed to the
+            // dataItemDTO
+            if (!projectName.equals(dataItemDTO.getProject())) {
+                throw new CustomException("Project Context and DataItem Project does not match", null);
+            }
+            if (!uuid.equals(dataItemDTO.getId())) {
+                throw new CustomException(
+                    "Trying to update an dataItem with an ID different from the one passed in the request.",
+                    null
+                );
+            }
+            // Check project context
+            checkContext(dataItemDTO.getProject());
 
-      return this.dataItemRepository.findByProjectAndNameAndId(
-          projectName,
-          dataItemName,
-          uuid
-        )
-        .map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
-        .orElseThrow(() ->
-          new CustomException("The dataItem does not exist.", null)
-        );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+            DataItemEntity dataItem =
+                this.dataItemRepository.findById(dataItemDTO.getId())
+                    .map(a -> {
+                        // Update the existing dataItem version
+                        return dataItemEntityBuilder.update(a, dataItemDTO);
+                    })
+                    .orElseThrow(() -> new CustomException("The dataItem does not exist.", null));
+
+            // Return dataItem DTO
+            return dataItemDTOBuilder.build(dataItem, false);
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
 
-  @Override
-  public DataItem getLatestByProjectNameAndDataItemName(
-    String projectName,
-    String dataItemName
-  ) {
-    try {
-      // Check project context
-      checkContext(projectName);
-
-      return this.dataItemRepository.findLatestDataItemByProjectAndName(
-          projectName,
-          dataItemName
-        )
-        .map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
-        .orElseThrow(() ->
-          new CustomException("The dataItem does not exist.", null)
-        );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public DataItem createOrUpdateDataItem(
-    String projectName,
-    String dataItemName,
-    DataItem dataItemDTO
-  ) {
-    try {
-      // Check that project context is the same as the project passed to the
-      // dataItemDTO
-      if (!projectName.equals(dataItemDTO.getProject())) {
-        throw new CustomException(
-          "Project Context and DataItem Project does not match.",
-          null
-        );
-      }
-      if (!dataItemName.equals(dataItemDTO.getName())) {
-        throw new CustomException(
-          "Trying to create/update an dataItem with name different from the one passed in the request.",
-          null
-        );
-      }
-
-      // Check project context
-      checkContext(dataItemDTO.getProject());
-
-      // Check if dataItem already exist if exist throw exception otherwise create a
-      // new one
-      DataItemEntity dataItem = Optional
-        .ofNullable(dataItemDTO.getId())
-        .flatMap(id -> {
-          Optional<DataItemEntity> optionalDataItem =
-            dataItemRepository.findById(id);
-          if (optionalDataItem.isPresent()) {
-            DataItemEntity existingDataItem = optionalDataItem.get();
-
-            // Update the existing dataItem version
-            final DataItemEntity dataItemUpdated = dataItemEntityBuilder.update(
-              existingDataItem,
-              dataItemDTO
+    @Override
+    @Transactional
+    public Boolean deleteSpecificDataItemVersion(String projectName, String dataItemName, String uuid) {
+        try {
+            if (this.dataItemRepository.existsByProjectAndNameAndId(projectName, dataItemName, uuid)) {
+                this.dataItemRepository.deleteByProjectAndNameAndId(projectName, dataItemName, uuid);
+                return true;
+            }
+            throw new CoreException(
+                "DataItemNotFound",
+                "The dataItem you are trying to delete does not exist.",
+                HttpStatus.NOT_FOUND
             );
-            return Optional.of(
-              this.dataItemRepository.saveAndFlush(dataItemUpdated)
+        } catch (Exception e) {
+            throw new CoreException("InternalServerError", "cannot delete dataItem", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    @Transactional
+    public Boolean deleteAllDataItemVersions(String projectName, String dataItemName) {
+        try {
+            if (dataItemRepository.existsByProjectAndName(projectName, dataItemName)) {
+                this.dataItemRepository.deleteByProjectAndName(projectName, dataItemName);
+                return true;
+            }
+            throw new CoreException(
+                "DataItemNotFound",
+                "The dataItems you are trying to delete does not exist.",
+                HttpStatus.NOT_FOUND
             );
-          } else {
-            // Build a new dataItem and store it in the database
-            DataItemEntity newDataItem = dataItemEntityBuilder.build(
-              dataItemDTO
-            );
-            return Optional.of(dataItemRepository.saveAndFlush(newDataItem));
-          }
-        })
-        .orElseGet(() -> {
-          // Build a new dataItem and store it in the database
-          DataItemEntity newDataItem = dataItemEntityBuilder.build(dataItemDTO);
-          return dataItemRepository.saveAndFlush(newDataItem);
-        });
-
-      // Return dataItem DTO
-      return dataItemDTOBuilder.build(dataItem, false);
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+        } catch (Exception e) {
+            throw new CoreException("InternalServerError", "cannot delete dataItem", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
-
-  @Override
-  public DataItem updateDataItem(
-    String projectName,
-    String dataItemName,
-    String uuid,
-    DataItem dataItemDTO
-  ) {
-    try {
-      // Check that project context is the same as the project passed to the
-      // dataItemDTO
-      if (!projectName.equals(dataItemDTO.getProject())) {
-        throw new CustomException(
-          "Project Context and DataItem Project does not match",
-          null
-        );
-      }
-      if (!uuid.equals(dataItemDTO.getId())) {
-        throw new CustomException(
-          "Trying to update an dataItem with an ID different from the one passed in the request.",
-          null
-        );
-      }
-      // Check project context
-      checkContext(dataItemDTO.getProject());
-
-      DataItemEntity dataItem =
-        this.dataItemRepository.findById(dataItemDTO.getId())
-          .map(a -> {
-            // Update the existing dataItem version
-            return dataItemEntityBuilder.update(a, dataItemDTO);
-          })
-          .orElseThrow(() ->
-            new CustomException("The dataItem does not exist.", null)
-          );
-
-      // Return dataItem DTO
-      return dataItemDTOBuilder.build(dataItem, false);
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  @Transactional
-  public Boolean deleteSpecificDataItemVersion(
-    String projectName,
-    String dataItemName,
-    String uuid
-  ) {
-    try {
-      if (
-        this.dataItemRepository.existsByProjectAndNameAndId(
-            projectName,
-            dataItemName,
-            uuid
-          )
-      ) {
-        this.dataItemRepository.deleteByProjectAndNameAndId(
-            projectName,
-            dataItemName,
-            uuid
-          );
-        return true;
-      }
-      throw new CoreException(
-        "DataItemNotFound",
-        "The dataItem you are trying to delete does not exist.",
-        HttpStatus.NOT_FOUND
-      );
-    } catch (Exception e) {
-      throw new CoreException(
-        "InternalServerError",
-        "cannot delete dataItem",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  @Transactional
-  public Boolean deleteAllDataItemVersions(
-    String projectName,
-    String dataItemName
-  ) {
-    try {
-      if (
-        dataItemRepository.existsByProjectAndName(projectName, dataItemName)
-      ) {
-        this.dataItemRepository.deleteByProjectAndName(
-            projectName,
-            dataItemName
-          );
-        return true;
-      }
-      throw new CoreException(
-        "DataItemNotFound",
-        "The dataItems you are trying to delete does not exist.",
-        HttpStatus.NOT_FOUND
-      );
-    } catch (Exception e) {
-      throw new CoreException(
-        "InternalServerError",
-        "cannot delete dataItem",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
 }

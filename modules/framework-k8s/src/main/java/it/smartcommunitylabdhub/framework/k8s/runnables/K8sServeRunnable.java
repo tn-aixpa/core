@@ -20,32 +20,32 @@ import lombok.*;
 @NoArgsConstructor
 public class K8sServeRunnable extends BaseRunnable {
 
-  private String runtime;
+    private String runtime;
 
-  private String task;
+    private String task;
 
-  private String image;
+    private String image;
 
-  private String entrypoint;
+    private String entrypoint;
 
-  private String state;
+    private String state;
 
-  private String[] args;
+    private String[] args;
 
-  private List<CoreEnv> envs;
+    private List<CoreEnv> envs;
 
-  private List<CoreVolume> volumes;
+    private List<CoreVolume> volumes;
 
-  @JsonProperty("node_selector")
-  private List<CoreNodeSelector> nodeSelector;
+    @JsonProperty("node_selector")
+    private List<CoreNodeSelector> nodeSelector;
 
-  private List<CoreResource> resources;
+    private List<CoreResource> resources;
 
-  // mapping secret name to the list of keys to of the secret to use
-  Map<String, Set<String>> secrets;
+    // mapping secret name to the list of keys to of the secret to use
+    Map<String, Set<String>> secrets;
 
-  @Override
-  public String getFramework() {
-    return "k8sserve";
-  }
+    @Override
+    public String getFramework() {
+        return "k8sserve";
+    }
 }

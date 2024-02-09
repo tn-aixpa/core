@@ -29,278 +29,256 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class ProjectSecretServiceImpl implements ProjectSecretService {
 
-  private static final String K8S_PROVIDER = "kubernetes";
-  private static final String PATH_FORMAT = "%s://%s/%s";
-  private static final Pattern PATH_PATTERN = Pattern.compile(
-    "(\\w+)://([\\w-]+)/([\\w-]+)"
-  );
+    private static final String K8S_PROVIDER = "kubernetes";
+    private static final String PATH_FORMAT = "%s://%s/%s";
+    private static final Pattern PATH_PATTERN = Pattern.compile("(\\w+)://([\\w-]+)/([\\w-]+)");
 
-  @Autowired
-  SecretDTOBuilder secretDTOBuilder;
+    @Autowired
+    SecretDTOBuilder secretDTOBuilder;
 
-  @Autowired
-  SecretEntityBuilder secretEntityBuilder;
+    @Autowired
+    SecretEntityBuilder secretEntityBuilder;
 
-  @Autowired(required = false)
-  private K8sSecretHelper secretHelper;
+    @Autowired(required = false)
+    private K8sSecretHelper secretHelper;
 
-  @Autowired
-  private SecretRepository secretRepository;
+    @Autowired
+    private SecretRepository secretRepository;
 
-  @Autowired
-  private ProjectRepository projectRepository;
+    @Autowired
+    private ProjectRepository projectRepository;
 
-  @Override
-  public Secret createProjectSecret(Secret secretDTO) {
-    // store in DB, do not create physically the secret
-    if (
-      secretDTO.getId() != null &&
-      secretRepository.existsById(secretDTO.getId())
-    ) {
-      throw new CoreException(
-        ErrorList.DUPLICATE_SECRET.getValue(),
-        ErrorList.DUPLICATE_SECRET.getReason(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-    Optional<SecretEntity> savedSecret = Optional
-      .of(secretDTO)
-      .map(secretEntityBuilder::build)
-      .map(this.secretRepository::saveAndFlush);
-
-    return savedSecret
-      .map(secret -> secretDTOBuilder.build(secret, false))
-      .orElseThrow(() ->
-        new CoreException(
-          ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-          "Error saving secret",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        )
-      );
-  }
-
-  @Override
-  public Secret updateProjectSecret(Secret secretDTO, String uuid) {
-    if (!secretDTO.getId().equals(uuid)) {
-      throw new CoreException(
-        ErrorList.FUNCTION_NOT_MATCH.getValue(),
-        ErrorList.FUNCTION_NOT_MATCH.getReason(),
-        HttpStatus.NOT_FOUND
-      );
-    }
-
-    final SecretEntity secret = secretRepository.findById(uuid).orElse(null);
-    if (secret == null) {
-      throw new CoreException(
-        ErrorList.SECRET_NOT_FOUND.getValue(),
-        ErrorList.SECRET_NOT_FOUND.getReason(),
-        HttpStatus.NOT_FOUND
-      );
-    }
-
-    try {
-      final SecretEntity secretUpdated = secretEntityBuilder.update(
-        secret,
-        secretDTO
-      );
-      this.secretRepository.saveAndFlush(secretUpdated);
-
-      return secretDTOBuilder.build(secretUpdated, false);
-    } catch (CustomException e) {
-      throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public Secret getProjectSecret(String uuid) {
-    final SecretEntity secret = secretRepository.findById(uuid).orElse(null);
-    if (secret == null) {
-      throw new CoreException(
-        ErrorList.SECRET_NOT_FOUND.getValue(),
-        ErrorList.SECRET_NOT_FOUND.getReason(),
-        HttpStatus.NOT_FOUND
-      );
-    }
-
-    try {
-      return secretDTOBuilder.build(secret, false);
-    } catch (CustomException e) {
-      throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public List<Secret> getProjectSecrets(String projectName) {
-    return secretRepository
-      .findByProject(projectName)
-      .stream()
-      .map(secretEntity -> {
-        return secretDTOBuilder.build(secretEntity, false);
-      })
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public boolean deleteProjectSecret(String uuid) {
-    try {
-      SecretEntity secret = secretRepository.findById(uuid).orElse(null);
-      if (secret != null) {
-        Secret secretDTO = secretDTOBuilder.build(secret, false);
-        this.secretRepository.deleteById(uuid);
-        if (secretHelper != null) {
-          secretHelper.deleteSecretKeys(
-            getProjectSecretName(secret.getProject()),
-            Collections.singleton((String) secretDTO.getSpec().get("path"))
-          );
+    @Override
+    public Secret createProjectSecret(Secret secretDTO) {
+        // store in DB, do not create physically the secret
+        if (secretDTO.getId() != null && secretRepository.existsById(secretDTO.getId())) {
+            throw new CoreException(
+                ErrorList.DUPLICATE_SECRET.getValue(),
+                ErrorList.DUPLICATE_SECRET.getReason(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
-        return true;
-      }
-      throw new CoreException(
-        ErrorList.SECRET_NOT_FOUND.getValue(),
-        ErrorList.SECRET_NOT_FOUND.getReason(),
-        HttpStatus.NOT_FOUND
-      );
-    } catch (Exception e) {
-      throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        "Cannot delete secret",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+        Optional<SecretEntity> savedSecret = Optional
+            .of(secretDTO)
+            .map(secretEntityBuilder::build)
+            .map(this.secretRepository::saveAndFlush);
+
+        return savedSecret
+            .map(secret -> secretDTOBuilder.build(secret, false))
+            .orElseThrow(() ->
+                new CoreException(
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Error saving secret",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                )
+            );
     }
-  }
 
-  @Override
-  public Map<String, String> getProjectSecretData(
-    String projectName,
-    Set<String> names
-  ) {
-    if (names == null || names.isEmpty()) return Collections.emptyMap();
+    @Override
+    public Secret updateProjectSecret(Secret secretDTO, String uuid) {
+        if (!secretDTO.getId().equals(uuid)) {
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_MATCH.getValue(),
+                ErrorList.FUNCTION_NOT_MATCH.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        }
 
-    Map<String, String> data = new HashMap<>();
-    Map<String, String> secretData;
-    if (secretHelper != null) {
-      try {
-        secretData =
-          secretHelper.getSecretData(getProjectSecretName(projectName));
-        if (secretData != null) {
-          names.forEach(n -> {
-            SecretEntity secret = secretRepository
-              .findByProjectAndName(projectName, n)
-              .orElse(null);
+        final SecretEntity secret = secretRepository.findById(uuid).orElse(null);
+        if (secret == null) {
+            throw new CoreException(
+                ErrorList.SECRET_NOT_FOUND.getValue(),
+                ErrorList.SECRET_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        try {
+            final SecretEntity secretUpdated = secretEntityBuilder.update(secret, secretDTO);
+            this.secretRepository.saveAndFlush(secretUpdated);
+
+            return secretDTOBuilder.build(secretUpdated, false);
+        } catch (CustomException e) {
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @Override
+    public Secret getProjectSecret(String uuid) {
+        final SecretEntity secret = secretRepository.findById(uuid).orElse(null);
+        if (secret == null) {
+            throw new CoreException(
+                ErrorList.SECRET_NOT_FOUND.getValue(),
+                ErrorList.SECRET_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        try {
+            return secretDTOBuilder.build(secret, false);
+        } catch (CustomException e) {
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @Override
+    public List<Secret> getProjectSecrets(String projectName) {
+        return secretRepository
+            .findByProject(projectName)
+            .stream()
+            .map(secretEntity -> {
+                return secretDTOBuilder.build(secretEntity, false);
+            })
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean deleteProjectSecret(String uuid) {
+        try {
+            SecretEntity secret = secretRepository.findById(uuid).orElse(null);
             if (secret != null) {
-              data.put(n, secretData.get(n));
-            }
-          });
-        }
-      } catch (ApiException e) {
-        throw new CoreException(
-          ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-          "Cannot read secret",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
-    }
-    return data;
-  }
-
-  @Override
-  public void storeProjectSecretData(
-    String projectName,
-    Map<String, String> values
-  ) {
-    if (values == null || values.isEmpty()) return;
-
-    String secretName = getProjectSecretName(projectName);
-
-    for (Entry<String, String> entry : values.entrySet()) {
-      if (
-        !secretRepository.existsByProjectAndName(projectName, entry.getKey())
-      ) {
-        Secret secret = new Secret();
-        secret.setKind("secret");
-        secret.setName(entry.getKey());
-        secret.setProject(projectName);
-
-        SecretMetadata secretMetadata = new SecretMetadata();
-        secretMetadata.setCreated(new Date());
-        secretMetadata.setEmbedded(true);
-        secretMetadata.setName(entry.getKey());
-        secretMetadata.setProject(projectName);
-        secretMetadata.setUpdated(secretMetadata.getCreated());
-        secret.setMetadata(secretMetadata);
-
-        SecretBaseSpec spec = new SecretBaseSpec();
-        spec.setProvider(K8S_PROVIDER);
-        spec.setPath(getSecretPath(K8S_PROVIDER, secretName, entry.getKey()));
-        secret.setSpec(spec.toMap());
-
-        secretRepository.saveAndFlush(secretEntityBuilder.build(secret));
-      }
-    }
-    if (secretHelper != null) {
-      try {
-        secretHelper.storeSecretData(secretName, values);
-      } catch (Exception e) {
-        throw new CoreException(
-          ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-          "Cannot write secret",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        );
-      }
-    }
-  }
-
-  /**
-   * Group secrets by secret name as stored in provider. Only Kubernetes provider is supported at this moment.
-   */
-  @Override
-  public Map<String, Set<String>> groupSecrets(
-    String projectId,
-    Collection<String> secrets
-  ) {
-    Optional<ProjectEntity> project = projectRepository.findById(projectId);
-    if (project.isPresent()) {
-      Map<String, Set<String>> result = new HashMap<>();
-      if (secrets != null && !secrets.isEmpty()) {
-        secretRepository
-          .findByProject(project.get().getName())
-          .stream()
-          .filter(s -> secrets.contains(s.getName()))
-          .forEach(secret -> {
-            Secret secretDTO = secretDTOBuilder.build(secret, false);
-            String path = (String) secretDTO.getSpec().get("path");
-            Matcher matcher = PATH_PATTERN.matcher(path);
-            if (matcher.matches()) {
-              String provider = matcher.group(1);
-              String secretName = matcher.group(2);
-              String key = matcher.group(3);
-              if (K8S_PROVIDER.equals(provider)) {
-                if (!result.containsKey(secretName)) {
-                  result.put(secretName, new HashSet<>());
+                Secret secretDTO = secretDTOBuilder.build(secret, false);
+                this.secretRepository.deleteById(uuid);
+                if (secretHelper != null) {
+                    secretHelper.deleteSecretKeys(
+                        getProjectSecretName(secret.getProject()),
+                        Collections.singleton((String) secretDTO.getSpec().get("path"))
+                    );
                 }
-                result.get(secretName).add(key);
-              }
+                return true;
             }
-          });
-      }
-      return result.isEmpty() ? Map.of() : result;
+            throw new CoreException(
+                ErrorList.SECRET_NOT_FOUND.getValue(),
+                ErrorList.SECRET_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Cannot delete secret",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
-    return Map.of();
-  }
 
-  private String getProjectSecretName(String project) {
-    return String.format("dhcore-proj-secrets-%s", project);
-  }
+    @Override
+    public Map<String, String> getProjectSecretData(String projectName, Set<String> names) {
+        if (names == null || names.isEmpty()) return Collections.emptyMap();
 
-  private String getSecretPath(String provider, String secret, String key) {
-    return String.format(PATH_FORMAT, provider, secret, key);
-  }
+        Map<String, String> data = new HashMap<>();
+        Map<String, String> secretData;
+        if (secretHelper != null) {
+            try {
+                secretData = secretHelper.getSecretData(getProjectSecretName(projectName));
+                if (secretData != null) {
+                    names.forEach(n -> {
+                        SecretEntity secret = secretRepository.findByProjectAndName(projectName, n).orElse(null);
+                        if (secret != null) {
+                            data.put(n, secretData.get(n));
+                        }
+                    });
+                }
+            } catch (ApiException e) {
+                throw new CoreException(
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Cannot read secret",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+        }
+        return data;
+    }
+
+    @Override
+    public void storeProjectSecretData(String projectName, Map<String, String> values) {
+        if (values == null || values.isEmpty()) return;
+
+        String secretName = getProjectSecretName(projectName);
+
+        for (Entry<String, String> entry : values.entrySet()) {
+            if (!secretRepository.existsByProjectAndName(projectName, entry.getKey())) {
+                Secret secret = new Secret();
+                secret.setKind("secret");
+                secret.setName(entry.getKey());
+                secret.setProject(projectName);
+
+                SecretMetadata secretMetadata = new SecretMetadata();
+                secretMetadata.setCreated(new Date());
+                secretMetadata.setEmbedded(true);
+                secretMetadata.setName(entry.getKey());
+                secretMetadata.setProject(projectName);
+                secretMetadata.setUpdated(secretMetadata.getCreated());
+                secret.setMetadata(secretMetadata);
+
+                SecretBaseSpec spec = new SecretBaseSpec();
+                spec.setProvider(K8S_PROVIDER);
+                spec.setPath(getSecretPath(K8S_PROVIDER, secretName, entry.getKey()));
+                secret.setSpec(spec.toMap());
+
+                secretRepository.saveAndFlush(secretEntityBuilder.build(secret));
+            }
+        }
+        if (secretHelper != null) {
+            try {
+                secretHelper.storeSecretData(secretName, values);
+            } catch (Exception e) {
+                throw new CoreException(
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Cannot write secret",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                );
+            }
+        }
+    }
+
+    /**
+     * Group secrets by secret name as stored in provider. Only Kubernetes provider is supported at this moment.
+     */
+    @Override
+    public Map<String, Set<String>> groupSecrets(String projectId, Collection<String> secrets) {
+        Optional<ProjectEntity> project = projectRepository.findById(projectId);
+        if (project.isPresent()) {
+            Map<String, Set<String>> result = new HashMap<>();
+            if (secrets != null && !secrets.isEmpty()) {
+                secretRepository
+                    .findByProject(project.get().getName())
+                    .stream()
+                    .filter(s -> secrets.contains(s.getName()))
+                    .forEach(secret -> {
+                        Secret secretDTO = secretDTOBuilder.build(secret, false);
+                        String path = (String) secretDTO.getSpec().get("path");
+                        Matcher matcher = PATH_PATTERN.matcher(path);
+                        if (matcher.matches()) {
+                            String provider = matcher.group(1);
+                            String secretName = matcher.group(2);
+                            String key = matcher.group(3);
+                            if (K8S_PROVIDER.equals(provider)) {
+                                if (!result.containsKey(secretName)) {
+                                    result.put(secretName, new HashSet<>());
+                                }
+                                result.get(secretName).add(key);
+                            }
+                        }
+                    });
+            }
+            return result.isEmpty() ? Map.of() : result;
+        }
+        return Map.of();
+    }
+
+    private String getProjectSecretName(String project) {
+        return String.format("dhcore-proj-secrets-%s", project);
+    }
+
+    private String getSecretPath(String provider, String secret, String key) {
+        return String.format(PATH_FORMAT, provider, secret, key);
+    }
 }

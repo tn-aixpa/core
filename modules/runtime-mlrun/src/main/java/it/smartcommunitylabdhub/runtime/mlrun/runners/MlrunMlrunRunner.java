@@ -23,62 +23,51 @@ import java.util.Set;
  */
 public class MlrunMlrunRunner implements Runner {
 
-  private static final String TASK = "mlrun";
-  private final String image;
-  private final Map<String, Set<String>> groupedSecrets;
+    private static final String TASK = "mlrun";
+    private final String image;
+    private final Map<String, Set<String>> groupedSecrets;
 
-  public MlrunMlrunRunner(
-    String image,
-    Map<String, Set<String>> groupedSecrets
-  ) {
-    this.image = image;
-    this.groupedSecrets = groupedSecrets;
-  }
+    public MlrunMlrunRunner(String image, Map<String, Set<String>> groupedSecrets) {
+        this.image = image;
+        this.groupedSecrets = groupedSecrets;
+    }
 
-  @Override
-  public K8sJobRunnable produce(Run runDTO) {
-    // Retrieve information about RunMlrunSpec
-    RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
-    runMlrunSpec.configure(runDTO.getSpec());
+    @Override
+    public K8sJobRunnable produce(Run runDTO) {
+        // Retrieve information about RunMlrunSpec
+        RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
+        runMlrunSpec.configure(runDTO.getSpec());
 
-    RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        runDTO,
-        JacksonMapper.typeRef
-      )
-    );
+        RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
+            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+        );
 
-    List<CoreEnv> coreEnvList = new ArrayList<>(
-      List.of(
-        new CoreEnv("PROJECT_NAME", runDTO.getProject()),
-        new CoreEnv("RUN_ID", runDTO.getId())
-      )
-    );
-    if (runMlrunSpec.getTaskSpec().getEnvs() != null) coreEnvList.addAll(
-      runMlrunSpec.getTaskSpec().getEnvs()
-    );
+        List<CoreEnv> coreEnvList = new ArrayList<>(
+            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+        );
+        if (runMlrunSpec.getTaskSpec().getEnvs() != null) coreEnvList.addAll(runMlrunSpec.getTaskSpec().getEnvs());
 
-    coreEnvList.addAll(runMlrunSpec.getTaskSpec().getEnvs());
+        coreEnvList.addAll(runMlrunSpec.getTaskSpec().getEnvs());
 
-    //TODO: Create runnable using information from Run completed spec.
-    K8sJobRunnable k8sJobRunnable = K8sJobRunnable
-      .builder()
-      .runtime(MlrunRuntime.RUNTIME)
-      .task(TASK)
-      .image(image)
-      .command("python")
-      .args(List.of("wrapper.py").toArray(String[]::new))
-      .resources(runMlrunSpec.getTaskSpec().getResources())
-      .nodeSelector(runMlrunSpec.getTaskSpec().getNodeSelector())
-      .volumes(runMlrunSpec.getTaskSpec().getVolumes())
-      .secrets(groupedSecrets)
-      .envs(coreEnvList)
-      .state(runDefaultFieldAccessor.getState())
-      .build();
+        //TODO: Create runnable using information from Run completed spec.
+        K8sJobRunnable k8sJobRunnable = K8sJobRunnable
+            .builder()
+            .runtime(MlrunRuntime.RUNTIME)
+            .task(TASK)
+            .image(image)
+            .command("python")
+            .args(List.of("wrapper.py").toArray(String[]::new))
+            .resources(runMlrunSpec.getTaskSpec().getResources())
+            .nodeSelector(runMlrunSpec.getTaskSpec().getNodeSelector())
+            .volumes(runMlrunSpec.getTaskSpec().getVolumes())
+            .secrets(groupedSecrets)
+            .envs(coreEnvList)
+            .state(runDefaultFieldAccessor.getState())
+            .build();
 
-    k8sJobRunnable.setId(runDTO.getId());
-    k8sJobRunnable.setProject(runDTO.getProject());
+        k8sJobRunnable.setId(runDTO.getId());
+        k8sJobRunnable.setProject(runDTO.getProject());
 
-    return k8sJobRunnable;
-  }
+        return k8sJobRunnable;
+    }
 }

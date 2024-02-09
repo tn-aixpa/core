@@ -14,21 +14,16 @@ import it.smartcommunitylabdhub.runtime.dbt.models.specs.task.TaskTransformSpec;
  * @BuilderComponent(runtime = "dbt", task = "transform")
  */
 
-public class DbtTransformBuilder
-  implements Builder<FunctionDbtSpec, TaskTransformSpec, RunDbtSpec> {
+public class DbtTransformBuilder implements Builder<FunctionDbtSpec, TaskTransformSpec, RunDbtSpec> {
 
-  @Override
-  public RunDbtSpec build(
-    FunctionDbtSpec funSpec,
-    TaskTransformSpec taskSpec,
-    RunDbtSpec runSpec
-  ) {
-    RunDbtSpec runDbtSpec = RunDbtSpec.builder().build();
+    @Override
+    public RunDbtSpec build(FunctionDbtSpec funSpec, TaskTransformSpec taskSpec, RunDbtSpec runSpec) {
+        RunDbtSpec runDbtSpec = RunDbtSpec.builder().build();
 
-    runDbtSpec.configure(runSpec.toMap());
-    runDbtSpec.setTaskSpec(taskSpec);
-    runDbtSpec.setFuncSpec(funSpec);
+        runDbtSpec.configure(runSpec.toMap());
+        runDbtSpec.setTaskSpec(taskSpec);
+        runDbtSpec.setFuncSpec(funSpec);
 
-    return runDbtSpec;
-  }
+        return runDbtSpec;
+    }
 }

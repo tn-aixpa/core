@@ -3,12 +3,12 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.conver
 import it.smartcommunitylabdhub.commons.annotations.common.ConverterType;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.ConverterFactory;
-
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ConverterTypeFactory implements ConverterFactory {
+
     private final Map<String, Converter<?, ?>> converterMap;
 
     /**
@@ -17,9 +17,8 @@ public class ConverterTypeFactory implements ConverterFactory {
      * @param converters The list of Converters to be managed by the factory.
      */
     public ConverterTypeFactory(List<Converter<?, ?>> converters) {
-        converterMap = converters.stream()
-                .collect(Collectors.toMap(this::getConverterFromAnnotation,
-                        Function.identity()));
+        converterMap =
+            converters.stream().collect(Collectors.toMap(this::getConverterFromAnnotation, Function.identity()));
     }
 
     /**
@@ -33,13 +32,12 @@ public class ConverterTypeFactory implements ConverterFactory {
     private String getConverterFromAnnotation(Converter<?, ?> converter) {
         Class<?> converterClass = converter.getClass();
         if (converterClass.isAnnotationPresent(ConverterType.class)) {
-            ConverterType annotation =
-                    converterClass.getAnnotation(ConverterType.class);
+            ConverterType annotation = converterClass.getAnnotation(ConverterType.class);
             return annotation.type();
         }
         throw new IllegalArgumentException(
-                "No @ConverterComponent annotation found for converter: "
-                        + converterClass.getName());
+            "No @ConverterComponent annotation found for converter: " + converterClass.getName()
+        );
     }
 
     /**
@@ -51,13 +49,10 @@ public class ConverterTypeFactory implements ConverterFactory {
      */
     @SuppressWarnings("unchecked")
     public <I, O> Converter<I, O> getConverter(String converter) {
-
         Converter<?, ?> concreteConverter = converterMap.get(converter);
         if (concreteConverter == null) {
-            throw new IllegalArgumentException(
-                    "No converter found for name: " + converter);
+            throw new IllegalArgumentException("No converter found for name: " + converter);
         }
         return (Converter<I, O>) concreteConverter;
     }
 }
-

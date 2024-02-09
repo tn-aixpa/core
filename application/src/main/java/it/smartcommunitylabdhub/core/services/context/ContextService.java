@@ -15,11 +15,7 @@ public class ContextService<T, F extends SpecificationFilter<T>> extends Abstrac
     private ProjectRepository projectRepository;
 
     public ProjectEntity checkContext(String projectName) throws CustomException {
-
         return this.projectRepository.findByName(projectName)
-                .orElseThrow(() -> new CustomException(
-                        "(Context) Project " + "[" + projectName + "] not found", null));
-
+            .orElseThrow(() -> new CustomException("(Context) Project " + "[" + projectName + "] not found", null));
     }
-
 }

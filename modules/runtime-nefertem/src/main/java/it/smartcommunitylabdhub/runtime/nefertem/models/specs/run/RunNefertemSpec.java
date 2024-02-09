@@ -18,45 +18,36 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(
-  kind = "run",
-  runtime = "nefertem",
-  entity = EntityName.RUN,
-  factory = RunNefertemSpec.class
-)
+@SpecType(kind = "run", runtime = "nefertem", entity = EntityName.RUN, factory = RunNefertemSpec.class)
 public class RunNefertemSpec extends RunBaseSpec {
 
-  @JsonProperty("infer_spec")
-  private TaskInferSpec taskInferSpec;
+    @JsonProperty("infer_spec")
+    private TaskInferSpec taskInferSpec;
 
-  @JsonProperty("metric_spec")
-  private TaskMetricSpec taskMetricSpec;
+    @JsonProperty("metric_spec")
+    private TaskMetricSpec taskMetricSpec;
 
-  @JsonProperty("profile_spec")
-  private TaskProfileSpec taskProfileSpec;
+    @JsonProperty("profile_spec")
+    private TaskProfileSpec taskProfileSpec;
 
-  @JsonProperty("validate_spec")
-  private TaskValidateSpec taskValidateSpec;
+    @JsonProperty("validate_spec")
+    private TaskValidateSpec taskValidateSpec;
 
-  @JsonProperty("function_spec")
-  private FunctionNefertemSpec funcSpec;
+    @JsonProperty("function_spec")
+    private FunctionNefertemSpec funcSpec;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    RunNefertemSpec runNefertemSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        RunNefertemSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        RunNefertemSpec runNefertemSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, RunNefertemSpec.class);
 
-    this.setTaskInferSpec(runNefertemSpec.getTaskInferSpec());
-    this.setTaskMetricSpec(runNefertemSpec.getTaskMetricSpec());
-    this.setTaskProfileSpec(runNefertemSpec.getTaskProfileSpec());
-    this.setTaskValidateSpec(runNefertemSpec.getTaskValidateSpec());
+        this.setTaskInferSpec(runNefertemSpec.getTaskInferSpec());
+        this.setTaskMetricSpec(runNefertemSpec.getTaskMetricSpec());
+        this.setTaskProfileSpec(runNefertemSpec.getTaskProfileSpec());
+        this.setTaskValidateSpec(runNefertemSpec.getTaskValidateSpec());
 
-    this.setFuncSpec(runNefertemSpec.getFuncSpec());
+        this.setFuncSpec(runNefertemSpec.getFuncSpec());
 
-    super.configure(data);
-    this.setExtraSpecs(runNefertemSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(runNefertemSpec.getExtraSpecs());
+    }
 }

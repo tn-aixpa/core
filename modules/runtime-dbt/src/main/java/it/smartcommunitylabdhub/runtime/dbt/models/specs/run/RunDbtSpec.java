@@ -1,14 +1,12 @@
 package it.smartcommunitylabdhub.runtime.dbt.models.specs.run;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.task.TaskTransformSpec;
-
 import java.util.Map;
 import lombok.*;
 
@@ -17,31 +15,23 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(
-  kind = "run",
-  runtime = "dbt",
-  entity = EntityName.RUN,
-  factory = RunDbtSpec.class
-)
+@SpecType(kind = "run", runtime = "dbt", entity = EntityName.RUN, factory = RunDbtSpec.class)
 public class RunDbtSpec extends RunBaseSpec {
 
-  @JsonProperty("transform_spec")
-  private TaskTransformSpec taskSpec;
+    @JsonProperty("transform_spec")
+    private TaskTransformSpec taskSpec;
 
-  @JsonProperty("function_spec")
-  private FunctionDbtSpec funcSpec;
+    @JsonProperty("function_spec")
+    private FunctionDbtSpec funcSpec;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    RunDbtSpec runDbtSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-      data,
-      RunDbtSpec.class
-    );
+    @Override
+    public void configure(Map<String, Object> data) {
+        RunDbtSpec runDbtSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, RunDbtSpec.class);
 
-    this.setTaskSpec(runDbtSpec.getTaskSpec());
-    this.setFuncSpec(runDbtSpec.getFuncSpec());
+        this.setTaskSpec(runDbtSpec.getTaskSpec());
+        this.setFuncSpec(runDbtSpec.getFuncSpec());
 
-    super.configure(data);
-    this.setExtraSpecs(runDbtSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(runDbtSpec.getExtraSpecs());
+    }
 }

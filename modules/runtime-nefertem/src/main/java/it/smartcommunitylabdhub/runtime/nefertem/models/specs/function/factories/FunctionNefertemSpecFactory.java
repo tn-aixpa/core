@@ -5,11 +5,10 @@ import it.smartcommunitylabdhub.runtime.nefertem.models.specs.function.FunctionN
 import org.springframework.stereotype.Component;
 
 @Component
-public class FunctionNefertemSpecFactory
-  implements SpecFactory<FunctionNefertemSpec> {
+public class FunctionNefertemSpecFactory implements SpecFactory<FunctionNefertemSpec> {
 
-  @Override
-  public FunctionNefertemSpec create() {
-    return new FunctionNefertemSpec();
-  }
+    @Override
+    public FunctionNefertemSpec create() {
+        return new FunctionNefertemSpec();
+    }
 }

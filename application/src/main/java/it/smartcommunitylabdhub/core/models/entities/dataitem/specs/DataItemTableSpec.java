@@ -10,22 +10,17 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "table",
-  entity = EntityName.DATAITEM,
-  factory = DataItemTableSpec.class
-)
+@SpecType(kind = "table", entity = EntityName.DATAITEM, factory = DataItemTableSpec.class)
 public class DataItemTableSpec extends DataItemBaseSpec {
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    DataItemTableSpec dataItemTableSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        DataItemTableSpec.class
-      );
-    super.configure(data);
+    @Override
+    public void configure(Map<String, Object> data) {
+        DataItemTableSpec dataItemTableSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            DataItemTableSpec.class
+        );
+        super.configure(data);
 
-    this.setExtraSpecs(dataItemTableSpec.getExtraSpecs());
-  }
+        this.setExtraSpecs(dataItemTableSpec.getExtraSpecs());
+    }
 }

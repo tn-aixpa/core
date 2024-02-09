@@ -1,14 +1,13 @@
 package it.smartcommunitylabdhub.core.models.converters.types;
 
+import it.smartcommunitylabdhub.commons.annotations.common.ConverterType;
+import it.smartcommunitylabdhub.commons.exceptions.CustomException;
+import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-
-import it.smartcommunitylabdhub.commons.annotations.common.ConverterType;
-import it.smartcommunitylabdhub.commons.exceptions.CustomException;
-import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 
 @ConverterType(type = "datetime")
 public class DateTimeConverter implements Converter<String, Date> {
@@ -18,13 +17,11 @@ public class DateTimeConverter implements Converter<String, Date> {
 
     @Override
     public Date convert(String input) throws CustomException {
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
         LocalDateTime dateTime = LocalDateTime.parse(input, formatter);
 
         // Convert LocalDateTime to Date
         return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
-
     }
 
     @Override
@@ -33,7 +30,5 @@ public class DateTimeConverter implements Converter<String, Date> {
 
         // Format the Date object into a string
         return formatter.format(input);
-
     }
-
 }

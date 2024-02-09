@@ -8,15 +8,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface WorkflowService {
-  Page<Workflow> getWorkflows(Map<String, String> filter, Pageable pageable);
+    Page<Workflow> getWorkflows(Map<String, String> filter, Pageable pageable);
 
-  Workflow createWorkflow(Workflow workflowDTO);
+    Workflow createWorkflow(Workflow workflowDTO);
 
-  Workflow getWorkflow(String uuid);
+    Workflow getWorkflow(String uuid);
 
-  Workflow updateWorkflow(Workflow workflowDTO, String uuid);
+    Workflow updateWorkflow(Workflow workflowDTO, String uuid);
 
-  boolean deleteWorkflow(String uuid);
+    boolean deleteWorkflow(String uuid);
 
-  List<Run> getWorkflowRuns(String uuid);
+    List<Run> getWorkflowRuns(String uuid);
 }

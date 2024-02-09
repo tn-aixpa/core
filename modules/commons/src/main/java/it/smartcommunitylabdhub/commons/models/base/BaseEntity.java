@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.commons.models.base.interfaces;
+package it.smartcommunitylabdhub.commons.models.base;
 
 import java.io.Serializable;
 
@@ -8,6 +8,4 @@ import java.io.Serializable;
  * <p>
  * es: for kind = etl the Entity will receive the EtlService
  */
-public interface BaseEntity extends Serializable {
-
-}
+public interface BaseEntity extends Serializable {}

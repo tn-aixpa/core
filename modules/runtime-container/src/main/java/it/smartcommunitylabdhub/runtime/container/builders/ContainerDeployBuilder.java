@@ -14,18 +14,13 @@ import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskDeploySp
  * @BuilderComponent(runtime = "container", task = "deploy")
  */
 
-public class ContainerDeployBuilder
-  implements Builder<FunctionContainerSpec, TaskDeploySpec, RunContainerSpec> {
+public class ContainerDeployBuilder implements Builder<FunctionContainerSpec, TaskDeploySpec, RunContainerSpec> {
 
-  @Override
-  public RunContainerSpec build(
-    FunctionContainerSpec funSpec,
-    TaskDeploySpec taskSpec,
-    RunContainerSpec runSpec
-  ) {
-    runSpec.setTaskDeploySpec(taskSpec);
-    runSpec.setFuncSpec(funSpec);
+    @Override
+    public RunContainerSpec build(FunctionContainerSpec funSpec, TaskDeploySpec taskSpec, RunContainerSpec runSpec) {
+        runSpec.setTaskDeploySpec(taskSpec);
+        runSpec.setFuncSpec(funSpec);
 
-    return runSpec;
-  }
+        return runSpec;
+    }
 }

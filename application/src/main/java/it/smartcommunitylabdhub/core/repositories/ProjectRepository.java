@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.repositories;
 
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,10 +11,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
-
-public interface ProjectRepository extends JpaRepository<ProjectEntity, String>, JpaSpecificationExecutor<ProjectEntity> {
-
+public interface ProjectRepository
+    extends JpaRepository<ProjectEntity, String>, JpaSpecificationExecutor<ProjectEntity> {
     Boolean existsByName(String name);
 
     @Modifying

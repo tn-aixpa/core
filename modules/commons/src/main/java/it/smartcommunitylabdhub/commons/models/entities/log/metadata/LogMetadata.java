@@ -1,8 +1,7 @@
 package it.smartcommunitylabdhub.commons.models.entities.log.metadata;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import it.smartcommunitylabdhub.commons.models.base.metadata.BaseMetadata;
+import it.smartcommunitylabdhub.commons.models.base.BaseMetadata;
 import lombok.*;
 
 @AllArgsConstructor
@@ -13,13 +12,13 @@ import lombok.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LogMetadata extends BaseMetadata {
 
-  String name;
+    String name;
 
-  String run;
+    String run;
 
-  String version;
+    String version;
 
-  String description;
+    String description;
 
-  Boolean embedded;
+    Boolean embedded;
 }

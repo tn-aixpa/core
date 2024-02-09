@@ -11,38 +11,29 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "metric",
-  runtime = "nefertem",
-  entity = EntityName.TASK,
-  factory = TaskMetricSpec.class
-)
+@SpecType(kind = "metric", runtime = "nefertem", entity = EntityName.TASK, factory = TaskMetricSpec.class)
 public class TaskMetricSpec extends K8sTaskBaseSpec {
 
-  private String framework;
+    private String framework;
 
-  @JsonProperty("exec_args")
-  private Map<String, Object> execArgs;
+    @JsonProperty("exec_args")
+    private Map<String, Object> execArgs;
 
-  private Boolean parallel;
+    private Boolean parallel;
 
-  @JsonProperty("num_worker")
-  private Integer numWorker;
+    @JsonProperty("num_worker")
+    private Integer numWorker;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    TaskMetricSpec taskMetricSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        TaskMetricSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        TaskMetricSpec taskMetricSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, TaskMetricSpec.class);
 
-    this.setFramework(taskMetricSpec.getFramework());
-    this.setExecArgs(taskMetricSpec.getExecArgs());
-    this.setParallel(taskMetricSpec.getParallel());
-    this.setNumWorker(taskMetricSpec.getNumWorker());
+        this.setFramework(taskMetricSpec.getFramework());
+        this.setExecArgs(taskMetricSpec.getExecArgs());
+        this.setParallel(taskMetricSpec.getParallel());
+        this.setNumWorker(taskMetricSpec.getNumWorker());
 
-    super.configure(data);
-    this.setExtraSpecs(taskMetricSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(taskMetricSpec.getExtraSpecs());
+    }
 }

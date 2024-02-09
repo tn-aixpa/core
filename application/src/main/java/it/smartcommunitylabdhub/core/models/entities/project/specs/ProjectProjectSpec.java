@@ -6,22 +6,17 @@ import it.smartcommunitylabdhub.commons.models.entities.project.specs.ProjectBas
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import java.util.Map;
 
-@SpecType(
-  kind = "project",
-  entity = EntityName.PROJECT,
-  factory = ProjectProjectSpec.class
-)
+@SpecType(kind = "project", entity = EntityName.PROJECT, factory = ProjectProjectSpec.class)
 public class ProjectProjectSpec extends ProjectBaseSpec {
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    ProjectProjectSpec projectProjectSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        ProjectProjectSpec.class
-      );
-    super.configure(data);
+    @Override
+    public void configure(Map<String, Object> data) {
+        ProjectProjectSpec projectProjectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            ProjectProjectSpec.class
+        );
+        super.configure(data);
 
-    this.setExtraSpecs(projectProjectSpec.getExtraSpecs());
-  }
+        this.setExtraSpecs(projectProjectSpec.getExtraSpecs());
+    }
 }

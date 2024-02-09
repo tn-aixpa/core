@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.ConverterCommand;
 
 public class ConvertCommand<S, R> implements ConverterCommand<S, R> {
+
     private final Converter<S, R> converter;
     private final S input;
 

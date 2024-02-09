@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
-
 @Component
 @Getter
 @Setter
@@ -40,12 +39,13 @@ public class RunEntityFilter extends BaseEntityFilter implements SpecificationFi
         }
 
         if (getCreatedDate() != null) {
-
             DateUtils.DateInterval dateInterval = DateUtils.parseDateIntervalFromTimestamps(getCreatedDate(), true);
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate()));
-
+            predicate =
+                criteriaBuilder.and(
+                    predicate,
+                    criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate())
+                );
         }
-
 
         // add more..here...
 

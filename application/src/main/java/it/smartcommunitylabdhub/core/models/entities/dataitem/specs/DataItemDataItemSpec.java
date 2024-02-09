@@ -11,31 +11,26 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "dataitem",
-  entity = EntityName.DATAITEM,
-  factory = DataItemDataItemSpec.class
-)
+@SpecType(kind = "dataitem", entity = EntityName.DATAITEM, factory = DataItemDataItemSpec.class)
 public class DataItemDataItemSpec extends DataItemBaseSpec {
 
-  @JsonProperty("raw_code")
-  private String rawCode;
+    @JsonProperty("raw_code")
+    private String rawCode;
 
-  @JsonProperty("compiled_code")
-  private String compiledCode;
+    @JsonProperty("compiled_code")
+    private String compiledCode;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    DataItemDataItemSpec dataItemDataItemSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        DataItemDataItemSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        DataItemDataItemSpec dataItemDataItemSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            DataItemDataItemSpec.class
+        );
 
-    this.setRawCode(dataItemDataItemSpec.getRawCode());
-    this.setCompiledCode(dataItemDataItemSpec.getCompiledCode());
-    super.configure(data);
+        this.setRawCode(dataItemDataItemSpec.getRawCode());
+        this.setCompiledCode(dataItemDataItemSpec.getCompiledCode());
+        super.configure(data);
 
-    this.setExtraSpecs(dataItemDataItemSpec.getExtraSpecs());
-  }
+        this.setExtraSpecs(dataItemDataItemSpec.getExtraSpecs());
+    }
 }

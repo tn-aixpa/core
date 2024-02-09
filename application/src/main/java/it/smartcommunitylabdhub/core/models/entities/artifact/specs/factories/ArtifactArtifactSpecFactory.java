@@ -5,11 +5,10 @@ import it.smartcommunitylabdhub.core.models.entities.artifact.specs.ArtifactArti
 import org.springframework.stereotype.Component;
 
 @Component
-public class ArtifactArtifactSpecFactory
-  implements SpecFactory<ArtifactArtifactSpec> {
+public class ArtifactArtifactSpecFactory implements SpecFactory<ArtifactArtifactSpec> {
 
-  @Override
-  public ArtifactArtifactSpec create() {
-    return new ArtifactArtifactSpec();
-  }
+    @Override
+    public ArtifactArtifactSpec create() {
+        return new ArtifactArtifactSpec();
+    }
 }

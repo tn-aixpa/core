@@ -26,74 +26,59 @@ import java.util.Set;
  */
 public class ContainerJobRunner implements Runner {
 
-  private static final String TASK = "job";
+    private static final String TASK = "job";
 
-  private final FunctionContainerSpec functionContainerSpec;
-  private final Map<String, Set<String>> groupedSecrets;
+    private final FunctionContainerSpec functionContainerSpec;
+    private final Map<String, Set<String>> groupedSecrets;
 
-  public ContainerJobRunner(
-    FunctionContainerSpec functionContainerSpec,
-    Map<String, Set<String>> groupedSecrets
-  ) {
-    this.functionContainerSpec = functionContainerSpec;
-    this.groupedSecrets = groupedSecrets;
-  }
+    public ContainerJobRunner(FunctionContainerSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
+        this.functionContainerSpec = functionContainerSpec;
+        this.groupedSecrets = groupedSecrets;
+    }
 
-  @Override
-  public K8sJobRunnable produce(Run runDTO) {
-    RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
-    runContainerSpec.configure(runDTO.getSpec());
+    @Override
+    public K8sJobRunnable produce(Run runDTO) {
+        RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
+        runContainerSpec.configure(runDTO.getSpec());
 
-    RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        runDTO,
-        JacksonMapper.typeRef
-      )
-    );
+        RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
+            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+        );
 
-    List<CoreEnv> coreEnvList = new ArrayList<>(
-      List.of(
-        new CoreEnv("PROJECT_NAME", runDTO.getProject()),
-        new CoreEnv("RUN_ID", runDTO.getId())
-      )
-    );
+        List<CoreEnv> coreEnvList = new ArrayList<>(
+            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+        );
 
-    if (runContainerSpec.getTaskJobSpec().getEnvs() != null) coreEnvList.addAll(
-      runContainerSpec.getTaskJobSpec().getEnvs()
-    );
+        if (runContainerSpec.getTaskJobSpec().getEnvs() != null) coreEnvList.addAll(
+            runContainerSpec.getTaskJobSpec().getEnvs()
+        );
 
-    K8sJobRunnable k8sJobRunnable = K8sJobRunnable
-      .builder()
-      .runtime(ContainerRuntime.RUNTIME)
-      .task(TASK)
-      .image(functionContainerSpec.getImage())
-      .state(runDefaultFieldAccessor.getState())
-      .resources(runContainerSpec.getTaskJobSpec().getResources())
-      .nodeSelector(runContainerSpec.getTaskJobSpec().getNodeSelector())
-      .volumes(runContainerSpec.getTaskJobSpec().getVolumes())
-      .secrets(groupedSecrets)
-      .envs(coreEnvList)
-      .build();
+        K8sJobRunnable k8sJobRunnable = K8sJobRunnable
+            .builder()
+            .runtime(ContainerRuntime.RUNTIME)
+            .task(TASK)
+            .image(functionContainerSpec.getImage())
+            .state(runDefaultFieldAccessor.getState())
+            .resources(runContainerSpec.getTaskJobSpec().getResources())
+            .nodeSelector(runContainerSpec.getTaskJobSpec().getNodeSelector())
+            .volumes(runContainerSpec.getTaskJobSpec().getVolumes())
+            .secrets(groupedSecrets)
+            .envs(coreEnvList)
+            .build();
 
-    Optional
-      .ofNullable(functionContainerSpec.getArgs())
-      .ifPresent(args ->
-        k8sJobRunnable.setArgs(
-          args
-            .stream()
-            .filter(Objects::nonNull)
-            .map(Object::toString)
-            .toArray(String[]::new)
-        )
-      );
+        Optional
+            .ofNullable(functionContainerSpec.getArgs())
+            .ifPresent(args ->
+                k8sJobRunnable.setArgs(
+                    args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
+                )
+            );
 
-    Optional
-      .ofNullable(functionContainerSpec.getCommand())
-      .ifPresent(k8sJobRunnable::setCommand);
+        Optional.ofNullable(functionContainerSpec.getCommand()).ifPresent(k8sJobRunnable::setCommand);
 
-    k8sJobRunnable.setId(runDTO.getId());
-    k8sJobRunnable.setProject(runDTO.getProject());
+        k8sJobRunnable.setId(runDTO.getId());
+        k8sJobRunnable.setProject(runDTO.getProject());
 
-    return k8sJobRunnable;
-  }
+        return k8sJobRunnable;
+    }
 }

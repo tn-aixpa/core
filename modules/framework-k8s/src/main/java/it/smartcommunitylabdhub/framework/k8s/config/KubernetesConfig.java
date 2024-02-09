@@ -13,28 +13,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class KubernetesConfig {
 
-  @Bean
-  @ConditionalOnCloudPlatform(CloudPlatform.KUBERNETES)
-  public ApiClient kubeApiClusterClient() {
-    try {
-      return ClientBuilder.cluster().build();
-    } catch (IOException e1) {
-      throw new UnsupportedOperationException(
-        "Could not initialize connection to kubernetes."
-      );
+    @Bean
+    @ConditionalOnCloudPlatform(CloudPlatform.KUBERNETES)
+    public ApiClient kubeApiClusterClient() {
+        try {
+            return ClientBuilder.cluster().build();
+        } catch (IOException e1) {
+            throw new UnsupportedOperationException("Could not initialize connection to kubernetes.");
+        }
     }
-  }
 
-  @Bean
-  @ConditionalOnMissingBean(ApiClient.class)
-  @ConditionalOnKubernetes
-  public ApiClient kubeApiStandardClient() {
-    try {
-      return ClientBuilder.standard().build();
-    } catch (IOException e1) {
-      throw new UnsupportedOperationException(
-        "Could not initialize connection to kubernetes."
-      );
+    @Bean
+    @ConditionalOnMissingBean(ApiClient.class)
+    @ConditionalOnKubernetes
+    public ApiClient kubeApiStandardClient() {
+        try {
+            return ClientBuilder.standard().build();
+        } catch (IOException e1) {
+            throw new UnsupportedOperationException("Could not initialize connection to kubernetes.");
+        }
     }
-  }
 }

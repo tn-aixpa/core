@@ -1,13 +1,12 @@
 package it.smartcommunitylabdhub.commons.annotations.validators;
 
-import java.lang.annotation.*;
-
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+import java.lang.annotation.*;
 
 @Documented
 @Constraint(validatedBy = ValidFieldValidator.class)
-@Target({ElementType.PARAMETER, ElementType.FIELD})
+@Target({ ElementType.PARAMETER, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidateField {
     String message() default "";

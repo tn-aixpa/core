@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.config;
 
+import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,18 +10,18 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
 
     @Bean
     SecurityFilterChain filterChainApp3(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> {
-                    auth.anyRequest().permitAll();
-                })
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> {
+                auth.anyRequest().permitAll();
+            })
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
         return http.build();
     }
 

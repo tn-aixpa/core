@@ -9,25 +9,16 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "serve",
-  runtime = "container",
-  entity = EntityName.TASK,
-  factory = TaskServeSpec.class
-)
+@SpecType(kind = "serve", runtime = "container", entity = EntityName.TASK, factory = TaskServeSpec.class)
 public class TaskServeSpec extends TaskDeploySpec {
 
-  /// TODO: Service parameters port list...ClusterIP or NodePort
+    /// TODO: Service parameters port list...ClusterIP or NodePort
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    TaskServeSpec taskDeploySpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        TaskServeSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        TaskServeSpec taskDeploySpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, TaskServeSpec.class);
 
-    super.configure(data);
-    this.setExtraSpecs(taskDeploySpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(taskDeploySpec.getExtraSpecs());
+    }
 }

@@ -28,119 +28,94 @@ import org.springframework.util.StringUtils;
 @Component
 public class ProjectDTOBuilder {
 
-  @Autowired
-  ArtifactDTOBuilder artifactDTOBuilder;
+    @Autowired
+    ArtifactDTOBuilder artifactDTOBuilder;
 
-  @Autowired
-  FunctionDTOBuilder functionDTOBuilder;
+    @Autowired
+    FunctionDTOBuilder functionDTOBuilder;
 
-  @Autowired
-  WorkflowDTOBuilder workflowDTOBuilder;
+    @Autowired
+    WorkflowDTOBuilder workflowDTOBuilder;
 
-  @Autowired
-  DataItemDTOBuilder dataItemDTOBuilder;
+    @Autowired
+    DataItemDTOBuilder dataItemDTOBuilder;
 
-  @Autowired
-  SecretDTOBuilder secretDTOBuilder;
+    @Autowired
+    SecretDTOBuilder secretDTOBuilder;
 
-  @Autowired
-  MetadataConverter<ProjectMetadata> metadataConverter;
+    @Autowired
+    MetadataConverter<ProjectMetadata> metadataConverter;
 
-  public Project build(
-    ProjectEntity project,
-    List<ArtifactEntity> artifacts,
-    List<FunctionEntity> functions,
-    List<WorkflowEntity> workflows,
-    List<DataItemEntity> dataItems,
-    List<SecretEntity> secrets,
-    boolean embeddable
-  ) {
-    // Retrieve spec
-    Map<String, Object> spec = ConversionUtils.reverse(
-      project.getSpec(),
-      "cbor"
-    );
-    spec.put(
-      "functions",
-      functions
-        .stream()
-        .map(f -> functionDTOBuilder.build(f, embeddable))
-        .collect(Collectors.toList())
-    );
-    spec.put(
-      "artifacts",
-      artifacts
-        .stream()
-        .map(a -> artifactDTOBuilder.build(a, embeddable))
-        .collect(Collectors.toList())
-    );
-    spec.put(
-      "workflows",
-      workflows
-        .stream()
-        .map(w -> workflowDTOBuilder.build(w, embeddable))
-        .collect(Collectors.toList())
-    );
-    spec.put(
-      "dataitems",
-      dataItems
-        .stream()
-        .map(d -> dataItemDTOBuilder.build(d, embeddable))
-        .collect(Collectors.toList())
-    );
-    spec.put(
-      "secrets",
-      secrets
-        .stream()
-        .map(s -> secretDTOBuilder.build(s, embeddable))
-        .collect(Collectors.toList())
-    );
+    public Project build(
+        ProjectEntity project,
+        List<ArtifactEntity> artifacts,
+        List<FunctionEntity> functions,
+        List<WorkflowEntity> workflows,
+        List<DataItemEntity> dataItems,
+        List<SecretEntity> secrets,
+        boolean embeddable
+    ) {
+        // Retrieve spec
+        Map<String, Object> spec = ConversionUtils.reverse(project.getSpec(), "cbor");
+        spec.put(
+            "functions",
+            functions.stream().map(f -> functionDTOBuilder.build(f, embeddable)).collect(Collectors.toList())
+        );
+        spec.put(
+            "artifacts",
+            artifacts.stream().map(a -> artifactDTOBuilder.build(a, embeddable)).collect(Collectors.toList())
+        );
+        spec.put(
+            "workflows",
+            workflows.stream().map(w -> workflowDTOBuilder.build(w, embeddable)).collect(Collectors.toList())
+        );
+        spec.put(
+            "dataitems",
+            dataItems.stream().map(d -> dataItemDTOBuilder.build(d, embeddable)).collect(Collectors.toList())
+        );
+        spec.put(
+            "secrets",
+            secrets.stream().map(s -> secretDTOBuilder.build(s, embeddable)).collect(Collectors.toList())
+        );
 
-    // Find base run spec
-    return EntityFactory.create(
-      Project::new,
-      project,
-      builder ->
-        builder
-          .with(dto -> dto.setId(project.getId()))
-          .with(dto -> dto.setName(project.getName()))
-          .with(dto -> dto.setKind(project.getKind()))
-          .with(dto -> {
-            // Set Metadata for project
-            ProjectMetadata projectMetadata = Optional
-              .ofNullable(
-                metadataConverter.reverseByClass(
-                  project.getMetadata(),
-                  ProjectMetadata.class
-                )
-              )
-              .orElseGet(ProjectMetadata::new);
+        // Find base run spec
+        return EntityFactory.create(
+            Project::new,
+            project,
+            builder ->
+                builder
+                    .with(dto -> dto.setId(project.getId()))
+                    .with(dto -> dto.setName(project.getName()))
+                    .with(dto -> dto.setKind(project.getKind()))
+                    .with(dto -> {
+                        // Set Metadata for project
+                        ProjectMetadata projectMetadata = Optional
+                            .ofNullable(metadataConverter.reverseByClass(project.getMetadata(), ProjectMetadata.class))
+                            .orElseGet(ProjectMetadata::new);
 
-            if (!StringUtils.hasText(projectMetadata.getVersion())) {
-              projectMetadata.setVersion(project.getId());
-            }
-            if (!StringUtils.hasText(projectMetadata.getName())) {
-              projectMetadata.setName(project.getName());
-            }
-            projectMetadata.setProject(project.getName());
-            projectMetadata.setDescription(project.getDescription());
-            projectMetadata.setSource(project.getSource());
-            projectMetadata.setCreated(project.getCreated());
-            projectMetadata.setUpdated(project.getUpdated());
-            dto.setMetadata(projectMetadata);
-          })
-          .with(dto -> dto.setSpec(spec))
-          .with(dto ->
-            dto.setExtra(ConversionUtils.reverse(project.getExtra(), "cbor"))
-          )
-          .with(dto ->
-            dto.setStatus(
-              MapUtils.mergeMultipleMaps(
-                ConversionUtils.reverse(project.getStatus(), "cbor"),
-                Map.of("state", project.getState())
-              )
-            )
-          )
-    );
-  }
+                        if (!StringUtils.hasText(projectMetadata.getVersion())) {
+                            projectMetadata.setVersion(project.getId());
+                        }
+                        if (!StringUtils.hasText(projectMetadata.getName())) {
+                            projectMetadata.setName(project.getName());
+                        }
+                        projectMetadata.setProject(project.getName());
+                        projectMetadata.setDescription(project.getDescription());
+                        projectMetadata.setSource(project.getSource());
+                        projectMetadata.setCreated(project.getCreated());
+                        projectMetadata.setUpdated(project.getUpdated());
+                        dto.setMetadata(projectMetadata);
+                    })
+                    .with(dto -> dto.setSpec(spec))
+                    .with(dto -> dto.setExtra(ConversionUtils.reverse(project.getExtra(), "cbor")))
+                    .with(dto ->
+                        dto.setStatus(
+                            MapUtils.mergeMultipleMaps(
+                                ConversionUtils.reverse(project.getStatus(), "cbor"),
+                                Map.of("state", project.getState())
+                            )
+                        )
+                    )
+        );
+    }
 }

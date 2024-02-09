@@ -17,40 +17,34 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(
-  kind = "run",
-  runtime = "container",
-  entity = EntityName.RUN,
-  factory = RunContainerSpec.class
-)
+@SpecType(kind = "run", runtime = "container", entity = EntityName.RUN, factory = RunContainerSpec.class)
 public class RunContainerSpec extends RunBaseSpec {
 
-  @JsonProperty("job_spec")
-  private TaskJobSpec taskJobSpec;
+    @JsonProperty("job_spec")
+    private TaskJobSpec taskJobSpec;
 
-  @JsonProperty("deploy_spec")
-  private TaskDeploySpec taskDeploySpec;
+    @JsonProperty("deploy_spec")
+    private TaskDeploySpec taskDeploySpec;
 
-  @JsonProperty("serve_spec")
-  private TaskServeSpec taskServeSpec;
+    @JsonProperty("serve_spec")
+    private TaskServeSpec taskServeSpec;
 
-  @JsonProperty("function_spec")
-  private FunctionContainerSpec funcSpec;
+    @JsonProperty("function_spec")
+    private FunctionContainerSpec funcSpec;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    RunContainerSpec runContainerSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        RunContainerSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        RunContainerSpec runContainerSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            RunContainerSpec.class
+        );
 
-    this.setTaskJobSpec(runContainerSpec.getTaskJobSpec());
-    this.setTaskDeploySpec(runContainerSpec.getTaskDeploySpec());
-    this.setTaskServeSpec(runContainerSpec.getTaskServeSpec());
-    this.setFuncSpec(runContainerSpec.getFuncSpec());
+        this.setTaskJobSpec(runContainerSpec.getTaskJobSpec());
+        this.setTaskDeploySpec(runContainerSpec.getTaskDeploySpec());
+        this.setTaskServeSpec(runContainerSpec.getTaskServeSpec());
+        this.setFuncSpec(runContainerSpec.getFuncSpec());
 
-    super.configure(data);
-    this.setExtraSpecs(runContainerSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(runContainerSpec.getExtraSpecs());
+    }
 }

@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.core.config.filters;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,7 +12,7 @@ public class RequestLoggingFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+        throws IOException, ServletException {
         WrappedRequest wrappedRequest = new WrappedRequest((HttpServletRequest) request);
         logRequestBody(wrappedRequest);
         chain.doFilter(wrappedRequest, response);
@@ -21,7 +20,11 @@ public class RequestLoggingFilter implements Filter {
 
     private void logRequestBody(WrappedRequest request) {
         // Check if the request method is POST or PUT (or any other method you are interested in)
-        if (request.getMethod().equalsIgnoreCase("GET") || request.getMethod().equalsIgnoreCase("POST") || request.getMethod().equalsIgnoreCase("PUT")) {
+        if (
+            request.getMethod().equalsIgnoreCase("GET") ||
+            request.getMethod().equalsIgnoreCase("POST") ||
+            request.getMethod().equalsIgnoreCase("PUT")
+        ) {
             try (BufferedReader reader = request.getReader()) {
                 String requestBody = reader.lines().collect(Collectors.joining());
                 System.out.println("Request Body: " + requestBody);
@@ -94,4 +97,3 @@ public class RequestLoggingFilter implements Filter {
         }
     }
 }
-

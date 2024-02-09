@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class SecretSecretSpecFactory implements SpecFactory<SecretSecretSpec> {
 
-  @Override
-  public SecretSecretSpec create() {
-    return new SecretSecretSpec();
-  }
+    @Override
+    public SecretSecretSpec create() {
+        return new SecretSecretSpec();
+    }
 }

@@ -6,17 +6,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TaskContextService {
-  Task createTask(String projectName, Task taskDTO);
+    Task createTask(String projectName, Task taskDTO);
 
-  Page<Task> getAllTasksByProjectName(
-    Map<String, String> filter,
-    String projectName,
-    Pageable pageable
-  );
+    Page<Task> getAllTasksByProjectName(Map<String, String> filter, String projectName, Pageable pageable);
 
-  Task getByProjectAndTaskUuid(String projectName, String uuid);
+    Task getByProjectAndTaskUuid(String projectName, String uuid);
 
-  Task updateTask(String projectName, String uuid, Task taskDTO);
+    Task updateTask(String projectName, String uuid, Task taskDTO);
 
-  Boolean deleteSpecificTaskVersion(String projectName, String uuid);
+    Boolean deleteSpecificTaskVersion(String projectName, String uuid);
 }

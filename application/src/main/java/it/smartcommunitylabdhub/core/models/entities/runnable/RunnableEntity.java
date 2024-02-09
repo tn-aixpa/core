@@ -1,8 +1,7 @@
 package it.smartcommunitylabdhub.core.models.entities.runnable;
 
-import lombok.*;
-
 import java.util.Date;
+import lombok.*;
 
 @Getter
 @Setter
@@ -18,5 +17,4 @@ public class RunnableEntity {
     private Date created;
 
     private Date updated;
-
 }

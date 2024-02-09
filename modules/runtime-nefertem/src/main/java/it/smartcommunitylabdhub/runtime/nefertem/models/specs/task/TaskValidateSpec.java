@@ -11,38 +11,32 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "validate",
-  runtime = "nefertem",
-  entity = EntityName.TASK,
-  factory = TaskValidateSpec.class
-)
+@SpecType(kind = "validate", runtime = "nefertem", entity = EntityName.TASK, factory = TaskValidateSpec.class)
 public class TaskValidateSpec extends K8sTaskBaseSpec {
 
-  private String framework;
+    private String framework;
 
-  @JsonProperty("exec_args")
-  private Map<String, Object> execArgs;
+    @JsonProperty("exec_args")
+    private Map<String, Object> execArgs;
 
-  private Boolean parallel;
+    private Boolean parallel;
 
-  @JsonProperty("num_worker")
-  private Integer numWorker;
+    @JsonProperty("num_worker")
+    private Integer numWorker;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    TaskValidateSpec taskValidateSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        TaskValidateSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        TaskValidateSpec taskValidateSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            TaskValidateSpec.class
+        );
 
-    this.setFramework(taskValidateSpec.getFramework());
-    this.setExecArgs(taskValidateSpec.getExecArgs());
-    this.setParallel(taskValidateSpec.getParallel());
-    this.setNumWorker(taskValidateSpec.getNumWorker());
+        this.setFramework(taskValidateSpec.getFramework());
+        this.setExecArgs(taskValidateSpec.getExecArgs());
+        this.setParallel(taskValidateSpec.getParallel());
+        this.setNumWorker(taskValidateSpec.getNumWorker());
 
-    super.configure(data);
-    this.setExtraSpecs(taskValidateSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(taskValidateSpec.getExtraSpecs());
+    }
 }

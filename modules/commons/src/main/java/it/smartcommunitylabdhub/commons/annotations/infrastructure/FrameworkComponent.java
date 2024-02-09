@@ -12,9 +12,9 @@ import org.springframework.stereotype.Component;
 @Documented
 @Component
 public @interface FrameworkComponent {
-  /**
-   * Specifies the framework type for which the component is designed.
-   * Possible values include: LOCAL, SERVE, DEPLOY, etc.
-   */
-  String framework(); // Framework type (e.g. local, serve, deploy)
+    /**
+     * Specifies the framework type for which the component is designed.
+     * Possible values include: LOCAL, SERVE, DEPLOY, etc.
+     */
+    String framework(); // Framework type (e.g. local, serve, deploy)
 }

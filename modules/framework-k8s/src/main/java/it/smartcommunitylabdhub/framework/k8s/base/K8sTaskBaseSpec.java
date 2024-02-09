@@ -17,32 +17,28 @@ import lombok.Setter;
 @Setter
 public class K8sTaskBaseSpec extends TaskBaseSpec {
 
-  private List<CoreVolume> volumes;
+    private List<CoreVolume> volumes;
 
-  @JsonProperty("node_selector")
-  private List<CoreNodeSelector> nodeSelector;
+    @JsonProperty("node_selector")
+    private List<CoreNodeSelector> nodeSelector;
 
-  private List<CoreEnv> envs;
+    private List<CoreEnv> envs;
 
-  private List<CoreResource> resources;
+    private List<CoreResource> resources;
 
-  private Set<String> secrets;
+    private Set<String> secrets;
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    K8sTaskBaseSpec concreteSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        K8sTaskBaseSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        K8sTaskBaseSpec concreteSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, K8sTaskBaseSpec.class);
 
-    this.setVolumes(concreteSpec.getVolumes());
-    this.setNodeSelector(concreteSpec.getNodeSelector());
-    this.setEnvs(concreteSpec.getEnvs());
-    this.setResources(concreteSpec.getResources());
-    this.setSecrets(concreteSpec.getSecrets());
-    super.configure(data);
+        this.setVolumes(concreteSpec.getVolumes());
+        this.setNodeSelector(concreteSpec.getNodeSelector());
+        this.setEnvs(concreteSpec.getEnvs());
+        this.setResources(concreteSpec.getResources());
+        this.setSecrets(concreteSpec.getSecrets());
+        super.configure(data);
 
-    this.setExtraSpecs(concreteSpec.getExtraSpecs());
-  }
+        this.setExtraSpecs(concreteSpec.getExtraSpecs());
+    }
 }

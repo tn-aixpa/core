@@ -14,18 +14,13 @@ import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskJobSpec;
  * @BuilderComponent(runtime = "container", task = "job")
  */
 
-public class ContainerJobBuilder
-  implements Builder<FunctionContainerSpec, TaskJobSpec, RunContainerSpec> {
+public class ContainerJobBuilder implements Builder<FunctionContainerSpec, TaskJobSpec, RunContainerSpec> {
 
-  @Override
-  public RunContainerSpec build(
-    FunctionContainerSpec funSpec,
-    TaskJobSpec taskSpec,
-    RunContainerSpec runSpec
-  ) {
-    runSpec.setTaskJobSpec(taskSpec);
-    runSpec.setFuncSpec(funSpec);
+    @Override
+    public RunContainerSpec build(FunctionContainerSpec funSpec, TaskJobSpec taskSpec, RunContainerSpec runSpec) {
+        runSpec.setTaskJobSpec(taskSpec);
+        runSpec.setFuncSpec(funSpec);
 
-    return runSpec;
-  }
+        return runSpec;
+    }
 }

@@ -12,5 +12,5 @@ import org.springframework.stereotype.Component;
 @Documented
 @Component
 public @interface ConverterType {
-	String type();
+    String type();
 }

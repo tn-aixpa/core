@@ -7,11 +7,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableJpaAuditing
-@ComponentScan(basePackages = {"it.smartcommunitylabdhub.core", "it.smartcommunitylabdhub.modules"})
+@ComponentScan(basePackages = { "it.smartcommunitylabdhub.core", "it.smartcommunitylabdhub.modules" })
 public class CoreApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(CoreApplication.class, args);
     }
-
 }

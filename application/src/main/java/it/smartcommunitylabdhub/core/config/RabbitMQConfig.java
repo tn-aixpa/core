@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.config;
 
+import java.util.Map;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -12,9 +13,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
-import java.util.Map;
-
 
 @Configuration
 @ConditionalOnProperty(name = "event-queue.services.rabbit.enabled", havingValue = "true", matchIfMissing = false)
@@ -45,10 +43,8 @@ public class RabbitMQConfig {
     @Value("${event-queue.services.rabbit.connection.virtual-host}")
     private String VIRTUAL_HOST;
 
-
     @Bean
     public Queue myQueue() {
-        
         return new Queue(QUEUE_NAME, true, false, false, Map.of("x-queue-type", "quorum")); // Set the durable option here
     }
 
@@ -63,7 +59,6 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(myQueue).to(topicExchange).with(ENTITY_ROUTING_KEY);
     }
 
-
     @Bean
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
@@ -75,5 +70,4 @@ public class RabbitMQConfig {
 
         return connectionFactory;
     }
-
 }

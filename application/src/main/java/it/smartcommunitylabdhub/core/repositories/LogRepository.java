@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface LogRepository extends JpaRepository<LogEntity, String> {
-
     Page<LogEntity> findByProject(String name, Pageable pageable);
 
     Page<LogEntity> findByRun(String uuid, Pageable pageable);

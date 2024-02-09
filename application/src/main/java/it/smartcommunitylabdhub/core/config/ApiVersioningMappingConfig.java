@@ -1,10 +1,9 @@
 package it.smartcommunitylabdhub.core.config;
 
+import it.smartcommunitylabdhub.core.config.handlers.VersionedHandlerMapping;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-
-import it.smartcommunitylabdhub.core.config.handlers.VersionedHandlerMapping;
 
 @Configuration
 public class ApiVersioningMappingConfig implements WebMvcRegistrations {
@@ -13,5 +12,4 @@ public class ApiVersioningMappingConfig implements WebMvcRegistrations {
     public RequestMappingHandlerMapping getRequestMappingHandlerMapping() {
         return new VersionedHandlerMapping();
     }
-
 }

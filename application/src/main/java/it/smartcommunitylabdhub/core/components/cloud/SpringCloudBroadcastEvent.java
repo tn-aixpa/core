@@ -1,8 +1,7 @@
 package it.smartcommunitylabdhub.core.components.cloud;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
-import it.smartcommunitylabdhub.commons.models.base.interfaces.BaseEntity;
+import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.utils.jackson.mixins.CborMixin;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntitySavedEvent;
@@ -28,16 +27,9 @@ public class SpringCloudBroadcastEvent {
             JacksonMapper.OBJECT_MAPPER.addMixIn(event.getEventClass(), CborMixin.class);
             String serializedEntity = JacksonMapper.OBJECT_MAPPER.writeValueAsString(event.getEntity());
 
-
-            rabbitTemplate.convertAndSend(
-                    "entityTopic",
-                    "entityRoutingKey",
-                    serializedEntity);
-            
+            rabbitTemplate.convertAndSend("entityTopic", "entityRoutingKey", serializedEntity);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
     }
-
 }

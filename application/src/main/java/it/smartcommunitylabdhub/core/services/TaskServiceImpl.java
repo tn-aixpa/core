@@ -6,9 +6,9 @@ import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.commons.models.accessors.entities.TaskAccessor;
 import it.smartcommunitylabdhub.commons.models.accessors.utils.TaskUtils;
-import it.smartcommunitylabdhub.commons.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.interfaces.TaskService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
@@ -35,184 +35,150 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-public class TaskServiceImpl
-  extends AbstractSpecificationService<TaskEntity, TaskEntityFilter>
-  implements TaskService {
+public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, TaskEntityFilter> implements TaskService {
 
-  @Autowired
-  TaskRepository taskRepository;
+    @Autowired
+    TaskRepository taskRepository;
 
-  @Autowired
-  RunRepository runRepository;
+    @Autowired
+    RunRepository runRepository;
 
-  @Autowired
-  TaskDTOBuilder taskDTOBuilder;
+    @Autowired
+    TaskDTOBuilder taskDTOBuilder;
 
-  @Autowired
-  TaskEntityBuilder taskEntityBuilder;
+    @Autowired
+    TaskEntityBuilder taskEntityBuilder;
 
-  @Autowired
-  TaskEntityFilter taskEntityFilter;
+    @Autowired
+    TaskEntityFilter taskEntityFilter;
 
-  @Autowired
-  SpecRegistry specRegistry;
+    @Autowired
+    SpecRegistry specRegistry;
 
-  @Override
-  public Page<Task> getTasks(Map<String, String> filter, Pageable pageable) {
-    try {
-      taskEntityFilter.setFunction(filter.get("function"));
-      taskEntityFilter.setKind(filter.get("kind"));
-      taskEntityFilter.setCreatedDate(filter.get("created"));
-      Optional<State> stateOptional = Stream
-        .of(State.values())
-        .filter(state -> state.name().equals(filter.get("state")))
-        .findAny();
-      taskEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+    @Override
+    public Page<Task> getTasks(Map<String, String> filter, Pageable pageable) {
+        try {
+            taskEntityFilter.setFunction(filter.get("function"));
+            taskEntityFilter.setKind(filter.get("kind"));
+            taskEntityFilter.setCreatedDate(filter.get("created"));
+            Optional<State> stateOptional = Stream
+                .of(State.values())
+                .filter(state -> state.name().equals(filter.get("state")))
+                .findAny();
+            taskEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-      Specification<TaskEntity> specification = createSpecification(
-        filter,
-        taskEntityFilter
-      );
+            Specification<TaskEntity> specification = createSpecification(filter, taskEntityFilter);
 
-      Page<TaskEntity> taskPage =
-        this.taskRepository.findAll(specification, pageable);
+            Page<TaskEntity> taskPage = this.taskRepository.findAll(specification, pageable);
 
-      return new PageImpl<>(
-        taskPage
-          .getContent()
-          .stream()
-          .map(task -> taskDTOBuilder.build(task))
-          .collect(Collectors.toList()),
-        pageable,
-        taskPage.getTotalElements()
-      );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public Task getTask(String uuid) {
-    return taskRepository
-      .findById(uuid)
-      .map(task -> taskDTOBuilder.build(task))
-      .orElseThrow(() ->
-        new CoreException(
-          "TaskNotFound",
-          "The Task you are searching for does not exist.",
-          HttpStatus.NOT_FOUND
-        )
-      );
-  }
-
-  @Override
-  public List<Task> getTasksByFunction(String function) {
-    return taskRepository
-      .findByFunction(function)
-      .stream()
-      .map(taskDTOBuilder::build)
-      .toList();
-  }
-
-  @Override
-  public boolean deleteTask(String uuid, Boolean cascade) {
-    try {
-      if (this.taskRepository.existsById(uuid)) {
-        if (cascade) {
-          this.runRepository.deleteByTaskId(uuid);
+            return new PageImpl<>(
+                taskPage.getContent().stream().map(task -> taskDTOBuilder.build(task)).collect(Collectors.toList()),
+                pageable,
+                taskPage.getTotalElements()
+            );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        this.taskRepository.deleteById(uuid);
-        return true;
-      }
-      throw new CoreException(
-        ErrorList.TASK_NOT_FOUND.getValue(),
-        ErrorList.TASK_NOT_FOUND.getReason(),
-        HttpStatus.NOT_FOUND
-      );
-    } catch (Exception e) {
-      throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        "Cannot delete task",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public Task createTask(Task taskDTO) {
-    if (taskDTO.getId() != null && taskRepository.existsById(taskDTO.getId())) {
-      throw new CoreException(
-        "DuplicateTaskId",
-        "Cannot create the task",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
     }
 
-    K8sTaskBaseSpec taskSpec = specRegistry.createSpec(
-      taskDTO.getKind(),
-      EntityName.TASK,
-      taskDTO.getSpec()
-    );
-
-    TaskAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
-    if (!taskDTO.getProject().equals(taskAccessor.getProject())) {
-      throw new CoreException(
-        "Task string Project and associated Project does not match",
-        "Cannot create the task",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+    @Override
+    public Task getTask(String uuid) {
+        return taskRepository
+            .findById(uuid)
+            .map(task -> taskDTOBuilder.build(task))
+            .orElseThrow(() ->
+                new CoreException(
+                    "TaskNotFound",
+                    "The Task you are searching for does not exist.",
+                    HttpStatus.NOT_FOUND
+                )
+            );
     }
 
-    Optional<TaskEntity> savedTask = Optional
-      .ofNullable(taskDTO)
-      .map(taskEntityBuilder::build)
-      .map(this.taskRepository::saveAndFlush);
-
-    return savedTask
-      .map(task -> taskDTOBuilder.build(task))
-      .orElseThrow(() ->
-        new CoreException(
-          "InternalServerError",
-          "Error saving task",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        )
-      );
-  }
-
-  @Override
-  public Task updateTask(Task taskDTO, String uuid) {
-    if (!taskDTO.getId().equals(uuid)) {
-      throw new CoreException(
-        "TaskNotMatch",
-        "Trying to update a task with an uuid different from the one passed in the request.",
-        HttpStatus.NOT_FOUND
-      );
+    @Override
+    public List<Task> getTasksByFunction(String function) {
+        return taskRepository.findByFunction(function).stream().map(taskDTOBuilder::build).toList();
     }
 
-    final TaskEntity task = taskRepository.findById(uuid).orElse(null);
-    if (task == null) {
-      throw new CoreException(
-        "TaskNotFound",
-        "The task you are searching for does not exist.",
-        HttpStatus.NOT_FOUND
-      );
+    @Override
+    public boolean deleteTask(String uuid, Boolean cascade) {
+        try {
+            if (this.taskRepository.existsById(uuid)) {
+                if (cascade) {
+                    this.runRepository.deleteByTaskId(uuid);
+                }
+                this.taskRepository.deleteById(uuid);
+                return true;
+            }
+            throw new CoreException(
+                ErrorList.TASK_NOT_FOUND.getValue(),
+                ErrorList.TASK_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Cannot delete task",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
-    try {
-      final TaskEntity taskUpdated = taskEntityBuilder.update(task, taskDTO);
-      this.taskRepository.saveAndFlush(taskUpdated);
+    @Override
+    public Task createTask(Task taskDTO) {
+        if (taskDTO.getId() != null && taskRepository.existsById(taskDTO.getId())) {
+            throw new CoreException("DuplicateTaskId", "Cannot create the task", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
-      return taskDTOBuilder.build(taskUpdated);
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+        K8sTaskBaseSpec taskSpec = specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, taskDTO.getSpec());
+
+        TaskAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
+        if (!taskDTO.getProject().equals(taskAccessor.getProject())) {
+            throw new CoreException(
+                "Task string Project and associated Project does not match",
+                "Cannot create the task",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+
+        Optional<TaskEntity> savedTask = Optional
+            .ofNullable(taskDTO)
+            .map(taskEntityBuilder::build)
+            .map(this.taskRepository::saveAndFlush);
+
+        return savedTask
+            .map(task -> taskDTOBuilder.build(task))
+            .orElseThrow(() ->
+                new CoreException("InternalServerError", "Error saving task", HttpStatus.INTERNAL_SERVER_ERROR)
+            );
     }
-  }
+
+    @Override
+    public Task updateTask(Task taskDTO, String uuid) {
+        if (!taskDTO.getId().equals(uuid)) {
+            throw new CoreException(
+                "TaskNotMatch",
+                "Trying to update a task with an uuid different from the one passed in the request.",
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        final TaskEntity task = taskRepository.findById(uuid).orElse(null);
+        if (task == null) {
+            throw new CoreException(
+                "TaskNotFound",
+                "The task you are searching for does not exist.",
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        try {
+            final TaskEntity taskUpdated = taskEntityBuilder.update(task, taskDTO);
+            this.taskRepository.saveAndFlush(taskUpdated);
+
+            return taskDTOBuilder.build(taskUpdated);
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

@@ -5,11 +5,10 @@ import it.smartcommunitylabdhub.core.models.entities.dataitem.specs.DataItemData
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataItemDataItemSpecFactory
-  implements SpecFactory<DataItemDataItemSpec> {
+public class DataItemDataItemSpecFactory implements SpecFactory<DataItemDataItemSpec> {
 
-  @Override
-  public DataItemDataItemSpec create() {
-    return new DataItemDataItemSpec();
-  }
+    @Override
+    public DataItemDataItemSpec create() {
+        return new DataItemDataItemSpec();
+    }
 }

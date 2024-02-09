@@ -22,122 +22,94 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class LogSerivceImpl implements LogService {
 
-  @Autowired
-  LogRepository logRepository;
+    @Autowired
+    LogRepository logRepository;
 
-  @Autowired
-  LogEntityBuilder logEntityBuilder;
+    @Autowired
+    LogEntityBuilder logEntityBuilder;
 
-  @Autowired
-  LogDTOBuilder logDTOBuilder;
+    @Autowired
+    LogDTOBuilder logDTOBuilder;
 
-  @Override
-  public Page<Log> getLogs(Pageable pageable) {
-    try {
-      Page<LogEntity> logPage = this.logRepository.findAll(pageable);
-
-      return new PageImpl<>(
-        logPage
-          .getContent()
-          .stream()
-          .map(log -> logDTOBuilder.build(log))
-          .collect(Collectors.toList()),
-        pageable,
-        logPage.getTotalElements()
-      );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public Log getLog(String uuid) {
-    return logRepository
-      .findById(uuid)
-      .map(log -> {
+    @Override
+    public Page<Log> getLogs(Pageable pageable) {
         try {
-          return logDTOBuilder.build(log);
-        } catch (CustomException e) {
-          throw new CoreException(
-            "InternalServerError",
-            e.getMessage(),
-            HttpStatus.INTERNAL_SERVER_ERROR
-          );
-        }
-      })
-      .orElseThrow(() ->
-        new CoreException(
-          "LogNotFound",
-          "The log you are searching for does not exist.",
-          HttpStatus.NOT_FOUND
-        )
-      );
-  }
+            Page<LogEntity> logPage = this.logRepository.findAll(pageable);
 
-  @Override
-  public boolean deleteLog(String uuid) {
-    try {
-      this.logRepository.deleteById(uuid);
-      return true;
-    } catch (Exception e) {
-      throw new CoreException(
-        "InternalServerError",
-        "cannot delete artifact",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public Log createLog(Log logDTO) {
-    if (logDTO.getId() != null && logRepository.existsById(logDTO.getId())) {
-      throw new CoreException(
-        "DuplicateLogId",
-        "Cannot create the log",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-    Optional<LogEntity> savedLog = Optional
-      .of(logDTO)
-      .map(logEntityBuilder::build)
-      .map(this.logRepository::saveAndFlush);
-
-    return savedLog
-      .map(log -> logDTOBuilder.build(log))
-      .orElseThrow(() ->
-        new CoreException(
-          "InternalServerError",
-          "Error saving log",
-          HttpStatus.INTERNAL_SERVER_ERROR
-        )
-      );
-  }
-
-  @Override
-  public Page<Log> getLogsByRunUuid(String uuid, Pageable pageable) {
-    Page<LogEntity> logPage = logRepository.findByRun(uuid, pageable);
-    return new PageImpl<>(
-      logPage
-        .getContent()
-        .stream()
-        .map(log -> {
-          try {
-            return logDTOBuilder.build(log);
-          } catch (CustomException e) {
-            throw new CoreException(
-              "InternalServerError",
-              e.getMessage(),
-              HttpStatus.INTERNAL_SERVER_ERROR
+            return new PageImpl<>(
+                logPage.getContent().stream().map(log -> logDTOBuilder.build(log)).collect(Collectors.toList()),
+                pageable,
+                logPage.getTotalElements()
             );
-          }
-        })
-        .collect(Collectors.toList()),
-      pageable,
-      logPage.getTotalElements()
-    );
-  }
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public Log getLog(String uuid) {
+        return logRepository
+            .findById(uuid)
+            .map(log -> {
+                try {
+                    return logDTOBuilder.build(log);
+                } catch (CustomException e) {
+                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            })
+            .orElseThrow(() ->
+                new CoreException("LogNotFound", "The log you are searching for does not exist.", HttpStatus.NOT_FOUND)
+            );
+    }
+
+    @Override
+    public boolean deleteLog(String uuid) {
+        try {
+            this.logRepository.deleteById(uuid);
+            return true;
+        } catch (Exception e) {
+            throw new CoreException("InternalServerError", "cannot delete artifact", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public Log createLog(Log logDTO) {
+        if (logDTO.getId() != null && logRepository.existsById(logDTO.getId())) {
+            throw new CoreException("DuplicateLogId", "Cannot create the log", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        Optional<LogEntity> savedLog = Optional
+            .of(logDTO)
+            .map(logEntityBuilder::build)
+            .map(this.logRepository::saveAndFlush);
+
+        return savedLog
+            .map(log -> logDTOBuilder.build(log))
+            .orElseThrow(() ->
+                new CoreException("InternalServerError", "Error saving log", HttpStatus.INTERNAL_SERVER_ERROR)
+            );
+    }
+
+    @Override
+    public Page<Log> getLogsByRunUuid(String uuid, Pageable pageable) {
+        Page<LogEntity> logPage = logRepository.findByRun(uuid, pageable);
+        return new PageImpl<>(
+            logPage
+                .getContent()
+                .stream()
+                .map(log -> {
+                    try {
+                        return logDTOBuilder.build(log);
+                    } catch (CustomException e) {
+                        throw new CoreException(
+                            "InternalServerError",
+                            e.getMessage(),
+                            HttpStatus.INTERNAL_SERVER_ERROR
+                        );
+                    }
+                })
+                .collect(Collectors.toList()),
+            pageable,
+            logPage.getTotalElements()
+        );
+    }
 }

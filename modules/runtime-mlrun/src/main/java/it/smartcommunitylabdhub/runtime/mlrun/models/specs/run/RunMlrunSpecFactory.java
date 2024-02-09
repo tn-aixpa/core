@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class RunMlrunSpecFactory implements SpecFactory<RunMlrunSpec> {
 
-  @Override
-  public RunMlrunSpec create() {
-    return RunMlrunSpec.builder().build();
-  }
+    @Override
+    public RunMlrunSpec create() {
+        return RunMlrunSpec.builder().build();
+    }
 }

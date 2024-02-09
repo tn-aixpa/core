@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.commons.utils;
 import java.util.Random;
 
 public class RandomStringGenerator {
+
     private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     public static String generateRandomString(int length) {

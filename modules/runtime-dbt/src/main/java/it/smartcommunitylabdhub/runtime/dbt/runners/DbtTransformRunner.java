@@ -24,63 +24,52 @@ import java.util.Set;
  */
 public class DbtTransformRunner implements Runner {
 
-  private static final String TASK = "transform";
+    private static final String TASK = "transform";
 
-  private final String image;
-  private final Map<String, Set<String>> groupedSecrets;
+    private final String image;
+    private final Map<String, Set<String>> groupedSecrets;
 
-  public DbtTransformRunner(
-    String image,
-    Map<String, Set<String>> groupedSecrets
-  ) {
-    this.image = image;
-    this.groupedSecrets = groupedSecrets;
-  }
+    public DbtTransformRunner(String image, Map<String, Set<String>> groupedSecrets) {
+        this.image = image;
+        this.groupedSecrets = groupedSecrets;
+    }
 
-  @Override
-  public K8sJobRunnable produce(Run runDTO) {
-    // Retrieve information about RunDbtSpec
-    RunDbtSpec runDbtSpec = RunDbtSpec.builder().build();
-    runDbtSpec.configure(runDTO.getSpec());
+    @Override
+    public K8sJobRunnable produce(Run runDTO) {
+        // Retrieve information about RunDbtSpec
+        RunDbtSpec runDbtSpec = RunDbtSpec.builder().build();
+        runDbtSpec.configure(runDTO.getSpec());
 
-    RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        runDTO,
-        JacksonMapper.typeRef
-      )
-    );
+        RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
+            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+        );
 
-    List<CoreEnv> coreEnvList = new ArrayList<>(
-      List.of(
-        new CoreEnv("PROJECT_NAME", runDTO.getProject()),
-        new CoreEnv("RUN_ID", runDTO.getId())
-      )
-    );
-    if (runDbtSpec.getTaskSpec().getEnvs() != null) coreEnvList.addAll(
-      runDbtSpec.getTaskSpec().getEnvs()
-    );
+        List<CoreEnv> coreEnvList = new ArrayList<>(
+            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+        );
+        if (runDbtSpec.getTaskSpec().getEnvs() != null) coreEnvList.addAll(runDbtSpec.getTaskSpec().getEnvs());
 
-    coreEnvList.addAll(runDbtSpec.getTaskSpec().getEnvs());
+        coreEnvList.addAll(runDbtSpec.getTaskSpec().getEnvs());
 
-    //TODO: Create runnable using information from Run completed spec.
-    K8sJobRunnable k8sJobRunnable = K8sJobRunnable
-      .builder()
-      .runtime(DbtRuntime.RUNTIME)
-      .task(TASK)
-      .image(image)
-      .command("python")
-      .args(List.of("wrapper.py").toArray(String[]::new))
-      .resources(runDbtSpec.getTaskSpec().getResources())
-      .nodeSelector(runDbtSpec.getTaskSpec().getNodeSelector())
-      .volumes(runDbtSpec.getTaskSpec().getVolumes())
-      .secrets(groupedSecrets)
-      .envs(coreEnvList)
-      .state(runDefaultFieldAccessor.getState())
-      .build();
+        //TODO: Create runnable using information from Run completed spec.
+        K8sJobRunnable k8sJobRunnable = K8sJobRunnable
+            .builder()
+            .runtime(DbtRuntime.RUNTIME)
+            .task(TASK)
+            .image(image)
+            .command("python")
+            .args(List.of("wrapper.py").toArray(String[]::new))
+            .resources(runDbtSpec.getTaskSpec().getResources())
+            .nodeSelector(runDbtSpec.getTaskSpec().getNodeSelector())
+            .volumes(runDbtSpec.getTaskSpec().getVolumes())
+            .secrets(groupedSecrets)
+            .envs(coreEnvList)
+            .state(runDefaultFieldAccessor.getState())
+            .build();
 
-    k8sJobRunnable.setId(runDTO.getId());
-    k8sJobRunnable.setProject(runDTO.getProject());
+        k8sJobRunnable.setId(runDTO.getId());
+        k8sJobRunnable.setProject(runDTO.getProject());
 
-    return k8sJobRunnable;
-  }
+        return k8sJobRunnable;
+    }
 }

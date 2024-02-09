@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.ConverterCommand;
 
 public class ReverseConvertCommand<S, R> implements ConverterCommand<R, S> {
+
     private final Converter<S, R> converter;
     private final R input;
 

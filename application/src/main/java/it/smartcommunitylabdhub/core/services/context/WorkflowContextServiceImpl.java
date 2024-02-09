@@ -27,409 +27,296 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 public class WorkflowContextServiceImpl
-  extends ContextService<WorkflowEntity, WorkflowEntityFilter>
-  implements WorkflowContextService {
+    extends ContextService<WorkflowEntity, WorkflowEntityFilter>
+    implements WorkflowContextService {
 
-  @Autowired
-  WorkflowRepository workflowRepository;
+    @Autowired
+    WorkflowRepository workflowRepository;
 
-  @Autowired
-  WorkflowEntityBuilder workflowEntityBuilder;
+    @Autowired
+    WorkflowEntityBuilder workflowEntityBuilder;
 
-  @Autowired
-  WorkflowEntityFilter workflowEntityFilter;
+    @Autowired
+    WorkflowEntityFilter workflowEntityFilter;
 
-  @Autowired
-  WorkflowDTOBuilder workflowDTOBuilder;
+    @Autowired
+    WorkflowDTOBuilder workflowDTOBuilder;
 
-  @Override
-  public Workflow createWorkflow(String projectName, Workflow workflowDTO) {
-    try {
-      // Check that project context is the same as the project passed to the
-      // workflowDTO
-      if (!projectName.equals(workflowDTO.getProject())) {
-        throw new CustomException(
-          "Project Context and Workflow Project does not match",
-          null
-        );
-      }
+    @Override
+    public Workflow createWorkflow(String projectName, Workflow workflowDTO) {
+        try {
+            // Check that project context is the same as the project passed to the
+            // workflowDTO
+            if (!projectName.equals(workflowDTO.getProject())) {
+                throw new CustomException("Project Context and Workflow Project does not match", null);
+            }
 
-      // Check project context
-      checkContext(workflowDTO.getProject());
+            // Check project context
+            checkContext(workflowDTO.getProject());
 
-      // Check if workflow already exist if exist throw exception otherwise create a
-      // new one
-      WorkflowEntity workflow = (WorkflowEntity) Optional
-        .ofNullable(workflowDTO.getId())
-        .flatMap(id ->
-          workflowRepository
-            .findById(id)
-            .map(a -> {
-              throw new CustomException(
-                "The project already contains an workflow with the specified UUID.",
-                null
-              );
-            })
-        )
-        .orElseGet(() -> {
-          // Build an workflow and store it in the database
-          WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
-          return workflowRepository.saveAndFlush(newWorkflow);
-        });
+            // Check if workflow already exist if exist throw exception otherwise create a
+            // new one
+            WorkflowEntity workflow = (WorkflowEntity) Optional
+                .ofNullable(workflowDTO.getId())
+                .flatMap(id ->
+                    workflowRepository
+                        .findById(id)
+                        .map(a -> {
+                            throw new CustomException(
+                                "The project already contains an workflow with the specified UUID.",
+                                null
+                            );
+                        })
+                )
+                .orElseGet(() -> {
+                    // Build an workflow and store it in the database
+                    WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
+                    return workflowRepository.saveAndFlush(newWorkflow);
+                });
 
-      // Return workflow DTO
-      return workflowDTOBuilder.build(workflow, false);
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public Page<Workflow> getLatestByProjectName(
-    Map<String, String> filter,
-    String projectName,
-    Pageable pageable
-  ) {
-    try {
-      checkContext(projectName);
-
-      workflowEntityFilter.setCreatedDate(filter.get("created"));
-      workflowEntityFilter.setName(filter.get("name"));
-      workflowEntityFilter.setKind(filter.get("kind"));
-
-      Optional<State> stateOptional = Stream
-        .of(State.values())
-        .filter(state -> state.name().equals(filter.get("state")))
-        .findAny();
-
-      workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
-
-      Specification<WorkflowEntity> specification = createSpecification(
-        filter,
-        workflowEntityFilter
-      )
-        .and(CommonSpecification.latestByProject(projectName));
-
-      Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
-        Specification
-          .where(specification)
-          .and((root, query, criteriaBuilder) ->
-            criteriaBuilder.equal(root.get("project"), projectName)
-          ),
-        pageable
-      );
-
-      return new PageImpl<>(
-        workflowPage
-          .getContent()
-          .stream()
-          .map(workflow -> {
+            // Return workflow DTO
             return workflowDTOBuilder.build(workflow, false);
-          })
-          .collect(Collectors.toList()),
-        pageable,
-        workflowPage.getTotalElements()
-      );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
 
-  @Override
-  public Page<Workflow> getByProjectNameAndWorkflowName(
-    Map<String, String> filter,
-    String projectName,
-    String workflowName,
-    Pageable pageable
-  ) {
-    try {
-      checkContext(projectName);
+    @Override
+    public Page<Workflow> getLatestByProjectName(Map<String, String> filter, String projectName, Pageable pageable) {
+        try {
+            checkContext(projectName);
 
-      workflowEntityFilter.setCreatedDate(filter.get("created"));
-      workflowEntityFilter.setKind(filter.get("kind"));
-      Optional<State> stateOptional = Stream
-        .of(State.values())
-        .filter(state -> state.name().equals(filter.get("state")))
-        .findAny();
+            workflowEntityFilter.setCreatedDate(filter.get("created"));
+            workflowEntityFilter.setName(filter.get("name"));
+            workflowEntityFilter.setKind(filter.get("kind"));
 
-      workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+            Optional<State> stateOptional = Stream
+                .of(State.values())
+                .filter(state -> state.name().equals(filter.get("state")))
+                .findAny();
 
-      Specification<WorkflowEntity> specification = createSpecification(
-        filter,
-        workflowEntityFilter
-      );
+            workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-      Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
-        Specification
-          .where(specification)
-          .and((root, query, criteriaBuilder) ->
-            criteriaBuilder.and(
-              criteriaBuilder.equal(root.get("project"), projectName),
-              criteriaBuilder.equal(root.get("name"), workflowName)
-            )
-          ),
-        pageable
-      );
+            Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter)
+                .and(CommonSpecification.latestByProject(projectName));
 
-      return new PageImpl<>(
-        workflowPage
-          .getContent()
-          .stream()
-          .map(workflow -> {
+            Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
+                Specification
+                    .where(specification)
+                    .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
+                pageable
+            );
+
+            return new PageImpl<>(
+                workflowPage
+                    .getContent()
+                    .stream()
+                    .map(workflow -> {
+                        return workflowDTOBuilder.build(workflow, false);
+                    })
+                    .collect(Collectors.toList()),
+                pageable,
+                workflowPage.getTotalElements()
+            );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public Page<Workflow> getByProjectNameAndWorkflowName(
+        Map<String, String> filter,
+        String projectName,
+        String workflowName,
+        Pageable pageable
+    ) {
+        try {
+            checkContext(projectName);
+
+            workflowEntityFilter.setCreatedDate(filter.get("created"));
+            workflowEntityFilter.setKind(filter.get("kind"));
+            Optional<State> stateOptional = Stream
+                .of(State.values())
+                .filter(state -> state.name().equals(filter.get("state")))
+                .findAny();
+
+            workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter);
+
+            Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
+                Specification
+                    .where(specification)
+                    .and((root, query, criteriaBuilder) ->
+                        criteriaBuilder.and(
+                            criteriaBuilder.equal(root.get("project"), projectName),
+                            criteriaBuilder.equal(root.get("name"), workflowName)
+                        )
+                    ),
+                pageable
+            );
+
+            return new PageImpl<>(
+                workflowPage
+                    .getContent()
+                    .stream()
+                    .map(workflow -> {
+                        return workflowDTOBuilder.build(workflow, false);
+                    })
+                    .collect(Collectors.toList()),
+                pageable,
+                workflowPage.getTotalElements()
+            );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public Workflow getByProjectAndWorkflowAndUuid(String projectName, String workflowName, String uuid) {
+        try {
+            // Check project context
+            checkContext(projectName);
+
+            return this.workflowRepository.findByProjectAndNameAndId(projectName, workflowName, uuid)
+                .map(workflow -> workflowDTOBuilder.build(workflow, false))
+                .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public Workflow getLatestByProjectNameAndWorkflowName(String projectName, String workflowName) {
+        try {
+            // Check project context
+            checkContext(projectName);
+
+            return this.workflowRepository.findLatestWorkflowByProjectAndName(projectName, workflowName)
+                .map(workflow -> workflowDTOBuilder.build(workflow, false))
+                .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public Workflow createOrUpdateWorkflow(String projectName, String workflowName, Workflow workflowDTO) {
+        try {
+            // Check that project context is the same as the project passed to the
+            // workflowDTO
+            if (!projectName.equals(workflowDTO.getProject())) {
+                throw new CustomException("Project Context and Workflow Project does not match.", null);
+            }
+            if (!workflowName.equals(workflowDTO.getName())) {
+                throw new CustomException(
+                    "Trying to create/update an workflow with name different from the one passed in the request.",
+                    null
+                );
+            }
+
+            // Check project context
+            checkContext(workflowDTO.getProject());
+
+            // Check if workflow already exist if exist throw exception otherwise create a
+            // new one
+            WorkflowEntity workflow = Optional
+                .ofNullable(workflowDTO.getId())
+                .flatMap(id -> {
+                    Optional<WorkflowEntity> optionalWorkflow = workflowRepository.findById(id);
+                    if (optionalWorkflow.isPresent()) {
+                        WorkflowEntity existingWorkflow = optionalWorkflow.get();
+
+                        // Update the existing workflow version
+                        final WorkflowEntity workflowUpdated = workflowEntityBuilder.update(
+                            existingWorkflow,
+                            workflowDTO
+                        );
+                        return Optional.of(this.workflowRepository.saveAndFlush(workflowUpdated));
+                    } else {
+                        // Build a new workflow and store it in the database
+                        WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
+                        return Optional.of(workflowRepository.saveAndFlush(newWorkflow));
+                    }
+                })
+                .orElseGet(() -> {
+                    // Build a new workflow and store it in the database
+                    WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
+                    return workflowRepository.saveAndFlush(newWorkflow);
+                });
+
+            // Return workflow DTO
             return workflowDTOBuilder.build(workflow, false);
-          })
-          .collect(Collectors.toList()),
-        pageable,
-        workflowPage.getTotalElements()
-      );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
 
-  @Override
-  public Workflow getByProjectAndWorkflowAndUuid(
-    String projectName,
-    String workflowName,
-    String uuid
-  ) {
-    try {
-      // Check project context
-      checkContext(projectName);
+    @Override
+    public Workflow updateWorkflow(String projectName, String workflowName, String uuid, Workflow workflowDTO) {
+        try {
+            // Check that project context is the same as the project passed to the
+            // workflowDTO
+            if (!projectName.equals(workflowDTO.getProject())) {
+                throw new CustomException("Project Context and Workflow Project does not match", null);
+            }
+            if (!uuid.equals(workflowDTO.getId())) {
+                throw new CustomException(
+                    "Trying to update an workflow with an ID different from the one passed in the request.",
+                    null
+                );
+            }
+            // Check project context
+            checkContext(workflowDTO.getProject());
 
-      return this.workflowRepository.findByProjectAndNameAndId(
-          projectName,
-          workflowName,
-          uuid
-        )
-        .map(workflow -> workflowDTOBuilder.build(workflow, false))
-        .orElseThrow(() ->
-          new CustomException("The workflow does not exist.", null)
-        );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+            WorkflowEntity workflow =
+                this.workflowRepository.findById(workflowDTO.getId())
+                    .map(a -> {
+                        // Update the existing workflow version
+                        return workflowEntityBuilder.update(a, workflowDTO);
+                    })
+                    .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
+
+            // Return workflow DTO
+            return workflowDTOBuilder.build(workflow, false);
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
 
-  @Override
-  public Workflow getLatestByProjectNameAndWorkflowName(
-    String projectName,
-    String workflowName
-  ) {
-    try {
-      // Check project context
-      checkContext(projectName);
-
-      return this.workflowRepository.findLatestWorkflowByProjectAndName(
-          projectName,
-          workflowName
-        )
-        .map(workflow -> workflowDTOBuilder.build(workflow, false))
-        .orElseThrow(() ->
-          new CustomException("The workflow does not exist.", null)
-        );
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  public Workflow createOrUpdateWorkflow(
-    String projectName,
-    String workflowName,
-    Workflow workflowDTO
-  ) {
-    try {
-      // Check that project context is the same as the project passed to the
-      // workflowDTO
-      if (!projectName.equals(workflowDTO.getProject())) {
-        throw new CustomException(
-          "Project Context and Workflow Project does not match.",
-          null
-        );
-      }
-      if (!workflowName.equals(workflowDTO.getName())) {
-        throw new CustomException(
-          "Trying to create/update an workflow with name different from the one passed in the request.",
-          null
-        );
-      }
-
-      // Check project context
-      checkContext(workflowDTO.getProject());
-
-      // Check if workflow already exist if exist throw exception otherwise create a
-      // new one
-      WorkflowEntity workflow = Optional
-        .ofNullable(workflowDTO.getId())
-        .flatMap(id -> {
-          Optional<WorkflowEntity> optionalWorkflow =
-            workflowRepository.findById(id);
-          if (optionalWorkflow.isPresent()) {
-            WorkflowEntity existingWorkflow = optionalWorkflow.get();
-
-            // Update the existing workflow version
-            final WorkflowEntity workflowUpdated = workflowEntityBuilder.update(
-              existingWorkflow,
-              workflowDTO
+    @Override
+    @Transactional
+    public Boolean deleteSpecificWorkflowVersion(String projectName, String workflowName, String uuid) {
+        try {
+            if (this.workflowRepository.existsByProjectAndNameAndId(projectName, workflowName, uuid)) {
+                this.workflowRepository.deleteByProjectAndNameAndId(projectName, workflowName, uuid);
+                return true;
+            }
+            throw new CoreException(
+                "WorkflowNotFound",
+                "The workflow you are trying to delete does not exist.",
+                HttpStatus.NOT_FOUND
             );
-            return Optional.of(
-              this.workflowRepository.saveAndFlush(workflowUpdated)
+        } catch (Exception e) {
+            throw new CoreException("InternalServerError", "cannot delete workflow", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    @Transactional
+    public Boolean deleteAllWorkflowVersions(String projectName, String workflowName) {
+        try {
+            if (workflowRepository.existsByProjectAndName(projectName, workflowName)) {
+                this.workflowRepository.deleteByProjectAndName(projectName, workflowName);
+                return true;
+            }
+            throw new CoreException(
+                "WorkflowNotFound",
+                "The workflows you are trying to delete does not exist.",
+                HttpStatus.NOT_FOUND
             );
-          } else {
-            // Build a new workflow and store it in the database
-            WorkflowEntity newWorkflow = workflowEntityBuilder.build(
-              workflowDTO
-            );
-            return Optional.of(workflowRepository.saveAndFlush(newWorkflow));
-          }
-        })
-        .orElseGet(() -> {
-          // Build a new workflow and store it in the database
-          WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
-          return workflowRepository.saveAndFlush(newWorkflow);
-        });
-
-      // Return workflow DTO
-      return workflowDTOBuilder.build(workflow, false);
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+        } catch (Exception e) {
+            throw new CoreException("InternalServerError", "cannot delete workflow", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-  }
-
-  @Override
-  public Workflow updateWorkflow(
-    String projectName,
-    String workflowName,
-    String uuid,
-    Workflow workflowDTO
-  ) {
-    try {
-      // Check that project context is the same as the project passed to the
-      // workflowDTO
-      if (!projectName.equals(workflowDTO.getProject())) {
-        throw new CustomException(
-          "Project Context and Workflow Project does not match",
-          null
-        );
-      }
-      if (!uuid.equals(workflowDTO.getId())) {
-        throw new CustomException(
-          "Trying to update an workflow with an ID different from the one passed in the request.",
-          null
-        );
-      }
-      // Check project context
-      checkContext(workflowDTO.getProject());
-
-      WorkflowEntity workflow =
-        this.workflowRepository.findById(workflowDTO.getId())
-          .map(a -> {
-            // Update the existing workflow version
-            return workflowEntityBuilder.update(a, workflowDTO);
-          })
-          .orElseThrow(() ->
-            new CustomException("The workflow does not exist.", null)
-          );
-
-      // Return workflow DTO
-      return workflowDTOBuilder.build(workflow, false);
-    } catch (CustomException e) {
-      throw new CoreException(
-        "InternalServerError",
-        e.getMessage(),
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  @Transactional
-  public Boolean deleteSpecificWorkflowVersion(
-    String projectName,
-    String workflowName,
-    String uuid
-  ) {
-    try {
-      if (
-        this.workflowRepository.existsByProjectAndNameAndId(
-            projectName,
-            workflowName,
-            uuid
-          )
-      ) {
-        this.workflowRepository.deleteByProjectAndNameAndId(
-            projectName,
-            workflowName,
-            uuid
-          );
-        return true;
-      }
-      throw new CoreException(
-        "WorkflowNotFound",
-        "The workflow you are trying to delete does not exist.",
-        HttpStatus.NOT_FOUND
-      );
-    } catch (Exception e) {
-      throw new CoreException(
-        "InternalServerError",
-        "cannot delete workflow",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  @Override
-  @Transactional
-  public Boolean deleteAllWorkflowVersions(
-    String projectName,
-    String workflowName
-  ) {
-    try {
-      if (
-        workflowRepository.existsByProjectAndName(projectName, workflowName)
-      ) {
-        this.workflowRepository.deleteByProjectAndName(
-            projectName,
-            workflowName
-          );
-        return true;
-      }
-      throw new CoreException(
-        "WorkflowNotFound",
-        "The workflows you are trying to delete does not exist.",
-        HttpStatus.NOT_FOUND
-      );
-    } catch (Exception e) {
-      throw new CoreException(
-        "InternalServerError",
-        "cannot delete workflow",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
 }

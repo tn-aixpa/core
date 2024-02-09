@@ -1,17 +1,15 @@
 package it.smartcommunitylabdhub.core.models.entities.project;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import it.smartcommunitylabdhub.commons.models.base.interfaces.BaseEntity;
+import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.EntitySavedListener;
 import jakarta.persistence.*;
+import java.util.Date;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.util.Date;
 
 @Getter
 @Setter
@@ -21,7 +19,7 @@ import java.util.Date;
 @Entity
 @Table(name = "projects")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({AuditingEntityListener.class, EntitySavedListener.class})
+@EntityListeners({ AuditingEntityListener.class, EntitySavedListener.class })
 public class ProjectEntity implements BaseEntity {
 
     @Id

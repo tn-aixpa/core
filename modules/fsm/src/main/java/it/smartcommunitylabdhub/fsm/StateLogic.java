@@ -15,12 +15,12 @@ import java.util.Optional;
 
 @FunctionalInterface
 public interface StateLogic<S, E, C, T> {
-  /**
-   * Apply the internal logic of the state.
-   *
-   * @param c The context for the state machine.
-   * @param stateMachine The state machine instance.
-   * @return The optional result from applying the logic.
-   */
-  Optional<T> applyLogic(C context, StateMachine<S, E, C> stateMachine);
+    /**
+     * Apply the internal logic of the state.
+     *
+     * @param c The context for the state machine.
+     * @param stateMachine The state machine instance.
+     * @return The optional result from applying the logic.
+     */
+    Optional<T> applyLogic(C context, StateMachine<S, E, C> stateMachine);
 }

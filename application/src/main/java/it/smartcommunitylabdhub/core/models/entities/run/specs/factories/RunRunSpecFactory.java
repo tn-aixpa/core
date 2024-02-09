@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class RunRunSpecFactory implements SpecFactory<RunRunSpec> {
 
-  @Override
-  public RunRunSpec create() {
-    return new RunRunSpec();
-  }
+    @Override
+    public RunRunSpec create() {
+        return new RunRunSpec();
+    }
 }

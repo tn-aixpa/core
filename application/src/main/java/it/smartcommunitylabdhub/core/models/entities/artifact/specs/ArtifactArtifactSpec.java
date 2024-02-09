@@ -10,22 +10,17 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(
-  kind = "artifact",
-  entity = EntityName.ARTIFACT,
-  factory = ArtifactArtifactSpec.class
-)
+@SpecType(kind = "artifact", entity = EntityName.ARTIFACT, factory = ArtifactArtifactSpec.class)
 public class ArtifactArtifactSpec extends ArtifactBaseSpec {
 
-  @Override
-  public void configure(Map<String, Object> data) {
-    ArtifactArtifactSpec artifactArtifactSpec =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        data,
-        ArtifactArtifactSpec.class
-      );
+    @Override
+    public void configure(Map<String, Object> data) {
+        ArtifactArtifactSpec artifactArtifactSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            ArtifactArtifactSpec.class
+        );
 
-    super.configure(data);
-    this.setExtraSpecs(artifactArtifactSpec.getExtraSpecs());
-  }
+        super.configure(data);
+        this.setExtraSpecs(artifactArtifactSpec.getExtraSpecs());
+    }
 }

@@ -6,8 +6,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TaskMlrunSpecFactory implements SpecFactory<TaskMlrunSpec> {
 
-  @Override
-  public TaskMlrunSpec create() {
-    return new TaskMlrunSpec();
-  }
+    @Override
+    public TaskMlrunSpec create() {
+        return new TaskMlrunSpec();
+    }
 }

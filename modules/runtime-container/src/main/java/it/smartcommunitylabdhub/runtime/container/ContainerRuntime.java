@@ -31,175 +31,165 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 @RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
-public class ContainerRuntime
-  implements Runtime<FunctionContainerSpec, RunContainerSpec, Runnable> {
+public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunContainerSpec, Runnable> {
 
-  public static final String RUNTIME = "container";
+    public static final String RUNTIME = "container";
 
-  @Autowired
-  SpecRegistry specRegistry;
+    @Autowired
+    SpecRegistry specRegistry;
 
-  @Autowired
-  FunctionContainerSpecFactory functionContainerSpecFactory;
+    @Autowired
+    FunctionContainerSpecFactory functionContainerSpecFactory;
 
-  @Autowired
-  RunContainerSpecFactory runContainerSpecFactory;
+    @Autowired
+    RunContainerSpecFactory runContainerSpecFactory;
 
-  @Autowired
-  ProjectSecretService secretService;
+    @Autowired
+    ProjectSecretService secretService;
 
-  @Override
-  public RunContainerSpec build(
-    FunctionContainerSpec funSpec,
-    TaskBaseSpec taskSpec,
-    RunBaseSpec runSpec,
-    String kind
-  ) {
-    // Retrieve builder using task kind
-    switch (kind) {
-      case "deploy" -> {
-        TaskDeploySpec taskDeploySpec = specRegistry.createSpec(
-          "container",
-          "deploy",
-          EntityName.TASK,
-          taskSpec.toMap()
-        );
+    @Override
+    public RunContainerSpec build(
+        FunctionContainerSpec funSpec,
+        TaskBaseSpec taskSpec,
+        RunBaseSpec runSpec,
+        String kind
+    ) {
+        // Retrieve builder using task kind
+        switch (kind) {
+            case "deploy" -> {
+                TaskDeploySpec taskDeploySpec = specRegistry.createSpec(
+                    "container",
+                    "deploy",
+                    EntityName.TASK,
+                    taskSpec.toMap()
+                );
 
-        RunContainerSpec runRunSpec = specRegistry.createSpec(
-          "container",
-          "run",
-          EntityName.RUN,
-          runSpec.toMap()
-        );
+                RunContainerSpec runRunSpec = specRegistry.createSpec(
+                    "container",
+                    "run",
+                    EntityName.RUN,
+                    runSpec.toMap()
+                );
 
-        /**
-         *  As an alternative, you can use the code below to retrieve the correct builder.
-         *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
-         *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
-         *  the builder in this way remember also that you have to register the builder as
-         *  a component using the follow annotation: `@BuilderComponent(runtime = "container", task = "transform")`
-         *  Only by doing this you can get the bean related
-         * <p>
-         *      ContainerJobBuilder b = getBuilder("transform");
-         */
+                /**
+                 *  As an alternative, you can use the code below to retrieve the correct builder.
+                 *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
+                 *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
+                 *  the builder in this way remember also that you have to register the builder as
+                 *  a component using the follow annotation: `@BuilderComponent(runtime = "container", task = "transform")`
+                 *  Only by doing this you can get the bean related
+                 * <p>
+                 *      ContainerJobBuilder b = getBuilder("transform");
+                 */
 
-        ContainerDeployBuilder builder = new ContainerDeployBuilder();
+                ContainerDeployBuilder builder = new ContainerDeployBuilder();
 
-        return builder.build(funSpec, taskDeploySpec, runRunSpec);
-      }
-      case "job" -> {
-        TaskJobSpec taskJobSpec = specRegistry.createSpec(
-          "container",
-          "job",
-          EntityName.TASK,
-          taskSpec.toMap()
-        );
+                return builder.build(funSpec, taskDeploySpec, runRunSpec);
+            }
+            case "job" -> {
+                TaskJobSpec taskJobSpec = specRegistry.createSpec(
+                    "container",
+                    "job",
+                    EntityName.TASK,
+                    taskSpec.toMap()
+                );
 
-        RunContainerSpec runRunSpec = specRegistry.createSpec(
-          "container",
-          "run",
-          EntityName.RUN,
-          runSpec.toMap()
-        );
+                RunContainerSpec runRunSpec = specRegistry.createSpec(
+                    "container",
+                    "run",
+                    EntityName.RUN,
+                    runSpec.toMap()
+                );
 
-        /**
-         *  As an alternative, you can use the code below to retrieve the correct builder.
-         *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
-         *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
-         *  the builder in this way remember also that you have to register the builder as
-         *  a component using the follow annotation: `@BuilderComponent(runtime = "container", task = "transform")`
-         *  Only by doing this you can get the bean related
-         * <p>
-         *      ContainerJobBuilder b = getBuilder("transform");
-         */
+                /**
+                 *  As an alternative, you can use the code below to retrieve the correct builder.
+                 *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
+                 *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
+                 *  the builder in this way remember also that you have to register the builder as
+                 *  a component using the follow annotation: `@BuilderComponent(runtime = "container", task = "transform")`
+                 *  Only by doing this you can get the bean related
+                 * <p>
+                 *      ContainerJobBuilder b = getBuilder("transform");
+                 */
 
-        ContainerJobBuilder builder = new ContainerJobBuilder();
+                ContainerJobBuilder builder = new ContainerJobBuilder();
 
-        return builder.build(funSpec, taskJobSpec, runRunSpec);
-      }
-      case "serve" -> {
-        TaskServeSpec taskServeSpec = specRegistry.createSpec(
-          "container",
-          "serve",
-          EntityName.TASK,
-          taskSpec.toMap()
-        );
+                return builder.build(funSpec, taskJobSpec, runRunSpec);
+            }
+            case "serve" -> {
+                TaskServeSpec taskServeSpec = specRegistry.createSpec(
+                    "container",
+                    "serve",
+                    EntityName.TASK,
+                    taskSpec.toMap()
+                );
 
-        RunContainerSpec runRunSpec = specRegistry.createSpec(
-          "container",
-          "run",
-          EntityName.RUN,
-          runSpec.toMap()
-        );
+                RunContainerSpec runRunSpec = specRegistry.createSpec(
+                    "container",
+                    "run",
+                    EntityName.RUN,
+                    runSpec.toMap()
+                );
 
-        /**
-         *  As an alternative, you can use the code below to retrieve the correct builder.
-         *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
-         *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
-         *  the builder in this way remember also that you have to register the builder as
-         *  a component using the follow annotation: `@BuilderComponent(runtime = "container", task = "transform")`
-         *  Only by doing this you can get the bean related
-         * <p>
-         *      ContainerJobBuilder b = getBuilder("transform");
-         */
+                /**
+                 *  As an alternative, you can use the code below to retrieve the correct builder.
+                 *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
+                 *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
+                 *  the builder in this way remember also that you have to register the builder as
+                 *  a component using the follow annotation: `@BuilderComponent(runtime = "container", task = "transform")`
+                 *  Only by doing this you can get the bean related
+                 * <p>
+                 *      ContainerJobBuilder b = getBuilder("transform");
+                 */
 
-        ContainerServeBuilder builder = new ContainerServeBuilder();
+                ContainerServeBuilder builder = new ContainerServeBuilder();
 
-        return builder.build(funSpec, taskServeSpec, runRunSpec);
-      }
-      default -> throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+                return builder.build(funSpec, taskServeSpec, runRunSpec);
+            }
+            default -> throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
-  }
 
-  @Override
-  public Runnable run(Run runDTO) {
-    RunContainerSpec runContainerSpec = runContainerSpecFactory.create();
-    runContainerSpec.configure(runDTO.getSpec());
+    @Override
+    public Runnable run(Run runDTO) {
+        RunContainerSpec runContainerSpec = runContainerSpecFactory.create();
+        runContainerSpec.configure(runDTO.getSpec());
 
-    // Create string run accessor from task
-    //TODO drop the utils and get the task accessor from the spec.
-    RunAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
+        // Create string run accessor from task
+        //TODO drop the utils and get the task accessor from the spec.
+        RunAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
 
-    return switch (runAccessor.getTask()) {
-      case "deploy" -> new ContainerDeployRunner(
-        runContainerSpec.getFuncSpec(),
-        secretService.groupSecrets(
-          runDTO.getProject(),
-          runContainerSpec.getTaskDeploySpec().getSecrets()
-        )
-      )
-        .produce(runDTO);
-      case "job" -> new ContainerJobRunner(
-        runContainerSpec.getFuncSpec(),
-        secretService.groupSecrets(
-          runDTO.getProject(),
-          runContainerSpec.getTaskJobSpec().getSecrets()
-        )
-      )
-        .produce(runDTO);
-      case "serve" -> new ContainerServeRunner(
-        runContainerSpec.getFuncSpec(),
-        secretService.groupSecrets(
-          runDTO.getProject(),
-          runContainerSpec.getTaskServeSpec().getSecrets()
-        )
-      )
-        .produce(runDTO);
-      default -> throw new CoreException(
-        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-        "Kind not recognized. Cannot retrieve the right Runner",
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    };
-  }
+        return switch (runAccessor.getTask()) {
+            case "deploy" -> new ContainerDeployRunner(
+                runContainerSpec.getFuncSpec(),
+                secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
+            )
+                .produce(runDTO);
+            case "job" -> new ContainerJobRunner(
+                runContainerSpec.getFuncSpec(),
+                secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
+            )
+                .produce(runDTO);
+            case "serve" -> new ContainerServeRunner(
+                runContainerSpec.getFuncSpec(),
+                secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
+            )
+                .produce(runDTO);
+            default -> throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Kind not recognized. Cannot retrieve the right Runner",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        };
+    }
 
-  @Override
-  public RunStatus parse() {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'parse'");
-  }
+    @Override
+    public RunStatus parse() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'parse'");
+    }
 }
