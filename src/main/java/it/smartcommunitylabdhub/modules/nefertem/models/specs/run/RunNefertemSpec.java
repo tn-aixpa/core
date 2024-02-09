@@ -35,7 +35,6 @@ public class RunNefertemSpec extends RunBaseSpec {
     @JsonProperty("task_validate_spec")
     private TaskValidateSpec taskValidateSpec;
 
-
     @JsonProperty("func_nefertem_spec")
     private FunctionNefertemSpec funcSpec;
 

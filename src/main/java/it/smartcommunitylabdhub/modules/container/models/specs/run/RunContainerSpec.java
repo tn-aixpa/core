@@ -22,16 +22,16 @@ import java.util.Map;
 @SpecType(kind = "run", runtime = "container", entity = EntityName.RUN, factory = RunContainerSpec.class)
 public class RunContainerSpec extends RunBaseSpec {
 
-    @JsonProperty("task_job_spec")
+    @JsonProperty("job_spec")
     private TaskJobSpec taskJobSpec;
 
-    @JsonProperty("task_deploy_spec")
+    @JsonProperty("deploy_spec")
     private TaskDeploySpec taskDeploySpec;
 
-    @JsonProperty("task_serve_spec")
+    @JsonProperty("serve_spec")
     private TaskServeSpec taskServeSpec;
 
-    @JsonProperty("func_container_spec")
+    @JsonProperty("function_spec")
     private FunctionContainerSpec funcSpec;
 
     @Override
