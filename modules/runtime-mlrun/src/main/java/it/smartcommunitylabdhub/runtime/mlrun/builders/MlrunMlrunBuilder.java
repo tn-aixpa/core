@@ -1,9 +1,9 @@
-package it.smartcommunitylabdhub.modules.mlrun.components.builders;
+package it.smartcommunitylabdhub.runtime.mlrun.builders;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.modules.mlrun.models.specs.function.FunctionMlrunSpec;
-import it.smartcommunitylabdhub.modules.mlrun.models.specs.run.RunMlrunSpec;
-import it.smartcommunitylabdhub.modules.mlrun.models.specs.task.TaskMlrunSpec;
+import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
+import it.smartcommunitylabdhub.runtime.mlrun.models.specs.function.FunctionMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.models.specs.run.RunMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.models.specs.task.TaskMlrunSpec;
 
 /**
  * MlrunMlrunBuilder
@@ -14,25 +14,22 @@ import it.smartcommunitylabdhub.modules.mlrun.models.specs.task.TaskMlrunSpec;
  * @BuilderComponent(runtime = "mlrun", task = "mlrun")
  */
 
-public class MlrunMlrunBuilder implements Builder<
-        FunctionMlrunSpec,
-        TaskMlrunSpec,
-        RunMlrunSpec> {
+public class MlrunMlrunBuilder
+  implements Builder<FunctionMlrunSpec, TaskMlrunSpec, RunMlrunSpec> {
 
-    @Override
-    public RunMlrunSpec build(
-            FunctionMlrunSpec funSpec,
-            TaskMlrunSpec taskSpec,
-            RunMlrunSpec runSpec) {
+  @Override
+  public RunMlrunSpec build(
+    FunctionMlrunSpec funSpec,
+    TaskMlrunSpec taskSpec,
+    RunMlrunSpec runSpec
+  ) {
+    RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
 
-        RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder()
-                .build();
+    runMlrunSpec.configure(runSpec.toMap());
+    runMlrunSpec.setTaskSpec(taskSpec);
+    runMlrunSpec.setFuncSpec(funSpec);
 
-        runMlrunSpec.configure(runSpec.toMap());
-        runMlrunSpec.setTaskSpec(taskSpec);
-        runMlrunSpec.setFuncSpec(funSpec);
-
-        // Return a run spec
-        return runMlrunSpec;
-    }
+    // Return a run spec
+    return runMlrunSpec;
+  }
 }

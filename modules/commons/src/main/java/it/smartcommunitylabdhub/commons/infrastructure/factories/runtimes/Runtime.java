@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.commons.infrastructure.factories.runtimes;
 
+import it.smartcommunitylabdhub.commons.infrastructure.factories.runnables.Runnable;
 import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;

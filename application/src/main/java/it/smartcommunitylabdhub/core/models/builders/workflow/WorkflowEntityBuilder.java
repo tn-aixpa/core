@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.models.builders.workflow;
 
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.WorkflowFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.WorkflowFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.specs.WorkflowBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;

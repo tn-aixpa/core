@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.task;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.TaskFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.TaskFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;

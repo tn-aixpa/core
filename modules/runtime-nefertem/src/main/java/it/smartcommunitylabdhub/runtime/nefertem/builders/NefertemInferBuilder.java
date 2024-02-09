@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.runtime.nefertem.builders;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
+import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.run.RunNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskInferSpec;
@@ -14,26 +14,22 @@ import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskInferSpec
  * @BuilderComponent(runtime = "nefertem", task = "infer")
  */
 
-public class NefertemInferBuilder implements Builder<
-        FunctionNefertemSpec,
-        TaskInferSpec,
-        RunNefertemSpec> {
+public class NefertemInferBuilder
+  implements Builder<FunctionNefertemSpec, TaskInferSpec, RunNefertemSpec> {
 
-    @Override
-    public RunNefertemSpec build(
-            FunctionNefertemSpec funSpec,
-            TaskInferSpec taskSpec,
-            RunNefertemSpec runSpec) {
+  @Override
+  public RunNefertemSpec build(
+    FunctionNefertemSpec funSpec,
+    TaskInferSpec taskSpec,
+    RunNefertemSpec runSpec
+  ) {
+    RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
 
-        RunNefertemSpec runNefertemSpec =
-                RunNefertemSpec.builder()
-                        .build();
+    runNefertemSpec.configure(runSpec.toMap());
+    runNefertemSpec.setFuncSpec(funSpec);
+    runNefertemSpec.setTaskInferSpec(taskSpec);
 
-        runNefertemSpec.configure(runSpec.toMap());
-        runNefertemSpec.setFuncSpec(funSpec);
-        runNefertemSpec.setTaskInferSpec(taskSpec);
-
-        // Return a run spec
-        return runNefertemSpec;
-    }
+    // Return a run spec
+    return runNefertemSpec;
+  }
 }

@@ -10,7 +10,7 @@ import it.smartcommunitylabdhub.commons.services.interfaces.LogService;
 import it.smartcommunitylabdhub.commons.services.interfaces.RunService;
 import it.smartcommunitylabdhub.commons.services.interfaces.RunnableStoreService;
 import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
-import it.smartcommunitylabdhub.core.components.pollers.PollingService;
+import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import jakarta.validation.Valid;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +36,7 @@ public class RunController {
   LogService logService;
 
   @Autowired
+  //TODO remove
   PollingService pollingService;
 
   @Autowired
@@ -124,6 +125,7 @@ public class RunController {
     @ValidateField @PathVariable String uuid
   ) {
     Runnable runnable = runnableStoreService.find(uuid);
+    //TODO refactor! the framework is responsible for managing runs, not the controller
     pollingService.stopOne(runnable.getId());
 
     // Do other operation to stop poller.

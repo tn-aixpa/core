@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>it.smartcommunitylabdhub</groupId>
-        <artifactId>dh-core</artifactId>
+        <artifactId>digitalhub-core</artifactId>
         <version>${revision}</version>
         <relativePath>../../</relativePath> <!-- lookup parent from repository -->
     </parent>
@@ -73,20 +73,4 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

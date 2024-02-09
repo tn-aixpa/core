@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.models.builders.secret;
 
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.SecretFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.SecretFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.specs.SecretBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;

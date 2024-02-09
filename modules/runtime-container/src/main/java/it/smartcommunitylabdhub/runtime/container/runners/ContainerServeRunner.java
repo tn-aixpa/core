@@ -1,17 +1,20 @@
 package it.smartcommunitylabdhub.runtime.container.runners;
 
-
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
-import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.infrastructure.factories.runners.Runner;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.RunFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-
-import java.util.*;
-
+import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * ContainerDeployRunner
@@ -23,64 +26,72 @@ import java.util.*;
  */
 public class ContainerServeRunner implements Runner {
 
-    private final static String TASK = "serve";
-    private final RunDefaultFieldAccessor runDefaultFieldAccessor;
-    private final FunctionContainerSpec functionContainerSpec;
-    private final Map<String, Set<String>> groupedSecrets;
+  private static final String TASK = "serve";
+  private final FunctionContainerSpec functionContainerSpec;
+  private final Map<String, Set<String>> groupedSecrets;
 
-    public ContainerServeRunner(FunctionContainerSpec functionContainerSpec,
-                                RunDefaultFieldAccessor runDefaultFieldAccessor,
-                                Map<String, Set<String>> groupedSecrets) {
+  public ContainerServeRunner(
+    FunctionContainerSpec functionContainerSpec,
+    Map<String, Set<String>> groupedSecrets
+  ) {
+    this.functionContainerSpec = functionContainerSpec;
+    this.groupedSecrets = groupedSecrets;
+  }
 
-        this.functionContainerSpec = functionContainerSpec;
-        this.runDefaultFieldAccessor = runDefaultFieldAccessor;
-        this.groupedSecrets = groupedSecrets;
-    }
+  @Override
+  public K8sServeRunnable produce(Run runDTO) {
+    RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
+    runContainerSpec.configure(runDTO.getSpec());
 
-    @Override
-    public K8sServeRunnable produce(Run runDTO) {
+    RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
+      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+        runDTO,
+        JacksonMapper.typeRef
+      )
+    );
+    List<CoreEnv> coreEnvList = new ArrayList<>(
+      List.of(
+        new CoreEnv("PROJECT_NAME", runDTO.getProject()),
+        new CoreEnv("RUN_ID", runDTO.getId())
+      )
+    );
 
-        RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
-        runContainerSpec.configure(runDTO.getSpec());
+    if (
+      runContainerSpec.getTaskServeSpec().getEnvs() != null
+    ) coreEnvList.addAll(runContainerSpec.getTaskServeSpec().getEnvs());
 
-        List<CoreEnv> coreEnvList = new ArrayList<>(List.of(
-                new CoreEnv("PROJECT_NAME", runDTO.getProject()),
-                new CoreEnv("RUN_ID", runDTO.getId())
-        ));
+    K8sServeRunnable k8sServeRunnable = K8sServeRunnable
+      .builder()
+      .runtime(ContainerRuntime.RUNTIME)
+      .task(TASK)
+      .image(functionContainerSpec.getImage())
+      .state(runDefaultFieldAccessor.getState())
+      .resources(runContainerSpec.getTaskServeSpec().getResources())
+      .nodeSelector(runContainerSpec.getTaskServeSpec().getNodeSelector())
+      .volumes(runContainerSpec.getTaskServeSpec().getVolumes())
+      .secrets(groupedSecrets)
+      .envs(coreEnvList)
+      .build();
 
-        if (runContainerSpec.getTaskServeSpec().getEnvs() != null)
-            coreEnvList.addAll(runContainerSpec.getTaskServeSpec().getEnvs());
+    Optional
+      .ofNullable(functionContainerSpec.getArgs())
+      .ifPresent(args ->
+        k8sServeRunnable.setArgs(
+          args
+            .stream()
+            .filter(Objects::nonNull)
+            .map(Object::toString)
+            .toArray(String[]::new)
+        )
+      );
 
+    Optional
+      .ofNullable(functionContainerSpec.getEntrypoint())
+      .ifPresent(k8sServeRunnable::setEntrypoint);
 
-        K8sServeRunnable k8sServeRunnable = K8sServeRunnable.builder()
-                .runtime(ContainerRuntime.RUNTIME)
-                .task(TASK)
-                .image(functionContainerSpec.getImage())
-                .state(runDefaultFieldAccessor.getState())
-                .resources(runContainerSpec.getTaskServeSpec().getResources())
-                .nodeSelector(runContainerSpec.getTaskServeSpec().getNodeSelector())
-                .volumes(runContainerSpec.getTaskServeSpec().getVolumes())
-                .secrets(groupedSecrets)
-                .envs(coreEnvList)
-                .build();
+    k8sServeRunnable.setId(runDTO.getId());
+    k8sServeRunnable.setProject(runDTO.getProject());
 
-        Optional.ofNullable(functionContainerSpec.getArgs())
-                .ifPresent(args -> k8sServeRunnable.setArgs(
-                                args.stream()
-                                        .filter(Objects::nonNull)
-                                        .map(Object::toString)
-                                        .toArray(String[]::new)
-                        )
-                );
-
-        Optional.ofNullable(functionContainerSpec.getEntrypoint())
-                .ifPresent(k8sServeRunnable::setEntrypoint);
-
-        k8sServeRunnable.setId(runDTO.getId());
-        k8sServeRunnable.setProject(runDTO.getProject());
-
-        return k8sServeRunnable;
-
-    }
-
+    return k8sServeRunnable;
+  }
 }

@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.models.builders.artifact;
 
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.ArtifactFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.ArtifactFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.specs.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;

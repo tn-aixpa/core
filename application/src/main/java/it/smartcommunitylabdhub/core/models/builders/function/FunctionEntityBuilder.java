@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.models.builders.function;
 
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.FunctionFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.FunctionFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;

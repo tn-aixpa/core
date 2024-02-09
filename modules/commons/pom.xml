@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>it.smartcommunitylabdhub</groupId>
-        <artifactId>dh-core</artifactId>
+        <artifactId>digitalhub-core</artifactId>
         <version>${revision}</version>
         <relativePath>../../</relativePath> <!-- lookup parent from repository -->
     </parent>

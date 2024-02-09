@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>it.smartcommunitylabdhub</groupId>
-        <artifactId>dh-core</artifactId>
+        <artifactId>digitalhub-core</artifactId>
         <version>${revision}</version>
         <relativePath>../</relativePath> <!-- lookup parent from repository -->
     </parent>
@@ -151,6 +151,26 @@
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-commons</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-fsm</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-framework-k8s</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-runtime-container</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-runtime-nefertem</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>

@@ -6,21 +6,18 @@ import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.runtimes.Runtime;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.commons.models.base.RunStatus;
-import it.smartcommunitylabdhub.commons.models.base.interfaces.Spec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.services.interfaces.ProjectSecretService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.builders.DbtTransformBuilder;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.function.FunctionDbtSpec;
-import it.smartcommunitylabdhub.runtime.dbt.models.specs.function.factories.FunctionDbtSpecFactory;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.run.RunDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.run.factories.RunDbtSpecFactory;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.task.TaskTransformSpec;
 import it.smartcommunitylabdhub.runtime.dbt.runners.DbtTransformRunner;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -33,12 +30,6 @@ public class DbtRuntime
 
   @Autowired
   SpecRegistry specRegistry;
-
-  @Autowired
-  FunctionDbtSpecFactory functionDbtSpecFactory;
-
-  @Autowired
-  RunDefaultFieldAccessorFactory runDefaultFieldAccessorFactory;
 
   @Autowired
   RunDbtSpecFactory runDbtSpecFactory;
@@ -119,19 +110,8 @@ public class DbtRuntime
     RunDbtSpec runDbtSpec = runDbtSpecFactory.create();
     runDbtSpec.configure(runDTO.getSpec());
 
-    // Create and configure default run field accessor
-    RunDefaultFieldAccessor runDefaultFieldAccessor =
-      runDefaultFieldAccessorFactory.create();
-    runDefaultFieldAccessor.configure(
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        runDTO,
-        JacksonMapper.typeRef
-      )
-    );
-
     DbtTransformRunner runner = new DbtTransformRunner(
       image,
-      runDefaultFieldAccessor,
       secretService.groupSecrets(
         runDTO.getProject(),
         runDbtSpec.getTaskSpec().getSecrets()

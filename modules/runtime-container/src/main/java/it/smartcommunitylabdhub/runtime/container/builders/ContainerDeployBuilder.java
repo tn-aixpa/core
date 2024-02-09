@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.runtime.container.builders;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySpec;
+import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
+import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskDeploySpec;
 
 /**
  * ContainerDeployBuilder
@@ -14,22 +14,18 @@ import it.smartcommunitylabdhub.modules.container.models.specs.task.TaskDeploySp
  * @BuilderComponent(runtime = "container", task = "deploy")
  */
 
-public class ContainerDeployBuilder implements Builder<
-        FunctionContainerSpec,
-        TaskDeploySpec,
-        RunContainerSpec> {
+public class ContainerDeployBuilder
+  implements Builder<FunctionContainerSpec, TaskDeploySpec, RunContainerSpec> {
 
-    @Override
-    public RunContainerSpec build(
-            FunctionContainerSpec funSpec,
-            TaskDeploySpec taskSpec,
-            RunContainerSpec runSpec) {
+  @Override
+  public RunContainerSpec build(
+    FunctionContainerSpec funSpec,
+    TaskDeploySpec taskSpec,
+    RunContainerSpec runSpec
+  ) {
+    runSpec.setTaskDeploySpec(taskSpec);
+    runSpec.setFuncSpec(funSpec);
 
-        runSpec.setTaskDeploySpec(taskSpec);
-        runSpec.setFuncSpec(funSpec);
-
-
-        return runSpec;
-    }
+    return runSpec;
+  }
 }
-

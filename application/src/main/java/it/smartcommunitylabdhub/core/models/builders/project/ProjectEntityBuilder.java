@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.models.builders.project;
 
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.ProjectFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.ProjectFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.project.specs.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;

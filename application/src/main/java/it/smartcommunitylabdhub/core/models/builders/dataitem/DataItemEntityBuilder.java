@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.models.builders.dataitem;
 
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.DataItemFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.DataItemFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.specs.DataItemBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;

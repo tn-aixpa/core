@@ -9,8 +9,8 @@
         <version>3.2.0</version>
     </parent>
     <groupId>it.smartcommunitylabdhub</groupId>
-    <artifactId>dh-core</artifactId>
-    <name>DHCore</name>
+    <artifactId>digitalhub-core</artifactId>
+    <name>digitalhub-core</name>
     <version>${revision}</version>
     <packaging>pom</packaging>
 
@@ -24,10 +24,12 @@
 
     <modules>
         <module>modules/commons</module>
+        <module>modules/fsm</module>
         <module>modules/framework-k8s</module>
         <module>modules/runtime-container</module>
         <module>modules/runtime-dbt</module>
         <module>modules/runtime-nefertem</module>
+        <module>modules/runtime-mlrun</module>
         <module>application</module>
     </modules>
 

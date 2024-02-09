@@ -1,15 +1,20 @@
 package it.smartcommunitylabdhub.runtime.container.runners;
 
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.core.models.accessors.kinds.runs.RunDefaultFieldAccessor;
-import it.smartcommunitylabdhub.core.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.infrastructure.factories.runners.Runner;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.RunFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
-import it.smartcommunitylabdhub.modules.container.models.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.modules.container.models.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-
-import java.util.*;
+import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * ContainerDeployRunner
@@ -23,17 +28,14 @@ public class ContainerDeployRunner implements Runner {
 
   private static final String TASK = "deploy";
 
-  private final RunDefaultFieldAccessor runDefaultFieldAccessor;
   private final FunctionContainerSpec functionContainerSpec;
   private final Map<String, Set<String>> groupedSecrets;
 
   public ContainerDeployRunner(
     FunctionContainerSpec functionContainerSpec,
-    RunDefaultFieldAccessor runDefaultFieldAccessor,
     Map<String, Set<String>> groupedSecrets
   ) {
     this.functionContainerSpec = functionContainerSpec;
-    this.runDefaultFieldAccessor = runDefaultFieldAccessor;
     this.groupedSecrets = groupedSecrets;
   }
 
@@ -43,6 +45,13 @@ public class ContainerDeployRunner implements Runner {
 
     RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
     runContainerSpec.configure(runDTO.getSpec());
+
+    RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
+      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+        runDTO,
+        JacksonMapper.typeRef
+      )
+    );
 
     List<CoreEnv> coreEnvList = new ArrayList<>(
       List.of(

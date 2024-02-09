@@ -1,12 +1,13 @@
 package it.smartcommunitylabdhub.runtime.dbt.runners;
 
 import it.smartcommunitylabdhub.commons.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.RunFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.RunFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.run.RunDbtSpec;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,13 @@ public class DbtTransformRunner implements Runner {
     RunDbtSpec runDbtSpec = RunDbtSpec.builder().build();
     runDbtSpec.configure(runDTO.getSpec());
 
+    RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
+      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+        runDTO,
+        JacksonMapper.typeRef
+      )
+    );
+
     List<CoreEnv> coreEnvList = new ArrayList<>(
       List.of(
         new CoreEnv("PROJECT_NAME", runDTO.getProject()),
@@ -53,12 +61,6 @@ public class DbtTransformRunner implements Runner {
     );
 
     coreEnvList.addAll(runDbtSpec.getTaskSpec().getEnvs());
-    HashMap<String, Object> map =
-      JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-        runDTO,
-        JacksonMapper.typeRef
-      );
-    RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(map);
 
     //TODO: Create runnable using information from Run completed spec.
     K8sJobRunnable k8sJobRunnable = K8sJobRunnable

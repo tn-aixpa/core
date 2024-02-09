@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.log;
 
-import it.smartcommunitylabdhub.commons.models.accessors.kinds.interfaces.LogFieldAccessor;
+import it.smartcommunitylabdhub.commons.models.accessors.fields.LogFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;

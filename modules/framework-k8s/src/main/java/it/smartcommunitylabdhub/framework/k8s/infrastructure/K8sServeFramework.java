@@ -11,24 +11,23 @@ import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComp
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.StopPoller;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.frameworks.Framework;
+import it.smartcommunitylabdhub.commons.models.entities.log.Log;
+import it.smartcommunitylabdhub.commons.models.entities.log.metadata.LogMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.services.interfaces.LogService;
 import it.smartcommunitylabdhub.commons.services.interfaces.RunService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.core.components.fsm.StateMachine;
-import it.smartcommunitylabdhub.core.components.fsm.enums.RunEvent;
-import it.smartcommunitylabdhub.core.components.fsm.enums.RunState;
-import it.smartcommunitylabdhub.core.components.fsm.types.RunStateMachine;
-import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreNodeSelector;
-import it.smartcommunitylabdhub.core.components.infrastructure.objects.CoreResource;
-import it.smartcommunitylabdhub.core.components.kubernetes.K8sBuilderHelper;
-import it.smartcommunitylabdhub.core.components.pollers.PollingService;
-import it.smartcommunitylabdhub.core.components.workflows.factory.WorkflowFactory;
-import it.smartcommunitylabdhub.core.models.builders.log.LogEntityBuilder;
-import it.smartcommunitylabdhub.core.models.entities.log.Log;
-import it.smartcommunitylabdhub.core.models.entities.log.metadata.LogMetadata;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import it.smartcommunitylabdhub.fsm.StateMachine;
+import it.smartcommunitylabdhub.fsm.enums.RunEvent;
+import it.smartcommunitylabdhub.fsm.pollers.PollingService;
+import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
+import it.smartcommunitylabdhub.fsm.workflow.WorkflowFactory;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -53,9 +52,6 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
   @Autowired
   RunStateMachine runStateMachine;
-
-  @Autowired
-  LogEntityBuilder logEntityBuilder;
 
   @Autowired
   LogService logService;
