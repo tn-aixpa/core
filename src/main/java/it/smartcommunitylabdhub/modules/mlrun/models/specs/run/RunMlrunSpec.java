@@ -20,10 +20,10 @@ import java.util.Map;
 @SpecType(kind = "run", runtime = "mlrun", entity = EntityName.RUN, factory = RunMlrunSpec.class)
 public class RunMlrunSpec extends RunBaseSpec {
 
-    @JsonProperty("task_mlrun_spec")
+    @JsonProperty("mlrun_spec")
     private TaskMlrunSpec taskSpec;
 
-    @JsonProperty("func_mlrun_spec")
+    @JsonProperty("function_spec")
     private FunctionMlrunSpec funcSpec;
 
     @Override

@@ -23,19 +23,19 @@ import java.util.Map;
 @SpecType(kind = "run", runtime = "nefertem", entity = EntityName.RUN, factory = RunNefertemSpec.class)
 public class RunNefertemSpec extends RunBaseSpec {
 
-    @JsonProperty("task_infer_spec")
+    @JsonProperty("infer_spec")
     private TaskInferSpec taskInferSpec;
 
-    @JsonProperty("task_metric_spec")
+    @JsonProperty("metric_spec")
     private TaskMetricSpec taskMetricSpec;
 
-    @JsonProperty("task_profile_spec")
+    @JsonProperty("profile_spec")
     private TaskProfileSpec taskProfileSpec;
 
-    @JsonProperty("task_validate_spec")
+    @JsonProperty("validate_spec")
     private TaskValidateSpec taskValidateSpec;
 
-    @JsonProperty("func_nefertem_spec")
+    @JsonProperty("function_spec")
     private FunctionNefertemSpec funcSpec;
 
     @Override

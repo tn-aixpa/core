@@ -19,10 +19,10 @@ import java.util.Map;
 @SpecType(kind = "run", runtime = "dbt", entity = EntityName.RUN, factory = RunDbtSpec.class)
 public class RunDbtSpec extends RunBaseSpec {
 
-    @JsonProperty("task_transform_spec")
+    @JsonProperty("transform_spec")
     private TaskTransformSpec taskSpec;
 
-    @JsonProperty("func_dbt_spec")
+    @JsonProperty("function_spec")
     private FunctionDbtSpec funcSpec;
 
     @Override
