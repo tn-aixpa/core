@@ -5,15 +5,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.services.interfaces.TaskService;
-import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tasks")
@@ -38,9 +39,9 @@ public class TaskController {
 
     @Operation(summary = "Create a task", description = "Create and return a new task")
     @PostMapping(
-        path = "",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Task> createTask(@Valid @RequestBody Task taskDTO) {
         return ResponseEntity.ok(this.taskService.createTask(taskDTO));
@@ -48,13 +49,13 @@ public class TaskController {
 
     @Operation(summary = "Update a task", description = "Update and return a task")
     @PutMapping(
-        path = "/{uuid}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "/{uuid}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Task> updateTask(
-        @Valid @RequestBody Task functionDTO,
-        @ValidateField @PathVariable String uuid
+            @Valid @RequestBody Task functionDTO,
+            @ValidateField @PathVariable String uuid
     ) {
         return ResponseEntity.ok(this.taskService.updateTask(functionDTO, uuid));
     }
@@ -62,8 +63,8 @@ public class TaskController {
     @Operation(summary = "Delete a task", description = "Delete a specific task")
     @DeleteMapping(path = "/{uuid}")
     public ResponseEntity<Boolean> deleteTask(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
-        @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
+            @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade
     ) {
         return ResponseEntity.ok(this.taskService.deleteTask(uuid, cascade));
     }

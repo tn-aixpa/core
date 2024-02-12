@@ -9,16 +9,17 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.services.interfaces.LogService;
 import it.smartcommunitylabdhub.commons.services.interfaces.RunService;
 import it.smartcommunitylabdhub.commons.services.interfaces.RunnableStoreService;
-import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import jakarta.validation.Valid;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/runs")
@@ -48,8 +49,8 @@ public class RunController {
     @Operation(summary = "Run log list", description = "Return the log list for a specific run")
     @GetMapping(path = "/{uuid}/log", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Page<Log>> getRunLog(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
-        Pageable pageable
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
+            Pageable pageable
     ) {
         return ResponseEntity.ok(this.logService.getLogsByRunUuid(uuid, pageable));
     }
@@ -62,9 +63,9 @@ public class RunController {
 
     @Operation(summary = "Create and execute a run", description = "Create a run and then execute it")
     @PostMapping(
-        path = "",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Run> createRun(@Valid @RequestBody Run inputRunDTO) {
         return ResponseEntity.ok(this.runService.createRun(inputRunDTO));
@@ -72,9 +73,9 @@ public class RunController {
 
     @Operation(summary = "Update specific run", description = "Update and return the update run")
     @PutMapping(
-        path = "/{uuid}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "/{uuid}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Run> updateRun(@Valid @RequestBody Run runDTO, @ValidateField @PathVariable String uuid) {
         return ResponseEntity.ok(this.runService.updateRun(runDTO, uuid));
@@ -83,17 +84,17 @@ public class RunController {
     @Operation(summary = "Delete a run", description = "Delete a specific run")
     @DeleteMapping(path = "/{uuid}")
     public ResponseEntity<Boolean> deleteRun(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
-        @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
+            @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade
     ) {
         return ResponseEntity.ok(this.runService.deleteRun(uuid, cascade));
     }
 
     @Operation(summary = "Stop a run", description = "Stop a specific run")
     @PostMapping(
-        path = "/{uuid}/stop",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "/{uuid}/stop",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Boolean> stopRun(@ValidateField @PathVariable String uuid) {
         Runnable runnable = runnableStoreService.find(uuid);

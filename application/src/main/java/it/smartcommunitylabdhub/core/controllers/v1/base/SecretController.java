@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.services.interfaces.ProjectSecretService;
-import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -29,9 +29,9 @@ public class SecretController {
 
     @Operation(summary = "Create a secret", description = "Create and return a new secret")
     @PostMapping(
-        path = "",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Secret> createSecret(@Valid @RequestBody Secret secretDTO) {
         return ResponseEntity.ok(this.secretService.createProjectSecret(secretDTO));
@@ -39,13 +39,13 @@ public class SecretController {
 
     @Operation(summary = "Update a secret", description = "Update and return a secret")
     @PutMapping(
-        path = "/{uuid}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "/{uuid}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Secret> updateSecret(
-        @Valid @RequestBody Secret functionDTO,
-        @ValidateField @PathVariable String uuid
+            @Valid @RequestBody Secret functionDTO,
+            @ValidateField @PathVariable String uuid
     ) {
         return ResponseEntity.ok(this.secretService.updateProjectSecret(functionDTO, uuid));
     }
@@ -53,7 +53,7 @@ public class SecretController {
     @Operation(summary = "Delete a secret", description = "Delete a specific secret")
     @DeleteMapping(path = "/{uuid}")
     public ResponseEntity<Boolean> deleteSecret(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid
     ) {
         return ResponseEntity.ok(this.secretService.deleteProjectSecret(uuid));
     }

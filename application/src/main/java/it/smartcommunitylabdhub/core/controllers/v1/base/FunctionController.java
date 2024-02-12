@@ -6,10 +6,8 @@ import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.services.interfaces.FunctionService;
-import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +15,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/functions")
@@ -36,9 +37,9 @@ public class FunctionController {
 
     @Operation(summary = "Create function", description = "Create an function and return")
     @PostMapping(
-        value = "",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            value = "",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Function> createFunction(@Valid @RequestBody Function functionDTO) {
         return ResponseEntity.ok(this.functionService.createFunction(functionDTO));
@@ -47,20 +48,20 @@ public class FunctionController {
     @Operation(summary = "Get a function by uuid", description = "Return an function")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Function> getFunction(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid
     ) {
         return ResponseEntity.ok(this.functionService.getFunction(uuid));
     }
 
     @Operation(summary = "Update specific function", description = "Update and return the function")
     @PutMapping(
-        path = "/{uuid}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "/{uuid}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Function> updateFunction(
-        @Valid @RequestBody Function functionDTO,
-        @ValidateField @PathVariable String uuid
+            @Valid @RequestBody Function functionDTO,
+            @ValidateField @PathVariable String uuid
     ) {
         return ResponseEntity.ok(this.functionService.updateFunction(functionDTO, uuid));
     }
@@ -68,8 +69,8 @@ public class FunctionController {
     @Operation(summary = "Delete a function", description = "Delete a specific function")
     @DeleteMapping(path = "/{uuid}")
     public ResponseEntity<Boolean> deleteFunction(
-        @ValidateField @PathVariable String uuid,
-        @RequestParam(value = "cascade", defaultValue = "false") Boolean cascade
+            @ValidateField @PathVariable String uuid,
+            @RequestParam(value = "cascade", defaultValue = "false") Boolean cascade
     ) {
         return ResponseEntity.ok(this.functionService.deleteFunction(uuid, cascade));
     }

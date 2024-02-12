@@ -48,4 +48,5 @@ build/
 /data/*
 
 run.sh
-/src/main/resources/application-local.yml
+/application/src/main/resources/application-local.yml
+/reports

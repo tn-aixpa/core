@@ -1,10 +1,7 @@
 package it.smartcommunitylabdhub.core.config.handlers;
 
-import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.servlet.http.HttpServletRequest;
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Optional;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -16,6 +13,10 @@ import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.pattern.PathPattern;
+
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.Optional;
 
 public class VersionedHandlerMapping extends RequestMappingHandlerMapping {
 
@@ -68,12 +69,12 @@ public class VersionedHandlerMapping extends RequestMappingHandlerMapping {
         // .getPatternString();
 
         String originalPattern = Optional
-            .ofNullable(mappingInfo)
-            .map(RequestMappingInfo::getPathPatternsCondition)
-            .map(PathPatternsRequestCondition::getPatterns)
-            .flatMap(patterns -> patterns.stream().findFirst())
-            .map(PathPattern::getPatternString)
-            .orElse("/error");
+                .ofNullable(mappingInfo)
+                .map(RequestMappingInfo::getPathPatternsCondition)
+                .map(PathPatternsRequestCondition::getPatterns)
+                .flatMap(patterns -> patterns.stream().findFirst())
+                .map(PathPattern::getPatternString)
+                .orElse("/error");
 
         String versionedPattern = "/api/" + version + originalPattern;
 
@@ -83,13 +84,13 @@ public class VersionedHandlerMapping extends RequestMappingHandlerMapping {
 
         if (mappingInfo != null) {
             RequestMappingInfo.Builder builder = mappingInfo
-                .mutate()
-                .paths(versionedPattern)
-                .methods(mappingInfo.getMethodsCondition().getMethods().toArray(RequestMethod[]::new))
-                .params(mappingInfo.getParamsCondition().getExpressions().toArray(String[]::new))
-                .headers(mappingInfo.getHeadersCondition().getExpressions().toArray(String[]::new))
-                .consumes(getMediaTypeStrings(mappingInfo.getConsumesCondition()))
-                .produces(getMediaTypeStrings(mappingInfo.getProducesCondition()));
+                    .mutate()
+                    .paths(versionedPattern)
+                    .methods(mappingInfo.getMethodsCondition().getMethods().toArray(RequestMethod[]::new))
+                    .params(mappingInfo.getParamsCondition().getExpressions().toArray(String[]::new))
+                    .headers(mappingInfo.getHeadersCondition().getExpressions().toArray(String[]::new))
+                    .consumes(getMediaTypeStrings(mappingInfo.getConsumesCondition()))
+                    .produces(getMediaTypeStrings(mappingInfo.getProducesCondition()));
 
             if (mappingInfo.getName() != null) {
                 builder.mappingName(mappingInfo.getName());
@@ -118,7 +119,7 @@ public class VersionedHandlerMapping extends RequestMappingHandlerMapping {
         String version = (String) request.getAttribute(VERSION_ATTRIBUTE);
         if (version != null) {
             Map<String, String> uriTemplateVariables = (Map<String, String>) request.getAttribute(
-                HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE
+                    HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE
             );
             if (uriTemplateVariables != null) {
                 uriTemplateVariables.put("version", version);

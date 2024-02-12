@@ -6,10 +6,8 @@ import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.services.interfaces.WorkflowService;
-import it.smartcommunitylabdhub.core.annotations.common.ApiVersion;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +15,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/workflows")
@@ -36,9 +37,9 @@ public class WorkflowController {
 
     @Operation(summary = "Create workflow", description = "Create an workflow and return")
     @PostMapping(
-        value = "",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            value = "",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Workflow> createWorkflow(@Valid @RequestBody Workflow workflowDTO) {
         return ResponseEntity.ok(this.workflowService.createWorkflow(workflowDTO));
@@ -47,20 +48,20 @@ public class WorkflowController {
     @Operation(summary = "Get an workflow by uuid", description = "Return an workflow")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Workflow> getWorkflow(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid
+            @ValidateField @PathVariable(name = "uuid", required = true) String uuid
     ) {
         return ResponseEntity.ok(this.workflowService.getWorkflow(uuid));
     }
 
     @Operation(summary = "Update specific workflow", description = "Update and return the workflow")
     @PutMapping(
-        path = "/{uuid}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "/{uuid}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Workflow> updateWorkflow(
-        @Valid @RequestBody Workflow workflowDTO,
-        @ValidateField @PathVariable String uuid
+            @Valid @RequestBody Workflow workflowDTO,
+            @ValidateField @PathVariable String uuid
     ) {
         return ResponseEntity.ok(this.workflowService.updateWorkflow(workflowDTO, uuid));
     }
