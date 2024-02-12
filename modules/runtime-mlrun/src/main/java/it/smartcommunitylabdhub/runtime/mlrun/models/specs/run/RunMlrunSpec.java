@@ -7,15 +7,16 @@ import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.runtime.mlrun.models.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.models.specs.task.TaskMlrunSpec;
-import java.util.Map;
 import lombok.*;
+
+import java.util.Map;
 
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "run", runtime = "mlrun", entity = EntityName.RUN, factory = RunMlrunSpec.class)
+@SpecType(kind = "mlrun+run", entity = EntityName.RUN, factory = RunMlrunSpec.class)
 public class RunMlrunSpec extends RunBaseSpec {
 
     @JsonProperty("mlrun_spec")

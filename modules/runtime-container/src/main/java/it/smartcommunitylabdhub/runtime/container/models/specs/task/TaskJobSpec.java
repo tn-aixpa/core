@@ -4,13 +4,14 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
-@SpecType(kind = "job", runtime = "container", entity = EntityName.TASK, factory = TaskJobSpec.class)
+@SpecType(kind = "container+job", entity = EntityName.TASK, factory = TaskJobSpec.class)
 public class TaskJobSpec extends K8sTaskBaseSpec {
 
     @Override

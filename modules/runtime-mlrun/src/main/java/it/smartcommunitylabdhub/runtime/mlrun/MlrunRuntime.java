@@ -43,9 +43,9 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8
     public RunMlrunSpec build(FunctionMlrunSpec funSpec, TaskBaseSpec taskSpec, RunBaseSpec runSpec, String kind) {
         // Retrieve builder using task kind
         if (kind.equals("mlrun")) {
-            TaskMlrunSpec taskMlrunSpec = specRegistry.createSpec("mlrun", "mlrun", EntityName.TASK, taskSpec.toMap());
+            TaskMlrunSpec taskMlrunSpec = specRegistry.createSpec("mlrun+mlrun", EntityName.TASK, taskSpec.toMap());
 
-            RunMlrunSpec runMlrunSpec = specRegistry.createSpec("mlrun", "run", EntityName.RUN, runSpec.toMap());
+            RunMlrunSpec runMlrunSpec = specRegistry.createSpec("mlrun+run", EntityName.RUN, runSpec.toMap());
 
             /**
              *  As an alternative, you can use the code below to retrieve the correct builder.
@@ -64,9 +64,9 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8
         }
 
         throw new CoreException(
-            ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-            "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
-            HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
+                HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
 
@@ -95,8 +95,8 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8
         runRunSpec.configure(runDTO.getSpec());
 
         MlrunMlrunRunner runner = new MlrunMlrunRunner(
-            image,
-            secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskSpec().getSecrets())
+                image,
+                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskSpec().getSecrets())
         );
 
         return runner.produce(runDTO);

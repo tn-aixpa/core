@@ -5,14 +5,15 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
-import java.util.List;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+import java.util.Map;
+
 @Getter
 @Setter
-@SpecType(kind = "nefertem", runtime = "nefertem", entity = EntityName.FUNCTION, factory = FunctionNefertemSpec.class)
+@SpecType(kind = "nefertem", entity = EntityName.FUNCTION, factory = FunctionNefertemSpec.class)
 public class FunctionNefertemSpec extends FunctionBaseSpec {
 
     private List<Map<String, Object>> constraints;
@@ -25,8 +26,8 @@ public class FunctionNefertemSpec extends FunctionBaseSpec {
     @Override
     public void configure(Map<String, Object> data) {
         FunctionNefertemSpec functionNefertemSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            data,
-            FunctionNefertemSpec.class
+                data,
+                FunctionNefertemSpec.class
         );
 
         this.setConstraints(functionNefertemSpec.getConstraints());

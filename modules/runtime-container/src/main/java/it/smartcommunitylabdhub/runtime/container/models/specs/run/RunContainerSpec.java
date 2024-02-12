@@ -9,15 +9,16 @@ import it.smartcommunitylabdhub.runtime.container.models.specs.function.Function
 import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskServeSpec;
-import java.util.Map;
 import lombok.*;
+
+import java.util.Map;
 
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "run", runtime = "container", entity = EntityName.RUN, factory = RunContainerSpec.class)
+@SpecType(kind = "container+run", entity = EntityName.RUN, factory = RunContainerSpec.class)
 public class RunContainerSpec extends RunBaseSpec {
 
     @JsonProperty("job_spec")
@@ -35,8 +36,8 @@ public class RunContainerSpec extends RunBaseSpec {
     @Override
     public void configure(Map<String, Object> data) {
         RunContainerSpec runContainerSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            data,
-            RunContainerSpec.class
+                data,
+                RunContainerSpec.class
         );
 
         this.setTaskJobSpec(runContainerSpec.getTaskJobSpec());

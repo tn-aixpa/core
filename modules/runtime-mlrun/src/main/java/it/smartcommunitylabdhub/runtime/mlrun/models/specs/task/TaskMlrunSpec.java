@@ -4,13 +4,14 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
-@SpecType(kind = "mlrun", runtime = "mlrun", entity = EntityName.TASK, factory = TaskMlrunSpec.class)
+@SpecType(kind = "mlrun+mlrun", entity = EntityName.TASK, factory = TaskMlrunSpec.class)
 public class TaskMlrunSpec extends K8sTaskBaseSpec {
 
     @Override

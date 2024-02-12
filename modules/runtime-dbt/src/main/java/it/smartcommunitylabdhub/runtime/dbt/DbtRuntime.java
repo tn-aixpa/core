@@ -44,13 +44,12 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
         // Retrieve builder using task kind
         if (kind.equals("transform")) {
             TaskTransformSpec taskTransformSpec = specRegistry.createSpec(
-                "dbt",
-                "transform",
-                EntityName.TASK,
-                taskSpec.toMap()
+                    "dbt+transform",
+                    EntityName.TASK,
+                    taskSpec.toMap()
             );
 
-            RunDbtSpec runDbtSpec = specRegistry.createSpec("dbt", "run", EntityName.RUN, runSpec.toMap());
+            RunDbtSpec runDbtSpec = specRegistry.createSpec("dbt+run", EntityName.RUN, runSpec.toMap());
 
             /**
              *  As an alternative, you can use the code below to retrieve the correct builder.
@@ -69,9 +68,9 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
         }
 
         throw new CoreException(
-            ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-            "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
-            HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
+                HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
 
@@ -100,8 +99,8 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
         runDbtSpec.configure(runDTO.getSpec());
 
         DbtTransformRunner runner = new DbtTransformRunner(
-            image,
-            secretService.groupSecrets(runDTO.getProject(), runDbtSpec.getTaskSpec().getSecrets())
+                image,
+                secretService.groupSecrets(runDTO.getProject(), runDbtSpec.getTaskSpec().getSecrets())
         );
 
         return runner.produce(runDTO);

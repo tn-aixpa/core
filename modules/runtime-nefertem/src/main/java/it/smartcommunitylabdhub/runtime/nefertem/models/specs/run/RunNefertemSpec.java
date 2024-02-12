@@ -10,15 +10,16 @@ import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskInferSpec
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskMetricSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskProfileSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskValidateSpec;
-import java.util.Map;
 import lombok.*;
+
+import java.util.Map;
 
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "run", runtime = "nefertem", entity = EntityName.RUN, factory = RunNefertemSpec.class)
+@SpecType(kind = "nefertem+run", entity = EntityName.RUN, factory = RunNefertemSpec.class)
 public class RunNefertemSpec extends RunBaseSpec {
 
     @JsonProperty("infer_spec")

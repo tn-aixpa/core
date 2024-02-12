@@ -5,13 +5,14 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
-@SpecType(kind = "infer", runtime = "nefertem", entity = EntityName.TASK, factory = TaskInferSpec.class)
+@SpecType(kind = "nefertem+infer", entity = EntityName.TASK, factory = TaskInferSpec.class)
 public class TaskInferSpec extends K8sTaskBaseSpec {
 
     private String framework;

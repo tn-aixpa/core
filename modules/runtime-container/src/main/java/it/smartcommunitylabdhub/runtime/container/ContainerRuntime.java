@@ -49,26 +49,24 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
     @Override
     public RunContainerSpec build(
-        FunctionContainerSpec funSpec,
-        TaskBaseSpec taskSpec,
-        RunBaseSpec runSpec,
-        String kind
+            FunctionContainerSpec funSpec,
+            TaskBaseSpec taskSpec,
+            RunBaseSpec runSpec,
+            String kind
     ) {
         // Retrieve builder using task kind
         switch (kind) {
-            case "deploy" -> {
+            case "container+deploy" -> {
                 TaskDeploySpec taskDeploySpec = specRegistry.createSpec(
-                    "container",
-                    "deploy",
-                    EntityName.TASK,
-                    taskSpec.toMap()
+                        "container+deploy",
+                        EntityName.TASK,
+                        taskSpec.toMap()
                 );
 
                 RunContainerSpec runRunSpec = specRegistry.createSpec(
-                    "container",
-                    "run",
-                    EntityName.RUN,
-                    runSpec.toMap()
+                        "container+run",
+                        EntityName.RUN,
+                        runSpec.toMap()
                 );
 
                 /**
@@ -86,19 +84,17 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
                 return builder.build(funSpec, taskDeploySpec, runRunSpec);
             }
-            case "job" -> {
+            case "container+job" -> {
                 TaskJobSpec taskJobSpec = specRegistry.createSpec(
-                    "container",
-                    "job",
-                    EntityName.TASK,
-                    taskSpec.toMap()
+                        "container+job",
+                        EntityName.TASK,
+                        taskSpec.toMap()
                 );
 
                 RunContainerSpec runRunSpec = specRegistry.createSpec(
-                    "container",
-                    "run",
-                    EntityName.RUN,
-                    runSpec.toMap()
+                        "container+run",
+                        EntityName.RUN,
+                        runSpec.toMap()
                 );
 
                 /**
@@ -116,19 +112,17 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
                 return builder.build(funSpec, taskJobSpec, runRunSpec);
             }
-            case "serve" -> {
+            case "container+serve" -> {
                 TaskServeSpec taskServeSpec = specRegistry.createSpec(
-                    "container",
-                    "serve",
-                    EntityName.TASK,
-                    taskSpec.toMap()
+                        "container+serve",
+                        EntityName.TASK,
+                        taskSpec.toMap()
                 );
 
                 RunContainerSpec runRunSpec = specRegistry.createSpec(
-                    "container",
-                    "run",
-                    EntityName.RUN,
-                    runSpec.toMap()
+                        "container+run",
+                        EntityName.RUN,
+                        runSpec.toMap()
                 );
 
                 /**
@@ -147,9 +141,9 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
                 return builder.build(funSpec, taskServeSpec, runRunSpec);
             }
             default -> throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -165,24 +159,24 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
         return switch (runAccessor.getTask()) {
             case "deploy" -> new ContainerDeployRunner(
-                runContainerSpec.getFuncSpec(),
-                secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
+                    runContainerSpec.getFuncSpec(),
+                    secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
             )
-                .produce(runDTO);
+                    .produce(runDTO);
             case "job" -> new ContainerJobRunner(
-                runContainerSpec.getFuncSpec(),
-                secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
+                    runContainerSpec.getFuncSpec(),
+                    secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
             )
-                .produce(runDTO);
+                    .produce(runDTO);
             case "serve" -> new ContainerServeRunner(
-                runContainerSpec.getFuncSpec(),
-                secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
+                    runContainerSpec.getFuncSpec(),
+                    secretService.groupSecrets(runDTO.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
             )
-                .produce(runDTO);
+                    .produce(runDTO);
             default -> throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "Kind not recognized. Cannot retrieve the right Runner",
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Kind not recognized. Cannot retrieve the right Runner",
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         };
     }

@@ -7,15 +7,16 @@ import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.task.TaskTransformSpec;
-import java.util.Map;
 import lombok.*;
+
+import java.util.Map;
 
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "run", runtime = "dbt", entity = EntityName.RUN, factory = RunDbtSpec.class)
+@SpecType(kind = "dbt+run", entity = EntityName.RUN, factory = RunDbtSpec.class)
 public class RunDbtSpec extends RunBaseSpec {
 
     @JsonProperty("transform_spec")

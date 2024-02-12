@@ -4,15 +4,16 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 @Getter
 @Setter
-@SpecType(kind = "mlrun", runtime = "mlrun", entity = EntityName.FUNCTION, factory = FunctionMlrunSpec.class)
+@SpecType(kind = "mlrun", entity = EntityName.FUNCTION, factory = FunctionMlrunSpec.class)
 public class FunctionMlrunSpec extends FunctionBaseSpec {
 
     private String image;
@@ -24,8 +25,8 @@ public class FunctionMlrunSpec extends FunctionBaseSpec {
     @Override
     public void configure(Map<String, Object> data) {
         FunctionMlrunSpec functionMlrunSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            data,
-            FunctionMlrunSpec.class
+                data,
+                FunctionMlrunSpec.class
         );
 
         this.setImage(functionMlrunSpec.getImage());
