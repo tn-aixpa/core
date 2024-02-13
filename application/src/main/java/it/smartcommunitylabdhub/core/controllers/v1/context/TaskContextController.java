@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.services.interfaces.RunService;
-import it.smartcommunitylabdhub.commons.services.interfaces.TaskService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.services.context.interfaces.TaskContextService;
 import jakarta.validation.Valid;
@@ -28,8 +27,6 @@ public class TaskContextController extends AbstractContextController {
     @Autowired
     TaskContextService taskContextService;
 
-    @Autowired
-    TaskService taskService;
 
     @Autowired
     RunService runService;

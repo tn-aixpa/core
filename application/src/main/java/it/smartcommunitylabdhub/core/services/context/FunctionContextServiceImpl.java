@@ -17,11 +17,6 @@ import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.FunctionContextService;
 import jakarta.transaction.Transactional;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -30,11 +25,17 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Service
 @Transactional
 public class FunctionContextServiceImpl
-    extends ContextService<FunctionEntity, FunctionEntityFilter>
-    implements FunctionContextService {
+        extends ContextService<FunctionEntity, FunctionEntityFilter>
+        implements FunctionContextService {
 
     @Autowired
     FunctionRepository functionRepository;
@@ -69,30 +70,30 @@ public class FunctionContextServiceImpl
             // Check if function already exist if exist throw exception otherwise create a
             // new one
             FunctionEntity function = (FunctionEntity) Optional
-                .ofNullable(functionDTO.getId())
-                .flatMap(id ->
-                    functionRepository
-                        .findById(id)
-                        .map(a -> {
-                            throw new CustomException(
-                                "The project already contains an function with the specified UUID.",
-                                null
-                            );
-                        })
-                )
-                .orElseGet(() -> {
-                    // Build an function and store it in the database
-                    FunctionEntity newFunction = functionEntityBuilder.build(functionDTO);
-                    return functionRepository.saveAndFlush(newFunction);
-                });
+                    .ofNullable(functionDTO.getId())
+                    .flatMap(id ->
+                            functionRepository
+                                    .findById(id)
+                                    .map(a -> {
+                                        throw new CustomException(
+                                                "The project already contains an function with the specified UUID.",
+                                                null
+                                        );
+                                    })
+                    )
+                    .orElseGet(() -> {
+                        // Build an function and store it in the database
+                        FunctionEntity newFunction = functionEntityBuilder.build(functionDTO);
+                        return functionRepository.saveAndFlush(newFunction);
+                    });
 
             // Return function DTO
-            return functionDTOBuilder.build(function, false);
+            return functionDTOBuilder.build(function, function.getEmbedded());
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -102,25 +103,25 @@ public class FunctionContextServiceImpl
         checkContext(projectName);
 
         return functionRepository
-            .findById(uuid)
-            .map(function -> {
-                try {
-                    return functionDTOBuilder.build(function, false);
-                } catch (CustomException e) {
-                    throw new CoreException(
-                        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                        e.getMessage(),
-                        HttpStatus.INTERNAL_SERVER_ERROR
-                    );
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.FUNCTION_NOT_FOUND.getValue(),
-                    ErrorList.FUNCTION_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            );
+                .findById(uuid)
+                .map(function -> {
+                    try {
+                        return functionDTOBuilder.build(function, function.getEmbedded());
+                    } catch (CustomException e) {
+                        throw new CoreException(
+                                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                                e.getMessage(),
+                                HttpStatus.INTERNAL_SERVER_ERROR
+                        );
+                    }
+                })
+                .orElseThrow(() ->
+                        new CoreException(
+                                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                                ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                                HttpStatus.NOT_FOUND
+                        )
+                );
     }
 
     @Override
@@ -133,46 +134,46 @@ public class FunctionContextServiceImpl
             functionEntityFilter.setKind(filter.get("kind"));
 
             Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
+                    .of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
 
             functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
             Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter)
-                .and(CommonSpecification.latestByProject(projectName));
+                    .and(CommonSpecification.latestByProject(projectName));
 
             Page<FunctionEntity> functionPage = functionRepository.findAll(
-                Specification
-                    .where(specification)
-                    .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
-                pageable
+                    Specification
+                            .where(specification)
+                            .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
+                    pageable
             );
 
             return new PageImpl<>(
-                functionPage
-                    .getContent()
-                    .stream()
-                    .map(function -> functionDTOBuilder.build(function, false))
-                    .collect(Collectors.toList()),
-                pageable,
-                functionPage.getTotalElements()
+                    functionPage
+                            .getContent()
+                            .stream()
+                            .map(function -> functionDTOBuilder.build(function, function.getEmbedded()))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    functionPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
 
     @Override
     public Page<Function> getByProjectNameAndFunctionName(
-        Map<String, String> filter,
-        String projectName,
-        String functionName,
-        Pageable pageable
+            Map<String, String> filter,
+            String projectName,
+            String functionName,
+            Pageable pageable
     ) {
         try {
             checkContext(projectName);
@@ -180,40 +181,40 @@ public class FunctionContextServiceImpl
             functionEntityFilter.setCreatedDate(filter.get("created"));
             functionEntityFilter.setKind(filter.get("kind"));
             Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
+                    .of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
 
             functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
             Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter);
 
             Page<FunctionEntity> functionPage = functionRepository.findAll(
-                Specification
-                    .where(specification)
-                    .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.and(
-                            criteriaBuilder.equal(root.get("project"), projectName),
-                            criteriaBuilder.equal(root.get("name"), functionName)
-                        )
-                    ),
-                pageable
+                    Specification
+                            .where(specification)
+                            .and((root, query, criteriaBuilder) ->
+                                    criteriaBuilder.and(
+                                            criteriaBuilder.equal(root.get("project"), projectName),
+                                            criteriaBuilder.equal(root.get("name"), functionName)
+                                    )
+                            ),
+                    pageable
             );
 
             return new PageImpl<>(
-                functionPage
-                    .getContent()
-                    .stream()
-                    .map(function -> functionDTOBuilder.build(function, false))
-                    .collect(Collectors.toList()),
-                pageable,
-                functionPage.getTotalElements()
+                    functionPage
+                            .getContent()
+                            .stream()
+                            .map(function -> functionDTOBuilder.build(function, function.getEmbedded()))
+                            .collect(Collectors.toList()),
+                    pageable,
+                    functionPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -224,14 +225,14 @@ public class FunctionContextServiceImpl
             checkContext(projectName);
 
             return this.functionRepository.findAllByProjectAndNameOrderByCreatedDesc(projectName, functionName)
-                .stream()
-                .map(f -> functionDTOBuilder.build(f, false))
-                .toList();
+                    .stream()
+                    .map(function -> functionDTOBuilder.build(function, function.getEmbedded()))
+                    .toList();
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -243,13 +244,13 @@ public class FunctionContextServiceImpl
             checkContext(projectName);
 
             return this.functionRepository.findByProjectAndNameAndId(projectName, functionName, uuid)
-                .map(function -> functionDTOBuilder.build(function, false))
-                .orElseThrow(() -> new CustomException(ErrorList.FUNCTION_NOT_FOUND.getReason(), null));
+                    .map(function -> functionDTOBuilder.build(function, function.getEmbedded()))
+                    .orElseThrow(() -> new CustomException(ErrorList.FUNCTION_NOT_FOUND.getReason(), null));
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -261,13 +262,13 @@ public class FunctionContextServiceImpl
             checkContext(projectName);
 
             return this.functionRepository.findLatestFunctionByProjectAndName(projectName, functionName)
-                .map(function -> functionDTOBuilder.build(function, false))
-                .orElseThrow(() -> new CustomException(ErrorList.FUNCTION_NOT_FOUND.getReason(), null));
+                    .map(function -> functionDTOBuilder.build(function, function.getEmbedded()))
+                    .orElseThrow(() -> new CustomException(ErrorList.FUNCTION_NOT_FOUND.getReason(), null));
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -282,8 +283,8 @@ public class FunctionContextServiceImpl
             }
             if (!functionName.equals(functionDTO.getName())) {
                 throw new CustomException(
-                    "Trying to create/update an function with name different from the one passed in the request.",
-                    null
+                        "Trying to create/update an function with name different from the one passed in the request.",
+                        null
                 );
             }
 
@@ -293,37 +294,37 @@ public class FunctionContextServiceImpl
             // Check if function already exist if exist throw exception otherwise create a
             // new one
             FunctionEntity function = Optional
-                .ofNullable(functionDTO.getId())
-                .flatMap(id -> {
-                    Optional<FunctionEntity> optionalFunction = functionRepository.findById(id);
-                    if (optionalFunction.isPresent()) {
-                        FunctionEntity existingFunction = optionalFunction.get();
+                    .ofNullable(functionDTO.getId())
+                    .flatMap(id -> {
+                        Optional<FunctionEntity> optionalFunction = functionRepository.findById(id);
+                        if (optionalFunction.isPresent()) {
+                            FunctionEntity existingFunction = optionalFunction.get();
 
-                        // Update the existing function version
-                        final FunctionEntity functionUpdated = functionEntityBuilder.update(
-                            existingFunction,
-                            functionDTO
-                        );
-                        return Optional.of(this.functionRepository.saveAndFlush(functionUpdated));
-                    } else {
+                            // Update the existing function version
+                            final FunctionEntity functionUpdated = functionEntityBuilder.update(
+                                    existingFunction,
+                                    functionDTO
+                            );
+                            return Optional.of(this.functionRepository.saveAndFlush(functionUpdated));
+                        } else {
+                            // Build a new function and store it in the database
+                            FunctionEntity newFunction = functionEntityBuilder.build(functionDTO);
+                            return Optional.of(functionRepository.saveAndFlush(newFunction));
+                        }
+                    })
+                    .orElseGet(() -> {
                         // Build a new function and store it in the database
                         FunctionEntity newFunction = functionEntityBuilder.build(functionDTO);
-                        return Optional.of(functionRepository.saveAndFlush(newFunction));
-                    }
-                })
-                .orElseGet(() -> {
-                    // Build a new function and store it in the database
-                    FunctionEntity newFunction = functionEntityBuilder.build(functionDTO);
-                    return functionRepository.saveAndFlush(newFunction);
-                });
+                        return functionRepository.saveAndFlush(newFunction);
+                    });
 
             // Return function DTO
-            return functionDTOBuilder.build(function, false);
+            return functionDTOBuilder.build(function, function.getEmbedded());
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -338,27 +339,27 @@ public class FunctionContextServiceImpl
             }
             if (!uuid.equals(functionDTO.getId())) {
                 throw new CustomException(
-                    "Trying to update an function with an ID different from the one passed in the request.",
-                    null
+                        "Trying to update an function with an ID different from the one passed in the request.",
+                        null
                 );
             }
             // Check project context
             checkContext(functionDTO.getProject());
 
             FunctionEntity function =
-                this.functionRepository.findById(functionDTO.getId())
-                    .map(a -> // Update the existing function version
-                        functionEntityBuilder.update(a, functionDTO)
-                    )
-                    .orElseThrow(() -> new CustomException("The function does not exist.", null));
+                    this.functionRepository.findById(functionDTO.getId())
+                            .map(a -> // Update the existing function version
+                                    functionEntityBuilder.update(a, functionDTO)
+                            )
+                            .orElseThrow(() -> new CustomException("The function does not exist.", null));
 
             // Return function DTO
-            return functionDTOBuilder.build(function, false);
+            return functionDTOBuilder.build(function, function.getEmbedded());
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -387,15 +388,15 @@ public class FunctionContextServiceImpl
                 return true;
             }
             throw new CoreException(
-                ErrorList.FUNCTION_NOT_FOUND.getValue(),
-                ErrorList.FUNCTION_NOT_FOUND.getReason(),
-                HttpStatus.NOT_FOUND
+                    ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                    ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "cannot delete function",
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "cannot delete function",
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -407,34 +408,34 @@ public class FunctionContextServiceImpl
             if (functionRepository.existsByProjectAndName(projectName, functionName)) {
                 // Cascade delete
                 listByProjectNameAndFunctionName(projectName, functionName)
-                    .forEach(function -> {
-                        // Remove Task
-                        List<TaskEntity> taskList =
-                            this.taskRepository.findByFunction(TaskUtils.buildTaskString(function));
-                        //Delete all related object
-                        taskList.forEach(task -> {
-                            // remove run
-                            this.runRepository.deleteByTaskId(task.getId());
+                        .forEach(function -> {
+                            // Remove Task
+                            List<TaskEntity> taskList =
+                                    this.taskRepository.findByFunction(TaskUtils.buildTaskString(function));
+                            //Delete all related object
+                            taskList.forEach(task -> {
+                                // remove run
+                                this.runRepository.deleteByTaskId(task.getId());
 
-                            // remove task
-                            this.taskRepository.deleteById(task.getId());
+                                // remove task
+                                this.taskRepository.deleteById(task.getId());
+                            });
                         });
-                    });
 
                 this.functionRepository.deleteByProjectAndName(projectName, functionName);
 
                 return true;
             }
             throw new CoreException(
-                ErrorList.FUNCTION_NOT_FOUND.getValue(),
-                ErrorList.FUNCTION_NOT_FOUND.getReason(),
-                HttpStatus.NOT_FOUND
+                    ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                    ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "cannot delete function",
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "cannot delete function",
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }

@@ -12,10 +12,6 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.core.repositories.WorkflowRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.WorkflowContextService;
 import jakarta.transaction.Transactional;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -24,11 +20,16 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Service
 @Transactional
 public class WorkflowContextServiceImpl
-    extends ContextService<WorkflowEntity, WorkflowEntityFilter>
-    implements WorkflowContextService {
+        extends ContextService<WorkflowEntity, WorkflowEntityFilter>
+        implements WorkflowContextService {
 
     @Autowired
     WorkflowRepository workflowRepository;
@@ -57,25 +58,25 @@ public class WorkflowContextServiceImpl
             // Check if workflow already exist if exist throw exception otherwise create a
             // new one
             WorkflowEntity workflow = (WorkflowEntity) Optional
-                .ofNullable(workflowDTO.getId())
-                .flatMap(id ->
-                    workflowRepository
-                        .findById(id)
-                        .map(a -> {
-                            throw new CustomException(
-                                "The project already contains an workflow with the specified UUID.",
-                                null
-                            );
-                        })
-                )
-                .orElseGet(() -> {
-                    // Build an workflow and store it in the database
-                    WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
-                    return workflowRepository.saveAndFlush(newWorkflow);
-                });
+                    .ofNullable(workflowDTO.getId())
+                    .flatMap(id ->
+                            workflowRepository
+                                    .findById(id)
+                                    .map(a -> {
+                                        throw new CustomException(
+                                                "The project already contains an workflow with the specified UUID.",
+                                                null
+                                        );
+                                    })
+                    )
+                    .orElseGet(() -> {
+                        // Build an workflow and store it in the database
+                        WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
+                        return workflowRepository.saveAndFlush(newWorkflow);
+                    });
 
             // Return workflow DTO
-            return workflowDTOBuilder.build(workflow, false);
+            return workflowDTOBuilder.build(workflow, workflow.getEmbedded());
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -91,32 +92,32 @@ public class WorkflowContextServiceImpl
             workflowEntityFilter.setKind(filter.get("kind"));
 
             Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
+                    .of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
 
             workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
             Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter)
-                .and(CommonSpecification.latestByProject(projectName));
+                    .and(CommonSpecification.latestByProject(projectName));
 
             Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
-                Specification
-                    .where(specification)
-                    .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
-                pageable
+                    Specification
+                            .where(specification)
+                            .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
+                    pageable
             );
 
             return new PageImpl<>(
-                workflowPage
-                    .getContent()
-                    .stream()
-                    .map(workflow -> {
-                        return workflowDTOBuilder.build(workflow, false);
-                    })
-                    .collect(Collectors.toList()),
-                pageable,
-                workflowPage.getTotalElements()
+                    workflowPage
+                            .getContent()
+                            .stream()
+                            .map(workflow -> {
+                                return workflowDTOBuilder.build(workflow, workflow.getEmbedded());
+                            })
+                            .collect(Collectors.toList()),
+                    pageable,
+                    workflowPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -125,10 +126,10 @@ public class WorkflowContextServiceImpl
 
     @Override
     public Page<Workflow> getByProjectNameAndWorkflowName(
-        Map<String, String> filter,
-        String projectName,
-        String workflowName,
-        Pageable pageable
+            Map<String, String> filter,
+            String projectName,
+            String workflowName,
+            Pageable pageable
     ) {
         try {
             checkContext(projectName);
@@ -136,36 +137,36 @@ public class WorkflowContextServiceImpl
             workflowEntityFilter.setCreatedDate(filter.get("created"));
             workflowEntityFilter.setKind(filter.get("kind"));
             Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
+                    .of(State.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
 
             workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
             Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter);
 
             Page<WorkflowEntity> workflowPage = workflowRepository.findAll(
-                Specification
-                    .where(specification)
-                    .and((root, query, criteriaBuilder) ->
-                        criteriaBuilder.and(
-                            criteriaBuilder.equal(root.get("project"), projectName),
-                            criteriaBuilder.equal(root.get("name"), workflowName)
-                        )
-                    ),
-                pageable
+                    Specification
+                            .where(specification)
+                            .and((root, query, criteriaBuilder) ->
+                                    criteriaBuilder.and(
+                                            criteriaBuilder.equal(root.get("project"), projectName),
+                                            criteriaBuilder.equal(root.get("name"), workflowName)
+                                    )
+                            ),
+                    pageable
             );
 
             return new PageImpl<>(
-                workflowPage
-                    .getContent()
-                    .stream()
-                    .map(workflow -> {
-                        return workflowDTOBuilder.build(workflow, false);
-                    })
-                    .collect(Collectors.toList()),
-                pageable,
-                workflowPage.getTotalElements()
+                    workflowPage
+                            .getContent()
+                            .stream()
+                            .map(workflow -> {
+                                return workflowDTOBuilder.build(workflow, workflow.getEmbedded());
+                            })
+                            .collect(Collectors.toList()),
+                    pageable,
+                    workflowPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -179,8 +180,8 @@ public class WorkflowContextServiceImpl
             checkContext(projectName);
 
             return this.workflowRepository.findByProjectAndNameAndId(projectName, workflowName, uuid)
-                .map(workflow -> workflowDTOBuilder.build(workflow, false))
-                .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
+                    .map(workflow -> workflowDTOBuilder.build(workflow, workflow.getEmbedded()))
+                    .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -193,8 +194,8 @@ public class WorkflowContextServiceImpl
             checkContext(projectName);
 
             return this.workflowRepository.findLatestWorkflowByProjectAndName(projectName, workflowName)
-                .map(workflow -> workflowDTOBuilder.build(workflow, false))
-                .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
+                    .map(workflow -> workflowDTOBuilder.build(workflow, workflow.getEmbedded()))
+                    .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -210,8 +211,8 @@ public class WorkflowContextServiceImpl
             }
             if (!workflowName.equals(workflowDTO.getName())) {
                 throw new CustomException(
-                    "Trying to create/update an workflow with name different from the one passed in the request.",
-                    null
+                        "Trying to create/update an workflow with name different from the one passed in the request.",
+                        null
                 );
             }
 
@@ -221,32 +222,32 @@ public class WorkflowContextServiceImpl
             // Check if workflow already exist if exist throw exception otherwise create a
             // new one
             WorkflowEntity workflow = Optional
-                .ofNullable(workflowDTO.getId())
-                .flatMap(id -> {
-                    Optional<WorkflowEntity> optionalWorkflow = workflowRepository.findById(id);
-                    if (optionalWorkflow.isPresent()) {
-                        WorkflowEntity existingWorkflow = optionalWorkflow.get();
+                    .ofNullable(workflowDTO.getId())
+                    .flatMap(id -> {
+                        Optional<WorkflowEntity> optionalWorkflow = workflowRepository.findById(id);
+                        if (optionalWorkflow.isPresent()) {
+                            WorkflowEntity existingWorkflow = optionalWorkflow.get();
 
-                        // Update the existing workflow version
-                        final WorkflowEntity workflowUpdated = workflowEntityBuilder.update(
-                            existingWorkflow,
-                            workflowDTO
-                        );
-                        return Optional.of(this.workflowRepository.saveAndFlush(workflowUpdated));
-                    } else {
+                            // Update the existing workflow version
+                            final WorkflowEntity workflowUpdated = workflowEntityBuilder.update(
+                                    existingWorkflow,
+                                    workflowDTO
+                            );
+                            return Optional.of(this.workflowRepository.saveAndFlush(workflowUpdated));
+                        } else {
+                            // Build a new workflow and store it in the database
+                            WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
+                            return Optional.of(workflowRepository.saveAndFlush(newWorkflow));
+                        }
+                    })
+                    .orElseGet(() -> {
                         // Build a new workflow and store it in the database
                         WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
-                        return Optional.of(workflowRepository.saveAndFlush(newWorkflow));
-                    }
-                })
-                .orElseGet(() -> {
-                    // Build a new workflow and store it in the database
-                    WorkflowEntity newWorkflow = workflowEntityBuilder.build(workflowDTO);
-                    return workflowRepository.saveAndFlush(newWorkflow);
-                });
+                        return workflowRepository.saveAndFlush(newWorkflow);
+                    });
 
             // Return workflow DTO
-            return workflowDTOBuilder.build(workflow, false);
+            return workflowDTOBuilder.build(workflow, workflow.getEmbedded());
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -262,23 +263,23 @@ public class WorkflowContextServiceImpl
             }
             if (!uuid.equals(workflowDTO.getId())) {
                 throw new CustomException(
-                    "Trying to update an workflow with an ID different from the one passed in the request.",
-                    null
+                        "Trying to update an workflow with an ID different from the one passed in the request.",
+                        null
                 );
             }
             // Check project context
             checkContext(workflowDTO.getProject());
 
             WorkflowEntity workflow =
-                this.workflowRepository.findById(workflowDTO.getId())
-                    .map(a -> {
-                        // Update the existing workflow version
-                        return workflowEntityBuilder.update(a, workflowDTO);
-                    })
-                    .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
+                    this.workflowRepository.findById(workflowDTO.getId())
+                            .map(a -> {
+                                // Update the existing workflow version
+                                return workflowEntityBuilder.update(a, workflowDTO);
+                            })
+                            .orElseThrow(() -> new CustomException("The workflow does not exist.", null));
 
             // Return workflow DTO
-            return workflowDTOBuilder.build(workflow, false);
+            return workflowDTOBuilder.build(workflow, workflow.getEmbedded());
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -293,9 +294,9 @@ public class WorkflowContextServiceImpl
                 return true;
             }
             throw new CoreException(
-                "WorkflowNotFound",
-                "The workflow you are trying to delete does not exist.",
-                HttpStatus.NOT_FOUND
+                    "WorkflowNotFound",
+                    "The workflow you are trying to delete does not exist.",
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             throw new CoreException("InternalServerError", "cannot delete workflow", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -311,9 +312,9 @@ public class WorkflowContextServiceImpl
                 return true;
             }
             throw new CoreException(
-                "WorkflowNotFound",
-                "The workflows you are trying to delete does not exist.",
-                HttpStatus.NOT_FOUND
+                    "WorkflowNotFound",
+                    "The workflows you are trying to delete does not exist.",
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             throw new CoreException("InternalServerError", "cannot delete workflow", HttpStatus.INTERNAL_SERVER_ERROR);

@@ -26,9 +26,7 @@ public class RunContextController extends AbstractContextController {
 
     @Autowired
     RunContextService RunContextService;
-
-    @Autowired
-    RunService RunService;
+    
 
     @Autowired
     RunService runService;
