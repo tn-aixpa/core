@@ -8,11 +8,8 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.run.RunDbtSpec;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 
 /**
  * DbtTransformRunner
@@ -41,31 +38,30 @@ public class DbtTransformRunner implements Runner {
         runDbtSpec.configure(runDTO.getSpec());
 
         RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+                JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
         );
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+                List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
         );
-        if (runDbtSpec.getTaskSpec().getEnvs() != null) coreEnvList.addAll(runDbtSpec.getTaskSpec().getEnvs());
-
-        coreEnvList.addAll(runDbtSpec.getTaskSpec().getEnvs());
+        
+        Optional.ofNullable(runDbtSpec.getTaskSpec().getEnvs()).ifPresent(coreEnvList::addAll);
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
-            .builder()
-            .runtime(DbtRuntime.RUNTIME)
-            .task(TASK)
-            .image(image)
-            .command("python")
-            .args(List.of("wrapper.py").toArray(String[]::new))
-            .resources(runDbtSpec.getTaskSpec().getResources())
-            .nodeSelector(runDbtSpec.getTaskSpec().getNodeSelector())
-            .volumes(runDbtSpec.getTaskSpec().getVolumes())
-            .secrets(groupedSecrets)
-            .envs(coreEnvList)
-            .state(runDefaultFieldAccessor.getState())
-            .build();
+                .builder()
+                .runtime(DbtRuntime.RUNTIME)
+                .task(TASK)
+                .image(image)
+                .command("python")
+                .args(List.of("wrapper.py").toArray(String[]::new))
+                .resources(runDbtSpec.getTaskSpec().getResources())
+                .nodeSelector(runDbtSpec.getTaskSpec().getNodeSelector())
+                .volumes(runDbtSpec.getTaskSpec().getVolumes())
+                .secrets(groupedSecrets)
+                .envs(coreEnvList)
+                .state(runDefaultFieldAccessor.getState())
+                .build();
 
         k8sJobRunnable.setId(runDTO.getId());
         k8sJobRunnable.setProject(runDTO.getProject());
