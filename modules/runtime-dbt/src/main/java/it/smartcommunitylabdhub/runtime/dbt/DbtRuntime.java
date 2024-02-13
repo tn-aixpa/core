@@ -42,7 +42,7 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
     @Override
     public RunDbtSpec build(FunctionDbtSpec funSpec, TaskBaseSpec taskSpec, RunBaseSpec runSpec, String kind) {
         // Retrieve builder using task kind
-        if (kind.equals("transform")) {
+        if (kind.equals("dbt+transform")) {
             TaskTransformSpec taskTransformSpec = specRegistry.createSpec(
                     "dbt+transform",
                     EntityName.TASK,
