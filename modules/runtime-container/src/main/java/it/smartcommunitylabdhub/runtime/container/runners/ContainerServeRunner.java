@@ -9,12 +9,8 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
 
 /**
  * ContainerDeployRunner
@@ -41,36 +37,34 @@ public class ContainerServeRunner implements Runner {
         runContainerSpec.configure(runDTO.getSpec());
 
         RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+                JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
         );
         List<CoreEnv> coreEnvList = new ArrayList<>(
-            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+                List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
         );
 
-        if (runContainerSpec.getTaskServeSpec().getEnvs() != null) coreEnvList.addAll(
-            runContainerSpec.getTaskServeSpec().getEnvs()
-        );
+        Optional.ofNullable(runContainerSpec.getTaskServeSpec().getEnvs()).ifPresent(coreEnvList::addAll);
 
         K8sServeRunnable k8sServeRunnable = K8sServeRunnable
-            .builder()
-            .runtime(ContainerRuntime.RUNTIME)
-            .task(TASK)
-            .image(functionContainerSpec.getImage())
-            .state(runDefaultFieldAccessor.getState())
-            .resources(runContainerSpec.getTaskServeSpec().getResources())
-            .nodeSelector(runContainerSpec.getTaskServeSpec().getNodeSelector())
-            .volumes(runContainerSpec.getTaskServeSpec().getVolumes())
-            .secrets(groupedSecrets)
-            .envs(coreEnvList)
-            .build();
+                .builder()
+                .runtime(ContainerRuntime.RUNTIME)
+                .task(TASK)
+                .image(functionContainerSpec.getImage())
+                .state(runDefaultFieldAccessor.getState())
+                .resources(runContainerSpec.getTaskServeSpec().getResources())
+                .nodeSelector(runContainerSpec.getTaskServeSpec().getNodeSelector())
+                .volumes(runContainerSpec.getTaskServeSpec().getVolumes())
+                .secrets(groupedSecrets)
+                .envs(coreEnvList)
+                .build();
 
         Optional
-            .ofNullable(functionContainerSpec.getArgs())
-            .ifPresent(args ->
-                k8sServeRunnable.setArgs(
-                    args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
-                )
-            );
+                .ofNullable(functionContainerSpec.getArgs())
+                .ifPresent(args ->
+                        k8sServeRunnable.setArgs(
+                                args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
+                        )
+                );
 
         Optional.ofNullable(functionContainerSpec.getEntrypoint()).ifPresent(k8sServeRunnable::setEntrypoint);
 
