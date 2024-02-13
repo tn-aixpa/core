@@ -13,6 +13,10 @@ import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.SecretRepository;
 import it.smartcommunitylabdhub.core.services.context.interfaces.SecretContextService;
 import jakarta.transaction.Transactional;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,14 +25,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 @Service
 @Transactional
-public class SecretContextServiceImpl extends ContextService<SecretEntity, SecretEntityFilter> implements SecretContextService {
+public class SecretContextServiceImpl
+        extends ContextService<SecretEntity, SecretEntityFilter>
+        implements SecretContextService {
 
     @Autowired
     SecretRepository secretRepository;
@@ -113,7 +114,11 @@ public class SecretContextServiceImpl extends ContextService<SecretEntity, Secre
             );
 
             return new PageImpl<>(
-                    secretPage.getContent().stream().map(secret -> secretDTOBuilder.build(secret, secret.getEmbedded())).collect(Collectors.toList()),
+                    secretPage
+                            .getContent()
+                            .stream()
+                            .map(secret -> secretDTOBuilder.build(secret, secret.getEmbedded()))
+                            .collect(Collectors.toList()),
                     pageable,
                     secretPage.getTotalElements()
             );

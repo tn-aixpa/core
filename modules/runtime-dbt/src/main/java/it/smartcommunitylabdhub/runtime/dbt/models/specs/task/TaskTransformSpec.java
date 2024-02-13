@@ -4,10 +4,9 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Map;
 
 @Getter
 @Setter
@@ -17,8 +16,8 @@ public class TaskTransformSpec extends K8sTaskBaseSpec {
     @Override
     public void configure(Map<String, Object> data) {
         TaskTransformSpec taskTransformSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-                data,
-                TaskTransformSpec.class
+            data,
+            TaskTransformSpec.class
         );
 
         super.configure(data);

@@ -10,9 +10,8 @@ import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskInferSpec
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskMetricSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskProfileSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskValidateSpec;
-import lombok.*;
-
 import java.util.Map;
+import lombok.*;
 
 @Getter
 @Setter

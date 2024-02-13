@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
-
 import java.util.*;
 
 /**
@@ -40,35 +39,35 @@ public class ContainerDeployRunner implements Runner {
         runContainerSpec.configure(runDTO.getSpec());
 
         RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-                JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
         );
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-                List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
         );
 
         Optional.ofNullable(runContainerSpec.getTaskDeploySpec().getEnvs()).ifPresent(coreEnvList::addAll);
 
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable
-                .builder()
-                .runtime(ContainerRuntime.RUNTIME) //TODO: delete accessor.
-                .task(TASK)
-                .image(functionContainerSpec.getImage())
-                .state(runDefaultFieldAccessor.getState())
-                .resources(runContainerSpec.getTaskDeploySpec().getResources())
-                .nodeSelector(runContainerSpec.getTaskDeploySpec().getNodeSelector())
-                .volumes(runContainerSpec.getTaskDeploySpec().getVolumes())
-                .secrets(groupedSecrets)
-                .envs(coreEnvList)
-                .build();
+            .builder()
+            .runtime(ContainerRuntime.RUNTIME) //TODO: delete accessor.
+            .task(TASK)
+            .image(functionContainerSpec.getImage())
+            .state(runDefaultFieldAccessor.getState())
+            .resources(runContainerSpec.getTaskDeploySpec().getResources())
+            .nodeSelector(runContainerSpec.getTaskDeploySpec().getNodeSelector())
+            .volumes(runContainerSpec.getTaskDeploySpec().getVolumes())
+            .secrets(groupedSecrets)
+            .envs(coreEnvList)
+            .build();
 
         Optional
-                .ofNullable(functionContainerSpec.getArgs())
-                .ifPresent(args ->
-                        k8sDeploymentRunnable.setArgs(
-                                args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
-                        )
-                );
+            .ofNullable(functionContainerSpec.getArgs())
+            .ifPresent(args ->
+                k8sDeploymentRunnable.setArgs(
+                    args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
+                )
+            );
 
         Optional.ofNullable(functionContainerSpec.getEntrypoint()).ifPresent(k8sDeploymentRunnable::setEntrypoint);
 

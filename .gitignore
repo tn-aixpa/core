@@ -35,6 +35,8 @@ build/
 ### Env variable ###
 .env
 
+node_modules
+
 ### Checkstyle folder###
 /src/checkstyle
 

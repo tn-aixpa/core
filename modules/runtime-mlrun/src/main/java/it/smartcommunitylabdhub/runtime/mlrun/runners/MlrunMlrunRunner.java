@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import it.smartcommunitylabdhub.runtime.mlrun.models.specs.run.RunMlrunSpec;
-
 import java.util.*;
 
 /**
@@ -37,30 +36,30 @@ public class MlrunMlrunRunner implements Runner {
         runMlrunSpec.configure(runDTO.getSpec());
 
         RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-                JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
         );
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-                List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
         );
 
         Optional.ofNullable(runMlrunSpec.getTaskSpec().getEnvs()).ifPresent(coreEnvList::addAll);
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
-                .builder()
-                .runtime(MlrunRuntime.RUNTIME)
-                .task(TASK)
-                .image(image)
-                .command("python")
-                .args(List.of("wrapper.py").toArray(String[]::new))
-                .resources(runMlrunSpec.getTaskSpec().getResources())
-                .nodeSelector(runMlrunSpec.getTaskSpec().getNodeSelector())
-                .volumes(runMlrunSpec.getTaskSpec().getVolumes())
-                .secrets(groupedSecrets)
-                .envs(coreEnvList)
-                .state(runDefaultFieldAccessor.getState())
-                .build();
+            .builder()
+            .runtime(MlrunRuntime.RUNTIME)
+            .task(TASK)
+            .image(image)
+            .command("python")
+            .args(List.of("wrapper.py").toArray(String[]::new))
+            .resources(runMlrunSpec.getTaskSpec().getResources())
+            .nodeSelector(runMlrunSpec.getTaskSpec().getNodeSelector())
+            .volumes(runMlrunSpec.getTaskSpec().getVolumes())
+            .secrets(groupedSecrets)
+            .envs(coreEnvList)
+            .state(runDefaultFieldAccessor.getState())
+            .build();
 
         k8sJobRunnable.setId(runDTO.getId());
         k8sJobRunnable.setProject(runDTO.getProject());

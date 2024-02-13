@@ -7,9 +7,8 @@ import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.task.TaskTransformSpec;
-import lombok.*;
-
 import java.util.Map;
+import lombok.*;
 
 @Getter
 @Setter

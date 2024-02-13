@@ -1,16 +1,15 @@
 package it.smartcommunitylabdhub.core;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 public class PersonSerializationTest {
 
@@ -37,6 +36,7 @@ public class PersonSerializationTest {
     }
 
     public static class Person {
+
         private String name;
         private int age;
 
@@ -59,6 +59,7 @@ public class PersonSerializationTest {
     }
 
     public abstract static class PersonMixin {
+
         @JsonValue
         abstract String serializePerson();
 
@@ -70,6 +71,7 @@ public class PersonSerializationTest {
     }
 
     public static class CustomAgeSerializer extends StdSerializer<Integer> {
+
         public CustomAgeSerializer() {
             this(null);
         }
@@ -79,7 +81,11 @@ public class PersonSerializationTest {
         }
 
         @Override
-        public void serialize(Integer age, com.fasterxml.jackson.core.JsonGenerator jsonGenerator, com.fasterxml.jackson.databind.SerializerProvider serializerProvider) throws IOException {
+        public void serialize(
+            Integer age,
+            com.fasterxml.jackson.core.JsonGenerator jsonGenerator,
+            com.fasterxml.jackson.databind.SerializerProvider serializerProvider
+        ) throws IOException {
             // Perform custom calculation or transformation on the age before serialization
             int modifiedAge = age * 2;
 

@@ -253,60 +253,62 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
         log.info("Dbt Kubernetes Listener [" + threadName + "] " + deploymentName + "@" + namespace);
 
         // Define a function with parameters
-        Function<String, Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>> checkServeStatus =
-            dName ->
-                cName ->
-                    fMachine -> {
-                        try {
-                            V1Deployment v1Deployment = appsV1Api.readNamespacedDeployment(dName, namespace, null);
-                            V1DeploymentStatus v1DeploymentStatus = v1Deployment.getStatus();
+        Function<
+            String,
+            Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>
+        > checkServeStatus = dName ->
+            cName ->
+                fMachine -> {
+                    try {
+                        V1Deployment v1Deployment = appsV1Api.readNamespacedDeployment(dName, namespace, null);
+                        V1DeploymentStatus v1DeploymentStatus = v1Deployment.getStatus();
 
-                            assert v1DeploymentStatus != null;
-                            Objects
-                                .requireNonNull(v1DeploymentStatus.getConditions())
-                                .forEach(v -> log.info(v.getStatus()));
-                            //                // Check the Serve status
-                            //                if (Objects.requireNonNull(v1ServeStatus).getReadyReplicas() != null
-                            //                        && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
-                            //
-                            //
-                            //                    // Serve has completed successfully
-                            //                    log.info("Serve completed successfully.");
-                            //                    // Update state machine and update runDTO
-                            //                    fMachine.goToState(RunState.COMPLETED);
-                            //                    Run runDTO = runService.getRun(runnable.getId());
-                            //                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
-                            //                    runService.updateRun(runDTO, runDTO.getId());
-                            //
-                            //                    // Log pod status
-                            //                    logPod(dName, cName, namespace, runnable);
-                            //                    // Delete job and pod
-                            //                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
-                            //
-                            //                } else if (Objects.requireNonNull(v1ServeStatus).getFailed() != null) {
-                            //                    // Serve has failed delete job and pod
-                            //                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
-                            //
-                            //                } else if (v1ServeStatus.getActive() != null && v1ServeStatus.getActive() > 0) {
-                            //                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
-                            //                        fMachine.goToState(RunState.READY);
-                            //                        fMachine.goToState(RunState.RUNNING);
-                            //                    }
-                            //                    log.warn("Serve is running...");
-                            //                    logPod(dName, cName, namespace, runnable);
-                            //                } else {
-                            //                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1ServeStatus);
-                            //                    log.warn("Serve is in an unknown state : " + v1JobStatusString);
-                            //                    writeLog(runnable, v1JobStatusString);
-                            //                }
+                        assert v1DeploymentStatus != null;
+                        Objects
+                            .requireNonNull(v1DeploymentStatus.getConditions())
+                            .forEach(v -> log.info(v.getStatus()));
+                        //                // Check the Serve status
+                        //                if (Objects.requireNonNull(v1ServeStatus).getReadyReplicas() != null
+                        //                        && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
+                        //
+                        //
+                        //                    // Serve has completed successfully
+                        //                    log.info("Serve completed successfully.");
+                        //                    // Update state machine and update runDTO
+                        //                    fMachine.goToState(RunState.COMPLETED);
+                        //                    Run runDTO = runService.getRun(runnable.getId());
+                        //                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
+                        //                    runService.updateRun(runDTO, runDTO.getId());
+                        //
+                        //                    // Log pod status
+                        //                    logPod(dName, cName, namespace, runnable);
+                        //                    // Delete job and pod
+                        //                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
+                        //
+                        //                } else if (Objects.requireNonNull(v1ServeStatus).getFailed() != null) {
+                        //                    // Serve has failed delete job and pod
+                        //                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
+                        //
+                        //                } else if (v1ServeStatus.getActive() != null && v1ServeStatus.getActive() > 0) {
+                        //                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
+                        //                        fMachine.goToState(RunState.READY);
+                        //                        fMachine.goToState(RunState.RUNNING);
+                        //                    }
+                        //                    log.warn("Serve is running...");
+                        //                    logPod(dName, cName, namespace, runnable);
+                        //                } else {
+                        //                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1ServeStatus);
+                        //                    log.warn("Serve is in an unknown state : " + v1JobStatusString);
+                        //                    writeLog(runnable, v1JobStatusString);
+                        //                }
 
-                        } catch (ApiException | CoreException e) {
-                            deleteAssociatedPodAndJob(dName, namespace, runnable);
-                            throw new StopPoller(e.getMessage());
-                        }
+                    } catch (ApiException | CoreException e) {
+                        deleteAssociatedPodAndJob(dName, namespace, runnable);
+                        throw new StopPoller(e.getMessage());
+                    }
 
-                        return null;
-                    };
+                    return null;
+                };
 
         // Using the step method with explicit arguments
         pollingService.createPoller(

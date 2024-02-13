@@ -18,7 +18,10 @@ import java.util.stream.Collectors;
 
 public class BuilderFactory {
 
-    private final Map<String, ? extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builderMap;
+    private final Map<
+        String,
+        ? extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
+    > builderMap;
 
     /**
      * Constructor to create the BuilderFactory with a list of Builders.
@@ -72,9 +75,10 @@ public class BuilderFactory {
         return concreteBuilder;
     }
 
-    public Map<String, ? extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> getBuilders(
-        String runtime
-    ) {
+    public Map<
+        String,
+        ? extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
+    > getBuilders(String runtime) {
         return builderMap
             .entrySet()
             .stream()

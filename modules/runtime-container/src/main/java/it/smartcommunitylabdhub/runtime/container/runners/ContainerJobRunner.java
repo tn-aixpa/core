@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
-
 import java.util.*;
 
 /**

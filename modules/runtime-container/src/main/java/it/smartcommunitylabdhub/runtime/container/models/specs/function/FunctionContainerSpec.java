@@ -6,19 +6,14 @@ import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import jakarta.validation.constraints.NotBlank;
+import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-import java.util.Map;
-
 @Getter
 @Setter
-@SpecType(
-        kind = "container",
-        entity = EntityName.FUNCTION,
-        factory = FunctionContainerSpec.class
-)
+@SpecType(kind = "container", entity = EntityName.FUNCTION, factory = FunctionContainerSpec.class)
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
     @NotBlank
@@ -34,8 +29,8 @@ public class FunctionContainerSpec extends FunctionBaseSpec {
     @Override
     public void configure(Map<String, Object> data) {
         FunctionContainerSpec functionContainerSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-                data,
-                FunctionContainerSpec.class
+            data,
+            FunctionContainerSpec.class
         );
 
         this.setCommand(functionContainerSpec.getCommand());

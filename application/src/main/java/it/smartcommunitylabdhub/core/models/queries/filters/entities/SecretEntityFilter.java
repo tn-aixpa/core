@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 @Setter
 public class SecretEntityFilter extends BaseEntityFilter implements SpecificationFilter<SecretEntity> {
 
-
     @Override
     public Predicate toPredicate(Root<SecretEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
         Predicate predicate = criteriaBuilder.conjunction();
@@ -36,10 +35,10 @@ public class SecretEntityFilter extends BaseEntityFilter implements Specificatio
         if (getCreatedDate() != null) {
             DateUtils.DateInterval dateInterval = DateUtils.parseDateIntervalFromTimestamps(getCreatedDate(), true);
             predicate =
-                    criteriaBuilder.and(
-                            predicate,
-                            criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate())
-                    );
+                criteriaBuilder.and(
+                    predicate,
+                    criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate())
+                );
         }
 
         return predicate;

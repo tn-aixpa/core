@@ -48,10 +48,10 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
 
     @Override
     public RunNefertemSpec build(
-            FunctionNefertemSpec funSpec,
-            TaskBaseSpec taskSpec,
-            RunBaseSpec runSpec,
-            String kind
+        FunctionNefertemSpec funSpec,
+        TaskBaseSpec taskSpec,
+        RunBaseSpec runSpec,
+        String kind
     ) {
         /**
          *  As an alternative, you can use the code below to retrieve the correct builder.
@@ -72,42 +72,42 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
                 NefertemInferBuilder builder = new NefertemInferBuilder();
 
                 return builder.build(
-                        funSpec,
-                        specRegistry.createSpec("nefertem+infer", EntityName.TASK, taskSpec.toMap()),
-                        specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
+                    funSpec,
+                    specRegistry.createSpec("nefertem+infer", EntityName.TASK, taskSpec.toMap()),
+                    specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
                 );
             }
             case "nefertem+validate" -> {
                 NefertemValidateBuilder builder = new NefertemValidateBuilder();
 
                 return builder.build(
-                        funSpec,
-                        specRegistry.createSpec("nefertem+validate", EntityName.TASK, taskSpec.toMap()),
-                        specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
+                    funSpec,
+                    specRegistry.createSpec("nefertem+validate", EntityName.TASK, taskSpec.toMap()),
+                    specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
                 );
             }
             case "nefertem+metric" -> {
                 NefertemMetricBuilder builder = new NefertemMetricBuilder();
 
                 return builder.build(
-                        funSpec,
-                        specRegistry.createSpec("nefertem+metric", EntityName.TASK, taskSpec.toMap()),
-                        specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
+                    funSpec,
+                    specRegistry.createSpec("nefertem+metric", EntityName.TASK, taskSpec.toMap()),
+                    specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
                 );
             }
             case "nefertem+profile" -> {
                 NefertemProfileBuilder builder = new NefertemProfileBuilder();
 
                 return builder.build(
-                        funSpec,
-                        specRegistry.createSpec("nefertem+profile", EntityName.TASK, taskSpec.toMap()),
-                        specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
+                    funSpec,
+                    specRegistry.createSpec("nefertem+profile", EntityName.TASK, taskSpec.toMap()),
+                    specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
                 );
             }
             default -> throw new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -141,29 +141,29 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
 
         return switch (runAccessor.getTask()) {
             case "infer" -> new NefertemInferRunner(
-                    image,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskInferSpec().getSecrets())
+                image,
+                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskInferSpec().getSecrets())
             )
-                    .produce(runDTO);
+                .produce(runDTO);
             case "validate" -> new NefertemValidateRunner(
-                    image,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskValidateSpec().getSecrets())
+                image,
+                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskValidateSpec().getSecrets())
             )
-                    .produce(runDTO);
+                .produce(runDTO);
             case "profile" -> new NefertemProfileRunner(
-                    image,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskProfileSpec().getSecrets())
+                image,
+                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskProfileSpec().getSecrets())
             )
-                    .produce(runDTO);
+                .produce(runDTO);
             case "metric" -> new NefertemMetricRunner(
-                    image,
-                    secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskMetricSpec().getSecrets())
+                image,
+                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskMetricSpec().getSecrets())
             )
-                    .produce(runDTO);
+                .produce(runDTO);
             default -> throw new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Kind not recognized. Cannot retrieve the right Runner",
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Kind not recognized. Cannot retrieve the right Runner",
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         };
     }

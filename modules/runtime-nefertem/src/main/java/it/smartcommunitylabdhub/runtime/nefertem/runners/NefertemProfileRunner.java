@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.run.RunNefertemSpec;
-
 import java.util.*;
 
 /**
@@ -38,30 +37,30 @@ public class NefertemProfileRunner implements Runner {
         runNefertemSpec.configure(runDTO.getSpec());
 
         RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-                JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
+            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
         );
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-                List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
         );
 
         Optional.ofNullable(runNefertemSpec.getTaskProfileSpec().getEnvs()).ifPresent(coreEnvList::addAll);
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
-                .builder()
-                .runtime(NefertemRuntime.RUNTIME)
-                .task(TASK)
-                .image(image)
-                .command("python")
-                .args(List.of("wrapper.py").toArray(String[]::new))
-                .resources(runNefertemSpec.getTaskProfileSpec().getResources())
-                .nodeSelector(runNefertemSpec.getTaskProfileSpec().getNodeSelector())
-                .volumes(runNefertemSpec.getTaskProfileSpec().getVolumes())
-                .secrets(groupedSecrets)
-                .envs(coreEnvList)
-                .state(runDefaultFieldAccessor.getState())
-                .build();
+            .builder()
+            .runtime(NefertemRuntime.RUNTIME)
+            .task(TASK)
+            .image(image)
+            .command("python")
+            .args(List.of("wrapper.py").toArray(String[]::new))
+            .resources(runNefertemSpec.getTaskProfileSpec().getResources())
+            .nodeSelector(runNefertemSpec.getTaskProfileSpec().getNodeSelector())
+            .volumes(runNefertemSpec.getTaskProfileSpec().getVolumes())
+            .secrets(groupedSecrets)
+            .envs(coreEnvList)
+            .state(runDefaultFieldAccessor.getState())
+            .build();
 
         k8sJobRunnable.setId(runDTO.getId());
         k8sJobRunnable.setProject(runDTO.getProject());

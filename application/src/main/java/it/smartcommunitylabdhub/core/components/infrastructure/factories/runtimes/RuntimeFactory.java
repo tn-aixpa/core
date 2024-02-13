@@ -18,7 +18,10 @@ import java.util.stream.Collectors;
 
 public class RuntimeFactory {
 
-    private final Map<String, Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable>> runtimeMap;
+    private final Map<
+        String,
+        Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable>
+    > runtimeMap;
 
     /**
      * Constructor to create the RuntimeFactory with a list of Runtimes.

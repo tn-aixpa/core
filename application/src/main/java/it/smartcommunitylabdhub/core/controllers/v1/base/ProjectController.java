@@ -11,6 +11,9 @@ import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.services.interfaces.ProjectService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,10 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/projects")
@@ -43,9 +42,9 @@ public class ProjectController {
 
     @Operation(summary = "Create project", description = "Create an project and return")
     @PostMapping(
-            value = "",
-            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
-            produces = "application/json; charset=UTF-8"
+        value = "",
+        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
+        produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Project> createProject(@Valid @RequestBody Project projectDTO) {
         return ResponseEntity.ok(this.projectService.createProject(projectDTO));
@@ -54,20 +53,20 @@ public class ProjectController {
     @Operation(summary = "Get an project by name", description = "Return an project")
     @GetMapping(path = "/{name}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Project> getProject(
-            @ValidateField @PathVariable(name = "name", required = true) String name
+        @ValidateField @PathVariable(name = "name", required = true) String name
     ) {
         return ResponseEntity.ok(this.projectService.getProject(name));
     }
 
     @Operation(summary = "Update specific project", description = "Update and return the project")
     @PutMapping(
-            path = "/{name}",
-            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
-            produces = "application/json; charset=UTF-8"
+        path = "/{name}",
+        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
+        produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Project> updateProject(
-            @RequestBody Project projectDTO,
-            @ValidateField @PathVariable(name = "name", required = true) String name
+        @RequestBody Project projectDTO,
+        @ValidateField @PathVariable(name = "name", required = true) String name
     ) {
         return ResponseEntity.ok(this.projectService.updateProject(projectDTO, name));
     }
@@ -75,8 +74,8 @@ public class ProjectController {
     @Operation(summary = "Delete a project", description = "Delete a specific project")
     @DeleteMapping(path = "/{name}")
     public ResponseEntity<Boolean> deleteProject(
-            @ValidateField @PathVariable(name = "name", required = true) String name,
-            @RequestParam(name = "cascade") Boolean cascade
+        @ValidateField @PathVariable(name = "name", required = true) String name,
+        @RequestParam(name = "cascade") Boolean cascade
     ) {
         return ResponseEntity.ok(this.projectService.deleteProject(name, cascade));
     }
@@ -108,8 +107,8 @@ public class ProjectController {
     @Operation(summary = "Read project secret data", description = "Get project secrets data for the specified keys")
     @GetMapping(path = "/{name}/secrets/data", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Map<String, String>> projectSecretData(
-            @ValidateField @PathVariable String name,
-            @RequestParam Set<String> keys
+        @ValidateField @PathVariable String name,
+        @RequestParam Set<String> keys
     ) {
         return ResponseEntity.ok(this.projectService.getProjectSecretData(name, keys));
     }
@@ -117,8 +116,8 @@ public class ProjectController {
     @Operation(summary = "Store project secret data", description = "Store project secrets data")
     @PutMapping(path = "/{name}/secrets/data", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Void> storeProjectSecretData(
-            @ValidateField @PathVariable String name,
-            @RequestBody Map<String, String> values
+        @ValidateField @PathVariable String name,
+        @RequestBody Map<String, String> values
     ) {
         this.projectService.storeProjectSecretData(name, values);
         return ResponseEntity.ok().build();
