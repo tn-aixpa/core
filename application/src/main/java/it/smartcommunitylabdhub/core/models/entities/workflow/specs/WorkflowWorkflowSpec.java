@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "workflow", entity = EntityName.WORKFLOW, factory = WorkflowWorkflowSpec.class)
+@SpecType(kind = "workflow", entity = EntityName.WORKFLOW)
 public class WorkflowWorkflowSpec extends WorkflowBaseSpec {
 
     @Override

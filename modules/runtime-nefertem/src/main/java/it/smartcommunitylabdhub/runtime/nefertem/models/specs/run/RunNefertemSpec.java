@@ -18,7 +18,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "nefertem+run", entity = EntityName.RUN, factory = RunNefertemSpec.class)
+@SpecType(kind = "nefertem+run", entity = EntityName.RUN)
 public class RunNefertemSpec extends RunBaseSpec {
 
     @JsonProperty("infer_spec")

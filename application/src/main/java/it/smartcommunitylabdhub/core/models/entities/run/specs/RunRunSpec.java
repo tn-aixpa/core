@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "run", entity = EntityName.RUN, factory = RunRunSpec.class)
+@SpecType(kind = "run", entity = EntityName.RUN)
 public class RunRunSpec extends RunBaseSpec {
 
     @Override

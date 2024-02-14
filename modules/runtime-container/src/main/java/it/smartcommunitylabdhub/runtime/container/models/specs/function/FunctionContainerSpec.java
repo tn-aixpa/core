@@ -13,7 +13,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "container", entity = EntityName.FUNCTION, factory = FunctionContainerSpec.class)
+@SpecType(kind = "container", entity = EntityName.FUNCTION)
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
     @NotBlank

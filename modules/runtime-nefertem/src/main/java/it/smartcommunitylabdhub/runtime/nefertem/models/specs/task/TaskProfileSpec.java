@@ -11,7 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "nefertem+profile", entity = EntityName.TASK, factory = TaskProfileSpec.class)
+@SpecType(kind = "nefertem+profile", entity = EntityName.TASK)
 public class TaskProfileSpec extends K8sTaskBaseSpec {
 
     private String framework;

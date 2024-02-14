@@ -11,7 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "nefertem+validate", entity = EntityName.TASK, factory = TaskValidateSpec.class)
+@SpecType(kind = "nefertem+validate", entity = EntityName.TASK)
 public class TaskValidateSpec extends K8sTaskBaseSpec {
 
     private String framework;

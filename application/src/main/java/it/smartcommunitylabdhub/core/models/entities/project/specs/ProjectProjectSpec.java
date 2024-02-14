@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.specs.ProjectBas
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import java.util.Map;
 
-@SpecType(kind = "project", entity = EntityName.PROJECT, factory = ProjectProjectSpec.class)
+@SpecType(kind = "project", entity = EntityName.PROJECT)
 public class ProjectProjectSpec extends ProjectBaseSpec {
 
     @Override

@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "container+serve", entity = EntityName.TASK, factory = TaskServeSpec.class)
+@SpecType(kind = "container+serve", entity = EntityName.TASK)
 public class TaskServeSpec extends TaskDeploySpec {
 
     /// TODO: Service parameters port list...ClusterIP or NodePort

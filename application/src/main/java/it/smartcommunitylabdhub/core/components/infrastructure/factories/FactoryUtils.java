@@ -30,33 +30,33 @@ public class FactoryUtils {
     /**
      * Check if the generic type argument of SpecFactory matches specClass.
      *
-     * @param factoryClass     the factory class
-     * @param specFactoryClass the spec factory class
+     * @param paramClass     the factory class
+     * @param actualClass the spec factory class
      * @return true if the type matches, false otherwise
      */
-    public static Boolean isTypeMatch(Class<?> factoryClass, Class<?> specFactoryClass) {
+    public static Boolean isParamTypeMatch(Class<?> actualClass, Class<?> paramClass, int pos) {
         // Check if the generic type argument of SpecFactory matches specClass.
-        Type[] interfaceTypes = specFactoryClass.getGenericInterfaces();
-        for (Type type : interfaceTypes) {
+        Type[] interfaceTypes = actualClass.getGenericInterfaces();
+        if (interfaceTypes.length > pos) {
+            Type type = interfaceTypes[pos];
+
             if (type instanceof ParameterizedType parameterizedType) {
                 Type[] typeArguments = parameterizedType.getActualTypeArguments();
                 if (typeArguments.length == 1 && typeArguments[0] instanceof Class) {
                     // Case: SpecFactory<TypeX>
-                    if (factoryClass.isAssignableFrom((Class<?>) typeArguments[0])) {
+                    if (paramClass.isAssignableFrom((Class<?>) typeArguments[0])) {
                         return true;
                     }
                 } else if (typeArguments.length == 1 && typeArguments[0] instanceof ParameterizedType) {
                     // Case: SpecFactory<GenericTypeX<T>>
                     Type rawTypeArgument = ((ParameterizedType) typeArguments[0]).getRawType();
-                    if (
-                        rawTypeArgument.equals(factoryClass) ||
-                        factoryClass.isAssignableFrom((Class<?>) rawTypeArgument)
-                    ) {
+                    if (rawTypeArgument.equals(paramClass) || paramClass.isAssignableFrom((Class<?>) rawTypeArgument)) {
                         return true;
                     }
                 }
             }
         }
+
         return false;
     }
 }

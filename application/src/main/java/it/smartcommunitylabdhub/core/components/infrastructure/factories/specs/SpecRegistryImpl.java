@@ -45,67 +45,50 @@ public class SpecRegistryImpl implements SpecRegistry {
     @Override
     public <S extends Spec> S createSpec(@NotNull String kind, @NotNull EntityName entity, Map<String, Object> data) {
         // Retrieve the class associated with the specified spec type.
-        final String specKey = kind + "_" + entity.name().toLowerCase();
-        return getSpec(data, specKey);
-    }
-
-    @Override
-    public <S extends Spec> S createSpec(
-        @NotNull String runtime,
-        @NotNull String kind,
-        @NotNull EntityName entity,
-        Map<String, Object> data
-    ) {
-        // Retrieve the class associated with the specified spec type.
-        final String specKey = runtime + "_" + kind + "_" + entity.name().toLowerCase();
-        return getSpec(data, specKey);
+        return getSpec(extractKey(kind, entity), data);
     }
 
     @SuppressWarnings("unchecked")
-    private <S extends Spec> S getSpec(Map<String, Object> data, String specKey) {
-        Class<?> specClass = (Class<?>) specTypes.get(specKey);
+    private <S extends Spec> S getSpec(String key, Map<String, Object> data) {
+        Class<? extends Spec> specClass = specTypes.get(key);
 
         if (specClass == null) {
             // Fallback spec None if no class specific is found, avoid crash.
             //specClass = (Class<? extends T>) specTypes.get("none_none");
             throw new CoreException(
                 ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "Spec not found: tried to extract spec for <" + specKey + "> key",
+                "Spec not found: tried to extract spec for <" + key + "> key",
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
 
-        try {
-            // Find the corresponding SpecFactory using the SpecType annotation.
-            SpecType specTypeAnnotation = specClass.getAnnotation(SpecType.class);
-            if (specTypeAnnotation != null) {
-                Class<?> factoryClass = specTypeAnnotation.factory();
-                for (SpecFactory<? extends Spec> specFactory : specFactories) {
-                    // Check if the generic type of SpecFactory matches specClass.
-                    if (FactoryUtils.isFactoryTypeMatch(factoryClass, specFactory.getClass())) {
-                        // Call the create method of the spec factory to get a new instance.
-                        S spec = (S) specFactory.create();
-                        if (data != null) {
-                            spec.configure(data);
-                        }
-                        return spec;
-                    }
-                }
-            }
-            log.error("Cannot configure spec for type @SpecType('" + specKey + "') no way to recover error.");
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "Cannot configure spec for type @SpecType('" + specKey + "')",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        } catch (Exception e) {
-            // Handle any exceptions that may occur during instance creation.
-            log.error("Cannot configure spec for type @SpecType('" + specKey + "') no way to recover error.");
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "Cannot configure spec for type @SpecType('" + specKey + "')",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+        //pick a matching factory
+        //TODO refactor with specType annotation when fixed
+        SpecFactory<? extends Spec> specFactory = specFactories
+            .stream()
+            .filter(s -> FactoryUtils.isParamTypeMatch(s.getClass(), specClass, 0))
+            .findFirst()
+            .orElse(null);
+        if (specFactory == null) {
+            throw new IllegalArgumentException();
         }
+
+        S spec = (S) specFactory.create();
+        if (data != null) {
+            spec.configure(data);
+        }
+        return spec;
+    }
+
+    @Override
+    public void registerSpec(@NotNull String kind, @NotNull EntityName entity, @NotNull Class<? extends Spec> spec) {
+        String key = extractKey(kind, entity);
+
+        log.debug("register spec for {}:{} with class {} under key {}", entity, kind, spec.getName(), key);
+        specTypes.put(key, spec);
+    }
+
+    private String extractKey(String kind, EntityName entity) {
+        return entity.name().concat("/").concat(kind);
     }
 }

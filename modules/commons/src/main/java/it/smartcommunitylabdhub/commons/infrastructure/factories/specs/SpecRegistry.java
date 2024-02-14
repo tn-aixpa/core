@@ -15,7 +15,5 @@ public interface SpecRegistry {
      */
     <S extends Spec> S createSpec(String kind, EntityName entity, Map<String, Object> data);
 
-    <S extends Spec> S createSpec(String runtime, String kind, EntityName entity, Map<String, Object> data);
-
-    public void registerSpecTypes(Map<String, Class<? extends Spec>> specTypeMap);
+    public void registerSpec(String kind, EntityName entity, Class<? extends Spec> spec);
 }

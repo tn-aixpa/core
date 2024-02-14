@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "container+deploy", entity = EntityName.TASK, factory = TaskDeploySpec.class)
+@SpecType(kind = "container+deploy", entity = EntityName.TASK)
 public class TaskDeploySpec extends K8sTaskBaseSpec {
 
     @Override

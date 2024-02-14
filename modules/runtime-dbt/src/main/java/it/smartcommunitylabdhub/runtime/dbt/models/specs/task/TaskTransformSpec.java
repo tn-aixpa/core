@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "dbt+transform", entity = EntityName.TASK, factory = TaskTransformSpec.class)
+@SpecType(kind = "dbt+transform", entity = EntityName.TASK)
 public class TaskTransformSpec extends K8sTaskBaseSpec {
 
     @Override

@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.commons.annotations.common;
 
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,11 +13,9 @@ import org.springframework.stereotype.Indexed;
 @Target(ElementType.TYPE)
 @Indexed
 public @interface SpecType {
-    String runtime() default "";
-
     String kind();
 
     EntityName entity();
 
-    Class<?> factory();
+    // Class<? extends SpecFactory<? extends Spec>> factory();
 }

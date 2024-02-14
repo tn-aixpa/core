@@ -5,13 +5,14 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.specs.DataItemBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.specs.factories.DataItemDataItemSpecFactory;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "dataitem", entity = EntityName.DATAITEM, factory = DataItemDataItemSpec.class)
+@SpecType(kind = "dataitem", entity = EntityName.DATAITEM)
 public class DataItemDataItemSpec extends DataItemBaseSpec {
 
     @JsonProperty("raw_code")
