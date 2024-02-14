@@ -1,0 +1,7 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "maven.view": "hierarchical",
+    "java.checkstyle.configuration": "checkstyle/checkstyle.xml",
+    "prettier.configPath": ".prettierrc.yml"
+}
