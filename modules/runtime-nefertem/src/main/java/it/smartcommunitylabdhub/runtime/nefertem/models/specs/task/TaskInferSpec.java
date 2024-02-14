@@ -11,7 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "nefertem+infer", entity = EntityName.TASK, factory = TaskInferSpec.class)
+@SpecType(kind = "nefertem+infer", entity = EntityName.TASK)
 public class TaskInferSpec extends K8sTaskBaseSpec {
 
     private String framework;

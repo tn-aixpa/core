@@ -12,7 +12,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "mlrun", entity = EntityName.FUNCTION, factory = FunctionMlrunSpec.class)
+@SpecType(kind = "mlrun", entity = EntityName.FUNCTION)
 public class FunctionMlrunSpec extends FunctionBaseSpec {
 
     private String image;

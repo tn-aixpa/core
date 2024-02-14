@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "secret", entity = EntityName.SECRET, factory = SecretSecretSpec.class)
+@SpecType(kind = "secret", entity = EntityName.SECRET)
 public class SecretSecretSpec extends SecretBaseSpec {
 
     @Override

@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "container+job", entity = EntityName.TASK, factory = TaskJobSpec.class)
+@SpecType(kind = "container+job", entity = EntityName.TASK)
 public class TaskJobSpec extends K8sTaskBaseSpec {
 
     @Override

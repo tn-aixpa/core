@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "dbt", entity = EntityName.FUNCTION, factory = FunctionDbtSpec.class)
+@SpecType(kind = "dbt", entity = EntityName.FUNCTION)
 public class FunctionDbtSpec extends FunctionBaseSpec {
 
     private String sql;

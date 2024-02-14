@@ -1,11 +1,15 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
 import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.core.CoreApplication;
 import jakarta.annotation.PostConstruct;
+import java.lang.reflect.Constructor;
 import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ComponentScan;
@@ -18,7 +22,8 @@ import org.springframework.stereotype.Component;
  * registers them in the `SpecRegistry` for later instantiation.
  */
 @Component
-public class SpecTypeFactory {
+@Slf4j
+public class SpecTypeScanner {
 
     private final SpecRegistry specRegistry;
 
@@ -27,7 +32,7 @@ public class SpecTypeFactory {
      *
      * @param specRegistry The `SpecRegistry` used to register discovered spec types.
      */
-    public SpecTypeFactory(SpecRegistry specRegistry) {
+    public SpecTypeScanner(SpecRegistry specRegistry) {
         this.specRegistry = specRegistry;
     }
 
@@ -45,9 +50,7 @@ public class SpecTypeFactory {
 
         // Detect the base packages based on ComponentScan annotation in CoreApplication.
         List<String> basePackages = getBasePackages();
-
-        // Map to store discovered spec types and their corresponding classes.
-        Map<String, Class<? extends Spec>> specTypes = new HashMap<>();
+        log.info("Scanning for specTypes under packages {}", basePackages);
 
         for (String basePackage : basePackages) {
             Set<BeanDefinition> candidateComponents = scanner.findCandidateComponents(basePackage);
@@ -58,19 +61,21 @@ public class SpecTypeFactory {
                     // Load the class and check for SpecType annotation.
                     Class<? extends Spec> specClass = (Class<? extends Spec>) Class.forName(className);
                     SpecType specTypeAnnotation = specClass.getAnnotation(SpecType.class);
-                    String specKey = specTypeAnnotation.kind() + "_" + specTypeAnnotation.entity().name().toLowerCase();
-                    if (!specTypeAnnotation.runtime().isEmpty()) {
-                        specKey = specTypeAnnotation.runtime() + "_" + specKey;
-                    }
-                    specTypes.put(specKey, specClass);
+                    String kind = specTypeAnnotation.kind();
+                    EntityName entity = specTypeAnnotation.entity();
+
+                    // String specKey = specTypeAnnotation.kind() + "_" + specTypeAnnotation.entity().name().toLowerCase();
+                    // if (!specTypeAnnotation.runtime().isEmpty()) {
+                    //     specKey = specTypeAnnotation.runtime() + "_" + specKey;
+                    // }
+
+                    log.debug("discovered spec for {}:{} with class {}", entity, kind, specClass.getName());
+                    specRegistry.registerSpec(kind, entity, specClass);
                 } catch (ClassNotFoundException e) {
                     // Handle exceptions when a class is not found.
                 }
             }
         }
-
-        // Register the discovered spec types in the SpecRegistry for later instantiation.
-        specRegistry.registerSpecTypes(specTypes);
     }
 
     /**

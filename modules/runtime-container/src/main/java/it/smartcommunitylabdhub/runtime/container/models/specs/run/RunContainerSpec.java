@@ -17,7 +17,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "container+run", entity = EntityName.RUN, factory = RunContainerSpec.class)
+@SpecType(kind = "container+run", entity = EntityName.RUN)
 public class RunContainerSpec extends RunBaseSpec {
 
     @JsonProperty("job_spec")

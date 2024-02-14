@@ -12,7 +12,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "nefertem", entity = EntityName.FUNCTION, factory = FunctionNefertemSpec.class)
+@SpecType(kind = "nefertem", entity = EntityName.FUNCTION)
 public class FunctionNefertemSpec extends FunctionBaseSpec {
 
     private List<Map<String, Object>> constraints;

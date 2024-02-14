@@ -15,7 +15,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "mlrun+run", entity = EntityName.RUN, factory = RunMlrunSpec.class)
+@SpecType(kind = "mlrun+run", entity = EntityName.RUN)
 public class RunMlrunSpec extends RunBaseSpec {
 
     @JsonProperty("mlrun_spec")

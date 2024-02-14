@@ -15,7 +15,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "dbt+run", entity = EntityName.RUN, factory = RunDbtSpec.class)
+@SpecType(kind = "dbt+run", entity = EntityName.RUN)
 public class RunDbtSpec extends RunBaseSpec {
 
     @JsonProperty("transform_spec")
