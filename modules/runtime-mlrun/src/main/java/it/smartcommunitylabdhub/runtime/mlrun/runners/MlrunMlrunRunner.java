@@ -58,6 +58,9 @@ public class MlrunMlrunRunner implements Runner {
             .volumes(runMlrunSpec.getTaskSpec().getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
+            .labels(runMlrunSpec.getTaskSpec().getLabels())
+            .affinity(runMlrunSpec.getTaskSpec().getAffinity())
+            .tolerations(runMlrunSpec.getTaskSpec().getTolerations())
             .state(runDefaultFieldAccessor.getState())
             .build();
 

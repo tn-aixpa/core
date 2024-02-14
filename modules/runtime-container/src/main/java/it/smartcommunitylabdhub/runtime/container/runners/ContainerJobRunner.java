@@ -57,6 +57,9 @@ public class ContainerJobRunner implements Runner {
                 .volumes(runContainerSpec.getTaskJobSpec().getVolumes())
                 .secrets(groupedSecrets)
                 .envs(coreEnvList)
+                .labels(runContainerSpec.getTaskJobSpec().getLabels())
+                .affinity(runContainerSpec.getTaskJobSpec().getAffinity())
+                .tolerations(runContainerSpec.getTaskJobSpec().getTolerations())
                 .build();
 
         Optional

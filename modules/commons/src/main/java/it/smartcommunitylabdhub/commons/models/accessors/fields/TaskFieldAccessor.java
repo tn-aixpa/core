@@ -32,6 +32,24 @@ public interface TaskFieldAccessor extends CommonFieldAccessor {
         return mapHasField(getSpecs(), "secrets") ? (Set<String>) getSpecs().get("secrets") : null;
     }
 
+    @SuppressWarnings("unchecked")
+    default Map<String, Object> getAffinity() {
+        return mapHasField(getSpecs(), "affinity") ? (Map<String, Object>) getSpecs().get("affinity") : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    default List<Map<String, String>> getLabels() {
+        return mapHasField(getSpecs(), "labels") ? (List<Map<String, String>>) getSpecs().get("labels") : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    default List<Map<String, Object>> getTolerations() {
+        return mapHasField(getSpecs(), "tolerations")
+            ? (List<Map<String, Object>>) getSpecs().get("tolerations")
+            : null;
+    }
+
+
     static TaskFieldAccessor with(Map<String, Object> map) {
         return () -> map;
     }

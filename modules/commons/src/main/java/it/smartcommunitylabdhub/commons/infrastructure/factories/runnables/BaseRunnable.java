@@ -3,7 +3,9 @@ package it.smartcommunitylabdhub.commons.infrastructure.factories.runnables;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
+@SuperBuilder
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor

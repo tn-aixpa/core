@@ -55,6 +55,9 @@ public class ContainerServeRunner implements Runner {
             .volumes(runContainerSpec.getTaskServeSpec().getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
+            .labels(runContainerSpec.getTaskServeSpec().getLabels())
+            .affinity(runContainerSpec.getTaskServeSpec().getAffinity())
+            .tolerations(runContainerSpec.getTaskServeSpec().getTolerations())
             .build();
 
         Optional
