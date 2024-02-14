@@ -1,7 +1,10 @@
 package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableComponent;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @RunnableComponent(framework = "k8sdeployment")
@@ -10,11 +13,9 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class K8sDeploymentRunnable extends K8SRunnable {
+public class K8sDeploymentRunnable extends K8sRunnable {
 
     private String entrypoint;
-
-    private String state;
 
     private String[] args;
 
