@@ -8,7 +8,7 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.services.interfaces.ProjectService;
+import it.smartcommunitylabdhub.commons.services.ProjectService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
 import java.util.List;

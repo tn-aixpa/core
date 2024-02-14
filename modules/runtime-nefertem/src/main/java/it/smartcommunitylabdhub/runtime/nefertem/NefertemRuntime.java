@@ -1,17 +1,17 @@
 package it.smartcommunitylabdhub.runtime.nefertem;
 
+import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runtimes.Runtime;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.entities.RunAccessor;
-import it.smartcommunitylabdhub.commons.models.accessors.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.services.interfaces.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.nefertem.builders.NefertemInferBuilder;
@@ -137,7 +137,7 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
         runRunSpec.configure(runDTO.getSpec());
 
         // Create string run accessor from task
-        RunAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
+        RunSpecAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
 
         return switch (runAccessor.getTask()) {
             case "infer" -> new NefertemInferRunner(

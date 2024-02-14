@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.runtime.nefertem.builders;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
+import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.run.RunNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskMetricSpec;

@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
-import it.smartcommunitylabdhub.commons.services.interfaces.RunService;
+import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;

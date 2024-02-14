@@ -1,18 +1,18 @@
 package it.smartcommunitylabdhub.runtime.container;
 
+import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runnables.Runnable;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runtimes.Runtime;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.entities.RunAccessor;
-import it.smartcommunitylabdhub.commons.models.accessors.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
+import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.services.interfaces.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerDeployBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerJobBuilder;
@@ -139,7 +139,7 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
         // Create string run accessor from task
         //TODO drop the utils and get the task accessor from the spec.
-        RunAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
+        RunSpecAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
 
         return switch (runAccessor.getTask()) {
             case "deploy" -> new ContainerDeployRunner(

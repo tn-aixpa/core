@@ -1,8 +1,9 @@
 package it.smartcommunitylabdhub.core.models.entities.workflow.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.specs.WorkflowBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;

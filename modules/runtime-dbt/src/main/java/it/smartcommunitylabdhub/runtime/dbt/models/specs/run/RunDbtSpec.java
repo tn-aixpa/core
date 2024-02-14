@@ -2,13 +2,17 @@ package it.smartcommunitylabdhub.runtime.dbt.models.specs.run;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.models.specs.task.TaskTransformSpec;
 import java.util.Map;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter

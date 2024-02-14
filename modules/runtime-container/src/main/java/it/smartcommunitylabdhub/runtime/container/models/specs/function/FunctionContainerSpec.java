@@ -2,9 +2,9 @@ package it.smartcommunitylabdhub.runtime.container.models.specs.function;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.Map;

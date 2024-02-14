@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.runtime.nefertem.models.specs.function.factories;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
+import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.function.FunctionNefertemSpec;
 import org.springframework.stereotype.Component;
 

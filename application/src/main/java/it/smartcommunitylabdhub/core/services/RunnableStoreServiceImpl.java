@@ -1,8 +1,8 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runnables.BaseRunnable;
-import it.smartcommunitylabdhub.commons.services.interfaces.RunnableStoreService;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.infrastructure.base.BaseRunnable;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.services.RunnableStoreService;
 import it.smartcommunitylabdhub.core.models.entities.runnable.RunnableEntity;
 import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
 import java.io.IOException;

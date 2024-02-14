@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.commons.models.schemas;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

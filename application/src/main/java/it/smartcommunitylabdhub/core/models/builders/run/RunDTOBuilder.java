@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.run;
 
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.run.metadata.RunMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;

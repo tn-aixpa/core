@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.fsm.pollers;
 
-import it.smartcommunitylabdhub.commons.exceptions.StopPoller;
+import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.workflow.Workflow;
 import java.util.List;
 import java.util.concurrent.*;

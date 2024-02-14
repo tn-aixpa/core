@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.CoreApplication;
 import jakarta.annotation.PostConstruct;
 import java.lang.reflect.Constructor;

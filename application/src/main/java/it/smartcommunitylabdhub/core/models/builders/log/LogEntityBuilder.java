@@ -1,9 +1,8 @@
 package it.smartcommunitylabdhub.core.models.builders.log;
 
-import it.smartcommunitylabdhub.commons.models.accessors.fields.LogFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
@@ -19,9 +18,7 @@ public class LogEntityBuilder {
      */
     public LogEntity build(Log logDTO) {
         // Retrieve field accessor
-        LogFieldAccessor logFieldAccessor = LogFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(logDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(logDTO.getStatus());
 
         return EntityFactory.combine(
             LogEntity.builder().build(),
@@ -36,12 +33,12 @@ public class LogEntityBuilder {
                     .with(l -> l.setStatus(ConversionUtils.convert(logDTO.getStatus(), "cbor")))
                     // Store status if not present
                     .withIfElse(
-                        logFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (l, condition) -> {
                             if (condition) {
                                 l.setState(State.CREATED);
                             } else {
-                                l.setState(State.valueOf(logFieldAccessor.getState()));
+                                l.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

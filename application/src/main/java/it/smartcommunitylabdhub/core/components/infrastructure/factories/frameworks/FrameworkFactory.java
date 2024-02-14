@@ -7,8 +7,9 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.frameworks;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.frameworks.Framework;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runnables.Runnable;
+import it.smartcommunitylabdhub.commons.infrastructure.Framework;
+import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;

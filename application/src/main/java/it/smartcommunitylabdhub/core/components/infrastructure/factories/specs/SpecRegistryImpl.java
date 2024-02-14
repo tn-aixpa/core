@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import it.smartcommunitylabdhub.commons.models.schemas.SchemaImpl;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.commons.utils.SchemaUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.FactoryUtils;

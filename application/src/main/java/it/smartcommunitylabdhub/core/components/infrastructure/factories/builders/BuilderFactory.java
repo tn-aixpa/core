@@ -7,10 +7,11 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.builders;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.BuilderComponent;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.infrastructure.Builder;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;

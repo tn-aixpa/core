@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.services.interfaces.LogService;
+import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

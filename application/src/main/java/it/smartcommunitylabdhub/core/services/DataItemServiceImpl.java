@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.interfaces.DataItemService;
+import it.smartcommunitylabdhub.commons.services.DataItemService;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;

@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.task;
 
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.entities.task.metadata.TaskMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;

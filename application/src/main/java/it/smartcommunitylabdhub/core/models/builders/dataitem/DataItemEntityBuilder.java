@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.models.builders.dataitem;
 
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.DataItemFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.specs.DataItemBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
@@ -31,9 +31,7 @@ public class DataItemEntityBuilder {
         specRegistry.createSpec(dataItemDTO.getKind(), EntityName.DATAITEM, Map.of());
 
         // Retrieve field accessor
-        DataItemFieldAccessor dataItemFieldAccessor = DataItemFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(dataItemDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dataItemDTO.getStatus());
 
         // Retrieve Spec
         DataItemBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
@@ -56,12 +54,12 @@ public class DataItemEntityBuilder {
                     .with(d -> d.setStatus(ConversionUtils.convert(dataItemDTO.getStatus(), "cbor")))
                     // Store status if not present
                     .withIfElse(
-                        dataItemFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (d, condition) -> {
                             if (condition) {
                                 d.setState(State.CREATED);
                             } else {
-                                d.setState(State.valueOf(dataItemFieldAccessor.getState()));
+                                d.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

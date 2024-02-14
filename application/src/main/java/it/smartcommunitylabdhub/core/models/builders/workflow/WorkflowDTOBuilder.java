@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.workflow;
 
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.metadata.WorkflowMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;

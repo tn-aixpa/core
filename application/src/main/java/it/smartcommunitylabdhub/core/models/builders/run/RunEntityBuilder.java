@@ -1,15 +1,15 @@
 package it.smartcommunitylabdhub.core.models.builders.run;
 
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.RunFieldAccessor;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
@@ -37,9 +37,7 @@ public class RunEntityBuilder {
         specRegistry.createSpec(runDTO.getKind(), EntityName.RUN, Map.of());
 
         // Retrieve Field accessor
-        RunFieldAccessor runFieldAccessor = RunFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(runDTO.getStatus());
 
         // Retrieve base spec
         RunBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO.getSpec(), RunBaseSpec.class);
@@ -68,12 +66,12 @@ public class RunEntityBuilder {
                     )
                     .with(r -> r.setTaskId(spec.getTaskId()))
                     .withIfElse(
-                        runFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (r, condition) -> {
                             if (condition) {
                                 r.setState(RunState.CREATED);
                             } else {
-                                r.setState(RunState.valueOf(runFieldAccessor.getState()));
+                                r.setState(RunState.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

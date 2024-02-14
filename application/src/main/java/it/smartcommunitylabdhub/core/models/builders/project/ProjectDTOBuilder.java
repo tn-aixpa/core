@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.project;
 
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
-import it.smartcommunitylabdhub.commons.models.entities.project.metadata.ProjectMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.project.ProjectMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;

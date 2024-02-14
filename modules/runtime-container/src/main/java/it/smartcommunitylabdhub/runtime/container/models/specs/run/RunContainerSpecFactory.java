@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.runtime.container.models.specs.run;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
+import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import org.springframework.stereotype.Component;
 
 @Component

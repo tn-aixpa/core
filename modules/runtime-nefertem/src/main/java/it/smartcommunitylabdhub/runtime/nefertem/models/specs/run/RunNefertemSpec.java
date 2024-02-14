@@ -2,16 +2,20 @@ package it.smartcommunitylabdhub.runtime.nefertem.models.specs.run;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskInferSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskMetricSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskProfileSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.models.specs.task.TaskValidateSpec;
 import java.util.Map;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter

@@ -1,22 +1,22 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runnables.Runnable;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runtimes.Runtime;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.entities.TaskAccessor;
-import it.smartcommunitylabdhub.commons.models.accessors.utils.TaskUtils;
-import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
+import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.services.interfaces.FunctionService;
-import it.smartcommunitylabdhub.commons.services.interfaces.RunService;
-import it.smartcommunitylabdhub.commons.services.interfaces.RunnableStoreService;
-import it.smartcommunitylabdhub.commons.services.interfaces.TaskService;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.FunctionService;
+import it.smartcommunitylabdhub.commons.services.RunService;
+import it.smartcommunitylabdhub.commons.services.RunnableStoreService;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
@@ -213,7 +213,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                 );
 
                 // Parse task to get accessor
-                TaskAccessor taskAccessor = TaskUtils.parseTask(taskBaseSpec.getFunction());
+                TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskBaseSpec.getFunction());
 
                 return Optional
                     .ofNullable(functionService.getFunction(taskAccessor.getVersion()))

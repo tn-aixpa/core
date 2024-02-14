@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.artifact;
 
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.metadata.ArtifactMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;

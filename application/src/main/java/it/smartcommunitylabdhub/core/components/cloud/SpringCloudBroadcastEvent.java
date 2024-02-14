@@ -1,9 +1,10 @@
 package it.smartcommunitylabdhub.core.components.cloud;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.jackson.mixins.CborMixin;
 import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.utils.jackson.mixins.CborMixin;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntitySavedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.runtime.mlrun.runners;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.RunFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.infrastructure.Runner;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
@@ -35,9 +35,7 @@ public class MlrunMlrunRunner implements Runner {
         RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
         runMlrunSpec.configure(runDTO.getSpec());
 
-        RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(runDTO.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
@@ -61,7 +59,7 @@ public class MlrunMlrunRunner implements Runner {
             .labels(runMlrunSpec.getTaskSpec().getLabels())
             .affinity(runMlrunSpec.getTaskSpec().getAffinity())
             .tolerations(runMlrunSpec.getTaskSpec().getTolerations())
-            .state(runDefaultFieldAccessor.getState())
+            .state(statusFieldAccessor.getState())
             .build();
 
         k8sJobRunnable.setId(runDTO.getId());
