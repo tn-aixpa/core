@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.models.builders.secret;
 
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.SecretFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
-import it.smartcommunitylabdhub.commons.models.entities.secret.specs.SecretBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.secret.SecretBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
@@ -32,9 +32,7 @@ public class SecretEntityBuilder {
         specRegistry.createSpec(secretDTO.getKind(), EntityName.SECRET, Map.of());
 
         // Retrieve field accessor
-        SecretFieldAccessor secretFieldAccessor = SecretFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(secretDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(secretDTO.getStatus());
 
         // Retrieve Spec
         SecretBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
@@ -58,12 +56,12 @@ public class SecretEntityBuilder {
                     .with(f -> f.setStatus(ConversionUtils.convert(secretDTO.getStatus(), "cbor")))
                     // Store status if not present
                     .withIfElse(
-                        secretFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (f, condition) -> {
                             if (condition) {
                                 f.setState(State.CREATED);
                             } else {
-                                f.setState(State.valueOf(secretFieldAccessor.getState()));
+                                f.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.models.builders.workflow;
 
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.WorkflowFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.specs.WorkflowBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
@@ -30,9 +30,7 @@ public class WorkflowEntityBuilder {
         specRegistry.createSpec(workflowDTO.getKind(), EntityName.WORKFLOW, Map.of());
 
         // Retrieve Field accessor
-        WorkflowFieldAccessor workflowFieldAccessor = WorkflowFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(workflowDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(workflowDTO.getStatus());
 
         // Retrieve Spec
         WorkflowBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
@@ -56,12 +54,12 @@ public class WorkflowEntityBuilder {
                     .with(w -> w.setStatus(ConversionUtils.convert(workflowDTO.getStatus(), "cbor")))
                     // Store status if not present
                     .withIfElse(
-                        workflowFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (w, condition) -> {
                             if (condition) {
                                 w.setState(State.CREATED);
                             } else {
-                                w.setState(State.valueOf(workflowFieldAccessor.getState()));
+                                w.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

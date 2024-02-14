@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.models.builders.artifact;
 
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.ArtifactFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.specs.ArtifactBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
@@ -31,9 +31,7 @@ public class ArtifactEntityBuilder {
         specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
 
         // Retrieve Field accessor
-        ArtifactFieldAccessor artifactFieldAccessor = ArtifactFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(artifactDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(artifactDTO.getStatus());
 
         // Retrieve Spec
         ArtifactBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
@@ -57,12 +55,12 @@ public class ArtifactEntityBuilder {
                     .with(a -> a.setSpec(ConversionUtils.convert(spec.toMap(), "cbor")))
                     // Store status if not present
                     .withIfElse(
-                        artifactFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (a, condition) -> {
                             if (condition) {
                                 a.setState(State.CREATED);
                             } else {
-                                a.setState(State.valueOf(artifactFieldAccessor.getState()));
+                                a.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

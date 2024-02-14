@@ -1,8 +1,9 @@
 package it.smartcommunitylabdhub.framework.k8s.base;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;

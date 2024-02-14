@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.models.builders.function;
 
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.FunctionFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
@@ -32,9 +32,7 @@ public class FunctionEntityBuilder {
         specRegistry.createSpec(functionDTO.getKind(), EntityName.FUNCTION, Map.of());
 
         // Retrieve field accessor
-        FunctionFieldAccessor functionFieldAccessor = FunctionFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(functionDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(functionDTO.getStatus());
 
         // Retrieve Spec
         FunctionBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
@@ -58,12 +56,12 @@ public class FunctionEntityBuilder {
                     .with(f -> f.setStatus(ConversionUtils.convert(functionDTO.getStatus(), "cbor")))
                     // Store status if not present
                     .withIfElse(
-                        functionFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (f, condition) -> {
                             if (condition) {
                                 f.setState(State.CREATED);
                             } else {
-                                f.setState(State.valueOf(functionFieldAccessor.getState()));
+                                f.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

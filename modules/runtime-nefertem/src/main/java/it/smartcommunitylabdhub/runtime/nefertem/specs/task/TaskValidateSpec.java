@@ -1,0 +1,43 @@
+package it.smartcommunitylabdhub.runtime.nefertem.specs.task;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
+import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem+validate", entity = EntityName.TASK)
+public class TaskValidateSpec extends K8sTaskBaseSpec {
+
+    private String framework;
+
+    @JsonProperty("exec_args")
+    private Map<String, Object> execArgs;
+
+    private Boolean parallel;
+
+    @JsonProperty("num_worker")
+    private Integer numWorker;
+
+    @Override
+    public void configure(Map<String, Object> data) {
+        TaskValidateSpec taskValidateSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+            data,
+            TaskValidateSpec.class
+        );
+
+        this.setFramework(taskValidateSpec.getFramework());
+        this.setExecArgs(taskValidateSpec.getExecArgs());
+        this.setParallel(taskValidateSpec.getParallel());
+        this.setNumWorker(taskValidateSpec.getNumWorker());
+
+        super.configure(data);
+        this.setExtraSpecs(taskValidateSpec.getExtraSpecs());
+    }
+}

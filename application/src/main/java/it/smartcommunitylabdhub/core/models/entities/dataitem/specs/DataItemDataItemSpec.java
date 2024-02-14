@@ -2,9 +2,9 @@ package it.smartcommunitylabdhub.core.models.entities.dataitem.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.specs.DataItemBaseSpec;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.specs.factories.DataItemDataItemSpecFactory;
 import java.util.Map;
 import lombok.Getter;

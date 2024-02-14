@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
-import it.smartcommunitylabdhub.commons.services.interfaces.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

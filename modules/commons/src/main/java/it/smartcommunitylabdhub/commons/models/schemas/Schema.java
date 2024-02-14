@@ -7,10 +7,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public interface Schema {
     @JsonGetter
-    String key();
+    String kind();
 
     @JsonGetter
-    String kind();
+    String runtime();
 
     @JsonGetter
     String entity();
@@ -25,6 +25,6 @@ public interface Schema {
 
     @JsonGetter
     default String getId() {
-        return key();
+        return entity() + ":" + kind();
     }
 }

@@ -11,8 +11,8 @@ import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
 import com.github.victools.jsonschema.module.swagger2.Swagger2Module;
+import it.smartcommunitylabdhub.commons.jackson.introspect.JsonSchemaAnnotationIntrospector;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
-import it.smartcommunitylabdhub.commons.utils.jackson.introspect.JsonSchemaAnnotationIntrospector;
 
 public final class SchemaUtils {
 

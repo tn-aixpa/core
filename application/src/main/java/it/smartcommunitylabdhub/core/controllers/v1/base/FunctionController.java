@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.services.interfaces.FunctionService;
+import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
 import java.util.List;

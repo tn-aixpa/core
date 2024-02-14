@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.runtime.mlrun.builders;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.runtime.mlrun.models.specs.function.FunctionMlrunSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.models.specs.run.RunMlrunSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.models.specs.task.TaskMlrunSpec;
+import it.smartcommunitylabdhub.commons.infrastructure.Builder;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
 
 /**
  * MlrunMlrunBuilder

@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.runtime.dbt.builders;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.runtime.dbt.models.specs.function.FunctionDbtSpec;
-import it.smartcommunitylabdhub.runtime.dbt.models.specs.run.RunDbtSpec;
-import it.smartcommunitylabdhub.runtime.dbt.models.specs.task.TaskTransformSpec;
+import it.smartcommunitylabdhub.commons.infrastructure.Builder;
+import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
+import it.smartcommunitylabdhub.runtime.dbt.specs.run.RunDbtSpec;
+import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
 
 /**
  * DbtTransformBuilder

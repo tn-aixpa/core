@@ -9,15 +9,14 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.exceptions.StopPoller;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.frameworks.Framework;
+import it.smartcommunitylabdhub.commons.infrastructure.Framework;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.models.entities.log.metadata.LogMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
-import it.smartcommunitylabdhub.commons.services.interfaces.LogService;
-import it.smartcommunitylabdhub.commons.services.interfaces.RunService;
+import it.smartcommunitylabdhub.commons.services.LogService;
+import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
@@ -26,6 +25,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.fsm.StateMachine;
 import it.smartcommunitylabdhub.fsm.enums.RunEvent;
+import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
 import it.smartcommunitylabdhub.fsm.workflow.WorkflowFactory;
@@ -112,7 +112,6 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
             for (CoreLabel l : runnable.getLabels()) labels.putIfAbsent(l.name(), l.value());
         }
 
-
         // Prepare environment variables for the Kubernetes job
         List<V1EnvFromSource> envVarsFromSource = k8sBuilderHelper.getV1EnvFromSource();
 
@@ -193,7 +192,11 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
                     .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
             )
             .affinity(runnable.getAffinity())
-            .tolerations(runnable.getTolerations() != null && !runnable.getTolerations().isEmpty() ? runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList()) : null)
+            .tolerations(
+                runnable.getTolerations() != null && !runnable.getTolerations().isEmpty()
+                    ? runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList())
+                    : null
+            )
             .volumes(volumes)
             .restartPolicy("Always");
 

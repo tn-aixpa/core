@@ -9,7 +9,7 @@ package it.smartcommunitylabdhub.fsm.types;
 
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
-import it.smartcommunitylabdhub.commons.services.interfaces.RunService;
+import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.fsm.State;
 import it.smartcommunitylabdhub.fsm.StateMachine;
 import it.smartcommunitylabdhub.fsm.Transaction;

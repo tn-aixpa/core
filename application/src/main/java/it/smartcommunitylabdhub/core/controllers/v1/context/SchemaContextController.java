@@ -2,15 +2,16 @@ package it.smartcommunitylabdhub.core.controllers.v1.context;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.schemas.Schema;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -37,9 +38,15 @@ public class SchemaContextController {
     public ResponseEntity<Page<Schema>> listProjectSchemas(
         @PathVariable @Valid @NotNull String project,
         @PathVariable @Valid @NotNull EntityName entity,
+        @RequestParam(required = false) Optional<String> runtime,
         Pageable pageable
     ) {
-        Collection<Schema> schemas = specRegistry.listSchemas(entity);
+        Collection<Schema> schemas;
+        if (runtime.isPresent()) {
+            schemas = specRegistry.getSchemas(entity, runtime.get());
+        } else {
+            schemas = specRegistry.listSchemas(entity);
+        }
         PageImpl<Schema> page = new PageImpl<>(new ArrayList<>(schemas), pageable, schemas.size());
 
         return ResponseEntity.ok(page);

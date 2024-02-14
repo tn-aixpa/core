@@ -1,13 +1,13 @@
 package it.smartcommunitylabdhub.core.config;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.frameworks.Framework;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runnables.Runnable;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runtimes.Runtime;
-import it.smartcommunitylabdhub.commons.models.entities.function.specs.FunctionBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.infrastructure.Builder;
+import it.smartcommunitylabdhub.commons.infrastructure.Framework;
+import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
+import it.smartcommunitylabdhub.commons.infrastructure.Runner;
+import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.frameworks.FrameworkFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;

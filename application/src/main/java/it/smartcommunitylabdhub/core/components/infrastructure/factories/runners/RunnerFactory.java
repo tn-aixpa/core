@@ -7,7 +7,7 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.runners;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnerComponent;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runners.Runner;
+import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;

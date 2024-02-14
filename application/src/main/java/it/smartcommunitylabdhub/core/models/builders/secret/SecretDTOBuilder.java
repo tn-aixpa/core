@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.secret;
 
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
-import it.smartcommunitylabdhub.commons.models.entities.secret.metadata.SecretMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;

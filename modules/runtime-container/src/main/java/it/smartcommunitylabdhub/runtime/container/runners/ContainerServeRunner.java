@@ -1,14 +1,13 @@
 package it.smartcommunitylabdhub.runtime.container.runners;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.RunFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
 import java.util.*;
 
 /**
@@ -35,9 +34,8 @@ public class ContainerServeRunner implements Runner {
         RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
         runContainerSpec.configure(runDTO.getSpec());
 
-        RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(runDTO.getStatus());
+
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
         );
@@ -49,7 +47,7 @@ public class ContainerServeRunner implements Runner {
             .runtime(ContainerRuntime.RUNTIME)
             .task(TASK)
             .image(functionContainerSpec.getImage())
-            .state(runDefaultFieldAccessor.getState())
+            .state(statusFieldAccessor.getState())
             .resources(runContainerSpec.getTaskServeSpec().getResources())
             .nodeSelector(runContainerSpec.getTaskServeSpec().getNodeSelector())
             .volumes(runContainerSpec.getTaskServeSpec().getVolumes())

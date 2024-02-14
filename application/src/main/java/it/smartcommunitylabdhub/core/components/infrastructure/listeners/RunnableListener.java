@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.listeners;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.frameworks.Framework;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runnables.Runnable;
+import it.smartcommunitylabdhub.commons.infrastructure.Framework;
+import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.frameworks.FrameworkFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;

@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "workflows")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({AuditingEntityListener.class, WorkflowSavedListener.class})
+@EntityListeners({ AuditingEntityListener.class, WorkflowSavedListener.class })
 public class WorkflowEntity implements BaseEntity {
 
     @Id

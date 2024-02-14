@@ -1,14 +1,14 @@
 package it.smartcommunitylabdhub.core.models.builders.task;
 
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.TaskFieldAccessor;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
@@ -37,9 +37,7 @@ public class TaskEntityBuilder {
         specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, Map.of());
 
         // Retrieve Field accessor
-        TaskFieldAccessor taskFieldAccessor = TaskFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(taskDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(taskDTO.getStatus());
 
         // Retrieve base spec
         TaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
@@ -67,12 +65,12 @@ public class TaskEntityBuilder {
                         )
                     )
                     .withIfElse(
-                        taskFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (r, condition) -> {
                             if (condition) {
                                 r.setState(State.CREATED);
                             } else {
-                                r.setState(State.valueOf(taskFieldAccessor.getState()));
+                                r.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

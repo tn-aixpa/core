@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.services;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.services.interfaces.LogService;
+import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.core.models.builders.log.LogDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.log.LogEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;

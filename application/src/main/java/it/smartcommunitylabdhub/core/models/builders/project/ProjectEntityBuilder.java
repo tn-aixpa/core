@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.models.builders.project;
 
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.ProjectFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
-import it.smartcommunitylabdhub.commons.models.entities.project.specs.ProjectBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
@@ -32,9 +32,7 @@ public class ProjectEntityBuilder {
         specRegistry.createSpec(projectDTO.getKind(), EntityName.PROJECT, Map.of());
 
         // Retrieve field accessor
-        ProjectFieldAccessor projectFieldAccessor = ProjectFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(projectDTO, JacksonMapper.typeRef)
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(projectDTO.getStatus());
 
         // Retrieve object spec
         ProjectBaseSpec projectSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
@@ -53,12 +51,12 @@ public class ProjectEntityBuilder {
                     .with(p -> p.setName(projectDTO.getName()))
                     .with(p -> p.setKind(projectDTO.getKind()))
                     .withIfElse(
-                        projectFieldAccessor.getState().equals(State.NONE.name()),
+                        statusFieldAccessor.getState().equals(State.NONE.name()),
                         (p, condition) -> {
                             if (condition) {
                                 p.setState(State.CREATED);
                             } else {
-                                p.setState(State.valueOf(projectFieldAccessor.getState()));
+                                p.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )

@@ -1,13 +1,12 @@
 package it.smartcommunitylabdhub.runtime.nefertem.runners;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runners.Runner;
-import it.smartcommunitylabdhub.commons.models.accessors.fields.RunFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
-import it.smartcommunitylabdhub.runtime.nefertem.models.specs.run.RunNefertemSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
 import java.util.*;
 
 /**
@@ -36,10 +35,7 @@ public class NefertemMetricRunner implements Runner {
         RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
         runNefertemSpec.configure(runDTO.getSpec());
 
-        RunFieldAccessor runDefaultFieldAccessor = RunFieldAccessor.with(
-            JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO, JacksonMapper.typeRef)
-        );
-
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(runDTO.getStatus());
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
         );
@@ -62,12 +58,12 @@ public class NefertemMetricRunner implements Runner {
             .labels(runNefertemSpec.getTaskMetricSpec().getLabels())
             .affinity(runNefertemSpec.getTaskMetricSpec().getAffinity())
             .tolerations(runNefertemSpec.getTaskMetricSpec().getTolerations())
-            .state(runDefaultFieldAccessor.getState())
+            .state(statusFieldAccessor.getState())
             .build();
 
         k8sJobRunnable.setId(runDTO.getId());
-        k8sJobRunnable.setProject(runDTO.getProject());
 
+        k8sJobRunnable.setProject(runDTO.getProject());
         return k8sJobRunnable;
     }
 }

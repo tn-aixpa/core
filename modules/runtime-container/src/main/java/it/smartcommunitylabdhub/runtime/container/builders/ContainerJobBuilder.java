@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.runtime.container.builders;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.builders.Builder;
-import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskJobSpec;
+import it.smartcommunitylabdhub.commons.infrastructure.Builder;
+import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
 
 /**
  * ContainerJobBuilder

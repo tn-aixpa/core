@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.entities.secret.specs.factories;
 
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
+import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import it.smartcommunitylabdhub.core.models.entities.secret.specs.SecretSecretSpec;
 import org.springframework.stereotype.Component;
 

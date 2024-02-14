@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "secrets")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({AuditingEntityListener.class, SecretSavedListener.class})
+@EntityListeners({ AuditingEntityListener.class, SecretSavedListener.class })
 public class SecretEntity implements BaseEntity {
 
     @Id

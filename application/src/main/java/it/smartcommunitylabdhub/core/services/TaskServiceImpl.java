@@ -1,15 +1,15 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.entities.TaskAccessor;
-import it.smartcommunitylabdhub.commons.models.accessors.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
-import it.smartcommunitylabdhub.commons.services.interfaces.TaskService;
+import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
@@ -132,7 +132,7 @@ public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, Ta
 
         K8sTaskBaseSpec taskSpec = specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, taskDTO.getSpec());
 
-        TaskAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
+        TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
         if (!taskDTO.getProject().equals(taskAccessor.getProject())) {
             throw new CoreException(
                 "Task string Project and associated Project does not match",

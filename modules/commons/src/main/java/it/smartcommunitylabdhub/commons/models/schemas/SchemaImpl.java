@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.commons.models.schemas;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +11,8 @@ import lombok.Builder;
 @Builder
 public class SchemaImpl implements Schema, Serializable {
 
-    private final String key;
-
     private final String kind;
+    private final String runtime;
 
     @JsonIgnore
     private final EntityName entity;
@@ -22,13 +21,13 @@ public class SchemaImpl implements Schema, Serializable {
     private final transient JsonNode schema;
 
     @Override
-    public String key() {
-        return key;
+    public String kind() {
+        return kind;
     }
 
     @Override
-    public String kind() {
-        return kind;
+    public String runtime() {
+        return runtime;
     }
 
     @Override

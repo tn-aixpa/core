@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecFactory;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
+import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.CoreApplication;
 import jakarta.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
@@ -15,6 +15,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * The `SpecTypeFactory` class is responsible for scanning the classpath to discover
@@ -60,9 +61,17 @@ public class SpecTypeScanner {
                 try {
                     // Load the class and check for SpecType annotation.
                     Class<? extends Spec> specClass = (Class<? extends Spec>) Class.forName(className);
-                    SpecType specTypeAnnotation = specClass.getAnnotation(SpecType.class);
-                    String kind = specTypeAnnotation.kind();
-                    EntityName entity = specTypeAnnotation.entity();
+                    SpecType type = specClass.getAnnotation(SpecType.class);
+                    String kind = type.kind();
+                    EntityName entity = type.entity();
+                    String runtime = type.runtime();
+
+                    if (StringUtils.hasText(runtime)) {
+                        //enforce runtime prefix rule on kind
+                        if (!kind.startsWith(runtime)) {
+                            throw new IllegalArgumentException("invalid kind " + kind + "for runtime " + runtime);
+                        }
+                    }
 
                     // String specKey = specTypeAnnotation.kind() + "_" + specTypeAnnotation.entity().name().toLowerCase();
                     // if (!specTypeAnnotation.runtime().isEmpty()) {
@@ -70,9 +79,9 @@ public class SpecTypeScanner {
                     // }
 
                     log.debug("discovered spec for {}:{} with class {}", entity, kind, specClass.getName());
-                    specRegistry.registerSpec(kind, entity, specClass);
-                } catch (ClassNotFoundException e) {
-                    // Handle exceptions when a class is not found.
+                    specRegistry.registerSpec(type, specClass);
+                } catch (IllegalArgumentException | ClassNotFoundException e) {
+                    log.error("error registering spec {}: {}", className, e.getMessage());
                 }
             }
         }

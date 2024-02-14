@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import it.smartcommunitylabdhub.commons.annotations.common.ConverterType;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
-import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import java.io.IOException;
 import java.util.HashMap;

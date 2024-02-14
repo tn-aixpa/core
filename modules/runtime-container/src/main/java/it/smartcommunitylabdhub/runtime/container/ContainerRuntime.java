@@ -1,32 +1,32 @@
 package it.smartcommunitylabdhub.runtime.container;
 
+import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runnables.Runnable;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.runtimes.Runtime;
-import it.smartcommunitylabdhub.commons.infrastructure.factories.specs.SpecRegistry;
-import it.smartcommunitylabdhub.commons.models.accessors.entities.RunAccessor;
-import it.smartcommunitylabdhub.commons.models.accessors.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
+import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.run.specs.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.specs.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.services.interfaces.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerDeployBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerJobBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerServeBuilder;
-import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpecFactory;
-import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpecFactory;
-import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskDeploySpec;
-import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskJobSpec;
-import it.smartcommunitylabdhub.runtime.container.models.specs.task.TaskServeSpec;
 import it.smartcommunitylabdhub.runtime.container.runners.ContainerDeployRunner;
 import it.smartcommunitylabdhub.runtime.container.runners.ContainerJobRunner;
 import it.smartcommunitylabdhub.runtime.container.runners.ContainerServeRunner;
+import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpecFactory;
+import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpecFactory;
+import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
+import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
@@ -139,7 +139,7 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
         // Create string run accessor from task
         //TODO drop the utils and get the task accessor from the spec.
-        RunAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
+        RunSpecAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
 
         return switch (runAccessor.getTask()) {
             case "deploy" -> new ContainerDeployRunner(

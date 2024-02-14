@@ -28,8 +28,8 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 public class SecretContextServiceImpl
-        extends ContextService<SecretEntity, SecretEntityFilter>
-        implements SecretContextService {
+    extends ContextService<SecretEntity, SecretEntityFilter>
+    implements SecretContextService {
 
     @Autowired
     SecretRepository secretRepository;
@@ -61,31 +61,31 @@ public class SecretContextServiceImpl
             // Check if secret already exist if exist throw exception otherwise create a
             // new one
             SecretEntity secret = (SecretEntity) Optional
-                    .ofNullable(secretDTO.getId())
-                    .flatMap(id ->
-                            secretRepository
-                                    .findById(id)
-                                    .map(a -> {
-                                        throw new CoreException(
-                                                ErrorList.DUPLICATE_TASK.getValue(),
-                                                ErrorList.DUPLICATE_TASK.getReason(),
-                                                HttpStatus.INTERNAL_SERVER_ERROR
-                                        );
-                                    })
-                    )
-                    .orElseGet(() -> {
-                        // Build a secret and store it in the database
-                        SecretEntity newSecret = secretEntityBuilder.build(secretDTO);
-                        return secretRepository.saveAndFlush(newSecret);
-                    });
+                .ofNullable(secretDTO.getId())
+                .flatMap(id ->
+                    secretRepository
+                        .findById(id)
+                        .map(a -> {
+                            throw new CoreException(
+                                ErrorList.DUPLICATE_TASK.getValue(),
+                                ErrorList.DUPLICATE_TASK.getReason(),
+                                HttpStatus.INTERNAL_SERVER_ERROR
+                            );
+                        })
+                )
+                .orElseGet(() -> {
+                    // Build a secret and store it in the database
+                    SecretEntity newSecret = secretEntityBuilder.build(secretDTO);
+                    return secretRepository.saveAndFlush(newSecret);
+                });
 
             // Return secret DTO
             return secretDTOBuilder.build(secret, secret.getEmbedded());
         } catch (CustomException e) {
             throw new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -99,34 +99,34 @@ public class SecretContextServiceImpl
             secretEntityFilter.setKind(filter.get("kind"));
             secretEntityFilter.setCreatedDate(filter.get("created"));
             Optional<State> stateOptional = Stream
-                    .of(State.values())
-                    .filter(state -> state.name().equals(filter.get("state")))
-                    .findAny();
+                .of(State.values())
+                .filter(state -> state.name().equals(filter.get("state")))
+                .findAny();
             secretEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
             Specification<SecretEntity> specification = createSpecification(filter, secretEntityFilter);
 
             Page<SecretEntity> secretPage = secretRepository.findAll(
-                    Specification
-                            .where(specification)
-                            .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
-                    pageable
+                Specification
+                    .where(specification)
+                    .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
+                pageable
             );
 
             return new PageImpl<>(
-                    secretPage
-                            .getContent()
-                            .stream()
-                            .map(secret -> secretDTOBuilder.build(secret, secret.getEmbedded()))
-                            .collect(Collectors.toList()),
-                    pageable,
-                    secretPage.getTotalElements()
+                secretPage
+                    .getContent()
+                    .stream()
+                    .map(secret -> secretDTOBuilder.build(secret, secret.getEmbedded()))
+                    .collect(Collectors.toList()),
+                pageable,
+                secretPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -138,13 +138,13 @@ public class SecretContextServiceImpl
             checkContext(projectName);
 
             return this.secretRepository.findByProjectAndId(projectName, uuid)
-                    .map(secret -> secretDTOBuilder.build(secret, secret.getEmbedded()))
-                    .orElseThrow(() -> new CustomException(ErrorList.TASK_NOT_FOUND.getReason(), null));
+                .map(secret -> secretDTOBuilder.build(secret, secret.getEmbedded()))
+                .orElseThrow(() -> new CustomException(ErrorList.TASK_NOT_FOUND.getReason(), null));
         } catch (CustomException e) {
             throw new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -159,33 +159,33 @@ public class SecretContextServiceImpl
             }
             if (!uuid.equals(secretDTO.getId())) {
                 throw new CustomException(
-                        "Trying to update a secret with an ID different from the one passed in the request.",
-                        null
+                    "Trying to update a secret with an ID different from the one passed in the request.",
+                    null
                 );
             }
             // Check project context
             checkContext(secretDTO.getProject());
 
             SecretEntity secret =
-                    this.secretRepository.findById(secretDTO.getId())
-                            .map(a -> // Update the existing secret version
-                                    secretEntityBuilder.update(a, secretDTO)
-                            )
-                            .orElseThrow(() ->
-                                    new CoreException(
-                                            ErrorList.TASK_NOT_FOUND.getValue(),
-                                            ErrorList.TASK_NOT_FOUND.getReason(),
-                                            HttpStatus.INTERNAL_SERVER_ERROR
-                                    )
-                            );
+                this.secretRepository.findById(secretDTO.getId())
+                    .map(a -> // Update the existing secret version
+                        secretEntityBuilder.update(a, secretDTO)
+                    )
+                    .orElseThrow(() ->
+                        new CoreException(
+                            ErrorList.TASK_NOT_FOUND.getValue(),
+                            ErrorList.TASK_NOT_FOUND.getReason(),
+                            HttpStatus.INTERNAL_SERVER_ERROR
+                        )
+                    );
 
             // Return secret DTO
             return secretDTOBuilder.build(secret, secret.getEmbedded());
         } catch (CustomException e) {
             throw new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -201,15 +201,15 @@ public class SecretContextServiceImpl
                 return true;
             }
             throw new CoreException(
-                    ErrorList.TASK_NOT_FOUND.getValue(),
-                    ErrorList.TASK_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
+                ErrorList.TASK_NOT_FOUND.getValue(),
+                ErrorList.TASK_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             throw new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "cannot delete secret",
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "cannot delete secret",
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }

@@ -3,11 +3,14 @@ package it.smartcommunitylabdhub.commons.models.entities.project;
 import com.fasterxml.jackson.annotation.*;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
-import it.smartcommunitylabdhub.commons.models.entities.project.metadata.ProjectMetadata;
 import jakarta.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor
