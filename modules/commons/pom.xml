@@ -83,6 +83,16 @@
             <artifactId>jsonschema-module-jackson</artifactId>
             <version>4.33.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.victools</groupId>
+            <artifactId>jsonschema-module-jakarta-validation</artifactId>
+            <version>4.33.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.victools</groupId>
+            <artifactId>jsonschema-module-swagger-2</artifactId>
+            <version>4.33.1</version>
+        </dependency>
     </dependencies>
 
 </project>

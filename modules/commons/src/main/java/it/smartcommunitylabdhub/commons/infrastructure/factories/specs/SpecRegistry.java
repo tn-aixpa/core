@@ -1,7 +1,9 @@
 package it.smartcommunitylabdhub.commons.infrastructure.factories.specs;
 
 import it.smartcommunitylabdhub.commons.infrastructure.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import java.util.Collection;
 import java.util.Map;
 
 public interface SpecRegistry {
@@ -15,5 +17,9 @@ public interface SpecRegistry {
      */
     <S extends Spec> S createSpec(String kind, EntityName entity, Map<String, Object> data);
 
-    public void registerSpec(String kind, EntityName entity, Class<? extends Spec> spec);
+    void registerSpec(String kind, EntityName entity, Class<? extends Spec> spec);
+
+    Schema getSchema(String kind, EntityName name);
+
+    Collection<Schema> listSchemas(EntityName name);
 }
