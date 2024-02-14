@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import it.smartcommunitylabdhub.commons.annotations.schema.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +16,7 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BaseSpec implements Spec {
 
+    @JsonSchemaIgnore
     private Map<String, Object> extraSpecs = new HashMap<>();
 
     @Override
