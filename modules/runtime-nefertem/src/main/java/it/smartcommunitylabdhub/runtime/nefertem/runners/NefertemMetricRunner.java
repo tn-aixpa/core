@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
-import it.smartcommunitylabdhub.runtime.nefertem.models.specs.run.RunNefertemSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
 import java.util.*;
 
 /**

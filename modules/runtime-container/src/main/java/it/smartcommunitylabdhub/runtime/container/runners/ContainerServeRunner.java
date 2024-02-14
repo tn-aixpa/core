@@ -6,8 +6,8 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-import it.smartcommunitylabdhub.runtime.container.models.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.models.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
 import java.util.*;
 
 /**

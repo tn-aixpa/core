@@ -2,12 +2,11 @@ package it.smartcommunitylabdhub.runtime.mlrun.runners;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
-import it.smartcommunitylabdhub.runtime.mlrun.models.specs.run.RunMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
 import java.util.*;
 
 /**
