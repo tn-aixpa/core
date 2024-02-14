@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;

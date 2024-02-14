@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "artifacts")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({AuditingEntityListener.class, ArtifactSavedListener.class})
+@EntityListeners({ AuditingEntityListener.class, ArtifactSavedListener.class })
 public class ArtifactEntity implements BaseEntity {
 
     @Id

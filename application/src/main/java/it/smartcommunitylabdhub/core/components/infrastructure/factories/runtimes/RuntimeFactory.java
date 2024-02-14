@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;

@@ -91,6 +91,7 @@ public class SpecRegistryImpl implements SpecRegistry {
             throw new IllegalArgumentException();
         }
 
+        @SuppressWarnings("unchecked")
         S spec = (S) specFactory.create();
         if (data != null) {
             spec.configure(data);

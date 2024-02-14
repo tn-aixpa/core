@@ -18,9 +18,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Setter
 @Builder
 @Entity
-@Table(name = "tasks", uniqueConstraints = {@UniqueConstraint(columnNames = {"function", "kind"})})
+@Table(name = "tasks", uniqueConstraints = { @UniqueConstraint(columnNames = { "function", "kind" }) })
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({AuditingEntityListener.class, TaskSavedListener.class})
+@EntityListeners({ AuditingEntityListener.class, TaskSavedListener.class })
 public class TaskEntity implements BaseEntity {
 
     @Id

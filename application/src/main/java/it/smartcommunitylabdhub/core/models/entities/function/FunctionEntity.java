@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "functions")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({AuditingEntityListener.class, FunctionSavedListener.class})
+@EntityListeners({ AuditingEntityListener.class, FunctionSavedListener.class })
 public class FunctionEntity implements BaseEntity {
 
     @Id

@@ -19,7 +19,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "projects")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({AuditingEntityListener.class, ProjectSavedListener.class})
+@EntityListeners({ AuditingEntityListener.class, ProjectSavedListener.class })
 public class ProjectEntity implements BaseEntity {
 
     @Id

@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.components.cloud;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.jackson.mixins.CborMixin;
 import it.smartcommunitylabdhub.commons.models.base.BaseEntity;

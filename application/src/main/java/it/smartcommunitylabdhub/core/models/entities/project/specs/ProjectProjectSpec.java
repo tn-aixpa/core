@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-
 import java.util.Map;
 
 @SpecType(kind = "project", entity = EntityName.PROJECT)
