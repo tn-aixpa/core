@@ -19,6 +19,7 @@ import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.commons.utils.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
@@ -106,6 +107,10 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
             "app.kubernetes.io/managed-by",
             "dhcore"
         );
+        if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
+            labels = new HashMap<>(labels);
+            for (CoreLabel l : runnable.getLabels()) labels.putIfAbsent(l.name(), l.value());
+        }
 
         // Prepare environment variables for the Kubernetes job
         List<V1EnvFromSource> envVarsFromSource = k8sBuilderHelper.getV1EnvFromSource();
@@ -185,6 +190,8 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
                     .stream()
                     .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
             )
+            .affinity(runnable.getAffinity())
+            .tolerations(runnable.getTolerations() != null && !runnable.getTolerations().isEmpty() ? runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList()) : null)
             .volumes(volumes)
             .restartPolicy("Always");
 

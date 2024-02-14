@@ -59,6 +59,9 @@ public class ContainerDeployRunner implements Runner {
             .volumes(runContainerSpec.getTaskDeploySpec().getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
+            .labels(runContainerSpec.getTaskDeploySpec().getLabels())
+            .affinity(runContainerSpec.getTaskDeploySpec().getAffinity())
+            .tolerations(runContainerSpec.getTaskDeploySpec().getTolerations())
             .build();
 
         Optional

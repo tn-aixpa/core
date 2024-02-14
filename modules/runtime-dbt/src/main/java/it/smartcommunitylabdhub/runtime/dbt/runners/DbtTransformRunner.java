@@ -59,6 +59,9 @@ public class DbtTransformRunner implements Runner {
             .volumes(runDbtSpec.getTaskSpec().getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
+            .labels(runDbtSpec.getTaskSpec().getLabels())
+            .affinity(runDbtSpec.getTaskSpec().getAffinity())
+            .tolerations(runDbtSpec.getTaskSpec().getTolerations())
             .state(runDefaultFieldAccessor.getState())
             .build();
 

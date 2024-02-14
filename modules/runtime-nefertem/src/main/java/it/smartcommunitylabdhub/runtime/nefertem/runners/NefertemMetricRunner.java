@@ -59,6 +59,9 @@ public class NefertemMetricRunner implements Runner {
             .volumes(runNefertemSpec.getTaskMetricSpec().getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
+            .labels(runNefertemSpec.getTaskMetricSpec().getLabels())
+            .affinity(runNefertemSpec.getTaskMetricSpec().getAffinity())
+            .tolerations(runNefertemSpec.getTaskMetricSpec().getTolerations())
             .state(runDefaultFieldAccessor.getState())
             .build();
 

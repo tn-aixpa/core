@@ -58,6 +58,9 @@ public class NefertemValidateRunner implements Runner {
             .volumes(runNefertemSpec.getTaskValidateSpec().getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
+            .labels(runNefertemSpec.getTaskValidateSpec().getLabels())
+            .affinity(runNefertemSpec.getTaskValidateSpec().getAffinity())
+            .tolerations(runNefertemSpec.getTaskValidateSpec().getTolerations())
             .state(runDefaultFieldAccessor.getState())
             .build();
 
