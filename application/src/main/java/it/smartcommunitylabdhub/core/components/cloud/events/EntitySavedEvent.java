@@ -17,11 +17,7 @@ public class EntitySavedEvent<T extends BaseEntity> extends ApplicationEvent imp
         this.entity = entity;
     }
 
-    public Class<?> getEventClass() {
-        return this.getClazz();
-    }
-
-    public String getEventClassName() {
-        return this.getClazz().getName();
+    public T getEntity() {
+        return (T) entity;
     }
 }

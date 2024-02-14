@@ -24,7 +24,7 @@ public class SpringCloudBroadcastEvent {
     public <T extends BaseEntity> void handleEntitySavedEvent(EntitySavedEvent<T> event) {
         // Broadcast event on rabbit amqp
         try {
-            JacksonMapper.OBJECT_MAPPER.addMixIn(event.getEventClass(), CborMixin.class);
+            JacksonMapper.OBJECT_MAPPER.addMixIn(event.getClazz(), CborMixin.class);
             String serializedEntity = JacksonMapper.OBJECT_MAPPER.writeValueAsString(event.getEntity());
 
             rabbitTemplate.convertAndSend("entityTopic", "entityRoutingKey", serializedEntity);
