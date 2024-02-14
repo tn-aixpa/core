@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
@@ -21,7 +22,7 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "container+run", entity = EntityName.RUN)
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container+run", entity = EntityName.RUN)
 public class RunContainerSpec extends RunBaseSpec {
 
     @JsonProperty("job_spec")

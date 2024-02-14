@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
 import java.util.Map;
@@ -19,7 +20,7 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "mlrun+run", entity = EntityName.RUN)
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = "mlrun+run", entity = EntityName.RUN)
 public class RunMlrunSpec extends RunBaseSpec {
 
     @JsonProperty("mlrun_spec")

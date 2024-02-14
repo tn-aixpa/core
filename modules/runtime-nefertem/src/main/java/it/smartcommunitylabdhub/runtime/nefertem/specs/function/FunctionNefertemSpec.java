@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "nefertem", entity = EntityName.FUNCTION)
+@SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem", entity = EntityName.FUNCTION)
 public class FunctionNefertemSpec extends FunctionBaseSpec {
 
     private List<Map<String, Object>> constraints;

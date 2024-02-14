@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "container", entity = EntityName.FUNCTION)
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container", entity = EntityName.FUNCTION)
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
     @NotBlank

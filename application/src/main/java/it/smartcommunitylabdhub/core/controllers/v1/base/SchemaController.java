@@ -11,6 +11,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,9 +38,15 @@ public class SchemaController {
     @GetMapping(path = "/{entity}")
     public ResponseEntity<Page<Schema>> listSchemas(
         @PathVariable @Valid @NotNull EntityName entity,
+        @RequestParam(required = false) Optional<String> runtime,
         Pageable pageable
     ) {
-        Collection<Schema> schemas = specRegistry.listSchemas(entity);
+        Collection<Schema> schemas;
+        if (runtime.isPresent()) {
+            schemas = specRegistry.getSchemas(entity, runtime.get());
+        } else {
+            schemas = specRegistry.listSchemas(entity);
+        }
         PageImpl<Schema> page = new PageImpl<>(new ArrayList<>(schemas), pageable, schemas.size());
 
         return ResponseEntity.ok(page);

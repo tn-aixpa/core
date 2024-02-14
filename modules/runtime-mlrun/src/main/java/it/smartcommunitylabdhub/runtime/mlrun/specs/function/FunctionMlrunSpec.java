@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "mlrun", entity = EntityName.FUNCTION)
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = "mlrun", entity = EntityName.FUNCTION)
 public class FunctionMlrunSpec extends FunctionBaseSpec {
 
     private String image;

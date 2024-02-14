@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskInferSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskMetricSpec;
@@ -22,7 +23,7 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "nefertem+run", entity = EntityName.RUN)
+@SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem+run", entity = EntityName.RUN)
 public class RunNefertemSpec extends RunBaseSpec {
 
     @JsonProperty("infer_spec")

@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
 import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
 import java.util.Map;
@@ -19,7 +20,7 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@SpecType(kind = "dbt+run", entity = EntityName.RUN)
+@SpecType(runtime = DbtRuntime.RUNTIME, kind = "dbt+run", entity = EntityName.RUN)
 public class RunDbtSpec extends RunBaseSpec {
 
     @JsonProperty("transform_spec")

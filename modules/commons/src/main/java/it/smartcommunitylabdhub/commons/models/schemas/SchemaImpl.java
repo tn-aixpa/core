@@ -11,9 +11,8 @@ import lombok.Builder;
 @Builder
 public class SchemaImpl implements Schema, Serializable {
 
-    private final String key;
-
     private final String kind;
+    private final String runtime;
 
     @JsonIgnore
     private final EntityName entity;
@@ -22,13 +21,13 @@ public class SchemaImpl implements Schema, Serializable {
     private final transient JsonNode schema;
 
     @Override
-    public String key() {
-        return key;
+    public String kind() {
+        return kind;
     }
 
     @Override
-    public String kind() {
-        return kind;
+    public String runtime() {
+        return runtime;
     }
 
     @Override

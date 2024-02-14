@@ -13,6 +13,8 @@ import org.springframework.stereotype.Indexed;
 @Target(ElementType.TYPE)
 @Indexed
 public @interface SpecType {
+    String runtime() default "";
+
     String kind();
 
     EntityName entity();

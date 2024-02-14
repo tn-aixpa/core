@@ -3,13 +3,14 @@ package it.smartcommunitylabdhub.runtime.container.specs.task;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "container+serve", entity = EntityName.TASK)
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container+serve", entity = EntityName.TASK)
 public class TaskServeSpec extends TaskDeploySpec {
 
     /// TODO: Service parameters port list...ClusterIP or NodePort
