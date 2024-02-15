@@ -18,9 +18,7 @@ public class DbtTransformBuilder implements Builder<FunctionDbtSpec, TaskTransfo
 
     @Override
     public RunDbtSpec build(FunctionDbtSpec funSpec, TaskTransformSpec taskSpec, RunDbtSpec runSpec) {
-        RunDbtSpec runDbtSpec = RunDbtSpec.builder().build();
-
-        runDbtSpec.configure(runSpec.toMap());
+        RunDbtSpec runDbtSpec = new RunDbtSpec(runSpec.toMap());
         runDbtSpec.setTaskSpec(taskSpec);
         runDbtSpec.setFuncSpec(funSpec);
 

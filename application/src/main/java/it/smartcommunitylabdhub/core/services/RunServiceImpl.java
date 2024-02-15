@@ -243,16 +243,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
 
                                     // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
                                     // an exception occur! for.
-                                    RunBaseSpec runSpecBuilt = runtime.build(
-                                        specRegistry.createSpec(
-                                            functionDTO.getKind(),
-                                            EntityName.FUNCTION,
-                                            functionDTO.getSpec()
-                                        ),
-                                        taskBaseSpec,
-                                        runBaseSpec,
-                                        taskDTO.getKind()
-                                    );
+                                    RunBaseSpec runSpecBuilt = runtime.build(functionDTO, taskDTO, runDTO);
 
                                     // Update run spec
                                     runDTO.setSpec(runSpecBuilt.toMap());

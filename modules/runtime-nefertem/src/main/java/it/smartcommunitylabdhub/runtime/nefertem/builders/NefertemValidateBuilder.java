@@ -18,9 +18,7 @@ public class NefertemValidateBuilder implements Builder<FunctionNefertemSpec, Ta
 
     @Override
     public RunNefertemSpec build(FunctionNefertemSpec funSpec, TaskValidateSpec taskSpec, RunNefertemSpec runSpec) {
-        RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
-
-        runNefertemSpec.configure(runSpec.toMap());
+        RunNefertemSpec runNefertemSpec = new RunNefertemSpec(runSpec.toMap());
         runNefertemSpec.setFuncSpec(funSpec);
         runNefertemSpec.setTaskValidateSpec(taskSpec);
 

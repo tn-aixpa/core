@@ -18,9 +18,7 @@ public class NefertemProfileBuilder implements Builder<FunctionNefertemSpec, Tas
 
     @Override
     public RunNefertemSpec build(FunctionNefertemSpec funSpec, TaskProfileSpec taskSpec, RunNefertemSpec runSpec) {
-        RunNefertemSpec runNefertemSpec = RunNefertemSpec.builder().build();
-
-        runNefertemSpec.configure(runSpec.toMap());
+        RunNefertemSpec runNefertemSpec = new RunNefertemSpec(runSpec.toMap());
         runNefertemSpec.setFuncSpec(funSpec);
         runNefertemSpec.setTaskProfileSpec(taskSpec);
 

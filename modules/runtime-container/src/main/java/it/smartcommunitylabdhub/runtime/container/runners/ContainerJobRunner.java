@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,59 +24,58 @@ import java.util.Set;
  *
  * @RunnerComponent(runtime = "container", task = "job")
  */
-public class ContainerJobRunner implements Runner {
+public class ContainerJobRunner implements Runner<K8sJobRunnable> {
 
     private static final String TASK = "job";
 
-    private final FunctionContainerSpec functionContainerSpec;
+    private final FunctionContainerSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
     public ContainerJobRunner(FunctionContainerSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
-        this.functionContainerSpec = functionContainerSpec;
+        this.functionSpec = functionContainerSpec;
         this.groupedSecrets = groupedSecrets;
     }
 
     @Override
-    public K8sJobRunnable produce(Run runDTO) {
-        RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
-        runContainerSpec.configure(runDTO.getSpec());
-
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(runDTO.getStatus());
+    public K8sJobRunnable produce(Run run) {
+        RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
+        TaskJobSpec taskSpec = runSpec.getTaskJobSpec();
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+            List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
-        Optional.ofNullable(runContainerSpec.getTaskJobSpec().getEnvs()).ifPresent(coreEnvList::addAll);
+        Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
             .builder()
             .runtime(ContainerRuntime.RUNTIME)
             .task(TASK)
-            .image(functionContainerSpec.getImage())
+            .image(functionSpec.getImage())
             .state(statusFieldAccessor.getState())
-            .resources(runContainerSpec.getTaskJobSpec().getResources())
-            .nodeSelector(runContainerSpec.getTaskJobSpec().getNodeSelector())
-            .volumes(runContainerSpec.getTaskJobSpec().getVolumes())
+            .resources(taskSpec.getResources())
+            .nodeSelector(taskSpec.getNodeSelector())
+            .volumes(taskSpec.getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
-            .labels(runContainerSpec.getTaskJobSpec().getLabels())
-            .affinity(runContainerSpec.getTaskJobSpec().getAffinity())
-            .tolerations(runContainerSpec.getTaskJobSpec().getTolerations())
+            .labels(taskSpec.getLabels())
+            .affinity(taskSpec.getAffinity())
+            .tolerations(taskSpec.getTolerations())
             .build();
 
         Optional
-            .ofNullable(functionContainerSpec.getArgs())
+            .ofNullable(functionSpec.getArgs())
             .ifPresent(args ->
                 k8sJobRunnable.setArgs(
                     args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
                 )
             );
 
-        Optional.ofNullable(functionContainerSpec.getCommand()).ifPresent(k8sJobRunnable::setCommand);
+        Optional.ofNullable(functionSpec.getCommand()).ifPresent(k8sJobRunnable::setCommand);
 
-        k8sJobRunnable.setId(runDTO.getId());
-        k8sJobRunnable.setProject(runDTO.getProject());
+        k8sJobRunnable.setId(run.getId());
+        k8sJobRunnable.setProject(run.getProject());
 
         return k8sJobRunnable;
     }

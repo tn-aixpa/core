@@ -10,10 +10,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container", entity = EntityName.FUNCTION)
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
@@ -26,6 +28,10 @@ public class FunctionContainerSpec extends FunctionBaseSpec {
     private String command;
     private String entrypoint;
     private List<String> args;
+
+    public FunctionContainerSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {

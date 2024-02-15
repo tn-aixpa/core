@@ -7,12 +7,20 @@ import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container+job", entity = EntityName.TASK)
+@NoArgsConstructor
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = TaskJobSpec.KIND, entity = EntityName.TASK)
 public class TaskJobSpec extends K8sTaskBaseSpec {
+
+    public static final String KIND = "container+job";
+
+    public TaskJobSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {

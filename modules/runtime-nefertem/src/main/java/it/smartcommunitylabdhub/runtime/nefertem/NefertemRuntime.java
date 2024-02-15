@@ -2,17 +2,13 @@ package it.smartcommunitylabdhub.runtime.nefertem;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
-import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.base.RunStatus;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
-import it.smartcommunitylabdhub.commons.services.SpecRegistry;
-import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.nefertem.builders.NefertemInferBuilder;
 import it.smartcommunitylabdhub.runtime.nefertem.builders.NefertemMetricBuilder;
@@ -24,21 +20,22 @@ import it.smartcommunitylabdhub.runtime.nefertem.runners.NefertemProfileRunner;
 import it.smartcommunitylabdhub.runtime.nefertem.runners.NefertemValidateRunner;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
-import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpecFactory;
+import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskInferSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskMetricSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskProfileSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 
 @RuntimeComponent(runtime = NefertemRuntime.RUNTIME)
 public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNefertemSpec, K8sJobRunnable> {
 
     public static final String RUNTIME = "nefertem";
-
-    @Autowired
-    SpecRegistry specRegistry;
-
-    @Autowired
-    RunNefertemSpecFactory runNefertemSpecFactory;
+    private final NefertemInferBuilder inferBuilder = new NefertemInferBuilder();
+    private final NefertemMetricBuilder metricBuilder = new NefertemMetricBuilder();
+    private final NefertemValidateBuilder validateBuilder = new NefertemValidateBuilder();
+    private final NefertemProfileBuilder profileBuilder = new NefertemProfileBuilder();
 
     @Autowired
     ProjectSecretService secretService;
@@ -47,124 +44,66 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
     private String image;
 
     @Override
-    public RunNefertemSpec build(
-        FunctionNefertemSpec funSpec,
-        TaskBaseSpec taskSpec,
-        RunBaseSpec runSpec,
-        String kind
-    ) {
-        /**
-         *  As an alternative, you can use the code below to retrieve the correct builder.
-         *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
-         *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
-         *  the builder in this way remember also that you have to register the builder as
-         *  a component using the follow annotation: `@BuilderComponent(runtime = "dbt", task = "transform")`
-         *  Only by doing this you can get the bean related
-         * <p>
-         *      NefertemInferBuilder builder = (NefertemInferBuilder) getBuilder(kind);
-         */
+    public RunNefertemSpec build(@NotNull Function function, @NotNull Task task, @NotNull Run run) {
+        FunctionNefertemSpec functionSpec = new FunctionNefertemSpec(function.getSpec());
+        RunNefertemSpec runSpec = new RunNefertemSpec(run.getSpec());
 
-        // NefertemInferBuilder b = getBuilder(kind);
+        String kind = task.getKind();
 
         // Retrieve builder using task kind
         switch (kind) {
-            case "nefertem+infer" -> {
-                NefertemInferBuilder builder = new NefertemInferBuilder();
-
-                return builder.build(
-                    funSpec,
-                    specRegistry.createSpec("nefertem+infer", EntityName.TASK, taskSpec.toMap()),
-                    specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
-                );
+            case TaskInferSpec.KIND -> {
+                TaskInferSpec taskInferSpec = new TaskInferSpec(task.getSpec());
+                return inferBuilder.build(functionSpec, taskInferSpec, runSpec);
             }
-            case "nefertem+validate" -> {
-                NefertemValidateBuilder builder = new NefertemValidateBuilder();
-
-                return builder.build(
-                    funSpec,
-                    specRegistry.createSpec("nefertem+validate", EntityName.TASK, taskSpec.toMap()),
-                    specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
-                );
+            case TaskValidateSpec.KIND -> {
+                TaskValidateSpec taskValidateSpec = new TaskValidateSpec(task.getSpec());
+                return validateBuilder.build(functionSpec, taskValidateSpec, runSpec);
             }
-            case "nefertem+metric" -> {
-                NefertemMetricBuilder builder = new NefertemMetricBuilder();
-
-                return builder.build(
-                    funSpec,
-                    specRegistry.createSpec("nefertem+metric", EntityName.TASK, taskSpec.toMap()),
-                    specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
-                );
+            case TaskProfileSpec.KIND -> {
+                TaskProfileSpec taskProfileSpec = new TaskProfileSpec(task.getSpec());
+                return profileBuilder.build(functionSpec, taskProfileSpec, runSpec);
             }
-            case "nefertem+profile" -> {
-                NefertemProfileBuilder builder = new NefertemProfileBuilder();
-
-                return builder.build(
-                    funSpec,
-                    specRegistry.createSpec("nefertem+profile", EntityName.TASK, taskSpec.toMap()),
-                    specRegistry.createSpec("nefertem+run", EntityName.RUN, runSpec.toMap())
-                );
+            case TaskMetricSpec.KIND -> {
+                TaskMetricSpec taskMetricSpec = new TaskMetricSpec(task.getSpec());
+                return metricBuilder.build(functionSpec, taskMetricSpec, runSpec);
             }
-            default -> throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task.",
-                HttpStatus.INTERNAL_SERVER_ERROR
+            default -> throw new IllegalArgumentException(
+                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
 
     @Override
-    public K8sJobRunnable run(Run runDTO) {
-        /**
-         *  As an alternative, you can use the code below to retrieve the correct runner.
-         *  Remember that if you follow this path, you still need to retrieve the SpecRegistry
-         *  either with the @Autowired annotation or with the BeanProvider. If you want to retrieve
-         *  the Runner using specRegistry remember that you have to register also each Runner
-         *  component in this way : `@RunnerComponent(runtime = "dbt", task = "transform")`
-         *  Only by doing this you can get the bean related
-         * <p>
-         *      // Retrieve base run spec to use task
-         *      RunRunSpec runBaseSpec = specRegistry.createSpec(
-         *              runDTO.getKind(),
-         *              SpecEntity.RUN,
-         *              runDTO.getSpec()
-         *      );
-         *      RunAccessor runAccessor = RunUtils.parseRun(runBaseSpec.getTask());
-         *      Runner runner = getRunner(runAccessor.getTask());
-         */
-
-        // Crete spec for run
-        RunNefertemSpec runRunSpec = runNefertemSpecFactory.create();
-        runRunSpec.configure(runDTO.getSpec());
+    public K8sJobRunnable run(Run run) {
+        RunNefertemSpec runSpec = new RunNefertemSpec(run.getSpec());
 
         // Create string run accessor from task
-        RunSpecAccessor runAccessor = RunUtils.parseRun(runRunSpec.getTask());
+        //TODO drop the utils and get the task accessor from the spec.
+        RunSpecAccessor runAccessor = RunUtils.parseRun(runSpec.getTask());
 
         return switch (runAccessor.getTask()) {
-            case "infer" -> new NefertemInferRunner(
+            case TaskInferSpec.KIND -> new NefertemInferRunner(
                 image,
-                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskInferSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskInferSpec().getSecrets())
             )
-                .produce(runDTO);
-            case "validate" -> new NefertemValidateRunner(
+                .produce(run);
+            case TaskValidateSpec.KIND -> new NefertemValidateRunner(
                 image,
-                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskValidateSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskValidateSpec().getSecrets())
             )
-                .produce(runDTO);
-            case "profile" -> new NefertemProfileRunner(
+                .produce(run);
+            case TaskProfileSpec.KIND -> new NefertemProfileRunner(
                 image,
-                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskProfileSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskProfileSpec().getSecrets())
             )
-                .produce(runDTO);
-            case "metric" -> new NefertemMetricRunner(
+                .produce(run);
+            case TaskMetricSpec.KIND -> new NefertemMetricRunner(
                 image,
-                secretService.groupSecrets(runDTO.getProject(), runRunSpec.getTaskMetricSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskMetricSpec().getSecrets())
             )
-                .produce(runDTO);
-            default -> throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "Kind not recognized. Cannot retrieve the right Runner",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                .produce(run);
+            default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
 

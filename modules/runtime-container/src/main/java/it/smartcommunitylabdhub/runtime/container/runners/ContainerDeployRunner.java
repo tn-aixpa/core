@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,61 +24,58 @@ import java.util.Set;
  *
  * @RunnerComponent(runtime = "container", task = "deploy")
  */
-public class ContainerDeployRunner implements Runner {
+public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
 
     private static final String TASK = "deploy";
 
-    private final FunctionContainerSpec functionContainerSpec;
+    private final FunctionContainerSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
     public ContainerDeployRunner(FunctionContainerSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
-        this.functionContainerSpec = functionContainerSpec;
+        this.functionSpec = functionContainerSpec;
         this.groupedSecrets = groupedSecrets;
     }
 
     @Override
-    public K8sDeploymentRunnable produce(Run runDTO) {
-        // Retrieve information about RunDbtSpec
-
-        RunContainerSpec runContainerSpec = RunContainerSpec.builder().build();
-        runContainerSpec.configure(runDTO.getSpec());
-
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(runDTO.getStatus());
+    public K8sDeploymentRunnable produce(Run run) {
+        RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
+        TaskDeploySpec taskSpec = runSpec.getTaskDeploySpec();
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+            List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
-        Optional.ofNullable(runContainerSpec.getTaskDeploySpec().getEnvs()).ifPresent(coreEnvList::addAll);
+        Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable
             .builder()
-            .runtime(ContainerRuntime.RUNTIME) //TODO: delete accessor.
+            .runtime(ContainerRuntime.RUNTIME)
             .task(TASK)
-            .image(functionContainerSpec.getImage())
+            .image(functionSpec.getImage())
             .state(statusFieldAccessor.getState())
-            .resources(runContainerSpec.getTaskDeploySpec().getResources())
-            .nodeSelector(runContainerSpec.getTaskDeploySpec().getNodeSelector())
-            .volumes(runContainerSpec.getTaskDeploySpec().getVolumes())
+            .resources(taskSpec.getResources())
+            .nodeSelector(taskSpec.getNodeSelector())
+            .volumes(taskSpec.getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
-            .labels(runContainerSpec.getTaskDeploySpec().getLabels())
-            .affinity(runContainerSpec.getTaskDeploySpec().getAffinity())
-            .tolerations(runContainerSpec.getTaskDeploySpec().getTolerations())
+            .labels(taskSpec.getLabels())
+            .affinity(taskSpec.getAffinity())
+            .tolerations(taskSpec.getTolerations())
             .build();
 
         Optional
-            .ofNullable(functionContainerSpec.getArgs())
+            .ofNullable(functionSpec.getArgs())
             .ifPresent(args ->
                 k8sDeploymentRunnable.setArgs(
                     args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
                 )
             );
 
-        Optional.ofNullable(functionContainerSpec.getEntrypoint()).ifPresent(k8sDeploymentRunnable::setEntrypoint);
+        Optional.ofNullable(functionSpec.getEntrypoint()).ifPresent(k8sDeploymentRunnable::setEntrypoint);
 
-        k8sDeploymentRunnable.setId(runDTO.getId());
-        k8sDeploymentRunnable.setProject(runDTO.getProject());
+        k8sDeploymentRunnable.setId(run.getId());
+        k8sDeploymentRunnable.setProject(run.getProject());
 
         return k8sDeploymentRunnable;
     }

@@ -7,12 +7,20 @@ import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(runtime = MlrunRuntime.RUNTIME, kind = "mlrun+mlrun", entity = EntityName.TASK)
+@NoArgsConstructor
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = TaskMlrunSpec.KIND, entity = EntityName.TASK)
 public class TaskMlrunSpec extends K8sTaskBaseSpec {
+
+    public static final String KIND = "mlrun+mlrun";
+
+    public TaskMlrunSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {

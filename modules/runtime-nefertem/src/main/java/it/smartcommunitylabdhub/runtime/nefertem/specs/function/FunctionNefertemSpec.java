@@ -9,10 +9,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem", entity = EntityName.FUNCTION)
 public class FunctionNefertemSpec extends FunctionBaseSpec {
 
@@ -22,6 +24,10 @@ public class FunctionNefertemSpec extends FunctionBaseSpec {
 
     @JsonProperty("error_report")
     private String errorReport;
+
+    public FunctionNefertemSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {

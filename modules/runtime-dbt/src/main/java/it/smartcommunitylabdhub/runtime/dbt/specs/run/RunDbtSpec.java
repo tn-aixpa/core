@@ -9,16 +9,12 @@ import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
 import java.io.Serializable;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 @SpecType(runtime = DbtRuntime.RUNTIME, kind = "dbt+run", entity = EntityName.RUN)
 public class RunDbtSpec extends RunBaseSpec {
@@ -28,6 +24,10 @@ public class RunDbtSpec extends RunBaseSpec {
 
     @JsonProperty("function_spec")
     private FunctionDbtSpec funcSpec;
+
+    public RunDbtSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {

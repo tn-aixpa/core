@@ -18,9 +18,7 @@ public class MlrunMlrunBuilder implements Builder<FunctionMlrunSpec, TaskMlrunSp
 
     @Override
     public RunMlrunSpec build(FunctionMlrunSpec funSpec, TaskMlrunSpec taskSpec, RunMlrunSpec runSpec) {
-        RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
-
-        runMlrunSpec.configure(runSpec.toMap());
+        RunMlrunSpec runMlrunSpec = new RunMlrunSpec(runSpec.toMap());
         runMlrunSpec.setTaskSpec(taskSpec);
         runMlrunSpec.setFuncSpec(funSpec);
 

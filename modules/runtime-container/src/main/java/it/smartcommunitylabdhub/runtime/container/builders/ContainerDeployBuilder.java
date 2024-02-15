@@ -18,9 +18,10 @@ public class ContainerDeployBuilder implements Builder<FunctionContainerSpec, Ta
 
     @Override
     public RunContainerSpec build(FunctionContainerSpec funSpec, TaskDeploySpec taskSpec, RunContainerSpec runSpec) {
-        runSpec.setTaskDeploySpec(taskSpec);
-        runSpec.setFuncSpec(funSpec);
+        RunContainerSpec containerSpec = new RunContainerSpec(runSpec.toMap());
+        containerSpec.setTaskDeploySpec(taskSpec);
+        containerSpec.setFunctionSpec(funSpec);
 
-        return runSpec;
+        return containerSpec;
     }
 }

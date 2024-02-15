@@ -6,6 +6,6 @@ import javax.validation.constraints.NotNull;
 /**
  * Prender il RunDTO e produce il Runnable
  */
-public interface Runner {
-    Runnable produce(@NotNull Run runDTO);
+public interface Runner<R extends Runnable> {
+    R produce(@NotNull Run runDTO);
 }

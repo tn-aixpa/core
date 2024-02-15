@@ -18,9 +18,10 @@ public class ContainerJobBuilder implements Builder<FunctionContainerSpec, TaskJ
 
     @Override
     public RunContainerSpec build(FunctionContainerSpec funSpec, TaskJobSpec taskSpec, RunContainerSpec runSpec) {
-        runSpec.setTaskJobSpec(taskSpec);
-        runSpec.setFuncSpec(funSpec);
+        RunContainerSpec containerSpec = new RunContainerSpec(runSpec.toMap());
+        containerSpec.setTaskJobSpec(taskSpec);
+        containerSpec.setFunctionSpec(funSpec);
 
-        return runSpec;
+        return containerSpec;
     }
 }

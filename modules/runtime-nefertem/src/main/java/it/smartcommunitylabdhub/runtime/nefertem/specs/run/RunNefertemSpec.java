@@ -20,8 +20,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 @SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem+run", entity = EntityName.RUN)
 public class RunNefertemSpec extends RunBaseSpec {
@@ -40,6 +38,10 @@ public class RunNefertemSpec extends RunBaseSpec {
 
     @JsonProperty("function_spec")
     private FunctionNefertemSpec funcSpec;
+
+    public RunNefertemSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {

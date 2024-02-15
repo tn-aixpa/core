@@ -8,12 +8,16 @@ import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem+validate", entity = EntityName.TASK)
+@NoArgsConstructor
+@SpecType(runtime = NefertemRuntime.RUNTIME, kind = TaskValidateSpec.KIND, entity = EntityName.TASK)
 public class TaskValidateSpec extends K8sTaskBaseSpec {
+
+    public static final String KIND = "nefertem+validate";
 
     private String framework;
 
@@ -24,6 +28,10 @@ public class TaskValidateSpec extends K8sTaskBaseSpec {
 
     @JsonProperty("num_worker")
     private Integer numWorker;
+
+    public TaskValidateSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {

@@ -18,9 +18,10 @@ public class ContainerServeBuilder implements Builder<FunctionContainerSpec, Tas
 
     @Override
     public RunContainerSpec build(FunctionContainerSpec funSpec, TaskServeSpec taskSpec, RunContainerSpec runSpec) {
-        runSpec.setTaskServeSpec(taskSpec);
-        runSpec.setFuncSpec(funSpec);
+        RunContainerSpec containerSpec = new RunContainerSpec(runSpec.toMap());
+        containerSpec.setTaskServeSpec(taskSpec);
+        containerSpec.setFunctionSpec(funSpec);
 
-        return runSpec;
+        return containerSpec;
     }
 }

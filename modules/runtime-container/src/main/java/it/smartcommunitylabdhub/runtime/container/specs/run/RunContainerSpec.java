@@ -19,8 +19,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
 @SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container+run", entity = EntityName.RUN)
 public class RunContainerSpec extends RunBaseSpec {
@@ -35,7 +33,11 @@ public class RunContainerSpec extends RunBaseSpec {
     private TaskServeSpec taskServeSpec;
 
     @JsonProperty("function_spec")
-    private FunctionContainerSpec funcSpec;
+    private FunctionContainerSpec functionSpec;
+
+    public RunContainerSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {
@@ -46,6 +48,6 @@ public class RunContainerSpec extends RunBaseSpec {
         this.setTaskJobSpec(runContainerSpec.getTaskJobSpec());
         this.setTaskDeploySpec(runContainerSpec.getTaskDeploySpec());
         this.setTaskServeSpec(runContainerSpec.getTaskServeSpec());
-        this.setFuncSpec(runContainerSpec.getFuncSpec());
+        this.setFunctionSpec(runContainerSpec.getFunctionSpec());
     }
 }

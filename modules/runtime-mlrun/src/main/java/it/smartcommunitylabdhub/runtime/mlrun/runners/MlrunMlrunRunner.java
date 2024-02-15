@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ import java.util.Set;
  *
  * @RunnerComponent(runtime = "mlrun", task = "mlrun")
  */
-public class MlrunMlrunRunner implements Runner {
+public class MlrunMlrunRunner implements Runner<K8sJobRunnable> {
 
     private static final String TASK = "mlrun";
     private final String image;
@@ -33,18 +34,17 @@ public class MlrunMlrunRunner implements Runner {
     }
 
     @Override
-    public K8sJobRunnable produce(Run runDTO) {
+    public K8sJobRunnable produce(Run run) {
         // Retrieve information about RunMlrunSpec
-        RunMlrunSpec runMlrunSpec = RunMlrunSpec.builder().build();
-        runMlrunSpec.configure(runDTO.getSpec());
-
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(runDTO.getStatus());
+        RunMlrunSpec runSpec = new RunMlrunSpec(run.getSpec());
+        TaskMlrunSpec taskSpec = runSpec.getTaskSpec();
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-            List.of(new CoreEnv("PROJECT_NAME", runDTO.getProject()), new CoreEnv("RUN_ID", runDTO.getId()))
+            List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
-        Optional.ofNullable(runMlrunSpec.getTaskSpec().getEnvs()).ifPresent(coreEnvList::addAll);
+        Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
@@ -54,19 +54,19 @@ public class MlrunMlrunRunner implements Runner {
             .image(image)
             .command("python")
             .args(List.of("wrapper.py").toArray(String[]::new))
-            .resources(runMlrunSpec.getTaskSpec().getResources())
-            .nodeSelector(runMlrunSpec.getTaskSpec().getNodeSelector())
-            .volumes(runMlrunSpec.getTaskSpec().getVolumes())
+            .resources(taskSpec.getResources())
+            .nodeSelector(taskSpec.getNodeSelector())
+            .volumes(taskSpec.getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
-            .labels(runMlrunSpec.getTaskSpec().getLabels())
-            .affinity(runMlrunSpec.getTaskSpec().getAffinity())
-            .tolerations(runMlrunSpec.getTaskSpec().getTolerations())
+            .labels(taskSpec.getLabels())
+            .affinity(taskSpec.getAffinity())
+            .tolerations(taskSpec.getTolerations())
             .state(statusFieldAccessor.getState())
             .build();
 
-        k8sJobRunnable.setId(runDTO.getId());
-        k8sJobRunnable.setProject(runDTO.getProject());
+        k8sJobRunnable.setId(run.getId());
+        k8sJobRunnable.setProject(run.getProject());
 
         return k8sJobRunnable;
     }

@@ -7,14 +7,20 @@ import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @SpecType(runtime = DbtRuntime.RUNTIME, kind = "dbt", entity = EntityName.FUNCTION)
 public class FunctionDbtSpec extends FunctionBaseSpec {
 
     private String sql;
+
+    public FunctionDbtSpec(Map<String, Serializable> data) {
+        configure(data);
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {
