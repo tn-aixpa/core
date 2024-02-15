@@ -1,21 +1,17 @@
 package it.smartcommunitylabdhub.commons.models.entities.run;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import jakarta.validation.constraints.NotEmpty;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class RunBaseSpec extends BaseSpec {
+public abstract class RunBaseSpec extends BaseSpec {
 
     @NotEmpty
     private String task;
@@ -34,8 +30,8 @@ public class RunBaseSpec extends BaseSpec {
     private Boolean localExecution = false;
 
     @Override
-    public void configure(Map<String, Object> data) {
-        RunBaseSpec runBaseSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, RunBaseSpec.class);
+    public void configure(Map<String, Serializable> data) {
+        RunBaseSpec runBaseSpec = mapper.convertValue(data, RunBaseSpec.class);
 
         this.setTask(runBaseSpec.getTask());
         this.setTaskId(runBaseSpec.getTaskId());
@@ -43,8 +39,5 @@ public class RunBaseSpec extends BaseSpec {
         this.setOutputs(runBaseSpec.getOutputs());
         this.setParameters(runBaseSpec.getParameters());
         this.setLocalExecution(runBaseSpec.getLocalExecution());
-
-        super.configure(data);
-        this.setExtraSpecs(runBaseSpec.getExtraSpecs());
     }
 }

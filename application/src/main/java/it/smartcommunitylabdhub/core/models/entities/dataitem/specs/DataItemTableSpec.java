@@ -1,10 +1,9 @@
 package it.smartcommunitylabdhub.core.models.entities.dataitem.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.specs.factories.DataItemTableSpecFactory;
+import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,13 +14,7 @@ import lombok.Setter;
 public class DataItemTableSpec extends DataItemBaseSpec {
 
     @Override
-    public void configure(Map<String, Object> data) {
-        DataItemTableSpec dataItemTableSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            data,
-            DataItemTableSpec.class
-        );
+    public void configure(Map<String, Serializable> data) {
         super.configure(data);
-
-        this.setExtraSpecs(dataItemTableSpec.getExtraSpecs());
     }
 }

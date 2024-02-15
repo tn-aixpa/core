@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.runtime.nefertem.specs.run;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
@@ -11,6 +10,7 @@ import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskInferSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskMetricSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskProfileSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
+import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,17 +42,15 @@ public class RunNefertemSpec extends RunBaseSpec {
     private FunctionNefertemSpec funcSpec;
 
     @Override
-    public void configure(Map<String, Object> data) {
-        RunNefertemSpec runNefertemSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, RunNefertemSpec.class);
+    public void configure(Map<String, Serializable> data) {
+        super.configure(data);
+
+        RunNefertemSpec runNefertemSpec = mapper.convertValue(data, RunNefertemSpec.class);
 
         this.setTaskInferSpec(runNefertemSpec.getTaskInferSpec());
         this.setTaskMetricSpec(runNefertemSpec.getTaskMetricSpec());
         this.setTaskProfileSpec(runNefertemSpec.getTaskProfileSpec());
         this.setTaskValidateSpec(runNefertemSpec.getTaskValidateSpec());
-
         this.setFuncSpec(runNefertemSpec.getFuncSpec());
-
-        super.configure(data);
-        this.setExtraSpecs(runNefertemSpec.getExtraSpecs());
     }
 }

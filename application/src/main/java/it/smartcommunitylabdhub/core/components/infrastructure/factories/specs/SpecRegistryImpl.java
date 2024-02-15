@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.SchemaUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.FactoryUtils;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +67,11 @@ public class SpecRegistryImpl implements SpecRegistry {
      * @return An instance of the specified spec type, or null if not found or in case of errors.
      */
     @Override
-    public <S extends Spec> S createSpec(@NotNull String kind, @NotNull EntityName entity, Map<String, Object> data) {
+    public <S extends Spec> S createSpec(
+        @NotNull String kind,
+        @NotNull EntityName entity,
+        Map<String, Serializable> data
+    ) {
         // Retrieve the class associated with the specified spec type.
         Class<? extends Spec> specClass = retrieveSpec(kind, entity);
 

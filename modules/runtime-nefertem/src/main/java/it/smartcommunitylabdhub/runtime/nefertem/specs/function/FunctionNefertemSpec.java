@@ -2,10 +2,10 @@ package it.smartcommunitylabdhub.runtime.nefertem.specs.function;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -24,17 +24,13 @@ public class FunctionNefertemSpec extends FunctionBaseSpec {
     private String errorReport;
 
     @Override
-    public void configure(Map<String, Object> data) {
-        FunctionNefertemSpec functionNefertemSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            data,
-            FunctionNefertemSpec.class
-        );
+    public void configure(Map<String, Serializable> data) {
+        super.configure(data);
+
+        FunctionNefertemSpec functionNefertemSpec = mapper.convertValue(data, FunctionNefertemSpec.class);
 
         this.setConstraints(functionNefertemSpec.getConstraints());
         this.setMetrics(functionNefertemSpec.getMetrics());
         this.setErrorReport(functionNefertemSpec.getErrorReport());
-
-        super.configure(data);
-        this.setExtraSpecs(functionNefertemSpec.getExtraSpecs());
     }
 }

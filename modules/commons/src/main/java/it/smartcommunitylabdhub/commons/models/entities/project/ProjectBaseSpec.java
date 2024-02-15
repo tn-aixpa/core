@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.commons.models.entities.project;
 
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,29 +10,26 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ProjectBaseSpec extends BaseSpec {
+public abstract class ProjectBaseSpec extends BaseSpec {
 
-    String context;
+    private String context;
 
-    List<Object> functions = new ArrayList<>();
+    private List<Object> functions = new ArrayList<>();
 
-    List<Object> artifacts = new ArrayList<>();
+    private List<Object> artifacts = new ArrayList<>();
 
-    List<Object> workflows = new ArrayList<>();
+    private List<Object> workflows = new ArrayList<>();
 
-    List<Object> dataitems = new ArrayList<>();
+    private List<Object> dataitems = new ArrayList<>();
 
     @Override
-    public void configure(Map<String, Object> data) {
-        ProjectBaseSpec concreteSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, ProjectBaseSpec.class);
+    public void configure(Map<String, Serializable> data) {
+        ProjectBaseSpec concreteSpec = mapper.convertValue(data, ProjectBaseSpec.class);
+
         this.setContext(concreteSpec.getContext());
         this.setFunctions(concreteSpec.getFunctions());
         this.setArtifacts(concreteSpec.getArtifacts());
         this.setDataitems(concreteSpec.getDataitems());
         this.setWorkflows(concreteSpec.getWorkflows());
-
-        super.configure(data);
-
-        this.setExtraSpecs(concreteSpec.getExtraSpecs());
     }
 }

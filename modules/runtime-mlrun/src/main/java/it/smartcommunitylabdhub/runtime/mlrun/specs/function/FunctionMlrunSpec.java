@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.runtime.mlrun.specs.function;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
@@ -23,19 +22,15 @@ public class FunctionMlrunSpec extends FunctionBaseSpec {
     private List<Serializable> requirements;
 
     @Override
-    public void configure(Map<String, Object> data) {
-        FunctionMlrunSpec functionMlrunSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            data,
-            FunctionMlrunSpec.class
-        );
+    public void configure(Map<String, Serializable> data) {
+        super.configure(data);
+
+        FunctionMlrunSpec functionMlrunSpec = mapper.convertValue(data, FunctionMlrunSpec.class);
 
         this.setImage(functionMlrunSpec.getImage());
         this.setTag(functionMlrunSpec.getTag());
         this.setHandler(functionMlrunSpec.getHandler());
         this.setCommand(functionMlrunSpec.getCommand());
         this.setRequirements(functionMlrunSpec.getRequirements());
-        super.configure(data);
-
-        this.setExtraSpecs(functionMlrunSpec.getExtraSpecs());
     }
 }

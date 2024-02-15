@@ -12,6 +12,7 @@ import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.secret.SecretEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
+import it.smartcommunitylabdhub.core.models.entities.secret.specs.SecretSecretSpec;
 import it.smartcommunitylabdhub.core.repositories.ProjectRepository;
 import it.smartcommunitylabdhub.core.repositories.SecretRepository;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
@@ -226,7 +227,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
                 secretMetadata.setUpdated(secretMetadata.getCreated());
                 secret.setMetadata(secretMetadata);
 
-                SecretBaseSpec spec = new SecretBaseSpec();
+                SecretBaseSpec spec = new SecretSecretSpec();
                 spec.setProvider(K8S_PROVIDER);
                 spec.setPath(getSecretPath(K8S_PROVIDER, secretName, entry.getKey()));
                 secret.setSpec(spec.toMap());

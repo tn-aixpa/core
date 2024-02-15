@@ -17,6 +17,8 @@ import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,26 +58,41 @@ public class ProjectDTOBuilder {
         boolean embeddable
     ) {
         // Retrieve spec
-        Map<String, Object> spec = ConversionUtils.reverse(project.getSpec(), "cbor");
+        Map<String, Serializable> spec = ConversionUtils.reverse(project.getSpec(), "cbor");
         spec.put(
             "functions",
-            functions.stream().map(f -> functionDTOBuilder.build(f, embeddable)).collect(Collectors.toList())
+            functions
+                .stream()
+                .map(f -> functionDTOBuilder.build(f, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
         spec.put(
             "artifacts",
-            artifacts.stream().map(a -> artifactDTOBuilder.build(a, embeddable)).collect(Collectors.toList())
+            artifacts
+                .stream()
+                .map(a -> artifactDTOBuilder.build(a, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
         spec.put(
             "workflows",
-            workflows.stream().map(w -> workflowDTOBuilder.build(w, embeddable)).collect(Collectors.toList())
+            workflows
+                .stream()
+                .map(w -> workflowDTOBuilder.build(w, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
         spec.put(
             "dataitems",
-            dataItems.stream().map(d -> dataItemDTOBuilder.build(d, embeddable)).collect(Collectors.toList())
+            dataItems
+                .stream()
+                .map(d -> dataItemDTOBuilder.build(d, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
         spec.put(
             "secrets",
-            secrets.stream().map(s -> secretDTOBuilder.build(s, embeddable)).collect(Collectors.toList())
+            secrets
+                .stream()
+                .map(s -> secretDTOBuilder.build(s, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
 
         // Find base run spec

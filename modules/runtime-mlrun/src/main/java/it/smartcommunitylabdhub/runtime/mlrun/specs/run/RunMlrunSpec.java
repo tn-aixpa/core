@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
+import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,13 +31,12 @@ public class RunMlrunSpec extends RunBaseSpec {
     private FunctionMlrunSpec funcSpec;
 
     @Override
-    public void configure(Map<String, Object> data) {
-        RunMlrunSpec runMlrunSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, RunMlrunSpec.class);
+    public void configure(Map<String, Serializable> data) {
+        super.configure(data);
+
+        RunMlrunSpec runMlrunSpec = mapper.convertValue(data, RunMlrunSpec.class);
 
         this.setTaskSpec(runMlrunSpec.getTaskSpec());
         this.setFuncSpec(runMlrunSpec.getFuncSpec());
-
-        super.configure(data);
-        this.setExtraSpecs(runMlrunSpec.getExtraSpecs());
     }
 }

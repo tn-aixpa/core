@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -28,25 +29,25 @@ public class Log implements BaseEntity {
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Map<String, Object> body = new HashMap<>();
+    private Map<String, Serializable> body = new HashMap<>();
 
     @Builder.Default
     @JsonIgnore
-    private Map<String, Object> extra = new HashMap<>();
+    private Map<String, Serializable> extra = new HashMap<>();
 
     @Builder.Default
-    private Map<String, Object> status = new HashMap<>();
+    private Map<String, Serializable> status = new HashMap<>();
 
     @Builder.Default
     private LogMetadata metadata = new LogMetadata();
 
     @JsonAnyGetter
-    public Map<String, Object> getExtra() {
+    public Map<String, Serializable> getExtra() {
         return this.extra;
     }
 
     @JsonAnySetter
-    public void setExtra(String key, Object value) {
+    public void setExtra(String key, Serializable value) {
         if (value != null) {
             extra.put(key, value);
         }

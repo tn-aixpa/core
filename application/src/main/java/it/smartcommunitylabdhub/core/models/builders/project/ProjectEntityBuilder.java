@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
 import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import java.io.Serializable;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,7 @@ public class ProjectEntityBuilder {
             projectDTO.getSpec(),
             ProjectBaseSpec.class
         );
-        Map<String, Object> spec = projectSpec.toMap();
+        Map<String, Serializable> spec = projectSpec.toMap();
 
         return EntityFactory.combine(
             ProjectEntity.builder().build(),

@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ public interface SpecRegistry {
      * @param <S>  The generic type for the spec.
      * @return An instance of the specified spec type, or null if not found or in case of errors.
      */
-    <S extends Spec> S createSpec(String kind, EntityName entity, Map<String, Object> data);
+    <S extends Spec> S createSpec(String kind, EntityName entity, Map<String, Serializable> data);
 
     void registerSpec(SpecType spec, Class<? extends Spec> clazz);
 

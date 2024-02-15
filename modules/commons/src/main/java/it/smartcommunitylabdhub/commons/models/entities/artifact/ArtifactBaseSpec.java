@@ -1,15 +1,15 @@
 package it.smartcommunitylabdhub.commons.models.entities.artifact;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
+import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ArtifactBaseSpec extends BaseSpec {
+public abstract class ArtifactBaseSpec extends BaseSpec {
 
     private String key;
 
@@ -20,14 +20,11 @@ public class ArtifactBaseSpec extends BaseSpec {
     private String targetPath;
 
     @Override
-    public void configure(Map<String, Object> data) {
-        ArtifactBaseSpec concreteSpec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(data, ArtifactBaseSpec.class);
+    public void configure(Map<String, Serializable> data) {
+        ArtifactBaseSpec concreteSpec = mapper.convertValue(data, ArtifactBaseSpec.class);
 
         this.setKey(concreteSpec.getKey());
         this.setSrcPath(concreteSpec.getSrcPath());
         this.setTargetPath(concreteSpec.getTargetPath());
-
-        super.configure(data);
-        this.setExtraSpecs(concreteSpec.getExtraSpecs());
     }
 }

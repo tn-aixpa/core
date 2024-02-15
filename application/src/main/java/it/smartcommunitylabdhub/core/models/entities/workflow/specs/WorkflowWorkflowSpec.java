@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.models.entities.workflow.specs;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,7 @@ import lombok.Setter;
 public class WorkflowWorkflowSpec extends WorkflowBaseSpec {
 
     @Override
-    public void configure(Map<String, Object> data) {
+    public void configure(Map<String, Serializable> data) {
         super.configure(data);
     }
 }
