@@ -41,9 +41,10 @@ public class RunController {
     LogService logService;
 
     @Autowired
-    //TODO remove
+    //TODO remove!
     PollingService pollingService;
 
+    //TODO remove!
     @Autowired
     RunnableStoreService<Runnable> runnableStoreService;
 
@@ -104,6 +105,7 @@ public class RunController {
         produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Boolean> stopRun(@ValidateField @PathVariable String uuid) {
+        //TODO move to service!
         Runnable runnable = runnableStoreService.find(uuid);
         //TODO refactor! the framework is responsible for managing runs, not the controller
         pollingService.stopOne(runnable.getId());

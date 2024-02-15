@@ -12,8 +12,10 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+//TODO FIX generic typing
 @Service
-public class RunnableStoreServiceImpl<T> implements RunnableStoreService<T> {
+public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons.infrastructure.Runnable>
+    implements RunnableStoreService<T> {
 
     @Autowired
     private RunnableRepository runnableRepository;
@@ -62,6 +64,7 @@ public class RunnableStoreServiceImpl<T> implements RunnableStoreService<T> {
         runnableRepository.delete(id);
     }
 
+    //TODO FIX! take the class as parameter
     @SuppressWarnings("unchecked")
     private Class<T> getRunnableClass() {
         return (Class<T>) BaseRunnable.class;

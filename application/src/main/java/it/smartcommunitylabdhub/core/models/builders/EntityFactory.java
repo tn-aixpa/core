@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 
 public class EntityFactory {
 
+    //deprecated because entity is never used, just a wrapper around entityBuilder
+    @Deprecated(forRemoval = true)
     public static <T extends BaseEntity, U extends BaseEntity> T create(
         Supplier<T> entitySupplier,
         U entity,
@@ -16,6 +18,8 @@ public class EntityFactory {
         return builder.build();
     }
 
+    //deprecated because entity is never used, just a wrapper around entityBuilder
+    @Deprecated(forRemoval = true)
     public static <T extends BaseEntity, U extends BaseEntity> T combine(
         T sourceEntity,
         U entity,

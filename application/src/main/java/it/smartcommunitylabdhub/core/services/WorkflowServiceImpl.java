@@ -8,10 +8,10 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.WorkflowService;
+import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
@@ -59,6 +59,9 @@ public class WorkflowServiceImpl
 
     @Autowired
     TaskDTOBuilder taskDTOBuilder;
+
+    @Autowired
+    RunDTOBuilder runDTOBuilder;
 
     @Override
     public Page<Workflow> getWorkflows(Map<String, String> filter, Pageable pageable) {
@@ -202,8 +205,7 @@ public class WorkflowServiceImpl
                             .stream()
                     )
                     .collect(Collectors.toList());
-
-            return (List<Run>) ConversionUtils.reverseIterable(runs, "run", Run.class);
+            return runs.stream().map(r -> runDTOBuilder.convert(r)).collect(Collectors.toList());
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

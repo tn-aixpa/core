@@ -41,45 +41,25 @@ public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity
         ArtifactMetadata metadata = new ArtifactMetadata();
         metadata.configure(dto.getMetadata());
 
-        return EntityFactory.combine(
-            ArtifactEntity.builder().build(),
-            dto,
-            builder ->
-                builder
-                    // check id
-                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
-                    .with(e -> e.setName(dto.getName()))
-                    .with(e -> e.setKind(dto.getKind()))
-                    .with(e -> e.setProject(dto.getProject()))
-                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
-                    .with(e -> e.setSpec(cborConverter.convert(spec)))
-                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
-                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
-                    // Store status if not present
-                    .withIfElse(
-                        (statusFieldAccessor.getState() == null),
-                        (e, condition) -> {
-                            if (condition) {
-                                e.setState(State.CREATED);
-                            } else {
-                                e.setState(State.valueOf(statusFieldAccessor.getState()));
-                            }
-                        }
-                    )
-                    // Metadata Extraction
-                    .withIfElse(
-                        metadata.getEmbedded() == null,
-                        (e, condition) -> {
-                            if (condition) {
-                                e.setEmbedded(false);
-                            } else {
-                                e.setEmbedded(metadata.getEmbedded());
-                            }
-                        }
-                    )
-                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
-                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
-        );
+        return ArtifactEntity
+            .builder()
+            .id(dto.getId())
+            .name(dto.getName())
+            .kind(dto.getKind())
+            .project(dto.getProject())
+            .metadata(cborConverter.convert(dto.getMetadata()))
+            .spec(cborConverter.convert(spec))
+            .status(cborConverter.convert(dto.getStatus()))
+            .extra(cborConverter.convert(dto.getExtra()))
+            .state(
+                // Store status if not present
+                statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
+            )
+            // Metadata Extraction
+            .embedded(metadata.getEmbedded() == null ? Boolean.FALSE : metadata.getEmbedded())
+            .created(metadata.getCreated())
+            .updated(metadata.getUpdated())
+            .build();
     }
 
     @Override

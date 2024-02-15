@@ -12,8 +12,8 @@ import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
+import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
@@ -61,6 +61,9 @@ public class FunctionServiceImpl
 
     @Autowired
     TaskDTOBuilder taskDTOBuilder;
+
+    @Autowired
+    RunDTOBuilder runDTOBuilder;
 
     @Override
     public Page<Function> getFunctions(Map<String, String> filter, Pageable pageable) {
@@ -255,7 +258,7 @@ public class FunctionServiceImpl
                     )
                     .collect(Collectors.toList());
 
-            return (List<Run>) ConversionUtils.reverseIterable(runs, "run", Run.class);
+            return runs.stream().map(r -> runDTOBuilder.convert(r)).collect(Collectors.toList());
         } catch (CustomException e) {
             throw new CoreException(
                 ErrorList.FUNCTION_NOT_FOUND.getValue(),
