@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import org.springframework.http.HttpStatus;
 
 //TODO remove
+@Deprecated(forRemoval = true)
 public class RunUtils {
 
     public static final Pattern RUN_PATTERN = Pattern.compile("([^:/]+)\\+([^+]+)://([^/]+)/([^/]+):(.+)");

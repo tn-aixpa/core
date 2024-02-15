@@ -7,6 +7,7 @@ import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
+//TODO move to application
 @AllArgsConstructor
 @Builder
 public class SchemaImpl implements Schema, Serializable {

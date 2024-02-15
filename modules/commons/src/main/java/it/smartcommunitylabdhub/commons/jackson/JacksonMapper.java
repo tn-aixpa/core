@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.jackson.mixins.ConcreteSpecMixin;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import java.util.HashMap;
 
+//TODO refactor into a factory
 public class JacksonMapper {
 
     public static final ObjectMapper CUSTOM_OBJECT_MAPPER = new ObjectMapper();

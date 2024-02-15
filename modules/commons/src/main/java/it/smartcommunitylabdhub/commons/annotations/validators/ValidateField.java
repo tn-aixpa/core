@@ -8,6 +8,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+//deprecated because it isn't discoverable. Replace with standard jakarta annotations
+@Deprecated(forRemoval = true)
 @Documented
 @Constraint(validatedBy = ValidFieldValidator.class)
 @Target({ ElementType.PARAMETER, ElementType.FIELD })

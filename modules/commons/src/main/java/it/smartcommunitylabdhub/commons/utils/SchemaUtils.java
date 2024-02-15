@@ -14,6 +14,7 @@ import com.github.victools.jsonschema.module.swagger2.Swagger2Module;
 import it.smartcommunitylabdhub.commons.jackson.introspect.JsonSchemaAnnotationIntrospector;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 
+//TODO refactor into a factory
 public final class SchemaUtils {
 
     public static final SchemaGenerator GENERATOR;

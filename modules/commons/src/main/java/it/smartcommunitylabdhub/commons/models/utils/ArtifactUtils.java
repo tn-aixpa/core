@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.commons.models.utils;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 
 //TODO remove, this goes into the accessor
+@Deprecated(forRemoval = true)
 public class ArtifactUtils {
 
     private ArtifactUtils() {}

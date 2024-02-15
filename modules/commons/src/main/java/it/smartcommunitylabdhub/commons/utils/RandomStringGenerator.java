@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.commons.utils;
 
 import java.util.Random;
 
+//TODO remove, unused
+@Deprecated(forRemoval = true)
 public class RandomStringGenerator {
 
     private static final String CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

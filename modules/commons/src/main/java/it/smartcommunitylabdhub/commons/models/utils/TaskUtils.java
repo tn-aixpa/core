@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import org.springframework.http.HttpStatus;
 
 //TODO remove
+@Deprecated(forRemoval = true)
 public class TaskUtils {
 
     private static final Pattern TASK_PATTERN = Pattern.compile("([^:/]+)://([^/]+)/([^:]+):(.+)");
