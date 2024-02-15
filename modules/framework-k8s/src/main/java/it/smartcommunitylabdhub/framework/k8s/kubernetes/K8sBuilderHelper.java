@@ -138,6 +138,7 @@ public class K8sBuilderHelper {
                     new V1PersistentVolumeClaimVolumeSource()
                         .claimName((String) coreVolume.spec().getOrDefault("claim_name", coreVolume.name()))
                 );
+            //TODO add empty_dir (mounted to /dev/shm )
             default:
                 return null;
         }

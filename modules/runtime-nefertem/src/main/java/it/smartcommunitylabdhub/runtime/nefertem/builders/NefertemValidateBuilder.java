@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.runtime.nefertem.builders;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
@@ -21,6 +22,10 @@ public class NefertemValidateBuilder implements Builder<FunctionNefertemSpec, Ta
         RunNefertemSpec runNefertemSpec = new RunNefertemSpec(runSpec.toMap());
         runNefertemSpec.setFuncSpec(funSpec);
         runNefertemSpec.setTaskValidateSpec(taskSpec);
+
+        //let run override k8s specs
+        K8sTaskBaseSpec k8sSpec = runSpec.getTaskValidateSpec();
+        runNefertemSpec.getTaskValidateSpec().configure(k8sSpec.toMap());
 
         // Return a run spec
         return runNefertemSpec;

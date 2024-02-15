@@ -11,8 +11,6 @@ import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
 import java.io.Serializable;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

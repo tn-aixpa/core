@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.runtime.container.builders;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
@@ -21,6 +22,10 @@ public class ContainerServeBuilder implements Builder<FunctionContainerSpec, Tas
         RunContainerSpec containerSpec = new RunContainerSpec(runSpec.toMap());
         containerSpec.setTaskServeSpec(taskSpec);
         containerSpec.setFunctionSpec(funSpec);
+
+        //let run override k8s specs
+        K8sTaskBaseSpec k8sSpec = runSpec.getTaskServeSpec();
+        containerSpec.getTaskServeSpec().configure(k8sSpec.toMap());
 
         return containerSpec;
     }
