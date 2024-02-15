@@ -2,43 +2,48 @@ package it.smartcommunitylabdhub.commons.models.base;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder(builderMethodName = "baseBuilder")
 @Getter
 @Setter
-public class BaseMetadata implements Serializable {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class BaseMetadata extends BaseSpec {
 
-    String project;
+    protected String project;
 
-    String source;
+    protected String name;
+    protected String description;
 
-    Set<String> labels;
+    protected Date created;
+    protected Date updated;
 
-    private Date created;
+    protected Set<String> labels;
 
-    private Date updated;
+    @Override
+    public void configure(Map<String, Serializable> data) {
+        BaseMetadata meta = mapper.convertValue(data, BaseMetadata.class);
 
-    private Map<String, Serializable> extra;
+        this.project = meta.getProject();
 
-    // ADD any getter any setter TEMPORARY SOLUTION
-    @JsonAnyGetter
-    public Map<String, Serializable> getExtra() {
-        return this.extra;
-    }
+        this.name = meta.getName();
+        this.description = meta.getDescription();
 
-    @JsonAnySetter
-    public void setExtra(String key, Serializable value) {
-        if (value != null) {
-            extra.put(key, value);
-        }
+        this.created = meta.getCreated();
+        this.updated = meta.getUpdated();
+
+        this.labels = meta.getLabels();
     }
 }

@@ -4,50 +4,58 @@ import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
-import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
+import java.io.Serializable;
 import java.util.Map;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LogDTOBuilder {
+public class LogDTOBuilder implements Converter<LogEntity, Log> {
 
     @Autowired
-    MetadataConverter<LogMetadata> metadataConverter;
+    CBORConverter cborConverter;
 
-    public Log build(LogEntity log) {
+    public Log build(LogEntity entity) {
         return EntityFactory.create(
             Log::new,
-            log,
+            entity,
             builder ->
                 builder
-                    .with(dto -> dto.setId(log.getId()))
+                    .with(dto -> dto.setId(entity.getId()))
                     .with(dto -> {
-                        // Set Metadata for log
-                        LogMetadata logMetadata = Optional
-                            .ofNullable(metadataConverter.reverseByClass(log.getMetadata(), LogMetadata.class))
-                            .orElseGet(LogMetadata::new);
+                        //read metadata as-is
+                        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
-                        logMetadata.setRun(log.getRun());
-                        logMetadata.setVersion(log.getId());
-                        logMetadata.setProject(log.getProject());
-                        logMetadata.setCreated(log.getCreated());
-                        logMetadata.setUpdated(log.getUpdated());
-                        dto.setMetadata(logMetadata);
+                        // Set Metadata for log
+                        LogMetadata metadata = new LogMetadata();
+                        metadata.configure(meta);
+
+                        metadata.setRun(entity.getRun());
+                        metadata.setProject(entity.getProject());
+                        metadata.setCreated(entity.getCreated());
+                        metadata.setUpdated(entity.getUpdated());
+
+                        //merge into map with override
+                        dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
                     })
-                    .with(dto -> dto.setBody(ConversionUtils.reverse(log.getBody(), "cbor")))
-                    .with(dto -> dto.setExtra(ConversionUtils.reverse(log.getExtra(), "cbor")))
+                    .with(dto -> dto.setBody(cborConverter.reverseConvert(entity.getBody())))
+                    .with(dto -> dto.setExtra(cborConverter.reverseConvert(entity.getExtra())))
                     .with(dto ->
                         dto.setStatus(
                             MapUtils.mergeMultipleMaps(
-                                ConversionUtils.reverse(log.getStatus(), "cbor"),
-                                Map.of("state", log.getState())
+                                cborConverter.reverseConvert(entity.getStatus()),
+                                Map.of("state", entity.getState())
                             )
                         )
                     )
         );
+    }
+
+    @Override
+    public Log convert(LogEntity source) {
+        return build(source);
     }
 }

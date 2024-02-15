@@ -41,7 +41,7 @@ public class Function implements BaseEntity {
     private String project;
 
     @Builder.Default
-    private FunctionMetadata metadata = new FunctionMetadata();
+    private Map<String, Serializable> metadata = new HashMap<>();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

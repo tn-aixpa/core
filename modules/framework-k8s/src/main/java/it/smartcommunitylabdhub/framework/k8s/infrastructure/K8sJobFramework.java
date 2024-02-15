@@ -333,7 +333,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         LogMetadata logMetadata = new LogMetadata();
         logMetadata.setProject(runnable.getProject());
         logMetadata.setRun(runnable.getId());
-        Log logDTO = Log.builder().body(Map.of("content", log)).metadata(logMetadata).build();
+        Log logDTO = Log.builder().body(Map.of("content", log)).metadata(logMetadata.toMap()).build();
         logService.createLog(logDTO);
     }
 

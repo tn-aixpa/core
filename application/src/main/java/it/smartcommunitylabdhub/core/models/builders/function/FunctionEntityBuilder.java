@@ -1,21 +1,25 @@
 package it.smartcommunitylabdhub.core.models.builders.function;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import java.io.Serializable;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FunctionEntityBuilder {
+public class FunctionEntityBuilder implements Converter<Function, FunctionEntity> {
+
+    @Autowired
+    CBORConverter cborConverter;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -24,39 +28,37 @@ public class FunctionEntityBuilder {
      * Build a function from a functionDTO and store extra values as f cbor
      * <p>
      *
-     * @param functionDTO the functionDTO that need to be stored
+     * @param dto the functionDTO that need to be stored
      * @return Function
      */
-    public FunctionEntity build(Function functionDTO) {
-        // Validate spec
-        specRegistry.createSpec(functionDTO.getKind(), EntityName.FUNCTION, Map.of());
+    public FunctionEntity build(Function dto) {
+        // Parse and export Spec
+        Map<String, Serializable> spec = specRegistry
+            .createSpec(dto.getKind(), EntityName.FUNCTION, dto.getSpec())
+            .toMap();
 
         // Retrieve field accessor
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(functionDTO.getStatus());
-
-        // Retrieve Spec
-        FunctionBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            functionDTO.getSpec(),
-            FunctionBaseSpec.class
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
+        FunctionMetadata metadata = new FunctionMetadata();
+        metadata.configure(dto.getMetadata());
 
         return EntityFactory.combine(
             FunctionEntity.builder().build(),
-            functionDTO,
+            dto,
             builder ->
                 builder
                     // check id
-                    .withIf(functionDTO.getId() != null, f -> f.setId(functionDTO.getId()))
-                    .with(f -> f.setName(functionDTO.getName()))
-                    .with(f -> f.setKind(functionDTO.getKind()))
-                    .with(f -> f.setProject(functionDTO.getProject()))
-                    .with(f -> f.setMetadata(ConversionUtils.convert(functionDTO.getMetadata(), "metadata")))
-                    .with(f -> f.setExtra(ConversionUtils.convert(functionDTO.getExtra(), "cbor")))
-                    .with(f -> f.setSpec(ConversionUtils.convert(spec.toMap(), "cbor")))
-                    .with(f -> f.setStatus(ConversionUtils.convert(functionDTO.getStatus(), "cbor")))
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setName(dto.getName()))
+                    .with(e -> e.setKind(dto.getKind()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
                     // Store status if not present
                     .withIfElse(
-                        statusFieldAccessor.getState().equals(State.NONE.name()),
+                        (statusFieldAccessor.getState() == null),
                         (f, condition) -> {
                             if (condition) {
                                 f.setState(State.CREATED);
@@ -67,24 +69,23 @@ public class FunctionEntityBuilder {
                     )
                     // Metadata Extraction
                     .withIfElse(
-                        functionDTO.getMetadata().getEmbedded() == null,
-                        (f, condition) -> {
+                        metadata.getEmbedded() == null,
+                        (a, condition) -> {
                             if (condition) {
-                                f.setEmbedded(false);
+                                a.setEmbedded(false);
                             } else {
-                                f.setEmbedded(functionDTO.getMetadata().getEmbedded());
+                                a.setEmbedded(metadata.getEmbedded());
                             }
                         }
                     )
-                    .withIf(
-                        functionDTO.getMetadata().getCreated() != null,
-                        f -> f.setCreated(functionDTO.getMetadata().getCreated())
-                    )
-                    .withIf(
-                        functionDTO.getMetadata().getUpdated() != null,
-                        f -> f.setUpdated(functionDTO.getMetadata().getUpdated())
-                    )
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
+    }
+
+    @Override
+    public FunctionEntity convert(Function source) {
+        return build(source);
     }
 
     /**
@@ -114,9 +115,9 @@ public class FunctionEntityBuilder {
                             }
                         }
                     )
-                    .with(f -> f.setMetadata(newFunction.getMetadata()))
-                    .with(f -> f.setExtra(newFunction.getExtra()))
-                    .with(f -> f.setStatus(newFunction.getStatus()))
+                    .with(e -> e.setMetadata(newFunction.getMetadata()))
+                    .with(e -> e.setExtra(newFunction.getExtra()))
+                    .with(e -> e.setStatus(newFunction.getStatus()))
                     // Metadata Extraction
                     .withIfElse(
                         newFunction.getEmbedded() == null,

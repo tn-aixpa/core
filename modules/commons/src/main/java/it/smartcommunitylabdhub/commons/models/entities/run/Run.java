@@ -37,7 +37,7 @@ public class Run implements BaseEntity {
     private String kind;
 
     @Builder.Default
-    private RunMetadata metadata = new RunMetadata();
+    private Map<String, Serializable> metadata = new HashMap<>();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

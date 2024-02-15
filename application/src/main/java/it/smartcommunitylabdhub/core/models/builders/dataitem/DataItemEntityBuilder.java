@@ -1,21 +1,25 @@
 package it.smartcommunitylabdhub.core.models.builders.dataitem;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import java.io.Serializable;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataItemEntityBuilder {
+public class DataItemEntityBuilder implements Converter<DataItem, DataItemEntity> {
+
+    @Autowired
+    CBORConverter cborConverter;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -26,35 +30,33 @@ public class DataItemEntityBuilder {
      *
      * @return DataItemDTO
      */
-    public DataItemEntity build(DataItem dataItemDTO) {
-        // Validate Spec
-        specRegistry.createSpec(dataItemDTO.getKind(), EntityName.DATAITEM, Map.of());
+    public DataItemEntity build(DataItem dto) {
+        // Parse and export Spec
+        Map<String, Serializable> spec = specRegistry
+            .createSpec(dto.getKind(), EntityName.DATAITEM, dto.getSpec())
+            .toMap();
 
         // Retrieve field accessor
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dataItemDTO.getStatus());
-
-        // Retrieve Spec
-        DataItemBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            dataItemDTO.getSpec(),
-            DataItemBaseSpec.class
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
+        DataItemMetadata metadata = new DataItemMetadata();
+        metadata.configure(dto.getMetadata());
 
         return EntityFactory.combine(
             DataItemEntity.builder().build(),
-            dataItemDTO,
+            dto,
             builder ->
                 builder
-                    .withIf(dataItemDTO.getId() != null, d -> d.setId(dataItemDTO.getId()))
-                    .with(d -> d.setName(dataItemDTO.getName()))
-                    .with(d -> d.setKind(dataItemDTO.getKind()))
-                    .with(d -> d.setProject(dataItemDTO.getProject()))
-                    .with(d -> d.setMetadata(ConversionUtils.convert(dataItemDTO.getMetadata(), "metadata")))
-                    .with(d -> d.setExtra(ConversionUtils.convert(dataItemDTO.getExtra(), "cbor")))
-                    .with(d -> d.setSpec(ConversionUtils.convert(spec.toMap(), "cbor")))
-                    .with(d -> d.setStatus(ConversionUtils.convert(dataItemDTO.getStatus(), "cbor")))
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setName(dto.getName()))
+                    .with(e -> e.setKind(dto.getKind()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
                     // Store status if not present
                     .withIfElse(
-                        statusFieldAccessor.getState().equals(State.NONE.name()),
+                        (statusFieldAccessor.getState() == null),
                         (d, condition) -> {
                             if (condition) {
                                 d.setState(State.CREATED);
@@ -65,24 +67,23 @@ public class DataItemEntityBuilder {
                     )
                     // Metadata Extraction
                     .withIfElse(
-                        dataItemDTO.getMetadata().getEmbedded() == null,
-                        (d, condition) -> {
+                        metadata.getEmbedded() == null,
+                        (a, condition) -> {
                             if (condition) {
-                                d.setEmbedded(false);
+                                a.setEmbedded(false);
                             } else {
-                                d.setEmbedded(dataItemDTO.getMetadata().getEmbedded());
+                                a.setEmbedded(metadata.getEmbedded());
                             }
                         }
                     )
-                    .withIf(
-                        dataItemDTO.getMetadata().getCreated() != null,
-                        d -> d.setCreated(dataItemDTO.getMetadata().getCreated())
-                    )
-                    .withIf(
-                        dataItemDTO.getMetadata().getUpdated() != null,
-                        d -> d.setUpdated(dataItemDTO.getMetadata().getUpdated())
-                    )
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
+    }
+
+    @Override
+    public DataItemEntity convert(DataItem source) {
+        return build(source);
     }
 
     /**
@@ -113,9 +114,9 @@ public class DataItemEntityBuilder {
                             }
                         }
                     )
-                    .with(d -> d.setMetadata(newDataItem.getMetadata()))
-                    .with(d -> d.setExtra(newDataItem.getExtra()))
-                    .with(d -> d.setStatus(newDataItem.getStatus()))
+                    .with(e -> e.setMetadata(newDataItem.getMetadata()))
+                    .with(e -> e.setExtra(newDataItem.getExtra()))
+                    .with(e -> e.setStatus(newDataItem.getStatus()))
                     // Metadata Extraction
                     .withIfElse(
                         newDataItem.getEmbedded() == null,

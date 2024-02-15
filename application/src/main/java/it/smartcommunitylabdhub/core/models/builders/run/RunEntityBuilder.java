@@ -2,26 +2,31 @@ package it.smartcommunitylabdhub.core.models.builders.run;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component
-public class RunEntityBuilder {
+public class RunEntityBuilder implements Converter<Run, RunEntity> {
+
+    @Autowired
+    CBORConverter cborConverter;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -29,32 +34,33 @@ public class RunEntityBuilder {
     /**
      * Build a Run from a RunDTO and store extra values as a cbor
      *
-     * @param runDTO the run dto
+     * @param dto the run dto
      * @return Run
      */
-    public RunEntity build(Run runDTO) {
-        // Validate Spec
-        specRegistry.createSpec(runDTO.getKind(), EntityName.RUN, Map.of());
+    public RunEntity build(Run dto) {
+        // Parse and export Spec
+        Map<String, Serializable> spec = specRegistry.createSpec(dto.getKind(), EntityName.RUN, dto.getSpec()).toMap();
 
         // Retrieve Field accessor
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(runDTO.getStatus());
-
-        // Retrieve base spec
-        RunBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(runDTO.getSpec(), RunBaseSpec.class);
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
+        RunMetadata metadata = new RunMetadata();
+        metadata.configure(dto.getMetadata());
+        RunBaseSpec runSpec = new RunBaseSpec();
+        runSpec.configure(spec);
 
         return EntityFactory.combine(
             RunEntity.builder().build(),
-            runDTO,
+            dto,
             builder ->
                 builder
                     // check id
-                    .withIf(runDTO.getId() != null, r -> r.setId(runDTO.getId()))
-                    .with(r -> r.setProject(runDTO.getProject()))
-                    .with(r -> r.setKind(runDTO.getKind()))
-                    .with(r ->
-                        r.setTask(
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setKind(dto.getKind()))
+                    .with(e ->
+                        e.setTask(
                             Optional
-                                .ofNullable(StringUtils.hasText(spec.getTask()) ? spec.getTask() : null)
+                                .ofNullable(StringUtils.hasText(runSpec.getTask()) ? runSpec.getTask() : null)
                                 .orElseThrow(() ->
                                     new CoreException(
                                         ErrorList.TASK_NOT_FOUND.getValue(),
@@ -64,30 +70,29 @@ public class RunEntityBuilder {
                                 )
                         )
                     )
-                    .with(r -> r.setTaskId(spec.getTaskId()))
+                    .with(e -> e.setTaskId(runSpec.getTaskId()))
                     .withIfElse(
-                        statusFieldAccessor.getState().equals(State.NONE.name()),
-                        (r, condition) -> {
+                        (statusFieldAccessor.getState() == null),
+                        (e, condition) -> {
                             if (condition) {
-                                r.setState(RunState.CREATED);
+                                e.setState(RunState.CREATED);
                             } else {
-                                r.setState(RunState.valueOf(statusFieldAccessor.getState()));
+                                e.setState(RunState.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )
-                    .with(r -> r.setMetadata(ConversionUtils.convert(runDTO.getMetadata(), "metadata")))
-                    .with(r -> r.setExtra(ConversionUtils.convert(runDTO.getExtra(), "cbor")))
-                    .with(r -> r.setSpec(ConversionUtils.convert(spec.toMap(), "cbor")))
-                    .with(r -> r.setStatus(ConversionUtils.convert(runDTO.getStatus(), "cbor")))
-                    .withIf(
-                        runDTO.getMetadata().getCreated() != null,
-                        r -> r.setCreated(runDTO.getMetadata().getCreated())
-                    )
-                    .withIf(
-                        runDTO.getMetadata().getUpdated() != null,
-                        r -> r.setUpdated(runDTO.getMetadata().getUpdated())
-                    )
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
+    }
+
+    @Override
+    public RunEntity convert(Run source) {
+        return build(source);
     }
 
     /**
@@ -117,16 +122,16 @@ public class RunEntityBuilder {
                 builder
                     .withIfElse(
                         newRun.getState().name().equals(State.NONE.name()),
-                        (r, condition) -> {
+                        (e, condition) -> {
                             if (condition) {
-                                r.setState(RunState.CREATED);
+                                e.setState(RunState.CREATED);
                             } else {
-                                r.setState(newRun.getState());
+                                e.setState(newRun.getState());
                             }
                         }
                     )
-                    .with(r -> r.setStatus(newRun.getStatus()))
-                    .with(p -> p.setMetadata(newRun.getMetadata()))
+                    .with(e -> e.setStatus(newRun.getStatus()))
+                    .with(e -> e.setMetadata(newRun.getMetadata()))
         );
     }
 }

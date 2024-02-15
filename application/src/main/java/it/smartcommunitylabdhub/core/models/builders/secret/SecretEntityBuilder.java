@@ -1,21 +1,25 @@
 package it.smartcommunitylabdhub.core.models.builders.secret;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
-import it.smartcommunitylabdhub.commons.models.entities.secret.SecretBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
+import java.io.Serializable;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SecretEntityBuilder {
+public class SecretEntityBuilder implements Converter<Secret, SecretEntity> {
+
+    @Autowired
+    CBORConverter cborConverter;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -24,67 +28,64 @@ public class SecretEntityBuilder {
      * Build a secret from a secretDTO and store extra values as f cbor
      * <p>
      *
-     * @param secretDTO the secretDTO that need to be stored
+     * @param dto the secretDTO that need to be stored
      * @return Secret
      */
-    public SecretEntity build(Secret secretDTO) {
-        // Validate spec
-        specRegistry.createSpec(secretDTO.getKind(), EntityName.SECRET, Map.of());
+    public SecretEntity build(Secret dto) {
+        // Parse and export Spec
+        Map<String, Serializable> spec = specRegistry
+            .createSpec(dto.getKind(), EntityName.SECRET, dto.getSpec())
+            .toMap();
 
         // Retrieve field accessor
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(secretDTO.getStatus());
-
-        // Retrieve Spec
-        SecretBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            secretDTO.getSpec(),
-            SecretBaseSpec.class
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
+        SecretMetadata metadata = new SecretMetadata();
+        metadata.configure(dto.getMetadata());
 
         return EntityFactory.combine(
             SecretEntity.builder().build(),
-            secretDTO,
+            dto,
             builder ->
                 builder
                     // check id
-                    .withIf(secretDTO.getId() != null, f -> f.setId(secretDTO.getId()))
-                    .with(f -> f.setKind(secretDTO.getKind()))
-                    .with(f -> f.setName(secretDTO.getName()))
-                    .with(f -> f.setProject(secretDTO.getProject()))
-                    .with(f -> f.setMetadata(ConversionUtils.convert(secretDTO.getMetadata(), "metadata")))
-                    .with(f -> f.setExtra(ConversionUtils.convert(secretDTO.getExtra(), "cbor")))
-                    .with(f -> f.setSpec(ConversionUtils.convert(spec.toMap(), "cbor")))
-                    .with(f -> f.setStatus(ConversionUtils.convert(secretDTO.getStatus(), "cbor")))
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setKind(dto.getKind()))
+                    .with(e -> e.setName(dto.getName()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
                     // Store status if not present
                     .withIfElse(
-                        statusFieldAccessor.getState().equals(State.NONE.name()),
-                        (f, condition) -> {
+                        (statusFieldAccessor.getState() == null),
+                        (e, condition) -> {
                             if (condition) {
-                                f.setState(State.CREATED);
+                                e.setState(State.CREATED);
                             } else {
-                                f.setState(State.valueOf(statusFieldAccessor.getState()));
+                                e.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )
                     // Metadata Extraction
                     .withIfElse(
-                        secretDTO.getMetadata().getEmbedded() == null,
-                        (f, condition) -> {
+                        metadata.getEmbedded() == null,
+                        (e, condition) -> {
                             if (condition) {
-                                f.setEmbedded(false);
+                                e.setEmbedded(false);
                             } else {
-                                f.setEmbedded(secretDTO.getMetadata().getEmbedded());
+                                e.setEmbedded(metadata.getEmbedded());
                             }
                         }
                     )
-                    .withIf(
-                        secretDTO.getMetadata().getCreated() != null,
-                        f -> f.setCreated(secretDTO.getMetadata().getCreated())
-                    )
-                    .withIf(
-                        secretDTO.getMetadata().getUpdated() != null,
-                        f -> f.setUpdated(secretDTO.getMetadata().getUpdated())
-                    )
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
+    }
+
+    @Override
+    public SecretEntity convert(Secret source) {
+        return build(source);
     }
 
     /**
@@ -121,17 +122,17 @@ public class SecretEntityBuilder {
                             }
                         }
                     )
-                    .with(f -> f.setMetadata(newSecret.getMetadata()))
-                    .with(f -> f.setExtra(newSecret.getExtra()))
-                    .with(f -> f.setStatus(newSecret.getStatus()))
+                    .with(e -> e.setMetadata(newSecret.getMetadata()))
+                    .with(e -> e.setExtra(newSecret.getExtra()))
+                    .with(e -> e.setStatus(newSecret.getStatus()))
                     // Metadata Extraction
                     .withIfElse(
                         newSecret.getEmbedded() == null,
-                        (f, condition) -> {
+                        (e, condition) -> {
                             if (condition) {
-                                f.setEmbedded(false);
+                                e.setEmbedded(false);
                             } else {
-                                f.setEmbedded(newSecret.getEmbedded());
+                                e.setEmbedded(newSecret.getEmbedded());
                             }
                         }
                     )

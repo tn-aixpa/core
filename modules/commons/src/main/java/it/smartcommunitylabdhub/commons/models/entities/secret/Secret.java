@@ -41,7 +41,7 @@ public class Secret implements BaseEntity {
     private String project;
 
     @Builder.Default
-    private SecretMetadata metadata = new SecretMetadata();
+    private Map<String, Serializable> metadata = new HashMap<>();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

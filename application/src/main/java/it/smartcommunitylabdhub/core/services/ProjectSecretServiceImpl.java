@@ -225,7 +225,7 @@ public class ProjectSecretServiceImpl implements ProjectSecretService {
                 secretMetadata.setName(entry.getKey());
                 secretMetadata.setProject(projectName);
                 secretMetadata.setUpdated(secretMetadata.getCreated());
-                secret.setMetadata(secretMetadata);
+                secret.setMetadata(secretMetadata.toMap());
 
                 SecretBaseSpec spec = new SecretSecretSpec();
                 spec.setProvider(K8S_PROVIDER);

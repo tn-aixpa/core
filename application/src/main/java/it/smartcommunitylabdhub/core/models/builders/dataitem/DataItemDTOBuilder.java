@@ -4,85 +4,91 @@ import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
-import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component
-public class DataItemDTOBuilder {
+public class DataItemDTOBuilder implements Converter<DataItemEntity, DataItem> {
 
     @Autowired
-    MetadataConverter<DataItemMetadata> metadataConverter;
+    CBORConverter cborConverter;
 
-    public DataItem build(DataItemEntity dataItem, boolean embeddable) {
+    public DataItem build(DataItemEntity entity, boolean embeddable) {
         return EntityFactory.create(
             DataItem::new,
-            dataItem,
+            entity,
             builder ->
                 builder
-                    .with(dto -> dto.setId(dataItem.getId()))
-                    .with(dto -> dto.setKind(dataItem.getKind()))
-                    .with(dto -> dto.setProject(dataItem.getProject()))
-                    .with(dto -> dto.setName(dataItem.getName()))
+                    .with(dto -> dto.setId(entity.getId()))
+                    .with(dto -> dto.setKind(entity.getKind()))
+                    .with(dto -> dto.setProject(entity.getProject()))
+                    .with(dto -> dto.setName(entity.getName()))
                     .with(dto -> {
-                        // Set Metadata for dataItem
-                        DataItemMetadata dataItemMetadata = Optional
-                            .ofNullable(
-                                metadataConverter.reverseByClass(dataItem.getMetadata(), DataItemMetadata.class)
-                            )
-                            .orElseGet(DataItemMetadata::new);
+                        //read metadata as-is
+                        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
-                        if (!StringUtils.hasText(dataItemMetadata.getVersion())) {
-                            dataItemMetadata.setVersion(dataItem.getId());
+                        // Set Metadata for dataitem
+                        DataItemMetadata metadata = new DataItemMetadata();
+                        metadata.configure(meta);
+
+                        if (!StringUtils.hasText(metadata.getVersion())) {
+                            metadata.setVersion(entity.getId());
                         }
-                        if (!StringUtils.hasText(dataItemMetadata.getName())) {
-                            dataItemMetadata.setName(dataItem.getName());
+                        if (!StringUtils.hasText(metadata.getName())) {
+                            metadata.setName(entity.getName());
                         }
 
-                        dataItemMetadata.setProject(dataItem.getProject());
-                        dataItemMetadata.setEmbedded(dataItem.getEmbedded());
-                        dataItemMetadata.setCreated(dataItem.getCreated());
-                        dataItemMetadata.setUpdated(dataItem.getUpdated());
-                        dto.setMetadata(dataItemMetadata);
+                        metadata.setProject(entity.getProject());
+                        metadata.setEmbedded(entity.getEmbedded());
+                        metadata.setCreated(entity.getCreated());
+                        metadata.setUpdated(entity.getUpdated());
+
+                        //merge into map with override
+                        dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
                     })
                     .withIfElse(
                         embeddable,
                         (dto, condition) ->
                             Optional
-                                .ofNullable(dataItem.getEmbedded())
+                                .ofNullable(entity.getEmbedded())
                                 .filter(embedded -> !condition || embedded)
-                                .ifPresent(embedded -> dto.setSpec(ConversionUtils.reverse(dataItem.getSpec(), "cbor")))
+                                .ifPresent(embedded -> dto.setSpec(cborConverter.reverseConvert(entity.getSpec())))
                     )
                     .withIfElse(
                         embeddable,
                         (dto, condition) ->
                             Optional
-                                .ofNullable(dataItem.getEmbedded())
+                                .ofNullable(entity.getEmbedded())
                                 .filter(embedded -> !condition || embedded)
-                                .ifPresent(embedded ->
-                                    dto.setExtra(ConversionUtils.reverse(dataItem.getExtra(), "cbor"))
-                                )
+                                .ifPresent(embedded -> dto.setExtra(cborConverter.reverseConvert(entity.getExtra())))
                     )
                     .withIfElse(
                         embeddable,
                         (dto, condition) ->
                             Optional
-                                .ofNullable(dataItem.getEmbedded())
+                                .ofNullable(entity.getEmbedded())
                                 .filter(embedded -> !condition || embedded)
                                 .ifPresent(embedded ->
                                     dto.setStatus(
                                         MapUtils.mergeMultipleMaps(
-                                            ConversionUtils.reverse(dataItem.getStatus(), "cbor"),
-                                            Map.of("state", dataItem.getState())
+                                            cborConverter.reverseConvert(entity.getStatus()),
+                                            Map.of("state", entity.getState())
                                         )
                                     )
                                 )
                     )
         );
+    }
+
+    @Override
+    public DataItem convert(DataItemEntity source) {
+        return build(source, false);
     }
 }

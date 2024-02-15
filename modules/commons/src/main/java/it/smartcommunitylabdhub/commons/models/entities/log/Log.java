@@ -39,7 +39,7 @@ public class Log implements BaseEntity {
     private Map<String, Serializable> status = new HashMap<>();
 
     @Builder.Default
-    private LogMetadata metadata = new LogMetadata();
+    private Map<String, Serializable> metadata = new HashMap<>();
 
     @JsonAnyGetter
     public Map<String, Serializable> getExtra() {

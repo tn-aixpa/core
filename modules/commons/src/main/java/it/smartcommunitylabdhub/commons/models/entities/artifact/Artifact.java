@@ -41,7 +41,7 @@ public class Artifact implements BaseEntity {
     private String project;
 
     @Builder.Default
-    private ArtifactMetadata metadata = new ArtifactMetadata();
+    private Map<String, Serializable> metadata = new HashMap<>();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

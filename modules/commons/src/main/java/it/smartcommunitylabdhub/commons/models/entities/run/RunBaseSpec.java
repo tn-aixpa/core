@@ -7,11 +7,13 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-public abstract class RunBaseSpec extends BaseSpec {
+@NoArgsConstructor
+public class RunBaseSpec extends BaseSpec {
 
     @NotEmpty
     private String task;

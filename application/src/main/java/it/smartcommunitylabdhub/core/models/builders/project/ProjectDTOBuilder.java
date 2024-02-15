@@ -9,8 +9,7 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
-import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
@@ -21,7 +20,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -46,7 +44,7 @@ public class ProjectDTOBuilder {
     SecretDTOBuilder secretDTOBuilder;
 
     @Autowired
-    MetadataConverter<ProjectMetadata> metadataConverter;
+    CBORConverter cborConverter;
 
     public Project build(
         ProjectEntity project,
@@ -58,7 +56,7 @@ public class ProjectDTOBuilder {
         boolean embeddable
     ) {
         // Retrieve spec
-        Map<String, Serializable> spec = ConversionUtils.reverse(project.getSpec(), "cbor");
+        Map<String, Serializable> spec = cborConverter.reverseConvert(project.getSpec());
         spec.put(
             "functions",
             functions
@@ -105,30 +103,31 @@ public class ProjectDTOBuilder {
                     .with(dto -> dto.setName(project.getName()))
                     .with(dto -> dto.setKind(project.getKind()))
                     .with(dto -> {
-                        // Set Metadata for project
-                        ProjectMetadata projectMetadata = Optional
-                            .ofNullable(metadataConverter.reverseByClass(project.getMetadata(), ProjectMetadata.class))
-                            .orElseGet(ProjectMetadata::new);
+                        //read metadata as-is
+                        Map<String, Serializable> meta = cborConverter.reverseConvert(project.getMetadata());
 
-                        if (!StringUtils.hasText(projectMetadata.getVersion())) {
-                            projectMetadata.setVersion(project.getId());
+                        // Set Metadata for project
+                        ProjectMetadata metadata = new ProjectMetadata();
+                        metadata.configure(meta);
+
+                        if (!StringUtils.hasText(metadata.getName())) {
+                            metadata.setName(project.getName());
                         }
-                        if (!StringUtils.hasText(projectMetadata.getName())) {
-                            projectMetadata.setName(project.getName());
-                        }
-                        projectMetadata.setProject(project.getName());
-                        projectMetadata.setDescription(project.getDescription());
-                        projectMetadata.setSource(project.getSource());
-                        projectMetadata.setCreated(project.getCreated());
-                        projectMetadata.setUpdated(project.getUpdated());
-                        dto.setMetadata(projectMetadata);
+                        metadata.setProject(project.getName());
+                        metadata.setDescription(project.getDescription());
+                        metadata.setSource(project.getSource());
+                        metadata.setCreated(project.getCreated());
+                        metadata.setUpdated(project.getUpdated());
+
+                        //merge into map with override
+                        dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
                     })
                     .with(dto -> dto.setSpec(spec))
-                    .with(dto -> dto.setExtra(ConversionUtils.reverse(project.getExtra(), "cbor")))
+                    .with(dto -> dto.setExtra(cborConverter.reverseConvert(project.getExtra())))
                     .with(dto ->
                         dto.setStatus(
                             MapUtils.mergeMultipleMaps(
-                                ConversionUtils.reverse(project.getStatus(), "cbor"),
+                                cborConverter.reverseConvert(project.getStatus()),
                                 Map.of("state", project.getState())
                             )
                         )

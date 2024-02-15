@@ -35,7 +35,7 @@ public class Task implements BaseEntity {
     private String kind; // for instance build
 
     @Builder.Default
-    private TaskMetadata metadata = new TaskMetadata();
+    private Map<String, Serializable> metadata = new HashMap<>();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

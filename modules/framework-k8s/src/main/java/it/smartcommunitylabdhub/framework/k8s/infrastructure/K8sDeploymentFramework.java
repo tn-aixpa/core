@@ -375,7 +375,7 @@ public class K8sDeploymentFramework implements Framework<K8sDeploymentRunnable>,
         LogMetadata logMetadata = new LogMetadata();
         logMetadata.setProject(runnable.getProject());
         logMetadata.setRun(runnable.getId());
-        Log logDTO = Log.builder().body(Map.of("content", log)).metadata(logMetadata).build();
+        Log logDTO = Log.builder().body(Map.of("content", log)).metadata(logMetadata.toMap()).build();
         logService.createLog(logDTO);
     }
 

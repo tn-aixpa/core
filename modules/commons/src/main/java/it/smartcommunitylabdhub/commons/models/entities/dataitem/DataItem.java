@@ -41,7 +41,7 @@ public class DataItem implements BaseEntity {
     private String project;
 
     @Builder.Default
-    private DataItemMetadata metadata = new DataItemMetadata();
+    private Map<String, Serializable> metadata = new HashMap<>();
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

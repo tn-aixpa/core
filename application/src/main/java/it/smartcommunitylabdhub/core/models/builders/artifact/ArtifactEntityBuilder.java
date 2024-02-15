@@ -1,21 +1,25 @@
 package it.smartcommunitylabdhub.core.models.builders.artifact;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import java.io.Serializable;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ArtifactEntityBuilder {
+public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity> {
+
+    @Autowired
+    CBORConverter cborConverter;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -23,67 +27,64 @@ public class ArtifactEntityBuilder {
     /**
      * Build an artifact from an artifactDTO and store extra values as a cbor
      *
-     * @param artifactDTO the artifact DTO
+     * @param dto the artifact DTO
      * @return Artifact
      */
-    public ArtifactEntity build(Artifact artifactDTO) {
-        // Validate Spec
-        specRegistry.createSpec(artifactDTO.getKind(), EntityName.ARTIFACT, Map.of());
+    public ArtifactEntity build(Artifact dto) {
+        // Parse and export Spec
+        Map<String, Serializable> spec = specRegistry
+            .createSpec(dto.getKind(), EntityName.ARTIFACT, dto.getSpec())
+            .toMap();
 
         // Retrieve Field accessor
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(artifactDTO.getStatus());
-
-        // Retrieve Spec
-        ArtifactBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-            artifactDTO.getSpec(),
-            ArtifactBaseSpec.class
-        );
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
+        ArtifactMetadata metadata = new ArtifactMetadata();
+        metadata.configure(dto.getMetadata());
 
         return EntityFactory.combine(
             ArtifactEntity.builder().build(),
-            artifactDTO,
+            dto,
             builder ->
                 builder
                     // check id
-                    .withIf(artifactDTO.getId() != null, a -> a.setId(artifactDTO.getId()))
-                    .with(a -> a.setName(artifactDTO.getName()))
-                    .with(a -> a.setKind(artifactDTO.getKind()))
-                    .with(a -> a.setProject(artifactDTO.getProject()))
-                    .with(a -> a.setMetadata(ConversionUtils.convert(artifactDTO.getMetadata(), "metadata")))
-                    .with(a -> a.setExtra(ConversionUtils.convert(artifactDTO.getExtra(), "cbor")))
-                    .with(a -> a.setExtra(ConversionUtils.convert(artifactDTO.getStatus(), "cbor")))
-                    .with(a -> a.setSpec(ConversionUtils.convert(spec.toMap(), "cbor")))
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setName(dto.getName()))
+                    .with(e -> e.setKind(dto.getKind()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
                     // Store status if not present
                     .withIfElse(
-                        statusFieldAccessor.getState().equals(State.NONE.name()),
-                        (a, condition) -> {
+                        (statusFieldAccessor.getState() == null),
+                        (e, condition) -> {
                             if (condition) {
-                                a.setState(State.CREATED);
+                                e.setState(State.CREATED);
                             } else {
-                                a.setState(State.valueOf(statusFieldAccessor.getState()));
+                                e.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )
                     // Metadata Extraction
                     .withIfElse(
-                        artifactDTO.getMetadata().getEmbedded() == null,
-                        (a, condition) -> {
+                        metadata.getEmbedded() == null,
+                        (e, condition) -> {
                             if (condition) {
-                                a.setEmbedded(false);
+                                e.setEmbedded(false);
                             } else {
-                                a.setEmbedded(artifactDTO.getMetadata().getEmbedded());
+                                e.setEmbedded(metadata.getEmbedded());
                             }
                         }
                     )
-                    .withIf(
-                        artifactDTO.getMetadata().getCreated() != null,
-                        a -> a.setCreated(artifactDTO.getMetadata().getCreated())
-                    )
-                    .withIf(
-                        artifactDTO.getMetadata().getUpdated() != null,
-                        a -> a.setUpdated(artifactDTO.getMetadata().getUpdated())
-                    )
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
+    }
+
+    @Override
+    public ArtifactEntity convert(Artifact source) {
+        return build(source);
     }
 
     /**
@@ -115,18 +116,18 @@ public class ArtifactEntityBuilder {
                             }
                         }
                     )
-                    .with(a -> a.setMetadata(newArtifact.getMetadata()))
-                    .with(a -> a.setExtra(newArtifact.getExtra()))
-                    .with(a -> a.setExtra(newArtifact.getStatus()))
-                    .with(a -> a.setMetadata(newArtifact.getMetadata()))
+                    .with(e -> e.setMetadata(newArtifact.getMetadata()))
+                    .with(e -> e.setExtra(newArtifact.getExtra()))
+                    .with(e -> e.setStatus(newArtifact.getStatus()))
+                    .with(e -> e.setMetadata(newArtifact.getMetadata()))
                     // Metadata Extraction
                     .withIfElse(
                         newArtifact.getEmbedded() == null,
-                        (a, condition) -> {
+                        (e, condition) -> {
                             if (condition) {
-                                a.setEmbedded(false);
+                                e.setEmbedded(false);
                             } else {
-                                a.setEmbedded(newArtifact.getEmbedded());
+                                e.setEmbedded(newArtifact.getEmbedded());
                             }
                         }
                     )

@@ -4,11 +4,13 @@ import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-public abstract class SecretBaseSpec extends BaseSpec {
+@NoArgsConstructor
+public class SecretBaseSpec extends BaseSpec {
 
     String path;
     String provider;

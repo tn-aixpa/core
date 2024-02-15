@@ -37,7 +37,7 @@ public class Workflow implements BaseEntity {
     private String kind;
 
     @Builder.Default
-    private WorkflowMetadata metadata = new WorkflowMetadata();
+    private Map<String, Serializable> metadata = new HashMap<>();
 
     @NotNull
     @ValidateField

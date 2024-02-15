@@ -7,14 +7,15 @@ import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.core.models.converters.interfaces.Converter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 @ConverterType(type = "cbor")
-public class CBORConverter implements Converter<Map<String, Object>, byte[]> {
+public class CBORConverter implements Converter<Map<String, Serializable>, byte[]> {
 
     @Override
-    public byte[] convert(Map<String, Object> map) throws CustomException {
+    public byte[] convert(Map<String, Serializable> map) throws CustomException {
         try {
             return JacksonMapper.CBOR_OBJECT_MAPPER.writeValueAsBytes(map);
         } catch (JsonProcessingException e) {
@@ -23,7 +24,7 @@ public class CBORConverter implements Converter<Map<String, Object>, byte[]> {
     }
 
     @Override
-    public Map<String, Object> reverseConvert(byte[] cborBytes) throws CustomException {
+    public Map<String, Serializable> reverseConvert(byte[] cborBytes) throws CustomException {
         try {
             if (cborBytes == null) {
                 return new HashMap<>();

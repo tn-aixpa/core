@@ -4,84 +4,90 @@ import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
-import it.smartcommunitylabdhub.core.models.converters.types.MetadataConverter;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component
-public class WorkflowDTOBuilder {
+public class WorkflowDTOBuilder implements Converter<WorkflowEntity, Workflow> {
 
     @Autowired
-    MetadataConverter<WorkflowMetadata> metadataConverter;
+    CBORConverter cborConverter;
 
-    public Workflow build(WorkflowEntity workflow, boolean embeddable) {
+    public Workflow build(WorkflowEntity entity, boolean embeddable) {
         return EntityFactory.create(
             Workflow::new,
-            workflow,
+            entity,
             builder ->
                 builder
-                    .with(dto -> dto.setId(workflow.getId()))
-                    .with(dto -> dto.setKind(workflow.getKind()))
-                    .with(dto -> dto.setProject(workflow.getProject()))
-                    .with(dto -> dto.setName(workflow.getName()))
+                    .with(dto -> dto.setId(entity.getId()))
+                    .with(dto -> dto.setKind(entity.getKind()))
+                    .with(dto -> dto.setProject(entity.getProject()))
+                    .with(dto -> dto.setName(entity.getName()))
                     .with(dto -> {
-                        // Set Metadata for workflow
-                        WorkflowMetadata workflowMetadata = Optional
-                            .ofNullable(
-                                metadataConverter.reverseByClass(workflow.getMetadata(), WorkflowMetadata.class)
-                            )
-                            .orElseGet(WorkflowMetadata::new);
+                        //read metadata as-is
+                        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
-                        if (!StringUtils.hasText(workflowMetadata.getVersion())) {
-                            workflowMetadata.setVersion(workflow.getId());
+                        // Set Metadata for workflow
+                        WorkflowMetadata metadata = new WorkflowMetadata();
+                        metadata.configure(meta);
+
+                        if (!StringUtils.hasText(metadata.getVersion())) {
+                            metadata.setVersion(entity.getId());
                         }
-                        if (!StringUtils.hasText(workflowMetadata.getName())) {
-                            workflowMetadata.setName(workflow.getName());
+                        if (!StringUtils.hasText(metadata.getName())) {
+                            metadata.setName(entity.getName());
                         }
-                        workflowMetadata.setProject(workflow.getProject());
-                        workflowMetadata.setEmbedded(workflow.getEmbedded());
-                        workflowMetadata.setCreated(workflow.getCreated());
-                        workflowMetadata.setUpdated(workflow.getUpdated());
-                        dto.setMetadata(workflowMetadata);
+                        metadata.setProject(entity.getProject());
+                        metadata.setEmbedded(entity.getEmbedded());
+                        metadata.setCreated(entity.getCreated());
+                        metadata.setUpdated(entity.getUpdated());
+
+                        //merge into map with override
+                        dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
                     })
                     .withIfElse(
                         embeddable,
                         (dto, condition) ->
                             Optional
-                                .ofNullable(workflow.getEmbedded())
+                                .ofNullable(entity.getEmbedded())
                                 .filter(embedded -> !condition || embedded)
-                                .ifPresent(embedded -> dto.setSpec(ConversionUtils.reverse(workflow.getSpec(), "cbor")))
+                                .ifPresent(embedded -> dto.setSpec(cborConverter.reverseConvert(entity.getSpec())))
                     )
                     .withIfElse(
                         embeddable,
                         (dto, condition) ->
                             Optional
-                                .ofNullable(workflow.getEmbedded())
+                                .ofNullable(entity.getEmbedded())
                                 .filter(embedded -> !condition || embedded)
-                                .ifPresent(embedded ->
-                                    dto.setExtra(ConversionUtils.reverse(workflow.getExtra(), "cbor"))
-                                )
+                                .ifPresent(embedded -> dto.setExtra(cborConverter.reverseConvert(entity.getExtra())))
                     )
                     .withIfElse(
                         embeddable,
                         (dto, condition) ->
                             Optional
-                                .ofNullable(workflow.getEmbedded())
+                                .ofNullable(entity.getEmbedded())
                                 .filter(embedded -> !condition || embedded)
                                 .ifPresent(embedded ->
                                     dto.setStatus(
                                         MapUtils.mergeMultipleMaps(
-                                            ConversionUtils.reverse(workflow.getStatus(), "cbor"),
-                                            Map.of("state", workflow.getState())
+                                            cborConverter.reverseConvert(entity.getStatus()),
+                                            Map.of("state", entity.getState())
                                         )
                                     )
                                 )
                     )
         );
+    }
+
+    @Override
+    public Workflow convert(WorkflowEntity source) {
+        return build(source, false);
     }
 }

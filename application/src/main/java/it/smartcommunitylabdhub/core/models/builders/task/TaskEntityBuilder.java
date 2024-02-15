@@ -2,25 +2,30 @@ package it.smartcommunitylabdhub.core.models.builders.task;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.EntityFactory;
-import it.smartcommunitylabdhub.core.models.converters.ConversionUtils;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component
-public class TaskEntityBuilder {
+public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
+
+    @Autowired
+    CBORConverter cborConverter;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -29,32 +34,33 @@ public class TaskEntityBuilder {
      * Build a Task from a TaskDTO and store extra values as a cbor
      * <p>
      *
-     * @param taskDTO TaskDTO
+     * @param dto TaskDTO
      * @return Task the task entity
      */
-    public TaskEntity build(Task taskDTO) {
-        // Validate Spec
-        specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, Map.of());
+    public TaskEntity build(Task dto) {
+        // Parse and export Spec
+        Map<String, Serializable> spec = specRegistry.createSpec(dto.getKind(), EntityName.TASK, dto.getSpec()).toMap();
 
         // Retrieve Field accessor
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(taskDTO.getStatus());
-
-        // Retrieve base spec
-        TaskBaseSpec spec = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(taskDTO.getSpec(), TaskBaseSpec.class);
+        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
+        TaskMetadata metadata = new TaskMetadata();
+        metadata.configure(dto.getMetadata());
+        TaskBaseSpec taskSpec = new TaskBaseSpec();
+        taskSpec.configure(spec);
 
         return EntityFactory.combine(
             TaskEntity.builder().build(),
-            taskDTO,
+            dto,
             builder ->
                 builder
                     // check id
-                    .withIf(taskDTO.getId() != null, t -> t.setId(taskDTO.getId()))
-                    .with(t -> t.setProject(taskDTO.getProject()))
-                    .with(t -> t.setKind(taskDTO.getKind()))
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setKind(dto.getKind()))
                     .with(r ->
                         r.setFunction(
                             Optional
-                                .ofNullable(StringUtils.hasText(spec.getFunction()) ? spec.getFunction() : null)
+                                .ofNullable(StringUtils.hasText(taskSpec.getFunction()) ? taskSpec.getFunction() : null)
                                 .orElseThrow(() ->
                                     new CoreException(
                                         ErrorList.FUNCTION_NOT_FOUND.getValue(),
@@ -64,29 +70,31 @@ public class TaskEntityBuilder {
                                 )
                         )
                     )
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                    // Store status if not present
                     .withIfElse(
-                        statusFieldAccessor.getState().equals(State.NONE.name()),
-                        (r, condition) -> {
+                        (statusFieldAccessor.getState() == null),
+                        (e, condition) -> {
                             if (condition) {
-                                r.setState(State.CREATED);
+                                e.setState(State.CREATED);
                             } else {
-                                r.setState(State.valueOf(statusFieldAccessor.getState()));
+                                e.setState(State.valueOf(statusFieldAccessor.getState()));
                             }
                         }
                     )
-                    .with(t -> t.setMetadata(ConversionUtils.convert(taskDTO.getMetadata(), "metadata")))
-                    .with(t -> t.setExtra(ConversionUtils.convert(taskDTO.getExtra(), "cbor")))
-                    .with(t -> t.setSpec(ConversionUtils.convert(spec.toMap(), "cbor")))
-                    .with(t -> t.setStatus(ConversionUtils.convert(taskDTO.getStatus(), "cbor")))
-                    .withIf(
-                        taskDTO.getMetadata().getCreated() != null,
-                        t -> t.setCreated(taskDTO.getMetadata().getCreated())
-                    )
-                    .withIf(
-                        taskDTO.getMetadata().getUpdated() != null,
-                        t -> t.setUpdated(taskDTO.getMetadata().getUpdated())
-                    )
+                    // Metadata Extraction
+
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
+    }
+
+    @Override
+    public TaskEntity convert(Task source) {
+        return build(source);
     }
 
     /**
@@ -114,7 +122,7 @@ public class TaskEntityBuilder {
             newTask,
             builder ->
                 builder
-                    .with(t -> t.setFunction(newTask.getFunction()))
+                    .with(e -> e.setFunction(newTask.getFunction()))
                     .withIfElse(
                         newTask.getState().name().equals(State.NONE.name()),
                         (r, condition) -> {
@@ -125,10 +133,10 @@ public class TaskEntityBuilder {
                             }
                         }
                     )
-                    .with(t -> t.setMetadata(newTask.getMetadata()))
-                    .with(t -> t.setExtra(newTask.getExtra()))
-                    .with(t -> t.setSpec(newTask.getSpec()))
-                    .with(t -> t.setStatus(newTask.getStatus()))
+                    .with(e -> e.setMetadata(newTask.getMetadata()))
+                    .with(e -> e.setExtra(newTask.getExtra()))
+                    .with(e -> e.setSpec(newTask.getSpec()))
+                    .with(e -> e.setStatus(newTask.getStatus()))
         );
     }
 }

@@ -6,11 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-public abstract class ProjectBaseSpec extends BaseSpec {
+@NoArgsConstructor
+public class ProjectBaseSpec extends BaseSpec {
 
     private String context;
 
