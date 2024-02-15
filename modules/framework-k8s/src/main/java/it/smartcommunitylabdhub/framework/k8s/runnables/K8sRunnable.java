@@ -2,7 +2,13 @@ package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.infrastructure.base.BaseRunnable;
-import it.smartcommunitylabdhub.framework.k8s.objects.*;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreToleration;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

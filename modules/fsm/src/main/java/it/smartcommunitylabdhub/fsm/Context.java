@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.fsm;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Optional;
 
 class Context<C> implements Serializable {
 
