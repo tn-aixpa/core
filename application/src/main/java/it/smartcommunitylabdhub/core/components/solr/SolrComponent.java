@@ -36,6 +36,22 @@ import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
+import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
+import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
+import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 
 @Component
 @ConditionalOnProperty(name = "solr.enabled", havingValue = "true", matchIfMissing = false)

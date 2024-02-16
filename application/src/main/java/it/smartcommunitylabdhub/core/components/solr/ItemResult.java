@@ -49,6 +49,7 @@ public class ItemResult {
 	public void setMetadata(Map<String, Object> metadata) {
 		this.metadata = metadata;
 	}
+	
 	public Map<String, List<String>> getHighlights() {
 		return highlights;
 	}
