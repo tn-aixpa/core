@@ -55,7 +55,7 @@ public class TaskDTOBuilder implements Converter<TaskEntity, Task> {
                         dto.setStatus(
                             MapUtils.mergeMultipleMaps(
                                 cborConverter.reverseConvert(entity.getStatus()),
-                                Map.of("state", entity.getState())
+                                Map.of("state", entity.getState().toString())
                             )
                         )
                     )

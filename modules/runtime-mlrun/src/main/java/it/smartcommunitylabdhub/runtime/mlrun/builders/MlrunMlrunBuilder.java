@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.runtime.mlrun.builders;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
+import java.util.Optional;
 
 /**
  * MlrunMlrunBuilder
@@ -24,8 +24,9 @@ public class MlrunMlrunBuilder implements Builder<FunctionMlrunSpec, TaskMlrunSp
         runMlrunSpec.setFuncSpec(funSpec);
 
         //let run override k8s specs
-        K8sTaskBaseSpec k8sSpec = runSpec.getTaskSpec();
-        runMlrunSpec.getTaskSpec().configure(k8sSpec.toMap());
+        Optional
+            .ofNullable(runSpec.getTaskSpec())
+            .ifPresent(k8sSpec -> runSpec.getTaskSpec().configure(k8sSpec.toMap()));
 
         // Return a run spec
         return runMlrunSpec;

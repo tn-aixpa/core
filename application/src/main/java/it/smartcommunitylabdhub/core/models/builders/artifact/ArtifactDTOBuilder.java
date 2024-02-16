@@ -79,7 +79,7 @@ public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
                                     dto.setStatus(
                                         MapUtils.mergeMultipleMaps(
                                             cborConverter.reverseConvert(entity.getStatus()),
-                                            Map.of("state", entity.getState())
+                                            Map.of("state", entity.getState().toString())
                                         )
                                     )
                                 )

@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.runtime.container.builders;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
+import java.util.Optional;
 
 /**
  * ContainerDeployBuilder
@@ -24,8 +24,9 @@ public class ContainerDeployBuilder implements Builder<FunctionContainerSpec, Ta
         containerSpec.setFunctionSpec(funSpec);
 
         //let run override k8s specs
-        K8sTaskBaseSpec k8sSpec = runSpec.getTaskDeploySpec();
-        containerSpec.getTaskDeploySpec().configure(k8sSpec.toMap());
+        Optional
+            .ofNullable(runSpec.getTaskDeploySpec())
+            .ifPresent(k8sSpec -> containerSpec.getTaskDeploySpec().configure(k8sSpec.toMap()));
 
         return containerSpec;
     }

@@ -1,17 +1,14 @@
 package it.smartcommunitylabdhub.commons.jackson;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.smartcommunitylabdhub.commons.jackson.mixins.ConcreteSpecMixin;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import java.util.HashMap;
 
-//TODO refactor into a factory
+//TODO refactor into a factory ( create method to retrieve all objects mapper)
 public class JacksonMapper {
 
     public static final ObjectMapper CUSTOM_OBJECT_MAPPER = new ObjectMapper();
@@ -41,5 +38,13 @@ public class JacksonMapper {
     public static JavaType extractJavaType(Class<?> clazz) {
         // resolve generics type via subclass trick
         return CUSTOM_OBJECT_MAPPER.getTypeFactory().constructSimpleType(clazz, null);
+    }
+
+    public static ObjectWriter getCustomObjectMapperWrite() {
+        return CUSTOM_OBJECT_MAPPER.writer();
+    }
+
+    public static ObjectReader getCustomObjectMapperReader() {
+        return CUSTOM_OBJECT_MAPPER.reader();
     }
 }

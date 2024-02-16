@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.runtime.dbt.builders;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.run.RunDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
+import java.util.Optional;
 
 /**
  * DbtTransformBuilder
@@ -24,8 +24,9 @@ public class DbtTransformBuilder implements Builder<FunctionDbtSpec, TaskTransfo
         runDbtSpec.setFuncSpec(funSpec);
 
         //let run override k8s specs
-        K8sTaskBaseSpec k8sSpec = runSpec.getTaskSpec();
-        runDbtSpec.getTaskSpec().configure(k8sSpec.toMap());
+        Optional
+            .ofNullable(runSpec.getTaskSpec())
+            .ifPresent(k8sSpec -> runDbtSpec.getTaskSpec().configure(k8sSpec.toMap()));
 
         return runDbtSpec;
     }

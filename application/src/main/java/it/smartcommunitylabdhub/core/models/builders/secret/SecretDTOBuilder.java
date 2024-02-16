@@ -79,7 +79,7 @@ public class SecretDTOBuilder implements Converter<SecretEntity, Secret> {
                                     dto.setStatus(
                                         MapUtils.mergeMultipleMaps(
                                             cborConverter.reverseConvert(entity.getStatus()),
-                                            Map.of("state", entity.getState())
+                                            Map.of("state", entity.getState().toString())
                                         )
                                     )
                                 )

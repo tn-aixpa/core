@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.runtime.nefertem.builders;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskMetricSpec;
+import java.util.Optional;
 
 /**
  * NefetermMetricBuilder
@@ -24,8 +24,9 @@ public class NefertemMetricBuilder implements Builder<FunctionNefertemSpec, Task
         runNefertemSpec.setTaskMetricSpec(taskSpec);
 
         //let run override k8s specs
-        K8sTaskBaseSpec k8sSpec = runSpec.getTaskMetricSpec();
-        runNefertemSpec.getTaskMetricSpec().configure(k8sSpec.toMap());
+        Optional
+            .ofNullable(runSpec.getTaskMetricSpec())
+            .ifPresent(k8sSpec -> runNefertemSpec.getTaskMetricSpec().configure(k8sSpec.toMap()));
 
         // Return a run spec
         return runNefertemSpec;

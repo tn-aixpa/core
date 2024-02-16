@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
 @Deprecated(forRemoval = true)
 public class RunUtils {
 
-    public static final Pattern RUN_PATTERN = Pattern.compile("([^:/]+)\\+([^+]+)://([^/]+)/([^/]+):(.+)");
+    public static final Pattern RUN_PATTERN = Pattern.compile("([^:/]+)://([^/]+)/([^/]+):(.+)");
 
     private RunUtils() {}
 
@@ -24,14 +24,12 @@ public class RunUtils {
     public static RunSpecAccessor parseRun(String value) {
         Matcher matcher = RUN_PATTERN.matcher(value);
         if (matcher.matches()) {
-            String runtime = matcher.group(1);
-            String task = matcher.group(2);
-            String project = matcher.group(3);
-            String function = matcher.group(4);
-            String version = matcher.group(5);
+            String task = matcher.group(1);
+            String project = matcher.group(2);
+            String function = matcher.group(3);
+            String version = matcher.group(4);
 
             Map<String, String> map = new HashMap<>();
-            map.put("runtime", runtime);
             map.put("task", task);
             map.put("project", project);
             map.put("function", function);

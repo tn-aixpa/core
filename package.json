@@ -1,14 +1,14 @@
 {
-    "name": "digitalhub-core",
-    "version": "1.0.0",
-    "private": true,
-    "scripts": {
-        "prettier": "prettier --config ./.prettierrc.yaml --write --list-different \"modules/*/src/**/*.{java}\"  \"application/src/**/*.{java}\""
-    },
-    "devDependencies": {
-        "prettier": "^3.2.5",
-        "prettier-plugin-java": "^2.5.0"
-    },
-    "dependencies": {},
-    "eslintConfig": {}
+  "name": "digitalhub-core",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "prettier": "prettier --config ./.prettierrc.yml --write --list-different \"modules/*/src/**/*.java\"  \"application/src/**/*.java\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "prettier-plugin-java": "^2.5.0"
+  },
+  "dependencies": {},
+  "eslintConfig": {}
 }
