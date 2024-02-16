@@ -43,8 +43,8 @@ public class SolrIndexManager {
 	public Page<SearchGroupResult> search(String q, String fq, Pageable pageRequest) throws Exception {
 		Map<String, String> queryParamMap = new HashMap<>();
 		if(StringUtils.hasText(q)) {
-			String query = String.format("metadata.name:\"%1s\" OR  metadata.description:\"%1s\" OR metadata.project:\"%1s\" "
-					+ "OR metadata.version:\"%1s\" OR metadata.labels:\"%1s\"", getTerm(q));
+			String query = String.format("metadata.name:\"%1$s\" OR  metadata.description:\"%1$s\" OR metadata.project:\"%1$s\""
+					+ " OR metadata.version:\"%1$s\" OR metadata.labels:\"%1$s\"", getTerm(q));
 			queryParamMap.put("q", query);	
 		} else {
 			queryParamMap.put("q", "*:*");
