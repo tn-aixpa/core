@@ -85,3 +85,8 @@ event-queue:
       entity-topic: ${RABBITMQ_TOPIC:entityTopic}
       entity-routing-key: ${RABBITMQ_ROUTING_KEY:entityRoutingKey}
       enabled: ${RABBITMQ_ENABLE:false}
+
+solr:
+  enabled: ${ENABLE_SOLR:false}
+  url:  ${SOLR_URL:http://localhost:8983/solr}
+  collection: ${SOLR_COLLECTION:DigitalHub}
