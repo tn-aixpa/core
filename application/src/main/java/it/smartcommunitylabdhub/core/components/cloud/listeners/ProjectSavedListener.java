@@ -25,27 +25,60 @@ public class ProjectSavedListener {
     @PostPersist
     public void onPostPersist(Object entity) {
         // Trigger a custom event when an entity is saved
-        eventPublisher.publishEvent(new EntityEvent<>(
-                projectDTOBuilder.build((ProjectEntity) entity, List.of(), List.of(), List.of(), List.of(), List.of(), false),
+        eventPublisher.publishEvent(
+            new EntityEvent<>(
+                projectDTOBuilder.build(
+                    (ProjectEntity) entity,
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    false
+                ),
                 Project.class,
-                EntityAction.CREATE));
+                EntityAction.CREATE
+            )
+        );
     }
 
     @PostUpdate
     public void onPostUpdate(Object entity) {
         // Trigger a custom event when an entity is removed
-        eventPublisher.publishEvent(new EntityEvent<>(
-                projectDTOBuilder.build((ProjectEntity) entity, List.of(), List.of(), List.of(), List.of(), List.of(), false),
+        eventPublisher.publishEvent(
+            new EntityEvent<>(
+                projectDTOBuilder.build(
+                    (ProjectEntity) entity,
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    false
+                ),
                 Project.class,
-                EntityAction.UPDATE));
+                EntityAction.UPDATE
+            )
+        );
     }
 
     @PostRemove
     public void onPostRemove(Object entity) {
         // Trigger a custom event when an entity is removed
-        eventPublisher.publishEvent(new EntityEvent<>(
-                projectDTOBuilder.build((ProjectEntity) entity, List.of(), List.of(), List.of(), List.of(), List.of(), false),
+        eventPublisher.publishEvent(
+            new EntityEvent<>(
+                projectDTOBuilder.build(
+                    (ProjectEntity) entity,
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    false
+                ),
                 Project.class,
-                EntityAction.UPDATE));
+                EntityAction.UPDATE
+            )
+        );
     }
 }

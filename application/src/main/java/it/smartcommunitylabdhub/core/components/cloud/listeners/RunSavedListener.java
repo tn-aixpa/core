@@ -25,27 +25,24 @@ public class RunSavedListener {
     @PostPersist
     public void onPostPersist(Object entity) {
         // Trigger a custom event when an entity is saved
-        eventPublisher.publishEvent(new EntityEvent<>(
-                runDTOBuilder.build((RunEntity) entity),
-                Run.class,
-                EntityAction.CREATE));
+        eventPublisher.publishEvent(
+            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), Run.class, EntityAction.CREATE)
+        );
     }
 
     @PostUpdate
     public void onPostUpdate(Object entity) {
         // Trigger a custom event when an entity is removed
-        eventPublisher.publishEvent(new EntityEvent<>(
-                runDTOBuilder.build((RunEntity) entity),
-                Run.class,
-                EntityAction.UPDATE));
+        eventPublisher.publishEvent(
+            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), Run.class, EntityAction.UPDATE)
+        );
     }
 
     @PostRemove
     public void onPostRemove(Object entity) {
         // Trigger a custom event when an entity is removed
-        eventPublisher.publishEvent(new EntityEvent<>(
-                runDTOBuilder.build((RunEntity) entity),
-                Run.class,
-                EntityAction.UPDATE));
+        eventPublisher.publishEvent(
+            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), Run.class, EntityAction.UPDATE)
+        );
     }
 }

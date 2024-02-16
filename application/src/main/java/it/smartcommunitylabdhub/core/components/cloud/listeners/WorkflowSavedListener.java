@@ -25,27 +25,36 @@ public class WorkflowSavedListener {
     @PostPersist
     public void onPostPersist(Object entity) {
         // Trigger a custom event when an entity is saved
-        eventPublisher.publishEvent(new EntityEvent<>(
+        eventPublisher.publishEvent(
+            new EntityEvent<>(
                 workflowDTOBuilder.build((WorkflowEntity) entity, false),
                 Workflow.class,
-                EntityAction.CREATE));
+                EntityAction.CREATE
+            )
+        );
     }
 
     @PostUpdate
     public void onPostUpdate(Object entity) {
         // Trigger a custom event when an entity is removed
-        eventPublisher.publishEvent(new EntityEvent<>(
+        eventPublisher.publishEvent(
+            new EntityEvent<>(
                 workflowDTOBuilder.build((WorkflowEntity) entity, false),
                 Workflow.class,
-                EntityAction.UPDATE));
+                EntityAction.UPDATE
+            )
+        );
     }
 
     @PostRemove
     public void onPostRemove(Object entity) {
         // Trigger a custom event when an entity is removed
-        eventPublisher.publishEvent(new EntityEvent<>(
+        eventPublisher.publishEvent(
+            new EntityEvent<>(
                 workflowDTOBuilder.build((WorkflowEntity) entity, false),
                 Workflow.class,
-                EntityAction.UPDATE));
+                EntityAction.UPDATE
+            )
+        );
     }
 }
