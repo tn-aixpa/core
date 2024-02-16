@@ -16,20 +16,6 @@ import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 
 public class SolrBaseEntityParser {
 	
@@ -38,7 +24,7 @@ public class SolrBaseEntityParser {
 	}
 	
 	public static SolrInputDocument parser(DataItem item, DataItemMetadata metadata) {
-    String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
+		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
 		
 		SolrInputDocument doc = new SolrInputDocument();
 		doc.addField("id", item.getId());
@@ -60,7 +46,7 @@ public class SolrBaseEntityParser {
 	}
 	
 	public static SolrInputDocument parser(Function item, FunctionMetadata metadata) {
-   	String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
+		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
     	
 		SolrInputDocument doc = new SolrInputDocument();
 		doc.addField("id", item.getId());
@@ -82,7 +68,7 @@ public class SolrBaseEntityParser {
 	}
 	
 	public static SolrInputDocument parser(Artifact item, ArtifactMetadata metadata) {
-   	String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
+		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
     	
 		SolrInputDocument doc = new SolrInputDocument();
 		doc.addField("id", item.getId());
@@ -104,7 +90,7 @@ public class SolrBaseEntityParser {
 	}
 	
 	public static SolrInputDocument parser(Run item, RunMetadata metadata) {
-   	String keyGroup = getKeyGroup(item.getKind(), item.getProject(), "???");
+		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), "???");
     	
 		SolrInputDocument doc = new SolrInputDocument();
 		doc.addField("id", item.getId());
@@ -125,7 +111,7 @@ public class SolrBaseEntityParser {
 	}
 	
 	public static SolrInputDocument parser(Task item, TaskMetadata metadata) {
-   	String keyGroup = getKeyGroup(item.getKind(), item.getProject(), "???");
+		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), "???");
     	
 		SolrInputDocument doc = new SolrInputDocument();
 		doc.addField("id", item.getId());
@@ -146,7 +132,7 @@ public class SolrBaseEntityParser {
 	}
 
 	public static SolrInputDocument parser(Secret item, SecretMetadata metadata) {
-   	String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
+		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
     	
 		SolrInputDocument doc = new SolrInputDocument();
 		doc.addField("id", item.getId());
@@ -168,7 +154,7 @@ public class SolrBaseEntityParser {
 	}
 
 	public static SolrInputDocument parser(Workflow item, WorkflowMetadata metadata) {
-   	String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
+		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());
     	
 		SolrInputDocument doc = new SolrInputDocument();
 		doc.addField("id", item.getId());

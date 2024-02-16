@@ -18,9 +18,6 @@ import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
 import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
-import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 
@@ -57,7 +54,6 @@ public class SolrController {
 				List<DataItem> items = new ArrayList<>();
 				page.getContent().forEach(e -> items.add(dataItemDTOBuilder.build(e, false)));
 				solrComponent.indexBounce(items);
-				solrComponent.indexBounce(page.getContent());
 			}
 			pageNumber++;
 		} while (finished);
