@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ItemResult {
@@ -10,6 +11,7 @@ public class ItemResult {
 	String name;
 	String type;
 	Map<String, Object> metadata = new HashMap<>();
+	Map<String, List<String>> highlights = new HashMap<>();
 	
 	public String getId() {
 		return id;
@@ -46,5 +48,11 @@ public class ItemResult {
 	}
 	public void setMetadata(Map<String, Object> metadata) {
 		this.metadata = metadata;
+	}
+	public Map<String, List<String>> getHighlights() {
+		return highlights;
+	}
+	public void setHighlights(Map<String, List<String>> highlights) {
+		this.highlights = highlights;
 	}
 }

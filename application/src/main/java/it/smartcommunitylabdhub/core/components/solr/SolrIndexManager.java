@@ -56,12 +56,16 @@ public class SolrIndexManager {
 		queryParamMap.put("group.field", "keyGroup");
 		queryParamMap.put("group.limit", "5");
 		
+		queryParamMap.put("hl", "true");
+		queryParamMap.put("hl.fl", "metadata.name,metadata.description,metadata.project,metadata.version,metadata.labels");
+		
 		queryParamMap.put("start", String.valueOf(pageRequest.getOffset()));
 		queryParamMap.put("rows", String.valueOf(pageRequest.getPageSize()));
 		
 		MapSolrParams queryParams = new MapSolrParams(queryParamMap);
 		QueryResponse response = solrClient.query(solrCollection, queryParams);
 				
+		Map<String,Map<String,List<String>>> highlighting = response.getHighlighting();
 		List<SearchGroupResult> result = new ArrayList<>();
 		long total = 0;
 		GroupResponse groupResponse = response.getGroupResponse();
@@ -76,6 +80,9 @@ public class SolrIndexManager {
 				result.add(groupResult);
 				for(SolrDocument doc : documents) {
 					ItemResult itemResult = SolrDocParser.parse(doc);
+					if(highlighting.containsKey(itemResult.getId())) {
+						itemResult.getHighlights().putAll(highlighting.get(itemResult.getId()));
+					}
 					groupResult.getDocs().add(itemResult);
 				}
 			}
