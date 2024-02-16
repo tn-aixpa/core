@@ -1,5 +1,8 @@
 package it.smartcommunitylabdhub.core.controllers.v1.base;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
 import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
+import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 
@@ -26,6 +31,9 @@ public class SolrController {
 	
 	@Autowired
 	DataItemRepository dataItemRepository;
+	
+	@Autowired
+	DataItemDTOBuilder dataItemDTOBuilder;
 	
 	@GetMapping(path = "/clear", produces = "application/json; charset=UTF-8")
 	public ResponseEntity<Void> clearIndex() {
@@ -43,7 +51,9 @@ public class SolrController {
 			if(page.getContent().size() == 0) {
 				finished = true;
 			} else {
-				solrComponent.indexBounce(page.getContent());
+				List<DataItem> items = new ArrayList<>();
+				page.getContent().forEach(e -> items.add(dataItemDTOBuilder.build(e, false)));
+				solrComponent.indexBounce(items);
 			}
 			pageNumber++;
 		} while (finished);
