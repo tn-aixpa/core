@@ -1,6 +1,6 @@
 FROM maven:3.8.2-eclipse-temurin-17 AS cache
-COPY ./src /tmp/src
-COPY ./pom.xml /tmp/pom.xml
+COPY application/src /tmp/src
+COPY application/pom.xml /tmp/pom.xml
 WORKDIR /tmp
 RUN mvn package -DskipTests
 
