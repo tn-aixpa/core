@@ -65,6 +65,7 @@ public class SolrIndexManager {
 		
 		MultiMapSolrParams.addParam("hl", "true", queryParamMap);
 		MultiMapSolrParams.addParam("hl.fl", "metadata.name,metadata.description,metadata.project,metadata.version,metadata.labels", queryParamMap);
+		MultiMapSolrParams.addParam("hl.fragsize", "250", queryParamMap);
 		
 		MultiMapSolrParams.addParam("start", String.valueOf(pageRequest.getOffset()), queryParamMap);
 		MultiMapSolrParams.addParam("rows", String.valueOf(pageRequest.getPageSize()), queryParamMap);
