@@ -18,8 +18,8 @@ public class SolrDocParser {
 		item.getMetadata().put("description", (String) doc.getFieldValue("metadata.description"));
 		item.getMetadata().put("project", (String) doc.getFieldValue("metadata.project"));
 		item.getMetadata().put("version", (String) doc.getFieldValue("metadata.version"));
-		item.getMetadata().put("created", (Date) doc.getFieldValue("metadata.created"));
-		item.getMetadata().put("updated", (Date) doc.getFieldValue("metadata.updated"));
+		item.getMetadata().put("created", (String) doc.getFieldValue("metadata.created"));
+		item.getMetadata().put("updated", (String) doc.getFieldValue("metadata.updated"));
 		item.getMetadata().put("labels", (List<String>) doc.getFieldValue("metadata.labels"));
 		return item;
 	}
