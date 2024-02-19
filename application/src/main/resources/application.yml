@@ -2,7 +2,7 @@
 spring:
   sql:
     init:
-      schema-locations: classpath:db/schema-h2.sql
+      schema-locations: ${JDBC_TABLE:classpath:db/schema-h2.sql}
       mode: always
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
