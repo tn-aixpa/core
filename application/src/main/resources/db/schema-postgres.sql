@@ -7,6 +7,6 @@ create table if not exists public.runnable
     updated timestamp(6) with time zone default CURRENT_TIMESTAMP
 );
 
-alter table public.runnable
-    owner to postgres;
+-- alter table public.runnable
+--     owner to postgres;
 
