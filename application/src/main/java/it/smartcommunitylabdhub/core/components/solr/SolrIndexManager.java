@@ -14,7 +14,7 @@ import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.params.MapSolrParams;
+import org.apache.solr.common.params.MultiMapSolrParams;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -36,34 +36,38 @@ public class SolrIndexManager {
 		}		
 	}
 	
+	@SuppressWarnings("unused")
 	private String getTerm(String term) {
 		return ClientUtils.escapeQueryChars(term.trim());
 	}
 
-	public Page<SearchGroupResult> search(String q, String fq, Pageable pageRequest) throws Exception {
-		Map<String, String> queryParamMap = new HashMap<>();
+	public Page<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
+		Map<String, String[]> queryParamMap = new HashMap<>();
 		if(StringUtils.hasText(q)) {
 			String query = String.format("metadata.name:\"%1$s\" OR  metadata.description:\"%1$s\" OR metadata.project:\"%1$s\""
-					+ " OR metadata.version:\"%1$s\" OR metadata.labels:\"%1$s\"", getTerm(q));
-			queryParamMap.put("q", query);	
+					+ " OR metadata.version:\"%1$s\" OR metadata.labels:\"%1$s\"", q.trim());
+			MultiMapSolrParams.addParam("q", query, queryParamMap);	
 		} else {
-			queryParamMap.put("q", "*:*");
+			MultiMapSolrParams.addParam("q", "*:*", queryParamMap);
 		}
-		if(StringUtils.hasText(fq)) {
-			queryParamMap.put("fq", fq);
+		if(fq != null) {
+			fq.forEach(filter -> {
+				if(StringUtils.hasText(filter)) {
+					MultiMapSolrParams.addParam("fq", filter.trim(), queryParamMap);
+				}				
+			});
 		}
-		queryParamMap.put("group", "true");
-		queryParamMap.put("group.field", "keyGroup");
-		queryParamMap.put("group.limit", "5");
+		MultiMapSolrParams.addParam("group", "true", queryParamMap);
+		MultiMapSolrParams.addParam("group.field", "keyGroup", queryParamMap);
+		MultiMapSolrParams.addParam("group.limit", "10", queryParamMap);
 		
-		queryParamMap.put("hl", "true");
-		queryParamMap.put("hl.fl", "metadata.name,metadata.description,metadata.project,metadata.version,metadata.labels");
+		MultiMapSolrParams.addParam("hl", "true", queryParamMap);
+		MultiMapSolrParams.addParam("hl.fl", "metadata.name,metadata.description,metadata.project,metadata.version,metadata.labels", queryParamMap);
 		
-		queryParamMap.put("start", String.valueOf(pageRequest.getOffset()));
-		queryParamMap.put("rows", String.valueOf(pageRequest.getPageSize()));
-		
-		MapSolrParams queryParams = new MapSolrParams(queryParamMap);
-		QueryResponse response = solrClient.query(solrCollection, queryParams);
+		MultiMapSolrParams.addParam("start", String.valueOf(pageRequest.getOffset()), queryParamMap);
+		MultiMapSolrParams.addParam("rows", String.valueOf(pageRequest.getPageSize()), queryParamMap);
+				
+		QueryResponse response = solrClient.query(solrCollection, new MultiMapSolrParams(queryParamMap));
 				
 		Map<String,Map<String,List<String>>> highlighting = response.getHighlighting();
 		List<SearchGroupResult> result = new ArrayList<>();
@@ -75,6 +79,7 @@ public class SolrIndexManager {
 			for(Group group : groupCommand.getValues()) {
 				SolrDocumentList documents = group.getResult();
 				SearchGroupResult groupResult = new SearchGroupResult();
+				groupResult.setId(group.getGroupValue());
 				groupResult.setKeyGroup(group.getGroupValue());
 				groupResult.setNumFound(documents.getNumFound());
 				result.add(groupResult);

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +27,7 @@ import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 @ApiVersion("v1")
 public class SolrController {
 	
-	@Autowired
+	@Autowired(required = false)
 	SolrComponent solrComponent;
 	
 	@Autowired
@@ -37,12 +38,16 @@ public class SolrController {
 	
 	@GetMapping(path = "/clear", produces = "application/json; charset=UTF-8")
 	public ResponseEntity<Void> clearIndex() {
+		if(solrComponent == null)
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);		
 		solrComponent.clearIndex();
 		return ResponseEntity.ok(null);
 	}
 	
 	@GetMapping(path = "/init", produces = "application/json; charset=UTF-8")
 	public ResponseEntity<Void> initIndex() {
+		if(solrComponent == null)
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);		
 		solrComponent.clearIndex();
 		boolean finished = false;
 		int pageNumber = 0;
@@ -65,10 +70,12 @@ public class SolrController {
 	@GetMapping(path = "/search", produces = "application/json; charset=UTF-8")
 	public ResponseEntity<Page<SearchGroupResult>> search(
 			@RequestParam(required = false) String q,
-			@RequestParam(required = false) String fq,
+			@RequestParam(required = false) List<String> fq,
 			Pageable pageRequest) {
+		if(solrComponent == null)
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);				
 		try {
-			Page<SearchGroupResult> page = solrComponent.search(q, fq, pageRequest);
+			Page<SearchGroupResult> page = solrComponent.groupSearch(q, fq, pageRequest);
 			return ResponseEntity.ok(page);
 		} catch (Exception e) {
 			
