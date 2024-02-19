@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,6 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.MultiMapSolrParams;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
@@ -41,9 +40,11 @@ public class SolrIndexManager {
 		return ClientUtils.escapeQueryChars(term.trim());
 	}
 
-	public Page<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
+	public SolrPage<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
+		Map<String, List<String>> filters = new HashMap<>();
 		Map<String, String[]> queryParamMap = new HashMap<>();
 		if(StringUtils.hasText(q)) {
+			filters.put("q", Arrays.asList(q));
 			String query = String.format("metadata.name:\"%1$s\" OR  metadata.description:\"%1$s\" OR metadata.project:\"%1$s\""
 					+ " OR metadata.version:\"%1$s\" OR metadata.labels:\"%1$s\"", q.trim());
 			MultiMapSolrParams.addParam("q", query, queryParamMap);	
@@ -51,6 +52,7 @@ public class SolrIndexManager {
 			MultiMapSolrParams.addParam("q", "*:*", queryParamMap);
 		}
 		if(fq != null) {
+			filters.put("fq", fq);
 			fq.forEach(filter -> {
 				if(StringUtils.hasText(filter)) {
 					MultiMapSolrParams.addParam("fq", filter.trim(), queryParamMap);
@@ -92,7 +94,8 @@ public class SolrIndexManager {
 				}
 			}
 		}
-		return new PageImpl<>(result, pageRequest, total);
+		
+		return new SolrPageImpl<>(result, pageRequest, total, filters);
 	}
 	
 	public void indexDoc(SolrInputDocument doc) throws Exception {

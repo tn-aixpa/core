@@ -15,7 +15,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -216,7 +215,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 		}
     }
     
-	public Page<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
+	public SolrPage<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
 		return indexManager.groupSearch(q, fq, pageRequest);
 	}
 	

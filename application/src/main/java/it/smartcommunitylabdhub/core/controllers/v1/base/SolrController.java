@@ -18,6 +18,7 @@ import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
 import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
+import it.smartcommunitylabdhub.core.components.solr.SolrPage;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
@@ -68,14 +69,14 @@ public class SolrController {
 	
 	
 	@GetMapping(path = "/search", produces = "application/json; charset=UTF-8")
-	public ResponseEntity<Page<SearchGroupResult>> search(
+	public ResponseEntity<SolrPage<SearchGroupResult>> search(
 			@RequestParam(required = false) String q,
 			@RequestParam(required = false) List<String> fq,
 			Pageable pageRequest) {
 		if(solrComponent == null)
 			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);				
 		try {
-			Page<SearchGroupResult> page = solrComponent.groupSearch(q, fq, pageRequest);
+			SolrPage<SearchGroupResult> page = solrComponent.groupSearch(q, fq, pageRequest);
 			return ResponseEntity.ok(page);
 		} catch (Exception e) {
 			
