@@ -18,7 +18,7 @@ spring:
     driverClassName: ${JDBC_DRIVER:org.h2.Driver}
     password: ${JDBC_PASS:password}
     username: ${JDBC_USER:sa}
-    url: ${JDBC_URL:jdbc:h2:file:./data/db}
+    url: ${JDBC_URL:jdbc:h2:file:../data/db}
 
   data:
     web:
