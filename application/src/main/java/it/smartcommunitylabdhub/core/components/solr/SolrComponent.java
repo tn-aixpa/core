@@ -29,7 +29,6 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
@@ -71,11 +70,12 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 				indexDoc(event);
 				break;
 			case DELETE:
-			try {
-				indexManager.removeDoc(getId(event));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+				try {
+					indexManager.removeDoc(getId(event));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				break;
 		}    	
     }
     
@@ -113,9 +113,6 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     		return entity.getId();
     	} else if(event.getEntity() instanceof Run) {
     		Run entity = (Run)event.getEntity();
-    		return entity.getId();
-    	} else if(event.getEntity() instanceof Task) {
-    		Task entity = (Task)event.getEntity();
     		return entity.getId();
     	} else if(event.getEntity() instanceof Secret) {
     		Secret entity = (Secret)event.getEntity();
