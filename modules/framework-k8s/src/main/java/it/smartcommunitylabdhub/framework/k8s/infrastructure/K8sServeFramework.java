@@ -6,24 +6,7 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Container;
-import io.kubernetes.client.openapi.models.V1Deployment;
-import io.kubernetes.client.openapi.models.V1DeploymentSpec;
-import io.kubernetes.client.openapi.models.V1DeploymentStatus;
-import io.kubernetes.client.openapi.models.V1EnvFromSource;
-import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1LabelSelector;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1Pod;
-import io.kubernetes.client.openapi.models.V1PodList;
-import io.kubernetes.client.openapi.models.V1PodSpec;
-import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
-import io.kubernetes.client.openapi.models.V1ResourceRequirements;
-import io.kubernetes.client.openapi.models.V1Service;
-import io.kubernetes.client.openapi.models.V1ServicePort;
-import io.kubernetes.client.openapi.models.V1ServiceSpec;
-import io.kubernetes.client.openapi.models.V1Volume;
-import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
@@ -46,14 +29,7 @@ import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
 import it.smartcommunitylabdhub.fsm.workflow.WorkflowFactory;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -120,16 +96,16 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
         // Create labels for job
         Map<String, String> labels = Map.of(
-            "app.kubernetes.io/instance",
-            "dhcore-" + deploymentName,
-            "app.kubernetes.io/version",
-            "0.0.3",
-            "app.kubernetes.io/component",
-            "deployment",
-            "app.kubernetes.io/part-of",
-            "dhcore-k8sdeployment",
-            "app.kubernetes.io/managed-by",
-            "dhcore"
+                "app.kubernetes.io/instance",
+                "dhcore-" + deploymentName,
+                "app.kubernetes.io/version",
+                "0.0.3",
+                "app.kubernetes.io/component",
+                "deployment",
+                "app.kubernetes.io/part-of",
+                "dhcore-k8sdeployment",
+                "app.kubernetes.io/managed-by",
+                "dhcore"
         );
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
@@ -150,39 +126,39 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
         List<V1VolumeMount> volumeMounts = new LinkedList<>();
         if (runnable.getVolumes() != null) {
             runnable
-                .getVolumes()
-                .forEach(volumeMap -> {
-                    V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
-                    if (volume != null) {
-                        volumes.add(volume);
-                    }
-                    V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
-                    if (mount != null) {
-                        volumeMounts.add(mount);
-                    }
-                });
+                    .getVolumes()
+                    .forEach(volumeMap -> {
+                        V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
+                        if (volume != null) {
+                            volumes.add(volume);
+                        }
+                        V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
+                        if (mount != null) {
+                            volumeMounts.add(mount);
+                        }
+                    });
         }
 
         // resources
         V1ResourceRequirements resources = new V1ResourceRequirements();
         if (runnable.getResources() != null) {
             resources.setRequests(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.requests() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
-                )
+                    k8sBuilderHelper.convertResources(
+                            runnable
+                                    .getResources()
+                                    .stream()
+                                    .filter(r -> r.requests() != null)
+                                    .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
+                    )
             );
             resources.setLimits(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.limits() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
-                )
+                    k8sBuilderHelper.convertResources(
+                            runnable
+                                    .getResources()
+                                    .stream()
+                                    .filter(r -> r.limits() != null)
+                                    .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
+                    )
             );
         }
 
@@ -191,48 +167,48 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
         // Build Container
         V1Container container = new V1Container()
-            .name(containerName)
-            .image(runnable.getImage())
-            .imagePullPolicy("Always")
-            .imagePullPolicy("IfNotPresent")
-            .resources(resources)
-            .volumeMounts(volumeMounts)
-            .envFrom(envVarsFromSource)
-            .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
+                .name(containerName)
+                .image(runnable.getImage())
+                .imagePullPolicy("Always")
+                .imagePullPolicy("IfNotPresent")
+                .resources(resources)
+                .volumeMounts(volumeMounts)
+                .envFrom(envVarsFromSource)
+                .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
 
         //        if present entry point set it
         Optional
-            .ofNullable(runnable.getEntrypoint())
-            .ifPresent(entrypoint -> container.command(getEntryPoint(runnable)));
+                .ofNullable(runnable.getEntrypoint())
+                .ifPresent(entrypoint -> container.command(getEntryPoint(runnable)));
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
-            .containers(Collections.singletonList(container))
-            .nodeSelector(
-                Optional
-                    .ofNullable(runnable.getNodeSelector())
-                    .orElse(Collections.emptyList())
-                    .stream()
-                    .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
-            )
-            .affinity(runnable.getAffinity())
-            .tolerations(
-                runnable.getTolerations() != null && !runnable.getTolerations().isEmpty()
-                    ? runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList())
-                    : null
-            )
-            .volumes(volumes)
-            .restartPolicy("Always");
+                .containers(Collections.singletonList(container))
+                .nodeSelector(
+                        Optional
+                                .ofNullable(runnable.getNodeSelector())
+                                .orElse(Collections.emptyList())
+                                .stream()
+                                .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
+                )
+                .affinity(runnable.getAffinity())
+                .tolerations(
+                        runnable.getTolerations() != null && !runnable.getTolerations().isEmpty()
+                                ? runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList())
+                                : null
+                )
+                .volumes(volumes)
+                .restartPolicy("Always");
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
 
         // Create the JobSpec with the PodTemplateSpec
         V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
-            // .completions(1)
-            // .backoffLimit(6)    // is the default value
-            .selector(new V1LabelSelector().matchLabels(labels))
-            .template(podTemplateSpec);
+                // .completions(1)
+                // .backoffLimit(6)    // is the default value
+                .selector(new V1LabelSelector().matchLabels(labels))
+                .template(podTemplateSpec);
 
         // Create the V1Serve object with metadata and JobSpec
 
@@ -240,15 +216,18 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
         // Create the V1 service
         // TODO: the service definition contains a list of ports. service: { ports:[xxx,xxx,,xxx],.....}
-        V1ServicePort servicePort = new V1ServicePort()
-            .port(8501) // The port exposed by your deployment
-            .targetPort(new IntOrString(8501))
-            .protocol("TCP");
+
+        List<V1ServicePort> ports = runnable.getServicePorts().stream().map(port ->
+                new V1ServicePort()
+                        .port(port.port())
+                        .targetPort(new IntOrString(port.targetPort()))
+                        .protocol("TCP")
+        ).toList();
 
         V1ServiceSpec serviceSpec = new V1ServiceSpec()
-            .type("NodePort") // or ClusterIP
-            .ports(List.of(servicePort))
-            .selector(labels);
+                .type(runnable.getServiceType()) // ClusterIP or NodePort
+                .ports(ports)
+                .selector(labels);
 
         V1ObjectMeta serviceMetadata = new V1ObjectMeta().name(serviceName);
 
@@ -256,12 +235,12 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
         try {
             V1Deployment createdServe = appsV1Api.createNamespacedDeployment(
-                namespace,
-                deployment,
-                null,
-                null,
-                null,
-                null
+                    namespace,
+                    deployment,
+                    null,
+                    null,
+                    null,
+                    null
             );
 
             V1Service createdService = coreV1Api.createNamespacedService(namespace, service, null, null, null, null);
@@ -272,16 +251,16 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
             log.error(String.valueOf(e));
             // Handle exceptions here
             throw new CoreException(
-                ErrorList.RUN_JOB_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.RUN_JOB_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
 
         // Initialize the run state machine considering current state and context
         StateMachine<RunState, RunEvent, Map<String, Object>> fsm = runStateMachine.create(
-            RunState.valueOf(runnable.getState()),
-            Map.of("runId", runnable.getId())
+                RunState.valueOf(runnable.getState()),
+                Map.of("runId", runnable.getId())
         );
 
         // Log the initiation of Dbt Kubernetes Listener
@@ -289,74 +268,74 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
         // Define a function with parameters
         Function<
-            String,
-            Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>
-        > checkServeStatus = dName ->
-            cName ->
-                fMachine -> {
-                    try {
-                        V1Deployment v1Deployment = appsV1Api.readNamespacedDeployment(dName, namespace, null);
-                        V1DeploymentStatus v1DeploymentStatus = v1Deployment.getStatus();
+                String,
+                Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>
+                > checkServeStatus = dName ->
+                cName ->
+                        fMachine -> {
+                            try {
+                                V1Deployment v1Deployment = appsV1Api.readNamespacedDeployment(dName, namespace, null);
+                                V1DeploymentStatus v1DeploymentStatus = v1Deployment.getStatus();
 
-                        assert v1DeploymentStatus != null;
-                        Objects
-                            .requireNonNull(v1DeploymentStatus.getConditions())
-                            .forEach(v -> log.info(v.getStatus()));
-                        //                // Check the Serve status
-                        //                if (Objects.requireNonNull(v1ServeStatus).getReadyReplicas() != null
-                        //                        && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
-                        //
-                        //
-                        //                    // Serve has completed successfully
-                        //                    log.info("Serve completed successfully.");
-                        //                    // Update state machine and update runDTO
-                        //                    fMachine.goToState(RunState.COMPLETED);
-                        //                    Run runDTO = runService.getRun(runnable.getId());
-                        //                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
-                        //                    runService.updateRun(runDTO, runDTO.getId());
-                        //
-                        //                    // Log pod status
-                        //                    logPod(dName, cName, namespace, runnable);
-                        //                    // Delete job and pod
-                        //                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
-                        //
-                        //                } else if (Objects.requireNonNull(v1ServeStatus).getFailed() != null) {
-                        //                    // Serve has failed delete job and pod
-                        //                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
-                        //
-                        //                } else if (v1ServeStatus.getActive() != null && v1ServeStatus.getActive() > 0) {
-                        //                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
-                        //                        fMachine.goToState(RunState.READY);
-                        //                        fMachine.goToState(RunState.RUNNING);
-                        //                    }
-                        //                    log.warn("Serve is running...");
-                        //                    logPod(dName, cName, namespace, runnable);
-                        //                } else {
-                        //                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1ServeStatus);
-                        //                    log.warn("Serve is in an unknown state : " + v1JobStatusString);
-                        //                    writeLog(runnable, v1JobStatusString);
-                        //                }
+                                assert v1DeploymentStatus != null;
+                                Objects
+                                        .requireNonNull(v1DeploymentStatus.getConditions())
+                                        .forEach(v -> log.info(v.getStatus()));
+                                //                // Check the Serve status
+                                //                if (Objects.requireNonNull(v1ServeStatus).getReadyReplicas() != null
+                                //                        && !fMachine.getCurrentState().equals(RunState.COMPLETED)) {
+                                //
+                                //
+                                //                    // Serve has completed successfully
+                                //                    log.info("Serve completed successfully.");
+                                //                    // Update state machine and update runDTO
+                                //                    fMachine.goToState(RunState.COMPLETED);
+                                //                    Run runDTO = runService.getRun(runnable.getId());
+                                //                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
+                                //                    runService.updateRun(runDTO, runDTO.getId());
+                                //
+                                //                    // Log pod status
+                                //                    logPod(dName, cName, namespace, runnable);
+                                //                    // Delete job and pod
+                                //                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
+                                //
+                                //                } else if (Objects.requireNonNull(v1ServeStatus).getFailed() != null) {
+                                //                    // Serve has failed delete job and pod
+                                //                    //deleteAssociatedPodAndJob(dName, namespace, runnable);
+                                //
+                                //                } else if (v1ServeStatus.getActive() != null && v1ServeStatus.getActive() > 0) {
+                                //                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
+                                //                        fMachine.goToState(RunState.READY);
+                                //                        fMachine.goToState(RunState.RUNNING);
+                                //                    }
+                                //                    log.warn("Serve is running...");
+                                //                    logPod(dName, cName, namespace, runnable);
+                                //                } else {
+                                //                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1ServeStatus);
+                                //                    log.warn("Serve is in an unknown state : " + v1JobStatusString);
+                                //                    writeLog(runnable, v1JobStatusString);
+                                //                }
 
-                    } catch (ApiException | CoreException e) {
-                        deleteAssociatedPodAndJob(dName, namespace, runnable);
-                        throw new StopPoller(e.getMessage());
-                    }
+                            } catch (ApiException | CoreException e) {
+                                deleteAssociatedPodAndJob(dName, namespace, runnable);
+                                throw new StopPoller(e.getMessage());
+                            }
 
-                    return null;
-                };
+                            return null;
+                        };
 
         // Using the step method with explicit arguments
         pollingService.createPoller(
-            runnable.getId(),
-            List.of(
-                WorkflowFactory
-                    .builder()
-                    .step((Function<?, ?>) i -> checkServeStatus.apply(deploymentName).apply(containerName).apply(fsm))
-                    .build()
-            ),
-            1,
-            true,
-            false
+                runnable.getId(),
+                List.of(
+                        WorkflowFactory
+                                .builder()
+                                .step((Function<?, ?>) i -> checkServeStatus.apply(deploymentName).apply(containerName).apply(fsm))
+                                .build()
+                ),
+                1,
+                true,
+                false
         );
 
         // Start job poller
@@ -364,7 +343,8 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
     }
 
     @Override
-    public void stop(K8sServeRunnable runnable) {}
+    public void stop(K8sServeRunnable runnable) {
+    }
 
     @Override
     public String status(K8sServeRunnable runnable) {
@@ -374,11 +354,11 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
     // Concat command with arguments
     private List<String> getEntryPoint(K8sServeRunnable runnable) {
         return Stream
-            .concat(
-                Stream.of(Optional.ofNullable(runnable.getEntrypoint()).orElse("")),
-                Optional.ofNullable(runnable.getArgs()).stream().flatMap(Arrays::stream)
-            )
-            .collect(Collectors.toList());
+                .concat(
+                        Stream.of(Optional.ofNullable(runnable.getEntrypoint()).orElse("")),
+                        Optional.ofNullable(runnable.getArgs()).stream().flatMap(Arrays::stream)
+                )
+                .collect(Collectors.toList());
     }
 
     // Generate and return deployment name
@@ -414,18 +394,18 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
         try {
             // Retrieve and print the logs of the associated Pod
             V1PodList v1PodList = coreV1Api.listNamespacedPod(
-                namespace,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                    namespace,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
             );
 
             for (V1Pod pod : v1PodList.getItems()) {
@@ -433,17 +413,17 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
                     if (pod.getMetadata().getName().startsWith(jobName)) {
                         String podName = pod.getMetadata().getName();
                         String logs = coreV1Api.readNamespacedPodLog(
-                            podName,
-                            namespace,
-                            cName,
-                            false,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null
+                                podName,
+                                namespace,
+                                cName,
+                                false,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
                         );
 
                         log.info("Logs for Pod: " + podName);
@@ -468,18 +448,18 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
         // Delete the Pod associated with the Serve
         try {
             V1PodList v1PodList = coreV1Api.listNamespacedPod(
-                namespace,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                    namespace,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
             );
 
             for (V1Pod pod : v1PodList.getItems()) {
@@ -489,21 +469,21 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
                         // Delete the Pod
                         V1Pod v1Pod = coreV1Api.deleteNamespacedPod(
-                            podName,
-                            namespace,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null
+                                podName,
+                                namespace,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
                         );
                         log.info("Pod deleted: " + podName);
 
                         try {
                             writeLog(
-                                runnable,
-                                JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
+                                    runnable,
+                                    JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
                             );
                         } catch (JsonProcessingException e) {
                             log.error(e.toString());

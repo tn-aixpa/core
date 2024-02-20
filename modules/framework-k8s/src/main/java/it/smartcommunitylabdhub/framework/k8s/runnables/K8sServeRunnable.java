@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableComponent;
+import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +20,10 @@ public class K8sServeRunnable extends K8sRunnable {
     private String entrypoint;
 
     private String[] args;
+
+    private List<CorePort> servicePorts;
+
+    private String serviceType;
 
     @Override
     public String getFramework() {

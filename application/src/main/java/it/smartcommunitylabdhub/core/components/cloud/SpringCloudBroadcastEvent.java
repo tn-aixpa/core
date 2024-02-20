@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.core.components.cloud;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.jackson.mixins.CborMixin;
 import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityAction;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
@@ -27,7 +26,7 @@ public class SpringCloudBroadcastEvent {
         try {
             // TODO: need to add DELETE in the future.
             if (event.getAction() != EntityAction.DELETE) {
-                JacksonMapper.OBJECT_MAPPER.addMixIn(event.getClazz(), CborMixin.class);
+                // JacksonMapper.OBJECT_MAPPER.addMixIn(event.getClazz(), CborMixin.class);
                 String serializedEntity = JacksonMapper.OBJECT_MAPPER.writeValueAsString(event.getEntity());
 
                 rabbitTemplate.convertAndSend("entityTopic", "entityRoutingKey", serializedEntity);

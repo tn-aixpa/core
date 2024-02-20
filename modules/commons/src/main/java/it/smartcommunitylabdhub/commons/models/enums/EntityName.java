@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.enums;
 
+//
 public enum EntityName {
     NONE,
     PROJECT,

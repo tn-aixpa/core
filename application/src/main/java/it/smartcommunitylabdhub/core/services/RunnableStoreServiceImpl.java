@@ -13,9 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 //TODO FIX generic typing
-@Service
+@Service // remove service...
 public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons.infrastructure.Runnable>
-    implements RunnableStoreService<T> {
+        implements RunnableStoreService<T> {
 
     @Autowired
     private RunnableRepository runnableRepository;
@@ -47,17 +47,17 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
     public List<T> findAll() {
         List<RunnableEntity> entities = runnableRepository.findAll();
         return entities
-            .stream()
-            .map(entity -> {
-                try {
-                    return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), getRunnableClass());
-                } catch (IOException e) {
-                    // Handle deserialization error
-                    return null;
-                }
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .stream()
+                .map(entity -> {
+                    try {
+                        return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), getRunnableClass());
+                    } catch (IOException e) {
+                        // Handle deserialization error
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     public void delete(String id) {
