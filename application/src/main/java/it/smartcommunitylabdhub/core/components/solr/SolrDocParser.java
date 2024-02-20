@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import java.util.Date;
 import java.util.List;
 
 import org.apache.solr.common.SolrDocument;

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.components.solr.ItemResult;
 import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
 import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
 import it.smartcommunitylabdhub.core.components.solr.SolrPage;
@@ -68,8 +69,8 @@ public class SolrController {
 	}
 	
 	
-	@GetMapping(path = "/search", produces = "application/json; charset=UTF-8")
-	public ResponseEntity<SolrPage<SearchGroupResult>> search(
+	@GetMapping(path = "/search/group", produces = "application/json; charset=UTF-8")
+	public ResponseEntity<SolrPage<SearchGroupResult>> searchGroup(
 			@RequestParam(required = false) String q,
 			@RequestParam(required = false) List<String> fq,
 			Pageable pageRequest) {
@@ -81,8 +82,23 @@ public class SolrController {
 		} catch (Exception e) {
 			
 			return ResponseEntity.ok(null);
-		}
-		
+		}		
+	}
+	
+	@GetMapping(path = "/search/item", produces = "application/json; charset=UTF-8")
+	public ResponseEntity<SolrPage<ItemResult>> search(
+			@RequestParam(required = false) String q,
+			@RequestParam(required = false) List<String> fq,
+			Pageable pageRequest) {
+		if(solrComponent == null)
+			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);				
+		try {
+			SolrPage<ItemResult> page = solrComponent.itemSearch(q, fq, pageRequest);
+			return ResponseEntity.ok(page);
+		} catch (Exception e) {
+			
+			return ResponseEntity.ok(null);
+		}		
 	}
 
 }

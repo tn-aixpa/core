@@ -41,37 +41,10 @@ public class SolrIndexManager {
 	}
 
 	public SolrPage<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
+		
 		Map<String, List<String>> filters = new HashMap<>();
-		Map<String, String[]> queryParamMap = new HashMap<>();
-		if(StringUtils.hasText(q)) {
-			filters.put("q", Arrays.asList(q));
-			String query = String.format("metadata.name:\"%1$s\" OR  metadata.description:\"%1$s\" OR metadata.project:\"%1$s\""
-					+ " OR metadata.version:\"%1$s\" OR metadata.labels:\"%1$s\"", q.trim());
-			MultiMapSolrParams.addParam("q", query, queryParamMap);	
-		} else {
-			MultiMapSolrParams.addParam("q", "*:*", queryParamMap);
-		}
-		if(fq != null) {
-			filters.put("fq", fq);
-			fq.forEach(filter -> {
-				if(StringUtils.hasText(filter)) {
-					MultiMapSolrParams.addParam("fq", filter.trim(), queryParamMap);
-				}				
-			});
-		}
-		MultiMapSolrParams.addParam("group", "true", queryParamMap);
-		MultiMapSolrParams.addParam("group.field", "keyGroup", queryParamMap);
-		MultiMapSolrParams.addParam("group.limit", "10", queryParamMap);
-		
-		MultiMapSolrParams.addParam("hl", "true", queryParamMap);
-		MultiMapSolrParams.addParam("hl.fl", "metadata.name,metadata.description,metadata.project,metadata.version,metadata.labels", queryParamMap);
-		MultiMapSolrParams.addParam("hl.fragsize", "250", queryParamMap);
-		
-		MultiMapSolrParams.addParam("start", String.valueOf(pageRequest.getOffset()), queryParamMap);
-		MultiMapSolrParams.addParam("rows", String.valueOf(pageRequest.getPageSize()), queryParamMap);
-				
-		QueryResponse response = solrClient.query(solrCollection, new MultiMapSolrParams(queryParamMap));
-				
+		QueryResponse response = prepareQuery(q, fq, pageRequest, filters, true);
+
 		Map<String,Map<String,List<String>>> highlighting = response.getHighlighting();
 		List<SearchGroupResult> result = new ArrayList<>();
 		long total = 0;
@@ -119,6 +92,62 @@ public class SolrIndexManager {
 			solrClient.add(solrCollection, doc);
 		}
 		solrClient.commit(solrCollection);
+	}
+
+	public SolrPage<ItemResult> itemSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
+		
+		Map<String, List<String>> filters = new HashMap<>();
+		QueryResponse response = prepareQuery(q, fq, pageRequest, filters, false);
+				
+		Map<String,Map<String,List<String>>> highlighting = response.getHighlighting();
+		List<ItemResult> result = new ArrayList<>();		
+		SolrDocumentList documents = response.getResults();
+		for(SolrDocument doc : documents) {
+			ItemResult itemResult = SolrDocParser.parse(doc);
+			if(highlighting.containsKey(itemResult.getId())) {
+				itemResult.getHighlights().putAll(highlighting.get(itemResult.getId()));
+			}
+			result.add(itemResult);
+		}
+		
+		return new SolrPageImpl<>(result, pageRequest, documents.getNumFound(), filters);
+	}
+	
+	private QueryResponse prepareQuery(String q, List<String> fq, Pageable pageRequest, 
+			Map<String, List<String>> filters, boolean grouped) throws Exception {
+		
+		Map<String, String[]> queryParamMap = new HashMap<>();
+		if(StringUtils.hasText(q)) {
+			filters.put("q", Arrays.asList(q));
+			String query = String.format("metadata.name:\"%1$s\" OR  metadata.description:\"%1$s\" OR metadata.project:\"%1$s\""
+					+ " OR metadata.version:\"%1$s\" OR metadata.labels:\"%1$s\"", q.trim());
+			MultiMapSolrParams.addParam("q", query, queryParamMap);	
+		} else {
+			MultiMapSolrParams.addParam("q", "*:*", queryParamMap);
+		}
+		if(fq != null) {
+			filters.put("fq", fq);
+			fq.forEach(filter -> {
+				if(StringUtils.hasText(filter)) {
+					MultiMapSolrParams.addParam("fq", filter.trim(), queryParamMap);
+				}				
+			});
+		}
+		
+		if(grouped) {
+			MultiMapSolrParams.addParam("group", "true", queryParamMap);
+			MultiMapSolrParams.addParam("group.field", "keyGroup", queryParamMap);
+			MultiMapSolrParams.addParam("group.limit", "10", queryParamMap);			
+		}
+		
+		MultiMapSolrParams.addParam("hl", "true", queryParamMap);
+		MultiMapSolrParams.addParam("hl.fl", "metadata.name,metadata.description,metadata.project,metadata.version,metadata.labels", queryParamMap);
+		MultiMapSolrParams.addParam("hl.fragsize", "250", queryParamMap);
+		
+		MultiMapSolrParams.addParam("start", String.valueOf(pageRequest.getOffset()), queryParamMap);
+		MultiMapSolrParams.addParam("rows", String.valueOf(pageRequest.getPageSize()), queryParamMap);
+				
+		return solrClient.query(solrCollection, new MultiMapSolrParams(queryParamMap));		
 	}
 	
 }

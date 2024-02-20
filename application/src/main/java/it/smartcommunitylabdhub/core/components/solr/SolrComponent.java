@@ -219,6 +219,10 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 		return indexManager.groupSearch(q, fq, pageRequest);
 	}
 	
+	public SolrPage<ItemResult> itemSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
+		return indexManager.itemSearch(q, fq, pageRequest);
+	}
+	
 	public void clearIndex() {
 		try {
 			indexManager.clearIndex();
