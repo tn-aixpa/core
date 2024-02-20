@@ -12,8 +12,6 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
 
@@ -110,26 +108,26 @@ public class SolrBaseEntityParser {
 		return doc;
 	}
 	
-	public static SolrInputDocument parser(Task item, TaskMetadata metadata) {
-		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), "???");
-    	
-		SolrInputDocument doc = new SolrInputDocument();
-		doc.addField("id", item.getId());
-		doc.addField("name", "???"); //TODO name in task?
-		doc.addField("project", item.getProject());
-		doc.addField("kind", item.getKind());
-		doc.addField("type", "task");
-		doc.addField("keyGroup", keyGroup);
-		
-		doc.addField("metadata.name", metadata.getName());
-		doc.addField("metadata.description", metadata.getDescription());
-		doc.addField("metadata.version", metadata.getVersion());
-		doc.addField("metadata.created", metadata.getCreated());
-		doc.addField("metadata.updated", metadata.getUpdated());
-		doc.addField("metadata.labels", metadata.getLabels());
-    	
-		return doc;
-	}
+//	public static SolrInputDocument parser(Task item, TaskMetadata metadata) {
+//		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), "???");
+//    	
+//		SolrInputDocument doc = new SolrInputDocument();
+//		doc.addField("id", item.getId());
+//		doc.addField("name", "???"); //TODO name in task?
+//		doc.addField("project", item.getProject());
+//		doc.addField("kind", item.getKind());
+//		doc.addField("type", "task");
+//		doc.addField("keyGroup", keyGroup);
+//		
+//		doc.addField("metadata.name", metadata.getName());
+//		doc.addField("metadata.description", metadata.getDescription());
+//		doc.addField("metadata.version", metadata.getVersion());
+//		doc.addField("metadata.created", metadata.getCreated());
+//		doc.addField("metadata.updated", metadata.getUpdated());
+//		doc.addField("metadata.labels", metadata.getLabels());
+//    	
+//		return doc;
+//	}
 
 	public static SolrInputDocument parser(Secret item, SecretMetadata metadata) {
 		String keyGroup = getKeyGroup(item.getKind(), item.getProject(), item.getName());

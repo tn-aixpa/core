@@ -30,7 +30,6 @@ import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
@@ -92,9 +91,6 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     		indexDoc(entity);
     	} else if(event.getEntity() instanceof Run) {
     		Run entity = (Run)event.getEntity();
-    		indexDoc(entity);
-    	} else if(event.getEntity() instanceof Task) {
-    		Task entity = (Task)event.getEntity();
     		indexDoc(entity);
     	} else if(event.getEntity() instanceof Secret) {
     		Secret entity = (Secret)event.getEntity();
@@ -179,17 +175,17 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 		}
     }
     
-    private void indexDoc(Task item) {
-		try {
-			Map<String, Serializable> metadataMap = item.getMetadata();
-			TaskMetadata metadata = new TaskMetadata();
-			metadata.configure(metadataMap);
-			SolrInputDocument doc = SolrBaseEntityParser.parser(item, metadata);
-			indexManager.indexDoc(doc);			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-    }
+//    private void indexDoc(Task item) {
+//		try {
+//			Map<String, Serializable> metadataMap = item.getMetadata();
+//			TaskMetadata metadata = new TaskMetadata();
+//			metadata.configure(metadataMap);
+//			SolrInputDocument doc = SolrBaseEntityParser.parser(item, metadata);
+//			indexManager.indexDoc(doc);			
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//    }
     
     private void indexDoc(Secret item) {
 		try {
@@ -231,12 +227,87 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 		}
 	}
 	
-	public void indexBounce(List<DataItem> docs) {
+	public void indexBounceDataItem(List<DataItem> docs) {
 		try {
 			List<SolrInputDocument> solrDocs = new ArrayList<>();
 			for(DataItem doc : docs) {
 				Map<String, Serializable> metadataMap = doc.getMetadata();
 				DataItemMetadata metadata = new DataItemMetadata();
+				metadata.configure(metadataMap);
+				solrDocs.add(SolrBaseEntityParser.parser(doc, metadata));
+			}
+			indexManager.indexBounce(solrDocs);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void indexBounceFunction(List<Function> docs) {
+		try {
+			List<SolrInputDocument> solrDocs = new ArrayList<>();
+			for(Function doc : docs) {
+				Map<String, Serializable> metadataMap = doc.getMetadata();
+				FunctionMetadata metadata = new FunctionMetadata();
+				metadata.configure(metadataMap);
+				solrDocs.add(SolrBaseEntityParser.parser(doc, metadata));
+			}
+			indexManager.indexBounce(solrDocs);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void indexBounceArtifact(List<Artifact> docs) {
+		try {
+			List<SolrInputDocument> solrDocs = new ArrayList<>();
+			for(Artifact doc : docs) {
+				Map<String, Serializable> metadataMap = doc.getMetadata();
+				ArtifactMetadata metadata = new ArtifactMetadata();
+				metadata.configure(metadataMap);
+				solrDocs.add(SolrBaseEntityParser.parser(doc, metadata));
+			}
+			indexManager.indexBounce(solrDocs);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void indexBounceRun(List<Run> docs) {
+		try {
+			List<SolrInputDocument> solrDocs = new ArrayList<>();
+			for(Run doc : docs) {
+				Map<String, Serializable> metadataMap = doc.getMetadata();
+				RunMetadata metadata = new RunMetadata();
+				metadata.configure(metadataMap);
+				solrDocs.add(SolrBaseEntityParser.parser(doc, metadata));
+			}
+			indexManager.indexBounce(solrDocs);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void indexBounceSecret(List<Secret> docs) {
+		try {
+			List<SolrInputDocument> solrDocs = new ArrayList<>();
+			for(Secret doc : docs) {
+				Map<String, Serializable> metadataMap = doc.getMetadata();
+				SecretMetadata metadata = new SecretMetadata();
+				metadata.configure(metadataMap);
+				solrDocs.add(SolrBaseEntityParser.parser(doc, metadata));
+			}
+			indexManager.indexBounce(solrDocs);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void indexBounceWorkflow(List<Workflow> docs) {
+		try {
+			List<SolrInputDocument> solrDocs = new ArrayList<>();
+			for(Workflow doc : docs) {
+				Map<String, Serializable> metadataMap = doc.getMetadata();
+				WorkflowMetadata metadata = new WorkflowMetadata();
 				metadata.configure(metadataMap);
 				solrDocs.add(SolrBaseEntityParser.parser(doc, metadata));
 			}
