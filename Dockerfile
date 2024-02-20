@@ -1,4 +1,4 @@
-FROM maven:3.8.2-eclipse-temurin-21 AS build
+FROM maven:3-eclipse-temurin-21-alpine AS build
 COPY application /tmp/application
 COPY modules /tmp/modules
 COPY pom.xml /tmp/pom.xml
