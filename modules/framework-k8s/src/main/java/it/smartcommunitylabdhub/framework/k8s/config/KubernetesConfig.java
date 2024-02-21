@@ -22,20 +22,20 @@ public class KubernetesConfig {
     protected RunnableStoreService.StoreSupplier storeSupplier;
 
     @Bean
-    @ConditionalOnCloudPlatform(CloudPlatform.KUBERNETES)
+    @ConditionalOnKubernetes
     public RunnableStoreService<K8sServeRunnable> k8sServeRunnableStoreService() {
         return storeSupplier.get(K8sServeRunnable.class);
     }
 
     @Bean
-    @ConditionalOnCloudPlatform(CloudPlatform.KUBERNETES)
-    public RunnableStoreService<K8sDeploymentRunnable> deploymentRunnableStoreService() {
+    @ConditionalOnKubernetes
+    public RunnableStoreService<K8sDeploymentRunnable> k8sDeploymentRunnableStoreService() {
         return storeSupplier.get(K8sDeploymentRunnable.class);
     }
 
     @Bean
-    @ConditionalOnCloudPlatform(CloudPlatform.KUBERNETES)
-    public RunnableStoreService<K8sJobRunnable> runnableStoreService() {
+    @ConditionalOnKubernetes
+    public RunnableStoreService<K8sJobRunnable> k8sjobRunnableStoreService() {
         return storeSupplier.get(K8sJobRunnable.class);
     }
 
