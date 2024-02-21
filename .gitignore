@@ -31,6 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+.vscode/launch.json
 
 ### Env variable ###
 .env
@@ -51,5 +52,3 @@ node_modules
 
 /application/src/main/resources/application-local.yml
 /reports
-
-.vscode/*
