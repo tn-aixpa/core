@@ -30,6 +30,8 @@ spring:
     console:
       enabled: ${H2_CONSOLE:false}
 
+server.error.include-stacktrace: never
+
 # Management Endpoints
 management:
   endpoints:
