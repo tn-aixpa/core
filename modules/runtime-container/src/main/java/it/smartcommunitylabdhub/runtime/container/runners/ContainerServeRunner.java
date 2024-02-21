@@ -38,36 +38,36 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-                List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
+            List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         K8sServeRunnable k8sServeRunnable = K8sServeRunnable
-                .builder()
-                .runtime(ContainerRuntime.RUNTIME)
-                .task(TASK)
-                .image(functionSpec.getImage())
-                .state(statusFieldAccessor.getState())
-                .resources(taskSpec.getResources())
-                .nodeSelector(taskSpec.getNodeSelector())
-                .volumes(taskSpec.getVolumes())
-                .secrets(groupedSecrets)
-                .envs(coreEnvList)
-                .labels(taskSpec.getLabels())
-                .affinity(taskSpec.getAffinity())
-                .tolerations(taskSpec.getTolerations())
-                .servicePorts(taskSpec.getServicePorts())
-                .serviceType(taskSpec.getServiceType())
-                .build();
+            .builder()
+            .runtime(ContainerRuntime.RUNTIME)
+            .task(TASK)
+            .image(functionSpec.getImage())
+            .state(statusFieldAccessor.getState())
+            .resources(taskSpec.getResources())
+            .nodeSelector(taskSpec.getNodeSelector())
+            .volumes(taskSpec.getVolumes())
+            .secrets(groupedSecrets)
+            .envs(coreEnvList)
+            .labels(taskSpec.getLabels())
+            .affinity(taskSpec.getAffinity())
+            .tolerations(taskSpec.getTolerations())
+            .servicePorts(taskSpec.getServicePorts())
+            .serviceType(taskSpec.getServiceType())
+            .build();
 
         Optional
-                .ofNullable(functionSpec.getArgs())
-                .ifPresent(args ->
-                        k8sServeRunnable.setArgs(
-                                args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
-                        )
-                );
+            .ofNullable(functionSpec.getArgs())
+            .ifPresent(args ->
+                k8sServeRunnable.setArgs(
+                    args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
+                )
+            );
 
         Optional.ofNullable(functionSpec.getEntrypoint()).ifPresent(k8sServeRunnable::setEntrypoint);
 

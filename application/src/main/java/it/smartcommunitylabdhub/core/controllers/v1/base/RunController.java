@@ -3,12 +3,10 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
-import it.smartcommunitylabdhub.commons.services.RunnableStoreService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import jakarta.validation.Valid;
@@ -18,15 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/runs")
@@ -43,10 +33,6 @@ public class RunController {
     @Autowired
     //TODO remove!
     PollingService pollingService;
-
-    //TODO remove!
-    @Autowired
-    RunnableStoreService<Runnable> runnableStoreService;
 
     @Operation(summary = "Get a run", description = "Given an uuid return the related Run")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
@@ -106,9 +92,9 @@ public class RunController {
     )
     public ResponseEntity<Boolean> stopRun(@ValidateField @PathVariable String uuid) {
         //TODO move to service!
-        Runnable runnable = runnableStoreService.find(uuid);
+        // Runnable runnable = runnableStoreService.find(uuid);
         //TODO refactor! the framework is responsible for managing runs, not the controller
-        pollingService.stopOne(runnable.getId());
+        // pollingService.stopOne(runnable.getId());
 
         // Do other operation to stop poller.
         return ResponseEntity.ok(true);

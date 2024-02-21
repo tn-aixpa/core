@@ -14,7 +14,6 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.commons.services.RunService;
-import it.smartcommunitylabdhub.commons.services.RunnableStoreService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
@@ -70,10 +69,6 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
 
     @Autowired
     SpecRegistry specRegistry;
-
-    //TODO remove!
-    @Autowired
-    RunnableStoreService<Runnable> runnableStoreService;
 
     @Override
     public Page<Run> getRuns(Map<String, String> filter, Pageable pageable) {
@@ -260,7 +255,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
 
                                     // Store runnable
                                     //TODO remove, the framework handler should persist to it's own store, there is no global store
-                                    runnableStoreService.store(runnable.getId(), runnable);
+                                    // runnableStoreService.store(runnable.getId(), runnable);
 
                                     // Dispatch Runnable
                                     eventPublisher.publishEvent(runnable);

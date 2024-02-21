@@ -40,6 +40,5 @@ public class TaskServeSpec extends TaskDeploySpec {
 
         this.setServicePorts(taskServeSpec.getServicePorts());
         this.setServiceType(taskServeSpec.getServiceType());
-
     }
 }

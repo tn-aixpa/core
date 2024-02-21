@@ -31,6 +31,8 @@ public interface ProjectService {
     List<Workflow> getProjectWorkflows(String name);
 
     List<Secret> getProjectSecrets(String name);
+
     Map<String, String> getProjectSecretData(String name, Set<String> keys);
+
     void storeProjectSecretData(String name, Map<String, String> values);
 }
