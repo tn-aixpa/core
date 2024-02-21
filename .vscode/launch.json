@@ -10,7 +10,14 @@
             "request": "launch",
             "mainClass": "it.smartcommunitylabdhub.core.CoreApplication",
             "projectName": "core",
-            // "vmArgs": "-Dspring.profiles.active=local",
+        },
+        {
+            "type": "java",
+            "name": "CoreApplication-local",
+            "request": "launch",
+            "mainClass": "it.smartcommunitylabdhub.core.CoreApplication",
+            "projectName": "core",
+            "vmArgs": "-Dspring.profiles.active=local",
         }
     ]
 }

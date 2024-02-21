@@ -70,6 +70,20 @@ application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
 
 
+security:
+  api:
+    cors:
+      origins: ${DH_CORS_ORIGINS:http://localhost:5173}     
+  basic:
+    username: ${DH_AUTH_BASIC_USER:admin}
+    password: ${DH_AUTH_BASIC_PASSWORD:}   
+  jwt:
+    issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:}
+    audience: ${DH_AUTH_JWT_AUDIENCE:dhcore}
+    claim: ${DH_AUTH_JWT_CLAIM:roles}
+
+
+
 # Conditional Configuration Cloud
 event-queue:
   enabled: ${ENABLE_EVENTS:false}
