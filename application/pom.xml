@@ -147,6 +147,33 @@
             <version>${slf4j.version}</version> <!-- or the latest version -->
         </dependency>
 
+				<!-- Solr -->
+				<dependency>
+				  <groupId>org.apache.solr</groupId>
+				  <artifactId>solr-solrj</artifactId>
+				  <version>9.4.1</version>
+				</dependency>
+		    <dependency>
+		        <groupId>org.eclipse.jetty</groupId>
+		        <artifactId>jetty-util</artifactId>
+		        <version>10.0.19</version>
+		    </dependency>
+		    <dependency>
+		        <groupId>org.eclipse.jetty</groupId>
+		        <artifactId>jetty-client</artifactId>
+		        <version>10.0.19</version>
+		    </dependency>
+		    <dependency>
+		        <groupId>org.eclipse.jetty</groupId>
+		        <artifactId>jetty-io</artifactId>
+		        <version>10.0.19</version>
+		    </dependency>
+		    <dependency>
+		        <groupId>org.eclipse.jetty</groupId>
+		        <artifactId>jetty-http</artifactId>
+		        <version>10.0.19</version>
+		    </dependency>
+    				
         <!-- DH MODULES -->
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
