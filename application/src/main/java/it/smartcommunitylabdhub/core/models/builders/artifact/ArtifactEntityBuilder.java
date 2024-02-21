@@ -33,8 +33,8 @@ public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity
     public ArtifactEntity build(Artifact dto) {
         // Parse and export Spec
         Map<String, Serializable> spec = specRegistry
-            .createSpec(dto.getKind(), EntityName.ARTIFACT, dto.getSpec())
-            .toMap();
+                .createSpec(dto.getKind(), EntityName.ARTIFACT, dto.getSpec())
+                .toMap();
 
         // Retrieve Field accessor
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
@@ -42,24 +42,24 @@ public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity
         metadata.configure(dto.getMetadata());
 
         return ArtifactEntity
-            .builder()
-            .id(dto.getId())
-            .name(dto.getName())
-            .kind(dto.getKind())
-            .project(dto.getProject())
-            .metadata(cborConverter.convert(dto.getMetadata()))
-            .spec(cborConverter.convert(spec))
-            .status(cborConverter.convert(dto.getStatus()))
-            .extra(cborConverter.convert(dto.getExtra()))
-            .state(
-                // Store status if not present
-                statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
-            )
-            // Metadata Extraction
-            .embedded(metadata.getEmbedded() == null ? Boolean.FALSE : metadata.getEmbedded())
-            .created(metadata.getCreated())
-            .updated(metadata.getUpdated())
-            .build();
+                .builder()
+                .id(dto.getId())
+                .name(dto.getName())
+                .kind(dto.getKind())
+                .project(dto.getProject())
+                .metadata(cborConverter.convert(dto.getMetadata()))
+                .spec(cborConverter.convert(spec))
+                .status(cborConverter.convert(dto.getStatus()))
+                .extra(cborConverter.convert(dto.getExtra()))
+                .state(
+                        // Store status if not present
+                        statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
+                )
+                // Metadata Extraction
+                .embedded(metadata.getEmbedded() == null ? Boolean.FALSE : metadata.getEmbedded())
+                .created(metadata.getCreated())
+                .updated(metadata.getUpdated())
+                .build();
     }
 
     @Override
@@ -82,35 +82,34 @@ public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity
 
     private ArtifactEntity doUpdate(ArtifactEntity artifact, ArtifactEntity newArtifact) {
         return EntityFactory.combine(
-            artifact,
-            newArtifact,
-            builder ->
-                builder
-                    .withIfElse(
-                        newArtifact.getState().name().equals(State.NONE.name()),
-                        (a, condition) -> {
-                            if (condition) {
-                                a.setState(State.CREATED);
-                            } else {
-                                a.setState(newArtifact.getState());
-                            }
-                        }
-                    )
-                    .with(e -> e.setMetadata(newArtifact.getMetadata()))
-                    .with(e -> e.setExtra(newArtifact.getExtra()))
-                    .with(e -> e.setStatus(newArtifact.getStatus()))
-                    .with(e -> e.setMetadata(newArtifact.getMetadata()))
-                    // Metadata Extraction
-                    .withIfElse(
-                        newArtifact.getEmbedded() == null,
-                        (e, condition) -> {
-                            if (condition) {
-                                e.setEmbedded(false);
-                            } else {
-                                e.setEmbedded(newArtifact.getEmbedded());
-                            }
-                        }
-                    )
+                artifact,
+                builder ->
+                        builder
+                                .withIfElse(
+                                        newArtifact.getState().name().equals(State.NONE.name()),
+                                        (a, condition) -> {
+                                            if (condition) {
+                                                a.setState(State.CREATED);
+                                            } else {
+                                                a.setState(newArtifact.getState());
+                                            }
+                                        }
+                                )
+                                .with(e -> e.setMetadata(newArtifact.getMetadata()))
+                                .with(e -> e.setExtra(newArtifact.getExtra()))
+                                .with(e -> e.setStatus(newArtifact.getStatus()))
+                                .with(e -> e.setMetadata(newArtifact.getMetadata()))
+                                // Metadata Extraction
+                                .withIfElse(
+                                        newArtifact.getEmbedded() == null,
+                                        (e, condition) -> {
+                                            if (condition) {
+                                                e.setEmbedded(false);
+                                            } else {
+                                                e.setEmbedded(newArtifact.getEmbedded());
+                                            }
+                                        }
+                                )
         );
     }
 }

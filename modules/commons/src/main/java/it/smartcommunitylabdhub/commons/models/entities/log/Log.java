@@ -1,20 +1,12 @@
 package it.smartcommunitylabdhub.commons.models.entities.log;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.*;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,7 +14,7 @@ import lombok.Setter;
 @Setter
 @Builder
 @JsonPropertyOrder(alphabetic = true)
-public class Log implements BaseEntity {
+public class Log implements BaseDTO {
 
     @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
     private String id;

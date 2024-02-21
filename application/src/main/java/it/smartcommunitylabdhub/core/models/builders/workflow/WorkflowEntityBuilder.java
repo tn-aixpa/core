@@ -32,8 +32,8 @@ public class WorkflowEntityBuilder implements Converter<Workflow, WorkflowEntity
     public WorkflowEntity build(Workflow dto) {
         // Parse and export Spec
         Map<String, Serializable> spec = specRegistry
-            .createSpec(dto.getKind(), EntityName.WORKFLOW, dto.getSpec())
-            .toMap();
+                .createSpec(dto.getKind(), EntityName.WORKFLOW, dto.getSpec())
+                .toMap();
 
         // Retrieve Field accessor
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
@@ -41,43 +41,42 @@ public class WorkflowEntityBuilder implements Converter<Workflow, WorkflowEntity
         metadata.configure(dto.getMetadata());
 
         return EntityFactory.combine(
-            WorkflowEntity.builder().build(),
-            dto,
-            builder ->
-                builder
-                    // check id
-                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
-                    .with(e -> e.setName(dto.getName()))
-                    .with(e -> e.setKind(dto.getKind()))
-                    .with(e -> e.setProject(dto.getProject()))
-                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
-                    .with(e -> e.setSpec(cborConverter.convert(spec)))
-                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
-                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
-                    // Store status if not present
-                    .withIfElse(
-                        (statusFieldAccessor.getState() == null),
-                        (e, condition) -> {
-                            if (condition) {
-                                e.setState(State.CREATED);
-                            } else {
-                                e.setState(State.valueOf(statusFieldAccessor.getState()));
-                            }
-                        }
-                    )
-                    // Metadata Extraction
-                    .withIfElse(
-                        metadata.getEmbedded() == null,
-                        (e, condition) -> {
-                            if (condition) {
-                                e.setEmbedded(false);
-                            } else {
-                                e.setEmbedded(metadata.getEmbedded());
-                            }
-                        }
-                    )
-                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
-                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
+                WorkflowEntity.builder().build(),
+                builder ->
+                        builder
+                                // check id
+                                .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                                .with(e -> e.setName(dto.getName()))
+                                .with(e -> e.setKind(dto.getKind()))
+                                .with(e -> e.setProject(dto.getProject()))
+                                .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                                .with(e -> e.setSpec(cborConverter.convert(spec)))
+                                .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                                .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                                // Store status if not present
+                                .withIfElse(
+                                        (statusFieldAccessor.getState() == null),
+                                        (e, condition) -> {
+                                            if (condition) {
+                                                e.setState(State.CREATED);
+                                            } else {
+                                                e.setState(State.valueOf(statusFieldAccessor.getState()));
+                                            }
+                                        }
+                                )
+                                // Metadata Extraction
+                                .withIfElse(
+                                        metadata.getEmbedded() == null,
+                                        (e, condition) -> {
+                                            if (condition) {
+                                                e.setEmbedded(false);
+                                            } else {
+                                                e.setEmbedded(metadata.getEmbedded());
+                                            }
+                                        }
+                                )
+                                .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                                .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
     }
 
@@ -108,34 +107,33 @@ public class WorkflowEntityBuilder implements Converter<Workflow, WorkflowEntity
      */
     private WorkflowEntity doUpdate(WorkflowEntity workflow, WorkflowEntity newWorkflow) {
         return EntityFactory.combine(
-            workflow,
-            newWorkflow,
-            builder ->
-                builder
-                    .withIfElse(
-                        newWorkflow.getState().name().equals(State.NONE.name()),
-                        (e, condition) -> {
-                            if (condition) {
-                                e.setState(State.CREATED);
-                            } else {
-                                e.setState(newWorkflow.getState());
-                            }
-                        }
-                    )
-                    .with(e -> e.setMetadata(newWorkflow.getMetadata()))
-                    .with(e -> e.setExtra(newWorkflow.getExtra()))
-                    .with(e -> e.setStatus(newWorkflow.getStatus()))
-                    // Metadata Extraction
-                    .withIfElse(
-                        newWorkflow.getEmbedded() == null,
-                        (e, condition) -> {
-                            if (condition) {
-                                e.setEmbedded(false);
-                            } else {
-                                e.setEmbedded(newWorkflow.getEmbedded());
-                            }
-                        }
-                    )
+                workflow,
+                builder ->
+                        builder
+                                .withIfElse(
+                                        newWorkflow.getState().name().equals(State.NONE.name()),
+                                        (e, condition) -> {
+                                            if (condition) {
+                                                e.setState(State.CREATED);
+                                            } else {
+                                                e.setState(newWorkflow.getState());
+                                            }
+                                        }
+                                )
+                                .with(e -> e.setMetadata(newWorkflow.getMetadata()))
+                                .with(e -> e.setExtra(newWorkflow.getExtra()))
+                                .with(e -> e.setStatus(newWorkflow.getStatus()))
+                                // Metadata Extraction
+                                .withIfElse(
+                                        newWorkflow.getEmbedded() == null,
+                                        (e, condition) -> {
+                                            if (condition) {
+                                                e.setEmbedded(false);
+                                            } else {
+                                                e.setEmbedded(newWorkflow.getEmbedded());
+                                            }
+                                        }
+                                )
         );
     }
 }

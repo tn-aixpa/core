@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.common.SolrInputDocument;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,23 +33,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 @ConditionalOnProperty(name = "solr.enabled", havingValue = "true", matchIfMissing = false)
 public class SolrComponent implements ApplicationListener<ContextRefreshedEvent> {
 
+    SolrIndexManager indexManager;
     @Value("${solr.url}")
     private String solrUrl;
-
     @Value("${solr.collection}")
     private String solrCollection;
-
-    SolrIndexManager indexManager;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         try {
             Http2SolrClient solrClient = new Http2SolrClient.Builder(solrUrl)
-                .withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
-                .build();
+                    .withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
+                    .build();
             indexManager = new SolrIndexManager(solrClient, solrCollection);
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,7 +61,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     }
 
     @EventListener
-    public <T extends BaseEntity> void handleEntitySavedEvent(EntityEvent<T> event) {
+    public <T extends BaseDTO> void handleEntitySavedEvent(EntityEvent<T> event) {
         switch (event.getAction()) {
             case CREATE:
             case UPDATE:
@@ -77,7 +77,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
         }
     }
 
-    private <T extends BaseEntity> void indexDoc(EntityEvent<T> event) {
+    private <T extends BaseDTO> void indexDoc(EntityEvent<T> event) {
         if (event.getEntity() instanceof DataItem) {
             DataItem entity = (DataItem) event.getEntity();
             indexDoc(entity);
@@ -99,7 +99,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
         }
     }
 
-    private <T extends BaseEntity> String getId(EntityEvent<T> event) {
+    private <T extends BaseDTO> String getId(EntityEvent<T> event) {
         if (event.getEntity() instanceof DataItem) {
             DataItem entity = (DataItem) event.getEntity();
             return entity.getId();

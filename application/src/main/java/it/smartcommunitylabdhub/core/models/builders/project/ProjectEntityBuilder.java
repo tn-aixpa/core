@@ -34,8 +34,8 @@ public class ProjectEntityBuilder implements Converter<Project, ProjectEntity> {
     public ProjectEntity build(Project dto) {
         // Parse and export Spec
         Map<String, Serializable> spec = specRegistry
-            .createSpec(dto.getKind(), EntityName.PROJECT, dto.getSpec())
-            .toMap();
+                .createSpec(dto.getKind(), EntityName.PROJECT, dto.getSpec())
+                .toMap();
 
         // Retrieve field accessor
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
@@ -43,39 +43,38 @@ public class ProjectEntityBuilder implements Converter<Project, ProjectEntity> {
         metadata.configure(dto.getMetadata());
 
         return EntityFactory.combine(
-            ProjectEntity.builder().build(),
-            dto,
-            builder ->
-                builder
-                    // check id
-                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
-                    .with(e -> e.setName(dto.getName()))
-                    .with(e -> e.setKind(dto.getKind()))
-                    .withIfElse(
-                        (statusFieldAccessor.getState() == null),
-                        (p, condition) -> {
-                            if (condition) {
-                                p.setState(State.CREATED);
-                            } else {
-                                p.setState(State.valueOf(statusFieldAccessor.getState()));
-                            }
-                        }
-                    )
-                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
-                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
-                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
-                    .with(e -> {
-                        spec.remove("functions");
-                        spec.remove("artifacts");
-                        spec.remove("workflows");
-                        spec.remove("dataitems");
-                        e.setSpec(cborConverter.convert(spec));
-                    })
-                    // Metadata Extraction
-                    .withIf(metadata.getSource() != null, e -> e.setSource(metadata.getSource()))
-                    .withIf(metadata.getDescription() != null, e -> e.setDescription(metadata.getDescription()))
-                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
-                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
+                ProjectEntity.builder().build(),
+                builder ->
+                        builder
+                                // check id
+                                .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                                .with(e -> e.setName(dto.getName()))
+                                .with(e -> e.setKind(dto.getKind()))
+                                .withIfElse(
+                                        (statusFieldAccessor.getState() == null),
+                                        (p, condition) -> {
+                                            if (condition) {
+                                                p.setState(State.CREATED);
+                                            } else {
+                                                p.setState(State.valueOf(statusFieldAccessor.getState()));
+                                            }
+                                        }
+                                )
+                                .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                                .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                                .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                                .with(e -> {
+                                    spec.remove("functions");
+                                    spec.remove("artifacts");
+                                    spec.remove("workflows");
+                                    spec.remove("dataitems");
+                                    e.setSpec(cborConverter.convert(spec));
+                                })
+                                // Metadata Extraction
+                                .withIf(metadata.getSource() != null, e -> e.setSource(metadata.getSource()))
+                                .withIf(metadata.getDescription() != null, e -> e.setDescription(metadata.getDescription()))
+                                .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                                .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
     }
 
@@ -98,26 +97,25 @@ public class ProjectEntityBuilder implements Converter<Project, ProjectEntity> {
 
     private ProjectEntity doUpdate(ProjectEntity project, ProjectEntity newProject) {
         return EntityFactory.combine(
-            project,
-            newProject,
-            builder ->
-                builder
-                    .withIfElse(
-                        newProject.getState().name().equals(State.NONE.name()),
-                        (p, condition) -> {
-                            if (condition) {
-                                p.setState(State.CREATED);
-                            } else {
-                                p.setState(newProject.getState());
-                            }
-                        }
-                    )
-                    .with(e -> e.setMetadata(newProject.getMetadata()))
-                    .with(e -> e.setExtra(newProject.getExtra()))
-                    .with(e -> e.setStatus(newProject.getStatus()))
-                    .with(e -> e.setSpec(newProject.getSpec()))
-                    .withIf(newProject.getSource() != null, e -> e.setSource(newProject.getSource()))
-                    .withIf(newProject.getDescription() != null, e -> e.setDescription(newProject.getDescription()))
+                project,
+                builder ->
+                        builder
+                                .withIfElse(
+                                        newProject.getState().name().equals(State.NONE.name()),
+                                        (p, condition) -> {
+                                            if (condition) {
+                                                p.setState(State.CREATED);
+                                            } else {
+                                                p.setState(newProject.getState());
+                                            }
+                                        }
+                                )
+                                .with(e -> e.setMetadata(newProject.getMetadata()))
+                                .with(e -> e.setExtra(newProject.getExtra()))
+                                .with(e -> e.setStatus(newProject.getStatus()))
+                                .with(e -> e.setSpec(newProject.getSpec()))
+                                .withIf(newProject.getSource() != null, e -> e.setSource(newProject.getSource()))
+                                .withIf(newProject.getDescription() != null, e -> e.setDescription(newProject.getDescription()))
         );
     }
 }

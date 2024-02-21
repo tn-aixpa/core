@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.components.cloud;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityAction;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ public class SpringCloudBroadcastEvent {
     RabbitTemplate rabbitTemplate;
 
     @EventListener
-    public <T extends BaseEntity> void handleEntitySavedEvent(EntityEvent<T> event) {
+    public <T extends BaseDTO> void handleEntitySavedEvent(EntityEvent<T> event) {
         // Broadcast event on rabbit amqp
         try {
             // TODO: need to add DELETE in the future.

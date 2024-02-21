@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.commons.models.utils;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
@@ -18,7 +18,8 @@ public class RunUtils {
 
     public static final Pattern RUN_PATTERN = Pattern.compile("([^:/]+)://([^/]+)/([^/]+):(.+)");
 
-    private RunUtils() {}
+    private RunUtils() {
+    }
 
     //TODO this goes into the accessor, via a with()
     public static RunSpecAccessor parseRun(String value) {
@@ -38,14 +39,14 @@ public class RunUtils {
             return RunSpecAccessor.with(map);
         }
         throw new CoreException(
-            "InvalidRunStringCase",
-            "Cannot create accessor for the given Run string.",
-            HttpStatus.INTERNAL_SERVER_ERROR
+                "InvalidRunStringCase",
+                "Cannot create accessor for the given Run string.",
+                HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
 
     //TODO this should be removed, core shouldn't need this info
-    public static <T extends BaseEntity> String buildRunString(T type, Task task) {
+    public static <T extends BaseDTO> String buildRunString(T type, Task task) {
         if (type instanceof Function) {
             Function f = (Function) type;
             return (task.getKind() + "://" + f.getProject() + "/" + f.getName() + ":" + f.getId());
@@ -54,9 +55,9 @@ public class RunUtils {
             return (task.getKind() + "://" + w.getProject() + "/" + w.getName() + ":" + w.getId());
         } else {
             throw new CoreException(
-                "CannotComposeRunField",
-                "Cannot compose Run field for the given object.",
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    "CannotComposeRunField",
+                    "Cannot compose Run field for the given object.",
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }

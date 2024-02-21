@@ -49,46 +49,45 @@ public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
         taskSpec.configure(spec);
 
         return EntityFactory.combine(
-            TaskEntity.builder().build(),
-            dto,
-            builder ->
-                builder
-                    // check id
-                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
-                    .with(e -> e.setProject(dto.getProject()))
-                    .with(e -> e.setKind(dto.getKind()))
-                    .with(r ->
-                        r.setFunction(
-                            Optional
-                                .ofNullable(StringUtils.hasText(taskSpec.getFunction()) ? taskSpec.getFunction() : null)
-                                .orElseThrow(() ->
-                                    new CoreException(
-                                        ErrorList.FUNCTION_NOT_FOUND.getValue(),
-                                        ErrorList.FUNCTION_NOT_FOUND.getReason(),
-                                        HttpStatus.INTERNAL_SERVER_ERROR
-                                    )
+                TaskEntity.builder().build(),
+                builder ->
+                        builder
+                                // check id
+                                .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                                .with(e -> e.setProject(dto.getProject()))
+                                .with(e -> e.setKind(dto.getKind()))
+                                .with(r ->
+                                        r.setFunction(
+                                                Optional
+                                                        .ofNullable(StringUtils.hasText(taskSpec.getFunction()) ? taskSpec.getFunction() : null)
+                                                        .orElseThrow(() ->
+                                                                new CoreException(
+                                                                        ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                                                                        ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                                                                        HttpStatus.INTERNAL_SERVER_ERROR
+                                                                )
+                                                        )
+                                        )
                                 )
-                        )
-                    )
-                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
-                    .with(e -> e.setSpec(cborConverter.convert(spec)))
-                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
-                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
-                    // Store status if not present
-                    .withIfElse(
-                        (statusFieldAccessor.getState() == null),
-                        (e, condition) -> {
-                            if (condition) {
-                                e.setState(State.CREATED);
-                            } else {
-                                e.setState(State.valueOf(statusFieldAccessor.getState()));
-                            }
-                        }
-                    )
-                    // Metadata Extraction
+                                .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                                .with(e -> e.setSpec(cborConverter.convert(spec)))
+                                .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                                .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                                // Store status if not present
+                                .withIfElse(
+                                        (statusFieldAccessor.getState() == null),
+                                        (e, condition) -> {
+                                            if (condition) {
+                                                e.setState(State.CREATED);
+                                            } else {
+                                                e.setState(State.valueOf(statusFieldAccessor.getState()));
+                                            }
+                                        }
+                                )
+                                // Metadata Extraction
 
-                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
-                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
+                                .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                                .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
     }
 
@@ -118,25 +117,24 @@ public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
      */
     public TaskEntity doUpdate(TaskEntity task, TaskEntity newTask) {
         return EntityFactory.combine(
-            task,
-            newTask,
-            builder ->
-                builder
-                    .with(e -> e.setFunction(newTask.getFunction()))
-                    .withIfElse(
-                        newTask.getState().name().equals(State.NONE.name()),
-                        (r, condition) -> {
-                            if (condition) {
-                                r.setState(State.CREATED);
-                            } else {
-                                r.setState(newTask.getState());
-                            }
-                        }
-                    )
-                    .with(e -> e.setMetadata(newTask.getMetadata()))
-                    .with(e -> e.setExtra(newTask.getExtra()))
-                    .with(e -> e.setSpec(newTask.getSpec()))
-                    .with(e -> e.setStatus(newTask.getStatus()))
+                task,
+                builder ->
+                        builder
+                                .with(e -> e.setFunction(newTask.getFunction()))
+                                .withIfElse(
+                                        newTask.getState().name().equals(State.NONE.name()),
+                                        (r, condition) -> {
+                                            if (condition) {
+                                                r.setState(State.CREATED);
+                                            } else {
+                                                r.setState(newTask.getState());
+                                            }
+                                        }
+                                )
+                                .with(e -> e.setMetadata(newTask.getMetadata()))
+                                .with(e -> e.setExtra(newTask.getExtra()))
+                                .with(e -> e.setSpec(newTask.getSpec()))
+                                .with(e -> e.setStatus(newTask.getStatus()))
         );
     }
 }

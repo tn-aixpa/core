@@ -29,33 +29,32 @@ public class LogEntityBuilder implements Converter<Log, LogEntity> {
         metadata.configure(dto.getMetadata());
 
         return EntityFactory.combine(
-            LogEntity.builder().build(),
-            dto,
-            builder ->
-                builder
-                    // check id
-                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
-                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
-                    .with(e -> e.setBody(cborConverter.convert(dto.getBody())))
-                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
-                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
-                    // Store status if not present
-                    .withIfElse(
-                        (statusFieldAccessor.getState() == null),
-                        (l, condition) -> {
-                            if (condition) {
-                                l.setState(State.CREATED);
-                            } else {
-                                l.setState(State.valueOf(statusFieldAccessor.getState()));
-                            }
-                        }
-                    )
-                    // Metadata Extraction
+                LogEntity.builder().build(),
+                builder ->
+                        builder
+                                // check id
+                                .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                                .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                                .with(e -> e.setBody(cborConverter.convert(dto.getBody())))
+                                .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                                .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                                // Store status if not present
+                                .withIfElse(
+                                        (statusFieldAccessor.getState() == null),
+                                        (l, condition) -> {
+                                            if (condition) {
+                                                l.setState(State.CREATED);
+                                            } else {
+                                                l.setState(State.valueOf(statusFieldAccessor.getState()));
+                                            }
+                                        }
+                                )
+                                // Metadata Extraction
 
-                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
-                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
-                    .withIf(metadata.getRun() != null, e -> e.setRun(metadata.getRun()))
-                    .withIf(metadata.getProject() != null, e -> e.setProject(metadata.getProject()))
+                                .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                                .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
+                                .withIf(metadata.getRun() != null, e -> e.setRun(metadata.getRun()))
+                                .withIf(metadata.getProject() != null, e -> e.setProject(metadata.getProject()))
         );
     }
 
@@ -84,29 +83,28 @@ public class LogEntityBuilder implements Converter<Log, LogEntity> {
      */
     public LogEntity doUpdate(LogEntity log, LogEntity newLog) {
         return EntityFactory.combine(
-            log,
-            newLog,
-            builder ->
-                builder
-                    .with(e -> e.setMetadata(newLog.getMetadata()))
-                    .with(e -> e.setExtra(newLog.getExtra()))
-                    .with(e -> e.setStatus(newLog.getStatus()))
-                    .with(e -> e.setBody(newLog.getBody()))
-                    // Store status if not present
-                    .withIfElse(
-                        newLog.getState().name().equals(State.NONE.name()),
-                        (l, condition) -> {
-                            if (condition) {
-                                l.setState(State.CREATED);
-                            } else {
-                                l.setState(newLog.getState());
-                            }
-                        }
-                    )
-                    .withIf(newLog.getRun() != null, e -> e.setRun(newLog.getRun()))
-                    .withIf(newLog.getProject() != null, e -> e.setProject(newLog.getProject()))
-                    .withIf(newLog.getCreated() != null, e -> e.setCreated(newLog.getCreated()))
-                    .withIf(newLog.getUpdated() != null, e -> e.setUpdated(newLog.getUpdated()))
+                log,
+                builder ->
+                        builder
+                                .with(e -> e.setMetadata(newLog.getMetadata()))
+                                .with(e -> e.setExtra(newLog.getExtra()))
+                                .with(e -> e.setStatus(newLog.getStatus()))
+                                .with(e -> e.setBody(newLog.getBody()))
+                                // Store status if not present
+                                .withIfElse(
+                                        newLog.getState().name().equals(State.NONE.name()),
+                                        (l, condition) -> {
+                                            if (condition) {
+                                                l.setState(State.CREATED);
+                                            } else {
+                                                l.setState(newLog.getState());
+                                            }
+                                        }
+                                )
+                                .withIf(newLog.getRun() != null, e -> e.setRun(newLog.getRun()))
+                                .withIf(newLog.getProject() != null, e -> e.setProject(newLog.getProject()))
+                                .withIf(newLog.getCreated() != null, e -> e.setCreated(newLog.getCreated()))
+                                .withIf(newLog.getUpdated() != null, e -> e.setUpdated(newLog.getUpdated()))
         );
     }
 }

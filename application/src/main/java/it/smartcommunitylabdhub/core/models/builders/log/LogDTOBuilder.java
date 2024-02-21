@@ -20,37 +20,36 @@ public class LogDTOBuilder implements Converter<LogEntity, Log> {
 
     public Log build(LogEntity entity) {
         return EntityFactory.create(
-            Log::new,
-            entity,
-            builder ->
-                builder
-                    .with(dto -> dto.setId(entity.getId()))
-                    .with(dto -> {
-                        //read metadata as-is
-                        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
+                Log::new,
+                builder ->
+                        builder
+                                .with(dto -> dto.setId(entity.getId()))
+                                .with(dto -> {
+                                    //read metadata as-is
+                                    Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
-                        // Set Metadata for log
-                        LogMetadata metadata = new LogMetadata();
-                        metadata.configure(meta);
+                                    // Set Metadata for log
+                                    LogMetadata metadata = new LogMetadata();
+                                    metadata.configure(meta);
 
-                        metadata.setRun(entity.getRun());
-                        metadata.setProject(entity.getProject());
-                        metadata.setCreated(entity.getCreated());
-                        metadata.setUpdated(entity.getUpdated());
+                                    metadata.setRun(entity.getRun());
+                                    metadata.setProject(entity.getProject());
+                                    metadata.setCreated(entity.getCreated());
+                                    metadata.setUpdated(entity.getUpdated());
 
-                        //merge into map with override
-                        dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
-                    })
-                    .with(dto -> dto.setBody(cborConverter.reverseConvert(entity.getBody())))
-                    .with(dto -> dto.setExtra(cborConverter.reverseConvert(entity.getExtra())))
-                    .with(dto ->
-                        dto.setStatus(
-                            MapUtils.mergeMultipleMaps(
-                                cborConverter.reverseConvert(entity.getStatus()),
-                                Map.of("state", entity.getState().toString())
-                            )
-                        )
-                    )
+                                    //merge into map with override
+                                    dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
+                                })
+                                .with(dto -> dto.setBody(cborConverter.reverseConvert(entity.getBody())))
+                                .with(dto -> dto.setExtra(cborConverter.reverseConvert(entity.getExtra())))
+                                .with(dto ->
+                                        dto.setStatus(
+                                                MapUtils.mergeMultipleMaps(
+                                                        cborConverter.reverseConvert(entity.getStatus()),
+                                                        Map.of("state", entity.getState().toString())
+                                                )
+                                        )
+                                )
         );
     }
 
