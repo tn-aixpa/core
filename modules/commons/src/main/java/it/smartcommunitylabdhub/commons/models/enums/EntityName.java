@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons.models.enums;
 
 import lombok.Getter;
 import lombok.ToString;
+import org.springframework.util.Assert;
 
 //
 @Getter
@@ -21,6 +22,7 @@ public enum EntityName {
     private final String value;
 
     EntityName(String value) {
+        Assert.hasText(value, "value cannot be empty");
         this.value = value;
     }
 }
