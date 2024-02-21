@@ -353,12 +353,14 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
     // Concat command with arguments
     private List<String> getEntryPoint(K8sServeRunnable runnable) {
-        return Stream
-            .concat(
-                Stream.of(Optional.ofNullable(runnable.getEntrypoint()).orElse("")),
-                Optional.ofNullable(runnable.getArgs()).stream().flatMap(Arrays::stream)
+        Optional<String> entrypoint = Optional.ofNullable(runnable.getEntrypoint());
+        Optional<String[]> args = Optional.ofNullable(runnable.getArgs());
+
+        return entrypoint
+            .map(cmd ->
+                Stream.concat(Stream.of(cmd), Arrays.stream(args.orElse(new String[0]))).collect(Collectors.toList())
             )
-            .collect(Collectors.toList());
+            .orElse(List.of());
     }
 
     // Generate and return deployment name

@@ -5,21 +5,7 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Container;
-import io.kubernetes.client.openapi.models.V1EnvFromSource;
-import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1Job;
-import io.kubernetes.client.openapi.models.V1JobSpec;
-import io.kubernetes.client.openapi.models.V1JobStatus;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1Pod;
-import io.kubernetes.client.openapi.models.V1PodList;
-import io.kubernetes.client.openapi.models.V1PodSpec;
-import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
-import io.kubernetes.client.openapi.models.V1ResourceRequirements;
-import io.kubernetes.client.openapi.models.V1Status;
-import io.kubernetes.client.openapi.models.V1Volume;
-import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
@@ -43,14 +29,7 @@ import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
 import it.smartcommunitylabdhub.fsm.workflow.WorkflowFactory;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -339,9 +318,14 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
     // Concat command with arguments
     private List<String> getCommand(K8sJobRunnable runnable) {
-        return List.of(
-            Stream.concat(Stream.of(runnable.getCommand()), Arrays.stream(runnable.getArgs())).toArray(String[]::new)
-        );
+        Optional<String> command = Optional.ofNullable(runnable.getCommand());
+        Optional<String[]> args = Optional.ofNullable(runnable.getArgs());
+
+        return command
+            .map(cmd ->
+                Stream.concat(Stream.of(cmd), Arrays.stream(args.orElse(new String[0]))).collect(Collectors.toList())
+            )
+            .orElse(List.of());
     }
 
     // Generate and return job name

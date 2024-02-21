@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>it.smartcommunitylabdhub</groupId>
   <artifactId>dh-runtime-mlrun</artifactId>
-  <version>0.0.27</version>
+  <version>0.0.28</version>
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -15,13 +15,13 @@
     <dependency>
       <groupId>it.smartcommunitylabdhub</groupId>
       <artifactId>dh-commons</artifactId>
-      <version>0.0.27</version>
+      <version>0.0.28</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>it.smartcommunitylabdhub</groupId>
       <artifactId>dh-framework-k8s</artifactId>
-      <version>0.0.27</version>
+      <version>0.0.28</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

@@ -253,10 +253,6 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                                     // Create Runnable
                                     Runnable runnable = runtime.run(runDTOBuilder.build(run));
 
-                                    // Store runnable
-                                    //TODO remove, the framework handler should persist to it's own store, there is no global store
-                                    // runnableStoreService.store(runnable.getId(), runnable);
-
                                     // Dispatch Runnable
                                     eventPublisher.publishEvent(runnable);
 

@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.listeners;
 
+import it.smartcommunitylabdhub.commons.services.RunnableStoreService;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
@@ -15,12 +16,14 @@ public class K8sDeploymentRunnableListener {
     @Autowired
     K8sDeploymentFramework k8sDeployFramework;
 
-    //    @Autowired
-    //    private Supplier<RunnableStoreService<Runnable>> myRunnableSupplier;
+    @Autowired
+    private RunnableStoreService<K8sDeploymentRunnable> myRunnableStoreService;
 
     @Async
     @EventListener
     public void listen(K8sDeploymentRunnable runnable) {
+        myRunnableStoreService.store(runnable.getId(), runnable);
+
         k8sDeployFramework.execute(runnable);
     }
 }

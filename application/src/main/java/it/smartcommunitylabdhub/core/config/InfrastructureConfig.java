@@ -6,11 +6,13 @@ import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.services.RunnableStoreService;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.frameworks.FrameworkFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
+import it.smartcommunitylabdhub.core.services.RunnableStoreServiceImpl;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -45,8 +47,14 @@ public class InfrastructureConfig {
     protected RunnerFactory runnerFactory(List<Runner<? extends Runnable>> runners) {
         return new RunnerFactory(runners);
     }
-    //    @Bean
-    //    public RunnableStoreService<K8sServeRunnable>  {
-    //        return () -> new RunnableStoreServiceImpl<>(K8sServeRunnable.class, runnableRepository);
-    //    }
+
+    @Bean
+    protected RunnableStoreService.StoreSupplier runnableStoreService() {
+        return new RunnableStoreService.StoreSupplier() {
+            @Override
+            public <T extends Runnable> RunnableStoreService<T> get(Class<T> clazz) {
+                return new RunnableStoreServiceImpl<T>(clazz, runnableRepository);
+            }
+        };
+    }
 }
