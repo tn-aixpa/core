@@ -1,25 +1,25 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
 import java.util.List;
-
 import org.apache.solr.common.SolrDocument;
 
 public class SolrDocParser {
-	@SuppressWarnings("unchecked")
-	public static ItemResult parse(SolrDocument doc) {
-		ItemResult item = new ItemResult();
-		item.setId((String) doc.getFieldValue("id"));
-		item.setType((String) doc.getFieldValue("type"));
-		item.setKind((String) doc.getFieldValue("kind"));
-		item.setProject((String) doc.getFieldValue("project"));
-		item.setName((String) doc.getFieldValue("name"));
-		item.getMetadata().put("name", (String) doc.getFieldValue("metadata.name"));
-		item.getMetadata().put("description", (String) doc.getFieldValue("metadata.description"));
-		item.getMetadata().put("project", (String) doc.getFieldValue("metadata.project"));
-		item.getMetadata().put("version", (String) doc.getFieldValue("metadata.version"));
-		item.getMetadata().put("created", (String) doc.getFieldValue("metadata.created"));
-		item.getMetadata().put("updated", (String) doc.getFieldValue("metadata.updated"));
-		item.getMetadata().put("labels", (List<String>) doc.getFieldValue("metadata.labels"));
-		return item;
-	}
+
+    @SuppressWarnings("unchecked")
+    public static ItemResult parse(SolrDocument doc) {
+        ItemResult item = new ItemResult();
+        item.setId((String) doc.getFieldValue("id"));
+        item.setType((String) doc.getFieldValue("type"));
+        item.setKind((String) doc.getFieldValue("kind"));
+        item.setProject((String) doc.getFieldValue("project"));
+        item.setName((String) doc.getFieldValue("name"));
+        item.getMetadata().put("name", (String) doc.getFieldValue("metadata.name"));
+        item.getMetadata().put("description", (String) doc.getFieldValue("metadata.description"));
+        item.getMetadata().put("project", (String) doc.getFieldValue("metadata.project"));
+        item.getMetadata().put("version", (String) doc.getFieldValue("metadata.version"));
+        item.getMetadata().put("created", (String) doc.getFieldValue("metadata.created"));
+        item.getMetadata().put("updated", (String) doc.getFieldValue("metadata.updated"));
+        item.getMetadata().put("labels", (List<String>) doc.getFieldValue("metadata.labels"));
+        return item;
+    }
 }
