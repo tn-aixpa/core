@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>it.smartcommunitylabdhub</groupId>
   <artifactId>digitalhub-core</artifactId>
-  <version>0.0.28</version>
+  <version>0.0.29</version>
   <packaging>pom</packaging>
   <licenses>
     <license>

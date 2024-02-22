@@ -58,7 +58,7 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
                 return serveBuilder.build(funSpec, taskServeSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -73,20 +73,20 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
         return switch (runAccessor.getTask()) {
             case TaskDeploySpec.KIND -> new ContainerDeployRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskJobSpec.KIND -> new ContainerJobRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskServeSpec.KIND -> new ContainerServeRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }

@@ -96,16 +96,16 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
         // Create labels for job
         Map<String, String> labels = Map.of(
-            "app.kubernetes.io/instance",
-            "dhcore-" + jobName,
-            "app.kubernetes.io/version",
-            "0.0.3",
-            "app.kubernetes.io/component",
-            "job",
-            "app.kubernetes.io/part-of",
-            "dhcore-k8sjob",
-            "app.kubernetes.io/managed-by",
-            "dhcore"
+                "app.kubernetes.io/instance",
+                "dhcore-" + jobName,
+                "app.kubernetes.io/version",
+                "0.0.3",
+                "app.kubernetes.io/component",
+                "job",
+                "app.kubernetes.io/part-of",
+                "dhcore-k8sjob",
+                "app.kubernetes.io/managed-by",
+                "dhcore"
         );
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
@@ -125,39 +125,39 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         List<V1VolumeMount> volumeMounts = new LinkedList<>();
         if (runnable.getVolumes() != null) {
             runnable
-                .getVolumes()
-                .forEach(volumeMap -> {
-                    V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
-                    if (volume != null) {
-                        volumes.add(volume);
-                    }
-                    V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
-                    if (mount != null) {
-                        volumeMounts.add(mount);
-                    }
-                });
+                    .getVolumes()
+                    .forEach(volumeMap -> {
+                        V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
+                        if (volume != null) {
+                            volumes.add(volume);
+                        }
+                        V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
+                        if (mount != null) {
+                            volumeMounts.add(mount);
+                        }
+                    });
         }
 
         // resources
         V1ResourceRequirements resources = new V1ResourceRequirements();
         if (runnable.getResources() != null) {
             resources.setRequests(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.requests() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
-                )
+                    k8sBuilderHelper.convertResources(
+                            runnable
+                                    .getResources()
+                                    .stream()
+                                    .filter(r -> r.requests() != null)
+                                    .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
+                    )
             );
             resources.setLimits(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.limits() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
-                )
+                    k8sBuilderHelper.convertResources(
+                            runnable
+                                    .getResources()
+                                    .stream()
+                                    .filter(r -> r.limits() != null)
+                                    .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
+                    )
             );
         }
         // Create the Job metadata
@@ -165,43 +165,43 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
         // Build Container
         V1Container container = new V1Container()
-            .name(containerName)
-            .image(runnable.getImage())
-            .imagePullPolicy("Always")
-            .command(getCommand(runnable))
-            .imagePullPolicy("IfNotPresent")
-            .resources(resources)
-            .volumeMounts(volumeMounts)
-            .envFrom(envVarsFromSource)
-            .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
+                .name(containerName)
+                .image(runnable.getImage())
+                .imagePullPolicy("Always")
+                .command(getCommand(runnable))
+                .imagePullPolicy("IfNotPresent")
+                .resources(resources)
+                .volumeMounts(volumeMounts)
+                .envFrom(envVarsFromSource)
+                .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
-            .containers(Collections.singletonList(container))
-            .nodeSelector(
-                Optional
-                    .ofNullable(runnable.getNodeSelector())
-                    .orElse(Collections.emptyList())
-                    .stream()
-                    .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
-            )
-            .affinity(runnable.getAffinity())
-            .tolerations(
-                runnable.getTolerations() != null && !runnable.getTolerations().isEmpty()
-                    ? runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList())
-                    : null
-            )
-            .volumes(volumes)
-            .restartPolicy("Never");
+                .containers(Collections.singletonList(container))
+                .nodeSelector(
+                        Optional
+                                .ofNullable(runnable.getNodeSelector())
+                                .orElse(Collections.emptyList())
+                                .stream()
+                                .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
+                )
+                .affinity(runnable.getAffinity())
+                .tolerations(
+                        runnable.getTolerations() != null && !runnable.getTolerations().isEmpty()
+                                ? runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList())
+                                : null
+                )
+                .volumes(volumes)
+                .restartPolicy("Never");
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
 
         // Create the JobSpec with the PodTemplateSpec
         V1JobSpec jobSpec = new V1JobSpec()
-            // .completions(1)
-            // .backoffLimit(6)    // is the default value
-            .template(podTemplateSpec);
+                // .completions(1)
+                // .backoffLimit(6)    // is the default value
+                .template(podTemplateSpec);
 
         // Create the V1Job object with metadata and JobSpec
         V1Job job = new V1Job().metadata(metadata).spec(jobSpec);
@@ -209,21 +209,24 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         try {
             V1Job createdJob = batchV1Api.createNamespacedJob(namespace, job, null, null, null, null);
             log.info("Job created: " + Objects.requireNonNull(createdJob.getMetadata()).getName());
-        } catch (Exception e) {
+        } catch (ApiException e) {
             log.error("====== K8s FATAL ERROR =====");
             log.error(String.valueOf(e));
+            log.error("====== K8s REASONS =====");
+            log.error(String.valueOf(e.getResponseBody()));
+            log.error("====== K8s END REASONS =====");
             // Handle exceptions here
             throw new CoreException(
-                ErrorList.RUN_JOB_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.RUN_JOB_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
 
         // Initialize the run state machine considering current state and context
         StateMachine<RunState, RunEvent, Map<String, Object>> fsm = runStateMachine.create(
-            RunState.valueOf(runnable.getState()),
-            Map.of("runId", runnable.getId())
+                RunState.valueOf(runnable.getState()),
+                Map.of("runId", runnable.getId())
         );
 
         // Log the initiation of Dbt Kubernetes Listener
@@ -231,69 +234,69 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
         // Define a function with parameters
         Function<
-            String,
-            Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>
-        > checkJobStatus = jName ->
-            cName ->
-                fMachine -> {
-                    try {
-                        V1Job v1Job = batchV1Api.readNamespacedJob(jName, namespace, null);
-                        V1JobStatus v1JobStatus = v1Job.getStatus();
+                String,
+                Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>
+                > checkJobStatus = jName ->
+                cName ->
+                        fMachine -> {
+                            try {
+                                V1Job v1Job = batchV1Api.readNamespacedJob(jName, namespace, null);
+                                V1JobStatus v1JobStatus = v1Job.getStatus();
 
-                        // Check the Job status
-                        if (
-                            Objects.requireNonNull(v1JobStatus).getSucceeded() != null &&
-                            !fMachine.getCurrentState().equals(RunState.COMPLETED)
-                        ) {
-                            // Job has completed successfully
-                            log.info("Job completed successfully.");
-                            // Update state machine and update runDTO
-                            fMachine.goToState(RunState.COMPLETED);
-                            Run runDTO = runService.getRun(runnable.getId());
-                            runDTO.getStatus().put("state", fsm.getCurrentState().name());
-                            runService.updateRun(runDTO, runDTO.getId());
+                                // Check the Job status
+                                if (
+                                        Objects.requireNonNull(v1JobStatus).getSucceeded() != null &&
+                                                !fMachine.getCurrentState().equals(RunState.COMPLETED)
+                                ) {
+                                    // Job has completed successfully
+                                    log.info("Job completed successfully.");
+                                    // Update state machine and update runDTO
+                                    fMachine.goToState(RunState.COMPLETED);
+                                    Run runDTO = runService.getRun(runnable.getId());
+                                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
+                                    runService.updateRun(runDTO, runDTO.getId());
 
-                            // Log pod status
-                            logPod(jName, cName, namespace, runnable);
-                            // Delete job and pod
-                            deleteAssociatedPodAndJob(jName, namespace, runnable);
-                        } else if (Objects.requireNonNull(v1JobStatus).getFailed() != null) {
-                            // Job has failed delete job and pod
-                            deleteAssociatedPodAndJob(jName, namespace, runnable);
-                        } else if (v1JobStatus.getActive() != null && v1JobStatus.getActive() > 0) {
-                            if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
-                                fMachine.goToState(RunState.READY);
-                                fMachine.goToState(RunState.RUNNING);
+                                    // Log pod status
+                                    logPod(jName, cName, namespace, runnable);
+                                    // Delete job and pod
+                                    deleteAssociatedPodAndJob(jName, namespace, runnable);
+                                } else if (Objects.requireNonNull(v1JobStatus).getFailed() != null) {
+                                    // Job has failed delete job and pod
+                                    deleteAssociatedPodAndJob(jName, namespace, runnable);
+                                } else if (v1JobStatus.getActive() != null && v1JobStatus.getActive() > 0) {
+                                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
+                                        fMachine.goToState(RunState.READY);
+                                        fMachine.goToState(RunState.RUNNING);
+                                    }
+                                    log.warn("Job is running...");
+                                    logPod(jName, cName, namespace, runnable);
+                                } else {
+                                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(
+                                            v1JobStatus
+                                    );
+                                    log.warn("Job is in an unknown state : " + v1JobStatusString);
+                                    writeLog(runnable, v1JobStatusString);
+                                }
+                            } catch (ApiException | JsonProcessingException | CoreException e) {
+                                deleteAssociatedPodAndJob(jName, namespace, runnable);
+                                throw new StopPoller(e.getMessage());
                             }
-                            log.warn("Job is running...");
-                            logPod(jName, cName, namespace, runnable);
-                        } else {
-                            String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(
-                                v1JobStatus
-                            );
-                            log.warn("Job is in an unknown state : " + v1JobStatusString);
-                            writeLog(runnable, v1JobStatusString);
-                        }
-                    } catch (ApiException | JsonProcessingException | CoreException e) {
-                        deleteAssociatedPodAndJob(jName, namespace, runnable);
-                        throw new StopPoller(e.getMessage());
-                    }
 
-                    return null;
-                };
+                            return null;
+                        };
 
         // Using the step method with explicit arguments
         pollingService.createPoller(
-            runnable.getId(),
-            List.of(
-                WorkflowFactory
-                    .builder()
-                    .step((Function<?, ?>) i -> checkJobStatus.apply(jobName).apply(containerName).apply(fsm))
-                    .build()
-            ),
-            1,
-            true,
-            false
+                runnable.getId(),
+                List.of(
+                        WorkflowFactory
+                                .builder()
+                                .step((Function<?, ?>) i -> checkJobStatus.apply(jobName).apply(containerName).apply(fsm))
+                                .build()
+                ),
+                1,
+                true,
+                false
         );
 
         // Start job poller
@@ -301,7 +304,8 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
     }
 
     @Override
-    public void stop(K8sJobRunnable runnable) {}
+    public void stop(K8sJobRunnable runnable) {
+    }
 
     @Override
     public String status(K8sJobRunnable runnable) {
@@ -322,10 +326,10 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         Optional<String[]> args = Optional.ofNullable(runnable.getArgs());
 
         return command
-            .map(cmd ->
-                Stream.concat(Stream.of(cmd), Arrays.stream(args.orElse(new String[0]))).collect(Collectors.toList())
-            )
-            .orElse(List.of());
+                .map(cmd ->
+                        Stream.concat(Stream.of(cmd), Arrays.stream(args.orElse(new String[0]))).collect(Collectors.toList())
+                )
+                .orElse(List.of());
     }
 
     // Generate and return job name
@@ -348,18 +352,18 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         try {
             // Retrieve and print the logs of the associated Pod
             V1PodList v1PodList = coreV1Api.listNamespacedPod(
-                namespace,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                    namespace,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
             );
 
             for (V1Pod pod : v1PodList.getItems()) {
@@ -367,17 +371,17 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
                     if (pod.getMetadata().getName().startsWith(jobName)) {
                         String podName = pod.getMetadata().getName();
                         String logs = coreV1Api.readNamespacedPodLog(
-                            podName,
-                            namespace,
-                            cName,
-                            false,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null
+                                podName,
+                                namespace,
+                                cName,
+                                false,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
                         );
 
                         log.info("Logs for Pod: " + podName);
@@ -402,18 +406,18 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         // Delete the Pod associated with the Job
         try {
             V1PodList v1PodList = coreV1Api.listNamespacedPod(
-                namespace,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                    namespace,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
             );
 
             for (V1Pod pod : v1PodList.getItems()) {
@@ -423,21 +427,21 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
                         // Delete the Pod
                         V1Pod v1Pod = coreV1Api.deleteNamespacedPod(
-                            podName,
-                            namespace,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null
+                                podName,
+                                namespace,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
                         );
                         log.info("Pod deleted: " + podName);
 
                         try {
                             writeLog(
-                                runnable,
-                                JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
+                                    runnable,
+                                    JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
                             );
                         } catch (JsonProcessingException e) {
                             log.error(e.toString());
@@ -445,14 +449,14 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
                         // Delete the Job
                         V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
-                            jobName,
-                            "default",
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null
+                                jobName,
+                                "default",
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
                         );
 
                         try {
