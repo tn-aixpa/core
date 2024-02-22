@@ -58,7 +58,10 @@ public class SchemaController {
     }
 
     @GetMapping(path = "/{entity}/{kind}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Schema> getSchema(@PathVariable @Valid @NotNull EntityName entity, @NotBlank String kind) {
+    public ResponseEntity<Schema> getSchema(
+        @PathVariable @Valid @NotNull EntityName entity,
+        @PathVariable @NotBlank String kind
+    ) {
         Schema schema = specRegistry.getSchema(kind, entity);
 
         return ResponseEntity.ok(schema);

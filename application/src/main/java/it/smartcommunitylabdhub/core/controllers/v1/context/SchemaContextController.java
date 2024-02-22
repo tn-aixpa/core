@@ -60,7 +60,7 @@ public class SchemaContextController {
     public ResponseEntity<Schema> getProjectSchema(
         @PathVariable @Valid @NotNull String project,
         @PathVariable @Valid @NotNull EntityName entity,
-        @NotBlank String kind
+        @PathVariable @NotBlank String kind
     ) {
         Schema schema = specRegistry.getSchema(kind, entity);
 
