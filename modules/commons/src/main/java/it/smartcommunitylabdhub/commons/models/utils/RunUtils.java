@@ -18,8 +18,7 @@ public class RunUtils {
 
     public static final Pattern RUN_PATTERN = Pattern.compile("([^:/]+)://([^/]+)/([^/]+):(.+)");
 
-    private RunUtils() {
-    }
+    private RunUtils() {}
 
     //TODO this goes into the accessor, via a with()
     public static RunSpecAccessor parseRun(String value) {
@@ -39,9 +38,9 @@ public class RunUtils {
             return RunSpecAccessor.with(map);
         }
         throw new CoreException(
-                "InvalidRunStringCase",
-                "Cannot create accessor for the given Run string.",
-                HttpStatus.INTERNAL_SERVER_ERROR
+            "InvalidRunStringCase",
+            "Cannot create accessor for the given Run string.",
+            HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
 
@@ -55,9 +54,9 @@ public class RunUtils {
             return (task.getKind() + "://" + w.getProject() + "/" + w.getName() + ":" + w.getId());
         } else {
             throw new CoreException(
-                    "CannotComposeRunField",
-                    "Cannot compose Run field for the given object.",
-                    HttpStatus.INTERNAL_SERVER_ERROR
+                "CannotComposeRunField",
+                "Cannot compose Run field for the given object.",
+                HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }

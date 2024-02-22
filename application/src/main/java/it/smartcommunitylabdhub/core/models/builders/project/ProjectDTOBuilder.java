@@ -47,90 +47,90 @@ public class ProjectDTOBuilder {
     CBORConverter cborConverter;
 
     public Project build(
-            ProjectEntity project,
-            List<ArtifactEntity> artifacts,
-            List<FunctionEntity> functions,
-            List<WorkflowEntity> workflows,
-            List<DataItemEntity> dataItems,
-            List<SecretEntity> secrets,
-            boolean embeddable
+        ProjectEntity project,
+        List<ArtifactEntity> artifacts,
+        List<FunctionEntity> functions,
+        List<WorkflowEntity> workflows,
+        List<DataItemEntity> dataItems,
+        List<SecretEntity> secrets,
+        boolean embeddable
     ) {
         // Retrieve spec
         Map<String, Serializable> spec = cborConverter.reverseConvert(project.getSpec());
         spec.put(
-                "functions",
-                functions
-                        .stream()
-                        .map(f -> functionDTOBuilder.build(f, embeddable))
-                        .collect(Collectors.toCollection(ArrayList::new))
+            "functions",
+            functions
+                .stream()
+                .map(f -> functionDTOBuilder.build(f, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
         spec.put(
-                "artifacts",
-                artifacts
-                        .stream()
-                        .map(a -> artifactDTOBuilder.build(a, embeddable))
-                        .collect(Collectors.toCollection(ArrayList::new))
+            "artifacts",
+            artifacts
+                .stream()
+                .map(a -> artifactDTOBuilder.build(a, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
         spec.put(
-                "workflows",
-                workflows
-                        .stream()
-                        .map(w -> workflowDTOBuilder.build(w, embeddable))
-                        .collect(Collectors.toCollection(ArrayList::new))
+            "workflows",
+            workflows
+                .stream()
+                .map(w -> workflowDTOBuilder.build(w, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
         spec.put(
-                "dataitems",
-                dataItems
-                        .stream()
-                        .map(d -> dataItemDTOBuilder.build(d, embeddable))
-                        .collect(Collectors.toCollection(ArrayList::new))
+            "dataitems",
+            dataItems
+                .stream()
+                .map(d -> dataItemDTOBuilder.build(d, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
         spec.put(
-                "secrets",
-                secrets
-                        .stream()
-                        .map(s -> secretDTOBuilder.build(s, embeddable))
-                        .collect(Collectors.toCollection(ArrayList::new))
+            "secrets",
+            secrets
+                .stream()
+                .map(s -> secretDTOBuilder.build(s, embeddable))
+                .collect(Collectors.toCollection(ArrayList::new))
         );
 
         // Find base run spec
         return EntityFactory.create(
-                Project::new,
-                builder ->
-                        builder
-                                .with(dto -> dto.setId(project.getId()))
-                                .with(dto -> dto.setName(project.getName()))
-                                .with(dto -> dto.setKind(project.getKind()))
-                                .with(dto -> {
-                                    //read metadata as-is
-                                    Map<String, Serializable> meta = cborConverter.reverseConvert(project.getMetadata());
+            Project::new,
+            builder ->
+                builder
+                    .with(dto -> dto.setId(project.getId()))
+                    .with(dto -> dto.setName(project.getName()))
+                    .with(dto -> dto.setKind(project.getKind()))
+                    .with(dto -> {
+                        //read metadata as-is
+                        Map<String, Serializable> meta = cborConverter.reverseConvert(project.getMetadata());
 
-                                    // Set Metadata for project
-                                    ProjectMetadata metadata = new ProjectMetadata();
-                                    metadata.configure(meta);
+                        // Set Metadata for project
+                        ProjectMetadata metadata = new ProjectMetadata();
+                        metadata.configure(meta);
 
-                                    if (!StringUtils.hasText(metadata.getName())) {
-                                        metadata.setName(project.getName());
-                                    }
-                                    metadata.setProject(project.getName());
-                                    metadata.setDescription(project.getDescription());
-                                    metadata.setSource(project.getSource());
-                                    metadata.setCreated(project.getCreated());
-                                    metadata.setUpdated(project.getUpdated());
+                        if (!StringUtils.hasText(metadata.getName())) {
+                            metadata.setName(project.getName());
+                        }
+                        metadata.setProject(project.getName());
+                        metadata.setDescription(project.getDescription());
+                        metadata.setSource(project.getSource());
+                        metadata.setCreated(project.getCreated());
+                        metadata.setUpdated(project.getUpdated());
 
-                                    //merge into map with override
-                                    dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
-                                })
-                                .with(dto -> dto.setSpec(spec))
-                                .with(dto -> dto.setExtra(cborConverter.reverseConvert(project.getExtra())))
-                                .with(dto ->
-                                        dto.setStatus(
-                                                MapUtils.mergeMultipleMaps(
-                                                        cborConverter.reverseConvert(project.getStatus()),
-                                                        Map.of("state", project.getState())
-                                                )
-                                        )
-                                )
+                        //merge into map with override
+                        dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
+                    })
+                    .with(dto -> dto.setSpec(spec))
+                    .with(dto -> dto.setExtra(cborConverter.reverseConvert(project.getExtra())))
+                    .with(dto ->
+                        dto.setStatus(
+                            MapUtils.mergeMultipleMaps(
+                                cborConverter.reverseConvert(project.getStatus()),
+                                Map.of("state", project.getState())
+                            )
+                        )
+                    )
         );
     }
 }

@@ -8,5 +8,4 @@ import java.io.Serializable;
  * <p>
  * es: for kind = etl the Entity will receive the EtlService
  */
-public interface BaseEntity extends Serializable {
-}
+public interface BaseEntity extends Serializable {}

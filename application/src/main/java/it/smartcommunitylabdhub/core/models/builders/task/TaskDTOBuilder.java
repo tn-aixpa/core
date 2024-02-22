@@ -26,38 +26,38 @@ public class TaskDTOBuilder implements Converter<TaskEntity, Task> {
      */
     public Task build(TaskEntity entity) {
         return EntityFactory.create(
-                Task::new,
-                builder ->
-                        builder
-                                .with(dto -> dto.setId(entity.getId()))
-                                .with(dto -> dto.setKind(entity.getKind()))
-                                .with(dto -> dto.setProject(entity.getProject()))
-                                .with(dto -> {
-                                    //read metadata as-is
-                                    Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
+            Task::new,
+            builder ->
+                builder
+                    .with(dto -> dto.setId(entity.getId()))
+                    .with(dto -> dto.setKind(entity.getKind()))
+                    .with(dto -> dto.setProject(entity.getProject()))
+                    .with(dto -> {
+                        //read metadata as-is
+                        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
-                                    // Set Metadata for task
-                                    TaskMetadata metadata = new TaskMetadata();
-                                    metadata.configure(meta);
+                        // Set Metadata for task
+                        TaskMetadata metadata = new TaskMetadata();
+                        metadata.configure(meta);
 
-                                    metadata.setVersion(entity.getId());
-                                    metadata.setProject(entity.getProject());
-                                    metadata.setCreated(entity.getCreated());
-                                    metadata.setUpdated(entity.getUpdated());
+                        metadata.setVersion(entity.getId());
+                        metadata.setProject(entity.getProject());
+                        metadata.setCreated(entity.getCreated());
+                        metadata.setUpdated(entity.getUpdated());
 
-                                    //merge into map with override
-                                    dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
-                                })
-                                .with(dto -> dto.setSpec(cborConverter.reverseConvert(entity.getSpec())))
-                                .with(dto -> dto.setExtra(cborConverter.reverseConvert(entity.getExtra())))
-                                .with(dto ->
-                                        dto.setStatus(
-                                                MapUtils.mergeMultipleMaps(
-                                                        cborConverter.reverseConvert(entity.getStatus()),
-                                                        Map.of("state", entity.getState().toString())
-                                                )
-                                        )
-                                )
+                        //merge into map with override
+                        dto.setMetadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()));
+                    })
+                    .with(dto -> dto.setSpec(cborConverter.reverseConvert(entity.getSpec())))
+                    .with(dto -> dto.setExtra(cborConverter.reverseConvert(entity.getExtra())))
+                    .with(dto ->
+                        dto.setStatus(
+                            MapUtils.mergeMultipleMaps(
+                                cborConverter.reverseConvert(entity.getStatus()),
+                                Map.of("state", entity.getState().toString())
+                            )
+                        )
+                    )
         );
     }
 

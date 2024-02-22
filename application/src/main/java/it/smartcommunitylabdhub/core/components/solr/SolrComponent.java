@@ -38,8 +38,10 @@ import org.springframework.stereotype.Component;
 public class SolrComponent implements ApplicationListener<ContextRefreshedEvent> {
 
     SolrIndexManager indexManager;
+
     @Value("${solr.url}")
     private String solrUrl;
+
     @Value("${solr.collection}")
     private String solrCollection;
 
@@ -47,8 +49,8 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     public void onApplicationEvent(ContextRefreshedEvent event) {
         try {
             Http2SolrClient solrClient = new Http2SolrClient.Builder(solrUrl)
-                    .withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
-                    .build();
+                .withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
+                .build();
             indexManager = new SolrIndexManager(solrClient, solrCollection);
         } catch (Exception e) {
             e.printStackTrace();

@@ -34,8 +34,8 @@ public class SecretEntityBuilder implements Converter<Secret, SecretEntity> {
     public SecretEntity build(Secret dto) {
         // Parse and export Spec
         Map<String, Serializable> spec = specRegistry
-                .createSpec(dto.getKind(), EntityName.SECRET, dto.getSpec())
-                .toMap();
+            .createSpec(dto.getKind(), EntityName.SECRET, dto.getSpec())
+            .toMap();
 
         // Retrieve field accessor
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
@@ -43,42 +43,42 @@ public class SecretEntityBuilder implements Converter<Secret, SecretEntity> {
         metadata.configure(dto.getMetadata());
 
         return EntityFactory.combine(
-                SecretEntity.builder().build(),
-                builder ->
-                        builder
-                                // check id
-                                .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
-                                .with(e -> e.setKind(dto.getKind()))
-                                .with(e -> e.setName(dto.getName()))
-                                .with(e -> e.setProject(dto.getProject()))
-                                .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
-                                .with(e -> e.setSpec(cborConverter.convert(spec)))
-                                .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
-                                .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
-                                // Store status if not present
-                                .withIfElse(
-                                        (statusFieldAccessor.getState() == null),
-                                        (e, condition) -> {
-                                            if (condition) {
-                                                e.setState(State.CREATED);
-                                            } else {
-                                                e.setState(State.valueOf(statusFieldAccessor.getState()));
-                                            }
-                                        }
-                                )
-                                // Metadata Extraction
-                                .withIfElse(
-                                        metadata.getEmbedded() == null,
-                                        (e, condition) -> {
-                                            if (condition) {
-                                                e.setEmbedded(false);
-                                            } else {
-                                                e.setEmbedded(metadata.getEmbedded());
-                                            }
-                                        }
-                                )
-                                .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
-                                .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
+            SecretEntity.builder().build(),
+            builder ->
+                builder
+                    // check id
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setKind(dto.getKind()))
+                    .with(e -> e.setName(dto.getName()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                    // Store status if not present
+                    .withIfElse(
+                        (statusFieldAccessor.getState() == null),
+                        (e, condition) -> {
+                            if (condition) {
+                                e.setState(State.CREATED);
+                            } else {
+                                e.setState(State.valueOf(statusFieldAccessor.getState()));
+                            }
+                        }
+                    )
+                    // Metadata Extraction
+                    .withIfElse(
+                        metadata.getEmbedded() == null,
+                        (e, condition) -> {
+                            if (condition) {
+                                e.setEmbedded(false);
+                            } else {
+                                e.setEmbedded(metadata.getEmbedded());
+                            }
+                        }
+                    )
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
     }
 
@@ -107,33 +107,33 @@ public class SecretEntityBuilder implements Converter<Secret, SecretEntity> {
      */
     private SecretEntity doUpdate(SecretEntity secret, SecretEntity newSecret) {
         return EntityFactory.combine(
-                secret,
-                builder ->
-                        builder
-                                .withIfElse(
-                                        newSecret.getState().name().equals(State.NONE.name()),
-                                        (f, condition) -> {
-                                            if (condition) {
-                                                f.setState(State.CREATED);
-                                            } else {
-                                                f.setState(newSecret.getState());
-                                            }
-                                        }
-                                )
-                                .with(e -> e.setMetadata(newSecret.getMetadata()))
-                                .with(e -> e.setExtra(newSecret.getExtra()))
-                                .with(e -> e.setStatus(newSecret.getStatus()))
-                                // Metadata Extraction
-                                .withIfElse(
-                                        newSecret.getEmbedded() == null,
-                                        (e, condition) -> {
-                                            if (condition) {
-                                                e.setEmbedded(false);
-                                            } else {
-                                                e.setEmbedded(newSecret.getEmbedded());
-                                            }
-                                        }
-                                )
+            secret,
+            builder ->
+                builder
+                    .withIfElse(
+                        newSecret.getState().name().equals(State.NONE.name()),
+                        (f, condition) -> {
+                            if (condition) {
+                                f.setState(State.CREATED);
+                            } else {
+                                f.setState(newSecret.getState());
+                            }
+                        }
+                    )
+                    .with(e -> e.setMetadata(newSecret.getMetadata()))
+                    .with(e -> e.setExtra(newSecret.getExtra()))
+                    .with(e -> e.setStatus(newSecret.getStatus()))
+                    // Metadata Extraction
+                    .withIfElse(
+                        newSecret.getEmbedded() == null,
+                        (e, condition) -> {
+                            if (condition) {
+                                e.setEmbedded(false);
+                            } else {
+                                e.setEmbedded(newSecret.getEmbedded());
+                            }
+                        }
+                    )
         );
     }
 }

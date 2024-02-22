@@ -2,5 +2,4 @@ package it.smartcommunitylabdhub.commons.models.base;
 
 import java.io.Serializable;
 
-public interface BaseDTO extends Serializable {
-}
+public interface BaseDTO extends Serializable {}
