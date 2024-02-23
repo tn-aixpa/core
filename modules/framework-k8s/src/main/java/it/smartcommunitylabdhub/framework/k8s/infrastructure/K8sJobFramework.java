@@ -234,7 +234,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                             fMachine.goToState(RunState.COMPLETED);
                             Run runDTO = runService.getRun(runnable.getId());
                             runDTO.getStatus().put("state", fsm.getCurrentState().name());
-                            runService.updateRun(runDTO, runDTO.getId());
+                            runService.updateRun(runDTO.getId(), runDTO);
 
                             // Log pod status
                             logPod(jName, cName, namespace, runnable);

@@ -73,7 +73,7 @@ public class RunStateMachine {
                         // update run state
                         Run runDTO = runService.getRun(c.get("runId").toString());
                         runDTO.getStatus().put("state", RunState.READY.toString());
-                        runService.updateRun(runDTO, runDTO.getId());
+                        runService.updateRun(runDTO.getId(), runDTO);
                     });
                 }
             )
@@ -87,7 +87,7 @@ public class RunStateMachine {
                         Run runDTO = runService.getRun(c.get("runId").toString());
                         runDTO.getStatus().put("state", RunState.RUNNING.toString());
 
-                        runService.updateRun(runDTO, runDTO.getId());
+                        runService.updateRun(runDTO.getId(), runDTO);
                     });
                 }
             )
@@ -99,7 +99,7 @@ public class RunStateMachine {
                     context.ifPresent(c -> {
                         Run runDTO = runService.getRun(c.get("runId").toString());
                         runDTO.getStatus().put("state", RunState.ERROR.toString());
-                        runService.updateRun(runDTO, runDTO.getId());
+                        runService.updateRun(runDTO.getId(), runDTO);
                     });
                 }
             )

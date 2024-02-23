@@ -160,7 +160,7 @@ public class FunctionContextController extends AbstractContextController {
         //Delete all related object
         taskList.forEach(task -> {
             // remove run
-            this.runService.deleteRunByTaskId(task.getId());
+            this.runService.deleteRunsByTaskId(task.getId());
 
             // remove task
             this.taskService.deleteTask(task.getId(), false);
@@ -186,7 +186,7 @@ public class FunctionContextController extends AbstractContextController {
                 //Delete all related object
                 taskList.forEach(task -> {
                     // remove run
-                    this.runService.deleteRunByTaskId(task.getId());
+                    this.runService.deleteRunsByTaskId(task.getId());
 
                     // remove task
                     this.taskService.deleteTask(task.getId(), false);
