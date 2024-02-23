@@ -47,27 +47,23 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
             .builder()
             .runtime(ContainerRuntime.RUNTIME)
             .task(TASK)
-            .image(functionSpec.getImage())
             .state(statusFieldAccessor.getState())
-            .resources(taskSpec.getResources())
-            .nodeSelector(taskSpec.getNodeSelector())
-            .volumes(taskSpec.getVolumes())
-            .secrets(groupedSecrets)
+            //base
+            .image(functionSpec.getImage())
+            .command(functionSpec.getCommand())
+            .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
             .envs(coreEnvList)
-            .labels(taskSpec.getLabels())
+            .secrets(groupedSecrets)
+            .resources(taskSpec.getResources())
+            .volumes(taskSpec.getVolumes())
+            .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
+            .labels(taskSpec.getLabels())
+            //specific
             .servicePorts(taskSpec.getServicePorts())
             .serviceType(taskSpec.getServiceType())
             .build();
-
-        Optional
-            .ofNullable(functionSpec.getArgs())
-            .ifPresent(args ->
-                k8sServeRunnable.setArgs(
-                    args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
-                )
-            );
 
         k8sServeRunnable.setId(run.getId());
         k8sServeRunnable.setProject(run.getProject());

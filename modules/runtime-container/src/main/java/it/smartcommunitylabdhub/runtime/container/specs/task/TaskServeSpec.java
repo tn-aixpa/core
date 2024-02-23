@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import java.io.Serializable;
 import java.util.List;
@@ -26,7 +27,7 @@ public class TaskServeSpec extends TaskDeploySpec {
 
     // ClusterIP or NodePort
     @JsonProperty("service_type")
-    private String serviceType;
+    private CoreServiceType serviceType;
 
     public TaskServeSpec(Map<String, Serializable> data) {
         configure(data);

@@ -13,7 +13,6 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
-import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.fsm.StateMachine;
@@ -22,6 +21,7 @@ import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
 import it.smartcommunitylabdhub.fsm.workflow.WorkflowFactory;
+import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 @Slf4j
-@FrameworkComponent(framework = "k8sjob")
+@FrameworkComponent(framework = K8sJobFramework.FRAMEWORK)
 public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
+
+    public static final String FRAMEWORK = "k8sjob";
 
     public static final int DEADLINE_SECONDS = 3600 * 24 * 3; //3 days
 
@@ -61,11 +63,6 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         batchV1Api = new BatchV1Api(apiClient);
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        Assert.notNull(k8sBuilderHelper, "k8s helper is required");
-    }
-
     public void setActiveDeadlineSeconds(int activeDeadlineSeconds) {
         Assert.isTrue(activeDeadlineSeconds > 300, "Minimum deadline seconds is 300");
         this.activeDeadlineSeconds = activeDeadlineSeconds;
@@ -75,89 +72,115 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     // caller.
     @Override
     public void execute(K8sJobRunnable runnable) throws K8sFrameworkException {
-        V1Job job = apply(runnable);
+        V1Job job = build(runnable);
+        job = apply(job);
 
         //TODO refactor
         monitor(runnable, job);
     }
 
-    public V1Job apply(K8sJobRunnable runnable) throws K8sFrameworkException {
+    public V1Job build(K8sJobRunnable runnable) throws K8sFrameworkException {
+        // Log service execution initiation
+        log.info("----------------- BUILD KUBERNETES JOB ----------------");
+
+        // Generate jobName and ContainerName
+        String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
+        String containerName = k8sBuilderHelper.getContainerName(
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
+        );
+
+        //build labels
+        Map<String, String> labels = buildLabels(runnable);
+
+        // Create the Job metadata
+        V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
+
+        // Prepare environment variables for the Kubernetes job
+        List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
+        List<V1EnvVar> env = buildEnv(runnable);
+
+        // Volumes to attach to the pod based on the volume spec with the additional volume_type
+        List<V1Volume> volumes = buildVolumes(runnable);
+        List<V1VolumeMount> volumeMounts = buildVolumeMounts(runnable);
+
+        // resources
+        V1ResourceRequirements resources = buildResources(runnable);
+
+        //command params
+        List<String> command = buildCommand(runnable);
+        List<String> args = buildArgs(runnable);
+
+        // Build Container
+        V1Container container = new V1Container()
+            .name(containerName)
+            .image(runnable.getImage())
+            .imagePullPolicy("Always")
+            .imagePullPolicy("IfNotPresent")
+            .command(command)
+            .args(args)
+            .resources(resources)
+            .volumeMounts(volumeMounts)
+            .envFrom(envFrom)
+            .env(env);
+
+        // Create a PodSpec for the container
+        V1PodSpec podSpec = new V1PodSpec()
+            .containers(Collections.singletonList(container))
+            .nodeSelector(buildNodeSelector(runnable))
+            .affinity(runnable.getAffinity())
+            .tolerations(buildTolerations(runnable))
+            .volumes(volumes)
+            .restartPolicy("Never");
+
+        // Create a PodTemplateSpec with the PodSpec
+        V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
+
+        int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(3).intValue();
+
+        // Create the JobSpec with the PodTemplateSpec
+        V1JobSpec jobSpec = new V1JobSpec()
+            .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
+            //TODO support work-queue style/parallel jobs
+            .parallelism(1)
+            .completions(1)
+            .backoffLimit(backoffLimit)
+            .template(podTemplateSpec);
+
+        // Create the V1Job object with metadata and JobSpec
+        return new V1Job().metadata(metadata).spec(jobSpec);
+    }
+
+    public V1Job apply(@NotNull V1Job job) throws K8sFrameworkException {
+        Assert.notNull(job.getMetadata(), "metadata can not be null");
+
         try {
             // Log service execution initiation
-            log.info("----------------- PREPARE KUBERNETES JOB ----------------");
-
-            // Generate jobName and ContainerName
-            String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
-            String containerName = k8sBuilderHelper.getContainerName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
-            );
-
-            //build labels
-            Map<String, String> labels = buildLabels(runnable);
-
-            // Create the Job metadata
-            V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
-
-            // Prepare environment variables for the Kubernetes job
-            List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
-            List<V1EnvVar> env = buildEnv(runnable);
-
-            // Volumes to attach to the pod based on the volume spec with the additional volume_type
-            List<V1Volume> volumes = buildVolumes(runnable);
-            List<V1VolumeMount> volumeMounts = buildVolumeMounts(runnable);
-
-            // resources
-            V1ResourceRequirements resources = buildResources(runnable);
-
-            //command params
-            List<String> command = buildCommand(runnable);
-            List<String> args = buildArgs(runnable);
-
-            // Build Container
-            V1Container container = new V1Container()
-                .name(containerName)
-                .image(runnable.getImage())
-                .imagePullPolicy("Always")
-                .imagePullPolicy("IfNotPresent")
-                .command(command)
-                .args(args)
-                .resources(resources)
-                .volumeMounts(volumeMounts)
-                .envFrom(envFrom)
-                .env(env);
-
-            // Create a PodSpec for the container
-            V1PodSpec podSpec = new V1PodSpec()
-                .containers(Collections.singletonList(container))
-                .nodeSelector(buildNodeSelector(runnable))
-                .affinity(runnable.getAffinity())
-                .tolerations(buildTolerations(runnable))
-                .volumes(volumes)
-                .restartPolicy("Never");
-
-            // Create a PodTemplateSpec with the PodSpec
-            V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
-
-            int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(3).intValue();
-
-            // Create the JobSpec with the PodTemplateSpec
-            V1JobSpec jobSpec = new V1JobSpec()
-                .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
-                //TODO support work-queue style/parallel jobs
-                .parallelism(1)
-                .completions(1)
-                .backoffLimit(backoffLimit)
-                .template(podTemplateSpec);
-
-            // Create the V1Job object with metadata and JobSpec
-            V1Job job = new V1Job().metadata(metadata).spec(jobSpec);
+            log.info("----------------- RUN KUBERNETES JOB ----------------");
 
             //dispatch job via api
             V1Job createdJob = batchV1Api.createNamespacedJob(namespace, job, null, null, null, null);
             log.info("Job created: {}", Objects.requireNonNull(createdJob.getMetadata()).getName());
             return createdJob;
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
+    }
+
+    public V1Job get(@NotNull V1Job job) throws K8sFrameworkException {
+        Assert.notNull(job.getMetadata(), "metadata can not be null");
+
+        try {
+            // Log service execution initiation
+            log.info("----------------- GET KUBERNETES JOB ----------------");
+
+            return batchV1Api.readNamespacedJob(job.getMetadata().getName(), namespace, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {

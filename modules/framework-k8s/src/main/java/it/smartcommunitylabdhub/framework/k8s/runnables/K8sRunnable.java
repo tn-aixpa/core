@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.infrastructure.base.BaseRunnable;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
@@ -23,7 +22,11 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class K8sRunnable extends BaseRunnable {
+public class K8sRunnable implements it.smartcommunitylabdhub.commons.infrastructure.Runnable {
+
+    private String id;
+
+    private String project;
 
     private String runtime;
 
@@ -37,15 +40,15 @@ public class K8sRunnable extends BaseRunnable {
 
     private List<CoreEnv> envs;
 
+    // mapping secret name to the list of keys to of the secret to use
+    private Map<String, Set<String>> secrets;
+
+    private List<CoreResource> resources;
+
     private List<CoreVolume> volumes;
 
     @JsonProperty("node_selector")
     private List<CoreNodeSelector> nodeSelector;
-
-    private List<CoreResource> resources;
-
-    // mapping secret name to the list of keys to of the secret to use
-    private Map<String, Set<String>> secrets;
 
     private CoreAffinity affinity;
 
@@ -54,4 +57,9 @@ public class K8sRunnable extends BaseRunnable {
     private List<CoreLabel> labels;
 
     private String state;
+
+    @Override
+    public String getFramework() {
+        return "k8s";
+    }
 }

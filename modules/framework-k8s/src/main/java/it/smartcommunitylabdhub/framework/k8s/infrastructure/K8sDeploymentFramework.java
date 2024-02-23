@@ -12,7 +12,6 @@ import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
-import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.fsm.StateMachine;
@@ -21,15 +20,19 @@ import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
 import it.smartcommunitylabdhub.fsm.workflow.WorkflowFactory;
+import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 
 //TODO: le operazioni di clean del deployment vanno fatte nel framework
 @Slf4j
-@FrameworkComponent(framework = "k8sdeployment")
+@FrameworkComponent(framework = K8sDeploymentFramework.FRAMEWORK)
 public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnable, V1Deployment> {
+
+    public static final String FRAMEWORK = "k8sdeployment";
 
     private final AppsV1Api appsV1Api;
 
@@ -58,7 +61,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
     @Override
     public void execute(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
-        V1Deployment deployment = apply(runnable);
+        V1Deployment deployment = build(runnable);
+        deployment = apply(deployment);
 
         //TODO refactor
         monitor(runnable, deployment);
@@ -67,78 +71,86 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
 
-    public V1Deployment apply(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+    public V1Deployment build(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+        // Log service execution initiation
+        log.info("----------------- PREPARE KUBERNETES Deployment ----------------");
+
+        // Generate deploymentName and ContainerName
+        String deploymentName = k8sBuilderHelper.getDeploymentName(
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
+        );
+        String containerName = k8sBuilderHelper.getContainerName(
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
+        );
+
+        // Create labels for job
+        Map<String, String> labels = buildLabels(runnable);
+
+        // Create the Deployment metadata
+        V1ObjectMeta metadata = new V1ObjectMeta().name(deploymentName).labels(labels);
+
+        // Prepare environment variables for the Kubernetes job
+        List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
+        List<V1EnvVar> env = buildEnv(runnable);
+
+        // Volumes to attach to the pod based on the volume spec with the additional volume_type
+        List<V1Volume> volumes = buildVolumes(runnable);
+        List<V1VolumeMount> volumeMounts = buildVolumeMounts(runnable);
+
+        // resources
+        V1ResourceRequirements resources = buildResources(runnable);
+
+        //command params
+        List<String> command = buildCommand(runnable);
+        List<String> args = buildArgs(runnable);
+
+        // Build Container
+        V1Container container = new V1Container()
+            .name(containerName)
+            .image(runnable.getImage())
+            .imagePullPolicy("Always")
+            .imagePullPolicy("IfNotPresent")
+            .command(command)
+            .args(args)
+            .resources(resources)
+            .volumeMounts(volumeMounts)
+            .envFrom(envFrom)
+            .env(env);
+
+        // Create a PodSpec for the container
+        V1PodSpec podSpec = new V1PodSpec()
+            .containers(Collections.singletonList(container))
+            .nodeSelector(buildNodeSelector(runnable))
+            .affinity(runnable.getAffinity())
+            .tolerations(buildTolerations(runnable))
+            .volumes(volumes)
+            .restartPolicy("Always");
+
+        // Create a PodTemplateSpec with the PodSpec
+        V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
+
+        int replicas = Optional.ofNullable(runnable.getReplicas()).orElse(1).intValue();
+
+        // Create the JobSpec with the PodTemplateSpec
+        V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
+            .replicas(replicas)
+            .selector(new V1LabelSelector().matchLabels(labels))
+            .template(podTemplateSpec);
+
+        // Create the V1Deployment object with metadata and JobSpec
+        return new V1Deployment().metadata(metadata).spec(deploymentSpec);
+    }
+
+    public V1Deployment apply(@NotNull V1Deployment deployment) throws K8sFrameworkException {
+        Assert.notNull(deployment.getMetadata(), "metadata can not be null");
+
         try {
             // Log service execution initiation
-            log.info("----------------- PREPARE KUBERNETES Deployment ----------------");
-
-            // Generate deploymentName and ContainerName
-            String deploymentName = k8sBuilderHelper.getDeploymentName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
-            );
-            String containerName = k8sBuilderHelper.getContainerName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
-            );
-
-            // Create labels for job
-            Map<String, String> labels = buildLabels(runnable);
-
-            // Create the Deployment metadata
-            V1ObjectMeta metadata = new V1ObjectMeta().name(deploymentName).labels(labels);
-
-            // Prepare environment variables for the Kubernetes job
-            List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
-            List<V1EnvVar> env = buildEnv(runnable);
-
-            // Volumes to attach to the pod based on the volume spec with the additional volume_type
-            List<V1Volume> volumes = buildVolumes(runnable);
-            List<V1VolumeMount> volumeMounts = buildVolumeMounts(runnable);
-
-            // resources
-            V1ResourceRequirements resources = buildResources(runnable);
-
-            //command params
-            List<String> command = buildCommand(runnable);
-            List<String> args = buildArgs(runnable);
-
-            // Build Container
-            V1Container container = new V1Container()
-                .name(containerName)
-                .image(runnable.getImage())
-                .imagePullPolicy("Always")
-                .imagePullPolicy("IfNotPresent")
-                .command(command)
-                .args(args)
-                .resources(resources)
-                .volumeMounts(volumeMounts)
-                .envFrom(envFrom)
-                .env(env);
-
-            // Create a PodSpec for the container
-            V1PodSpec podSpec = new V1PodSpec()
-                .containers(Collections.singletonList(container))
-                .nodeSelector(buildNodeSelector(runnable))
-                .affinity(runnable.getAffinity())
-                .tolerations(buildTolerations(runnable))
-                .volumes(volumes)
-                .restartPolicy("Always");
-
-            // Create a PodTemplateSpec with the PodSpec
-            V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
-
-            // Create the JobSpec with the PodTemplateSpec
-            V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
-                // .completions(1)
-                // .backoffLimit(6)    // is the default value
-                .selector(new V1LabelSelector().matchLabels(labels))
-                .template(podTemplateSpec);
-
-            // Create the V1Deployment object with metadata and JobSpec
-            V1Deployment deployment = new V1Deployment().metadata(metadata).spec(deploymentSpec);
+            log.info("----------------- APPLY KUBERNETES Deployment ----------------");
 
             //dispatch deployment via api
             V1Deployment createdDeployment = appsV1Api.createNamespacedDeployment(
@@ -151,6 +163,24 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             );
             log.info("Deployment created: {}", Objects.requireNonNull(createdDeployment.getMetadata()).getName());
             return createdDeployment;
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
+    }
+
+    public V1Deployment get(@NotNull V1Deployment deployment) throws K8sFrameworkException {
+        Assert.notNull(deployment.getMetadata(), "metadata can not be null");
+
+        try {
+            // Log service execution initiation
+            log.info("----------------- GET KUBERNETES Deployment ----------------");
+
+            return appsV1Api.readNamespacedDeployment(deployment.getMetadata().getName(), namespace, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {

@@ -10,7 +10,6 @@ import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
-import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
@@ -65,16 +64,21 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     public void stop(T runnable) throws K8sFrameworkException {
         if (runnable != null) {
             log.info("destroy objects for runnable {}", runnable.getId());
-            destroy(runnable);
+            //TODO collect or rebuild objects
+            // destroy(runnable);
         }
     }
 
     /*
      * K8s methods
      */
-    public abstract K apply(T runnable) throws K8sFrameworkException;
+    public abstract K build(T runnable) throws K8sFrameworkException;
 
-    public void destroy(T runnable) throws K8sFrameworkException {
+    public abstract K apply(K object) throws K8sFrameworkException;
+
+    public abstract K get(K object) throws K8sFrameworkException;
+
+    public void destroy(K object) throws K8sFrameworkException {
         throw new UnsupportedOperationException();
     }
 

@@ -4,7 +4,9 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.util.StringUtils;
 
 /**
  * ContainerJobRunner
@@ -24,7 +27,7 @@ import java.util.Set;
  *
  * @RunnerComponent(runtime = "container", task = "job")
  */
-public class ContainerJobRunner implements Runner<K8sJobRunnable> {
+public class ContainerJobRunner implements Runner<K8sRunnable> {
 
     private static final String TASK = "job";
 
@@ -37,7 +40,7 @@ public class ContainerJobRunner implements Runner<K8sJobRunnable> {
     }
 
     @Override
-    public K8sJobRunnable produce(Run run) {
+    public K8sRunnable produce(Run run) {
         RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
         TaskJobSpec taskSpec = runSpec.getTaskJobSpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
@@ -48,31 +51,52 @@ public class ContainerJobRunner implements Runner<K8sJobRunnable> {
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
-        K8sJobRunnable k8sJobRunnable = K8sJobRunnable
+        K8sRunnable k8sJobRunnable = K8sJobRunnable
             .builder()
             .runtime(ContainerRuntime.RUNTIME)
             .task(TASK)
-            .image(functionSpec.getImage())
             .state(statusFieldAccessor.getState())
-            .resources(taskSpec.getResources())
-            .nodeSelector(taskSpec.getNodeSelector())
-            .volumes(taskSpec.getVolumes())
-            .secrets(groupedSecrets)
+            //base
+            .image(functionSpec.getImage())
+            .command(functionSpec.getCommand())
+            .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
             .envs(coreEnvList)
-            .labels(taskSpec.getLabels())
+            .secrets(groupedSecrets)
+            .resources(taskSpec.getResources())
+            .volumes(taskSpec.getVolumes())
+            .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
+            .labels(taskSpec.getLabels())
+            //specific
+            .backoffLimit(taskSpec.getBackoffLimit())
             .build();
 
-        Optional
-            .ofNullable(functionSpec.getArgs())
-            .ifPresent(args ->
-                k8sJobRunnable.setArgs(
-                    args.stream().filter(Objects::nonNull).map(Object::toString).toArray(String[]::new)
-                )
-            );
-
-        Optional.ofNullable(functionSpec.getCommand()).ifPresent(k8sJobRunnable::setCommand);
+        if (StringUtils.hasText(taskSpec.getSchedule())) {
+            //build a cronJob
+            k8sJobRunnable =
+                K8sCronJobRunnable
+                    .builder()
+                    .runtime(ContainerRuntime.RUNTIME)
+                    .task(TASK)
+                    .state(statusFieldAccessor.getState())
+                    //base
+                    .image(functionSpec.getImage())
+                    .command(functionSpec.getCommand())
+                    .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
+                    .envs(coreEnvList)
+                    .secrets(groupedSecrets)
+                    .resources(taskSpec.getResources())
+                    .volumes(taskSpec.getVolumes())
+                    .nodeSelector(taskSpec.getNodeSelector())
+                    .affinity(taskSpec.getAffinity())
+                    .tolerations(taskSpec.getTolerations())
+                    .labels(taskSpec.getLabels())
+                    //specific
+                    .backoffLimit(taskSpec.getBackoffLimit())
+                    .schedule(taskSpec.getSchedule())
+                    .build();
+        }
 
         k8sJobRunnable.setId(run.getId());
         k8sJobRunnable.setProject(run.getProject());

@@ -18,6 +18,8 @@ public class TaskDeploySpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "container+deploy";
 
+    private Integer replicas;
+
     public TaskDeploySpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -25,5 +27,8 @@ public class TaskDeploySpec extends K8sTaskBaseSpec {
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
+
+        TaskDeploySpec spec = mapper.convertValue(data, TaskDeploySpec.class);
+        this.replicas = spec.getReplicas();
     }
 }
