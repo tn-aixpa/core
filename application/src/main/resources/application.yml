@@ -70,6 +70,7 @@ kubernetes:
 # Application endpoint
 application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
+  name: @project.name@
   description: @project.description@
   version: @project.version@  
   profiles: ${spring.profiles.active:default}
