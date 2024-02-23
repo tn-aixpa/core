@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.core.services.context;
 
-import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;

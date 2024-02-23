@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
+    <!-- <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.2.0</version>
-    </parent>
+    </parent> -->
     <groupId>it.smartcommunitylabdhub</groupId>
     <artifactId>digitalhub-core</artifactId>
     <name>digitalhub-core</name>
@@ -17,9 +17,12 @@
     <properties>
         <revision>0.0.29</revision>
         <java.version>21</java.version>
+        <spring-boot.version>3.2.0</spring-boot.version>
         <jackson.version>2.15.3</jackson.version>
         <slf4j.version>2.0.9</slf4j.version>
         <kubernetes.version>19.0.0</kubernetes.version>
+        <maven.compiler.release>21</maven.compiler.release>
+        <lombok.version>1.18.30</lombok.version>
     </properties>
 
     <modules>
@@ -36,6 +39,13 @@
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <parameters>true</parameters>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>

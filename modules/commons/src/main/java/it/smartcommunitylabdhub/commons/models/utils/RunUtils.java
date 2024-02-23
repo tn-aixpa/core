@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.utils;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
-import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -10,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.springframework.http.HttpStatus;
 
 //TODO remove
 @Deprecated(forRemoval = true)
@@ -37,11 +35,8 @@ public class RunUtils {
 
             return RunSpecAccessor.with(map);
         }
-        throw new CoreException(
-            "InvalidRunStringCase",
-            "Cannot create accessor for the given Run string.",
-            HttpStatus.INTERNAL_SERVER_ERROR
-        );
+
+        throw new IllegalArgumentException("Cannot create accessor for the given Run string.");
     }
 
     //TODO this should be removed, core shouldn't need this info
@@ -53,11 +48,7 @@ public class RunUtils {
             Workflow w = (Workflow) type;
             return (task.getKind() + "://" + w.getProject() + "/" + w.getName() + ":" + w.getId());
         } else {
-            throw new CoreException(
-                "CannotComposeRunField",
-                "Cannot compose Run field for the given object.",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            throw new IllegalArgumentException("Cannot compose Run field for the given object.");
         }
     }
 }

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.commons.exceptions;
+package it.smartcommunitylabdhub.core.exceptions;
 
 import lombok.Data;
 

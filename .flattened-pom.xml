@@ -6,10 +6,4 @@
   <artifactId>digitalhub-core</artifactId>
   <version>0.0.29</version>
   <packaging>pom</packaging>
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
-    </license>
-  </licenses>
 </project>

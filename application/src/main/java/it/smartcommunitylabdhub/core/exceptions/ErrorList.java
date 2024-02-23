@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.commons.utils;
+package it.smartcommunitylabdhub.core.exceptions;
 
 public enum ErrorList {
     INTERNAL_SERVER_ERROR("InternalServerError", "Internal Server Error"),

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core;
+package it.smartcommunitylabdhub.framework.k8s;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

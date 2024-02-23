@@ -8,7 +8,6 @@ import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
@@ -16,8 +15,8 @@ import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
-import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
@@ -36,7 +35,6 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
 
 //TODO: le operazioni di clean del deployment vanno fatte nel framework
@@ -79,7 +77,7 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
-    public void execute(K8sServeRunnable runnable) throws CoreException {
+    public void execute(K8sServeRunnable runnable) throws K8sFrameworkException {
         // FIXME: DELETE THIS IS ONLY FOR DEBUG
         String threadName = Thread.currentThread().getName();
         //String placeholder = "-" + RandomStringGenerator.generateRandomString(3);
@@ -248,18 +246,12 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
 
             log.info("Serve created: " + Objects.requireNonNull(createdServe.getMetadata()).getName());
         } catch (ApiException e) {
-            log.error("====== K8s FATAL ERROR =====");
-            log.error(String.valueOf(e));
-            log.error("====== K8s REASONS =====");
-            log.error(String.valueOf(e.getResponseBody()));
-            log.error("====== K8s END REASONS =====");
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
 
-            // Handle exceptions here
-            throw new CoreException(
-                ErrorList.RUN_JOB_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            throw new K8sFrameworkException(e.getMessage());
         }
 
         // Initialize the run state machine considering current state and context
@@ -269,7 +261,7 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
         );
 
         // Log the initiation of Dbt Kubernetes Listener
-        log.info("Dbt Kubernetes Listener [" + threadName + "] " + deploymentName + "@" + namespace);
+        log.info("Kubernetes Listener [" + threadName + "] " + deploymentName + "@" + namespace);
 
         // Define a function with parameters
         Function<
@@ -321,7 +313,12 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
                         //                    writeLog(runnable, v1JobStatusString);
                         //                }
 
-                    } catch (ApiException | CoreException e) {
+                    } catch (ApiException e) {
+                        log.error("Error with k8s: {}", e.getMessage());
+                        if (log.isDebugEnabled()) {
+                            log.debug("k8s api response: {}", e.getResponseBody());
+                        }
+
                         deleteAssociatedPodAndJob(dName, namespace, runnable);
                         throw new StopPoller(e.getMessage());
                     }
@@ -348,7 +345,9 @@ public class K8sServeFramework implements Framework<K8sServeRunnable> {
     }
 
     @Override
-    public void stop(K8sServeRunnable runnable) {}
+    public void stop(K8sServeRunnable runnable) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public String status(K8sServeRunnable runnable) {

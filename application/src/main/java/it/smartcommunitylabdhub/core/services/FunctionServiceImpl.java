@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -9,7 +8,8 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
-import it.smartcommunitylabdhub.commons.utils.ErrorList;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
+import it.smartcommunitylabdhub.core.exceptions.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
 import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;

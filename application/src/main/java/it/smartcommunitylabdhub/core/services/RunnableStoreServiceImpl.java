@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.services.RunnableStoreService;
+import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.core.models.entities.runnable.RunnableEntity;
 import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons.infrastructure.Runnable>
-    implements RunnableStoreService<T> {
+    implements RunnableStore<T> {
 
     private final Class<T> clazz;
     private final RunnableRepository runnableRepository;

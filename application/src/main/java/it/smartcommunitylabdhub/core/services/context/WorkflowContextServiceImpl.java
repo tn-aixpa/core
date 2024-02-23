@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.core.services.context;
 
-import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;

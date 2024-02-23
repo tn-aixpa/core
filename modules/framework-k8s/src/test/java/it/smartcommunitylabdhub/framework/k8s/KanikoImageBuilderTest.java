@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core;
+package it.smartcommunitylabdhub.framework.k8s;
 
 import io.kubernetes.client.openapi.ApiClient;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.kaniko.DockerBuildConfig;

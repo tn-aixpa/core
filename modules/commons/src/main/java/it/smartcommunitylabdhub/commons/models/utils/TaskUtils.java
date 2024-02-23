@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.utils;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
-import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
@@ -9,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.springframework.http.HttpStatus;
 
 //TODO remove
 @Deprecated(forRemoval = true)
@@ -36,11 +34,8 @@ public class TaskUtils {
 
             return TaskSpecAccessor.with(map);
         }
-        throw new CoreException(
-            "InvalidTaskStringCase",
-            "Cannot create accessor for the given task string.",
-            HttpStatus.INTERNAL_SERVER_ERROR
-        );
+
+        throw new IllegalArgumentException("Cannot create accessor for the given task string.");
     }
 
     //TODO this should be removed, core shouldn't need this info
@@ -52,11 +47,7 @@ public class TaskUtils {
             Workflow w = (Workflow) type;
             return (w.getKind() + "://" + w.getProject() + "/" + w.getName() + ":" + w.getId());
         } else {
-            throw new CoreException(
-                "CannotComposeTaskField",
-                "Cannot compose task field for the given object.",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            throw new IllegalArgumentException("Cannot compose task field for the given object.");
         }
     }
 }

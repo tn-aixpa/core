@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.framework.k8s.config;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.util.ClientBuilder;
-import it.smartcommunitylabdhub.commons.services.RunnableStoreService;
+import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
@@ -19,23 +19,23 @@ import org.springframework.context.annotation.Configuration;
 public class KubernetesConfig {
 
     @Autowired
-    protected RunnableStoreService.StoreSupplier storeSupplier;
+    protected RunnableStore.StoreSupplier storeSupplier;
 
     @Bean
     @ConditionalOnKubernetes
-    public RunnableStoreService<K8sServeRunnable> k8sServeRunnableStoreService() {
+    public RunnableStore<K8sServeRunnable> k8sServeRunnableStoreService() {
         return storeSupplier.get(K8sServeRunnable.class);
     }
 
     @Bean
     @ConditionalOnKubernetes
-    public RunnableStoreService<K8sDeploymentRunnable> k8sDeploymentRunnableStoreService() {
+    public RunnableStore<K8sDeploymentRunnable> k8sDeploymentRunnableStoreService() {
         return storeSupplier.get(K8sDeploymentRunnable.class);
     }
 
     @Bean
     @ConditionalOnKubernetes
-    public RunnableStoreService<K8sJobRunnable> k8sjobRunnableStoreService() {
+    public RunnableStore<K8sJobRunnable> k8sjobRunnableStoreService() {
         return storeSupplier.get(K8sJobRunnable.class);
     }
 

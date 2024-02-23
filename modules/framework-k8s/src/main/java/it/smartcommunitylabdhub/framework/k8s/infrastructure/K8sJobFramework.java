@@ -7,7 +7,6 @@ import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
@@ -16,8 +15,8 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
-import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
@@ -37,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
 
 @Slf4j
@@ -81,7 +79,7 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
-    public void execute(K8sJobRunnable runnable) throws CoreException {
+    public void execute(K8sJobRunnable runnable) throws K8sFrameworkException {
         // FIXME: DELETE THIS IS ONLY FOR DEBUG
         String threadName = Thread.currentThread().getName();
         //String placeholder = "-" + RandomStringGenerator.generateRandomString(3);
@@ -210,17 +208,12 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
             V1Job createdJob = batchV1Api.createNamespacedJob(namespace, job, null, null, null, null);
             log.info("Job created: " + Objects.requireNonNull(createdJob.getMetadata()).getName());
         } catch (ApiException e) {
-            log.error("====== K8s FATAL ERROR =====");
-            log.error(String.valueOf(e));
-            log.error("====== K8s REASONS =====");
-            log.error(String.valueOf(e.getResponseBody()));
-            log.error("====== K8s END REASONS =====");
-            // Handle exceptions here
-            throw new CoreException(
-                ErrorList.RUN_JOB_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
         }
 
         // Initialize the run state machine considering current state and context
@@ -277,7 +270,9 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
                             log.warn("Job is in an unknown state : " + v1JobStatusString);
                             writeLog(runnable, v1JobStatusString);
                         }
-                    } catch (ApiException | JsonProcessingException | CoreException e) {
+                    } catch (ApiException | JsonProcessingException e) {
+                        log.error("Error with k8s: {}", e.getMessage());
+
                         deleteAssociatedPodAndJob(jName, namespace, runnable);
                         throw new StopPoller(e.getMessage());
                     }
