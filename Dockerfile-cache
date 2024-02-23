@@ -3,7 +3,7 @@ COPY application /tmp/application
 COPY modules /tmp/modules
 COPY pom.xml /tmp/pom.xml
 WORKDIR /tmp
-RUN mvn package -DskipTests
+RUN mvn dependency:go-offline
 
 FROM scratch
 LABEL org.opencontainers.image.source=https://github.com/scc-digitalhub/digitalhub-core
