@@ -72,6 +72,7 @@ application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
   description: @project.description@
   version: @project.version@  
+  profiles: ${spring.profiles.active:default}
 
 
 security:

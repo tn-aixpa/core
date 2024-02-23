@@ -18,6 +18,7 @@
     <groupId>it.smartcommunitylabdhub</groupId>
     <artifactId>core</artifactId>
     <name>core</name>
+    <version>${revision}</version>
     <description>Digital Hub Core</description>
     <properties>
         <revision>0.0.29</revision>
