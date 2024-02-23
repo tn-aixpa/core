@@ -1,23 +1,26 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
-import it.smartcommunitylabdhub.commons.exceptions.CustomException;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
+import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
-import it.smartcommunitylabdhub.core.exceptions.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
@@ -25,257 +28,332 @@ import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSp
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
+@Slf4j
 public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunEntityFilter> implements RunService {
 
     @Autowired
-    RunDTOBuilder runDTOBuilder;
+    private RunRepository runRepository;
 
     @Autowired
-    RunRepository runRepository;
+    private RunDTOBuilder runDTOBuilder;
 
     @Autowired
-    TaskService taskService;
+    private RunEntityBuilder runEntityBuilder;
 
     @Autowired
-    FunctionService functionService;
+    private TaskService taskService;
 
     @Autowired
-    RuntimeFactory runtimeFactory;
+    private FunctionService functionService;
 
     @Autowired
-    RunEntityFilter runEntityFilter;
+    private RuntimeFactory runtimeFactory;
 
     @Autowired
-    RunEntityBuilder runEntityBuilder;
+    private SpecRegistry specRegistry;
 
     @Autowired
-    ApplicationEventPublisher eventPublisher;
-
-    @Autowired
-    SpecRegistry specRegistry;
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public Page<Run> getRuns(Map<String, String> filter, Pageable pageable) {
-        try {
-            runEntityFilter.setTask(filter.get("task"));
-            runEntityFilter.setTaskId(filter.get("task_id"));
-            runEntityFilter.setKind(filter.get("kind"));
-            runEntityFilter.setCreatedDate(filter.get("created"));
-            Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
-            runEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+        RunEntityFilter runEntityFilter = new RunEntityFilter();
+        runEntityFilter.setTask(filter.get("task"));
+        runEntityFilter.setTaskId(filter.get("task_id"));
+        runEntityFilter.setKind(filter.get("kind"));
+        runEntityFilter.setCreatedDate(filter.get("created"));
+        Optional<RunState> stateOptional = Stream
+            .of(RunState.values())
+            .filter(state -> state.name().equals(filter.get("state")))
+            .findAny();
+        runEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-            Specification<RunEntity> specification = createSpecification(filter, runEntityFilter);
+        Specification<RunEntity> specification = createSpecification(filter, runEntityFilter);
 
-            Page<RunEntity> runPage = this.runRepository.findAll(specification, pageable);
-
-            return new PageImpl<>(
-                runPage.getContent().stream().map(run -> runDTOBuilder.build(run)).collect(Collectors.toList()),
-                pageable,
-                runPage.getTotalElements()
-            );
-        } catch (CustomException e) {
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    @Override
-    public Run getRun(String uuid) {
-        return runRepository
-            .findById(uuid)
+        Page<RunEntity> runPage = runRepository.findAll(specification, pageable);
+        List<Run> content = runPage
+            .getContent()
+            .stream()
             .map(run -> runDTOBuilder.build(run))
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.RUN_NOT_FOUND.getValue(),
-                    ErrorList.RUN_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            );
+            .collect(Collectors.toList());
+
+        return new PageImpl<>(content, pageable, runPage.getTotalElements());
     }
 
     @Override
-    public boolean deleteRun(String uuid, Boolean cascade) {
-        try {
-            this.runRepository.deleteById(uuid);
-            return true;
-        } catch (Exception e) {
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "cannot delete artifact",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
+    public List<Run> getRunsByTask(@NotNull String task) {
+        log.debug("get runs for task {}", task);
+
+        return runRepository.findByTask(task).stream().map(e -> runDTOBuilder.build(e)).collect(Collectors.toList());
     }
 
     @Override
-    public boolean deleteRunByTaskId(String uuid) {
-        try {
-            this.runRepository.deleteByTaskId(uuid);
-            return true;
-        } catch (Exception e) {
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "cannot delete artifact",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    @Override
-    public Run save(Run runDTO) {
-        return Optional
-            .of(this.runRepository.saveAndFlush(runEntityBuilder.build(runDTO)))
-            .map(run -> runDTOBuilder.build(run))
-            .orElseThrow(() -> new CoreException("RunSaveError", "Problem while saving the run.", HttpStatus.NOT_FOUND)
-            );
-    }
-
-    @Override
-    public Run updateRun(Run runDTO, String uuid) {
-        if (!runDTO.getId().equals(uuid)) {
-            throw new CoreException(
-                ErrorList.RUN_NOT_MATCH.getValue(),
-                ErrorList.RUN_NOT_MATCH.getReason(),
-                HttpStatus.NOT_FOUND
-            );
+    public Run findRun(@NotNull String id) {
+        log.debug("find run with id {}", id);
+        Run run = runRepository.findById(id).map(e -> runDTOBuilder.build(e)).orElse(null);
+        if (log.isTraceEnabled()) {
+            log.trace("run: {}", run);
         }
 
-        final RunEntity run = runRepository.findById(uuid).orElse(null);
+        return run;
+    }
+
+    @Override
+    public Run getRun(@NotNull String id) throws NoSuchEntityException {
+        log.debug("get run with id {}", id);
+
+        return Optional.ofNullable(findRun(id)).orElseThrow(() -> new NoSuchEntityException(EntityName.RUN.name()));
+    }
+
+    @Override
+    public void deleteRun(@NotNull String id, Boolean cascade) {
+        log.debug("delete run with id {}", id);
+
+        Optional.ofNullable(findRun(id)).ifPresent(r -> runRepository.deleteById(r.getId()));
+    }
+
+    @Override
+    public void deleteRunsByTask(@NotNull String task) {
+        log.debug("delete runs for task {}", task);
+
+        runRepository.deleteByTask(task);
+    }
+
+    @Override
+    public Run updateRun(String id, @Valid Run dto) throws NoSuchEntityException {
+        log.debug("update run with id {}", id);
+
+        //lookup via id
+        RunEntity run = runRepository.findById(id).orElse(null);
         if (run == null) {
-            throw new CoreException(
-                ErrorList.RUN_NOT_FOUND.getValue(),
-                ErrorList.RUN_NOT_FOUND.getReason(),
-                HttpStatus.NOT_FOUND
-            );
+            log.debug("no run with id {}", id);
+            throw new NoSuchEntityException("run");
         }
 
-        try {
-            final RunEntity runUpdated = runEntityBuilder.update(run, runDTO);
-            this.runRepository.saveAndFlush(runUpdated);
-            return runDTOBuilder.build(runUpdated);
-        } catch (CustomException e) {
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+        if (log.isTraceEnabled()) {
+            log.trace("run: {}", run);
         }
+
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", dto);
+        }
+
+        //TODO validate DTO
+
+        //convert DTO
+        RunEntity entity = runEntityBuilder.build(dto);
+
+        //update only allowed fields
+        run.setMetadata(entity.getMetadata());
+        run.setExtra(entity.getExtra());
+        run.setStatus(entity.getStatus());
+
+        //TODO handle state changes via state machine, refuse invalid changes
+        //if state is CREATED we can update spec to allow prebuilt
+        run.setState(entity.getState());
+
+        //persist
+        run = runRepository.saveAndFlush(run);
+
+        if (log.isTraceEnabled()) {
+            log.trace("run: {}", run);
+        }
+
+        return runDTOBuilder.build(run);
     }
 
     @Override
-    public <F extends FunctionBaseSpec> Run createRun(Run runDTO) {
-        // Retrieve Run base spec
-        RunBaseSpec runBaseSpec = specRegistry.createSpec(runDTO.getKind(), EntityName.RUN, runDTO.getSpec());
-
-        // Check if run already exist with the passed uuid
-        if (runRepository.existsById(Optional.ofNullable(runDTO.getId()).orElse(""))) {
-            throw new CoreException(
-                ErrorList.DUPLICATE_RUN.getValue(),
-                ErrorList.DUPLICATE_RUN.getReason(),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+    public Run createRun(@NotNull Run dto) throws NoSuchEntityException, DuplicatedEntityException {
+        log.debug("create run with id {}", String.valueOf(dto.getId()));
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", dto);
         }
 
-        // Retrieve task
-        return Optional
-            .ofNullable(this.taskService.getTask(runBaseSpec.getTaskId()))
-            .map(taskDTO -> {
-                TaskBaseSpec taskBaseSpec = specRegistry.createSpec(
-                    taskDTO.getKind(),
-                    EntityName.TASK,
-                    taskDTO.getSpec()
-                );
+        //validate project
+        String project = dto.getProject();
+        if (!StringUtils.hasText(project)) {
+            throw new IllegalArgumentException("invalid or missing project");
+        }
 
-                // Parse task to get accessor
-                TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskBaseSpec.getFunction());
+        //TODO check if project exists
 
-                return Optional
-                    .ofNullable(functionService.getFunction(taskAccessor.getVersion()))
-                    .map(functionDTO -> {
-                        // Update spec object for run
-                        runDTO.setProject(taskAccessor.getProject());
+        // Retrieve Run base spec
+        RunBaseSpec runSpec = specRegistry.createSpec(dto.getKind(), EntityName.RUN, dto.getSpec());
 
-                        // Check weather the run has local set to True in that case return
-                        // immediately the run without invoke the execution.
-                        Supplier<Run> result = () ->
-                            Optional
-                                .of(runBaseSpec.getLocalExecution()) // if true save and return
-                                .filter(value -> value.equals(true))
-                                .map(value -> {
-                                    // Save the run and return immediately
-                                    RunEntity run = runRepository.saveAndFlush(runEntityBuilder.build(runDTO));
-                                    return runDTOBuilder.build(run);
-                                })
-                                // exec run and return run dto
-                                .orElseGet(() -> {
-                                    // Retrieve Runtime and build run
-                                    Runtime<
-                                        ? extends FunctionBaseSpec,
-                                        ? extends RunBaseSpec,
-                                        ? extends Runnable
-                                    > runtime = runtimeFactory.getRuntime(taskAccessor.getRuntime());
+        if (dto.getId() != null && (runRepository.existsById(dto.getId()))) {
+            throw new DuplicatedEntityException(EntityName.RUN.name(), dto.getId());
+        }
 
-                                    // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
-                                    // an exception occur! for.
-                                    RunBaseSpec runSpecBuilt = runtime.build(functionDTO, taskDTO, runDTO);
+        //TODO validate DTO
 
-                                    // Update run spec
-                                    runDTO.setSpec(runSpecBuilt.toMap());
+        // Create string run accessor from task
+        RunSpecAccessor runAccessor = RunUtils.parseRun(runSpec.getTask());
 
-                                    // Update run state to BUILT
-                                    runDTO.getStatus().put("state", State.BUILT.toString());
+        // retrieve function
+        Function function = functionService.getFunction(runAccessor.getVersion());
+        if (!function.getKind().equals(runAccessor.getFunction())) {
+            throw new IllegalArgumentException("function runtime mismatch");
+        }
 
-                                    // Save Run
-                                    RunEntity run = runRepository.saveAndFlush(runEntityBuilder.build(runDTO));
+        // retrieve task by looking up value
+        Task task = taskService
+            .getTasksByFunction(function.getId())
+            .stream()
+            .filter(t -> t.getKind().equals(runAccessor.getTask()))
+            .findFirst()
+            .orElse(null);
 
-                                    // Create Runnable
-                                    Runnable runnable = runtime.run(runDTOBuilder.build(run));
+        if (task == null) {
+            throw new NoSuchEntityException(EntityName.TASK.name());
+        }
 
-                                    // Dispatch Runnable
-                                    eventPublisher.publishEvent(runnable);
+        //check project
+        if (!project.equals(function.getProject()) || !project.equals(task.getProject())) {
+            throw new IllegalArgumentException("project mismatch");
+        }
 
-                                    // Return saved run
-                                    return runDTOBuilder.build(run);
-                                });
+        //TODO move build+exec to dedicated methods and handle state changes!
+        if (Optional.ofNullable(runSpec.getLocalExecution()).orElse(Boolean.FALSE).booleanValue() == false) {
+            //derive runtime from task spec
+            TaskBaseSpec taskSpec = specRegistry.createSpec(task.getKind(), EntityName.TASK, task.getSpec());
+            TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
 
-                        return result.get();
-                    })
-                    .orElseThrow(() ->
-                        new CoreException(
-                            ErrorList.FUNCTION_NOT_FOUND.getValue(),
-                            ErrorList.FUNCTION_NOT_FOUND.getReason(),
-                            HttpStatus.NOT_FOUND
-                        )
-                    );
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.RUN_NOT_FOUND.getValue(),
-                    ErrorList.RUN_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            );
+            // Retrieve Runtime and build run
+            Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime =
+                runtimeFactory.getRuntime(taskAccessor.getRuntime());
+
+            // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
+            // an exception occur! for.
+            RunBaseSpec runSpecBuilt = runtime.build(function, task, dto);
+
+            // Update run spec
+            dto.setSpec(runSpecBuilt.toMap());
+
+            // Update run state to BUILT
+            dto.getStatus().put("state", RunState.BUILT.toString());
+        }
+
+        //build entity
+        RunEntity entity = runEntityBuilder.build(dto);
+        entity.setTaskId(task.getId());
+
+        if (log.isTraceEnabled()) {
+            log.trace("run: {}", entity);
+        }
+
+        //persist
+        entity = runRepository.saveAndFlush(entity);
+
+        Run run = runDTOBuilder.build(entity);
+
+        //TODO move build+exec to dedicated methods and handle state changes!
+        if (Optional.ofNullable(runSpec.getLocalExecution()).orElse(Boolean.FALSE).booleanValue() == false) {
+            //derive runtime from task spec
+            TaskBaseSpec taskSpec = specRegistry.createSpec(task.getKind(), EntityName.TASK, task.getSpec());
+            TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
+
+            // Retrieve Runtime and build run
+            Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime =
+                runtimeFactory.getRuntime(taskAccessor.getRuntime());
+
+            // Create Runnable
+            Runnable runnable = runtime.run(run);
+
+            // Dispatch Runnable
+            eventPublisher.publishEvent(runnable);
+        }
+
+        return run;
+        // TaskBaseSpec taskBaseSpec = specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, taskDTO.getSpec());
+
+        // // Parse task to get accessor
+        // TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskBaseSpec.getFunction());
+
+        // return Optional
+        //     .ofNullable(functionService.getFunction(taskAccessor.getVersion()))
+        //     .map(functionDTO -> {
+        //         // Update spec object for run
+        //         runDTO.setProject(taskAccessor.getProject());
+
+        //         // Check weather the run has local set to True in that case return
+        //         // immediately the run without invoke the execution.
+        //         Supplier<Run> result = () ->
+        //             Optional
+        //                 .of(runBaseSpec.getLocalExecution()) // if true save and return
+        //                 .filter(value -> value.equals(true))
+        //                 .map(value -> {
+        //                     // Save the run and return immediately
+        //                     RunEntity run = runRepository.saveAndFlush(runEntityBuilder.build(runDTO));
+        //                     return runDTOBuilder.build(run);
+        //                 })
+        //                 // exec run and return run dto
+        //                 .orElseGet(() -> {
+        //                     // Retrieve Runtime and build run
+        //                     Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime =
+        //                         runtimeFactory.getRuntime(taskAccessor.getRuntime());
+
+        //                     // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
+        //                     // an exception occur! for.
+        //                     RunBaseSpec runSpecBuilt = runtime.build(functionDTO, taskDTO, runDTO);
+
+        //                     // Update run spec
+        //                     runDTO.setSpec(runSpecBuilt.toMap());
+
+        //                     // Update run state to BUILT
+        //                     runDTO.getStatus().put("state", RunState.BUILT.toString());
+
+        //                     // Save Run
+        //                     RunEntity run = runRepository.saveAndFlush(runEntityBuilder.build(runDTO));
+
+        //                     // Create Runnable
+        //                     Runnable runnable = runtime.run(runDTOBuilder.build(run));
+
+        //                     // Dispatch Runnable
+        //                     eventPublisher.publishEvent(runnable);
+
+        //                     // Return saved run
+        //                     return runDTOBuilder.build(run);
+        //                 });
+
+        //         return result.get();
+        //     })
+        //     .orElseThrow(() ->
+        //         new CoreException(
+        //             ErrorList.FUNCTION_NOT_FOUND.getValue(),
+        //             ErrorList.FUNCTION_NOT_FOUND.getReason(),
+        //             HttpStatus.NOT_FOUND
+        //         )
+        //     );
+    }
+
+    @Override
+    public Run buildRun(@NotNull @Valid Run dto) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'buildRun'");
+    }
+
+    @Override
+    public Run execRun(@NotNull @Valid Run dto) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'execRun'");
     }
 }

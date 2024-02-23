@@ -23,9 +23,8 @@ public class Project implements BaseDTO {
     @ValidateField
     private String name;
 
-    @NotNull
     @ValidateField
-    private String kind;
+    private String kind = "project";
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

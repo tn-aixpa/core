@@ -18,16 +18,6 @@ public class RunBaseSpec extends BaseSpec {
     @NotEmpty
     private String task;
 
-    @NotEmpty
-    @JsonProperty("task_id")
-    private String taskId;
-
-    private Map<String, Object> inputs = new HashMap<>();
-
-    private Map<String, Object> outputs = new HashMap<>();
-
-    private Map<String, Object> parameters = new HashMap<>();
-
     @JsonProperty("local_execution")
     private Boolean localExecution = false;
 
@@ -36,10 +26,6 @@ public class RunBaseSpec extends BaseSpec {
         RunBaseSpec runBaseSpec = mapper.convertValue(data, RunBaseSpec.class);
 
         this.setTask(runBaseSpec.getTask());
-        this.setTaskId(runBaseSpec.getTaskId());
-        this.setInputs(runBaseSpec.getInputs());
-        this.setOutputs(runBaseSpec.getOutputs());
-        this.setParameters(runBaseSpec.getParameters());
         this.setLocalExecution(runBaseSpec.getLocalExecution());
     }
 }
