@@ -31,6 +31,10 @@ public class K8sRunnable extends BaseRunnable {
 
     private String image;
 
+    private String command;
+
+    private String[] args;
+
     private List<CoreEnv> envs;
 
     private List<CoreVolume> volumes;

@@ -4,10 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
@@ -17,10 +15,6 @@ import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.fsm.StateMachine;
 import it.smartcommunitylabdhub.fsm.enums.RunEvent;
@@ -30,44 +24,40 @@ import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
 import it.smartcommunitylabdhub.fsm.workflow.WorkflowFactory;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 
 @Slf4j
-@ConditionalOnKubernetes
 @FrameworkComponent(framework = "k8sjob")
-public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingBean {
+public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
+
+    public static final int DEADLINE_SECONDS = 3600 * 24 * 3; //3 days
 
     private final BatchV1Api batchV1Api;
-    private final CoreV1Api coreV1Api;
 
+    private int activeDeadlineSeconds = DEADLINE_SECONDS;
+
+    //TODO drop
     @Autowired
     PollingService pollingService;
 
+    //TODO drop from framework, this should be delegated to run listener/service
+    //the framework has NO concept of runs, only RUNNABLEs
     @Autowired
     RunStateMachine runStateMachine;
 
+    //TODO drop, logs must be handled by a listener
     @Autowired
     LogService logService;
 
+    //TODO drop from framework, this should be delegated to run listener
+    //the framework has NO concept of runs, only RUNNABLEs
     @Autowired
     RunService runService;
 
-    @Autowired
-    K8sBuilderHelper k8sBuilderHelper;
-
-    @Value("${kubernetes.namespace}")
-    private String namespace;
-
     public K8sJobFramework(ApiClient apiClient) {
-        Assert.notNull(apiClient, "k8s api client is required");
-
-        coreV1Api = new CoreV1Api(apiClient);
+        super(apiClient);
         batchV1Api = new BatchV1Api(apiClient);
     }
 
@@ -76,137 +66,98 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         Assert.notNull(k8sBuilderHelper, "k8s helper is required");
     }
 
+    public void setActiveDeadlineSeconds(int activeDeadlineSeconds) {
+        Assert.isTrue(activeDeadlineSeconds > 300, "Minimum deadline seconds is 300");
+        this.activeDeadlineSeconds = activeDeadlineSeconds;
+    }
+
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
     public void execute(K8sJobRunnable runnable) throws K8sFrameworkException {
-        // FIXME: DELETE THIS IS ONLY FOR DEBUG
-        String threadName = Thread.currentThread().getName();
-        //String placeholder = "-" + RandomStringGenerator.generateRandomString(3);
+        V1Job job = apply(runnable);
 
-        // Log service execution initiation
-        log.info("----------------- PREPARE KUBERNETES JOB ----------------");
+        //TODO refactor
+        monitor(runnable, job);
+    }
 
-        // Generate jobName and ContainerName
-        String jobName = getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
-
-        String containerName = getContainerName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
-
-        // Create labels for job
-        Map<String, String> labels = Map.of(
-            "app.kubernetes.io/instance",
-            "dhcore-" + jobName,
-            "app.kubernetes.io/version",
-            "0.0.3",
-            "app.kubernetes.io/component",
-            "job",
-            "app.kubernetes.io/part-of",
-            "dhcore-k8sjob",
-            "app.kubernetes.io/managed-by",
-            "dhcore"
-        );
-        if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
-            labels = new HashMap<>(labels);
-            for (CoreLabel l : runnable.getLabels()) labels.putIfAbsent(l.name(), l.value());
-        }
-
-        // Prepare environment variables for the Kubernetes job
-        List<V1EnvFromSource> envVarsFromSource = k8sBuilderHelper.getV1EnvFromSource();
-
-        List<V1EnvVar> envVars = k8sBuilderHelper.getV1EnvVar();
-        List<V1EnvVar> runEnvFromSource = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
-        // Merge function specific envs
-        runnable.getEnvs().forEach(env -> envVars.add(new V1EnvVar().name(env.name()).value(env.value())));
-
-        // Volumes to attach to the pod based on the volume spec with the additional volume_type
-        List<V1Volume> volumes = new LinkedList<>();
-        List<V1VolumeMount> volumeMounts = new LinkedList<>();
-        if (runnable.getVolumes() != null) {
-            runnable
-                .getVolumes()
-                .forEach(volumeMap -> {
-                    V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
-                    if (volume != null) {
-                        volumes.add(volume);
-                    }
-                    V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
-                    if (mount != null) {
-                        volumeMounts.add(mount);
-                    }
-                });
-        }
-
-        // resources
-        V1ResourceRequirements resources = new V1ResourceRequirements();
-        if (runnable.getResources() != null) {
-            resources.setRequests(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.requests() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
-                )
-            );
-            resources.setLimits(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.limits() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
-                )
-            );
-        }
-        // Create the Job metadata
-        V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
-
-        // Build Container
-        V1Container container = new V1Container()
-            .name(containerName)
-            .image(runnable.getImage())
-            .imagePullPolicy("Always")
-            .command(getCommand(runnable))
-            .imagePullPolicy("IfNotPresent")
-            .resources(resources)
-            .volumeMounts(volumeMounts)
-            .envFrom(envVarsFromSource)
-            .env(Stream.concat(envVars.stream(), runEnvFromSource.stream()).toList());
-
-        // Create a PodSpec for the container
-        V1PodSpec podSpec = new V1PodSpec()
-            .containers(Collections.singletonList(container))
-            .nodeSelector(
-                Optional
-                    .ofNullable(runnable.getNodeSelector())
-                    .orElse(Collections.emptyList())
-                    .stream()
-                    .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
-            )
-            .affinity(runnable.getAffinity())
-            .tolerations(
-                runnable.getTolerations() != null && !runnable.getTolerations().isEmpty()
-                    ? runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList())
-                    : null
-            )
-            .volumes(volumes)
-            .restartPolicy("Never");
-
-        // Create a PodTemplateSpec with the PodSpec
-        V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
-
-        // Create the JobSpec with the PodTemplateSpec
-        V1JobSpec jobSpec = new V1JobSpec()
-            // .completions(1)
-            // .backoffLimit(6)    // is the default value
-            .template(podTemplateSpec);
-
-        // Create the V1Job object with metadata and JobSpec
-        V1Job job = new V1Job().metadata(metadata).spec(jobSpec);
-
+    public V1Job apply(K8sJobRunnable runnable) throws K8sFrameworkException {
         try {
+            // Log service execution initiation
+            log.info("----------------- PREPARE KUBERNETES JOB ----------------");
+
+            // Generate jobName and ContainerName
+            String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
+            String containerName = k8sBuilderHelper.getContainerName(
+                runnable.getRuntime(),
+                runnable.getTask(),
+                runnable.getId()
+            );
+
+            //build labels
+            Map<String, String> labels = buildLabels(runnable);
+
+            // Create the Job metadata
+            V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
+
+            // Prepare environment variables for the Kubernetes job
+            List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
+            List<V1EnvVar> env = buildEnv(runnable);
+
+            // Volumes to attach to the pod based on the volume spec with the additional volume_type
+            List<V1Volume> volumes = buildVolumes(runnable);
+            List<V1VolumeMount> volumeMounts = buildVolumeMounts(runnable);
+
+            // resources
+            V1ResourceRequirements resources = buildResources(runnable);
+
+            //command params
+            List<String> command = buildCommand(runnable);
+            List<String> args = buildArgs(runnable);
+
+            // Build Container
+            V1Container container = new V1Container()
+                .name(containerName)
+                .image(runnable.getImage())
+                .imagePullPolicy("Always")
+                .imagePullPolicy("IfNotPresent")
+                .command(command)
+                .args(args)
+                .resources(resources)
+                .volumeMounts(volumeMounts)
+                .envFrom(envFrom)
+                .env(env);
+
+            // Create a PodSpec for the container
+            V1PodSpec podSpec = new V1PodSpec()
+                .containers(Collections.singletonList(container))
+                .nodeSelector(buildNodeSelector(runnable))
+                .affinity(runnable.getAffinity())
+                .tolerations(buildTolerations(runnable))
+                .volumes(volumes)
+                .restartPolicy("Never");
+
+            // Create a PodTemplateSpec with the PodSpec
+            V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
+
+            int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(3).intValue();
+
+            // Create the JobSpec with the PodTemplateSpec
+            V1JobSpec jobSpec = new V1JobSpec()
+                .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
+                //TODO support work-queue style/parallel jobs
+                .parallelism(1)
+                .completions(1)
+                .backoffLimit(backoffLimit)
+                .template(podTemplateSpec);
+
+            // Create the V1Job object with metadata and JobSpec
+            V1Job job = new V1Job().metadata(metadata).spec(jobSpec);
+
+            //dispatch job via api
             V1Job createdJob = batchV1Api.createNamespacedJob(namespace, job, null, null, null, null);
-            log.info("Job created: " + Objects.requireNonNull(createdJob.getMetadata()).getName());
+            log.info("Job created: {}", Objects.requireNonNull(createdJob.getMetadata()).getName());
+            return createdJob;
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {
@@ -215,15 +166,28 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
 
             throw new K8sFrameworkException(e.getMessage());
         }
+    }
 
+    private void monitor(K8sJobRunnable runnable, V1Job job) {
+        // FIXME: DELETE THIS IS ONLY FOR DEBUG
+        String threadName = Thread.currentThread().getName();
+
+        // Generate jobName and ContainerName
+        String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
+        String containerName = k8sBuilderHelper.getContainerName(
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
+        );
         // Initialize the run state machine considering current state and context
+        //TODO implement a dedicated poller
         StateMachine<RunState, RunEvent, Map<String, Object>> fsm = runStateMachine.create(
             RunState.valueOf(runnable.getState()),
             Map.of("runId", runnable.getId())
         );
 
         // Log the initiation of Dbt Kubernetes Listener
-        log.info("Dbt Kubernetes Listener [" + threadName + "] " + jobName + "@" + namespace);
+        log.info("Kubernetes Listener [" + threadName + "] " + jobName + "@" + namespace);
 
         // Define a function with parameters
         Function<
@@ -298,42 +262,12 @@ public class K8sJobFramework implements Framework<K8sJobRunnable>, InitializingB
         pollingService.startOne(runnable.getId());
     }
 
-    @Override
-    public void stop(K8sJobRunnable runnable) {}
-
-    @Override
-    public String status(K8sJobRunnable runnable) {
-        return null;
-    }
-
     private void writeLog(K8sJobRunnable runnable, String log) {
         LogMetadata logMetadata = new LogMetadata();
         logMetadata.setProject(runnable.getProject());
         logMetadata.setRun(runnable.getId());
         Log logDTO = Log.builder().body(Map.of("content", log)).metadata(logMetadata.toMap()).build();
         logService.createLog(logDTO);
-    }
-
-    // Concat command with arguments
-    private List<String> getCommand(K8sJobRunnable runnable) {
-        Optional<String> command = Optional.ofNullable(runnable.getCommand());
-        Optional<String[]> args = Optional.ofNullable(runnable.getArgs());
-
-        return command
-            .map(cmd ->
-                Stream.concat(Stream.of(cmd), Arrays.stream(args.orElse(new String[0]))).collect(Collectors.toList())
-            )
-            .orElse(List.of());
-    }
-
-    // Generate and return job name
-    private String getJobName(String runtime, String task, String id) {
-        return "j" + "-" + runtime + "-" + task + "-" + id;
-    }
-
-    // Generate and return container name
-    private String getContainerName(String runtime, String task, String id) {
-        return "c" + "-" + runtime + "-" + task + "-" + id;
     }
 
     /**

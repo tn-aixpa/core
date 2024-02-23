@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.framework.k8s.kubernetes;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
 import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
+import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
@@ -35,13 +36,13 @@ import org.springframework.stereotype.Component;
 public class K8sBuilderHelper {
 
     @Value("${application.endpoint}")
-    private String DH_ENDPOINT;
+    private String coreEndpoint;
 
     @Value("${kubernetes.config.secret}")
-    private List<String> SECRET;
+    private List<String> sharedSecrets;
 
     @Value("${kubernetes.config.config-map}")
-    private List<String> CONFIG_MAP;
+    private List<String> sharedConfigMaps;
 
     /**
      * A helper method to get an environment variable with a default value if not present.
@@ -82,10 +83,10 @@ public class K8sBuilderHelper {
         // Get Env var from secret and config map
         return Stream
             .concat(
-                CONFIG_MAP
+                sharedConfigMaps
                     .stream()
                     .map(value -> new V1EnvFromSource().configMapRef(new V1ConfigMapEnvSource().name(value))),
-                SECRET
+                sharedSecrets
                     .stream()
                     //.filter(secret -> !secret.equals("")) // skip postgres
                     .map(secret -> new V1EnvFromSource().secretRef(new V1SecretEnvSource().name(secret)))
@@ -120,25 +121,30 @@ public class K8sBuilderHelper {
     public V1Volume getVolume(CoreVolume coreVolume) {
         V1Volume volume = new V1Volume().name(coreVolume.name());
         String type = coreVolume.volumeType();
+        Map<String, String> spec = coreVolume.spec();
         switch (type) {
             // TODO: support items
             case "config_map":
                 return volume.configMap(
-                    new V1ConfigMapVolumeSource()
-                        .name((String) coreVolume.spec().getOrDefault("name", coreVolume.name()))
+                    new V1ConfigMapVolumeSource().name(spec.getOrDefault("name", coreVolume.name()))
                 );
             case "secret":
                 return volume.secret(
                     new V1SecretVolumeSource()
-                        .secretName((String) coreVolume.spec().getOrDefault("secret_name", coreVolume.name()))
+                        .secretName(spec.getOrDefault("secret_name", coreVolume.name()))
                         .items(null)
                 );
             case "persistent_volume_claim":
                 return volume.persistentVolumeClaim(
                     new V1PersistentVolumeClaimVolumeSource()
-                        .claimName((String) coreVolume.spec().getOrDefault("claim_name", coreVolume.name()))
+                        .claimName(spec.getOrDefault("claim_name", coreVolume.name()))
                 );
-            //TODO add empty_dir (mounted to /dev/shm )
+            case "empty_dir":
+                return volume.emptyDir(
+                    new V1EmptyDirVolumeSource()
+                        .medium(spec.getOrDefault("medium", null))
+                        .sizeLimit(Quantity.fromString(spec.getOrDefault("sizeLimit", "128Mi")))
+                );
             default:
                 return null;
         }
@@ -153,7 +159,30 @@ public class K8sBuilderHelper {
     }
 
     public V1VolumeMount getVolumeMount(CoreVolume coreVolume) {
-        V1VolumeMount mount = new V1VolumeMount().name(coreVolume.name()).mountPath(coreVolume.mountPath());
-        return mount;
+        return new V1VolumeMount().name(coreVolume.name()).mountPath(coreVolume.mountPath());
+    }
+
+    /*
+     * Helpers
+     */
+    //TODO align names!
+    // Generate and return container name
+    public String getContainerName(String runtime, String task, String id) {
+        return "c" + "-" + runtime + "-" + task + "-" + id;
+    }
+
+    // Generate and return job name
+    public String getJobName(String runtime, String task, String id) {
+        return "j" + "-" + runtime + "-" + task + "-" + id;
+    }
+
+    // Generate and return deployment name
+    public String getDeploymentName(String runtime, String task, String id) {
+        return "d" + "-" + runtime + "-" + task + "-" + id;
+    }
+
+    // Generate and return service name
+    public String getServiceName(String runtime, String task, String id) {
+        return "s" + "-" + runtime + "-" + task + "-" + id;
     }
 }

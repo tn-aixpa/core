@@ -26,7 +26,6 @@ public class FunctionContainerSpec extends FunctionBaseSpec {
     private String baseImage;
 
     private String command;
-    private String entrypoint;
     private List<String> args;
 
     public FunctionContainerSpec(Map<String, Serializable> data) {
@@ -43,6 +42,5 @@ public class FunctionContainerSpec extends FunctionBaseSpec {
         this.setImage(functionContainerSpec.getImage());
         this.setBaseImage(functionContainerSpec.getBaseImage());
         this.setArgs(functionContainerSpec.getArgs());
-        this.setEntrypoint(functionContainerSpec.getEntrypoint());
     }
 }

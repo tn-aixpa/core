@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class FrameworkFactory {
 
     private final Map<String, Framework<?>> builderMap;
@@ -56,6 +57,7 @@ public class FrameworkFactory {
      * @return The Framework for the specified framework.
      * @throws IllegalArgumentException If no Framework is found for the given framework.
      */
+    @Deprecated
     public <R extends Runnable> Framework<R> getFramework(String framework) {
         @SuppressWarnings("unchecked")
         Framework<R> builder = (Framework<R>) builderMap.get(framework);

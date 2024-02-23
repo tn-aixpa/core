@@ -69,8 +69,6 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
                 )
             );
 
-        Optional.ofNullable(functionSpec.getEntrypoint()).ifPresent(k8sServeRunnable::setEntrypoint);
-
         k8sServeRunnable.setId(run.getId());
         k8sServeRunnable.setProject(run.getProject());
 

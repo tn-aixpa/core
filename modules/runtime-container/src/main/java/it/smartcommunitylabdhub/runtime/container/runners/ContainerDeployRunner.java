@@ -72,8 +72,6 @@ public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
                 )
             );
 
-        Optional.ofNullable(functionSpec.getEntrypoint()).ifPresent(k8sDeploymentRunnable::setEntrypoint);
-
         k8sDeploymentRunnable.setId(run.getId());
         k8sDeploymentRunnable.setProject(run.getProject());
 

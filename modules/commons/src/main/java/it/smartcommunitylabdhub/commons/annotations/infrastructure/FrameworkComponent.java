@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Component
 public @interface FrameworkComponent {
     /**
      * Specifies the framework type for which the component is designed.

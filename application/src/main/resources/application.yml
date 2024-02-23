@@ -70,6 +70,8 @@ kubernetes:
 # Application endpoint
 application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
+  description: @project.description@
+  version: @project.version@  
 
 
 security:

@@ -8,6 +8,6 @@ public record CoreVolume(
     @JsonProperty("volume_type") String volumeType,
     @JsonProperty("mount_path") String mountPath,
     String name,
-    Map<String, Object> spec
+    Map<String, String> spec
 )
     implements Serializable {}

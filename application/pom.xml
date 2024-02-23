@@ -201,11 +201,11 @@
             <artifactId>dh-commons</artifactId>
             <version>${revision}</version>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-fsm</artifactId>
             <version>${revision}</version>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-framework-k8s</artifactId>
@@ -242,6 +242,24 @@
                     </excludes>
                     <mainClass>it.smartcommunitylabdhub.core.CoreApplication</mainClass>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build-info</id>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                        <configuration>
+                            <additionalProperties>
+                                <java.version>${java.version}</java.version>
+                                <description>${project.description}</description>
+                            </additionalProperties>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

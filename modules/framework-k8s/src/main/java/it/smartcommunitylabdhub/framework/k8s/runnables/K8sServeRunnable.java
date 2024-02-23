@@ -15,11 +15,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class K8sServeRunnable extends K8sRunnable {
-
-    private String entrypoint;
-
-    private String[] args;
+public class K8sServeRunnable extends K8sDeploymentRunnable {
 
     private List<CorePort> servicePorts;
 
