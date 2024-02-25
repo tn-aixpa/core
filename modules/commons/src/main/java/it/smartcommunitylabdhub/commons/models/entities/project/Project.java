@@ -51,4 +51,9 @@ public class Project implements BaseDTO {
             extra.put(key, value);
         }
     }
+
+    @Override
+    public String getProject() {
+        return name;
+    }
 }

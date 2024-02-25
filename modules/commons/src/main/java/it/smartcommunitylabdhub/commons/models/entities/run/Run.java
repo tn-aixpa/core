@@ -53,4 +53,9 @@ public class Run implements BaseDTO {
             extra.put(key, value);
         }
     }
+
+    @Override
+    public @NotNull String getName() {
+        return id;
+    }
 }
