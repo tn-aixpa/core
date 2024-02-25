@@ -4,7 +4,16 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.RunSavedListener;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.UUID;
 import lombok.*;
@@ -68,5 +77,10 @@ public class RunEntity implements BaseEntity {
         if (id == null) {
             this.id = UUID.randomUUID().toString();
         }
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return id;
     }
 }

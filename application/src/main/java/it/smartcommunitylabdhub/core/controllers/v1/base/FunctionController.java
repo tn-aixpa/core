@@ -76,6 +76,7 @@ public class FunctionController {
         return ResponseEntity.ok(this.functionService.deleteFunction(uuid, cascade));
     }
 
+    @Deprecated
     @Operation(summary = "Get function runs", description = "Given a function return the run list")
     @GetMapping(path = "/{uuid}/runs", produces = "application/json; charset=UTF-8")
     public ResponseEntity<List<Run>> functionRuns(@ValidateField @PathVariable String uuid) {

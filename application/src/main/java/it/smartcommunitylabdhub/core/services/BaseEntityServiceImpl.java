@@ -43,7 +43,7 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
     }
 
     @Override
-    public D create(@NotNull D dto) throws NoSuchEntityException, DuplicatedEntityException {
+    public D create(@NotNull D dto) throws DuplicatedEntityException {
         log.debug("create with id {}", String.valueOf(dto.getId()));
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
@@ -155,9 +155,16 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
     }
 
     @Override
+    public List<D> listAll() {
+        log.debug("list all");
+
+        return repository.findAll().stream().map(e -> dtoBuilder.convert(e)).collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<D> search(Specification<E> specification, Pageable pageable) {
-        log.debug("list with spec {} page {}", specification, pageable);
+        log.debug("search with spec {} page {}", specification, pageable);
 
         if (repository instanceof JpaSpecificationExecutor) {
             @SuppressWarnings("unchecked")
@@ -165,6 +172,33 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
             List<D> content = page.stream().map(e -> dtoBuilder.convert(e)).collect(Collectors.toList());
 
             return new PageImpl<>(content, pageable, page.getTotalElements());
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<D> searchAll(Specification<E> specification) {
+        log.debug("search all with spec {} ", specification);
+
+        if (repository instanceof JpaSpecificationExecutor) {
+            return ((JpaSpecificationExecutor<E>) repository).findAll(specification)
+                .stream()
+                .map(e -> dtoBuilder.convert(e))
+                .collect(Collectors.toList());
+        }
+
+        throw new UnsupportedOperationException();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public long deleteAll(Specification<E> specification) {
+        log.debug("delete all with spec {} ", specification);
+
+        if (repository instanceof JpaSpecificationExecutor) {
+            return ((JpaSpecificationExecutor<E>) repository).delete(specification);
         }
 
         throw new UnsupportedOperationException();

@@ -14,7 +14,7 @@ import lombok.*;
 @Setter
 @Builder
 @JsonPropertyOrder(alphabetic = true)
-public class Log implements BaseDTO {
+public class Log implements Serializable {
 
     @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
     private String id;
