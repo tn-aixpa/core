@@ -4,59 +4,70 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.ArtifactService;
 import it.smartcommunitylabdhub.commons.services.EntityService;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity_;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
-import jakarta.persistence.criteria.Predicate;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 @Slf4j
-public class ArtifactServiceImpl implements ArtifactService {
+public class ArtifactServiceImpl implements ArtifactService<ArtifactEntity> {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
 
     @Override
-    public Page<Artifact> getArtifacts(Map<String, String> filter, Pageable pageable) {
-        log.debug("list artifacts with {} page {}", String.valueOf(filter), pageable);
+    public Page<Artifact> listArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter) {
+        log.debug("list artifacts page {}, filter {}", pageable, String.valueOf(filter));
 
-        ArtifactEntityFilter artifactEntityFilter = new ArtifactEntityFilter();
-        artifactEntityFilter.setName(filter.get("name"));
-        artifactEntityFilter.setKind(filter.get("kind"));
-        artifactEntityFilter.setCreatedDate(filter.get("created"));
-        Optional<State> stateOptional = Stream
-            .of(State.values())
-            .filter(state -> state.name().equals(filter.get("state")))
-            .findAny();
-        artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+        // ArtifactEntityFilter artifactEntityFilter = new ArtifactEntityFilter();
+        // artifactEntityFilter.setName(filter.get("name"));
+        // artifactEntityFilter.setKind(filter.get("kind"));
+        // artifactEntityFilter.setCreatedDate(filter.get("created"));
+        // Optional<State> stateOptional = Stream
+        //     .of(State.values())
+        //     .filter(state -> state.name().equals(filter.get("state")))
+        //     .findAny();
+        // artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
-        Specification<ArtifactEntity> specification = createSpecification(filter, artifactEntityFilter);
-        return entityService.search(specification, pageable);
+        // Specification<ArtifactEntity> specification = createSpecification(filter, artifactEntityFilter);
+
+        Specification<ArtifactEntity> specification = filter != null ? filter.toSpecification() : null;
+        if (specification != null) {
+            return entityService.search(specification, pageable);
+        } else {
+            return entityService.list(pageable);
+        }
     }
 
     @Override
-    public Page<Artifact> getLatestArtifactsByProject(
+    public Page<Artifact> listLatestArtifactsByProject(
         @NotNull String project,
-        Map<String, String> filter,
-        Pageable pageable
+        Pageable pageable,
+        @Nullable SearchFilter<ArtifactEntity> filter
     ) {
         log.debug("list artifacts for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<ArtifactEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<ArtifactEntity> specification = Specification.allOf(
+            createProjectSpecification(project),
+            CommonSpecification.latestByProject(project),
+            filterSpecification
+        );
+
+        return entityService.search(specification, pageable);
     }
 
     @Override
@@ -147,19 +158,24 @@ public class ArtifactServiceImpl implements ArtifactService {
         log.debug("deleted count {}", count);
     }
 
-    protected Specification<ArtifactEntity> createSpecification(
-        Map<String, String> filter,
-        ArtifactEntityFilter entityFilter
-    ) {
+    // protected Specification<ArtifactEntity> createSpecification(
+    //     Map<String, String> filter,
+    //     ArtifactEntityFilter entityFilter
+    // ) {
+    //     return (root, query, criteriaBuilder) -> {
+    //         Predicate predicate = criteriaBuilder.conjunction();
+
+    //         // Add your custom filter based on the provided map
+    //         predicate = entityFilter.toPredicate(root, query, criteriaBuilder);
+
+    //         // Add more conditions for other filter if needed
+
+    //         return predicate;
+    //     };
+    // }
+    protected Specification<ArtifactEntity> createProjectSpecification(String project) {
         return (root, query, criteriaBuilder) -> {
-            Predicate predicate = criteriaBuilder.conjunction();
-
-            // Add your custom filter based on the provided map
-            predicate = entityFilter.toPredicate(root, query, criteriaBuilder);
-
-            // Add more conditions for other filter if needed
-
-            return predicate;
+            return criteriaBuilder.equal(root.get(FunctionEntity_.PROJECT), project);
         };
     }
 

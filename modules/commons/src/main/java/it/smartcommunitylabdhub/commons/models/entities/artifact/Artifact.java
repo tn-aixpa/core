@@ -1,9 +1,10 @@
 package it.smartcommunitylabdhub.commons.models.entities.artifact;
 
 import com.fasterxml.jackson.annotation.*;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,19 +18,19 @@ import lombok.*;
 @JsonPropertyOrder(alphabetic = true)
 public class Artifact implements BaseDTO {
 
-    @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String id;
 
     @NotNull
-    @ValidateField
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String name;
 
     @NotNull
-    @ValidateField
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String kind;
 
     @NotNull
-    @ValidateField
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String project;
 
     @Builder.Default
