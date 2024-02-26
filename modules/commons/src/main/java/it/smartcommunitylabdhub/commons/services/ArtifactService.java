@@ -2,16 +2,22 @@ package it.smartcommunitylabdhub.commons.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 
-public interface ArtifactService {
-    Page<Artifact> getArtifacts(Map<String, String> filter, Pageable pageable);
-    Page<Artifact> getLatestArtifactsByProject(@NotNull String project, Map<String, String> filter, Pageable pageable);
+public interface ArtifactService<T extends BaseEntity> {
+    Page<Artifact> listArtifacts(Pageable pageable, @Nullable SearchFilter<T> filter);
+    Page<Artifact> listLatestArtifactsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<T> filter
+    );
 
     List<Artifact> findArtifacts(@NotNull String project, @NotNull String name);
     Page<Artifact> findArtifacts(@NotNull String project, @NotNull String name, Pageable pageable);
@@ -21,6 +27,6 @@ public interface ArtifactService {
 
     Artifact createArtifact(@NotNull Artifact artifactDTO) throws DuplicatedEntityException;
     Artifact updateArtifact(@NotNull String id, @NotNull Artifact artifactDTO) throws NoSuchEntityException;
-    void deleteArtifact(@NotNull String uuid);
+    void deleteArtifact(@NotNull String id);
     void deleteArtifacts(@NotNull String project, @NotNull String name);
 }

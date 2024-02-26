@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
+import it.smartcommunitylabdhub.commons.models.base.BaseEntitySearchCriteria;
 import it.smartcommunitylabdhub.commons.utils.DateUtils;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
@@ -14,7 +15,13 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 @Setter
-public class DataItemEntityFilter extends BaseEntityFilter implements SpecificationFilter<DataItemEntity> {
+public class DataItemEntityFilter implements SpecificationFilter<DataItemEntity> {
+
+    private String name;
+    private String kind;
+    private String project;
+    private String state;
+    private String createdDate;
 
     @Override
     public Predicate toPredicate(Root<DataItemEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {

@@ -9,6 +9,8 @@ import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.services.context.interfaces.FunctionContextService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -148,7 +151,7 @@ public class FunctionContextController extends AbstractContextController {
     )
     @DeleteMapping(path = "/functions/{name}/{uuid}")
     public ResponseEntity<Boolean> deleteSpecificFunctionVersion(
-        @ValidateField @PathVariable String project,
+        @ValidateField @PathVariable String prsoject,
         @ValidateField @PathVariable String name,
         @ValidateField @PathVariable String uuid
     ) {
@@ -194,5 +197,17 @@ public class FunctionContextController extends AbstractContextController {
             });
 
         return ResponseEntity.ok(this.functionContextService.deleteAllFunctionVersions(project, name));
+    }
+
+    protected Specification<TaskEntity> createTaskSpecification(String function) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("function"), function);
+        };
+    }
+
+    protected Specification<RunEntity> createRunSpecification(String task) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("task"), task);
+        };
     }
 }
