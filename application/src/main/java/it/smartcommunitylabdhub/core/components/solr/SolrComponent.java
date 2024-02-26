@@ -1,5 +1,23 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PreDestroy;
+
+import org.apache.solr.client.solrj.impl.Http2SolrClient;
+import org.apache.solr.common.SolrInputDocument;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
@@ -14,23 +32,7 @@ import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
-import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.solr.client.solrj.impl.Http2SolrClient;
-import org.apache.solr.common.SolrInputDocument;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
@@ -81,7 +83,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
         if (event.getEntity() instanceof DataItem) {
             DataItem entity = (DataItem) event.getEntity();
             indexDoc(entity);
-        } else if (event.getEntity() instanceof FunctionEntity) {
+        } else if (event.getEntity() instanceof Function) {
             Function entity = (Function) event.getEntity();
             indexDoc(entity);
         } else if (event.getEntity() instanceof Artifact) {
