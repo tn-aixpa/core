@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.ArtifactService;
-import it.smartcommunitylabdhub.commons.services.EntityService;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity_;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;

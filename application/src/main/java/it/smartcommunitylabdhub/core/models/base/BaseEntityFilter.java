@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.commons.models.base;
+package it.smartcommunitylabdhub.core.models.base;
 
 import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -16,7 +16,7 @@ import org.springframework.data.jpa.domain.Specification;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BaseEntityFilter<T extends BaseEntity> implements SearchFilter<T> {
+public class BaseEntityFilter<T> implements SearchFilter<T> {
 
     private List<SearchCriteria<T>> criteria;
     private Condition condition;

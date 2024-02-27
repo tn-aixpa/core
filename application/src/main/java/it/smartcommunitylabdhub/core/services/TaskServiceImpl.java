@@ -154,7 +154,7 @@ public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, Ta
     }
 
     @Override
-    public Task updateTask(Task taskDTO, String uuid) {
+    public Task updateTask(String uuid, Task taskDTO) {
         if (!taskDTO.getId().equals(uuid)) {
             throw new CoreException(
                 "TaskNotMatch",

@@ -3,6 +3,8 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.services.DataItemService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
@@ -48,7 +50,8 @@ public class DataItemController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<DataItem> createDataItem(@Valid @RequestBody DataItem dataItemDTO) {
+    public ResponseEntity<DataItem> createDataItem(@Valid @RequestBody DataItem dataItemDTO)
+        throws DuplicatedEntityException {
         return ResponseEntity.ok(this.dataItemService.createDataItem(dataItemDTO));
     }
 
@@ -56,7 +59,7 @@ public class DataItemController {
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<DataItem> getDataItem(
         @ValidateField @PathVariable(name = "uuid", required = true) String uuid
-    ) {
+    ) throws NoSuchEntityException {
         return ResponseEntity.ok(this.dataItemService.getDataItem(uuid));
     }
 
@@ -69,13 +72,14 @@ public class DataItemController {
     public ResponseEntity<DataItem> updateDataItem(
         @Valid @RequestBody DataItem dataItemDTO,
         @ValidateField @PathVariable String uuid
-    ) {
-        return ResponseEntity.ok(this.dataItemService.updateDataItem(dataItemDTO, uuid));
+    ) throws NoSuchEntityException {
+        return ResponseEntity.ok(this.dataItemService.updateDataItem(uuid, dataItemDTO));
     }
 
     @Operation(summary = "Delete a dataItem", description = "Delete a specific dataItem")
     @DeleteMapping(path = "/{uuid}")
     public ResponseEntity<Boolean> deleteDataItem(@ValidateField @PathVariable String uuid) {
-        return ResponseEntity.ok(this.dataItemService.deleteDataItem(uuid));
+        this.dataItemService.deleteDataItem(uuid);
+        return ResponseEntity.ok().build();
     }
 }

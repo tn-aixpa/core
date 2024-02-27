@@ -1,13 +1,13 @@
-package it.smartcommunitylabdhub.commons.models.schemas;
+package it.smartcommunitylabdhub.core.models.schemas;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
-//TODO move to application
 @AllArgsConstructor
 @Builder
 public class SchemaImpl implements Schema, Serializable {

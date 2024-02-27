@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.core.services.context;
 
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunService;
@@ -45,7 +47,7 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
     RunService runService;
 
     @Override
-    public Run createRun(String projectName, Run runDTO) {
+    public Run createRun(String projectName, Run runDTO) throws NoSuchEntityException, DuplicatedEntityException {
         try {
             // Check that project context is the same as the project passed to the
             // runDTO

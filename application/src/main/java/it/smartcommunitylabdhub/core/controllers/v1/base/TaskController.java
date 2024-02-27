@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
@@ -36,7 +37,8 @@ public class TaskController {
 
     @Operation(summary = "Get specific task", description = "Given a uuid return a specific task")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Task> getTask(@ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
+    public ResponseEntity<Task> getTask(@ValidateField @PathVariable(name = "uuid", required = true) String uuid)
+        throws NoSuchEntityException {
         return ResponseEntity.ok(this.taskService.getTask(uuid));
     }
 
@@ -65,8 +67,8 @@ public class TaskController {
     public ResponseEntity<Task> updateTask(
         @Valid @RequestBody Task functionDTO,
         @ValidateField @PathVariable String uuid
-    ) {
-        return ResponseEntity.ok(this.taskService.updateTask(functionDTO, uuid));
+    ) throws NoSuchEntityException {
+        return ResponseEntity.ok(this.taskService.updateTask(uuid, functionDTO));
     }
 
     @Operation(summary = "Delete a task", description = "Delete a specific task")

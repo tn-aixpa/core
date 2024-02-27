@@ -1,11 +1,11 @@
 package it.smartcommunitylabdhub.core.models.queries.filters.abstracts;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntityFilter;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntitySearchCriteria;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.base.BaseEntityFilter;
+import it.smartcommunitylabdhub.core.models.base.BaseEntitySearchCriteria;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;

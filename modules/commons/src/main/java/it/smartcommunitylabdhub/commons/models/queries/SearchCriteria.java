@@ -1,10 +1,9 @@
 package it.smartcommunitylabdhub.commons.models.queries;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import java.io.Serializable;
 import org.springframework.data.jpa.domain.Specification;
 
-public interface SearchCriteria<T extends BaseEntity> extends Specification<T> {
+public interface SearchCriteria<T> extends Specification<T> {
     String getField();
     Serializable getValue();
     Operation getOperation();

@@ -151,7 +151,7 @@ public class FunctionContextController extends AbstractContextController {
     )
     @DeleteMapping(path = "/functions/{name}/{uuid}")
     public ResponseEntity<Boolean> deleteSpecificFunctionVersion(
-        @ValidateField @PathVariable String prsoject,
+        @ValidateField @PathVariable String project,
         @ValidateField @PathVariable String name,
         @ValidateField @PathVariable String uuid
     ) {

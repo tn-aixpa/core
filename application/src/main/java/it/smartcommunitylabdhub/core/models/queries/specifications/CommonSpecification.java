@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.specifications;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;

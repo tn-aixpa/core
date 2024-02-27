@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.commons.models.base;
+package it.smartcommunitylabdhub.core.models.base;
 
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;

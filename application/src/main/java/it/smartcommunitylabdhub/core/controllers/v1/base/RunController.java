@@ -3,6 +3,8 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.services.LogService;
@@ -33,7 +35,8 @@ public class RunController {
 
     @Operation(summary = "Get a run", description = "Given an uuid return the related Run")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Run> getRun(@ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
+    public ResponseEntity<Run> getRun(@ValidateField @PathVariable(name = "uuid", required = true) String uuid)
+        throws NoSuchEntityException {
         return ResponseEntity.ok(this.runService.getRun(uuid));
     }
 
@@ -58,7 +61,8 @@ public class RunController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Run> createRun(@Valid @RequestBody Run inputRunDTO) {
+    public ResponseEntity<Run> createRun(@Valid @RequestBody Run inputRunDTO)
+        throws NoSuchEntityException, DuplicatedEntityException {
         return ResponseEntity.ok(this.runService.createRun(inputRunDTO));
     }
 
@@ -68,7 +72,8 @@ public class RunController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Run> updateRun(@Valid @RequestBody Run runDTO, @ValidateField @PathVariable String uuid) {
+    public ResponseEntity<Run> updateRun(@Valid @RequestBody Run runDTO, @ValidateField @PathVariable String uuid)
+        throws NoSuchEntityException {
         return ResponseEntity.ok(this.runService.updateRun(uuid, runDTO));
     }
 
@@ -78,7 +83,8 @@ public class RunController {
         @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
         @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade
     ) {
-        return ResponseEntity.ok(this.runService.deleteRun(uuid, cascade));
+        this.runService.deleteRun(uuid, cascade);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Stop a run", description = "Stop a specific run")

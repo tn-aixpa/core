@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.commons.models.base;
+package it.smartcommunitylabdhub.core.models.base;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
@@ -24,7 +24,7 @@ import org.springframework.lang.Nullable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BaseEntitySearchCriteria<T extends BaseEntity> implements SearchCriteria<T> {
+public class BaseEntitySearchCriteria<T> implements SearchCriteria<T> {
 
     @NotBlank
     private String field;

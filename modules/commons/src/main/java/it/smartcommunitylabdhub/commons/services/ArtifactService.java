@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.commons.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 
-public interface ArtifactService<T extends BaseEntity> {
+public interface ArtifactService<T> {
     Page<Artifact> listArtifacts(Pageable pageable, @Nullable SearchFilter<T> filter);
     Page<Artifact> listLatestArtifactsByProject(
         @NotNull String project,

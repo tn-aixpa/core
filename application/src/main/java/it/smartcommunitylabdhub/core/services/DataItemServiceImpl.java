@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.DataItemService;
-import it.smartcommunitylabdhub.commons.services.EntityService;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
 import jakarta.persistence.criteria.Predicate;
