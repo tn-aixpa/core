@@ -1,206 +1,287 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
-import it.smartcommunitylabdhub.commons.services.EntityService;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
+import it.smartcommunitylabdhub.core.exceptions.ErrorList;
+import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
+import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
+import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
+import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
-import jakarta.persistence.criteria.Predicate;
+import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
+import it.smartcommunitylabdhub.core.repositories.RunRepository;
+import it.smartcommunitylabdhub.core.repositories.TaskRepository;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-@Slf4j
-public class FunctionServiceImpl implements FunctionService {
+public class FunctionServiceImpl
+    extends AbstractSpecificationService<FunctionEntity, FunctionEntityFilter>
+    implements FunctionService {
 
     @Autowired
-    private EntityService<Function, FunctionEntity> entityService;
+    FunctionRepository functionRepository;
 
     @Autowired
-    private EntityService<Task, TaskEntity> taskEntityService;
+    RunRepository runRepository;
 
     @Autowired
-    private EntityService<Run, RunEntity> runEntityService;
+    TaskRepository taskRepository;
+
+    @Autowired
+    FunctionDTOBuilder functionDTOBuilder;
+
+    @Autowired
+    FunctionEntityBuilder functionEntityBuilder;
+
+    @Autowired
+    FunctionEntityFilter functionEntityFilter;
+
+    @Autowired
+    TaskDTOBuilder taskDTOBuilder;
+
+    @Autowired
+    RunDTOBuilder runDTOBuilder;
 
     @Override
     public Page<Function> getFunctions(Map<String, String> filter, Pageable pageable) {
-        log.debug("list functions with {} page {}", String.valueOf(filter), pageable);
-
-        FunctionEntityFilter functionEntityFilter = new FunctionEntityFilter();
-        functionEntityFilter.setCreatedDate(filter.get("created"));
-        functionEntityFilter.setName(filter.get("name"));
-        functionEntityFilter.setKind(filter.get("kind"));
-        Optional<State> stateOptional = Stream
-            .of(State.values())
-            .filter(state -> state.name().equals(filter.get("state")))
-            .findAny();
-        functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
-
-        Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter);
-        return entityService.search(specification, pageable);
-    }
-
-    @Override
-    public Function createFunction(Function functionDTO) throws DuplicatedEntityException {
-        log.debug("create function");
-
         try {
-            return entityService.create(functionDTO);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.FUNCTION.toString(), functionDTO.getId());
+            functionEntityFilter.setCreatedDate(filter.get("created"));
+            functionEntityFilter.setName(filter.get("name"));
+            functionEntityFilter.setKind(filter.get("kind"));
+            Optional<State> stateOptional = Stream
+                .of(State.values())
+                .filter(state -> state.name().equals(filter.get("state")))
+                .findAny();
+            functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter);
+
+            Page<FunctionEntity> functionPage = this.functionRepository.findAll(specification, pageable);
+
+            return new PageImpl<>(
+                functionPage
+                    .getContent()
+                    .stream()
+                    .map(function -> functionDTOBuilder.build(function, false))
+                    .collect(Collectors.toList()),
+                pageable,
+                functionPage.getTotalElements()
+            );
+        } catch (CustomException e) {
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
     @Override
-    public Function getFunction(@NotNull String id) throws NoSuchEntityException {
-        log.debug("get function with id {}", String.valueOf(id));
-
+    public List<Function> getFunctions() {
         try {
-            return entityService.get(id);
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.FUNCTION.toString());
+            List<FunctionEntity> functions = this.functionRepository.findAll();
+            return functions
+                .stream()
+                .map(function -> functionDTOBuilder.build(function, false))
+                .collect(Collectors.toList());
+        } catch (CustomException e) {
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
     @Override
-    public Function updateFunction(@NotNull String id, @NotNull Function functionDTO) throws NoSuchEntityException {
-        log.debug("update function with id {}", String.valueOf(id));
+    public Function createFunction(Function functionDTO) {
+        if (functionDTO.getId() != null && functionRepository.existsById(functionDTO.getId())) {
+            throw new CoreException(
+                ErrorList.DUPLICATE_FUNCTION.getValue(),
+                ErrorList.DUPLICATE_FUNCTION.getReason(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+        Optional<FunctionEntity> savedFunction = Optional
+            .of(functionDTO)
+            .map(functionEntityBuilder::build)
+            .map(this.functionRepository::saveAndFlush);
+
+        return savedFunction
+            .map(function -> functionDTOBuilder.build(function, false))
+            .orElseThrow(() ->
+                new CoreException(
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "Error saving function",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                )
+            );
+    }
+
+    @Override
+    public Function getFunction(String uuid) {
+        final FunctionEntity function = functionRepository.findById(uuid).orElse(null);
+        if (function == null) {
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        }
+
         try {
-            //fetch current and merge
-            Function current = entityService.get(id);
-
-            //spec is not modificable: enforce current
-            functionDTO.setSpec(current.getSpec());
-
-            //update
-            return entityService.update(id, functionDTO);
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.FUNCTION.toString());
+            return functionDTOBuilder.build(function, false);
+        } catch (CustomException e) {
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
     @Override
-    public void deleteFunction(@NotNull String id, Boolean cascade) {
-        log.debug("delete function with id {}, cascade {}", String.valueOf(id), String.valueOf(cascade));
+    public Function updateFunction(Function functionDTO, String uuid) {
+        if (!functionDTO.getId().equals(uuid)) {
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_MATCH.getValue(),
+                ErrorList.FUNCTION_NOT_MATCH.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        }
 
-        Function function = entityService.find(id);
-        if (function != null) {
-            if (Boolean.TRUE.equals(cascade)) {
-                // Remove Task
-                List<Task> taskList = taskEntityService.searchAll(
-                    createTaskSpecification(TaskUtils.buildTaskString(function))
-                );
+        final FunctionEntity function = functionRepository.findById(uuid).orElse(null);
+        if (function == null) {
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        }
 
-                //Delete all related sobject
-                taskList.forEach(task -> {
-                    //read base spec
-                    TaskBaseSpec taskSpec = new TaskBaseSpec();
-                    taskSpec.configure(task.getSpec());
+        try {
+            final FunctionEntity functionUpdated = functionEntityBuilder.update(function, functionDTO);
+            this.functionRepository.saveAndFlush(functionUpdated);
 
-                    // find and remove related runs
-                    runEntityService
-                        .searchAll(createRunSpecification(RunUtils.buildRunString(function, task)))
-                        .forEach(r -> runEntityService.delete(r.getId()));
+            return functionDTOBuilder.build(functionUpdated, false);
+        } catch (CustomException e) {
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
-                    // remove task
-                    taskEntityService.delete(task.getId());
-                });
+    @Override
+    public boolean deleteFunction(String uuid, Boolean cascade) {
+        try {
+            if (this.functionRepository.existsById(uuid)) {
+                if (cascade) {
+                    Function function = getFunction(uuid);
+
+                    // Remove Task
+                    List<Task> taskList =
+                        this.taskRepository.findByFunction(TaskUtils.buildTaskString(function))
+                            .stream()
+                            .map(taskDTOBuilder::build)
+                            .toList();
+                    //Delete all related object
+                    taskList.forEach(task -> {
+                        // remove run
+                        this.runRepository.deleteByTaskId(task.getId());
+
+                        // remove task
+                        this.taskRepository.deleteById(task.getId());
+                    });
+                }
+                this.functionRepository.deleteById(uuid);
+                return true;
             }
-
-            //remove function
-            entityService.delete(id);
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            throw new CoreException(
+                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                "Cannot delete function",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 
-    @Deprecated
     @Override
-    public List<Run> getFunctionRuns(String id) throws NoSuchEntityException {
-        log.debug("get runs for function with id {}", String.valueOf(id));
+    public List<Run> getFunctionRuns(String uuid) {
+        final FunctionEntity function = functionRepository.findById(uuid).orElse(null);
+        if (function == null) {
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                ErrorList.FUNCTION_NOT_FOUND.getReason(),
+                HttpStatus.NOT_FOUND
+            );
+        }
 
-        Function function = entityService.get(id);
+        Function functionDTO = functionDTOBuilder.build(function, false);
+        try {
+            // Find and collect runs for a function
+            List<RunEntity> runs =
+                this.taskRepository.findByFunction(TaskUtils.buildTaskString(functionDTO))
+                    .stream()
+                    .flatMap(task ->
+                        this.runRepository.findByTask(RunUtils.buildRunString(functionDTO, taskDTOBuilder.build(task)))
+                            .stream()
+                    )
+                    .collect(Collectors.toList());
 
-        // Find and collect runs for a function
-        return taskEntityService
-            .searchAll(createTaskSpecification(TaskUtils.buildTaskString(function)))
-            .stream()
-            .flatMap(task -> {
-                //read base spec
-                TaskBaseSpec taskSpec = new TaskBaseSpec();
-                taskSpec.configure(task.getSpec());
-
-                // find  related runs
-                return runEntityService
-                    .searchAll(createRunSpecification(RunUtils.buildRunString(function, task)))
-                    .stream();
-            })
-            .collect(Collectors.toList());
+            return runs.stream().map(r -> runDTOBuilder.convert(r)).collect(Collectors.toList());
+        } catch (CustomException e) {
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
-    // @Override
-    // public List<Function> getAllLatestFunctions() {
-    //     try {
-    //         List<FunctionEntity> functionList = this.functionRepository.findAllLatestFunctions();
-    //         return functionList
-    //             .stream()
-    //             .map(function -> functionDTOBuilder.build(function, false))
-    //             .collect(Collectors.toList());
-    //     } catch (CustomException e) {
-    //         throw new CoreException(
-    //             ErrorList.FUNCTION_NOT_FOUND.getValue(),
-    //             e.getMessage(),
-    //             HttpStatus.INTERNAL_SERVER_ERROR
-    //         );
-    //     }
-    // }
-
-    protected Specification<FunctionEntity> createSpecification(
-        Map<String, String> filter,
-        FunctionEntityFilter entityFilter
-    ) {
-        return (root, query, criteriaBuilder) -> {
-            Predicate predicate = criteriaBuilder.conjunction();
-
-            // Add your custom filter based on the provided map
-            predicate = entityFilter.toPredicate(root, query, criteriaBuilder);
-
-            // Add more conditions for other filter if needed
-
-            return predicate;
-        };
-    }
-
-    protected Specification<TaskEntity> createTaskSpecification(String function) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("function"), function);
-        };
-    }
-
-    protected Specification<RunEntity> createRunSpecification(String task) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("task"), task);
-        };
+    @Override
+    public List<Function> getAllLatestFunctions() {
+        try {
+            List<FunctionEntity> functionList = this.functionRepository.findAllLatestFunctions();
+            return functionList
+                .stream()
+                .map(function -> functionDTOBuilder.build(function, false))
+                .collect(Collectors.toList());
+        } catch (CustomException e) {
+            throw new CoreException(
+                ErrorList.FUNCTION_NOT_FOUND.getValue(),
+                e.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

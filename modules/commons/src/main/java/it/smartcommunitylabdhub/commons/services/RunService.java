@@ -1,40 +1,24 @@
 package it.smartcommunitylabdhub.commons.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import java.util.List;
 import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.lang.Nullable;
 
 public interface RunService {
     Page<Run> getRuns(Map<String, String> filter, Pageable pageable);
 
-    @Nullable
-    Run findRun(@NotNull String id);
+    Run getRun(String uuid);
 
-    Run getRun(@NotNull String id) throws NoSuchEntityException;
+    boolean deleteRun(String uuid, Boolean cascade);
 
-    Run createRun(@NotNull @Valid Run dto) throws NoSuchEntityException, DuplicatedEntityException;
+    boolean deleteRunByTaskId(String uuid);
 
-    Run updateRun(@NotNull String id, @NotNull @Valid Run dto) throws NoSuchEntityException;
+    Run save(Run runDTO);
 
-    void deleteRun(@NotNull String id, Boolean cascade);
+    <F extends FunctionBaseSpec> Run createRun(Run inputRunDTO);
 
-    /*
-     * Execution
-     */
-    Run buildRun(@NotNull @Valid Run dto);
-
-    Run execRun(@NotNull @Valid Run dto);
-
-    /*
-     * Tasks
-     */
-    List<Run> getRunsByTask(@NotNull String task);
-    void deleteRunsByTask(@NotNull String task);
+    Run updateRun(@Valid Run runDTO, String uuid);
 }

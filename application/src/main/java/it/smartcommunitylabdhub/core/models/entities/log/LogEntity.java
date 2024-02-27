@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -71,22 +70,4 @@ public class LogEntity implements BaseEntity {
             this.id = UUID.randomUUID().toString();
         }
     }
-
-    @Override
-    public @NotNull String getName() {
-        return id;
-    }
-
-    @Override
-    public @NotNull String getKind() {
-        return "log";
-    }
-
-    @Override
-    public byte[] getSpec() {
-        return null;
-    }
-
-    @Override
-    public void setSpec(byte[] spec) {}
 }

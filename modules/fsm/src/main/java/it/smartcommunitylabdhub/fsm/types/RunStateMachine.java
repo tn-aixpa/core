@@ -7,7 +7,6 @@
 
 package it.smartcommunitylabdhub.fsm.types;
 
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.services.RunService;
@@ -71,14 +70,10 @@ public class RunStateMachine {
                 RunState.CREATED,
                 context -> {
                     context.ifPresent(c -> {
-                        try {
-                            // update run state
-                            Run runDTO = runService.getRun(c.get("runId").toString());
-                            runDTO.getStatus().put("state", RunState.READY.toString());
-                            runService.updateRun(runDTO.getId(), runDTO);
-                        } catch (NoSuchEntityException nex) {
-                            log.error("error updating run: {}", nex.getMessage());
-                        }
+                        // update run state
+                        Run runDTO = runService.getRun(c.get("runId").toString());
+                        runDTO.getStatus().put("state", RunState.READY.toString());
+                        runService.updateRun(runDTO, runDTO.getId());
                     });
                 }
             )
@@ -89,13 +84,10 @@ public class RunStateMachine {
                 RunState.RUNNING,
                 context -> {
                     context.ifPresent(c -> {
-                        try {
-                            Run runDTO = runService.getRun(c.get("runId").toString());
-                            runDTO.getStatus().put("state", RunState.RUNNING.toString());
-                            runService.updateRun(runDTO.getId(), runDTO);
-                        } catch (NoSuchEntityException nex) {
-                            log.error("error updating run: {}", nex.getMessage());
-                        }
+                        Run runDTO = runService.getRun(c.get("runId").toString());
+                        runDTO.getStatus().put("state", RunState.RUNNING.toString());
+
+                        runService.updateRun(runDTO, runDTO.getId());
                     });
                 }
             )
@@ -105,13 +97,9 @@ public class RunStateMachine {
                 RunState.ERROR,
                 context -> {
                     context.ifPresent(c -> {
-                        try {
-                            Run runDTO = runService.getRun(c.get("runId").toString());
-                            runDTO.getStatus().put("state", RunState.ERROR.toString());
-                            runService.updateRun(runDTO.getId(), runDTO);
-                        } catch (NoSuchEntityException nex) {
-                            log.error("error updating run: {}", nex.getMessage());
-                        }
+                        Run runDTO = runService.getRun(c.get("runId").toString());
+                        runDTO.getStatus().put("state", RunState.ERROR.toString());
+                        runService.updateRun(runDTO, runDTO.getId());
                     });
                 }
             )

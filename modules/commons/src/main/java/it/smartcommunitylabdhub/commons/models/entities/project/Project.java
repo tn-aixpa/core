@@ -23,8 +23,9 @@ public class Project implements BaseDTO {
     @ValidateField
     private String name;
 
+    @NotNull
     @ValidateField
-    private String kind = "project";
+    private String kind;
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -50,10 +51,5 @@ public class Project implements BaseDTO {
         if (value != null) {
             extra.put(key, value);
         }
-    }
-
-    @Override
-    public String getProject() {
-        return name;
     }
 }

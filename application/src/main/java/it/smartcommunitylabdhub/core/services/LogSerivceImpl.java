@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-public class LogServiceImpl implements LogService {
+public class LogSerivceImpl implements LogService {
 
     @Autowired
     LogRepository logRepository;

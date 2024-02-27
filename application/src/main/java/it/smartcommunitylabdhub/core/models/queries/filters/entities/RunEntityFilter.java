@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseEntitySearchCriteria;
 import it.smartcommunitylabdhub.commons.utils.DateUtils;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
@@ -8,19 +7,15 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.stereotype.Component;
 
+@Component
 @Getter
 @Setter
-public class RunEntityFilter implements SpecificationFilter<RunEntity> {
+public class RunEntityFilter extends BaseEntityFilter implements SpecificationFilter<RunEntity> {
 
-    private String name;
-    private String kind;
-    private String project;
-    private String state;
-    private String createdDate;
     private String task;
     private String taskId;
 

@@ -3,8 +3,6 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
@@ -44,8 +42,7 @@ public class FunctionController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Function> createFunction(@Valid @RequestBody Function functionDTO)
-        throws DuplicatedEntityException {
+    public ResponseEntity<Function> createFunction(@Valid @RequestBody Function functionDTO) {
         return ResponseEntity.ok(this.functionService.createFunction(functionDTO));
     }
 
@@ -53,7 +50,7 @@ public class FunctionController {
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Function> getFunction(
         @ValidateField @PathVariable(name = "uuid", required = true) String uuid
-    ) throws NoSuchEntityException {
+    ) {
         return ResponseEntity.ok(this.functionService.getFunction(uuid));
     }
 
@@ -66,25 +63,22 @@ public class FunctionController {
     public ResponseEntity<Function> updateFunction(
         @Valid @RequestBody Function functionDTO,
         @ValidateField @PathVariable String uuid
-    ) throws NoSuchEntityException {
-        return ResponseEntity.ok(this.functionService.updateFunction(uuid, functionDTO));
+    ) {
+        return ResponseEntity.ok(this.functionService.updateFunction(functionDTO, uuid));
     }
 
     @Operation(summary = "Delete a function", description = "Delete a specific function")
     @DeleteMapping(path = "/{uuid}")
-    public ResponseEntity<Void> deleteFunction(
+    public ResponseEntity<Boolean> deleteFunction(
         @ValidateField @PathVariable String uuid,
         @RequestParam(value = "cascade", defaultValue = "false") Boolean cascade
     ) {
-        this.functionService.deleteFunction(uuid, cascade);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(this.functionService.deleteFunction(uuid, cascade));
     }
 
-    @Deprecated
     @Operation(summary = "Get function runs", description = "Given a function return the run list")
     @GetMapping(path = "/{uuid}/runs", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Run>> functionRuns(@ValidateField @PathVariable String uuid)
-        throws NoSuchEntityException {
+    public ResponseEntity<List<Run>> functionRuns(@ValidateField @PathVariable String uuid) {
         return ResponseEntity.ok(this.functionService.getFunctionRuns(uuid));
     }
 }

@@ -48,32 +48,62 @@ public class RunEntityBuilder implements Converter<Run, RunEntity> {
         RunBaseSpec runSpec = new RunBaseSpec();
         runSpec.configure(spec);
 
-        return RunEntity
-            .builder()
-            .id(dto.getId())
-            .kind(dto.getKind())
-            .project(dto.getProject())
-            .metadata(cborConverter.convert(dto.getMetadata()))
-            .spec(cborConverter.convert(spec))
-            .status(cborConverter.convert(dto.getStatus()))
-            .extra(cborConverter.convert(dto.getExtra()))
-            //extract task
-            .task(runSpec.getTask())
-            .state(
-                // Store status if not present
-                statusFieldAccessor.getState() == null
-                    ? RunState.CREATED
-                    : RunState.valueOf(statusFieldAccessor.getState())
-            )
-            // Metadata Extraction
-            .created(metadata.getCreated())
-            .updated(metadata.getUpdated())
-            .build();
+        return EntityFactory.combine(
+            RunEntity.builder().build(),
+            builder ->
+                builder
+                    // check id
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setKind(dto.getKind()))
+                    .with(e ->
+                        e.setTask(
+                            Optional
+                                .ofNullable(StringUtils.hasText(runSpec.getTask()) ? runSpec.getTask() : null)
+                                .orElseThrow(() ->
+                                    new CoreException(
+                                        ErrorList.TASK_NOT_FOUND.getValue(),
+                                        ErrorList.TASK_NOT_FOUND.getReason(),
+                                        HttpStatus.INTERNAL_SERVER_ERROR
+                                    )
+                                )
+                        )
+                    )
+                    .with(e -> e.setTaskId(runSpec.getTaskId()))
+                    .withIfElse(
+                        (statusFieldAccessor.getState() == null),
+                        (e, condition) -> {
+                            if (condition) {
+                                e.setState(RunState.CREATED);
+                            } else {
+                                e.setState(RunState.valueOf(statusFieldAccessor.getState()));
+                            }
+                        }
+                    )
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
+        );
     }
 
     @Override
     public RunEntity convert(Run source) {
         return build(source);
+    }
+
+    /**
+     * Update a Run if element is not passed it override causing empty field
+     *
+     * @param run    the Run
+     * @param runDTO the run DTO
+     * @return Run
+     */
+    public RunEntity update(RunEntity run, Run runDTO) {
+        RunEntity newRun = build(runDTO);
+        return doUpdate(run, newRun);
     }
 
     /**

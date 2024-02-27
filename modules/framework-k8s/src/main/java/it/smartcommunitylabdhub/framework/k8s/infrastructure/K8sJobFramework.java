@@ -6,7 +6,6 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
@@ -233,13 +232,10 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                             log.info("Job completed successfully.");
                             // Update state machine and update runDTO
                             fMachine.goToState(RunState.COMPLETED);
-                            try {
-                                Run runDTO = runService.getRun(runnable.getId());
-                                runDTO.getStatus().put("state", fsm.getCurrentState().name());
-                                runService.updateRun(runDTO.getId(), runDTO);
-                            } catch (NoSuchEntityException nex) {
-                                log.error("error updating run {}: {}", runnable.getId(), nex.getMessage());
-                            }
+                            Run runDTO = runService.getRun(runnable.getId());
+                            runDTO.getStatus().put("state", fsm.getCurrentState().name());
+                            runService.updateRun(runDTO, runDTO.getId());
+
                             // Log pod status
                             logPod(jName, cName, namespace, runnable);
                             // Delete job and pod

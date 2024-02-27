@@ -1,9 +1,6 @@
 package it.smartcommunitylabdhub.commons.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,11 +8,11 @@ import org.springframework.data.domain.Pageable;
 public interface DataItemService {
     Page<DataItem> getDataItems(Map<String, String> filter, Pageable pageable);
 
-    DataItem createDataItem(@NotNull DataItem dataItemDTO) throws DuplicatedEntityException;
+    DataItem createDataItem(DataItem dataItemDTO);
 
-    DataItem getDataItem(@NotNull String id) throws NoSuchEntityException;
+    DataItem getDataItem(String uuid);
 
-    DataItem updateDataItem(@NotNull String id, @NotNull DataItem dataItemDTO) throws NoSuchEntityException;
+    DataItem updateDataItem(DataItem dataItemDTO, String uuid);
 
-    void deleteDataItem(@NotNull String id);
+    boolean deleteDataItem(String uuid);
 }

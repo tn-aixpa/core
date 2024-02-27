@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -81,10 +80,5 @@ public class RunEntity implements BaseEntity {
         if (id == null) {
             this.id = UUID.randomUUID().toString();
         }
-    }
-
-    @Override
-    public @NotNull String getName() {
-        return id;
     }
 }

@@ -1,112 +1,162 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.DataItemService;
-import it.smartcommunitylabdhub.commons.services.EntityService;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
+import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
+import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
-import jakarta.persistence.criteria.Predicate;
+import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-@Slf4j
-public class DataItemServiceImpl implements DataItemService {
+public class DataItemServiceImpl
+    extends AbstractSpecificationService<DataItemEntity, DataItemEntityFilter>
+    implements DataItemService {
 
     @Autowired
-    private EntityService<DataItem, DataItemEntity> entityService;
+    DataItemRepository dataItemRepository;
+
+    @Autowired
+    DataItemEntityBuilder dataItemEntityBuilder;
+
+    @Autowired
+    DataItemEntityFilter dataItemEntityFilter;
+
+    @Autowired
+    DataItemDTOBuilder dataItemDTOBuilder;
 
     @Override
     public Page<DataItem> getDataItems(Map<String, String> filter, Pageable pageable) {
-        log.debug("list dataItems with {} page {}", String.valueOf(filter), pageable);
-
-        DataItemEntityFilter dataItemEntityFilter = new DataItemEntityFilter();
-        dataItemEntityFilter.setCreatedDate(filter.get("created"));
-        dataItemEntityFilter.setName(filter.get("name"));
-        dataItemEntityFilter.setKind(filter.get("kind"));
-        Optional<State> stateOptional = Stream
-            .of(State.values())
-            .filter(state -> state.name().equals(filter.get("state")))
-            .findAny();
-        dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
-
-        Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
-        return entityService.search(specification, pageable);
-    }
-
-    @Override
-    public DataItem createDataItem(@NotNull DataItem dataItemDTO) throws DuplicatedEntityException {
-        log.debug("create dataItem");
-
         try {
-            return entityService.create(dataItemDTO);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.DATAITEM.toString(), dataItemDTO.getId());
+            dataItemEntityFilter.setCreatedDate(filter.get("created"));
+            dataItemEntityFilter.setName(filter.get("name"));
+            dataItemEntityFilter.setKind(filter.get("kind"));
+            Optional<State> stateOptional = Stream
+                .of(State.values())
+                .filter(state -> state.name().equals(filter.get("state")))
+                .findAny();
+            dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+
+            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
+
+            Page<DataItemEntity> dataItemPage = this.dataItemRepository.findAll(specification, pageable);
+
+            return new PageImpl<>(
+                dataItemPage
+                    .getContent()
+                    .stream()
+                    .map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
+                    .collect(Collectors.toList()),
+                pageable,
+                dataItemPage.getTotalElements()
+            );
+        } catch (CustomException e) {
+            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
-    public DataItem getDataItem(@NotNull String id) throws NoSuchEntityException {
-        log.debug("get dataItem with id {}", String.valueOf(id));
-
-        try {
-            return entityService.get(id);
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+    public DataItem createDataItem(DataItem dataItemDTO) {
+        if (dataItemDTO.getId() != null && dataItemRepository.existsById(dataItemDTO.getId())) {
+            throw new CoreException(
+                "DuplicateDataItemId",
+                "Cannot create the dataItem",
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
+        Optional<DataItemEntity> savedDataItem = Optional
+            .of(dataItemDTO)
+            .map(dataItemEntityBuilder::build)
+            .map(this.dataItemRepository::saveAndFlush);
+
+        return savedDataItem
+            .map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
+            .orElseThrow(() ->
+                new CoreException("InternalServerError", "Error saving dataItem", HttpStatus.INTERNAL_SERVER_ERROR)
+            );
     }
 
     @Override
-    public DataItem updateDataItem(@NotNull String id, @NotNull DataItem dataItemDTO) throws NoSuchEntityException {
-        log.debug("dataItem artifact with id {}", String.valueOf(id));
-        try {
-            //fetch current and merge
-            DataItem current = entityService.get(id);
-
-            //spec is not modificable: enforce current
-            dataItemDTO.setSpec(current.getSpec());
-
-            //update
-            return entityService.update(id, dataItemDTO);
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
-        }
+    public DataItem getDataItem(String uuid) {
+        return dataItemRepository
+            .findById(uuid)
+            .map(dataItem -> {
+                try {
+                    return dataItemDTOBuilder.build(dataItem, false);
+                } catch (CustomException e) {
+                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            })
+            .orElseThrow(() ->
+                new CoreException(
+                    "DataItemNotFound",
+                    "The dataItem you are searching for does not exist.",
+                    HttpStatus.NOT_FOUND
+                )
+            );
     }
 
     @Override
-    public void deleteDataItem(@NotNull String id) {
-        log.debug("delete dataItem with id {}", String.valueOf(id));
+    public DataItem updateDataItem(DataItem dataItemDTO, String uuid) {
+        if (!dataItemDTO.getId().equals(uuid)) {
+            throw new CoreException(
+                "DataItemNotMatch",
+                "Trying to update a DataItem with a UUID different from the one passed in the request.",
+                HttpStatus.NOT_FOUND
+            );
+        }
 
-        entityService.delete(id);
+        return dataItemRepository
+            .findById(uuid)
+            .map(dataItem -> {
+                try {
+                    DataItemEntity dataItemUpdated = dataItemEntityBuilder.update(dataItem, dataItemDTO);
+                    dataItemRepository.saveAndFlush(dataItemUpdated);
+                    return dataItemDTOBuilder.build(dataItemUpdated, false);
+                } catch (CustomException e) {
+                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            })
+            .orElseThrow(() ->
+                new CoreException(
+                    "DataItemNotFound",
+                    "The dataItem you are searching for does not exist.",
+                    HttpStatus.NOT_FOUND
+                )
+            );
     }
 
-    protected Specification<DataItemEntity> createSpecification(
-        Map<String, String> filter,
-        DataItemEntityFilter entityFilter
-    ) {
-        return (root, query, criteriaBuilder) -> {
-            Predicate predicate = criteriaBuilder.conjunction();
-
-            // Add your custom filter based on the provided map
-            predicate = entityFilter.toPredicate(root, query, criteriaBuilder);
-
-            // Add more conditions for other filter if needed
-
-            return predicate;
-        };
+    @Override
+    public boolean deleteDataItem(String uuid) {
+        try {
+            if (this.dataItemRepository.existsById(uuid)) {
+                this.dataItemRepository.deleteById(uuid);
+                return true;
+            }
+            throw new CoreException(
+                "DataItemNotFound",
+                "The dataItem you are trying to delete does not exist.",
+                HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            throw new CoreException("InternalServerError", "cannot delete dataItem", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
