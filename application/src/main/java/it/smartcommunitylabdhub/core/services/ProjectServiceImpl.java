@@ -7,8 +7,8 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
 import it.smartcommunitylabdhub.commons.services.ProjectService;
+import it.smartcommunitylabdhub.commons.services.SecretService;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
@@ -93,7 +93,7 @@ public class ProjectServiceImpl
     ProjectEntityFilter projectEntityFilter;
 
     @Autowired
-    ProjectSecretService secretService;
+    SecretService secretService;
 
     @Override
     public Project getProject(String name) {

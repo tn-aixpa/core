@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
-import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.SecretService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SecretController {
 
     @Autowired
-    ProjectSecretService secretService;
+    SecretService secretService;
 
     @Operation(summary = "Get specific secret", description = "Given a uuid return a specific secret")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")

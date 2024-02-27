@@ -4,16 +4,14 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.DataItemService;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.entities.DataItemService;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
-import jakarta.persistence.criteria.Predicate;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity_;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,38 +22,71 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 @Slf4j
-public class DataItemServiceImpl implements DataItemService {
+public class DataItemServiceImpl implements DataItemService<DataItemEntity> {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
 
     @Override
-    public Page<DataItem> getDataItems(Map<String, String> filter, Pageable pageable) {
-        log.debug("list dataItems with {} page {}", String.valueOf(filter), pageable);
+    public Page<DataItem> listDataItems(Pageable pageable, SearchFilter<DataItemEntity> filter) {
+        log.debug("list dataItems page {}, filter {}", pageable, String.valueOf(filter));
 
-        DataItemEntityFilter dataItemEntityFilter = new DataItemEntityFilter();
-        dataItemEntityFilter.setCreatedDate(filter.get("created"));
-        dataItemEntityFilter.setName(filter.get("name"));
-        dataItemEntityFilter.setKind(filter.get("kind"));
-        Optional<State> stateOptional = Stream
-            .of(State.values())
-            .filter(state -> state.name().equals(filter.get("state")))
-            .findAny();
-        dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+        Specification<DataItemEntity> specification = filter != null ? filter.toSpecification() : null;
+        if (specification != null) {
+            return entityService.search(specification, pageable);
+        } else {
+            return entityService.list(pageable);
+        }
+    }
 
-        Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
+    @Override
+    public Page<DataItem> listLatestDataItemsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        SearchFilter<DataItemEntity> filter
+    ) {
+        log.debug("list dataItems for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<DataItemEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<DataItemEntity> specification = Specification.allOf(
+            createProjectSpecification(project),
+            CommonSpecification.latestByProject(project),
+            filterSpecification
+        );
+
         return entityService.search(specification, pageable);
     }
 
     @Override
-    public DataItem createDataItem(@NotNull DataItem dataItemDTO) throws DuplicatedEntityException {
-        log.debug("create dataItem");
+    public List<DataItem> findDataItems(@NotNull String project, @NotNull String name) {
+        log.debug("find artifacts for project {} with name {}", project, name);
 
-        try {
-            return entityService.create(dataItemDTO);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.DATAITEM.toString(), dataItemDTO.getId());
-        }
+        //fetch all versions ordered by date DESC
+        Specification<DataItemEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(DataItemEntity_.CREATED)));
+            return createProjectNameSpecification(project, name).toPredicate(root, query, builder);
+        };
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<DataItem> findDataItems(@NotNull String project, @NotNull String name, Pageable pageable) {
+        log.debug("find artifacts for project {} with name {} page {}", project, name, pageable);
+
+        //fetch all versions ordered by date DESC
+        Specification<DataItemEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(DataItemEntity_.CREATED)));
+            return createProjectNameSpecification(project, name).toPredicate(root, query, builder);
+        };
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public DataItem findDataItem(@NotNull String id) {
+        log.debug("find dataItem with id {}", String.valueOf(id));
+
+        return entityService.find(id);
     }
 
     @Override
@@ -66,6 +97,23 @@ public class DataItemServiceImpl implements DataItemService {
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+        }
+    }
+
+    @Override
+    public DataItem getLatestDataItem(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLatestDataItem'");
+    }
+
+    @Override
+    public DataItem createDataItem(@NotNull DataItem dataItemDTO) throws DuplicatedEntityException {
+        log.debug("create dataItem");
+
+        try {
+            return entityService.create(dataItemDTO);
+        } catch (DuplicatedEntityException e) {
+            throw new DuplicatedEntityException(EntityName.DATAITEM.toString(), dataItemDTO.getId());
         }
     }
 
@@ -93,19 +141,26 @@ public class DataItemServiceImpl implements DataItemService {
         entityService.delete(id);
     }
 
-    protected Specification<DataItemEntity> createSpecification(
-        Map<String, String> filter,
-        DataItemEntityFilter entityFilter
-    ) {
+    @Override
+    public void deleteDataItems(@NotNull String project, @NotNull String name) {
+        log.debug("delete dataItems for project {} with name {}", project, name);
+
+        long count = entityService.deleteAll(createProjectNameSpecification(project, name));
+        log.debug("deleted count {}", count);
+    }
+
+    protected Specification<DataItemEntity> createProjectSpecification(String project) {
         return (root, query, criteriaBuilder) -> {
-            Predicate predicate = criteriaBuilder.conjunction();
+            return criteriaBuilder.equal(root.get(DataItemEntity_.PROJECT), project);
+        };
+    }
 
-            // Add your custom filter based on the provided map
-            predicate = entityFilter.toPredicate(root, query, criteriaBuilder);
-
-            // Add more conditions for other filter if needed
-
-            return predicate;
+    protected Specification<DataItemEntity> createProjectNameSpecification(String project, String name) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.and(
+                criteriaBuilder.equal(root.get(DataItemEntity_.PROJECT), project),
+                criteriaBuilder.equal(root.get(DataItemEntity_.NAME), name)
+            );
         };
     }
 }

@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Project secret service
  */
-public interface ProjectSecretService {
+public interface SecretService {
     /**
      * Create new project secret entity and store it in the database. Throw error if the operation cannot be performed.
      * @param secret
@@ -18,19 +18,19 @@ public interface ProjectSecretService {
     Secret createProjectSecret(Secret secret);
 
     /**
-     * Update the secret with the specified uuid. Throw error if not found or if the operation cannot be performed.
+     * Update the secret with the specified id. Throw error if not found or if the operation cannot be performed.
      * @param secret
-     * @param uuid
+     * @param id
      * @return
      */
-    Secret updateProjectSecret(Secret secret, String uuid);
+    Secret updateProjectSecret(Secret secret, String id);
 
     /**
-     * Retrieve the secret with the specified uuid. Throw error if not found
-     * @param uuid
+     * Retrieve the secret with the specified id. Throw error if not found
+     * @param id
      * @return
      */
-    Secret getProjectSecret(String uuid);
+    Secret getProjectSecret(String id);
 
     /**
      * List all the project secrets for the project with the specified name
@@ -40,11 +40,11 @@ public interface ProjectSecretService {
     List<Secret> getProjectSecrets(String project);
 
     /**
-     * Delete the secret with the specified uuid. Throw error if not found or if the operation cannot be performed.
-     * @param uuid
+     * Delete the secret with the specified id. Throw error if not found or if the operation cannot be performed.
+     * @param id
      * @return
      */
-    boolean deleteProjectSecret(String uuid);
+    boolean deleteProjectSecret(String id);
 
     /**
      * Retrieve the project secret values for the specified names of the project
@@ -67,5 +67,7 @@ public interface ProjectSecretService {
      * @param secrets
      * @return
      */
+    //TODO move to runtimes, this logic is outside the service
+    @Deprecated(forRemoval = true)
     Map<String, Set<String>> groupSecrets(String projectId, Collection<String> secrets);
 }

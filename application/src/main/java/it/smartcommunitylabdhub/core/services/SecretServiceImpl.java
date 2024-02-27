@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
-import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.SecretService;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-public class ProjectSecretServiceImpl implements ProjectSecretService {
+public class SecretServiceImpl implements SecretService {
 
     private static final String K8S_PROVIDER = "kubernetes";
     private static final String PATH_FORMAT = "%s://%s/%s";

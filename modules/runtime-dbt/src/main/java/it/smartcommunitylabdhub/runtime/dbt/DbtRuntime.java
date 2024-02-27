@@ -8,7 +8,7 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.builders.DbtTransformBuilder;
 import it.smartcommunitylabdhub.runtime.dbt.runners.DbtTransformRunner;
@@ -27,7 +27,7 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
     private final DbtTransformBuilder builder = new DbtTransformBuilder();
 
     @Autowired
-    ProjectSecretService secretService;
+    SecretService secretService;
 
     @Value("${runtime.dbt.image}")
     private String image;

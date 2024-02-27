@@ -24,6 +24,7 @@ public class LogDTOBuilder implements Converter<LogEntity, Log> {
             builder ->
                 builder
                     .with(dto -> dto.setId(entity.getId()))
+                    .with(dto -> dto.setProject(entity.getProject()))
                     .with(dto -> {
                         //read metadata as-is
                         Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());

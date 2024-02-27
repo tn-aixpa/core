@@ -27,7 +27,7 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
     protected final Converter<D, E> entityBuilder;
     protected final Converter<E, D> dtoBuilder;
 
-    protected BaseEntityServiceImpl(
+    public BaseEntityServiceImpl(
         JpaRepository<E, String> repository,
         Converter<D, E> entityBuilder,
         Converter<E, D> dtoBuilder
