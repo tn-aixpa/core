@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
@@ -209,13 +208,13 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                 );
 
                 // Parse task to get accessor
-                TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskBaseSpec.getFunction());
+                TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskBaseSpec.toMap());
 
                 return Optional
-                    .ofNullable(functionService.getFunction(taskAccessor.getVersion()))
+                    .ofNullable(functionService.getFunction(taskAccessor.getFunctionVersion()))
                     .map(functionDTO -> {
                         // Update spec object for run
-                        runDTO.setProject(taskAccessor.getProject());
+                        runDTO.setProject(taskAccessor.getFunctionProject());
 
                         // Check weather the run has local set to True in that case return
                         // immediately the run without invoke the execution.
@@ -235,7 +234,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                                         ? extends FunctionBaseSpec,
                                         ? extends RunBaseSpec,
                                         ? extends Runnable
-                                    > runtime = runtimeFactory.getRuntime(taskAccessor.getRuntime());
+                                    > runtime = runtimeFactory.getRuntime(taskAccessor.getFunctionRuntime());
 
                                     // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
                                     // an exception occur! for.

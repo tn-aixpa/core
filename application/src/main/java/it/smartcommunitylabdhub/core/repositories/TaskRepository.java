@@ -12,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSpecificationExecutor<TaskEntity> {
     List<TaskEntity> findByFunction(String function);
 
+    List<TaskEntity> findByFunctionId(String functionId);
+
     @Modifying
     @Query("DELETE FROM TaskEntity t WHERE t.project = :project ")
     void deleteByProjectName(@Param("project") String project);

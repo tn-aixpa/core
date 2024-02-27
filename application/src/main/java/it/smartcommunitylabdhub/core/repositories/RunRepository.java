@@ -14,6 +14,8 @@ public interface RunRepository extends JpaRepository<RunEntity, String>, JpaSpec
 
     List<RunEntity> findByTask(String task);
 
+    List<RunEntity> findByTaskId(String taskId);
+
     @Modifying
     @Query("DELETE FROM RunEntity r WHERE r.project = :project ")
     void deleteByProjectName(@Param("project") String project);

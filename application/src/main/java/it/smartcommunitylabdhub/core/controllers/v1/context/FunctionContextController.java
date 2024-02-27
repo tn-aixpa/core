@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
@@ -18,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -156,7 +154,7 @@ public class FunctionContextController extends AbstractContextController {
         Function function = this.functionContextService.getByUuid(project, uuid);
 
         // Remove Task
-        List<Task> taskList = this.taskService.getTasksByFunction(TaskUtils.buildTaskString(function));
+        List<Task> taskList = this.taskService.getTasksByFunctionId(function.getId());
         //Delete all related object
         taskList.forEach(task -> {
             // remove run
@@ -182,7 +180,7 @@ public class FunctionContextController extends AbstractContextController {
         this.functionContextService.listByProjectNameAndFunctionName(project, name)
             .forEach(function -> {
                 // Remove Task
-                List<Task> taskList = this.taskService.getTasksByFunction(TaskUtils.buildTaskString(function));
+                List<Task> taskList = this.taskService.getTasksByFunctionId(function.getId());
                 //Delete all related object
                 taskList.forEach(task -> {
                     // remove run

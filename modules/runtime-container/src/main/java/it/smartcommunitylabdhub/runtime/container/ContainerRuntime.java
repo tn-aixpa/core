@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerDeployBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerJobBuilder;
@@ -68,10 +67,9 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
         RunContainerSpec runContainerSpec = new RunContainerSpec(run.getSpec());
 
         // Create string run accessor from task
-        //TODO drop the utils and get the task accessor from the spec.
-        RunSpecAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(runContainerSpec.toMap());
 
-        return switch (runAccessor.getTask()) {
+        return switch (runAccessor.getTaskKind()) {
             case TaskDeploySpec.KIND -> new ContainerDeployRunner(
                 runContainerSpec.getFunctionSpec(),
                 secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())

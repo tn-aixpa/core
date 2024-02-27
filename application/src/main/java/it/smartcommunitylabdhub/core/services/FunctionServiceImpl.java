@@ -6,8 +6,6 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
@@ -205,7 +203,7 @@ public class FunctionServiceImpl
 
                     // Remove Task
                     List<Task> taskList =
-                        this.taskRepository.findByFunction(TaskUtils.buildTaskString(function))
+                        this.taskRepository.findByFunctionId(function.getId())
                             .stream()
                             .map(taskDTOBuilder::build)
                             .toList();
@@ -250,13 +248,10 @@ public class FunctionServiceImpl
         try {
             // Find and collect runs for a function
             List<RunEntity> runs =
-                this.taskRepository.findByFunction(TaskUtils.buildTaskString(functionDTO))
+                this.taskRepository.findByFunctionId(functionDTO.getId())
                     .stream()
-                    .flatMap(task ->
-                        this.runRepository.findByTask(RunUtils.buildRunString(functionDTO, taskDTOBuilder.build(task)))
-                            .stream()
-                    )
-                    .collect(Collectors.toList());
+                    .flatMap(task -> this.runRepository.findByTaskId(task.getId()).stream())
+                    .toList();
 
             return runs.stream().map(r -> runDTOBuilder.convert(r)).collect(Collectors.toList());
         } catch (CustomException e) {

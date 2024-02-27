@@ -69,6 +69,7 @@ public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
                                 )
                         )
                     )
+                    .with(e -> e.setFunctionId(taskSpec.getFunctionId()))
                     .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
                     .with(e -> e.setSpec(cborConverter.convert(spec)))
                     .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))

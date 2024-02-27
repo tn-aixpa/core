@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.exceptions.CoreException;
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
@@ -372,7 +371,7 @@ public class FunctionContextServiceImpl
                 Function function = getByProjectAndFunctionAndUuid(projectName, functionName, uuid);
 
                 // Remove Task
-                List<TaskEntity> taskList = this.taskRepository.findByFunction(TaskUtils.buildTaskString(function));
+                List<TaskEntity> taskList = this.taskRepository.findByFunctionId(function.getId());
                 //Delete all related object
                 taskList.forEach(task -> {
                     // remove run
@@ -409,8 +408,7 @@ public class FunctionContextServiceImpl
                 listByProjectNameAndFunctionName(projectName, functionName)
                     .forEach(function -> {
                         // Remove Task
-                        List<TaskEntity> taskList =
-                            this.taskRepository.findByFunction(TaskUtils.buildTaskString(function));
+                        List<TaskEntity> taskList = this.taskRepository.findByFunctionId(function.getId());
                         //Delete all related object
                         taskList.forEach(task -> {
                             // remove run

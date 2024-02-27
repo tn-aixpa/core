@@ -7,7 +7,6 @@ import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.builders.DbtTransformBuilder;
@@ -54,16 +53,15 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
     @Override
     public K8sJobRunnable run(Run run) {
         // Crete spec for run
-        RunDbtSpec runSpec = new RunDbtSpec(run.getSpec());
+        RunDbtSpec runDbtSpec = new RunDbtSpec(run.getSpec());
 
         // Create string run accessor from task
-        //TODO drop the utils and get the task accessor from the spec.
-        RunSpecAccessor runAccessor = RunUtils.parseRun(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(runDbtSpec.toMap());
 
-        return switch (runAccessor.getTask()) {
+        return switch (runAccessor.getTaskKind()) {
             case TaskTransformSpec.KIND -> new DbtTransformRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runDbtSpec.getTaskSpec().getSecrets())
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

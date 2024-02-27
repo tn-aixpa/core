@@ -7,7 +7,6 @@ import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunMlrunBuilder;
@@ -52,16 +51,16 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8
 
     @Override
     public K8sJobRunnable run(Run run) {
-        RunMlrunSpec runSpec = new RunMlrunSpec(run.getSpec());
+        RunMlrunSpec runMlrunSpec = new RunMlrunSpec(run.getSpec());
 
         // Create string run accessor from task
         //TODO drop the utils and get the task accessor from the spec.
-        RunSpecAccessor runAccessor = RunUtils.parseRun(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(runMlrunSpec.toMap());
 
-        return switch (runAccessor.getTask()) {
+        return switch (runAccessor.getTaskKind()) {
             case TaskMlrunSpec.KIND -> new MlrunMlrunRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runMlrunSpec.getTaskSpec().getSecrets())
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

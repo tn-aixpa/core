@@ -6,8 +6,6 @@ import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.specs.Spec;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.commons.utils.ErrorList;
@@ -101,6 +99,11 @@ public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, Ta
     }
 
     @Override
+    public List<Task> getTasksByFunctionId(String functionId) {
+        return taskRepository.findByFunctionId(functionId).stream().map(taskDTOBuilder::build).toList();
+    }
+
+    @Override
     public boolean deleteTask(String uuid, Boolean cascade) {
         try {
             if (this.taskRepository.existsById(uuid)) {
@@ -132,8 +135,9 @@ public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, Ta
 
         K8sTaskBaseSpec taskSpec = specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, taskDTO.getSpec());
 
-        TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
-        if (!taskDTO.getProject().equals(taskAccessor.getProject())) {
+        TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
+
+        if (!taskDTO.getProject().equals(taskAccessor.getFunctionProject())) {
             throw new CoreException(
                 "Task string Project and associated Project does not match",
                 "Cannot create the task",

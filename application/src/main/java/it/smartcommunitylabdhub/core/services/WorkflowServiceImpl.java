@@ -5,8 +5,6 @@ import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.WorkflowService;
 import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
@@ -198,13 +196,10 @@ public class WorkflowServiceImpl
 
         try {
             List<RunEntity> runs =
-                this.taskRepository.findByFunction(TaskUtils.buildTaskString(workflowDTO))
+                this.taskRepository.findByFunctionId(workflowDTO.getId())
                     .stream()
-                    .flatMap(task ->
-                        this.runRepository.findByTask(RunUtils.buildRunString(workflowDTO, taskDTOBuilder.build(task)))
-                            .stream()
-                    )
-                    .collect(Collectors.toList());
+                    .flatMap(task -> this.runRepository.findByTaskId(task.getId()).stream())
+                    .toList();
             return runs.stream().map(r -> runDTOBuilder.convert(r)).collect(Collectors.toList());
         } catch (CustomException e) {
             throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
