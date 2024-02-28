@@ -236,24 +236,7 @@ public class TaskServiceImpl implements SearchableTaskService {
     public void deleteTasksByFunctionId(@NotNull String functionId) {
         log.debug("delete tasks for function {}", functionId);
 
-        Function function = functionEntityService.find(functionId);
-        if (function == null) {
-            return;
-        }
-
-        //define a spec for tasks building function path
-        Specification<TaskEntity> where = Specification.allOf(
-            CommonSpecification.projectEquals(function.getProject()),
-            createFunctionSpecification(TaskUtils.buildFunctionString(function))
-        );
-
-        //fetch all tasks ordered by kind ASC
-        Specification<TaskEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.asc(root.get(TaskEntity_.KIND)));
-            return where.toPredicate(root, query, builder);
-        };
-
-        entityService.deleteAll(specification);
+        getTasksByFunctionId(functionId).forEach(task -> deleteTask(task.getId(), Boolean.TRUE));
     }
 
     // @Override
@@ -296,12 +279,6 @@ public class TaskServiceImpl implements SearchableTaskService {
     //     long count = runEntityService.deleteAll(specification);
     //     log.debug("deleted runs count {}", count);
     // }
-
-    private Specification<RunEntity> createRunSpecification(String task) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("task"), task);
-        };
-    }
 
     private Specification<TaskEntity> createFunctionSpecification(String function) {
         return (root, query, criteriaBuilder) -> {

@@ -58,7 +58,7 @@ public class SecretServiceImpl implements SecretService {
     private ProjectRepository projectRepository;
 
     @Override
-    public Secret createProjectSecret(Secret secretDTO) {
+    public Secret createSecret(Secret secretDTO) {
         // store in DB, do not create physically the secret
         if (secretDTO.getId() != null && secretRepository.existsById(secretDTO.getId())) {
             throw new CoreException(
@@ -84,7 +84,7 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public Secret updateProjectSecret(Secret secretDTO, String uuid) {
+    public Secret updateSecret(Secret secretDTO, String uuid) {
         if (!secretDTO.getId().equals(uuid)) {
             throw new CoreException(
                 ErrorList.FUNCTION_NOT_MATCH.getValue(),
@@ -117,7 +117,7 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public Secret getProjectSecret(String uuid) {
+    public Secret getSecret(String uuid) {
         final SecretEntity secret = secretRepository.findById(uuid).orElse(null);
         if (secret == null) {
             throw new CoreException(
@@ -139,7 +139,7 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public List<Secret> getProjectSecrets(String projectName) {
+    public List<Secret> getSecretsByProject(String projectName) {
         return secretRepository
             .findByProject(projectName)
             .stream()
@@ -150,7 +150,7 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public boolean deleteProjectSecret(String uuid) {
+    public boolean deleteSecret(String uuid) {
         try {
             SecretEntity secret = secretRepository.findById(uuid).orElse(null);
             if (secret != null) {
@@ -179,7 +179,7 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public Map<String, String> getProjectSecretData(String projectName, Set<String> names) {
+    public Map<String, String> getSecretData(String projectName, Set<String> names) {
         if (names == null || names.isEmpty()) return Collections.emptyMap();
 
         Map<String, String> data = new HashMap<>();
@@ -207,7 +207,7 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public void storeProjectSecretData(String projectName, Map<String, String> values) {
+    public void storeSecretData(String projectName, Map<String, String> values) {
         if (values == null || values.isEmpty()) return;
 
         String secretName = getProjectSecretName(projectName);

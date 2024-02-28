@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.*;
+import org.springframework.lang.Nullable;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,6 +19,7 @@ import lombok.*;
 @JsonPropertyOrder(alphabetic = true)
 public class Artifact implements BaseDTO {
 
+    @Nullable
     @Pattern(regexp = Keys.SLUG_PATTERN)
     private String id;
 
@@ -33,17 +35,21 @@ public class Artifact implements BaseDTO {
     @Pattern(regexp = Keys.SLUG_PATTERN)
     private String project;
 
+    @Nullable
     @Builder.Default
     private Map<String, Serializable> metadata = new HashMap<>();
 
+    @Nullable
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Serializable> spec = new HashMap<>();
 
+    @Nullable
     @Builder.Default
     @JsonIgnore
     private Map<String, Serializable> extra = new HashMap<>();
 
+    @Nullable
     @Builder.Default
     private Map<String, Serializable> status = new HashMap<>();
 

@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,8 +63,8 @@ public class TaskController {
     @Operation(summary = "List tasks", description = "Return a list of all tasks")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Task> getTasks(
-        @RequestParam(required = false) @Valid @Nullable TaskEntityFilter filter,
-        @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+        @ParameterObject @RequestParam(required = false) @Valid @Nullable TaskEntityFilter filter,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "kind", direction = Direction.ASC) }
         ) Pageable pageable
     ) {

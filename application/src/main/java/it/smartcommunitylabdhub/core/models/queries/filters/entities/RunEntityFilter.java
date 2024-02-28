@@ -1,59 +1,44 @@
 package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
-import it.smartcommunitylabdhub.commons.utils.DateUtils;
+import io.swagger.v3.oas.annotations.media.Schema;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.models.base.BaseEntityFilter;
 import it.smartcommunitylabdhub.core.models.base.BaseEntitySearchCriteria;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import java.util.Date;
+import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractEntityFilter;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.Pattern;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class RunEntityFilter implements SpecificationFilter<RunEntity> {
+public class RunEntityFilter extends AbstractEntityFilter<RunEntity> {
 
-    private String name;
-    private String kind;
-    private String project;
-    private String state;
-    private String createdDate;
+    @Nullable
+    @Pattern(regexp = Keys.PATH_PATTERN)
+    @Schema(example = "kind://my-project/my-function:function-id", defaultValue = "", description = "Task path")
     private String task;
-    private String taskId;
 
     @Override
-    public Predicate toPredicate(Root<RunEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-        Predicate predicate = criteriaBuilder.conjunction();
+    public SearchFilter<RunEntity> toSearchFilter() {
+        List<SearchCriteria<RunEntity>> criteria = new ArrayList<>();
 
-        if (task != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("task"), "%" + task + "%"));
-        }
-        if (taskId != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("taskId"), "%" + taskId + "%"));
-        }
+        //base criteria
+        criteria.addAll(super.toSearchFilter().getCriteria());
 
-        if (getKind() != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("kind"), "%" + getKind() + "%"));
-        }
+        //task exact match
+        Optional
+            .ofNullable(task)
+            .ifPresent(value ->
+                criteria.add(new BaseEntitySearchCriteria<>("task", value, SearchCriteria.Operation.equal))
+            );
 
-        if (getState() != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("state"), "%" + getState() + "%"));
-        }
-
-        if (getCreatedDate() != null) {
-            DateUtils.DateInterval dateInterval = DateUtils.parseDateIntervalFromTimestamps(getCreatedDate(), true);
-            predicate =
-                criteriaBuilder.and(
-                    predicate,
-                    criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate())
-                );
-        }
-
-        // add more..here...
-
-        return predicate;
+        return BaseEntityFilter.<RunEntity>builder().criteria(criteria).condition(SearchFilter.Condition.and).build();
     }
 }

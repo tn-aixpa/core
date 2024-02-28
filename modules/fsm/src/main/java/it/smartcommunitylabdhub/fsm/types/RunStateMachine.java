@@ -10,7 +10,7 @@ package it.smartcommunitylabdhub.fsm.types;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.RunService;
+import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.FsmState;
 import it.smartcommunitylabdhub.fsm.Transaction;
@@ -35,14 +35,11 @@ public class RunStateMachine {
      * @param initialContext The initial context for the StateMachine.
      * @return The configured StateMachine instance.
      */
-    public Fsm<State, RunEvent, Map<String, Object>> create(
-            State initialState,
-            Map<String, Object> initialContext
-    ) {
+    public Fsm<State, RunEvent, Map<String, Object>> create(State initialState, Map<String, Object> initialContext) {
         // Create a new StateMachine builder with the initial state and context
         Fsm.Builder<State, RunEvent, Map<String, Object>> builder = new Fsm.Builder<>(
-                initialState,
-                Optional.of(initialContext)
+            initialState,
+            Optional.of(initialContext)
         );
 
         // Define states and transitions
@@ -66,47 +63,63 @@ public class RunStateMachine {
 
         // Configure the StateMachine with the defined states and transitions
         builder
-                .withState(State.CREATED, createState)
-                .withExitAction(
-                        State.CREATED,
-                        context -> {
-                            context.ifPresent(c -> {
-                                // update run state
-                                Run runDTO = runService.getRun(c.get("runId").toString());
-                                runDTO.getStatus().put("state", State.READY.toString());
-                                runService.updateRun(runDTO, runDTO.getId());
-                            });
-                        }
-                )
-                .withState(State.BUILT, builtState)
-                .withState(State.READY, readyState)
-                .withState(State.RUNNING, runningState)
-                .withEntryAction(
-                        State.RUNNING,
-                        context -> {
-                            context.ifPresent(c -> {
-                                Run runDTO = runService.getRun(c.get("runId").toString());
-                                runDTO.getStatus().put("state", State.RUNNING.toString());
+            .withState(State.CREATED, createState)
+            .withExitAction(
+                State.CREATED,
+                context -> {
+                    context.ifPresent(c -> {
+                        try {
+                            // update run state
+                            Run runDTO = runService.getRun(c.get("runId").toString());
+                            runDTO.getStatus().put("state", State.READY.toString());
 
-                                runService.updateRun(runDTO, runDTO.getId());
-                            });
+                            runService.updateRun(runDTO.getId(), runDTO);
+                        } catch (NoSuchEntityException e) {
+                            // TODO handle
+                            e.printStackTrace();
                         }
-                )
-                .withState(State.COMPLETED, completedState)
-                .withErrorState(State.ERROR, errorState)
-                .withEntryAction(
-                        State.ERROR,
-                        context -> {
-                            context.ifPresent(c -> {
-                                Run runDTO = runService.getRun(c.get("runId").toString());
-                                runDTO.getStatus().put("state", State.ERROR.toString());
-                                runService.updateRun(runDTO, runDTO.getId());
-                            });
+                    });
+                }
+            )
+            .withState(State.BUILT, builtState)
+            .withState(State.READY, readyState)
+            .withState(State.RUNNING, runningState)
+            .withEntryAction(
+                State.RUNNING,
+                context -> {
+                    context.ifPresent(c -> {
+                        try {
+                            Run runDTO = runService.getRun(c.get("runId").toString());
+                            runDTO.getStatus().put("state", State.RUNNING.toString());
+
+                            runService.updateRun(runDTO.getId(), runDTO);
+                        } catch (NoSuchEntityException e) {
+                            // TODO handle
+                            e.printStackTrace();
                         }
-                )
-                .withStateChangeListener((newState, context) ->
-                        log.info("State Change Listener: " + newState + ", context: " + context)
-                );
+                    });
+                }
+            )
+            .withState(State.COMPLETED, completedState)
+            .withErrorState(State.ERROR, errorState)
+            .withEntryAction(
+                State.ERROR,
+                context -> {
+                    context.ifPresent(c -> {
+                        try {
+                            Run runDTO = runService.getRun(c.get("runId").toString());
+                            runDTO.getStatus().put("state", State.ERROR.toString());
+                            runService.updateRun(runDTO.getId(), runDTO);
+                        } catch (NoSuchEntityException e) {
+                            // TODO handle
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            )
+            .withStateChangeListener((newState, context) ->
+                log.info("State Change Listener: " + newState + ", context: " + context)
+            );
 
         // Build and return the configured StateMachine instance
         return builder.build();

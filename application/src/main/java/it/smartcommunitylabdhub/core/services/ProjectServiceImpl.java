@@ -467,11 +467,11 @@ public class ProjectServiceImpl
 
     @Override
     public Map<String, String> getProjectSecretData(String name, Set<String> keys) {
-        return secretService.getProjectSecretData(name, keys);
+        return secretService.getSecretData(name, keys);
     }
 
     @Override
     public void storeProjectSecretData(String name, Map<String, String> values) {
-        secretService.storeProjectSecretData(name, values);
+        secretService.storeSecretData(name, values);
     }
 }

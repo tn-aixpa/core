@@ -33,7 +33,7 @@ public class SecretController {
     @Operation(summary = "Get specific secret", description = "Given a uuid return a specific secret")
     @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Secret> getSecret(@ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
-        return ResponseEntity.ok(this.secretService.getProjectSecret(uuid));
+        return ResponseEntity.ok(this.secretService.getSecret(uuid));
     }
 
     @Operation(summary = "Create a secret", description = "Create and return a new secret")
@@ -43,7 +43,7 @@ public class SecretController {
         produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Secret> createSecret(@Valid @RequestBody Secret secretDTO) {
-        return ResponseEntity.ok(this.secretService.createProjectSecret(secretDTO));
+        return ResponseEntity.ok(this.secretService.createSecret(secretDTO));
     }
 
     @Operation(summary = "Update a secret", description = "Update and return a secret")
@@ -56,7 +56,7 @@ public class SecretController {
         @Valid @RequestBody Secret functionDTO,
         @ValidateField @PathVariable String uuid
     ) {
-        return ResponseEntity.ok(this.secretService.updateProjectSecret(functionDTO, uuid));
+        return ResponseEntity.ok(this.secretService.updateSecret(functionDTO, uuid));
     }
 
     @Operation(summary = "Delete a secret", description = "Delete a specific secret")
@@ -64,6 +64,6 @@ public class SecretController {
     public ResponseEntity<Boolean> deleteSecret(
         @ValidateField @PathVariable(name = "uuid", required = true) String uuid
     ) {
-        return ResponseEntity.ok(this.secretService.deleteProjectSecret(uuid));
+        return ResponseEntity.ok(this.secretService.deleteSecret(uuid));
     }
 }

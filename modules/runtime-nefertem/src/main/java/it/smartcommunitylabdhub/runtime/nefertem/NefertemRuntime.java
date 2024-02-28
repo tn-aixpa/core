@@ -80,7 +80,7 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
 
         // Create string run accessor from task
         //TODO drop the utils and get the task accessor from the spec.
-        RunSpecAccessor runAccessor = RunUtils.parseRun(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
 
         return switch (runAccessor.getTask()) {
             case TaskInferSpec.KIND -> new NefertemInferRunner(

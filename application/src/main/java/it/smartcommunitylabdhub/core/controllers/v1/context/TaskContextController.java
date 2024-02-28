@@ -20,6 +20,7 @@ import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -83,8 +84,8 @@ public class TaskContextController {
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Task> getTasksByProject(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @RequestParam(required = false) @Valid @Nullable TaskEntityFilter filter,
-        @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+        @ParameterObject @RequestParam(required = false) @Valid @Nullable TaskEntityFilter filter,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
     ) {

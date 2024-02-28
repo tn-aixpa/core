@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.utils;
 
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
@@ -10,7 +11,7 @@ import java.util.regex.Pattern;
 
 public class TaskUtils {
 
-    private static final Pattern FUNCTION_PATTERN = Pattern.compile("([^:/]+)://([^/]+)/([^:]+):(.+)");
+    private static final Pattern FUNCTION_PATTERN = Pattern.compile(Keys.PATH_PATTERN);
 
     private TaskUtils() {}
 

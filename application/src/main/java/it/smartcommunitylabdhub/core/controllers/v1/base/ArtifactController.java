@@ -17,6 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,8 +63,8 @@ public class ArtifactController {
     @Operation(summary = "List artifacts", description = "Return a list of all artifacts")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Artifact> getArtifacts(
-        @RequestParam(required = false) @Valid @Nullable ArtifactEntityFilter filter,
-        @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+        @ParameterObject @RequestParam(required = false) @Valid @Nullable ArtifactEntityFilter filter,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
     ) {

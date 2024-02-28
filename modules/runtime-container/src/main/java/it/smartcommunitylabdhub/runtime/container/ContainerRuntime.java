@@ -69,7 +69,7 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
         // Create string run accessor from task
         //TODO drop the utils and get the task accessor from the spec.
-        RunSpecAccessor runAccessor = RunUtils.parseRun(runContainerSpec.getTask());
+        RunSpecAccessor runAccessor = RunUtils.parseTask(runContainerSpec.getTask());
 
         return switch (runAccessor.getTask()) {
             case TaskDeploySpec.KIND -> new ContainerDeployRunner(

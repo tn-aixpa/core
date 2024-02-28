@@ -1,11 +1,16 @@
 package it.smartcommunitylabdhub.core.models.queries.filters.abstracts;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.base.BaseEntityFilter;
 import it.smartcommunitylabdhub.core.models.base.BaseEntitySearchCriteria;
+import jakarta.annotation.Nullable;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -24,13 +29,30 @@ import org.springframework.util.StringUtils;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Valid
 public abstract class AbstractEntityFilter<T extends BaseEntity> {
 
+    @Nullable
+    @Pattern(regexp = Keys.SLUG_PATTERN)
+    @Schema(example = "my-function-1", defaultValue = "", description = "Name identifier")
     protected String name;
+
+    @Nullable
+    @Pattern(regexp = Keys.SLUG_PATTERN)
+    @Schema(example = "function", defaultValue = "", description = "Kind identifier")
     protected String kind;
+
+    @Nullable
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     protected String project;
+
+    @Nullable
     protected String state;
+
+    @Nullable
     protected String created;
+
+    @Nullable
     protected String updated;
 
     public SearchFilter<T> toSearchFilter() {

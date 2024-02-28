@@ -58,7 +58,7 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
 
         // Create string run accessor from task
         //TODO drop the utils and get the task accessor from the spec.
-        RunSpecAccessor runAccessor = RunUtils.parseRun(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
 
         return switch (runAccessor.getTask()) {
             case TaskTransformSpec.KIND -> new DbtTransformRunner(

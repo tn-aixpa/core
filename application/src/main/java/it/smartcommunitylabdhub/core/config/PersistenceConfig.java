@@ -72,14 +72,14 @@ public class PersistenceConfig {
         return new BaseEntityServiceImpl<>(repository, entityBuilder, dtoBuilder);
     }
 
-    @Bean
-    public EntityService<Project, ProjectEntity> projectEntityService(
-        ProjectRepository repository,
-        Converter<Project, ProjectEntity> entityBuilder,
-        Converter<ProjectEntity, Project> dtoBuilder
-    ) {
-        return new BaseEntityServiceImpl<>(repository, entityBuilder, dtoBuilder);
-    }
+    // @Bean
+    // public EntityService<Project, ProjectEntity> projectEntityService(
+    //     ProjectRepository repository,
+    //     Converter<Project, ProjectEntity> entityBuilder,
+    //     Converter<ProjectEntity, Project> dtoBuilder
+    // ) {
+    //     return new BaseEntityServiceImpl<>(repository, entityBuilder, dtoBuilder);
+    // }
 
     @Bean
     public EntityService<Run, RunEntity> runEntityService(

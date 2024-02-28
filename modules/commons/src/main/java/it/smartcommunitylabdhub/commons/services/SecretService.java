@@ -15,7 +15,7 @@ public interface SecretService {
      * @param secret
      * @return
      */
-    Secret createProjectSecret(Secret secret);
+    Secret createSecret(Secret secret);
 
     /**
      * Update the secret with the specified id. Throw error if not found or if the operation cannot be performed.
@@ -23,28 +23,28 @@ public interface SecretService {
      * @param id
      * @return
      */
-    Secret updateProjectSecret(Secret secret, String id);
+    Secret updateSecret(Secret secret, String id);
 
     /**
      * Retrieve the secret with the specified id. Throw error if not found
      * @param id
      * @return
      */
-    Secret getProjectSecret(String id);
+    Secret getSecret(String id);
 
     /**
      * List all the project secrets for the project with the specified name
      * @param project
      * @return
      */
-    List<Secret> getProjectSecrets(String project);
+    List<Secret> getSecretsByProject(String project);
 
     /**
      * Delete the secret with the specified id. Throw error if not found or if the operation cannot be performed.
      * @param id
      * @return
      */
-    boolean deleteProjectSecret(String id);
+    boolean deleteSecret(String id);
 
     /**
      * Retrieve the project secret values for the specified names of the project
@@ -52,14 +52,14 @@ public interface SecretService {
      * @param names
      * @return
      */
-    Map<String, String> getProjectSecretData(String projectName, Set<String> names);
+    Map<String, String> getSecretData(String projectName, Set<String> names);
 
     /**
      * Store the values for the project secrets. If the secret does not exist, it will be created.
      * @param projectName
      * @param values
      */
-    void storeProjectSecretData(String projectName, Map<String, String> values);
+    void storeSecretData(String projectName, Map<String, String> values);
 
     /**
      * Group the specifiedsecrets by secret name as stored in provider. Only Kubernetes provider is supported at this moment.

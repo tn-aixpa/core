@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.utils;
 
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
@@ -13,12 +14,12 @@ import java.util.regex.Pattern;
 public class RunUtils {
 
     public static final Pattern TASK_PARTS = Pattern.compile("([^:/]+)://([^/]+)/([^/]+):(.+)");
-    public static final Pattern TASK_PATTERN = Pattern.compile("^([a-z][a-z0-9+\\-.]*):(.*)");
+    public static final Pattern TASK_PATTERN = Pattern.compile(Keys.PATH_PATTERN);
 
     private RunUtils() {}
 
     //TODO this goes into the accessor, via a with()
-    public static RunSpecAccessor parseRun(String value) {
+    public static RunSpecAccessor parseTask(String value) {
         Matcher matcher = TASK_PARTS.matcher(value);
         if (matcher.matches()) {
             String task = matcher.group(1);
