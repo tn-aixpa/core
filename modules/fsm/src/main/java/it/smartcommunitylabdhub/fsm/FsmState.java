@@ -1,6 +1,6 @@
 /**
  * State.java
- *
+ * <p>
  * This class represents a state in the State Machine. It contains information about the entry
  * action, exit action, internal logic, and transactions associated with the state.
  *
@@ -15,12 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class State<S, E, C> {
+public class FsmState<S, E, C> {
 
     private Optional<StateLogic<S, E, C, ?>> internalLogic;
     private Map<E, Transaction<S, E, C>> transactions;
 
-    public State() {
+    public FsmState() {
         internalLogic = Optional.empty();
         transactions = new HashMap<>();
     }

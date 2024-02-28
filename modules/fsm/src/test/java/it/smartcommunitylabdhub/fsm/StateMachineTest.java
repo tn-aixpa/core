@@ -15,11 +15,11 @@ public class StateMachineTest {
     public void fsm() {
         // Create the state machine
 
-        State<String, String, Map<String, Object>> state1 = new State<>();
-        State<String, String, Map<String, Object>> state2 = new State<>();
-        State<String, String, Map<String, Object>> state3 = new State<>();
-        State<String, String, Map<String, Object>> state4 = new State<>();
-        State<String, String, Map<String, Object>> errorState = new State<>(); // Error
+        FsmState<String, String, Map<String, Object>> state1 = new FsmState<>();
+        FsmState<String, String, Map<String, Object>> state2 = new FsmState<>();
+        FsmState<String, String, Map<String, Object>> state3 = new FsmState<>();
+        FsmState<String, String, Map<String, Object>> state4 = new FsmState<>();
+        FsmState<String, String, Map<String, Object>> errorState = new FsmState<>(); // Error
         // state
 
         // Create the initial state and context
@@ -27,16 +27,16 @@ public class StateMachineTest {
         Map<String, Object> initialContext = new HashMap<>();
 
         // Create the state machine using the builder
-        StateMachine.Builder<String, String, Map<String, Object>> builder = StateMachine
-            .<String, String, Map<String, Object>>builder(initialState, Optional.of(initialContext))
-            .withState("State1", state1)
-            .withState("State2", state2)
-            .withState("State3", state3)
-            .withState("State4", state4)
-            .withErrorState("ErrorState", errorState)
-            .withStateChangeListener((newState, context) ->
-                System.out.println("State Change Listener: " + newState + ", context: " + context)
-            );
+        Fsm.Builder<String, String, Map<String, Object>> builder = Fsm
+                .<String, String, Map<String, Object>>builder(initialState, Optional.of(initialContext))
+                .withState("State1", state1)
+                .withState("State2", state2)
+                .withState("State3", state3)
+                .withState("State4", state4)
+                .withErrorState("ErrorState", errorState)
+                .withStateChangeListener((newState, context) ->
+                        System.out.println("State Change Listener: " + newState + ", context: " + context)
+                );
 
         // Define transactions for state 1
         state1.addTransaction(new Transaction<>("Event1", "State2", context -> true));
@@ -92,14 +92,14 @@ public class StateMachineTest {
         builder.withEventListener("Event4", context -> System.out.println("Event4 Listener: context: " + context));
 
         builder.withExitAction(
-            "State1",
-            context -> {
-                System.out.println("exit action for state 1");
-            }
+                "State1",
+                context -> {
+                    System.out.println("exit action for state 1");
+                }
         );
 
         // Build the state machine
-        StateMachine<String, String, Map<String, Object>> stateMachine = builder.build();
+        Fsm<String, String, Map<String, Object>> stateMachine = builder.build();
 
         // Trigger events to test the state machine
         stateMachine.goToState("State2");

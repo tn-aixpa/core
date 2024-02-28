@@ -18,12 +18,18 @@ public class RunnableRepository {
         jdbcTemplate.update(sql, entity.getId(), entity.getData());
     }
 
+    public void update(RunnableEntity entity) {
+        String sql = "UPDATE runnable SET data = ? WHERE id = ?";
+        jdbcTemplate.update(sql, entity.getData(), entity.getId());
+    }
+
+
     public RunnableEntity findById(String id) {
         String sql = "SELECT * FROM runnable WHERE id = ?";
         return jdbcTemplate.queryForObject(
-            sql,
-            new Object[] { id },
-            BeanPropertyRowMapper.newInstance(RunnableEntity.class)
+                sql,
+                new Object[] {id},
+                BeanPropertyRowMapper.newInstance(RunnableEntity.class)
         );
     }
 

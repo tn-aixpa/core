@@ -8,10 +8,10 @@
 package it.smartcommunitylabdhub.fsm.types;
 
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunService;
-import it.smartcommunitylabdhub.fsm.State;
-import it.smartcommunitylabdhub.fsm.StateMachine;
+import it.smartcommunitylabdhub.fsm.Fsm;
+import it.smartcommunitylabdhub.fsm.FsmState;
 import it.smartcommunitylabdhub.fsm.Transaction;
 import it.smartcommunitylabdhub.fsm.enums.RunEvent;
 import java.util.Map;
@@ -34,78 +34,78 @@ public class RunStateMachine {
      * @param initialContext The initial context for the StateMachine.
      * @return The configured StateMachine instance.
      */
-    public StateMachine<RunState, RunEvent, Map<String, Object>> create(
-        RunState initialState,
-        Map<String, Object> initialContext
+    public Fsm<State, RunEvent, Map<String, Object>> create(
+            State initialState,
+            Map<String, Object> initialContext
     ) {
         // Create a new StateMachine builder with the initial state and context
-        StateMachine.Builder<RunState, RunEvent, Map<String, Object>> builder = new StateMachine.Builder<>(
-            initialState,
-            Optional.of(initialContext)
+        Fsm.Builder<State, RunEvent, Map<String, Object>> builder = new Fsm.Builder<>(
+                initialState,
+                Optional.of(initialContext)
         );
 
         // Define states and transitions
-        State<RunState, RunEvent, Map<String, Object>> createState = new State<>();
-        State<RunState, RunEvent, Map<String, Object>> builtState = new State<>();
-        State<RunState, RunEvent, Map<String, Object>> readyState = new State<>();
-        State<RunState, RunEvent, Map<String, Object>> runningState = new State<>();
-        State<RunState, RunEvent, Map<String, Object>> completedState = new State<>();
-        State<RunState, RunEvent, Map<String, Object>> errorState = new State<>();
+        FsmState<State, RunEvent, Map<String, Object>> createState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Object>> builtState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Object>> readyState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Object>> runningState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Object>> completedState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Object>> errorState = new FsmState<>();
 
-        createState.addTransaction(new Transaction<>(RunEvent.BUILD, RunState.READY, context -> true));
-        builtState.addTransaction(new Transaction<>(RunEvent.BUILD, RunState.READY, context -> true));
+        createState.addTransaction(new Transaction<>(RunEvent.BUILD, State.READY, context -> true));
+        builtState.addTransaction(new Transaction<>(RunEvent.BUILD, State.READY, context -> true));
 
-        readyState.addTransaction(new Transaction<>(RunEvent.RUNNING, RunState.RUNNING, context -> true));
+        readyState.addTransaction(new Transaction<>(RunEvent.RUNNING, State.RUNNING, context -> true));
 
-        readyState.addTransaction(new Transaction<>(RunEvent.PENDING, RunState.READY, context -> true));
+        readyState.addTransaction(new Transaction<>(RunEvent.PENDING, State.READY, context -> true));
 
-        readyState.addTransaction(new Transaction<>(RunEvent.COMPLETED, RunState.COMPLETED, context -> true));
+        readyState.addTransaction(new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, context -> true));
 
-        runningState.addTransaction(new Transaction<>(RunEvent.COMPLETED, RunState.COMPLETED, context -> true));
+        runningState.addTransaction(new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, context -> true));
 
         // Configure the StateMachine with the defined states and transitions
         builder
-            .withState(RunState.CREATED, createState)
-            .withExitAction(
-                RunState.CREATED,
-                context -> {
-                    context.ifPresent(c -> {
-                        // update run state
-                        Run runDTO = runService.getRun(c.get("runId").toString());
-                        runDTO.getStatus().put("state", RunState.READY.toString());
-                        runService.updateRun(runDTO, runDTO.getId());
-                    });
-                }
-            )
-            .withState(RunState.BUILT, builtState)
-            .withState(RunState.READY, readyState)
-            .withState(RunState.RUNNING, runningState)
-            .withEntryAction(
-                RunState.RUNNING,
-                context -> {
-                    context.ifPresent(c -> {
-                        Run runDTO = runService.getRun(c.get("runId").toString());
-                        runDTO.getStatus().put("state", RunState.RUNNING.toString());
+                .withState(State.CREATED, createState)
+                .withExitAction(
+                        State.CREATED,
+                        context -> {
+                            context.ifPresent(c -> {
+                                // update run state
+                                Run runDTO = runService.getRun(c.get("runId").toString());
+                                runDTO.getStatus().put("state", State.READY.toString());
+                                runService.updateRun(runDTO, runDTO.getId());
+                            });
+                        }
+                )
+                .withState(State.BUILT, builtState)
+                .withState(State.READY, readyState)
+                .withState(State.RUNNING, runningState)
+                .withEntryAction(
+                        State.RUNNING,
+                        context -> {
+                            context.ifPresent(c -> {
+                                Run runDTO = runService.getRun(c.get("runId").toString());
+                                runDTO.getStatus().put("state", State.RUNNING.toString());
 
-                        runService.updateRun(runDTO, runDTO.getId());
-                    });
-                }
-            )
-            .withState(RunState.COMPLETED, completedState)
-            .withErrorState(RunState.ERROR, errorState)
-            .withEntryAction(
-                RunState.ERROR,
-                context -> {
-                    context.ifPresent(c -> {
-                        Run runDTO = runService.getRun(c.get("runId").toString());
-                        runDTO.getStatus().put("state", RunState.ERROR.toString());
-                        runService.updateRun(runDTO, runDTO.getId());
-                    });
-                }
-            )
-            .withStateChangeListener((newState, context) ->
-                log.info("State Change Listener: " + newState + ", context: " + context)
-            );
+                                runService.updateRun(runDTO, runDTO.getId());
+                            });
+                        }
+                )
+                .withState(State.COMPLETED, completedState)
+                .withErrorState(State.ERROR, errorState)
+                .withEntryAction(
+                        State.ERROR,
+                        context -> {
+                            context.ifPresent(c -> {
+                                Run runDTO = runService.getRun(c.get("runId").toString());
+                                runDTO.getStatus().put("state", State.ERROR.toString());
+                                runService.updateRun(runDTO, runDTO.getId());
+                            });
+                        }
+                )
+                .withStateChangeListener((newState, context) ->
+                        log.info("State Change Listener: " + newState + ", context: " + context)
+                );
 
         // Build and return the configured StateMachine instance
         return builder.build();

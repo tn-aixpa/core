@@ -59,9 +59,9 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
             return runService.createRun(runDTO);
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -76,30 +76,30 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
             runEntityFilter.setKind(filter.get("kind"));
             runEntityFilter.setCreatedDate(filter.get("created"));
             Optional<RunState> stateOptional = Stream
-                .of(RunState.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
+                    .of(RunState.values())
+                    .filter(state -> state.name().equals(filter.get("state")))
+                    .findAny();
             runEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
 
             Specification<RunEntity> specification = createSpecification(filter, runEntityFilter);
 
             Page<RunEntity> runPage = runRepository.findAll(
-                Specification
-                    .where(specification)
-                    .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
-                pageable
+                    Specification
+                            .where(specification)
+                            .and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("project"), projectName)),
+                    pageable
             );
 
             return new PageImpl<>(
-                runPage.getContent().stream().map(run -> runDTOBuilder.build(run)).collect(Collectors.toList()),
-                pageable,
-                runPage.getTotalElements()
+                    runPage.getContent().stream().map(run -> runDTOBuilder.build(run)).collect(Collectors.toList()),
+                    pageable,
+                    runPage.getTotalElements()
             );
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -111,13 +111,13 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
             checkContext(projectName);
 
             return this.runRepository.findByProjectAndId(projectName, uuid)
-                .map(run -> runDTOBuilder.build(run))
-                .orElseThrow(() -> new CustomException(ErrorList.RUN_NOT_FOUND.getReason(), null));
+                    .map(run -> runDTOBuilder.build(run))
+                    .orElseThrow(() -> new CustomException(ErrorList.RUN_NOT_FOUND.getReason(), null));
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -132,33 +132,33 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
             }
             if (!uuid.equals(runDTO.getId())) {
                 throw new CustomException(
-                    "Trying to update a run with an ID different from the one passed in the request.",
-                    null
+                        "Trying to update a run with an ID different from the one passed in the request.",
+                        null
                 );
             }
             // Check project context
             checkContext(runDTO.getProject());
 
             RunEntity run =
-                this.runRepository.findById(runDTO.getId())
-                    .map(a -> // Update the existing run version
-                        runEntityBuilder.update(a, runDTO)
-                    )
-                    .orElseThrow(() ->
-                        new CoreException(
-                            ErrorList.RUN_NOT_FOUND.getValue(),
-                            ErrorList.RUN_NOT_FOUND.getReason(),
-                            HttpStatus.INTERNAL_SERVER_ERROR
-                        )
-                    );
+                    this.runRepository.findById(runDTO.getId())
+                            .map(a -> // Update the existing run version
+                                    runEntityBuilder.update(a, runDTO)
+                            )
+                            .orElseThrow(() ->
+                                    new CoreException(
+                                            ErrorList.RUN_NOT_FOUND.getValue(),
+                                            ErrorList.RUN_NOT_FOUND.getReason(),
+                                            HttpStatus.INTERNAL_SERVER_ERROR
+                                    )
+                            );
 
             // Return run DTO
             return runDTOBuilder.build(run);
         } catch (CustomException e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -172,15 +172,15 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
                 return true;
             }
             throw new CoreException(
-                ErrorList.RUN_NOT_FOUND.getValue(),
-                ErrorList.RUN_NOT_FOUND.getReason(),
-                HttpStatus.NOT_FOUND
+                    ErrorList.RUN_NOT_FOUND.getValue(),
+                    ErrorList.RUN_NOT_FOUND.getReason(),
+                    HttpStatus.NOT_FOUND
             );
         } catch (Exception e) {
             throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "cannot delete run",
-                HttpStatus.INTERNAL_SERVER_ERROR
+                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
+                    "cannot delete run",
+                    HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
     }

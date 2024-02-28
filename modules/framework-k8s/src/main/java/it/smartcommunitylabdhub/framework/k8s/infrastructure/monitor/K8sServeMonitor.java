@@ -1,23 +1,76 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
-import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.apis.AppsV1Api;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1Service;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
+import it.smartcommunitylabdhub.commons.events.RunChangedEvent;
+import it.smartcommunitylabdhub.commons.events.RunMonitorObject;
+import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.util.Assert;
 
+@Slf4j
 @MonitorComponent(framework = "serve")
 public class K8sServeMonitor implements K8sBaseMonitor<Void> {
 
-    protected CoreV1Api coreV1Api;
-    private AppsV1Api appsV1Api;
+    private final K8sServeFramework k8sServeFramework;
+    private final RunnableStore<K8sServeRunnable> runnableStore;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public K8sServeMonitor(ApiClient apiClient) {
-        coreV1Api = new CoreV1Api(apiClient);
-        appsV1Api = new AppsV1Api(apiClient);
+    private final K8sDeploymentFramework deploymentFramework;
+
+    public K8sServeMonitor(K8sServeFramework k8sServeFramework,
+                           RunnableStore<K8sServeRunnable> runnableStore,
+                           ApplicationEventPublisher eventPublisher,
+                           K8sDeploymentFramework deploymentFramework) {
+        this.k8sServeFramework = k8sServeFramework;
+        this.runnableStore = runnableStore;
+        this.eventPublisher = eventPublisher;
+        this.deploymentFramework = deploymentFramework;
     }
+
 
     @Override
     public Void monitor() {
+        List<RunMonitorObject> runMonitorObjects = runnableStore.findAll().stream()
+                .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
+                .flatMap(runnable -> {
+                    try {
+                        V1Deployment v1Deployment = deploymentFramework.get(k8sServeFramework.buildDeployment(runnable));
+                        V1Service v1Service = k8sServeFramework.get(k8sServeFramework.build(runnable));
+
+                        // check status
+                        Assert.notNull(Objects.requireNonNull(v1Deployment.getStatus()).getReadyReplicas(), "Deployment not ready");
+                        Assert.isTrue(v1Deployment.getStatus().getReadyReplicas() > 0, "Deployment not ready");
+                        Assert.notNull(v1Service.getStatus(), "Service not ready");
+
+                        System.out.println("deployment status: " + v1Deployment.getStatus().getReadyReplicas());
+                        System.out.println("service status: " + v1Service.getStatus());
+                        return Stream.of(runnable);
+                    } catch (K8sFrameworkException e) {
+                        return Stream.empty();
+                    }
+                }).map(runnable ->
+                        RunMonitorObject.builder()
+                                .runId(runnable.getId())
+                                .stateId(runnable.getState())
+                                .project(runnable.getProject())
+                                .framework(runnable.getFramework())
+                                .task(runnable.getTask()).build()
+                ).collect(Collectors.toList());
+
+        // Send event to RunManager
+        eventPublisher.publishEvent(RunChangedEvent.builder().monitorObjects(runMonitorObjects).build());
+
         //        //TODO cleanup monitoring!
         //        if (pollingService == null || runStateMachine == null || logService == null || runService == null) {
         //            return;

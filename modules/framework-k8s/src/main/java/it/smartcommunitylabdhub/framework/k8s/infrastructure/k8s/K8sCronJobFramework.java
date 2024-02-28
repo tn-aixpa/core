@@ -5,12 +5,15 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -22,12 +25,12 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
 
     private final BatchV1Api batchV1Api;
 
-    private final K8sJobFramework jobFramework;
+    @Autowired
+    private K8sJobFramework jobFramework;
 
     public K8sCronJobFramework(ApiClient apiClient) {
         super(apiClient);
         this.batchV1Api = new BatchV1Api(apiClient);
-        this.jobFramework = new K8sJobFramework(apiClient);
     }
 
     // TODO: instead of void define a Result object that have to be merged with the run from the
@@ -55,10 +58,31 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             throw new K8sFrameworkException("missing or invalid schedule in spec");
         }
 
-        V1Job job = jobFramework.build(runnable);
+        K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
+                .id(runnable.getId())
+                .args(runnable.getArgs())
+                .affinity(runnable.getAffinity())
+                .backoffLimit(runnable.getBackoffLimit())
+                .command(runnable.getCommand())
+                .envs(runnable.getEnvs())
+                .image(runnable.getImage())
+                .labels(runnable.getLabels())
+                .nodeSelector(runnable.getNodeSelector())
+                .project(runnable.getProject())
+                .resources(runnable.getResources())
+                .runtime(runnable.getRuntime())
+                .secrets(runnable.getSecrets())
+                .task(runnable.getTask())
+                .tolerations(runnable.getTolerations())
+                .volumes(runnable.getVolumes())
+                .state(RunState.READY.name())
+                .build();
+
+
+        V1Job job = jobFramework.build(k8sJobRunnable);
         V1CronJobSpec cronJobSpec = new V1CronJobSpec()
-            .schedule(runnable.getSchedule())
-            .jobTemplate(new V1JobTemplateSpec().spec(job.getSpec()));
+                .schedule(runnable.getSchedule())
+                .jobTemplate(new V1JobTemplateSpec().spec(job.getSpec()));
 
         return new V1CronJob().metadata(metadata).spec(cronJobSpec);
     }
@@ -76,12 +100,12 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             log.info("Job created: {}", Objects.requireNonNull(createdJob.getMetadata()).getName());
             return createdJob;
         } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getMessage());
+            log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {
                 log.debug("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getResponseBody());
         }
     }
 

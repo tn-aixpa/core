@@ -1,6 +1,6 @@
 /**
  * StateLogic.java
- *
+ * <p>
  * This functional interface represents the internal logic of a state in the State Machine.
  *
  * @param <S> The type of the states.
@@ -22,5 +22,5 @@ public interface StateLogic<S, E, C, T> {
      * @param stateMachine The state machine instance.
      * @return The optional result from applying the logic.
      */
-    Optional<T> applyLogic(C context, StateMachine<S, E, C> stateMachine);
+    Optional<T> applyLogic(C context, Fsm<S, E, C> stateMachine);
 }

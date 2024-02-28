@@ -8,6 +8,8 @@ public interface RunnableStore<T extends it.smartcommunitylabdhub.commons.infras
 
     void store(String id, T e);
 
+    void update(String id, T e);
+
     List<T> findAll();
 
     @FunctionalInterface

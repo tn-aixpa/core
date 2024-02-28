@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.runnables;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableComponent;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
 import lombok.AllArgsConstructor;
@@ -14,9 +15,12 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class K8sCronJobRunnable extends K8sJobRunnable {
+public class K8sCronJobRunnable extends K8sRunnable {
 
     private String schedule;
+
+    @JsonProperty("backoff_limit")
+    private Integer backoffLimit;
 
     @Override
     public String getFramework() {

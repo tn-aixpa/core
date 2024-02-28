@@ -17,11 +17,13 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class K8sServeRunnable extends K8sDeploymentRunnable {
+public class K8sServeRunnable extends K8sRunnable {
 
     private List<CorePort> servicePorts;
 
     private CoreServiceType serviceType;
+
+    private Integer replicas;
 
     @Override
     public String getFramework() {
