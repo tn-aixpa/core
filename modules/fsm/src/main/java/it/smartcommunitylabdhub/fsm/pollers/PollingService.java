@@ -9,7 +9,6 @@ package it.smartcommunitylabdhub.fsm.pollers;
 
 import it.smartcommunitylabdhub.fsm.workflow.Workflow;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.springframework.core.task.TaskExecutor;
 
@@ -23,14 +22,11 @@ public class PollingService {
         this.executor = executor;
     }
 
-    public void createPoller(
-        String name,
-        List<Workflow> workflowList,
-        long delay,
-        boolean reschedule,
-        boolean asyncWorkflow
-    ) {
-        Poller poller = new Poller(name, workflowList, delay, reschedule, asyncWorkflow, executor);
+    public void createPoller(String name, Workflow workflow, long delay, boolean reschedule, boolean asyncWorkflow) {
+        if (pollerMap.containsKey(name)) {
+            throw new IllegalArgumentException("Poller [" + name + "] already exists");
+        }
+        Poller poller = new Poller(name, workflow, delay, reschedule, asyncWorkflow, executor);
         pollerMap.put(name, poller);
     }
 

@@ -79,15 +79,13 @@ public class WorkflowFactory {
      */
     @SuppressWarnings("unchecked")
     public <I, O> WorkflowFactory conditionalStep(Function<I, Boolean> condition, Function<I, O> step) {
-        steps.add(
-            (Function<Object, Object>) input -> {
-                if (condition.apply((I) input)) {
-                    return step.apply((I) input);
-                } else {
-                    return input; // Skip the step
-                }
+        steps.add(input -> {
+            if (condition.apply((I) input)) {
+                return step.apply((I) input);
+            } else {
+                return input; // Skip the step
             }
-        );
+        });
         return this;
     }
 

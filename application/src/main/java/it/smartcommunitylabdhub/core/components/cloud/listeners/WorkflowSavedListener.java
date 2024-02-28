@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.components.cloud.events.EntityAction;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
@@ -28,6 +27,7 @@ public class WorkflowSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 workflowDTOBuilder.build((WorkflowEntity) entity, false),
+                entity,
                 Workflow.class,
                 EntityAction.CREATE
             )
@@ -40,6 +40,7 @@ public class WorkflowSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 workflowDTOBuilder.build((WorkflowEntity) entity, false),
+                entity,
                 Workflow.class,
                 EntityAction.UPDATE
             )
@@ -52,6 +53,7 @@ public class WorkflowSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 workflowDTOBuilder.build((WorkflowEntity) entity, false),
+                entity,
                 Workflow.class,
                 EntityAction.UPDATE
             )

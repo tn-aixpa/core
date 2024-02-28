@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.framework.k8s.infrastructure;
+package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -8,7 +8,8 @@ import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComp
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import jakarta.validation.constraints.NotNull;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -32,7 +33,9 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
-    public void execute(K8sCronJobRunnable runnable) throws K8sFrameworkException {}
+    public K8sCronJobRunnable execute(K8sCronJobRunnable runnable) throws K8sFrameworkException {
+        return runnable;
+    }
 
     @Override
     public V1CronJob build(K8sCronJobRunnable runnable) throws K8sFrameworkException {

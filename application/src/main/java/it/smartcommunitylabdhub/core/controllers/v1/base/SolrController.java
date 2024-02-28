@@ -48,160 +48,165 @@ import org.springframework.web.bind.annotation.RestController;
 @ApiVersion("v1")
 @PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class SolrController {
-	
-	@Autowired(required = false)
-	SolrComponent solrComponent;
-	
-	@Autowired
-	DataItemRepository dataItemRepository;
-	@Autowired
-	DataItemDTOBuilder dataItemDTOBuilder;
-	@Autowired
-	FunctionRepository functionRepository;
-	@Autowired
-	FunctionDTOBuilder functionDTOBuilder;
-	@Autowired
-	ArtifactRepository artifactRepository;
-	@Autowired
-	ArtifactDTOBuilder artifactDTOBuilder;
-	@Autowired
-	RunRepository runRepository;
-	@Autowired
-	RunDTOBuilder runDTOBuilder;
-	@Autowired
-	SecretRepository secretRepository;
-	@Autowired
-	SecretDTOBuilder secretDTOBuilder;
-	@Autowired
-	WorkflowRepository workflowRepository;
-	@Autowired
-	WorkflowDTOBuilder workflowDTOBuilder;
-	
-	@GetMapping(path = "/clear", produces = "application/json; charset=UTF-8")
-	public ResponseEntity<Void> clearIndex() {
-		if(solrComponent == null)
-			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);		
-		solrComponent.clearIndex();
-		return ResponseEntity.ok(null);
-	}
-	
-	@GetMapping(path = "/init", produces = "application/json; charset=UTF-8")
-	public ResponseEntity<Void> initIndex() {
-		if(solrComponent == null)
-			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);		
-		boolean finished = false;
-		int pageNumber = 0;
-		do {
-			Page<DataItemEntity> page = dataItemRepository.findAll(PageRequest.of(pageNumber, 1000));
-			if(page.getContent().size() == 0) {
-				finished = true;
-			} else {
-				List<DataItem> items = new ArrayList<>();
-				page.getContent().forEach(e -> items.add(dataItemDTOBuilder.build(e, false)));
-				solrComponent.indexBounceDataItem(items);
-			}
-			pageNumber++;
-		} while (!finished);
-		finished = false;
-		pageNumber = 0;
-		do {
-			Page<FunctionEntity> page = functionRepository.findAll(PageRequest.of(pageNumber, 1000));
-			if(page.getContent().size() == 0) {
-				finished = true;
-			} else {
-				List<Function> items = new ArrayList<>();
-				page.getContent().forEach(e -> items.add(functionDTOBuilder.build(e, false)));
-				solrComponent.indexBounceFunction(items);
-			}
-			pageNumber++;
-		} while (!finished);
-		finished = false;
-		pageNumber = 0;
-		do {
-			Page<ArtifactEntity> page = artifactRepository.findAll(PageRequest.of(pageNumber, 1000));
-			if(page.getContent().size() == 0) {
-				finished = true;
-			} else {
-				List<Artifact> items = new ArrayList<>();
-				page.getContent().forEach(e -> items.add(artifactDTOBuilder.build(e, false)));
-				solrComponent.indexBounceArtifact(items);
-			}
-			pageNumber++;
-		} while (!finished);
-		finished = false;
-		pageNumber = 0;
-		do {
-			Page<RunEntity> page = runRepository.findAll(PageRequest.of(pageNumber, 1000));
-			if(page.getContent().size() == 0) {
-				finished = true;
-			} else {
-				List<Run> items = new ArrayList<>();
-				page.getContent().forEach(e -> items.add(runDTOBuilder.build(e)));
-				solrComponent.indexBounceRun(items);
-			}
-			pageNumber++;
-		} while (!finished);
-		finished = false;
-		pageNumber = 0;
-		do {
-			Page<SecretEntity> page = secretRepository.findAll(PageRequest.of(pageNumber, 1000));
-			if(page.getContent().size() == 0) {
-				finished = true;
-			} else {
-				List<Secret> items = new ArrayList<>();
-				page.getContent().forEach(e -> items.add(secretDTOBuilder.build(e, false)));
-				solrComponent.indexBounceSecret(items);
-			}
-			pageNumber++;
-		} while (!finished);
-		finished = false;
-		pageNumber = 0;
-		do {
-			Page<WorkflowEntity> page = workflowRepository.findAll(PageRequest.of(pageNumber, 1000));
-			if(page.getContent().size() == 0) {
-				finished = true;
-			} else {
-				List<Workflow> items = new ArrayList<>();
-				page.getContent().forEach(e -> items.add(workflowDTOBuilder.build(e, false)));
-				solrComponent.indexBounceWorkflow(items);
-			}
-			pageNumber++;
-		} while (!finished);
-		
-		return ResponseEntity.ok(null);
-	}
-	
-	
-	@GetMapping(path = "/search/group", produces = "application/json; charset=UTF-8")
-	public ResponseEntity<SolrPage<SearchGroupResult>> searchGroup(
-			@RequestParam(required = false) String q,
-			@RequestParam(required = false) List<String> fq,
-			Pageable pageRequest) {
-		if(solrComponent == null)
-			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);				
-		try {
-			SolrPage<SearchGroupResult> page = solrComponent.groupSearch(q, fq, pageRequest);
-			return ResponseEntity.ok(page);
-		} catch (Exception e) {
-			
-			return ResponseEntity.ok(null);
-		}		
-	}
-	
-	@GetMapping(path = "/search/item", produces = "application/json; charset=UTF-8")
-	public ResponseEntity<SolrPage<ItemResult>> search(
-			@RequestParam(required = false) String q,
-			@RequestParam(required = false) List<String> fq,
-			Pageable pageRequest) {
-		if(solrComponent == null)
-			return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);				
-		try {
-			SolrPage<ItemResult> page = solrComponent.itemSearch(q, fq, pageRequest);
-			return ResponseEntity.ok(page);
-		} catch (Exception e) {
-			
-			return ResponseEntity.ok(null);
-		}		
-	}
-	
+
+    @Autowired(required = false)
+    SolrComponent solrComponent;
+
+    @Autowired
+    DataItemRepository dataItemRepository;
+
+    @Autowired
+    DataItemDTOBuilder dataItemDTOBuilder;
+
+    @Autowired
+    FunctionRepository functionRepository;
+
+    @Autowired
+    FunctionDTOBuilder functionDTOBuilder;
+
+    @Autowired
+    ArtifactRepository artifactRepository;
+
+    @Autowired
+    ArtifactDTOBuilder artifactDTOBuilder;
+
+    @Autowired
+    RunRepository runRepository;
+
+    @Autowired
+    RunDTOBuilder runDTOBuilder;
+
+    @Autowired
+    SecretRepository secretRepository;
+
+    @Autowired
+    SecretDTOBuilder secretDTOBuilder;
+
+    @Autowired
+    WorkflowRepository workflowRepository;
+
+    @Autowired
+    WorkflowDTOBuilder workflowDTOBuilder;
+
+    @GetMapping(path = "/clear", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<Void> clearIndex() {
+        if (solrComponent == null) return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        solrComponent.clearIndex();
+        return ResponseEntity.ok(null);
+    }
+
+    @GetMapping(path = "/init", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<Void> initIndex() {
+        if (solrComponent == null) return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        boolean finished = false;
+        int pageNumber = 0;
+        do {
+            Page<DataItemEntity> page = dataItemRepository.findAll(PageRequest.of(pageNumber, 1000));
+            if (page.getContent().size() == 0) {
+                finished = true;
+            } else {
+                List<DataItem> items = new ArrayList<>();
+                page.getContent().forEach(e -> items.add(dataItemDTOBuilder.build(e, false)));
+                solrComponent.indexBounceDataItem(items);
+            }
+            pageNumber++;
+        } while (!finished);
+        finished = false;
+        pageNumber = 0;
+        do {
+            Page<FunctionEntity> page = functionRepository.findAll(PageRequest.of(pageNumber, 1000));
+            if (page.getContent().size() == 0) {
+                finished = true;
+            } else {
+                List<Function> items = new ArrayList<>();
+                page.getContent().forEach(e -> items.add(functionDTOBuilder.build(e, false)));
+                solrComponent.indexBounceFunction(items);
+            }
+            pageNumber++;
+        } while (!finished);
+        finished = false;
+        pageNumber = 0;
+        do {
+            Page<ArtifactEntity> page = artifactRepository.findAll(PageRequest.of(pageNumber, 1000));
+            if (page.getContent().size() == 0) {
+                finished = true;
+            } else {
+                List<Artifact> items = new ArrayList<>();
+                page.getContent().forEach(e -> items.add(artifactDTOBuilder.build(e, false)));
+                solrComponent.indexBounceArtifact(items);
+            }
+            pageNumber++;
+        } while (!finished);
+        finished = false;
+        pageNumber = 0;
+        do {
+            Page<RunEntity> page = runRepository.findAll(PageRequest.of(pageNumber, 1000));
+            if (page.getContent().size() == 0) {
+                finished = true;
+            } else {
+                List<Run> items = new ArrayList<>();
+                page.getContent().forEach(e -> items.add(runDTOBuilder.build(e)));
+                solrComponent.indexBounceRun(items);
+            }
+            pageNumber++;
+        } while (!finished);
+        finished = false;
+        pageNumber = 0;
+        do {
+            Page<SecretEntity> page = secretRepository.findAll(PageRequest.of(pageNumber, 1000));
+            if (page.getContent().size() == 0) {
+                finished = true;
+            } else {
+                List<Secret> items = new ArrayList<>();
+                page.getContent().forEach(e -> items.add(secretDTOBuilder.build(e, false)));
+                solrComponent.indexBounceSecret(items);
+            }
+            pageNumber++;
+        } while (!finished);
+        finished = false;
+        pageNumber = 0;
+        do {
+            Page<WorkflowEntity> page = workflowRepository.findAll(PageRequest.of(pageNumber, 1000));
+            if (page.getContent().size() == 0) {
+                finished = true;
+            } else {
+                List<Workflow> items = new ArrayList<>();
+                page.getContent().forEach(e -> items.add(workflowDTOBuilder.build(e, false)));
+                solrComponent.indexBounceWorkflow(items);
+            }
+            pageNumber++;
+        } while (!finished);
+
+        return ResponseEntity.ok(null);
+    }
+
+    @GetMapping(path = "/search/group", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<SolrPage<SearchGroupResult>> searchGroup(
+        @RequestParam(required = false) String q,
+        @RequestParam(required = false) List<String> fq,
+        Pageable pageRequest
+    ) {
+        if (solrComponent == null) return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        try {
+            SolrPage<SearchGroupResult> page = solrComponent.groupSearch(q, fq, pageRequest);
+            return ResponseEntity.ok(page);
+        } catch (Exception e) {
+            return ResponseEntity.ok(null);
+        }
+    }
+
+    @GetMapping(path = "/search/item", produces = "application/json; charset=UTF-8")
+    public ResponseEntity<SolrPage<ItemResult>> search(
+        @RequestParam(required = false) String q,
+        @RequestParam(required = false) List<String> fq,
+        Pageable pageRequest
+    ) {
+        if (solrComponent == null) return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        try {
+            SolrPage<ItemResult> page = solrComponent.itemSearch(q, fq, pageRequest);
+            return ResponseEntity.ok(page);
+        } catch (Exception e) {
+            return ResponseEntity.ok(null);
+        }
+    }
 }

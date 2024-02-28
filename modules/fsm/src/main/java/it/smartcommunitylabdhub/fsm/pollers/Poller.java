@@ -2,12 +2,7 @@ package it.smartcommunitylabdhub.fsm.pollers;
 
 import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.workflow.Workflow;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.task.TaskExecutor;
 
@@ -19,7 +14,7 @@ import org.springframework.core.task.TaskExecutor;
 public class Poller implements Runnable {
 
     // List of workflows to be executed by the poller
-    private final List<Workflow> workflowList;
+    private final Workflow workflow;
 
     // Scheduler for scheduling and executing tasks
     private final ScheduledExecutorService scheduledExecutorService;
@@ -43,7 +38,7 @@ public class Poller implements Runnable {
      * Constructs a Poller with the specified parameters.
      *
      * @param name           The name of the poller.
-     * @param workflowList   List of workflows to be executed.
+     * @param workflow       The workflow to be executed.
      * @param delay          Delay between consecutive polling runs in seconds.
      * @param reschedule     Flag indicating whether to reschedule after each run.
      * @param workflowsAsync Flag indicating whether workflows should be executed asynchronously.
@@ -51,14 +46,14 @@ public class Poller implements Runnable {
      */
     public Poller(
         String name,
-        List<Workflow> workflowList,
+        Workflow workflow,
         long delay,
         boolean reschedule,
         boolean workflowsAsync,
         TaskExecutor executor
     ) {
         this.name = name;
-        this.workflowList = workflowList;
+        this.workflow = workflow;
         this.delay = delay;
         this.reschedule = reschedule;
         this.active = true;
@@ -118,13 +113,26 @@ public class Poller implements Runnable {
      * Executes workflows synchronously one after the other.
      */
     private void executeSync() {
-        for (Workflow workflow : workflowList) {
-            if (!active) {
-                break;
+        if (active) {
+            try {
+                log.info(
+                    "Workflow execution: " +
+                    Thread.currentThread().getName() +
+                    " (ID: " +
+                    Thread.currentThread().getId() +
+                    ")"
+                );
+                workflow.execute(null);
+            } catch (Exception e) {
+                if (e instanceof StopPoller) {
+                    log.info("POLLER: " + e.getMessage());
+                    stopPolling(); // Stop this Poller thread.
+                } else {
+                    log.error("POLLER EXCEPTION: " + e.getMessage());
+                    stopPolling();
+                }
             }
-            executeWorkflow(workflow);
         }
-
         if (reschedule && active) {
             log.info(
                 "Poller [" +
@@ -148,25 +156,14 @@ public class Poller implements Runnable {
     }
 
     /**
-     * Executes workflows asynchronously, with support for rescheduling after completion.
+     * Executes steps in workflow in parallel way, with support for rescheduling after completion.
      */
     private void executeAsync() {
-        CompletableFuture<Object> allWorkflowsFuture = CompletableFuture.completedFuture(null);
+        // Execute the workflow asynchronously
+        CompletableFuture<Void> workflowFuture = workflow.executeAsync(null);
 
-        // Execute the workflows sequentially
-        for (Workflow workflow : workflowList) {
-            if (active) {
-                allWorkflowsFuture =
-                    allWorkflowsFuture.thenComposeAsync(
-                        result -> executeWorkflowAsync(workflow),
-                        getScheduledExecutor()
-                    );
-            } else {
-                break;
-            }
-        }
-
-        allWorkflowsFuture.whenCompleteAsync(
+        // Handle the completion of the workflow execution
+        workflowFuture.whenCompleteAsync(
             (result, exception) -> {
                 if (exception != null) {
                     if (exception instanceof CompletionException) {
@@ -200,33 +197,7 @@ public class Poller implements Runnable {
                 }
             },
             getScheduledExecutor()
-        ); // Specify the executor for the continuation
-    }
-
-    /**
-     * Executes a single workflow synchronously.
-     *
-     * @param workflow The workflow to be executed.
-     */
-    private void executeWorkflow(Workflow workflow) {
-        try {
-            log.info(
-                "Workflow execution: " +
-                Thread.currentThread().getName() +
-                " (ID: " +
-                Thread.currentThread().getId() +
-                ")"
-            );
-            workflow.execute(null);
-        } catch (Exception e) {
-            if (e instanceof StopPoller) {
-                log.info("POLLER: " + e.getMessage());
-                stopPolling(); // Stop this Poller thread.
-            } else {
-                log.error("POLLER EXCEPTION: " + e.getMessage());
-                stopPolling();
-            }
-        }
+        );
     }
 
     /**
@@ -235,37 +206,6 @@ public class Poller implements Runnable {
      * @param workflow The workflow to be executed.
      * @return CompletableFuture representing the asynchronous execution.
      */
-    private CompletableFuture<Object> executeWorkflowAsync(Workflow workflow) {
-        CompletableFuture<Object> workflowExecution = new CompletableFuture<>();
-
-        CompletableFuture
-            .supplyAsync(
-                () -> {
-                    try {
-                        log.info(
-                            "Workflow Execution: " +
-                            Thread.currentThread().getName() +
-                            " (ID: " +
-                            Thread.currentThread().getId() +
-                            ")"
-                        );
-                        return workflow.execute(null);
-                    } catch (Exception e) {
-                        throw new CompletionException(e);
-                    }
-                },
-                getScheduledExecutor()
-            )
-            .whenComplete((result, exception) -> {
-                if (exception != null) {
-                    workflowExecution.completeExceptionally(exception);
-                } else {
-                    workflowExecution.complete(result);
-                }
-            });
-
-        return workflowExecution;
-    }
 
     /**
      * Stops the polling process. It shuts down the executor service and waits for its termination.

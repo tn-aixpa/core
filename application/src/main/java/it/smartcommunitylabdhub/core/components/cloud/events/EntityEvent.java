@@ -9,17 +9,19 @@ import org.springframework.context.ApplicationEvent;
 public class EntityEvent<T extends BaseDTO> extends ApplicationEvent implements Serializable {
 
     private final Class<T> clazz;
-    private final BaseDTO entity;
+    private final Object wrappedEntity;
+    private final BaseDTO baseDTO;
     private final EntityAction action;
 
-    public EntityEvent(BaseDTO entity, Class<T> clazz, EntityAction action) {
+    public EntityEvent(BaseDTO entity, Object wrappedEntity, Class<T> clazz, EntityAction action) {
         super(entity);
         this.clazz = clazz;
-        this.entity = entity;
+        this.baseDTO = entity;
+        this.wrappedEntity = wrappedEntity;
         this.action = action;
     }
 
-    public T getEntity() {
-        return (T) entity;
+    public T getBaseDTO() {
+        return (T) baseDTO;
     }
 }

@@ -36,6 +36,7 @@ public class ProjectSavedListener {
                     List.of(),
                     false
                 ),
+                entity,
                 Project.class,
                 EntityAction.CREATE
             )
@@ -56,6 +57,7 @@ public class ProjectSavedListener {
                     List.of(),
                     false
                 ),
+                entity,
                 Project.class,
                 EntityAction.UPDATE
             )
@@ -76,6 +78,7 @@ public class ProjectSavedListener {
                     List.of(),
                     false
                 ),
+                entity,
                 Project.class,
                 EntityAction.UPDATE
             )

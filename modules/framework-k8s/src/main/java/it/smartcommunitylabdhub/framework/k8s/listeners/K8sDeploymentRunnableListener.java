@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.framework.k8s.listeners;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.K8sDeploymentFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.framework.k8s.listeners;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.K8sJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +34,14 @@ public class K8sJobRunnableListener {
         //store runnable
         runnableStore.store(runnable.getId(), runnable);
 
+        // if READY call execute else STOP(future)
         try {
             log.debug("Execute runnable {} via framework", runnable.getId());
-            k8sJobFramework.execute(runnable);
+            runnable = k8sJobFramework.execute(runnable);
+
+            log.debug("Update runnable {} via framework", runnable.getId());
+            runnableStore.store(runnable.getId(), runnable);
+            //TODO send run event to RunManager(todo) create an object of type RunState with stateId, runId, project, framework....
         } catch (K8sFrameworkException e) {
             log.error("Error with k8s: {}", e.getMessage());
         } finally {

@@ -27,6 +27,7 @@ public class ArtifactSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 artifactDTOBuilder.build((ArtifactEntity) entity, false),
+                entity,
                 Artifact.class,
                 EntityAction.CREATE
             )
@@ -39,6 +40,7 @@ public class ArtifactSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 artifactDTOBuilder.build((ArtifactEntity) entity, false),
+                entity,
                 Artifact.class,
                 EntityAction.UPDATE
             )
@@ -51,6 +53,7 @@ public class ArtifactSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 artifactDTOBuilder.build((ArtifactEntity) entity, false),
+                entity,
                 Artifact.class,
                 EntityAction.UPDATE
             )

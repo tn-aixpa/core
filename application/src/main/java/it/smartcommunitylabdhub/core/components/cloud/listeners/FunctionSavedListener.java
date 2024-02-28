@@ -27,6 +27,7 @@ public class FunctionSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 functionDTOBuilder.build((FunctionEntity) entity, false),
+                entity,
                 Function.class,
                 EntityAction.CREATE
             )
@@ -39,6 +40,7 @@ public class FunctionSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 functionDTOBuilder.build((FunctionEntity) entity, false),
+                entity,
                 Function.class,
                 EntityAction.UPDATE
             )
@@ -51,6 +53,7 @@ public class FunctionSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 functionDTOBuilder.build((FunctionEntity) entity, false),
+                entity,
                 Function.class,
                 EntityAction.UPDATE
             )

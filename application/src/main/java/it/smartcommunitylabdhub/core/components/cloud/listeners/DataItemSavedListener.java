@@ -27,6 +27,7 @@ public class DataItemSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 dataItemDTOBuilder.build((DataItemEntity) entity, false),
+                entity,
                 DataItem.class,
                 EntityAction.CREATE
             )
@@ -39,6 +40,7 @@ public class DataItemSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 dataItemDTOBuilder.build((DataItemEntity) entity, false),
+                entity,
                 DataItem.class,
                 EntityAction.UPDATE
             )
@@ -51,6 +53,7 @@ public class DataItemSavedListener {
         eventPublisher.publishEvent(
             new EntityEvent<>(
                 dataItemDTOBuilder.build((DataItemEntity) entity, false),
+                entity,
                 DataItem.class,
                 EntityAction.UPDATE
             )

@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableComponent;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.K8sCronJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

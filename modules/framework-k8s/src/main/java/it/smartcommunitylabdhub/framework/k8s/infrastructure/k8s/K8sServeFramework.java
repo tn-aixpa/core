@@ -1,10 +1,11 @@
-package it.smartcommunitylabdhub.framework.k8s.infrastructure;
+package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
@@ -12,7 +13,10 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
 import jakarta.validation.constraints.NotNull;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,13 +57,17 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
-    public void execute(K8sServeRunnable runnable) throws K8sFrameworkException {
+    public K8sServeRunnable execute(K8sServeRunnable runnable) throws K8sFrameworkException {
         V1Deployment deployment = deploymentFramework.build(runnable);
         deployment = deploymentFramework.apply(deployment);
 
         V1Service service = build(runnable);
         service = apply(service);
+
+        runnable.setState(State.RUNNING.name());
         //TODO monitor
+
+        return runnable;
     }
 
     public V1Service build(K8sServeRunnable runnable) throws K8sFrameworkException {

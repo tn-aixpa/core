@@ -72,17 +72,17 @@ application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
   name: @project.name@
   description: @project.description@
-  version: @project.version@  
+  version: @project.version@
   profiles: ${spring.profiles.active:default}
 
 
 security:
   api:
     cors:
-      origins: ${DH_CORS_ORIGINS:http://localhost:5173}     
+      origins: ${DH_CORS_ORIGINS:http://localhost:5173}
   basic:
     username: ${DH_AUTH_BASIC_USER:admin}
-    password: ${DH_AUTH_BASIC_PASSWORD:}   
+    password: ${DH_AUTH_BASIC_PASSWORD:}
   jwt:
     issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:}
     audience: ${DH_AUTH_JWT_AUDIENCE:dhcore}
@@ -106,7 +106,13 @@ event-queue:
       entity-routing-key: ${RABBITMQ_ROUTING_KEY:entityRoutingKey}
       enabled: ${RABBITMQ_ENABLE:false}
 
+
+# Managing monitors delay and other information
+monitors:
+  delay: ${MONITORS_DELAY:60}
+
+# Solr configuration
 solr:
   enabled: ${ENABLE_SOLR:false}
-  url:  ${SOLR_URL:http://localhost:8983/solr}
+  url: ${SOLR_URL:http://localhost:8983/solr}
   collection: ${SOLR_COLLECTION:DigitalHub}

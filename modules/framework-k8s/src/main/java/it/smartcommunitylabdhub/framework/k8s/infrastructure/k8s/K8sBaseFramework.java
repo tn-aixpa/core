@@ -1,28 +1,18 @@
-package it.smartcommunitylabdhub.framework.k8s.infrastructure;
+package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1EnvFromSource;
-import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1ResourceRequirements;
-import io.kubernetes.client.openapi.models.V1Toleration;
-import io.kubernetes.client.openapi.models.V1Volume;
-import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -37,14 +27,14 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected final CoreV1Api coreV1Api;
 
-    @Autowired
-    K8sBuilderHelper k8sBuilderHelper;
-
     @Value("${kubernetes.namespace}")
     protected String namespace;
 
     @Value("${application.version}")
     protected String version;
+
+    @Autowired
+    K8sBuilderHelper k8sBuilderHelper;
 
     protected K8sBaseFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
@@ -61,12 +51,15 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
      */
 
     @Override
-    public void stop(T runnable) throws K8sFrameworkException {
+    public T stop(T runnable) throws K8sFrameworkException {
         if (runnable != null) {
             log.info("destroy objects for runnable {}", runnable.getId());
             //TODO collect or rebuild objects
             // destroy(runnable);
+
+            runnable.setState(State.STOPPED.name());
         }
+        return runnable;
     }
 
     /*

@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.components.cloud.events.EntityAction;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
 import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
-import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
@@ -26,7 +25,12 @@ public class SecretSavedListener {
     public void onPostPersist(Object entity) {
         // Trigger a custom event when an entity is saved
         eventPublisher.publishEvent(
-            new EntityEvent<>(secretDTOBuilder.build((SecretEntity) entity, false), Secret.class, EntityAction.CREATE)
+            new EntityEvent<>(
+                secretDTOBuilder.build((SecretEntity) entity, false),
+                entity,
+                Secret.class,
+                EntityAction.CREATE
+            )
         );
     }
 
@@ -34,7 +38,12 @@ public class SecretSavedListener {
     public void onPostUpdate(Object entity) {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
-            new EntityEvent<>(secretDTOBuilder.build((SecretEntity) entity, false), Secret.class, EntityAction.UPDATE)
+            new EntityEvent<>(
+                secretDTOBuilder.build((SecretEntity) entity, false),
+                entity,
+                Secret.class,
+                EntityAction.UPDATE
+            )
         );
     }
 
@@ -42,7 +51,12 @@ public class SecretSavedListener {
     public void onPostRemove(Object entity) {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
-            new EntityEvent<>(secretDTOBuilder.build((SecretEntity) entity, false), Secret.class, EntityAction.UPDATE)
+            new EntityEvent<>(
+                secretDTOBuilder.build((SecretEntity) entity, false),
+                entity,
+                Secret.class,
+                EntityAction.UPDATE
+            )
         );
     }
 }

@@ -25,7 +25,7 @@ public class TaskSavedListener {
     public void onPostPersist(Object entity) {
         // Trigger a custom event when an entity is saved
         eventPublisher.publishEvent(
-            new EntityEvent<>(taskDTOBuilder.build((TaskEntity) entity), Task.class, EntityAction.CREATE)
+            new EntityEvent<>(taskDTOBuilder.build((TaskEntity) entity), entity, Task.class, EntityAction.CREATE)
         );
     }
 
@@ -33,7 +33,7 @@ public class TaskSavedListener {
     public void onPostUpdate(Object entity) {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
-            new EntityEvent<>(taskDTOBuilder.build((TaskEntity) entity), Task.class, EntityAction.UPDATE)
+            new EntityEvent<>(taskDTOBuilder.build((TaskEntity) entity), entity, Task.class, EntityAction.UPDATE)
         );
     }
 
@@ -41,7 +41,7 @@ public class TaskSavedListener {
     public void onPostRemove(Object entity) {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
-            new EntityEvent<>(taskDTOBuilder.build((TaskEntity) entity), Task.class, EntityAction.UPDATE)
+            new EntityEvent<>(taskDTOBuilder.build((TaskEntity) entity), entity, Task.class, EntityAction.UPDATE)
         );
     }
 }

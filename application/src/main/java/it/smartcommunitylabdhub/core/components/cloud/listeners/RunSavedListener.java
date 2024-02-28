@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.core.components.cloud.events.EntityAction;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
 import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
@@ -26,7 +25,7 @@ public class RunSavedListener {
     public void onPostPersist(Object entity) {
         // Trigger a custom event when an entity is saved
         eventPublisher.publishEvent(
-            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), Run.class, EntityAction.CREATE)
+            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), entity, Run.class, EntityAction.CREATE)
         );
     }
 
@@ -34,7 +33,7 @@ public class RunSavedListener {
     public void onPostUpdate(Object entity) {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
-            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), Run.class, EntityAction.UPDATE)
+            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), entity, Run.class, EntityAction.UPDATE)
         );
     }
 
@@ -42,7 +41,7 @@ public class RunSavedListener {
     public void onPostRemove(Object entity) {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
-            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), Run.class, EntityAction.UPDATE)
+            new EntityEvent<>(runDTOBuilder.build((RunEntity) entity), entity, Run.class, EntityAction.UPDATE)
         );
     }
 }

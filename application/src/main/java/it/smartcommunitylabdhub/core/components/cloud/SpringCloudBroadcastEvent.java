@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.components.cloud;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.jackson.mixins.CborMixin;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityAction;
 import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
@@ -20,14 +21,16 @@ public class SpringCloudBroadcastEvent {
     @Autowired
     RabbitTemplate rabbitTemplate;
 
+    //TODO : This should receive the wrapped classes from
     @EventListener
     public <T extends BaseDTO> void handleEntitySavedEvent(EntityEvent<T> event) {
         // Broadcast event on rabbit amqp
         try {
             // TODO: need to add DELETE in the future.
             if (event.getAction() != EntityAction.DELETE) {
-                // JacksonMapper.OBJECT_MAPPER.addMixIn(event.getClazz(), CborMixin.class);
-                String serializedEntity = JacksonMapper.OBJECT_MAPPER.writeValueAsString(event.getEntity());
+                JacksonMapper.OBJECT_MAPPER.addMixIn(event.getClazz(), CborMixin.class);
+
+                String serializedEntity = JacksonMapper.OBJECT_MAPPER.writeValueAsString(event.getWrappedEntity());
 
                 rabbitTemplate.convertAndSend("entityTopic", "entityRoutingKey", serializedEntity);
             }

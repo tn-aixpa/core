@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.framework.k8s.infrastructure;
+package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.kubernetes.client.openapi.ApiClient;
@@ -9,21 +9,16 @@ import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComp
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
-import it.smartcommunitylabdhub.fsm.StateMachine;
-import it.smartcommunitylabdhub.fsm.enums.RunEvent;
 import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
 import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
-import it.smartcommunitylabdhub.fsm.workflow.WorkflowFactory;
 import jakarta.validation.constraints.NotNull;
 import java.util.*;
-import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
@@ -37,8 +32,6 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     public static final int DEADLINE_SECONDS = 3600 * 24 * 3; //3 days
 
     private final BatchV1Api batchV1Api;
-
-    private int activeDeadlineSeconds = DEADLINE_SECONDS;
 
     //TODO drop
     @Autowired
@@ -58,6 +51,8 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     @Autowired
     RunService runService;
 
+    private int activeDeadlineSeconds = DEADLINE_SECONDS;
+
     public K8sJobFramework(ApiClient apiClient) {
         super(apiClient);
         batchV1Api = new BatchV1Api(apiClient);
@@ -71,12 +66,16 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
-    public void execute(K8sJobRunnable runnable) throws K8sFrameworkException {
+    public K8sJobRunnable execute(K8sJobRunnable runnable) throws K8sFrameworkException {
         V1Job job = build(runnable);
         job = apply(job);
 
+        // Update runnable state..
+        runnable.setState(State.RUNNING.name());
+
         //TODO refactor
-        monitor(runnable, job);
+        //        monitor(runnable, job);
+        return runnable;
     }
 
     public V1Job build(K8sJobRunnable runnable) throws K8sFrameworkException {
@@ -192,97 +191,97 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     }
 
     private void monitor(K8sJobRunnable runnable, V1Job job) {
-        // FIXME: DELETE THIS IS ONLY FOR DEBUG
-        String threadName = Thread.currentThread().getName();
-
-        // Generate jobName and ContainerName
-        String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
-        String containerName = k8sBuilderHelper.getContainerName(
-            runnable.getRuntime(),
-            runnable.getTask(),
-            runnable.getId()
-        );
-        // Initialize the run state machine considering current state and context
-        //TODO implement a dedicated poller
-        StateMachine<RunState, RunEvent, Map<String, Object>> fsm = runStateMachine.create(
-            RunState.valueOf(runnable.getState()),
-            Map.of("runId", runnable.getId())
-        );
-
-        // Log the initiation of Dbt Kubernetes Listener
-        log.info("Kubernetes Listener [" + threadName + "] " + jobName + "@" + namespace);
-
-        // Define a function with parameters
-        Function<
-            String,
-            Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>
-        > checkJobStatus = jName ->
-            cName ->
-                fMachine -> {
-                    try {
-                        V1Job v1Job = batchV1Api.readNamespacedJob(jName, namespace, null);
-                        V1JobStatus v1JobStatus = v1Job.getStatus();
-
-                        // Check the Job status
-                        if (
-                            Objects.requireNonNull(v1JobStatus).getSucceeded() != null &&
-                            !fMachine.getCurrentState().equals(RunState.COMPLETED)
-                        ) {
-                            // Job has completed successfully
-                            log.info("Job completed successfully.");
-                            // Update state machine and update runDTO
-                            fMachine.goToState(RunState.COMPLETED);
-                            Run runDTO = runService.getRun(runnable.getId());
-                            runDTO.getStatus().put("state", fsm.getCurrentState().name());
-                            runService.updateRun(runDTO, runDTO.getId());
-
-                            // Log pod status
-                            logPod(jName, cName, namespace, runnable);
-                            // Delete job and pod
-                            deleteAssociatedPodAndJob(jName, namespace, runnable);
-                        } else if (Objects.requireNonNull(v1JobStatus).getFailed() != null) {
-                            // Job has failed delete job and pod
-                            deleteAssociatedPodAndJob(jName, namespace, runnable);
-                        } else if (v1JobStatus.getActive() != null && v1JobStatus.getActive() > 0) {
-                            if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
-                                fMachine.goToState(RunState.READY);
-                                fMachine.goToState(RunState.RUNNING);
-                            }
-                            log.warn("Job is running...");
-                            logPod(jName, cName, namespace, runnable);
-                        } else {
-                            String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(
-                                v1JobStatus
-                            );
-                            log.warn("Job is in an unknown state : " + v1JobStatusString);
-                            writeLog(runnable, v1JobStatusString);
-                        }
-                    } catch (ApiException | JsonProcessingException e) {
-                        log.error("Error with k8s: {}", e.getMessage());
-
-                        deleteAssociatedPodAndJob(jName, namespace, runnable);
-                        throw new StopPoller(e.getMessage());
-                    }
-
-                    return null;
-                };
-
-        // Using the step method with explicit arguments
-        pollingService.createPoller(
-            runnable.getId(),
-            List.of(
-                WorkflowFactory
-                    .builder()
-                    .step((Function<?, ?>) i -> checkJobStatus.apply(jobName).apply(containerName).apply(fsm))
-                    .build()
-            ),
-            1,
-            true,
-            false
-        );
-
-        // Start job poller
-        pollingService.startOne(runnable.getId());
+        //        // FIXME: DELETE THIS IS ONLY FOR DEBUG
+        //        String threadName = Thread.currentThread().getName();
+        //
+        //        // Generate jobName and ContainerName
+        //        String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
+        //        String containerName = k8sBuilderHelper.getContainerName(
+        //                runnable.getRuntime(),
+        //                runnable.getTask(),
+        //                runnable.getId()
+        //        );
+        //        // Initialize the run state machine considering current state and context
+        //        //TODO implement a dedicated poller
+        //        StateMachine<RunState, RunEvent, Map<String, Object>> fsm = runStateMachine.create(
+        //                RunState.valueOf(runnable.getState()),
+        //                Map.of("runId", runnable.getId())
+        //        );
+        //
+        //        // Log the initiation of Dbt Kubernetes Listener
+        //        log.info("Kubernetes Listener [" + threadName + "] " + jobName + "@" + namespace);
+        //
+        //        // Define a function with parameters
+        //        Function<
+        //                String,
+        //                Function<String, Function<StateMachine<RunState, RunEvent, Map<String, Object>>, Void>>
+        //                > checkJobStatus = jName ->
+        //                cName ->
+        //                        fMachine -> {
+        //                            try {
+        //                                V1Job v1Job = batchV1Api.readNamespacedJob(jName, namespace, null);
+        //                                V1JobStatus v1JobStatus = v1Job.getStatus();
+        //
+        //                                // Check the Job status
+        //                                if (
+        //                                        Objects.requireNonNull(v1JobStatus).getSucceeded() != null &&
+        //                                                !fMachine.getCurrentState().equals(RunState.COMPLETED)
+        //                                ) {
+        //                                    // Job has completed successfully
+        //                                    log.info("Job completed successfully.");
+        //                                    // Update state machine and update runDTO
+        //                                    fMachine.goToState(RunState.COMPLETED);
+        //                                    Run runDTO = runService.getRun(runnable.getId());
+        //                                    runDTO.getStatus().put("state", fsm.getCurrentState().name());
+        //                                    runService.updateRun(runDTO, runDTO.getId());
+        //
+        //                                    // Log pod status
+        //                                    logPod(jName, cName, namespace, runnable);
+        //                                    // Delete job and pod
+        //                                    deleteAssociatedPodAndJob(jName, namespace, runnable);
+        //                                } else if (Objects.requireNonNull(v1JobStatus).getFailed() != null) {
+        //                                    // Job has failed delete job and pod
+        //                                    deleteAssociatedPodAndJob(jName, namespace, runnable);
+        //                                } else if (v1JobStatus.getActive() != null && v1JobStatus.getActive() > 0) {
+        //                                    if (!fMachine.getCurrentState().equals(RunState.RUNNING)) {
+        //                                        fMachine.goToState(RunState.READY);
+        //                                        fMachine.goToState(RunState.RUNNING);
+        //                                    }
+        //                                    log.warn("Job is running...");
+        //                                    logPod(jName, cName, namespace, runnable);
+        //                                } else {
+        //                                    String v1JobStatusString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(
+        //                                            v1JobStatus
+        //                                    );
+        //                                    log.warn("Job is in an unknown state : " + v1JobStatusString);
+        //                                    writeLog(runnable, v1JobStatusString);
+        //                                }
+        //                            } catch (ApiException | JsonProcessingException e) {
+        //                                log.error("Error with k8s: {}", e.getMessage());
+        //
+        //                                deleteAssociatedPodAndJob(jName, namespace, runnable);
+        //                                throw new StopPoller(e.getMessage());
+        //                            }
+        //
+        //                            return null;
+        //                        };
+        //
+        //        // Using the step method with explicit arguments
+        //        pollingService.createPoller(
+        //                runnable.getId(),
+        //                List.of(
+        //                        WorkflowFactory
+        //                                .builder()
+        //                                .step(i -> checkJobStatus.apply(jobName).apply(containerName).apply(fsm))
+        //                                .build()
+        //                ),
+        //                1,
+        //                true,
+        //                false
+        //        );
+        //
+        //        // Start job poller
+        //        pollingService.startOne(runnable.getId());
     }
 
     private void writeLog(K8sJobRunnable runnable, String log) {
