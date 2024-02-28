@@ -69,7 +69,7 @@ public class RunController {
         produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Run> updateRun(@Valid @RequestBody Run runDTO, @ValidateField @PathVariable String uuid) {
-        return ResponseEntity.ok(this.runService.updateRun(runDTO, uuid));
+        return ResponseEntity.ok(this.runService.updateRun(uuid, runDTO));
     }
 
     @Operation(summary = "Delete a run", description = "Delete a specific run")

@@ -76,4 +76,9 @@ public class ProjectEntity implements BaseEntity {
             this.id = this.name;
         }
     }
+
+    @Override
+    public String getProject() {
+        return name;
+    }
 }
