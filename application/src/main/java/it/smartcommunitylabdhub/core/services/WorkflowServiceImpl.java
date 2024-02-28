@@ -1,213 +1,185 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.CustomException;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
-import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
-import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.WorkflowEntityFilter;
-import it.smartcommunitylabdhub.core.repositories.RunRepository;
-import it.smartcommunitylabdhub.core.repositories.TaskRepository;
-import it.smartcommunitylabdhub.core.repositories.WorkflowRepository;
+import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity_;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-public class WorkflowServiceImpl
-    extends AbstractSpecificationService<WorkflowEntity, WorkflowEntityFilter>
-    implements WorkflowService {
+@Slf4j
+public class WorkflowServiceImpl implements SearchableWorkflowService {
 
     @Autowired
-    WorkflowRepository workflowRepository;
-
-    @Autowired
-    RunRepository runRepository;
-
-    @Autowired
-    TaskRepository taskRepository;
-
-    @Autowired
-    WorkflowEntityBuilder workflowEntityBuilder;
-
-    @Autowired
-    WorkflowEntityFilter workflowEntityFilter;
-
-    @Autowired
-    WorkflowDTOBuilder workflowDTOBuilder;
-
-    @Autowired
-    TaskDTOBuilder taskDTOBuilder;
-
-    @Autowired
-    RunDTOBuilder runDTOBuilder;
+    private EntityService<Workflow, WorkflowEntity> entityService;
 
     @Override
-    public Page<Workflow> getWorkflows(Map<String, String> filter, Pageable pageable) {
-        try {
-            workflowEntityFilter.setCreatedDate(filter.get("created"));
-            workflowEntityFilter.setName(filter.get("name"));
-            workflowEntityFilter.setKind(filter.get("kind"));
+    public Page<Workflow> listWorkflows(Pageable pageable) {
+        log.debug("list workflows page {}", pageable);
 
-            Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
+        return entityService.list(pageable);
+    }
 
-            workflowEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+    @Override
+    public Page<Workflow> searchWorkflows(Pageable pageable, @Nullable SearchFilter<WorkflowEntity> filter) {
+        log.debug("search workflows page {}, filter {}", pageable, String.valueOf(filter));
 
-            Specification<WorkflowEntity> specification = createSpecification(filter, workflowEntityFilter);
-
-            Page<WorkflowEntity> workflowPage = this.workflowRepository.findAll(specification, pageable);
-
-            return new PageImpl<>(
-                workflowPage
-                    .getContent()
-                    .stream()
-                    .map(workflow -> workflowDTOBuilder.build(workflow, false))
-                    .collect(Collectors.toList()),
-                pageable,
-                workflowPage.getTotalElements()
-            );
-        } catch (CustomException e) {
-            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        Specification<WorkflowEntity> specification = filter != null ? filter.toSpecification() : null;
+        if (specification != null) {
+            return entityService.search(specification, pageable);
+        } else {
+            return entityService.list(pageable);
         }
     }
 
     @Override
-    public Workflow createWorkflow(Workflow workflowDTO) {
-        if (workflowDTO.getId() != null && workflowRepository.existsById(workflowDTO.getId())) {
-            throw new CoreException(
-                "DuplicateWorkflowId",
-                "Cannot create the workflow",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-        Optional<WorkflowEntity> savedWorkflow = Optional
-            .of(workflowDTO)
-            .map(workflowEntityBuilder::build)
-            .map(this.workflowRepository::saveAndFlush);
+    public Page<Workflow> listLatestWorkflowsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list workflows for project {}  page {}", project, pageable);
+        Specification<WorkflowEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
 
-        return savedWorkflow
-            .map(workflow -> workflowDTOBuilder.build(workflow, false))
-            .orElseThrow(() ->
-                new CoreException("InternalServerError", "Error saving workflow", HttpStatus.INTERNAL_SERVER_ERROR)
-            );
+        return entityService.search(specification, pageable);
     }
 
     @Override
-    public Workflow getWorkflow(String uuid) {
-        return workflowRepository
-            .findById(uuid)
-            .map(workflow -> {
-                try {
-                    return workflowDTOBuilder.build(workflow, false);
-                } catch (CustomException e) {
-                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    "WorkflowNotFound",
-                    "The workflow you are searching for does not exist.",
-                    HttpStatus.NOT_FOUND
-                )
-            );
+    public Page<Workflow> searchLatestWorkflowsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<WorkflowEntity> filter
+    ) {
+        log.debug("list workflows for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<WorkflowEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<WorkflowEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project),
+            filterSpecification
+        );
+
+        return entityService.search(specification, pageable);
     }
 
     @Override
-    public Workflow updateWorkflow(Workflow workflowDTO, String uuid) {
-        if (!workflowDTO.getId().equals(uuid)) {
-            throw new CoreException(
-                "WorkflowNotMatch",
-                "Trying to update a workflow with a UUID different from the one passed in the request.",
-                HttpStatus.NOT_FOUND
-            );
-        }
+    public List<Workflow> findWorkflows(@NotNull String project, @NotNull String name) {
+        log.debug("find workflows for project {} with name {}", project, name);
 
-        return workflowRepository
-            .findById(uuid)
-            .map(workflow -> {
-                try {
-                    WorkflowEntity workflowUpdated = workflowEntityBuilder.update(workflow, workflowDTO);
-                    workflowRepository.saveAndFlush(workflowUpdated);
-                    return workflowDTOBuilder.build(workflowUpdated, false);
-                } catch (CustomException e) {
-                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    "WorkflowNotFound",
-                    "The workflow you are searching for does not exist.",
-                    HttpStatus.NOT_FOUND
-                )
-            );
+        //fetch all versions ordered by date DESC
+        Specification<WorkflowEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+        Specification<WorkflowEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(WorkflowEntity_.CREATED)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.searchAll(specification);
     }
 
     @Override
-    public boolean deleteWorkflow(String uuid) {
-        try {
-            if (this.workflowRepository.existsById(uuid)) {
-                this.workflowRepository.deleteById(uuid);
-                return true;
-            }
-            throw new CoreException(
-                "WorkflowNotFound",
-                "The workflow you are trying to delete does not exist.",
-                HttpStatus.NOT_FOUND
-            );
-        } catch (Exception e) {
-            throw new CoreException("InternalServerError", "cannot delete workflow", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public Page<Workflow> findWorkflows(@NotNull String project, @NotNull String name, Pageable pageable) {
+        log.debug("find workflows for project {} with name {} page {}", project, name, pageable);
+
+        //fetch all versions ordered by date DESC
+        Specification<WorkflowEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+        Specification<WorkflowEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(WorkflowEntity_.CREATED)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.search(specification, pageable);
     }
 
     @Override
-    public List<Run> getWorkflowRuns(String uuid) {
-        final WorkflowEntity workflow = workflowRepository.findById(uuid).orElse(null);
-        if (workflow == null) {
-            throw new CoreException(
-                "WorkflowNotFound",
-                "The workflow you are searching for does not exist.",
-                HttpStatus.NOT_FOUND
-            );
-        }
+    public Workflow findWorkflow(@NotNull String id) {
+        log.debug("find workflow with id {}", String.valueOf(id));
 
-        Workflow workflowDTO = workflowDTOBuilder.build(workflow, false);
+        return entityService.find(id);
+    }
+
+    @Override
+    public Workflow getWorkflow(@NotNull String id) throws NoSuchEntityException {
+        log.debug("get workflow with id {}", String.valueOf(id));
 
         try {
-            List<RunEntity> runs =
-                this.taskRepository.findByFunction(TaskUtils.buildTaskString(workflowDTO))
-                    .stream()
-                    .flatMap(task ->
-                        this.runRepository.findByTask(RunUtils.buildRunString(workflowDTO, taskDTOBuilder.build(task)))
-                            .stream()
-                    )
-                    .collect(Collectors.toList());
-            return runs.stream().map(r -> runDTOBuilder.convert(r)).collect(Collectors.toList());
-        } catch (CustomException e) {
-            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return entityService.get(id);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
         }
+    }
+
+    @Override
+    public Workflow getLatestWorkflow(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
+        log.debug("get latest workflow for project {} with name {}", project, name);
+
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLatestWorkflow'");
+    }
+
+    @Override
+    public Workflow createWorkflow(@NotNull Workflow workflowDTO) throws DuplicatedEntityException {
+        log.debug("create workflow");
+
+        try {
+            return entityService.create(workflowDTO);
+        } catch (DuplicatedEntityException e) {
+            throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), workflowDTO.getId());
+        }
+    }
+
+    @Override
+    public Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO) throws NoSuchEntityException {
+        log.debug("update workflow with id {}", String.valueOf(id));
+        try {
+            //fetch current and merge
+            Workflow current = entityService.get(id);
+
+            //spec is not modificable: enforce current
+            workflowDTO.setSpec(current.getSpec());
+
+            //update
+            return entityService.update(id, workflowDTO);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        }
+    }
+
+    @Override
+    public void deleteWorkflow(@NotNull String id) {
+        log.debug("delete workflow with id {}", String.valueOf(id));
+
+        entityService.delete(id);
+    }
+
+    @Override
+    public void deleteWorkflows(@NotNull String project, @NotNull String name) {
+        log.debug("delete workflows for project {} with name {}", project, name);
+
+        Specification<WorkflowEntity> spec = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+
+        long count = entityService.deleteAll(spec);
+        log.debug("deleted count {}", count);
     }
 }

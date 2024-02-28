@@ -7,6 +7,24 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class CommonSpecification {
 
+    public static <T extends BaseEntity> Specification<T> projectEquals(String project) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("project"), project);
+        };
+    }
+
+    public static <T extends BaseEntity> Specification<T> nameEquals(String name) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("name"), name);
+        };
+    }
+
+    public static <T extends BaseEntity> Specification<T> kindEquals(String kind) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("kind"), kind);
+        };
+    }
+
     public static <T extends BaseEntity> Specification<T> latestByProject(String project) {
         return (root, query, criteriaBuilder) -> {
             Subquery<Number> subquery = query.subquery(Number.class);

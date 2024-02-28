@@ -5,9 +5,9 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.services.entities.DataItemService;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity_;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
@@ -22,13 +22,20 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 @Slf4j
-public class DataItemServiceImpl implements DataItemService<DataItemEntity> {
+public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
 
     @Override
-    public Page<DataItem> listDataItems(Pageable pageable, SearchFilter<DataItemEntity> filter) {
+    public Page<DataItem> listDataItems(Pageable pageable) {
+        log.debug("list dataItems page {}", pageable);
+
+        return entityService.list(pageable);
+    }
+
+    @Override
+    public Page<DataItem> searchDataItems(Pageable pageable, SearchFilter<DataItemEntity> filter) {
         log.debug("list dataItems page {}, filter {}", pageable, String.valueOf(filter));
 
         Specification<DataItemEntity> specification = filter != null ? filter.toSpecification() : null;
@@ -40,7 +47,18 @@ public class DataItemServiceImpl implements DataItemService<DataItemEntity> {
     }
 
     @Override
-    public Page<DataItem> listLatestDataItemsByProject(
+    public Page<DataItem> listLatestDataItemsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list dataItems for project {} page {}", project, pageable);
+        Specification<DataItemEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Page<DataItem> searchLatestDataItemsByProject(
         @NotNull String project,
         Pageable pageable,
         SearchFilter<DataItemEntity> filter
@@ -48,7 +66,7 @@ public class DataItemServiceImpl implements DataItemService<DataItemEntity> {
         log.debug("list dataItems for project {} with {} page {}", project, String.valueOf(filter), pageable);
         Specification<DataItemEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
         Specification<DataItemEntity> specification = Specification.allOf(
-            createProjectSpecification(project),
+            CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project),
             filterSpecification
         );
@@ -61,9 +79,14 @@ public class DataItemServiceImpl implements DataItemService<DataItemEntity> {
         log.debug("find artifacts for project {} with name {}", project, name);
 
         //fetch all versions ordered by date DESC
+        Specification<DataItemEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+
         Specification<DataItemEntity> specification = (root, query, builder) -> {
             query.orderBy(builder.desc(root.get(DataItemEntity_.CREATED)));
-            return createProjectNameSpecification(project, name).toPredicate(root, query, builder);
+            return where.toPredicate(root, query, builder);
         };
 
         return entityService.searchAll(specification);
@@ -74,9 +97,13 @@ public class DataItemServiceImpl implements DataItemService<DataItemEntity> {
         log.debug("find artifacts for project {} with name {} page {}", project, name, pageable);
 
         //fetch all versions ordered by date DESC
+        Specification<DataItemEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
         Specification<DataItemEntity> specification = (root, query, builder) -> {
             query.orderBy(builder.desc(root.get(DataItemEntity_.CREATED)));
-            return createProjectNameSpecification(project, name).toPredicate(root, query, builder);
+            return where.toPredicate(root, query, builder);
         };
 
         return entityService.search(specification, pageable);
@@ -145,22 +172,12 @@ public class DataItemServiceImpl implements DataItemService<DataItemEntity> {
     public void deleteDataItems(@NotNull String project, @NotNull String name) {
         log.debug("delete dataItems for project {} with name {}", project, name);
 
-        long count = entityService.deleteAll(createProjectNameSpecification(project, name));
+        Specification<DataItemEntity> spec = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+
+        long count = entityService.deleteAll(spec);
         log.debug("deleted count {}", count);
-    }
-
-    protected Specification<DataItemEntity> createProjectSpecification(String project) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get(DataItemEntity_.PROJECT), project);
-        };
-    }
-
-    protected Specification<DataItemEntity> createProjectNameSpecification(String project, String name) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.and(
-                criteriaBuilder.equal(root.get(DataItemEntity_.PROJECT), project),
-                criteriaBuilder.equal(root.get(DataItemEntity_.NAME), name)
-            );
-        };
     }
 }

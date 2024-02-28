@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.commons.services.entities;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -13,27 +12,21 @@ import org.springframework.lang.Nullable;
 /*
  * Service for managing data items
  */
-public interface DataItemService<T> {
+public interface DataItemService {
     /**
-     * List all dataItems, with optional filters
+     * List all dataItems
      * @param pageable
-     * @param filter
      * @return
      */
-    Page<DataItem> listDataItems(Pageable pageable, @Nullable SearchFilter<T> filter);
+    Page<DataItem> listDataItems(Pageable pageable);
 
     /**
-     * List the latest version of every dataItem, with optional filters
+     * List the latest version of every dataItem
      * @param project
      * @param pageable
-     * @param filter
      * @return
      */
-    Page<DataItem> listLatestDataItemsByProject(
-        @NotNull String project,
-        Pageable pageable,
-        @Nullable SearchFilter<T> filter
-    );
+    Page<DataItem> listLatestDataItemsByProject(@NotNull String project, Pageable pageable);
 
     /**
      * Find all versions of a given dataItem

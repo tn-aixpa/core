@@ -5,9 +5,9 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity_;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -23,14 +23,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 @Slf4j
-public class ArtifactServiceImpl implements ArtifactService<ArtifactEntity> {
+public class ArtifactServiceImpl implements SearchableArtifactService {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
 
     @Override
-    public Page<Artifact> listArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter) {
-        log.debug("list artifacts page {}, filter {}", pageable, String.valueOf(filter));
+    public Page<Artifact> listArtifacts(Pageable pageable) {
+        log.debug("list artifacts page {}", pageable);
+
+        return entityService.list(pageable);
+    }
+
+    @Override
+    public Page<Artifact> searchArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter) {
+        log.debug("search artifacts page {}, filter {}", pageable, String.valueOf(filter));
 
         Specification<ArtifactEntity> specification = filter != null ? filter.toSpecification() : null;
         if (specification != null) {
@@ -41,7 +48,18 @@ public class ArtifactServiceImpl implements ArtifactService<ArtifactEntity> {
     }
 
     @Override
-    public Page<Artifact> listLatestArtifactsByProject(
+    public Page<Artifact> listLatestArtifactsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list artifacts for project {}  page {}", project, pageable);
+        Specification<ArtifactEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Page<Artifact> searchLatestArtifactsByProject(
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<ArtifactEntity> filter
@@ -49,7 +67,7 @@ public class ArtifactServiceImpl implements ArtifactService<ArtifactEntity> {
         log.debug("list artifacts for project {} with {} page {}", project, String.valueOf(filter), pageable);
         Specification<ArtifactEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
         Specification<ArtifactEntity> specification = Specification.allOf(
-            createProjectSpecification(project),
+            CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project),
             filterSpecification
         );
@@ -62,9 +80,13 @@ public class ArtifactServiceImpl implements ArtifactService<ArtifactEntity> {
         log.debug("find artifacts for project {} with name {}", project, name);
 
         //fetch all versions ordered by date DESC
+        Specification<ArtifactEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
         Specification<ArtifactEntity> specification = (root, query, builder) -> {
             query.orderBy(builder.desc(root.get(ArtifactEntity_.CREATED)));
-            return createProjectNameSpecification(project, name).toPredicate(root, query, builder);
+            return where.toPredicate(root, query, builder);
         };
 
         return entityService.searchAll(specification);
@@ -75,9 +97,13 @@ public class ArtifactServiceImpl implements ArtifactService<ArtifactEntity> {
         log.debug("find artifacts for project {} with name {} page {}", project, name, pageable);
 
         //fetch all versions ordered by date DESC
+        Specification<ArtifactEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
         Specification<ArtifactEntity> specification = (root, query, builder) -> {
             query.orderBy(builder.desc(root.get(ArtifactEntity_.CREATED)));
-            return createProjectNameSpecification(project, name).toPredicate(root, query, builder);
+            return where.toPredicate(root, query, builder);
         };
 
         return entityService.search(specification, pageable);
@@ -148,37 +174,12 @@ public class ArtifactServiceImpl implements ArtifactService<ArtifactEntity> {
     public void deleteArtifacts(@NotNull String project, @NotNull String name) {
         log.debug("delete artifacts for project {} with name {}", project, name);
 
-        long count = entityService.deleteAll(createProjectNameSpecification(project, name));
+        Specification<ArtifactEntity> spec = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+
+        long count = entityService.deleteAll(spec);
         log.debug("deleted count {}", count);
-    }
-
-    // protected Specification<ArtifactEntity> createSpecification(
-    //     Map<String, String> filter,
-    //     ArtifactEntityFilter entityFilter
-    // ) {
-    //     return (root, query, criteriaBuilder) -> {
-    //         Predicate predicate = criteriaBuilder.conjunction();
-
-    //         // Add your custom filter based on the provided map
-    //         predicate = entityFilter.toPredicate(root, query, criteriaBuilder);
-
-    //         // Add more conditions for other filter if needed
-
-    //         return predicate;
-    //     };
-    // }
-    protected Specification<ArtifactEntity> createProjectSpecification(String project) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get(ArtifactEntity_.PROJECT), project);
-        };
-    }
-
-    protected Specification<ArtifactEntity> createProjectNameSpecification(String project, String name) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.and(
-                criteriaBuilder.equal(root.get(ArtifactEntity_.PROJECT), project),
-                criteriaBuilder.equal(root.get(ArtifactEntity_.NAME), name)
-            );
-        };
     }
 }

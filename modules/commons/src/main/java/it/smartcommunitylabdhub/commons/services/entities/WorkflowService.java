@@ -2,13 +2,9 @@ package it.smartcommunitylabdhub.commons.services.entities;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
@@ -16,27 +12,22 @@ import org.springframework.lang.Nullable;
 /*
  * Service for managing workflows
  */
-public interface WorkflowService<T> {
+public interface WorkflowService {
     /**
-     * List all workflows, with optional filters
+     * List all workflows
      * @param pageable
-     * @param filter
      * @return
      */
-    Page<Workflow> listWorkflows(Pageable pageable, @Nullable SearchFilter<T> filter);
+    Page<Workflow> listWorkflows(Pageable pageable);
 
     /**
-     * List the latest version of every workflow, with optional filters
+     * List the latest version of every workflow,
      * @param project
      * @param pageable
      * @param filter
      * @return
      */
-    Page<Workflow> listLatestWorkflowsByProject(
-        @NotNull String project,
-        Pageable pageable,
-        @Nullable SearchFilter<T> filter
-    );
+    Page<Workflow> listLatestWorkflowsByProject(@NotNull String project, Pageable pageable);
 
     /**
      * Find all versions of a given workflow

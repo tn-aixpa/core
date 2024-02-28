@@ -1,184 +1,311 @@
 package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
-import it.smartcommunitylabdhub.commons.exceptions.CustomException;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
-import it.smartcommunitylabdhub.commons.services.SpecRegistry;
-import it.smartcommunitylabdhub.commons.services.entities.TaskService;
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
-import it.smartcommunitylabdhub.core.exceptions.ErrorList;
-import it.smartcommunitylabdhub.core.models.builders.task.TaskDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.task.TaskEntityBuilder;
+import it.smartcommunitylabdhub.commons.services.entities.RunService;
+import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.TaskEntityFilter;
-import it.smartcommunitylabdhub.core.repositories.RunRepository;
-import it.smartcommunitylabdhub.core.repositories.TaskRepository;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity_;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
-public class TaskServiceImpl extends AbstractSpecificationService<TaskEntity, TaskEntityFilter> implements TaskService {
+@Slf4j
+public class TaskServiceImpl implements SearchableTaskService {
 
     @Autowired
-    TaskRepository taskRepository;
+    private EntityService<Task, TaskEntity> entityService;
 
     @Autowired
-    RunRepository runRepository;
+    private EntityService<Function, FunctionEntity> functionEntityService;
 
     @Autowired
-    TaskDTOBuilder taskDTOBuilder;
-
-    @Autowired
-    TaskEntityBuilder taskEntityBuilder;
-
-    @Autowired
-    TaskEntityFilter taskEntityFilter;
-
-    @Autowired
-    SpecRegistry specRegistry;
+    private RunService runService;
 
     @Override
-    public Page<Task> getTasks(Map<String, String> filter, Pageable pageable) {
-        try {
-            taskEntityFilter.setFunction(filter.get("function"));
-            taskEntityFilter.setKind(filter.get("kind"));
-            taskEntityFilter.setCreatedDate(filter.get("created"));
-            Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
-            taskEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+    public Page<Task> listTasks(Pageable pageable) {
+        log.debug("list tasks page {}", pageable);
 
-            Specification<TaskEntity> specification = createSpecification(filter, taskEntityFilter);
+        return entityService.list(pageable);
+    }
 
-            Page<TaskEntity> taskPage = this.taskRepository.findAll(specification, pageable);
+    @Override
+    public Page<Task> searchTasks(Pageable pageable, @Nullable SearchFilter<TaskEntity> filter) {
+        log.debug("list tasks page {}, filter {}", pageable, String.valueOf(filter));
 
-            return new PageImpl<>(
-                taskPage.getContent().stream().map(task -> taskDTOBuilder.build(task)).collect(Collectors.toList()),
-                pageable,
-                taskPage.getTotalElements()
-            );
-        } catch (CustomException e) {
-            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        Specification<TaskEntity> specification = filter != null ? filter.toSpecification() : null;
+        if (specification != null) {
+            return entityService.search(specification, pageable);
+        } else {
+            return entityService.list(pageable);
         }
     }
 
     @Override
-    public Task getTask(String uuid) {
-        return taskRepository
-            .findById(uuid)
-            .map(task -> taskDTOBuilder.build(task))
-            .orElseThrow(() ->
-                new CoreException(
-                    "TaskNotFound",
-                    "The Task you are searching for does not exist.",
-                    HttpStatus.NOT_FOUND
-                )
-            );
+    public Page<Task> listTasksByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list tasks for project {} page {}", project, pageable);
+        Specification<TaskEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.search(specification, pageable);
     }
 
     @Override
-    public List<Task> getTasksByFunction(String function) {
-        return taskRepository.findByFunction(function).stream().map(taskDTOBuilder::build).toList();
+    public Page<Task> searchTasksByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<TaskEntity> filter
+    ) {
+        log.debug("list tasks for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<TaskEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<TaskEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            filterSpecification
+        );
+
+        return entityService.search(specification, pageable);
     }
 
     @Override
-    public boolean deleteTask(String uuid, Boolean cascade) {
+    public List<Task> getTasksByFunctionId(@NotNull String functionId) {
+        log.debug("list tasks for function {}", functionId);
+
+        Function function = functionEntityService.find(functionId);
+        if (function == null) {
+            return Collections.emptyList();
+        }
+
+        //define a spec for tasks building function path
+        Specification<TaskEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(function.getProject()),
+            createFunctionSpecification(TaskUtils.buildFunctionString(function))
+        );
+
+        //fetch all tasks ordered by kind ASC
+        Specification<TaskEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.asc(root.get(TaskEntity_.KIND)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Task findTask(@NotNull String id) {
+        log.debug("find task with id {}", String.valueOf(id));
+
+        return entityService.find(id);
+    }
+
+    @Override
+    public Task getTask(@NotNull String id) throws NoSuchEntityException {
+        log.debug("get task with id {}", String.valueOf(id));
+
         try {
-            if (this.taskRepository.existsById(uuid)) {
-                if (cascade) {
-                    this.runRepository.deleteByTaskId(uuid);
-                }
-                this.taskRepository.deleteById(uuid);
-                return true;
+            return entityService.get(id);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.TASK.toString());
+        }
+    }
+
+    @Override
+    public Task createTask(@NotNull Task taskDTO) throws DuplicatedEntityException {
+        log.debug("create task");
+
+        try {
+            //check if the same task already exists for the function
+            TaskBaseSpec taskSpec = new TaskBaseSpec();
+            taskSpec.configure(taskDTO.getSpec());
+
+            //TODO validate spec
+
+            String function = taskSpec.getFunction();
+            if (!StringUtils.hasText(function)) {
+                throw new IllegalArgumentException("missing function");
             }
-            throw new CoreException(
-                ErrorList.TASK_NOT_FOUND.getValue(),
-                ErrorList.TASK_NOT_FOUND.getReason(),
-                HttpStatus.NOT_FOUND
-            );
-        } catch (Exception e) {
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "Cannot delete task",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+
+            TaskSpecAccessor taskSpecAccessor = TaskUtils.parseFunction(function);
+            if (!StringUtils.hasText(taskSpecAccessor.getProject())) {
+                throw new IllegalArgumentException("spec: missing project");
+            }
+
+            //check project match
+            if (taskDTO.getProject() != null && !taskDTO.getProject().equals(taskSpecAccessor.getProject())) {
+                throw new IllegalArgumentException("project mismatch");
+            }
+            taskDTO.setProject(taskSpecAccessor.getProject());
+
+            if (!StringUtils.hasText(taskSpecAccessor.getVersion())) {
+                throw new IllegalArgumentException("spec: missing version");
+            }
+            String functionId = taskSpecAccessor.getVersion();
+
+            //check if function exists
+            Function fn = functionEntityService.find(functionId);
+            if (fn == null) {
+                throw new IllegalArgumentException("invalid function");
+            }
+
+            //check if a task for this kind already exists
+            Optional<Task> existingTask = getTasksByFunctionId(functionId)
+                .stream()
+                .filter(t -> t.getKind().equals(taskDTO.getKind()))
+                .findFirst();
+            if (existingTask.isPresent()) {
+                throw new DuplicatedEntityException(EntityName.TASK.toString(), taskDTO.getKind());
+            }
+
+            //create as new
+            return entityService.create(taskDTO);
+        } catch (DuplicatedEntityException e) {
+            throw new DuplicatedEntityException(EntityName.TASK.toString(), taskDTO.getId());
         }
     }
 
     @Override
-    public Task createTask(Task taskDTO) {
-        if (taskDTO.getId() != null && taskRepository.existsById(taskDTO.getId())) {
-            throw new CoreException("DuplicateTaskId", "Cannot create the task", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        K8sTaskBaseSpec taskSpec = specRegistry.createSpec(taskDTO.getKind(), EntityName.TASK, taskDTO.getSpec());
-
-        TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
-        if (!taskDTO.getProject().equals(taskAccessor.getProject())) {
-            throw new CoreException(
-                "Task string Project and associated Project does not match",
-                "Cannot create the task",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-
-        Optional<TaskEntity> savedTask = Optional
-            .ofNullable(taskDTO)
-            .map(taskEntityBuilder::build)
-            .map(this.taskRepository::saveAndFlush);
-
-        return savedTask
-            .map(task -> taskDTOBuilder.build(task))
-            .orElseThrow(() ->
-                new CoreException("InternalServerError", "Error saving task", HttpStatus.INTERNAL_SERVER_ERROR)
-            );
-    }
-
-    @Override
-    public Task updateTask(String uuid, Task taskDTO) {
-        if (!taskDTO.getId().equals(uuid)) {
-            throw new CoreException(
-                "TaskNotMatch",
-                "Trying to update a task with an uuid different from the one passed in the request.",
-                HttpStatus.NOT_FOUND
-            );
-        }
-
-        final TaskEntity task = taskRepository.findById(uuid).orElse(null);
-        if (task == null) {
-            throw new CoreException(
-                "TaskNotFound",
-                "The task you are searching for does not exist.",
-                HttpStatus.NOT_FOUND
-            );
-        }
-
+    public Task updateTask(@NotNull String id, @NotNull Task taskDTO) throws NoSuchEntityException {
+        log.debug("update task with id {}", String.valueOf(id));
         try {
-            final TaskEntity taskUpdated = taskEntityBuilder.update(task, taskDTO);
-            this.taskRepository.saveAndFlush(taskUpdated);
+            //fetch current and merge
+            Task current = entityService.get(id);
 
-            return taskDTOBuilder.build(taskUpdated);
-        } catch (CustomException e) {
-            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            //hardcoded: function ref is not modifiable
+            Map<String, Serializable> spec = new HashMap<>();
+            if (taskDTO.getSpec() != null) {
+                spec.putAll(taskDTO.getSpec());
+            }
+            if (current.getSpec() != null) {
+                spec.put("function", current.getSpec().get("function"));
+            }
+
+            TaskBaseSpec taskSpec = new TaskBaseSpec();
+            taskSpec.configure(taskDTO.getSpec());
+
+            //TODO validate spec
+
+            //full update, task is modifiable
+            return entityService.update(id, taskDTO);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.TASK.toString());
         }
+    }
+
+    @Override
+    public void deleteTask(@NotNull String id, @Nullable Boolean cascade) {
+        log.debug("delete task with id {}", String.valueOf(id));
+
+        Task task = findTask(id);
+        if (task != null) {
+            if (Boolean.TRUE.equals(cascade)) {
+                log.debug("cascade delete runs for task with id {}", String.valueOf(id));
+                runService.deleteRunsByTaskId(id);
+            }
+
+            //delete the task
+            entityService.delete(id);
+        }
+
+        entityService.delete(id);
+    }
+
+    @Override
+    public void deleteTasksByFunctionId(@NotNull String functionId) {
+        log.debug("delete tasks for function {}", functionId);
+
+        Function function = functionEntityService.find(functionId);
+        if (function == null) {
+            return;
+        }
+
+        //define a spec for tasks building function path
+        Specification<TaskEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(function.getProject()),
+            createFunctionSpecification(TaskUtils.buildFunctionString(function))
+        );
+
+        //fetch all tasks ordered by kind ASC
+        Specification<TaskEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.asc(root.get(TaskEntity_.KIND)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        entityService.deleteAll(specification);
+    }
+
+    // @Override
+    // public List<Run> listRunsByTask(@NotNull String id) throws NoSuchEntityException {
+    //     Task task = getTask(id);
+
+    //     //define a spec for runs building task path
+    //     Specification<RunEntity> where = Specification.allOf(
+    //         CommonSpecification.projectEquals(task.getProject()),
+    //         createRunSpecification(RunUtils.buildTaskString(task))
+    //     );
+
+    //     //fetch all runs ordered by created DESC
+    //     Specification<RunEntity> specification = (root, query, builder) -> {
+    //         query.orderBy(builder.desc(root.get(RunEntity_.CREATED)));
+
+    //         return where.toPredicate(root, query, builder);
+    //     };
+
+    //     return runEntityService.searchAll(specification);
+    // }
+
+    // @Override
+    // public void deleteRunsByTask(@NotNull String id) throws NoSuchEntityException {
+    //     Task task = getTask(id);
+
+    //     //define a spec for runs building task path
+    //     Specification<RunEntity> where = Specification.allOf(
+    //         CommonSpecification.projectEquals(task.getProject()),
+    //         createRunSpecification(RunUtils.buildTaskString(task))
+    //     );
+
+    //     //fetch all runs ordered by created DESC
+    //     Specification<RunEntity> specification = (root, query, builder) -> {
+    //         query.orderBy(builder.desc(root.get(RunEntity_.CREATED)));
+
+    //         return where.toPredicate(root, query, builder);
+    //     };
+
+    //     long count = runEntityService.deleteAll(specification);
+    //     log.debug("deleted runs count {}", count);
+    // }
+
+    private Specification<RunEntity> createRunSpecification(String task) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("task"), task);
+        };
+    }
+
+    private Specification<TaskEntity> createFunctionSpecification(String function) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("function"), function);
+        };
     }
 }

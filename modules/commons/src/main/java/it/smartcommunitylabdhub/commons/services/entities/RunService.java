@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.commons.services.entities;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -14,7 +13,7 @@ import org.springframework.lang.Nullable;
 /*
  * Service for managing runs
  */
-public interface RunService<T> {
+public interface RunService {
     /*
      * Execution
      * TODO move to manager
@@ -26,16 +25,23 @@ public interface RunService<T> {
     /*
      * Tasks
      */
-    List<Run> getRunsByTask(@NotNull String task);
-    void deleteRunsByTask(@NotNull String task);
+    List<Run> getRunsByTaskId(@NotNull String taskId);
+    void deleteRunsByTaskId(@NotNull String taskId);
 
     /**
-     * List all runs, with optional filters
+     * List all runs
      * @param pageable
-     * @param filter
      * @return
      */
-    Page<Run> listRuns(Pageable pageable, @Nullable SearchFilter<T> filter);
+    Page<Run> listRuns(Pageable pageable);
+
+    /**
+     * List all runs for a given project
+     * @param project
+     * @param pageable
+     * @return
+     */
+    Page<Run> listRunsByProject(@NotNull String project, Pageable pageable);
 
     /**
      * Find a specific run via unique ID. Returns null if not found

@@ -3,74 +3,122 @@ package it.smartcommunitylabdhub.core.services;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
-import it.smartcommunitylabdhub.commons.services.FunctionService;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity_;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
-import jakarta.persistence.criteria.Predicate;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
 @Slf4j
-public class FunctionServiceImpl implements FunctionService {
+public class FunctionServiceImpl implements SearchableFunctionService {
 
     @Autowired
     private EntityService<Function, FunctionEntity> entityService;
 
     @Autowired
-    private EntityService<Task, TaskEntity> taskEntityService;
-
-    @Autowired
-    private EntityService<Run, RunEntity> runEntityService;
+    private TaskService taskService;
 
     @Override
-    public Page<Function> getFunctions(Map<String, String> filter, Pageable pageable) {
-        log.debug("list functions with {} page {}", String.valueOf(filter), pageable);
+    public Page<Function> listFunctions(Pageable pageable) {
+        log.debug("list functions page {}", pageable);
 
-        FunctionEntityFilter functionEntityFilter = new FunctionEntityFilter();
-        functionEntityFilter.setCreatedDate(filter.get("created"));
-        functionEntityFilter.setName(filter.get("name"));
-        functionEntityFilter.setKind(filter.get("kind"));
-        Optional<State> stateOptional = Stream
-            .of(State.values())
-            .filter(state -> state.name().equals(filter.get("state")))
-            .findAny();
-        functionEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
+        return entityService.list(pageable);
+    }
 
-        Specification<FunctionEntity> specification = createSpecification(filter, functionEntityFilter);
+    @Override
+    public Page<Function> searchFunctions(Pageable pageable, @Nullable SearchFilter<FunctionEntity> filter) {
+        log.debug("list functions page {}, filter {}", pageable, String.valueOf(filter));
+
+        Specification<FunctionEntity> specification = filter != null ? filter.toSpecification() : null;
+        if (specification != null) {
+            return entityService.search(specification, pageable);
+        } else {
+            return entityService.list(pageable);
+        }
+    }
+
+    @Override
+    public Page<Function> listLatestFunctionsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list functions for project {} page {}", project, pageable);
+        Specification<FunctionEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
         return entityService.search(specification, pageable);
     }
 
     @Override
-    public Function createFunction(Function functionDTO) throws DuplicatedEntityException {
-        log.debug("create function");
+    public Page<Function> searchLatestFunctionsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<FunctionEntity> filter
+    ) {
+        log.debug("list functions for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<FunctionEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<FunctionEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project),
+            filterSpecification
+        );
 
-        try {
-            return entityService.create(functionDTO);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.FUNCTION.toString(), functionDTO.getId());
-        }
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public List<Function> findFunctions(@NotNull String project, @NotNull String name) {
+        log.debug("find functions for project {} with name {}", project, name);
+
+        //fetch all versions ordered by date DESC
+        Specification<FunctionEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+        Specification<FunctionEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(FunctionEntity_.CREATED)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<Function> findFunctions(@NotNull String project, @NotNull String name, Pageable pageable) {
+        log.debug("find functions for project {} with name {} page {}", project, name, pageable);
+
+        //fetch all versions ordered by date DESC
+        Specification<FunctionEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+        Specification<FunctionEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(FunctionEntity_.CREATED)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Function findFunction(@NotNull String id) {
+        log.debug("find function with id {}", String.valueOf(id));
+
+        return entityService.find(id);
     }
 
     @Override
@@ -81,6 +129,25 @@ public class FunctionServiceImpl implements FunctionService {
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.FUNCTION.toString());
+        }
+    }
+
+    @Override
+    public Function getLatestFunction(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
+        log.debug("get latest function for project {} with name {}", project, name);
+
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLatestFunction'");
+    }
+
+    @Override
+    public Function createFunction(@NotNull Function functionDTO) throws DuplicatedEntityException {
+        log.debug("create function");
+
+        try {
+            return entityService.create(functionDTO);
+        } catch (DuplicatedEntityException e) {
+            throw new DuplicatedEntityException(EntityName.FUNCTION.toString(), functionDTO.getId());
         }
     }
 
@@ -102,104 +169,78 @@ public class FunctionServiceImpl implements FunctionService {
     }
 
     @Override
-    public void deleteFunction(@NotNull String id, Boolean cascade) {
-        log.debug("delete function with id {}, cascade {}", String.valueOf(id), String.valueOf(cascade));
+    public void deleteFunction(@NotNull String id, @Nullable Boolean cascade) {
+        log.debug("delete function with id {}", String.valueOf(id));
 
-        Function function = entityService.find(id);
+        Function function = findFunction(id);
         if (function != null) {
             if (Boolean.TRUE.equals(cascade)) {
-                // Remove Task
-                List<Task> taskList = taskEntityService.searchAll(
-                    createTaskSpecification(TaskUtils.buildTaskString(function))
-                );
-
-                //Delete all related sobject
-                taskList.forEach(task -> {
-                    //read base spec
-                    TaskBaseSpec taskSpec = new TaskBaseSpec();
-                    taskSpec.configure(task.getSpec());
-
-                    // find and remove related runs
-                    runEntityService
-                        .searchAll(createRunSpecification(RunUtils.buildRunString(function, task)))
-                        .forEach(r -> runEntityService.delete(r.getId()));
-
-                    // remove task
-                    taskEntityService.delete(task.getId());
-                });
+                //tasks
+                log.debug("cascade delete tasks for function with id {}", String.valueOf(id));
+                taskService.deleteTasksByFunctionId(id);
             }
 
-            //remove function
+            //delete the function
             entityService.delete(id);
         }
     }
 
-    @Deprecated
     @Override
-    public List<Run> getFunctionRuns(String id) throws NoSuchEntityException {
-        log.debug("get runs for function with id {}", String.valueOf(id));
+    public void deleteFunctions(@NotNull String project, @NotNull String name) {
+        log.debug("delete functions for project {} with name {}", project, name);
 
-        Function function = entityService.get(id);
-
-        // Find and collect runs for a function
-        return taskEntityService
-            .searchAll(createTaskSpecification(TaskUtils.buildTaskString(function)))
-            .stream()
-            .flatMap(task -> {
-                //read base spec
-                TaskBaseSpec taskSpec = new TaskBaseSpec();
-                taskSpec.configure(task.getSpec());
-
-                // find  related runs
-                return runEntityService
-                    .searchAll(createRunSpecification(RunUtils.buildRunString(function, task)))
-                    .stream();
-            })
-            .collect(Collectors.toList());
+        //delete with cascade
+        findFunctions(project, name).forEach(function -> deleteFunction(function.getId(), Boolean.TRUE));
     }
 
     // @Override
-    // public List<Function> getAllLatestFunctions() {
-    //     try {
-    //         List<FunctionEntity> functionList = this.functionRepository.findAllLatestFunctions();
-    //         return functionList
-    //             .stream()
-    //             .map(function -> functionDTOBuilder.build(function, false))
-    //             .collect(Collectors.toList());
-    //     } catch (CustomException e) {
-    //         throw new CoreException(
-    //             ErrorList.FUNCTION_NOT_FOUND.getValue(),
-    //             e.getMessage(),
-    //             HttpStatus.INTERNAL_SERVER_ERROR
-    //         );
-    //     }
+    // public List<Task> listTasksByFunction(@NotNull String id) throws NoSuchEntityException {
+    //     log.debug("list tasks for function {}", id);
+
+    //     Function function = getFunction(id);
+
+    //     //define a spec for tasks building function path
+    //     Specification<TaskEntity> where = Specification.allOf(
+    //         CommonSpecification.projectEquals(function.getProject()),
+    //         createTaskSpecification(TaskUtils.buildFunctionString(function))
+    //     );
+
+    //     //fetch all tasks ordered by kind ASC
+    //     Specification<TaskEntity> specification = (root, query, builder) -> {
+    //         query.orderBy(builder.asc(root.get(TaskEntity_.KIND)));
+
+    //         return where.toPredicate(root, query, builder);
+    //     };
+
+    //     return taskEntityService.searchAll(specification);
     // }
 
-    protected Specification<FunctionEntity> createSpecification(
-        Map<String, String> filter,
-        FunctionEntityFilter entityFilter
-    ) {
-        return (root, query, criteriaBuilder) -> {
-            Predicate predicate = criteriaBuilder.conjunction();
+    // @Override
+    // public void deleteTasksByFunction(@NotNull String id) throws NoSuchEntityException {
+    //     log.debug("delete tasks for function {}", id);
 
-            // Add your custom filter based on the provided map
-            predicate = entityFilter.toPredicate(root, query, criteriaBuilder);
+    //     Function function = getFunction(id);
 
-            // Add more conditions for other filter if needed
+    //     //define a spec for tasks building function path
+    //     Specification<TaskEntity> where = Specification.allOf(
+    //         CommonSpecification.projectEquals(function.getProject()),
+    //         createTaskSpecification(TaskUtils.buildFunctionString(function))
+    //     );
 
-            return predicate;
-        };
-    }
+    //     //fetch all tasks ordered by kind ASC
+    //     Specification<TaskEntity> specification = (root, query, builder) -> {
+    //         query.orderBy(builder.asc(root.get(TaskEntity_.KIND)));
 
-    protected Specification<TaskEntity> createTaskSpecification(String function) {
+    //         return where.toPredicate(root, query, builder);
+    //     };
+
+    //     long count = taskEntityService.deleteAll(specification);
+    //     log.debug("deleted tasks count {}", count);
+    // }
+
+    private Specification<TaskEntity> createTaskSpecification(String function) {
         return (root, query, criteriaBuilder) -> {
             return criteriaBuilder.equal(root.get("function"), function);
-        };
-    }
-
-    protected Specification<RunEntity> createRunSpecification(String task) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("task"), task);
         };
     }
 }

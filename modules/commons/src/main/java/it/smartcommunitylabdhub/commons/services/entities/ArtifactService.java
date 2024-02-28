@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.commons.services.entities;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -13,27 +12,21 @@ import org.springframework.lang.Nullable;
 /*
  * Service for managing artifacts
  */
-public interface ArtifactService<T> {
+public interface ArtifactService {
     /**
-     * List all artifacts, with optional filters
+     * List all artifacts
      * @param pageable
-     * @param filter
      * @return
      */
-    Page<Artifact> listArtifacts(Pageable pageable, @Nullable SearchFilter<T> filter);
+    Page<Artifact> listArtifacts(Pageable pageable);
 
     /**
-     * List the latest version of every artifact, with optional filters
+     * List the latest version of every artifact
      * @param project
      * @param pageable
-     * @param filter
      * @return
      */
-    Page<Artifact> listLatestArtifactsByProject(
-        @NotNull String project,
-        Pageable pageable,
-        @Nullable SearchFilter<T> filter
-    );
+    Page<Artifact> listLatestArtifactsByProject(@NotNull String project, Pageable pageable);
 
     /**
      * Find all versions of a given artifact

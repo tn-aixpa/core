@@ -16,8 +16,8 @@ import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
-import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
@@ -100,7 +100,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
     }
 
     @Override
-    public List<Run> getRunsByTask(@NotNull String task) {
+    public List<Run> getRunsByTaskId(@NotNull String task) {
         log.debug("get runs for task {}", task);
 
         return runRepository.findByTask(task).stream().map(e -> runDTOBuilder.build(e)).collect(Collectors.toList());
@@ -132,7 +132,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
     }
 
     @Override
-    public void deleteRunsByTask(@NotNull String task) {
+    public void deleteRunsByTaskId(@NotNull String task) {
         log.debug("delete runs for task {}", task);
 
         runRepository.deleteByTask(task);
@@ -216,7 +216,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
 
         // retrieve task by looking up value
         Task task = taskService
-            .getTasksByFunction(function.getId())
+            .getTasksByFunctionId(function.getId())
             .stream()
             .filter(t -> t.getKind().equals(runAccessor.getTask()))
             .findFirst()
@@ -235,7 +235,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
         if (Optional.ofNullable(runSpec.getLocalExecution()).orElse(Boolean.FALSE).booleanValue() == false) {
             //derive runtime from task spec
             TaskBaseSpec taskSpec = specRegistry.createSpec(task.getKind(), EntityName.TASK, task.getSpec());
-            TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
+            TaskSpecAccessor taskAccessor = TaskUtils.parseFunction(taskSpec.getFunction());
 
             // Retrieve Runtime and build run
             Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime =
@@ -269,7 +269,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
         if (Optional.ofNullable(runSpec.getLocalExecution()).orElse(Boolean.FALSE).booleanValue() == false) {
             //derive runtime from task spec
             TaskBaseSpec taskSpec = specRegistry.createSpec(task.getKind(), EntityName.TASK, task.getSpec());
-            TaskSpecAccessor taskAccessor = TaskUtils.parseTask(taskSpec.getFunction());
+            TaskSpecAccessor taskAccessor = TaskUtils.parseFunction(taskSpec.getFunction());
 
             // Retrieve Runtime and build run
             Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime =

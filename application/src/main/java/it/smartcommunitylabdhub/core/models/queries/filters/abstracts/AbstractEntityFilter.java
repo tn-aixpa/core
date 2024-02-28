@@ -132,6 +132,6 @@ public abstract class AbstractEntityFilter<T extends BaseEntity> {
                 }
             });
 
-        return BaseEntityFilter.<T>builder().criteria(criteria).condition(SearchFilter.Condition.or).build();
+        return BaseEntityFilter.<T>builder().criteria(criteria).condition(SearchFilter.Condition.and).build();
     }
 }

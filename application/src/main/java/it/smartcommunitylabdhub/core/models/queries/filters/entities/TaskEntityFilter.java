@@ -1,56 +1,41 @@
 package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
-import it.smartcommunitylabdhub.commons.utils.DateUtils;
+import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.models.base.BaseEntityFilter;
 import it.smartcommunitylabdhub.core.models.base.BaseEntitySearchCriteria;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import java.util.Date;
+import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractEntityFilter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.stereotype.Component;
 
-@Component
 @Getter
 @Setter
-public class TaskEntityFilter implements SpecificationFilter<TaskEntity> {
+@AllArgsConstructor
+@NoArgsConstructor
+public class TaskEntityFilter extends AbstractEntityFilter<TaskEntity> {
 
-    private String name;
-    private String kind;
-    private String project;
-    private String state;
-    private String createdDate;
     private String function;
 
     @Override
-    public Predicate toPredicate(Root<TaskEntity> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-        Predicate predicate = criteriaBuilder.conjunction();
+    public SearchFilter<TaskEntity> toSearchFilter() {
+        List<SearchCriteria<TaskEntity>> criteria = new ArrayList<>();
 
-        if (function != null) {
-            predicate =
-                criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("function"), "%" + function + "%"));
-        }
+        //base criteria
+        criteria.addAll(super.toSearchFilter().getCriteria());
 
-        if (getKind() != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("kind"), "%" + getKind() + "%"));
-        }
+        //function exact match
+        Optional
+            .ofNullable(function)
+            .ifPresent(value ->
+                criteria.add(new BaseEntitySearchCriteria<>("function", value, SearchCriteria.Operation.equal))
+            );
 
-        if (getState() != null) {
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.like(root.get("state"), "%" + getState() + "%"));
-        }
-
-        if (getCreatedDate() != null) {
-            DateUtils.DateInterval dateInterval = DateUtils.parseDateIntervalFromTimestamps(getCreatedDate(), true);
-            predicate =
-                criteriaBuilder.and(
-                    predicate,
-                    criteriaBuilder.between(root.get("created"), dateInterval.startDate(), dateInterval.endDate())
-                );
-        }
-
-        return predicate;
+        return BaseEntityFilter.<TaskEntity>builder().criteria(criteria).condition(SearchFilter.Condition.and).build();
     }
 }

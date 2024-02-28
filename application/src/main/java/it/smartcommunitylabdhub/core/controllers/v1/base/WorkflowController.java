@@ -2,19 +2,28 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.WorkflowEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.Map;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,21 +37,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/workflows")
 @ApiVersion("v1")
-@Validated
-@Tag(name = "Workflow base API", description = "Endpoints related to workflows management out of the Context")
+@RequestMapping("/workflows")
+//TODO evaluate permissions for project via lookup in dto
 @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@Validated
+@Slf4j
+@Tag(name = "Workflow base API", description = "Endpoints related to workflows management")
 public class WorkflowController {
 
     @Autowired
-    WorkflowService workflowService;
-
-    @Operation(summary = "List workflows", description = "Return a list of all workflows")
-    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<Workflow>> getWorkflows(@RequestParam Map<String, String> filter, Pageable pageable) {
-        return ResponseEntity.ok(this.workflowService.getWorkflows(filter, pageable));
-    }
+    SearchableWorkflowService workflowService;
 
     @Operation(summary = "Create workflow", description = "Create an workflow and return")
     @PostMapping(
@@ -50,39 +55,49 @@ public class WorkflowController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Workflow> createWorkflow(@Valid @RequestBody Workflow workflowDTO) {
-        return ResponseEntity.ok(this.workflowService.createWorkflow(workflowDTO));
+    public Workflow createWorkflow(@RequestBody @Valid @NotNull Workflow dto) throws DuplicatedEntityException {
+        return workflowService.createWorkflow(dto);
     }
 
-    @Operation(summary = "Get an workflow by uuid", description = "Return an workflow")
-    @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Workflow> getWorkflow(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid
+    @Operation(summary = "List workflows", description = "Return a list of all workflows")
+    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
+    public Page<Workflow> getWorkflows(
+        @RequestParam(required = false) @Valid @Nullable WorkflowEntityFilter filter,
+        @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+            { @SortDefault(sort = "created", direction = Direction.DESC) }
+        ) Pageable pageable
     ) {
-        return ResponseEntity.ok(this.workflowService.getWorkflow(uuid));
+        SearchFilter<WorkflowEntity> sf = null;
+        if (filter != null) {
+            sf = filter.toSearchFilter();
+        }
+
+        return workflowService.searchWorkflows(pageable, sf);
+    }
+
+    @Operation(summary = "Get an workflow by id", description = "Return an workflow")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
+    public Workflow getWorkflow(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
+        throws NoSuchEntityException {
+        return workflowService.getWorkflow(id);
     }
 
     @Operation(summary = "Update specific workflow", description = "Update and return the workflow")
     @PutMapping(
-        path = "/{uuid}",
+        path = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Workflow> updateWorkflow(
-        @Valid @RequestBody Workflow workflowDTO,
-        @ValidateField @PathVariable String uuid
-    ) {
-        return ResponseEntity.ok(this.workflowService.updateWorkflow(workflowDTO, uuid));
+    public Workflow updateWorkflow(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestBody @Valid @NotNull Workflow dto
+    ) throws NoSuchEntityException {
+        return workflowService.updateWorkflow(id, dto);
     }
 
     @Operation(summary = "Delete an workflow", description = "Delete a specific workflow")
-    @DeleteMapping(path = "/{uuid}")
-    public ResponseEntity<Boolean> deleteWorkflow(@ValidateField @PathVariable String uuid) {
-        return ResponseEntity.ok(this.workflowService.deleteWorkflow(uuid));
-    }
-
-    @GetMapping(path = "/{uuid}/runs", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Run>> workflowRuns(@ValidateField @PathVariable String uuid) {
-        return ResponseEntity.ok(this.workflowService.getWorkflowRuns(uuid));
+    @DeleteMapping(path = "/{id}")
+    public void deleteWorkflow(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
+        workflowService.deleteWorkflow(id);
     }
 }

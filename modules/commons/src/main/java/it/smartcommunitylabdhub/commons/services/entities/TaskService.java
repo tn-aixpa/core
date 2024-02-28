@@ -2,8 +2,8 @@ package it.smartcommunitylabdhub.commons.services.entities;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -13,50 +13,31 @@ import org.springframework.lang.Nullable;
 /*
  * Service for managing tasks
  */
-public interface TaskService<T> {
+public interface TaskService {
     /**
      * List all tasks for a given function
      * @param function
      * @return
      */
-    List<Task> getTasksByFunction(@NotNull String function);
+    List<Task> getTasksByFunctionId(@NotNull String functionId);
 
     /**
-     * List all tasks, with optional filters
-     * @param pageable
-     * @param filter
-     * @return
-     */
-    Page<Task> listTasks(Pageable pageable, @Nullable SearchFilter<T> filter);
-
-    /**
-     * List the latest version of every task, with optional filters
-     * @param project
-     * @param pageable
-     * @param filter
-     * @return
-     */
-    Page<Task> listLatestTasksByProject(@NotNull String project, Pageable pageable, @Nullable SearchFilter<T> filter);
-
-    /**
-     * Find all versions of a given task
-     * @param project
-     * @param name
-     * @return
-     */
-    List<Task> findTasks(@NotNull String project, @NotNull String name);
-
-    /**
-     * Find all versions of a given task
-     * @param project
-     * @param name
+     * List all tasks
      * @param pageable
      * @return
      */
-    Page<Task> findTasks(@NotNull String project, @NotNull String name, Pageable pageable);
+    Page<Task> listTasks(Pageable pageable);
 
     /**
-     * Find a specific task (version) via unique ID. Returns null if not found
+     * List all tasks for a given project
+     * @param project
+     * @param pageable
+     * @return
+     */
+    Page<Task> listTasksByProject(@NotNull String project, Pageable pageable);
+
+    /**
+     * Find a specific task  via unique ID. Returns null if not found
      * @param id
      * @return
      */
@@ -64,20 +45,12 @@ public interface TaskService<T> {
     Task findTask(@NotNull String id);
 
     /**
-     * Get a specific task (version) via unique ID. Throws exception if not found
+     * Get a specific task via unique ID. Throws exception if not found
      * @param id
      * @return
      * @throws NoSuchEntityException
      */
     Task getTask(@NotNull String id) throws NoSuchEntityException;
-    /**
-     * Get the latest version of a given task
-     * @param project
-     * @param name
-     * @return
-     * @throws NoSuchEntityException
-     */
-    Task getLatestTask(@NotNull String project, @NotNull String name) throws NoSuchEntityException;
 
     /**
      * Create a new task and store it
@@ -88,7 +61,7 @@ public interface TaskService<T> {
     Task createTask(@NotNull Task taskDTO) throws DuplicatedEntityException;
 
     /**
-     * Update a specific task version
+     * Update a specific task
      * @param id
      * @param taskDTO
      * @return
@@ -97,22 +70,28 @@ public interface TaskService<T> {
     Task updateTask(@NotNull String id, @NotNull Task taskDTO) throws NoSuchEntityException;
 
     /**
-     * Delete a specific task (version) via unique ID, with optional cascade
+     * Delete a specific task via unique ID, with optional cascade
      * @param id
      * @param cascade
      */
     void deleteTask(@NotNull String id, @Nullable Boolean cascade);
 
     /**
-     * Delete all versions of a given task, with cascade
-     * @param project
-     * @param name
-     */
-    void deleteTasks(@NotNull String project, @NotNull String name);
-
-    /**
-     * Delete all tasks for a given action, with cascade.
+     * Delete all tasks for a given function, with cascade.
      * @param function
      */
-    void deleteTasksByFunction(@NotNull String function);
+    void deleteTasksByFunctionId(@NotNull String functionId);
+    // /**
+    //  * List all runs defined for a given task specified via unique ID
+    //  * @param id
+    //  * @return
+    //  */
+    // public List<Run> listRunsByTask(@NotNull String id) throws NoSuchEntityException;
+
+    // /**
+    //  * Delete all runs defined for a given task specified via unique ID, with cascade
+    //  * @param id
+    //  * @throws NoSuchEntityException
+    //  */
+    // public void deleteRunsByTask(@NotNull String id) throws NoSuchEntityException;
 }

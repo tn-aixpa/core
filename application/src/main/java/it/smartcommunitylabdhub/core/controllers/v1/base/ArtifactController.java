@@ -7,11 +7,11 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -39,14 +39,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @ApiVersion("v1")
 @RequestMapping("/artifacts")
+//TODO evaluate permissions for project via lookup in dto
 @PreAuthorize("hasAuthority('ROLE_ADMIN')")
 @Validated
-@Tag(name = "Artifact base API", description = "Endpoints related to artifacts management out of the Context")
 @Slf4j
+@Tag(name = "Artifact base API", description = "Endpoints related to artifacts management out of the Context")
 public class ArtifactController {
 
     @Autowired
-    ArtifactService<ArtifactEntity> artifactService;
+    SearchableArtifactService artifactService;
 
     @Operation(summary = "Create artifact", description = "Create an artifact and return")
     @PostMapping(
@@ -71,7 +72,7 @@ public class ArtifactController {
             sf = filter.toSearchFilter();
         }
 
-        return artifactService.listArtifacts(pageable, sf);
+        return artifactService.searchArtifacts(pageable, sf);
     }
 
     @Operation(summary = "Get an artifact by id", description = "Return an artifact")

@@ -7,11 +7,11 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -43,12 +43,12 @@ import org.springframework.web.bind.annotation.RestController;
     "hasAuthority('ROLE_ADMIN') or (hasAuthority(#project+':ROLE_USER') or hasAuthority(#project+':ROLE_ADMIN'))"
 )
 @Validated
-@Tag(name = "Artifact context API", description = "Endpoints related to artifacts management in Context")
 @Slf4j
+@Tag(name = "Artifact context API", description = "Endpoints related to artifacts management in project")
 public class ArtifactContextController {
 
     @Autowired
-    ArtifactService<ArtifactEntity> artifactService;
+    SearchableArtifactService artifactService;
 
     @Operation(
         summary = "Create an artifact in a project context",
@@ -81,7 +81,7 @@ public class ArtifactContextController {
     }
 
     @Operation(
-        summary = "Retrieve only the latest version of all artifact",
+        summary = "Retrieve only the latest version of all artifacts",
         description = "return a list of the latest version of each artifact related to a project"
     )
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
@@ -97,7 +97,7 @@ public class ArtifactContextController {
             sf = filter.toSearchFilter();
         }
 
-        return artifactService.listLatestArtifactsByProject(project, pageable, sf);
+        return artifactService.searchLatestArtifactsByProject(project, pageable, sf);
     }
 
     @Operation(
@@ -152,6 +152,22 @@ public class ArtifactContextController {
         artifactService.deleteArtifacts(project, name);
     }
 
+    /*
+     * Versions
+     */
+
+    @Operation(
+        summary = "Retrieve the latest version of an artifact",
+        description = "return the latest version of an artifact"
+    )
+    @GetMapping(path = "/{name}/latest", produces = "application/json; charset=UTF-8")
+    public Artifact getLatestArtifactByName(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
+    ) throws NoSuchEntityException {
+        return artifactService.getLatestArtifact(project, name);
+    }
+
     @Operation(
         summary = "Retrieve a specific artifact version given the artifact id",
         description = "return a specific version of the artifact identified by the id"
@@ -173,18 +189,6 @@ public class ArtifactContextController {
     }
 
     @Operation(
-        summary = "Retrieve the latest version of an artifact",
-        description = "return the latest version of an artifact"
-    )
-    @GetMapping(path = "/{name}/latest", produces = "application/json; charset=UTF-8")
-    public Artifact getLatestArtifactByName(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
-    ) throws NoSuchEntityException {
-        return artifactService.getLatestArtifact(project, name);
-    }
-
-    @Operation(
         summary = "Update if exist an artifact in a project context",
         description = "First check if project exist, if artifact exist update."
     )
@@ -193,7 +197,7 @@ public class ArtifactContextController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Artifact updateUpdateArtifact(
+    public Artifact updateArtifact(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
@@ -214,7 +218,7 @@ public class ArtifactContextController {
         description = "First check if project exist, then delete a specific artifact version"
     )
     @DeleteMapping(path = "/{name}/{id}")
-    public void deleteSpecificArtifactVersion(
+    public void deleteArtifact(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id

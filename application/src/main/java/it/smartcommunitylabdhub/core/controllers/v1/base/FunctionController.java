@@ -2,89 +2,97 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.services.FunctionService;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.Map;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/functions")
 @ApiVersion("v1")
-@Validated
-@Tag(name = "Function base API", description = "Endpoints related to functions management out of the Context")
+@RequestMapping("/functions")
+//TODO evaluate permissions for project via lookup in dto
 @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@Validated
+@Slf4j
+@Tag(name = "Function base API", description = "Endpoints related to functions management out of the Context")
 public class FunctionController {
 
     @Autowired
-    FunctionService functionService;
+    SearchableFunctionService functionService;
 
-    @Operation(summary = "List functions", description = "Return a list of all functions")
-    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<Function>> getFunctions(@RequestParam Map<String, String> filter, Pageable pageable) {
-        return ResponseEntity.ok(this.functionService.getFunctions(filter, pageable));
-    }
-
-    @Operation(summary = "Create function", description = "Create an function and return")
+    @Operation(summary = "Create function", description = "Create a function and return")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Function> createFunction(@Valid @RequestBody Function functionDTO)
-        throws DuplicatedEntityException {
-        return ResponseEntity.ok(this.functionService.createFunction(functionDTO));
+    public Function createFunction(@RequestBody @Valid @NotNull Function dto) throws DuplicatedEntityException {
+        return functionService.createFunction(dto);
     }
 
-    @Operation(summary = "Get a function by uuid", description = "Return an function")
-    @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Function> getFunction(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid
-    ) throws NoSuchEntityException {
-        return ResponseEntity.ok(this.functionService.getFunction(uuid));
+    @Operation(summary = "List functions", description = "Return a list of all functions")
+    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
+    public Page<Function> getFunctions(
+        @RequestParam(required = false) @Valid @Nullable FunctionEntityFilter filter,
+        @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+            { @SortDefault(sort = "id", direction = Direction.ASC) }
+        ) Pageable pageable
+    ) {
+        SearchFilter<FunctionEntity> sf = null;
+        if (filter != null) {
+            sf = filter.toSearchFilter();
+        }
+
+        return functionService.searchFunctions(pageable, sf);
+    }
+
+    @Operation(summary = "Get a function by id", description = "Return a function")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
+    public Function getFunction(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
+        throws NoSuchEntityException {
+        return functionService.getFunction(id);
     }
 
     @Operation(summary = "Update specific function", description = "Update and return the function")
     @PutMapping(
-        path = "/{uuid}",
+        path = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Function> updateFunction(
-        @Valid @RequestBody Function functionDTO,
-        @ValidateField @PathVariable String uuid
+    public Function updateFunction(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestBody @Valid @NotNull Function dto
     ) throws NoSuchEntityException {
-        return ResponseEntity.ok(this.functionService.updateFunction(uuid, functionDTO));
+        return functionService.updateFunction(id, dto);
     }
 
-    @Operation(summary = "Delete a function", description = "Delete a specific function")
-    @DeleteMapping(path = "/{uuid}")
-    public ResponseEntity<Void> deleteFunction(
-        @ValidateField @PathVariable String uuid,
-        @RequestParam(value = "cascade", defaultValue = "false") Boolean cascade
+    @Operation(summary = "Delete a function", description = "Delete a specific function, with optional cascade on runs")
+    @DeleteMapping(path = "/{id}")
+    public void deleteFunction(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
     ) {
-        this.functionService.deleteFunction(uuid, cascade);
-        return ResponseEntity.ok().build();
-    }
-
-    @Deprecated
-    @Operation(summary = "Get function runs", description = "Given a function return the run list")
-    @GetMapping(path = "/{uuid}/runs", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<List<Run>> functionRuns(@ValidateField @PathVariable String uuid)
-        throws NoSuchEntityException {
-        return ResponseEntity.ok(this.functionService.getFunctionRuns(uuid));
+        functionService.deleteFunction(id, cascade);
     }
 }
