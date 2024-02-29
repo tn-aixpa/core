@@ -8,7 +8,9 @@ import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
@@ -46,6 +48,9 @@ public class TaskServiceImpl implements SearchableTaskService {
 
     @Autowired
     private RunService runService;
+
+    @Autowired
+    SpecRegistry specRegistry;
 
     @Override
     public Page<Task> listTasks(Pageable pageable) {
@@ -133,15 +138,23 @@ public class TaskServiceImpl implements SearchableTaskService {
     }
 
     @Override
-    public Task createTask(@NotNull Task taskDTO) throws DuplicatedEntityException {
+    public Task createTask(@NotNull Task dto) throws DuplicatedEntityException {
         log.debug("create task");
 
         try {
             //check if the same task already exists for the function
             TaskBaseSpec taskSpec = new TaskBaseSpec();
-            taskSpec.configure(taskDTO.getSpec());
+            taskSpec.configure(dto.getSpec());
 
-            //TODO validate spec
+            // Parse and export Spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.TASK, dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //TODO validate spec via validator
+            //update spec as exported
+            dto.setSpec(spec.toMap());
 
             String function = taskSpec.getFunction();
             if (!StringUtils.hasText(function)) {
@@ -154,10 +167,10 @@ public class TaskServiceImpl implements SearchableTaskService {
             }
 
             //check project match
-            if (taskDTO.getProject() != null && !taskDTO.getProject().equals(taskSpecAccessor.getProject())) {
+            if (dto.getProject() != null && !dto.getProject().equals(taskSpecAccessor.getProject())) {
                 throw new IllegalArgumentException("project mismatch");
             }
-            taskDTO.setProject(taskSpecAccessor.getProject());
+            dto.setProject(taskSpecAccessor.getProject());
 
             if (!StringUtils.hasText(taskSpecAccessor.getVersion())) {
                 throw new IllegalArgumentException("spec: missing version");
@@ -173,42 +186,49 @@ public class TaskServiceImpl implements SearchableTaskService {
             //check if a task for this kind already exists
             Optional<Task> existingTask = getTasksByFunctionId(functionId)
                 .stream()
-                .filter(t -> t.getKind().equals(taskDTO.getKind()))
+                .filter(t -> t.getKind().equals(dto.getKind()))
                 .findFirst();
             if (existingTask.isPresent()) {
-                throw new DuplicatedEntityException(EntityName.TASK.toString(), taskDTO.getKind());
+                throw new DuplicatedEntityException(EntityName.TASK.toString(), dto.getKind());
             }
 
             //create as new
-            return entityService.create(taskDTO);
+            return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.TASK.toString(), taskDTO.getId());
+            throw new DuplicatedEntityException(EntityName.TASK.toString(), dto.getId());
         }
     }
 
     @Override
-    public Task updateTask(@NotNull String id, @NotNull Task taskDTO) throws NoSuchEntityException {
+    public Task updateTask(@NotNull String id, @NotNull Task dto) throws NoSuchEntityException {
         log.debug("update task with id {}", String.valueOf(id));
         try {
             //fetch current and merge
             Task current = entityService.get(id);
 
             //hardcoded: function ref is not modifiable
-            Map<String, Serializable> spec = new HashMap<>();
-            if (taskDTO.getSpec() != null) {
-                spec.putAll(taskDTO.getSpec());
+            Map<String, Serializable> specMap = new HashMap<>();
+            if (dto.getSpec() != null) {
+                specMap.putAll(dto.getSpec());
             }
             if (current.getSpec() != null) {
-                spec.put("function", current.getSpec().get("function"));
+                specMap.put("function", current.getSpec().get("function"));
             }
 
             TaskBaseSpec taskSpec = new TaskBaseSpec();
-            taskSpec.configure(taskDTO.getSpec());
+            taskSpec.configure(dto.getSpec());
 
-            //TODO validate spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.TASK, dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //TODO validate spec via validator
+            //update spec as exported
+            dto.setSpec(spec.toMap());
 
             //full update, task is modifiable
-            return entityService.update(id, taskDTO);
+            return entityService.update(id, dto);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.TASK.toString());
         }

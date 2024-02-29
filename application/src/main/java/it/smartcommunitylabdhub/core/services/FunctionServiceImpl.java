@@ -5,6 +5,8 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity_;
@@ -32,6 +34,9 @@ public class FunctionServiceImpl implements SearchableFunctionService {
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    SpecRegistry specRegistry;
 
     @Override
     public Page<Function> listFunctions(Pageable pageable) {
@@ -141,13 +146,31 @@ public class FunctionServiceImpl implements SearchableFunctionService {
     }
 
     @Override
-    public Function createFunction(@NotNull Function functionDTO) throws DuplicatedEntityException {
+    public Function createFunction(@NotNull Function dto) throws DuplicatedEntityException {
         log.debug("create function");
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", dto);
+        }
+
+        // Parse and export Spec
+        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.FUNCTION, dto.getSpec());
+        if (spec == null) {
+            throw new IllegalArgumentException("invalid kind");
+        }
+
+        //TODO validate
+
+        //update spec as exported
+        dto.setSpec(spec.toMap());
 
         try {
-            return entityService.create(functionDTO);
+            if (log.isTraceEnabled()) {
+                log.trace("storable dto: {}", dto);
+            }
+
+            return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.FUNCTION.toString(), functionDTO.getId());
+            throw new DuplicatedEntityException(EntityName.FUNCTION.toString(), dto.getId());
         }
     }
 

@@ -5,12 +5,16 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity_;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,6 +31,9 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
+
+    @Autowired
+    SpecRegistry specRegistry;
 
     @Override
     public Page<Artifact> listArtifacts(Pageable pageable) {
@@ -136,13 +143,31 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
     }
 
     @Override
-    public Artifact createArtifact(@NotNull Artifact artifactDTO) throws DuplicatedEntityException {
+    public Artifact createArtifact(@NotNull Artifact dto) throws DuplicatedEntityException {
         log.debug("create artifact");
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", dto);
+        }
+
+        // Parse and export Spec
+        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.ARTIFACT, dto.getSpec());
+        if (spec == null) {
+            throw new IllegalArgumentException("invalid kind");
+        }
+
+        //TODO validate
+
+        //update spec as exported
+        dto.setSpec(spec.toMap());
 
         try {
-            return entityService.create(artifactDTO);
+            if (log.isTraceEnabled()) {
+                log.trace("storable dto: {}", dto);
+            }
+
+            return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), artifactDTO.getId());
+            throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), dto.getId());
         }
     }
 

@@ -5,6 +5,8 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity_;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
@@ -26,6 +28,9 @@ public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
+
+    @Autowired
+    SpecRegistry specRegistry;
 
     @Override
     public Page<DataItem> listDataItems(Pageable pageable) {
@@ -134,13 +139,31 @@ public class DataItemServiceImpl implements SearchableDataItemService {
     }
 
     @Override
-    public DataItem createDataItem(@NotNull DataItem dataItemDTO) throws DuplicatedEntityException {
+    public DataItem createDataItem(@NotNull DataItem dto) throws DuplicatedEntityException {
         log.debug("create dataItem");
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", dto);
+        }
+
+        // Parse and export Spec
+        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.DATAITEM, dto.getSpec());
+        if (spec == null) {
+            throw new IllegalArgumentException("invalid kind");
+        }
+
+        //TODO validate
+
+        //update spec as exported
+        dto.setSpec(spec.toMap());
 
         try {
-            return entityService.create(dataItemDTO);
+            if (log.isTraceEnabled()) {
+                log.trace("storable dto: {}", dto);
+            }
+
+            return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.DATAITEM.toString(), dataItemDTO.getId());
+            throw new DuplicatedEntityException(EntityName.DATAITEM.toString(), dto.getId());
         }
     }
 

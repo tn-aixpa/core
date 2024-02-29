@@ -5,6 +5,8 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity_;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
@@ -27,6 +29,9 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
 
     @Autowired
     private EntityService<Workflow, WorkflowEntity> entityService;
+
+    @Autowired
+    SpecRegistry specRegistry;
 
     @Override
     public Page<Workflow> listWorkflows(Pageable pageable) {
@@ -136,13 +141,27 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
     }
 
     @Override
-    public Workflow createWorkflow(@NotNull Workflow workflowDTO) throws DuplicatedEntityException {
+    public Workflow createWorkflow(@NotNull Workflow dto) throws DuplicatedEntityException {
         log.debug("create workflow");
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", dto);
+        }
+
+        // Parse and export Spec
+        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.WORKFLOW, dto.getSpec());
+        if (spec == null) {
+            throw new IllegalArgumentException("invalid kind");
+        }
+
+        //TODO validate
+
+        //update spec as exported
+        dto.setSpec(spec.toMap());
 
         try {
-            return entityService.create(workflowDTO);
+            return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), workflowDTO.getId());
+            throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), dto.getId());
         }
     }
 

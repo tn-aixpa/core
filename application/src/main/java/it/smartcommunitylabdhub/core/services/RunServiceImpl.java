@@ -13,8 +13,10 @@ import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
@@ -51,6 +53,9 @@ public class RunServiceImpl implements SearchableRunService {
 
     @Autowired
     private EntityService<Function, FunctionEntity> functionEntityService;
+
+    @Autowired
+    SpecRegistry specRegistry;
 
     //TODO move to RunManager
     @Autowired
@@ -164,7 +169,15 @@ public class RunServiceImpl implements SearchableRunService {
         RunBaseSpec runSpec = new RunBaseSpec();
         runSpec.configure(dto.getSpec());
 
+        // Parse and export Spec
+        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.RUN, dto.getSpec());
+        if (spec == null) {
+            throw new IllegalArgumentException("invalid kind");
+        }
+
         //TODO validate spec via validator
+        //update spec as exported
+        dto.setSpec(spec.toMap());
 
         String taskPath = runSpec.getTask();
         if (!StringUtils.hasText(taskPath)) {

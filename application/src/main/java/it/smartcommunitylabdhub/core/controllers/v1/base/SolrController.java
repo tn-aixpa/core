@@ -145,7 +145,7 @@ public class SolrController {
                 finished = true;
             } else {
                 List<Run> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(runDTOBuilder.build(e)));
+                page.getContent().forEach(e -> items.add(runDTOBuilder.build(e, false)));
                 solrComponent.indexBounceRun(items);
             }
             pageNumber++;
