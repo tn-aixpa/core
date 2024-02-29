@@ -5,7 +5,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
@@ -75,7 +75,7 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
                 .task(runnable.getTask())
                 .tolerations(runnable.getTolerations())
                 .volumes(runnable.getVolumes())
-                .state(RunState.READY.name())
+                .state(State.READY.name())
                 .build();
 
 

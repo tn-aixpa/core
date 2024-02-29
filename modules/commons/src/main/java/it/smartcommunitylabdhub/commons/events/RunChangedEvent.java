@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.commons.events;
 
-import java.util.List;
 import lombok.*;
 
 
@@ -10,5 +9,5 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RunChangedEvent {
-    private List<RunMonitorObject> monitorObjects;
+    private RunMonitorObject runMonitorObject;
 }

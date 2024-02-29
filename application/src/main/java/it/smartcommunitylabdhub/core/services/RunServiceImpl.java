@@ -7,9 +7,9 @@ import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.commons.services.RunService;
@@ -77,8 +77,8 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
             runEntityFilter.setTaskId(filter.get("task_id"));
             runEntityFilter.setKind(filter.get("kind"));
             runEntityFilter.setCreatedDate(filter.get("created"));
-            Optional<RunState> stateOptional = Stream
-                    .of(RunState.values())
+            Optional<State> stateOptional = Stream
+                    .of(State.values())
                     .filter(state -> state.name().equals(filter.get("state")))
                     .findAny();
             runEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
@@ -245,7 +245,7 @@ public class RunServiceImpl extends AbstractSpecificationService<RunEntity, RunE
                                                     runDTO.setSpec(runSpecBuilt.toMap());
 
                                                     // Update run state to BUILT
-                                                    runDTO.getStatus().put("state", RunState.BUILT.toString());
+                                                    runDTO.getStatus().put("state", State.BUILT.toString());
 
                                                     // Save Run
                                                     RunEntity run = runRepository.saveAndFlush(runEntityBuilder.build(runDTO));

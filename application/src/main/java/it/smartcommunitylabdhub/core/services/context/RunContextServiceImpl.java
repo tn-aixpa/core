@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.services.context;
 
 import it.smartcommunitylabdhub.commons.exceptions.CustomException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.exceptions.ErrorList;
@@ -75,8 +75,8 @@ public class RunContextServiceImpl extends ContextService<RunEntity, RunEntityFi
             runEntityFilter.setTaskId(filter.get("task_id"));
             runEntityFilter.setKind(filter.get("kind"));
             runEntityFilter.setCreatedDate(filter.get("created"));
-            Optional<RunState> stateOptional = Stream
-                    .of(RunState.values())
+            Optional<State> stateOptional = Stream
+                    .of(State.values())
                     .filter(state -> state.name().equals(filter.get("state")))
                     .findAny();
             runEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));

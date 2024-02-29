@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.models.entities.run;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.RunSavedListener;
 import jakarta.persistence.*;
 import java.util.Date;
@@ -61,7 +61,7 @@ public class RunEntity implements BaseEntity {
     private Date updated;
 
     @Enumerated(EnumType.STRING)
-    private RunState state;
+    private State state;
 
     @PrePersist
     public void prePersist() {

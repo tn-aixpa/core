@@ -10,9 +10,7 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,8 +23,8 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
     private final K8sServeFramework k8sServeFramework;
     private final RunnableStore<K8sServeRunnable> runnableStore;
     private final ApplicationEventPublisher eventPublisher;
-
     private final K8sDeploymentFramework deploymentFramework;
+
 
     public K8sServeMonitor(K8sServeFramework k8sServeFramework,
                            RunnableStore<K8sServeRunnable> runnableStore,
@@ -41,7 +39,7 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
 
     @Override
     public Void monitor() {
-        List<RunMonitorObject> runMonitorObjects = runnableStore.findAll().stream()
+        runnableStore.findAll().stream()
                 .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
                 .flatMap(runnable -> {
                     try {
@@ -59,17 +57,24 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
                     } catch (K8sFrameworkException e) {
                         return Stream.empty();
                     }
-                }).map(runnable ->
-                        RunMonitorObject.builder()
-                                .runId(runnable.getId())
-                                .stateId(runnable.getState())
-                                .project(runnable.getProject())
-                                .framework(runnable.getFramework())
-                                .task(runnable.getTask()).build()
-                ).collect(Collectors.toList());
+                }).forEach(runnable -> {
 
-        // Send event to RunManager
-        eventPublisher.publishEvent(RunChangedEvent.builder().monitorObjects(runMonitorObjects).build());
+                            // Update the runnable
+                            runnableStore.update(runnable.getId(), runnable);
+
+                            // Send message to Serve manager
+                            eventPublisher.publishEvent(RunChangedEvent.builder()
+                                    .runMonitorObject(RunMonitorObject.builder()
+                                            .runId(runnable.getId())
+                                            .stateId(runnable.getState())
+                                            .project(runnable.getProject())
+                                            .framework(runnable.getFramework())
+                                            .task(runnable.getTask()).build()
+
+                                    ).build());
+                        }
+
+                );
 
         //        //TODO cleanup monitoring!
         //        if (pollingService == null || runStateMachine == null || logService == null || runService == null) {

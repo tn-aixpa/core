@@ -5,7 +5,6 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunService;
@@ -64,7 +63,6 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         service = apply(service);
 
         runnable.setState(State.RUNNING.name());
-        //TODO monitor
 
         return runnable;
     }
@@ -85,7 +83,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                 .runtime(runnable.getRuntime())
                 .secrets(runnable.getSecrets())
                 .task(runnable.getTask())
-                .state(RunState.READY.name())
+                .state(State.READY.name())
                 .tolerations(runnable.getTolerations())
                 .volumes(runnable.getVolumes())
                 .build();
@@ -112,9 +110,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
 
         //build ports
-        List<V1ServicePort> ports = Optional
-                .ofNullable(runnable.getServicePorts())
-                .orElse(null)
+        List<V1ServicePort> ports = runnable.getServicePorts()
                 .stream()
                 .filter(p -> p.port() != null && p.targetPort() != null)
                 .map(p -> new V1ServicePort()
@@ -123,7 +119,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                 .collect(Collectors.toList());
 
         // service type (ClusterIP or NodePort)
-        String type = Optional.ofNullable(runnable.getServiceType().name()).orElse("NodePort");
+        String type = Optional.of(runnable.getServiceType().name()).orElse("NodePort");
 
         //build service spec
         V1ServiceSpec serviceSpec = new V1ServiceSpec().type(type).ports(ports).selector(labels);

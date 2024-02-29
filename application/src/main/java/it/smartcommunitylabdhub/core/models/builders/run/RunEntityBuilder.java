@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
@@ -74,9 +73,9 @@ public class RunEntityBuilder implements Converter<Run, RunEntity> {
                                         (statusFieldAccessor.getState() == null),
                                         (e, condition) -> {
                                             if (condition) {
-                                                e.setState(RunState.CREATED);
+                                                e.setState(State.CREATED);
                                             } else {
-                                                e.setState(RunState.valueOf(statusFieldAccessor.getState()));
+                                                e.setState(State.valueOf(statusFieldAccessor.getState()));
                                             }
                                         }
                                 )
@@ -122,7 +121,7 @@ public class RunEntityBuilder implements Converter<Run, RunEntity> {
                                         newRun.getState().name().equals(State.NONE.name()),
                                         (e, condition) -> {
                                             if (condition) {
-                                                e.setState(RunState.CREATED);
+                                                e.setState(State.CREATED);
                                             } else {
                                                 e.setState(newRun.getState());
                                             }
