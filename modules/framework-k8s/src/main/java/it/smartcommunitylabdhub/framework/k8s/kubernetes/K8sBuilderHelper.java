@@ -59,7 +59,7 @@ public class K8sBuilderHelper implements InitializingBean {
         ).toList();
 
         // Remove all not present config maps
-        sharedConfigMaps = sharedSecrets.stream().flatMap(
+        sharedConfigMaps = sharedConfigMaps.stream().flatMap(
                 configMap -> {
                     try {
                         coreV1Api.readNamespacedConfigMap(configMap, namespace, null);

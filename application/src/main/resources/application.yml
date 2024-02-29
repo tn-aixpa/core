@@ -47,6 +47,8 @@ runtime:
     image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-dbt:latest}
   mlrun:
     image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
+  kfp:
+    image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
 
 # Spring Docs
 springdoc:
