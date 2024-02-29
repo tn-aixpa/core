@@ -7,6 +7,9 @@ import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,7 +25,12 @@ public class FunctionKFPSpec extends FunctionBaseSpec {
     private String handler;
     private String command;
     private List<Serializable> requirements;
-    private Map<String, Serializable> build;
+    @JsonProperty("function_source_code")
+    private String functionSourceCode;
+    @JsonProperty("code_origin")
+    private String codeOrigin;
+    @JsonProperty("origin_filename")
+    private String originFilename;
 
     public FunctionKFPSpec(Map<String, Serializable> data) {
         configure(data);
@@ -39,6 +47,8 @@ public class FunctionKFPSpec extends FunctionBaseSpec {
         this.setHandler(functionKFPSpec.getHandler());
         this.setCommand(functionKFPSpec.getCommand());
         this.setRequirements(functionKFPSpec.getRequirements());
-        this.setBuild(functionKFPSpec.getBuild());
+        this.setOriginFilename(functionKFPSpec.getOriginFilename());
+        this.setCodeOrigin(functionKFPSpec.getCodeOrigin());
+        this.setFunctionSourceCode(functionKFPSpec.getFunctionSourceCode());
     }
 }
