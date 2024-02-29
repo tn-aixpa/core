@@ -5,7 +5,8 @@ public enum State {
     BUILT,
     CREATING,
     READY,
-
+    PENDING,
+    
     CREATED,
     RUNNING,
     COMPLETED,
@@ -16,5 +17,6 @@ public enum State {
     ERROR,
     SUCCESS,
     STOPPED,
+
     NONE,
 }
