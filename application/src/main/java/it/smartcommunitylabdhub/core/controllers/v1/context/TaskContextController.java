@@ -68,7 +68,7 @@ public class TaskContextController {
     )
     public Task createTask(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @Valid @NotNull @RequestBody Task dto
+        @RequestBody @Valid @NotNull Task dto
     ) throws DuplicatedEntityException {
         //enforce project match
         dto.setProject(project);

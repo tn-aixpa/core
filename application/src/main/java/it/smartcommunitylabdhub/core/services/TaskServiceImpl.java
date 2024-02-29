@@ -13,7 +13,6 @@ import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity_;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;

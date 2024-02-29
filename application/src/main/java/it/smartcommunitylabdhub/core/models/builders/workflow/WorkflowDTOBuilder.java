@@ -20,7 +20,7 @@ public class WorkflowDTOBuilder implements Converter<WorkflowEntity, Workflow> {
         this.cborConverter = cborConverter;
     }
 
-    public Workflow build(WorkflowEntity entity, boolean embeddable) {
+    public Workflow build(WorkflowEntity entity) {
         //read metadata map as-is
         Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
@@ -46,21 +46,19 @@ public class WorkflowDTOBuilder implements Converter<WorkflowEntity, Workflow> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .spec(embeddable ? null : cborConverter.reverseConvert(entity.getSpec()))
-            .extra(embeddable ? null : cborConverter.reverseConvert(entity.getExtra()))
+            .spec(cborConverter.reverseConvert(entity.getSpec()))
+            .extra(cborConverter.reverseConvert(entity.getExtra()))
             .status(
-                embeddable
-                    ? null
-                    : MapUtils.mergeMultipleMaps(
-                        cborConverter.reverseConvert(entity.getStatus()),
-                        Map.of("state", entity.getState().toString())
-                    )
+                MapUtils.mergeMultipleMaps(
+                    cborConverter.reverseConvert(entity.getStatus()),
+                    Map.of("state", entity.getState().toString())
+                )
             )
             .build();
     }
 
     @Override
     public Workflow convert(WorkflowEntity source) {
-        return build(source, false);
+        return build(source);
     }
 }

@@ -26,7 +26,7 @@ public class TaskDTOBuilder implements Converter<TaskEntity, Task> {
      * @param entity the Task
      * @return TaskDTO
      */
-    public Task build(TaskEntity entity, boolean embeddable) {
+    public Task build(TaskEntity entity) {
         //read metadata map as-is
         Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
@@ -50,21 +50,19 @@ public class TaskDTOBuilder implements Converter<TaskEntity, Task> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .spec(embeddable ? null : cborConverter.reverseConvert(entity.getSpec()))
-            .extra(embeddable ? null : cborConverter.reverseConvert(entity.getExtra()))
+            .spec(cborConverter.reverseConvert(entity.getSpec()))
+            .extra(cborConverter.reverseConvert(entity.getExtra()))
             .status(
-                embeddable
-                    ? null
-                    : MapUtils.mergeMultipleMaps(
-                        cborConverter.reverseConvert(entity.getStatus()),
-                        Map.of("state", entity.getState().toString())
-                    )
+                MapUtils.mergeMultipleMaps(
+                    cborConverter.reverseConvert(entity.getStatus()),
+                    Map.of("state", entity.getState().toString())
+                )
             )
             .build();
     }
 
     @Override
     public Task convert(TaskEntity source) {
-        return build(source, false);
+        return build(source);
     }
 }

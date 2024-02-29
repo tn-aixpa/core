@@ -106,7 +106,7 @@ public class SolrController {
                 finished = true;
             } else {
                 List<DataItem> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(dataItemDTOBuilder.build(e, false)));
+                page.getContent().forEach(e -> items.add(dataItemDTOBuilder.build(e)));
                 solrComponent.indexBounceDataItem(items);
             }
             pageNumber++;
@@ -119,7 +119,7 @@ public class SolrController {
                 finished = true;
             } else {
                 List<Function> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(functionDTOBuilder.build(e, false)));
+                page.getContent().forEach(e -> items.add(functionDTOBuilder.build(e)));
                 solrComponent.indexBounceFunction(items);
             }
             pageNumber++;
@@ -132,7 +132,7 @@ public class SolrController {
                 finished = true;
             } else {
                 List<Artifact> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(artifactDTOBuilder.build(e, false)));
+                page.getContent().forEach(e -> items.add(artifactDTOBuilder.build(e)));
                 solrComponent.indexBounceArtifact(items);
             }
             pageNumber++;
@@ -145,7 +145,7 @@ public class SolrController {
                 finished = true;
             } else {
                 List<Run> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(runDTOBuilder.build(e, false)));
+                page.getContent().forEach(e -> items.add(runDTOBuilder.build(e)));
                 solrComponent.indexBounceRun(items);
             }
             pageNumber++;
@@ -158,7 +158,7 @@ public class SolrController {
                 finished = true;
             } else {
                 List<Secret> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(secretDTOBuilder.build(e, false)));
+                page.getContent().forEach(e -> items.add(secretDTOBuilder.build(e)));
                 solrComponent.indexBounceSecret(items);
             }
             pageNumber++;
@@ -171,7 +171,7 @@ public class SolrController {
                 finished = true;
             } else {
                 List<Workflow> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(workflowDTOBuilder.build(e, false)));
+                page.getContent().forEach(e -> items.add(workflowDTOBuilder.build(e)));
                 solrComponent.indexBounceWorkflow(items);
             }
             pageNumber++;

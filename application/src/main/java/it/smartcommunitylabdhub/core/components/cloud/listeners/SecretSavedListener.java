@@ -25,12 +25,7 @@ public class SecretSavedListener {
     public void onPostPersist(Object entity) {
         // Trigger a custom event when an entity is saved
         eventPublisher.publishEvent(
-            new EntityEvent<>(
-                secretDTOBuilder.build((SecretEntity) entity, false),
-                entity,
-                Secret.class,
-                EntityAction.CREATE
-            )
+            new EntityEvent<>(secretDTOBuilder.build((SecretEntity) entity), entity, Secret.class, EntityAction.CREATE)
         );
     }
 
@@ -38,12 +33,7 @@ public class SecretSavedListener {
     public void onPostUpdate(Object entity) {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
-            new EntityEvent<>(
-                secretDTOBuilder.build((SecretEntity) entity, false),
-                entity,
-                Secret.class,
-                EntityAction.UPDATE
-            )
+            new EntityEvent<>(secretDTOBuilder.build((SecretEntity) entity), entity, Secret.class, EntityAction.UPDATE)
         );
     }
 
@@ -51,12 +41,7 @@ public class SecretSavedListener {
     public void onPostRemove(Object entity) {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
-            new EntityEvent<>(
-                secretDTOBuilder.build((SecretEntity) entity, false),
-                entity,
-                Secret.class,
-                EntityAction.UPDATE
-            )
+            new EntityEvent<>(secretDTOBuilder.build((SecretEntity) entity), entity, Secret.class, EntityAction.UPDATE)
         );
     }
 }

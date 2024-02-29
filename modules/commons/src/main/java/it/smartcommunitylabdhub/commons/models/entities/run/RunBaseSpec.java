@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import jakarta.validation.constraints.NotEmpty;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

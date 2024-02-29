@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.services.SecretService;
+import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerDeployBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerJobBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerServeBuilder;

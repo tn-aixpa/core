@@ -20,7 +20,7 @@ public class DataItemDTOBuilder implements Converter<DataItemEntity, DataItem> {
         this.cborConverter = cborConverter;
     }
 
-    public DataItem build(DataItemEntity entity, boolean embeddable) {
+    public DataItem build(DataItemEntity entity) {
         //read metadata map as-is
         Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
@@ -46,21 +46,19 @@ public class DataItemDTOBuilder implements Converter<DataItemEntity, DataItem> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .spec(embeddable ? null : cborConverter.reverseConvert(entity.getSpec()))
-            .extra(embeddable ? null : cborConverter.reverseConvert(entity.getExtra()))
+            .spec(cborConverter.reverseConvert(entity.getSpec()))
+            .extra(cborConverter.reverseConvert(entity.getExtra()))
             .status(
-                embeddable
-                    ? null
-                    : MapUtils.mergeMultipleMaps(
-                        cborConverter.reverseConvert(entity.getStatus()),
-                        Map.of("state", entity.getState().toString())
-                    )
+                MapUtils.mergeMultipleMaps(
+                    cborConverter.reverseConvert(entity.getStatus()),
+                    Map.of("state", entity.getState().toString())
+                )
             )
             .build();
     }
 
     @Override
     public DataItem convert(DataItemEntity source) {
-        return build(source, false);
+        return build(source);
     }
 }

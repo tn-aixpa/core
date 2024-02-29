@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.commons.services.entities;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -81,17 +80,4 @@ public interface TaskService {
      * @param function
      */
     void deleteTasksByFunctionId(@NotNull String functionId);
-    // /**
-    //  * List all runs defined for a given task specified via unique ID
-    //  * @param id
-    //  * @return
-    //  */
-    // public List<Run> listRunsByTask(@NotNull String id) throws NoSuchEntityException;
-
-    // /**
-    //  * Delete all runs defined for a given task specified via unique ID, with cascade
-    //  * @param id
-    //  * @throws NoSuchEntityException
-    //  */
-    // public void deleteRunsByTask(@NotNull String id) throws NoSuchEntityException;
 }

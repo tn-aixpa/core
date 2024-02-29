@@ -1,13 +1,23 @@
 package it.smartcommunitylabdhub.commons.models.entities.project;
 
-import com.fasterxml.jackson.annotation.*;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.lang.Nullable;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,28 +27,30 @@ import lombok.*;
 @JsonPropertyOrder(alphabetic = true)
 public class Project implements BaseDTO {
 
+    @Nullable
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String id;
 
     @NotNull
-    @ValidateField
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String name;
 
-    @ValidateField
-    private String kind = "project";
+    @Pattern(regexp = Keys.SLUG_PATTERN)
+    private final String kind = "project";
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Serializable> spec = new HashMap<>();
 
     @Builder.Default
-    @JsonIgnore
-    private Map<String, Serializable> extra = new HashMap<>();
-
-    @Builder.Default
     private Map<String, Serializable> status = new HashMap<>();
 
     @Builder.Default
     private Map<String, Serializable> metadata = new HashMap<>();
+
+    @Builder.Default
+    @JsonIgnore
+    private Map<String, Serializable> extra = new HashMap<>();
 
     @JsonAnyGetter
     public Map<String, Serializable> getExtra() {

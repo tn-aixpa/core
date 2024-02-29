@@ -21,4 +21,10 @@ public interface BaseDTO extends Serializable {
     Map<String, Serializable> getSpec();
     Map<String, Serializable> getStatus();
     Map<String, Serializable> getExtra();
+
+    void setId(String id);
+    void setMetadata(Map<String, Serializable> metadata);
+    void setSpec(Map<String, Serializable> spec);
+    void setStatus(Map<String, Serializable> status);
+    void setExtra(Map<String, Serializable> extra);
 }

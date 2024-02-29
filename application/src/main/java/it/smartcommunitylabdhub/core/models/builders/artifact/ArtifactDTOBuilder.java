@@ -20,7 +20,7 @@ public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
         this.cborConverter = cborConverter;
     }
 
-    public Artifact build(ArtifactEntity entity, boolean embeddable) {
+    public Artifact build(ArtifactEntity entity) {
         //read metadata map as-is
         Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
@@ -46,21 +46,19 @@ public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .spec(embeddable ? null : cborConverter.reverseConvert(entity.getSpec()))
-            .extra(embeddable ? null : cborConverter.reverseConvert(entity.getExtra()))
+            .spec(cborConverter.reverseConvert(entity.getSpec()))
+            .extra(cborConverter.reverseConvert(entity.getExtra()))
             .status(
-                embeddable
-                    ? null
-                    : MapUtils.mergeMultipleMaps(
-                        cborConverter.reverseConvert(entity.getStatus()),
-                        Map.of("state", entity.getState().toString())
-                    )
+                MapUtils.mergeMultipleMaps(
+                    cborConverter.reverseConvert(entity.getStatus()),
+                    Map.of("state", entity.getState().toString())
+                )
             )
             .build();
     }
 
     @Override
     public Artifact convert(ArtifactEntity source) {
-        return build(source, false);
+        return build(source);
     }
 }

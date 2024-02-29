@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.commons.services.entities;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -100,17 +99,4 @@ public interface FunctionService {
      * @param name
      */
     void deleteFunctions(@NotNull String project, @NotNull String name);
-    // /**
-    //  * List all tasks defined for a given function specified via unique ID
-    //  * @param id
-    //  * @return
-    //  */
-    // public List<Task> listTasksByFunction(@NotNull String id) throws NoSuchEntityException;
-
-    // /**
-    //  * Delete all tasks defined for a given function specified via unique ID, with cascade
-    //  * @param id
-    //  * @throws NoSuchEntityException
-    //  */
-    // public void deleteTasksByFunction(@NotNull String id) throws NoSuchEntityException;
 }

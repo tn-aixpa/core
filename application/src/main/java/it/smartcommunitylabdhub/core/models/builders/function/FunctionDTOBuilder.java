@@ -20,7 +20,7 @@ public class FunctionDTOBuilder implements Converter<FunctionEntity, Function> {
         this.cborConverter = cborConverter;
     }
 
-    public Function build(FunctionEntity entity, boolean embeddable) {
+    public Function build(FunctionEntity entity) {
         //read metadata map as-is
         Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
 
@@ -46,21 +46,19 @@ public class FunctionDTOBuilder implements Converter<FunctionEntity, Function> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .spec(embeddable ? null : cborConverter.reverseConvert(entity.getSpec()))
-            .extra(embeddable ? null : cborConverter.reverseConvert(entity.getExtra()))
+            .spec(cborConverter.reverseConvert(entity.getSpec()))
+            .extra(cborConverter.reverseConvert(entity.getExtra()))
             .status(
-                embeddable
-                    ? null
-                    : MapUtils.mergeMultipleMaps(
-                        cborConverter.reverseConvert(entity.getStatus()),
-                        Map.of("state", entity.getState().toString())
-                    )
+                MapUtils.mergeMultipleMaps(
+                    cborConverter.reverseConvert(entity.getStatus()),
+                    Map.of("state", entity.getState().toString())
+                )
             )
             .build();
     }
 
     @Override
     public Function convert(FunctionEntity source) {
-        return build(source, false);
+        return build(source);
     }
 }
