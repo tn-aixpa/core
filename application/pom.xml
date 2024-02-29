@@ -232,6 +232,11 @@
             <artifactId>dh-runtime-dbt</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-runtime-kfp</artifactId>
+            <version>${revision}</version>
+        </dependency>
     </dependencies>
 
     <build>

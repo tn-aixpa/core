@@ -17,7 +17,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = KFPRuntime.RUNTIME, kind = "container+run", entity = EntityName.RUN)
+@SpecType(runtime = KFPRuntime.RUNTIME, kind = "kfp+run", entity = EntityName.RUN)
 public class RunKFPSpec extends RunBaseSpec {
 
     @JsonProperty("pipeline_spec")
