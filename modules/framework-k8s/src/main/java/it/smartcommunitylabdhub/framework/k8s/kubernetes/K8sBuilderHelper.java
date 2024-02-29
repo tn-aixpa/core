@@ -40,7 +40,7 @@ public class K8sBuilderHelper implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        
+
         // Retrieve CoreV1Api
         CoreV1Api coreV1Api = new CoreV1Api(apiClient);
 

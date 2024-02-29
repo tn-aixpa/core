@@ -14,10 +14,12 @@ import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.FsmState;
 import it.smartcommunitylabdhub.fsm.Transaction;
 import it.smartcommunitylabdhub.fsm.enums.RunEvent;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,6 +29,9 @@ public class RunStateMachine {
     @Autowired
     RunService runService;
 
+    @Autowired
+    ApplicationEventPublisher applicationEventPublisher;
+
     /**
      * Create and configure the StateMachine for managing the state transitions of a Run.
      *
@@ -34,33 +39,29 @@ public class RunStateMachine {
      * @param initialContext The initial context for the StateMachine.
      * @return The configured StateMachine instance.
      */
-    public Fsm<State, RunEvent, Map<String, Object>> create(
+    public Fsm<State, RunEvent, Map<String, Serializable>> create(
             State initialState,
-            Map<String, Object> initialContext
+            Map<String, Serializable> initialContext
     ) {
         // Create a new StateMachine builder with the initial state and context
-        Fsm.Builder<State, RunEvent, Map<String, Object>> builder = new Fsm.Builder<>(
+        Fsm.Builder<State, RunEvent, Map<String, Serializable>> builder = new Fsm.Builder<>(
                 initialState,
                 Optional.of(initialContext)
         );
 
         // Define states and transitions
-        FsmState<State, RunEvent, Map<String, Object>> createState = new FsmState<>();
-        FsmState<State, RunEvent, Map<String, Object>> builtState = new FsmState<>();
-        FsmState<State, RunEvent, Map<String, Object>> readyState = new FsmState<>();
-        FsmState<State, RunEvent, Map<String, Object>> runningState = new FsmState<>();
-        FsmState<State, RunEvent, Map<String, Object>> completedState = new FsmState<>();
-        FsmState<State, RunEvent, Map<String, Object>> errorState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Serializable>> createState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Serializable>> builtState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Serializable>> readyState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Serializable>> runningState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Serializable>> completedState = new FsmState<>();
+        FsmState<State, RunEvent, Map<String, Serializable>> errorState = new FsmState<>();
 
         createState.addTransaction(new Transaction<>(RunEvent.BUILD, State.READY, context -> true));
         builtState.addTransaction(new Transaction<>(RunEvent.BUILD, State.READY, context -> true));
-
         readyState.addTransaction(new Transaction<>(RunEvent.RUNNING, State.RUNNING, context -> true));
-
         readyState.addTransaction(new Transaction<>(RunEvent.PENDING, State.READY, context -> true));
-
         readyState.addTransaction(new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, context -> true));
-
         runningState.addTransaction(new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, context -> true));
 
         // Configure the StateMachine with the defined states and transitions
@@ -102,7 +103,9 @@ public class RunStateMachine {
                                 runService.updateRun(runDTO, runDTO.getId());
                             });
                         }
-                )
+                ).withEventListener(RunEvent.ERROR, context -> {
+                    // notifiy log when error happend
+                })
                 .withStateChangeListener((newState, context) ->
                         log.info("State Change Listener: " + newState + ", context: " + context)
                 );

@@ -5,6 +5,7 @@ import io.kubernetes.client.openapi.models.V1Service;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.events.RunChangedEvent;
 import it.smartcommunitylabdhub.commons.events.RunMonitorObject;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
@@ -55,7 +56,10 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
                         System.out.println("service status: " + v1Service.getStatus());
                         return Stream.of(runnable);
                     } catch (K8sFrameworkException e) {
-                        return Stream.empty();
+
+                        // Set Runnable to ERROR state
+                        runnable.setState(State.ERROR.name());
+                        return Stream.of(runnable);
                     }
                 }).forEach(runnable -> {
 

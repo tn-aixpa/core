@@ -87,11 +87,14 @@ public class Fsm<S, E, C> {
      * is invalid.
      * @throws InterruptedException
      */
-    public <T> void goToState(S targetState) {
+    public <T> void goToState(S targetState, Optional<C> input) {
         acquireLock()
                 .ifPresent(lockAcquired -> {
                     if (lockAcquired) {
                         try {
+//                            if (input.isPresent()) {
+//                                context.setValue(input);
+//                            }
                             // Check if a valid path exists from the current state to the target state
                             List<S> path = findPath(currentState, targetState);
                             if (path.isEmpty()) {
@@ -133,10 +136,8 @@ public class Fsm<S, E, C> {
                                             // Retrieve the transition event dynamically
                                             Optional<E> transitionEvent = stateDefinition.getTransitionEvent(nextState);
 
-                                            if (transitionEvent.isPresent()) {
-                                                // Notify event listeners for the transition event
-                                                notifyEventListeners(currentState, transitionEvent.get());
-                                            }
+                                            // Notify event listeners for the transition event
+                                            transitionEvent.ifPresent(e -> notifyEventListeners(currentState, e));
 
                                             // Update the current state and notify state change listener
                                             currentState = nextState;
@@ -208,6 +209,7 @@ public class Fsm<S, E, C> {
             stateLock.unlock();
         }
     }
+
 
     /**
      * Find a path from the source state to the target state in the state machine.
@@ -283,7 +285,6 @@ public class Fsm<S, E, C> {
      * transitions and updates to the state machine's context.
      *
      * @param stateLogic The state logic implementation to apply.
-     * @param state      The current state for which the internal logic is executed.
      * @param <T>        The type of result returned by the state logic.
      * @return An optional result obtained from applying the internal logic, or empty if not
      * applicable.
@@ -438,5 +439,6 @@ public class Fsm<S, E, C> {
             stateMachine.exitActions = exitActions;
             return stateMachine;
         }
+
     }
 }

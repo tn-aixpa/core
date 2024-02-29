@@ -102,9 +102,9 @@ public class StateMachineTest {
         Fsm<String, String, Map<String, Object>> stateMachine = builder.build();
 
         // Trigger events to test the state machine
-        stateMachine.goToState("State2");
-        stateMachine.goToState("State3");
-        stateMachine.goToState("State4");
+        stateMachine.goToState("State2", Optional.empty());
+        stateMachine.goToState("State3", Optional.empty());
+        stateMachine.goToState("State4", Optional.empty());
         // try {
         // String ser = stateMachine.serialize();
 
