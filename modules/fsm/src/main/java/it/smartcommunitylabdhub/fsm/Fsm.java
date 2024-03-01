@@ -43,7 +43,8 @@ public class Fsm<S, E, C> {
     /**
      * Default constructor to create an empty StateMachine.
      */
-    public Fsm() {}
+    public Fsm() {
+    }
 
     /**
      * Constructor to create a StateMachine with the initial state and context.
@@ -90,63 +91,72 @@ public class Fsm<S, E, C> {
      */
     public <T> void goToState(S targetState, Optional<C> input) {
         acquireLock()
-            .ifPresent(lockAcquired -> {
-                if (lockAcquired) {
-                    try {
-                        // Check if a valid path exists from the current state to the target state
-                        List<S> path = findPath(currentState, targetState);
-                        if (path.isEmpty()) {
-                            // No valid path exists; transition to the error state
-                            goToErrorState();
-                        }
-
-                        // Follow the path
-                        // 1. apply internal logic
-                        // 2. execute exit action
-                        // 3. execute entry action of the current state.
-                        for (int i = 0; i < path.size() - 1; i++) {
-                            // Get state definition
-                            S stateInPath = path.get(i);
-                            FsmState<S, E, C> stateDefinition = states.get(stateInPath);
-
-                            // Apply internal logic of the target state
-                            stateDefinition
-                                .getInternalLogic()
-                                .flatMap(internalFunc -> applyInternalFunc(internalFunc, input));
-
-                            // execute exit action
-                            Consumer<Optional<C>> exitAction = exitActions.get(stateInPath);
-                            if (exitAction != null) {
-                                exitAction.accept(context.getValue());
+                .ifPresent(lockAcquired -> {
+                    if (lockAcquired) {
+                        try {
+                            // Check if a valid path exists from the current state to the target state
+                            List<S> path = findPath(currentState, targetState);
+                            if (path.isEmpty()) {
+                                // No valid path exists; transition to the error state
+                                goToErrorState();
                             }
 
-                            // Get next state if exist and execute logic
-                            Optional
-                                .ofNullable(path.get(i + 1))
-                                .ifPresent(nextState -> {
-                                    // Retrieve the transition event dynamically
-                                    Optional<E> transitionEvent = stateDefinition.getTransitionEvent(nextState);
+                            // Follow the path
+                            // 1. apply internal logic
+                            // 2. execute exit action
+                            // 3. execute entry action of the current state.
+                            for (int i = 0; i < path.size() - 1; i++) {
+                                // Get state definition
+                                S stateInPath = path.get(i);
+                                FsmState<S, E, C> stateDefinition = states.get(stateInPath);
 
-                                    // Notify event listeners for the transition event
-                                    transitionEvent.ifPresent(eventName -> notifyEventListeners(eventName, input));
+                                // execute exit action
+                                Consumer<Optional<C>> exitAction = exitActions.get(stateInPath);
+                                if (exitAction != null) {
+                                    exitAction.accept(context.getValue());
+                                }
 
-                                    // Update the current state and notify state change listener
-                                    currentState = nextState;
+                                // Get next state if exist and execute logic
+                                Optional
+                                        .ofNullable(path.get(i + 1))
+                                        .ifPresent(nextState -> {
+                                            // Retrieve the transition event dynamically
+                                            Optional<E> transitionEvent = stateDefinition.getTransitionEvent(nextState);
 
-                                    // Notify listener for state changed
-                                    notifyStateChangeListener(currentState);
+                                            // Check if a transition event exists and if guard condition is satisfied
+                                            if (transitionEvent.isPresent()) {
+                                                Transaction<S, E, C> transaction = stateDefinition.getTransactions().get(transitionEvent.get());
+                                                if (transaction.getGuard().test(context.getValue(), input)) {
+                                                    // Notify event listeners for the transition event
+                                                    transitionEvent.ifPresent(eventName -> notifyEventListeners(eventName, input));
 
-                                    // Execute entry action
-                                    Optional
-                                        .ofNullable(entryActions.get(nextState))
-                                        .ifPresent(action -> action.accept(context.getValue()));
-                                });
+                                                    // Update the current state and notify state change listener
+                                                    currentState = nextState;
+
+                                                    // Notify listener for state changed
+                                                    notifyStateChangeListener(currentState);
+
+                                                    // Execute entry action
+                                                    Optional
+                                                            .ofNullable(entryActions.get(nextState))
+                                                            .ifPresent(action -> action.accept(context.getValue()));
+                                                    
+                                                    // Apply internal logic of the target state
+                                                    states.get(currentState)
+                                                            .getInternalLogic()
+                                                            .flatMap(internalFunc -> applyInternalFunc(internalFunc, input));
+
+                                                } else {
+                                                    // Guard condition not satisfied, skip this transition
+                                                }
+                                            }
+                                        });
+                            }
+                        } finally {
+                            stateLock.unlock();
                         }
-                    } finally {
-                        stateLock.unlock();
                     }
-                }
-            });
+                });
     }
 
     /**
@@ -162,8 +172,8 @@ public class Fsm<S, E, C> {
             if (errorStateDefinition != null) {
                 // Execute error logic if defined for the error state
                 errorStateDefinition
-                    .getInternalLogic()
-                    .flatMap(internalFunc -> applyInternalFunc(internalFunc, Optional.empty()));
+                        .getInternalLogic()
+                        .flatMap(internalFunc -> applyInternalFunc(internalFunc, Optional.empty()));
             } else {
                 // Throw an exception if the error state is not defined
                 throw new IllegalStateException("Invalid error state: " + errorState + " : " + this.getUuid());
@@ -193,6 +203,17 @@ public class Fsm<S, E, C> {
         } finally {
             stateLock.unlock();
         }
+    }
+
+
+    /**
+     * Return the state machine states
+     *
+     * @return ConcurrentHashMap<S, FsmState < S, E, C>> states
+     */
+
+    public ConcurrentHashMap<S, FsmState<S, E, C>> states() {
+        return states;
     }
 
     /**
@@ -345,12 +366,14 @@ public class Fsm<S, E, C> {
          *
          * @param state           The state to add.
          * @param stateDefinition The definition of the state.
-         * @return This builder instance, allowing for method chaining.
+         * @return This builder instance of the state, allowing for method chaining.
          */
-        public Builder<S, E, C> withState(S state, FsmState<S, E, C> stateDefinition) {
+
+        public FsmState.StateBuilder<S, E, C> withState(S state, FsmState<S, E, C> stateDefinition) {
             states.put(state, stateDefinition);
-            return this;
+            return new FsmState.StateBuilder<>(state, this, stateDefinition);
         }
+
 
         /**
          * Sets the error state and its definition in the builder's configuration. If the error

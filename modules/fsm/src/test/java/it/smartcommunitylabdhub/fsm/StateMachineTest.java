@@ -28,27 +28,27 @@ public class StateMachineTest {
 
         // Create the state machine using the builder
         Fsm.Builder<String, String, Map<String, Object>> builder = Fsm
-            .<String, String, Map<String, Object>>builder(initialState, initialContext)
-            .withState("State1", state1)
-            .withState("State2", state2)
-            .withState("State3", state3)
-            .withState("State4", state4)
-            .withErrorState("ErrorState", errorState)
-            .withStateChangeListener((newState, context) ->
-                System.out.println("State Change Listener: " + newState + ", context: " + context)
-            );
+                .<String, String, Map<String, Object>>builder(initialState, initialContext)
+                .withState("State1", state1).withFsm()
+                .withState("State2", state2).withFsm()
+                .withState("State3", state3).withFsm()
+                .withState("State4", state4).withFsm()
+                .withErrorState("ErrorState", errorState)
+                .withStateChangeListener((newState, context) ->
+                        System.out.println("State Change Listener: " + newState + ", context: " + context)
+                );
 
         // Define transactions for state 1
-        state1.addTransaction(new Transaction<>("Event1", "State2", context -> true));
+        state1.addTransaction(new Transaction<>("Event1", "State2", (context, input) -> true));
 
         // Define transactions for state 2
-        state2.addTransaction(new Transaction<>("Event2", "State3", context -> true));
+        state2.addTransaction(new Transaction<>("Event2", "State3", (context, input) -> true));
 
         // Define transactions for state 3
-        state3.addTransaction(new Transaction<>("Event3", "State4", context -> true));
+        state3.addTransaction(new Transaction<>("Event3", "State4", (context, input) -> true));
 
         // Define transactions for state 4
-        state4.addTransaction(new Transaction<>("Event4", "State1", context -> true));
+        state4.addTransaction(new Transaction<>("Event4", "State1", (context, input) -> true));
 
         // Set internal logic for state 1
         state1.setInternalLogic((context, input, stateMachine) -> {
@@ -87,27 +87,27 @@ public class StateMachineTest {
 
         // Add event listeners
         builder.withEventListener(
-            "Event1",
-            (context, input) -> System.out.println("Event1 Listener: context: " + context)
+                "Event1",
+                (context, input) -> System.out.println("Event1 Listener: context: " + context)
         );
         builder.withEventListener(
-            "Event2",
-            (context, input) -> System.out.println("Event2 Listener: context: " + context)
+                "Event2",
+                (context, input) -> System.out.println("Event2 Listener: context: " + context)
         );
         builder.withEventListener(
-            "Event3",
-            (context, input) -> System.out.println("Event3 Listener: context: " + context)
+                "Event3",
+                (context, input) -> System.out.println("Event3 Listener: context: " + context)
         );
         builder.withEventListener(
-            "Event4",
-            (context, input) -> System.out.println("Event4 Listener: context: " + context)
+                "Event4",
+                (context, input) -> System.out.println("Event4 Listener: context: " + context)
         );
 
         builder.withExitAction(
-            "State1",
-            context -> {
-                System.out.println("exit action for state 1");
-            }
+                "State1",
+                context -> {
+                    System.out.println("exit action for state 1");
+                }
         );
 
         // Build the state machine

@@ -15,6 +15,7 @@ import it.smartcommunitylabdhub.fsm.Transaction;
 import it.smartcommunitylabdhub.fsm.enums.RunEvent;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,13 +39,13 @@ public class RunStateMachineFactory {
      * @return The configured StateMachine instance.
      */
     public Fsm.Builder<State, RunEvent, Map<String, Serializable>> builder(
-        State initialState,
-        Map<String, Serializable> initialContext
+            State initialState,
+            Map<String, Serializable> initialContext
     ) {
         // Create a new StateMachine builder with the initial state and context
         Fsm.Builder<State, RunEvent, Map<String, Serializable>> builder = new Fsm.Builder<>(
-            initialState,
-            initialContext
+                initialState,
+                initialContext
         );
 
         // Define states and transitions
@@ -56,27 +57,41 @@ public class RunStateMachineFactory {
         FsmState<State, RunEvent, Map<String, Serializable>> errorState = new FsmState<>();
         FsmState<State, RunEvent, Map<String, Serializable>> fsmErrorState = new FsmState<>();
 
-        createState.addTransaction(new Transaction<>(RunEvent.BUILD, State.READY, context -> true));
-        builtState.addTransaction(new Transaction<>(RunEvent.BUILD, State.READY, context -> true));
-        readyState.addTransaction(new Transaction<>(RunEvent.RUNNING, State.RUNNING, context -> true));
-        readyState.addTransaction(new Transaction<>(RunEvent.PENDING, State.READY, context -> true));
-        readyState.addTransaction(new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, context -> true));
-        runningState.addTransaction(new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, context -> true));
-
-        createState.addTransaction(new Transaction<>(RunEvent.ERROR, State.ERROR, context -> true));
-        readyState.addTransaction(new Transaction<>(RunEvent.ERROR, State.ERROR, context -> true));
-        runningState.addTransaction(new Transaction<>(RunEvent.ERROR, State.ERROR, context -> true));
-        builtState.addTransaction(new Transaction<>(RunEvent.ERROR, State.ERROR, context -> true));
-
         // Configure the StateMachine with the defined states and transitions
         builder
-            .withState(State.CREATED, createState)
-            .withState(State.BUILT, builtState)
-            .withState(State.READY, readyState)
-            .withState(State.RUNNING, runningState)
-            .withState(State.COMPLETED, completedState)
-            .withState(State.ERROR, errorState)
-            .withErrorState(State.FSM_ERROR, fsmErrorState);
+                .withState(State.CREATED, createState)
+                .withTransaction(new Transaction<>(RunEvent.BUILD, State.READY, (context, input) -> true))
+                .withTransaction(new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true))
+                .withFsm()
+                .withState(State.BUILT, builtState)
+                .withTransaction(new Transaction<>(RunEvent.BUILD, State.READY, (context, input) -> true))
+                .withTransaction(new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true))
+                .withFsm()
+                .withState(State.READY, readyState)
+                .withTransaction(new Transaction<>(RunEvent.RUNNING, State.RUNNING, (context, input) -> true))
+                .withTransaction(new Transaction<>(RunEvent.PENDING, State.READY, (context, input) -> true))
+                .withTransaction(new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, (context, input) -> true))
+                .withTransaction(new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true))
+                .withInternalLogic((context, input, fsm) -> {
+                    log.info("READY INTERNAL LOGIC");
+                    return Optional.of("Hello");
+                }).withFsm()
+                .withExitAction(State.READY, (context) -> {
+                    log.info("EXITING FROM READY STATE");
+                })
+                .withState(State.RUNNING, runningState)
+                .withTransaction(new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true))
+                .withTransaction(new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, (context, input) -> true))
+                .withInternalLogic((context, input, fsm) -> {
+                    log.info("RUNNING INTERNAL LOGIC");
+                    return Optional.of("Hello");
+                })
+                .withFsm()
+                .withState(State.COMPLETED, completedState)
+                .withFsm()
+                .withState(State.ERROR, errorState)
+                .withFsm()
+                .withErrorState(State.FSM_ERROR, fsmErrorState);
 
         // Return the builder
         return builder;

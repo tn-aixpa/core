@@ -38,7 +38,7 @@ public class FsmState<S, E, C> {
      * Set the internal logic for this state.
      *
      * @param internalLogic The internal logic as a StateLogic instance.
-     * @param <T> The type of the result from the internal logic.
+     * @param <T>           The type of the result from the internal logic.
      */
     public <T> void setInternalLogic(StateLogic<S, E, C, T> internalLogic) {
         this.internalLogic = Optional.ofNullable(internalLogic);
@@ -57,7 +57,7 @@ public class FsmState<S, E, C> {
      * Get the transactions associated with this state.
      *
      * @return The map of transactions, where the key is the event and the value is the
-     *         corresponding transaction.
+     * corresponding transaction.
      */
     public Map<E, Transaction<S, E, C>> getTransactions() {
         return transactions;
@@ -68,7 +68,7 @@ public class FsmState<S, E, C> {
      *
      * @param nextState The next state for which to retrieve the transition event.
      * @return An Optional containing the transition event if found, or an empty Optional if not
-     *         found.
+     * found.
      */
     public Optional<E> getTransitionEvent(S nextState) {
         // Iterate over the transitions to find the event associated with the next state
@@ -78,5 +78,34 @@ public class FsmState<S, E, C> {
             }
         }
         return Optional.empty(); // No matching event found
+    }
+
+
+    public static class StateBuilder<S, E, C> {
+
+        private final S state;
+        private final Fsm.Builder<S, E, C> parentBuilder;
+        private final FsmState<S, E, C> stateDefinition;
+
+        public StateBuilder(S state, Fsm.Builder<S, E, C> parentBuilder, FsmState<S, E, C> stateDefinition) {
+            this.state = state;
+            this.parentBuilder = parentBuilder;
+            this.stateDefinition = stateDefinition;
+        }
+
+        public StateBuilder<S, E, C> withInternalLogic(StateLogic<S, E, C, ?> internalLogic) {
+            stateDefinition.setInternalLogic(internalLogic);
+            return this;
+        }
+
+        public StateBuilder<S, E, C> withTransaction(Transaction<S, E, C> transaction) {
+            stateDefinition.addTransaction(transaction);
+            return this;
+        }
+
+        public Fsm.Builder<S, E, C> withFsm() {
+            parentBuilder.withState(state, stateDefinition);
+            return parentBuilder;
+        }
     }
 }
