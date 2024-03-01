@@ -37,6 +37,15 @@ import org.springframework.core.convert.converter.Converter;
 public class PersistenceConfig {
 
     @Bean
+    public EntityService<Project, ProjectEntity> projectEntityService(
+        ProjectRepository repository,
+        Converter<Project, ProjectEntity> entityBuilder,
+        Converter<ProjectEntity, Project> dtoBuilder
+    ) {
+        return new BaseEntityServiceImpl<>(repository, entityBuilder, dtoBuilder);
+    }
+
+    @Bean
     public EntityService<Artifact, ArtifactEntity> artifactEntityService(
         ArtifactRepository repository,
         Converter<Artifact, ArtifactEntity> entityBuilder,

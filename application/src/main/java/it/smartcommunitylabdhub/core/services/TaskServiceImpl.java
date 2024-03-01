@@ -258,47 +258,6 @@ public class TaskServiceImpl implements SearchableTaskService {
         getTasksByFunctionId(functionId).forEach(task -> deleteTask(task.getId(), Boolean.TRUE));
     }
 
-    // @Override
-    // public List<Run> listRunsByTask(@NotNull String id) throws NoSuchEntityException {
-    //     Task task = getTask(id);
-
-    //     //define a spec for runs building task path
-    //     Specification<RunEntity> where = Specification.allOf(
-    //         CommonSpecification.projectEquals(task.getProject()),
-    //         createRunSpecification(RunUtils.buildTaskString(task))
-    //     );
-
-    //     //fetch all runs ordered by created DESC
-    //     Specification<RunEntity> specification = (root, query, builder) -> {
-    //         query.orderBy(builder.desc(root.get(RunEntity_.CREATED)));
-
-    //         return where.toPredicate(root, query, builder);
-    //     };
-
-    //     return runEntityService.searchAll(specification);
-    // }
-
-    // @Override
-    // public void deleteRunsByTask(@NotNull String id) throws NoSuchEntityException {
-    //     Task task = getTask(id);
-
-    //     //define a spec for runs building task path
-    //     Specification<RunEntity> where = Specification.allOf(
-    //         CommonSpecification.projectEquals(task.getProject()),
-    //         createRunSpecification(RunUtils.buildTaskString(task))
-    //     );
-
-    //     //fetch all runs ordered by created DESC
-    //     Specification<RunEntity> specification = (root, query, builder) -> {
-    //         query.orderBy(builder.desc(root.get(RunEntity_.CREATED)));
-
-    //         return where.toPredicate(root, query, builder);
-    //     };
-
-    //     long count = runEntityService.deleteAll(specification);
-    //     log.debug("deleted runs count {}", count);
-    // }
-
     private Specification<TaskEntity> createFunctionSpecification(String function) {
         return (root, query, criteriaBuilder) -> {
             return criteriaBuilder.equal(root.get("function"), function);

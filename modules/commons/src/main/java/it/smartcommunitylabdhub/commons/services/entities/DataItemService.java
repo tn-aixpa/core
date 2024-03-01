@@ -21,7 +21,14 @@ public interface DataItemService {
     Page<DataItem> listDataItems(Pageable pageable);
 
     /**
-     * List the latest version of every dataItem
+     * List the latest version of every dataItem for a project
+     * @param project
+     * @return
+     */
+    List<DataItem> listLatestDataItemsByProject(@NotNull String project);
+
+    /**
+     * List the latest version of every dataItem for a project
      * @param project
      * @param pageable
      * @return
@@ -99,4 +106,10 @@ public interface DataItemService {
      * @param name
      */
     void deleteDataItems(@NotNull String project, @NotNull String name);
+
+    /**
+     * Delete all dataItems for a given project, with cascade.
+     * @param project
+     */
+    void deleteDataItemsByProject(@NotNull String project);
 }

@@ -21,7 +21,14 @@ public interface ArtifactService {
     Page<Artifact> listArtifacts(Pageable pageable);
 
     /**
-     * List the latest version of every artifact
+     * List the latest version of every artifact for a project
+     * @param project
+     * @return
+     */
+    List<Artifact> listLatestArtifactsByProject(@NotNull String project);
+
+    /**
+     * List the latest version of every artifact for a project
      * @param project
      * @param pageable
      * @return
@@ -99,4 +106,10 @@ public interface ArtifactService {
      * @param name
      */
     void deleteArtifacts(@NotNull String project, @NotNull String name);
+
+    /**
+     * Delete all artifacts for a given project, with cascade.
+     * @param project
+     */
+    void deleteArtifactsByProject(@NotNull String project);
 }

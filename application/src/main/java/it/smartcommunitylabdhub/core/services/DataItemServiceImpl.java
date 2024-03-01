@@ -52,6 +52,17 @@ public class DataItemServiceImpl implements SearchableDataItemService {
     }
 
     @Override
+    public List<DataItem> listLatestDataItemsByProject(@NotNull String project) {
+        log.debug("list dataItems for project {}", project);
+        Specification<DataItemEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
     public Page<DataItem> listLatestDataItemsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list dataItems for project {} page {}", project, pageable);
         Specification<DataItemEntity> specification = Specification.allOf(
@@ -202,5 +213,12 @@ public class DataItemServiceImpl implements SearchableDataItemService {
 
         long count = entityService.deleteAll(spec);
         log.debug("deleted count {}", count);
+    }
+
+    @Override
+    public void deleteDataItemsByProject(@NotNull String project) {
+        log.debug("delete dataItems for project {}", project);
+
+        entityService.deleteAll(CommonSpecification.projectEquals(project));
     }
 }

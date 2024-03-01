@@ -75,6 +75,12 @@ public interface SecretService {
     void deleteSecret(@NotNull String id);
 
     /**
+     * Delete all secrets for a given project, with cascade.
+     * @param project
+     */
+    void deleteSecretsByProject(@NotNull String project);
+
+    /**
      * Retrieve the project secret values for the specified names of the project
      * @param project
      * @param names

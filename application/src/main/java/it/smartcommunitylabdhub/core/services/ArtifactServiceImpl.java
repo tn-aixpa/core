@@ -53,6 +53,17 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
     }
 
     @Override
+    public List<Artifact> listLatestArtifactsByProject(@NotNull String project) {
+        log.debug("list artifacts for project {}  ", project);
+        Specification<ArtifactEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
     public Page<Artifact> listLatestArtifactsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list artifacts for project {}  page {}", project, pageable);
         Specification<ArtifactEntity> specification = Specification.allOf(
@@ -204,5 +215,12 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
 
         long count = entityService.deleteAll(spec);
         log.debug("deleted count {}", count);
+    }
+
+    @Override
+    public void deleteArtifactsByProject(@NotNull String project) {
+        log.debug("delete artifacts for project {}", project);
+
+        entityService.deleteAll(CommonSpecification.projectEquals(project));
     }
 }

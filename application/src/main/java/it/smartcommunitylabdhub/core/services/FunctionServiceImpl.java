@@ -10,7 +10,6 @@ import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity_;
-import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
@@ -55,6 +54,17 @@ public class FunctionServiceImpl implements SearchableFunctionService {
         } else {
             return entityService.list(pageable);
         }
+    }
+
+    @Override
+    public List<Function> listLatestFunctionsByProject(@NotNull String project) {
+        log.debug("list functions for project {}", project);
+        Specification<FunctionEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.searchAll(specification);
     }
 
     @Override
@@ -216,54 +226,12 @@ public class FunctionServiceImpl implements SearchableFunctionService {
         findFunctions(project, name).forEach(function -> deleteFunction(function.getId(), Boolean.TRUE));
     }
 
-    // @Override
-    // public List<Task> listTasksByFunction(@NotNull String id) throws NoSuchEntityException {
-    //     log.debug("list tasks for function {}", id);
+    @Override
+    public void deleteFunctionsByProject(@NotNull String project) {
+        log.debug("delete functions for project {}", project);
 
-    //     Function function = getFunction(id);
-
-    //     //define a spec for tasks building function path
-    //     Specification<TaskEntity> where = Specification.allOf(
-    //         CommonSpecification.projectEquals(function.getProject()),
-    //         createTaskSpecification(TaskUtils.buildFunctionString(function))
-    //     );
-
-    //     //fetch all tasks ordered by kind ASC
-    //     Specification<TaskEntity> specification = (root, query, builder) -> {
-    //         query.orderBy(builder.asc(root.get(TaskEntity_.KIND)));
-
-    //         return where.toPredicate(root, query, builder);
-    //     };
-
-    //     return taskEntityService.searchAll(specification);
-    // }
-
-    // @Override
-    // public void deleteTasksByFunction(@NotNull String id) throws NoSuchEntityException {
-    //     log.debug("delete tasks for function {}", id);
-
-    //     Function function = getFunction(id);
-
-    //     //define a spec for tasks building function path
-    //     Specification<TaskEntity> where = Specification.allOf(
-    //         CommonSpecification.projectEquals(function.getProject()),
-    //         createTaskSpecification(TaskUtils.buildFunctionString(function))
-    //     );
-
-    //     //fetch all tasks ordered by kind ASC
-    //     Specification<TaskEntity> specification = (root, query, builder) -> {
-    //         query.orderBy(builder.asc(root.get(TaskEntity_.KIND)));
-
-    //         return where.toPredicate(root, query, builder);
-    //     };
-
-    //     long count = taskEntityService.deleteAll(specification);
-    //     log.debug("deleted tasks count {}", count);
-    // }
-
-    private Specification<TaskEntity> createTaskSpecification(String function) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("function"), function);
-        };
+        entityService
+            .searchAll(CommonSpecification.projectEquals(project))
+            .forEach(f -> deleteFunction(f.getId(), Boolean.TRUE));
     }
 }

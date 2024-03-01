@@ -1,477 +1,218 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.CustomException;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
-import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.ProjectService;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
+import it.smartcommunitylabdhub.commons.services.entities.DataItemService;
+import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
-import it.smartcommunitylabdhub.core.exceptions.ErrorList;
-import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.project.ProjectDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.project.ProjectEntityBuilder;
-import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
+import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.ProjectEntityFilter;
-import it.smartcommunitylabdhub.core.repositories.*;
+import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectSpec;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectService;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
-public class ProjectServiceImpl
-    extends AbstractSpecificationService<ProjectEntity, ProjectEntityFilter>
-    implements ProjectService {
+@Slf4j
+public class ProjectServiceImpl implements SearchableProjectService {
 
     @Autowired
-    ProjectRepository projectRepository;
+    private EntityService<Project, ProjectEntity> entityService;
 
     @Autowired
-    FunctionRepository functionRepository;
+    private FunctionService functionService;
 
     @Autowired
-    ArtifactRepository artifactRepository;
+    private ArtifactService artifactService;
 
     @Autowired
-    WorkflowRepository workflowRepository;
+    private DataItemService dataItemService;
 
     @Autowired
-    DataItemRepository dataItemRepository;
+    private WorkflowService workflowService;
 
     @Autowired
-    LogRepository logRepository;
-
-    @Autowired
-    RunRepository runRepository;
-
-    @Autowired
-    TaskRepository taskRepository;
-
-    @Autowired
-    SecretRepository secretRepository;
-
-    @Autowired
-    ProjectDTOBuilder projectDTOBuilder;
-
-    @Autowired
-    ProjectEntityBuilder projectEntityBuilder;
-
-    @Autowired
-    ArtifactDTOBuilder artifactDTOBuilder;
-
-    @Autowired
-    FunctionDTOBuilder functionDTOBuilder;
-
-    @Autowired
-    WorkflowDTOBuilder workflowDTOBuilder;
-
-    @Autowired
-    SecretDTOBuilder secretDTOBuilder;
-
-    @Autowired
-    ProjectEntityFilter projectEntityFilter;
-
-    @Autowired
-    SecretService secretService;
+    private SecretService secretService;
 
     @Override
-    public Project getProject(String name) {
-        return projectRepository
-            .findByName(name)
-            .map(project -> {
-                List<FunctionEntity> functions = functionRepository.findAllLatestFunctionsByProject(project.getName());
-                List<ArtifactEntity> artifacts = artifactRepository.findAllLatestArtifactsByProject(project.getName());
-                List<WorkflowEntity> workflows = workflowRepository.findAllLatestWorkflowsByProject(project.getName());
-                List<DataItemEntity> dataItems = dataItemRepository.findAllLatestDataItemsByProject(project.getName());
-                List<SecretEntity> secrets = secretRepository.findByProject(project.getName());
+    public Page<Project> listProjects(Pageable pageable) {
+        log.debug("list projects page {}", pageable);
 
-                return projectDTOBuilder.build(project, artifacts, functions, workflows, dataItems, secrets, true);
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.PROJECT_NOT_FOUND.getValue(),
-                    ErrorList.PROJECT_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            );
+        return entityService.list(pageable);
     }
 
     @Override
-    public Page<Project> getProjects(Map<String, String> filter, Pageable pageable) {
-        try {
-            projectEntityFilter.setKind(filter.get("kind"));
-            projectEntityFilter.setCreatedDate(filter.get("created"));
-            Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
+    public Page<Project> searchProjects(Pageable pageable, @Nullable SearchFilter<ProjectEntity> filter) {
+        log.debug("list projects page {}, filter {}", pageable, String.valueOf(filter));
 
-            projectEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
-
-            Specification<ProjectEntity> specification = createSpecification(filter, projectEntityFilter);
-
-            Page<ProjectEntity> projectPage = this.projectRepository.findAll(specification, pageable);
-
-            return new PageImpl<>(
-                projectPage
-                    .getContent()
-                    .stream()
-                    .map(project -> {
-                        List<FunctionEntity> functions = functionRepository.findAllLatestFunctionsByProject(
-                            project.getName()
-                        );
-                        List<ArtifactEntity> artifacts = artifactRepository.findAllLatestArtifactsByProject(
-                            project.getName()
-                        );
-                        List<WorkflowEntity> workflows = workflowRepository.findAllLatestWorkflowsByProject(
-                            project.getName()
-                        );
-                        List<DataItemEntity> dataItems = dataItemRepository.findAllLatestDataItemsByProject(
-                            project.getName()
-                        );
-
-                        return projectDTOBuilder.build(
-                            project,
-                            artifacts,
-                            functions,
-                            workflows,
-                            dataItems,
-                            Collections.emptyList(),
-                            true
-                        );
-                    })
-                    .collect(Collectors.toList()),
-                pageable,
-                projectPage.getTotalElements()
-            );
-        } catch (CustomException e) {
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                e.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+        Specification<ProjectEntity> specification = filter != null ? filter.toSpecification() : null;
+        if (specification != null) {
+            return entityService.search(specification, pageable);
+        } else {
+            return entityService.list(pageable);
         }
     }
 
     @Override
-    public Project createProject(Project projectDTO) {
-        if (projectRepository.existsByName(projectDTO.getName())) {
-            throw new CoreException(
-                ErrorList.DUPLICATE_PROJECT.getValue(),
-                ErrorList.DUPLICATE_PROJECT.getReason(),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-        return Optional
-            .of(projectEntityBuilder.build(projectDTO))
-            .map(project -> {
-                projectRepository.saveAndFlush(project);
-                return projectDTOBuilder.build(project, List.of(), List.of(), List.of(), List.of(), List.of(), true);
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Failed to generate the project.",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                )
-            );
+    public Project findProjectByName(@NotNull String name) {
+        log.debug("find project by name {}", name);
+
+        return entityService.searchAll(CommonSpecification.nameEquals(name)).stream().findFirst().orElse(null);
     }
 
     @Override
-    public Project updateProject(Project projectDTO, String name) {
-        return Optional
-            .ofNullable(projectDTO.getName())
-            .filter(projectName -> projectName.equals(name))
-            .map(projectName ->
-                projectRepository
-                    .findByName(projectName)
-                    .orElseThrow(() ->
-                        new CoreException(
-                            ErrorList.PROJECT_NOT_FOUND.getValue(),
-                            ErrorList.PROJECT_NOT_FOUND.getReason(),
-                            HttpStatus.NOT_FOUND
-                        )
-                    )
-            )
-            .map(project -> {
-                final ProjectEntity projectUpdated = projectEntityBuilder.update(project, projectDTO);
-                this.projectRepository.saveAndFlush(projectUpdated);
+    public Project findProject(@NotNull String id) {
+        log.debug("find project with id {}", String.valueOf(id));
 
-                List<FunctionEntity> functions = functionRepository.findAllLatestFunctionsByProject(
-                    projectUpdated.getName()
-                );
-                List<ArtifactEntity> artifacts = artifactRepository.findAllLatestArtifactsByProject(
-                    projectUpdated.getName()
-                );
-                List<WorkflowEntity> workflows = workflowRepository.findAllLatestWorkflowsByProject(
-                    projectUpdated.getName()
-                );
-                List<DataItemEntity> dataItems = dataItemRepository.findAllLatestDataItemsByProject(
-                    projectUpdated.getName()
-                );
-                List<SecretEntity> secrets = secretRepository.findByProject(project.getName());
-
-                return projectDTOBuilder.build(
-                    projectUpdated,
-                    artifacts,
-                    functions,
-                    workflows,
-                    dataItems,
-                    secrets,
-                    true
-                );
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.PROJECT_NOT_MATCH.getValue(),
-                    ErrorList.PROJECT_NOT_MATCH.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            );
+        return entityService.find(id);
     }
 
     @Override
-    @Transactional
-    public boolean deleteProject(String name, Boolean cascade) {
-        return Optional
-            .ofNullable(name)
-            .map(projectName -> {
-                boolean deleted = false;
-                if (projectRepository.existsByName(projectName)) {
-                    if (cascade) {
-                        projectRepository
-                            .findByName(projectName)
-                            .ifPresent(project -> {
-                                // delete functions, artifacts, workflow, dataitems
-                                this.artifactRepository.deleteByProjectName(project.getName());
-                                this.dataItemRepository.deleteByProjectName(project.getName());
-                                this.workflowRepository.deleteByProjectName(project.getName());
-                                this.functionRepository.deleteByProjectName(project.getName());
-                                this.dataItemRepository.deleteByProjectName(project.getName());
-                                this.logRepository.deleteByProjectName(project.getName());
-                                this.runRepository.deleteByProjectName(project.getName());
-                                this.taskRepository.deleteByProjectName(project.getName());
-                                this.secretRepository.deleteByProjectName(project.getName());
-                            });
-                    }
-                    projectRepository.deleteByName(projectName);
-                    deleted = true;
-                }
-                if (!deleted) {
-                    throw new CoreException(
-                        ErrorList.PROJECT_NOT_FOUND.getValue(),
-                        ErrorList.PROJECT_NOT_FOUND.getReason(),
-                        HttpStatus.NOT_FOUND
-                    );
-                }
-                return true;
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Cannot delete project",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                )
-            );
-    }
+    public Project getProject(@NotNull String id) throws NoSuchEntityException {
+        log.debug("get project with id {}", String.valueOf(id));
 
-    @Override
-    public List<Function> getProjectFunctions(String name) {
-        return Optional
-            .of(projectRepository.findByName(name))
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.PROJECT_NOT_FOUND.getValue(),
-                    ErrorList.PROJECT_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            )
-            .map(ProjectEntity::getName)
-            .flatMap(projectName -> {
-                try {
-                    List<FunctionEntity> functions = functionRepository.findByProject(projectName);
-                    return Optional.of(
-                        functions
-                            .stream()
-                            .map(function -> functionDTOBuilder.build(function, false))
-                            .collect(Collectors.toList())
-                    );
-                } catch (CustomException e) {
-                    throw new CoreException(
-                        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                        e.getMessage(),
-                        HttpStatus.INTERNAL_SERVER_ERROR
-                    );
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Error occurred while retrieving functions.",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                )
-            );
-    }
-
-    @Override
-    public List<Artifact> getProjectArtifacts(String name) {
-        return Optional
-            .of(projectRepository.findByName(name))
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.PROJECT_NOT_FOUND.getValue(),
-                    ErrorList.PROJECT_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            )
-            .map(ProjectEntity::getName)
-            .flatMap(projectName -> {
-                try {
-                    List<ArtifactEntity> artifacts = artifactRepository.findByProject(projectName);
-                    return Optional.of(
-                        artifacts
-                            .stream()
-                            .map(artifact -> artifactDTOBuilder.build(artifact, false))
-                            .collect(Collectors.toList())
-                    );
-                } catch (CustomException e) {
-                    throw new CoreException(
-                        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                        e.getMessage(),
-                        HttpStatus.INTERNAL_SERVER_ERROR
-                    );
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Error occurred while retrieving artifacts.",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                )
-            );
-    }
-
-    @Override
-    public List<Workflow> getProjectWorkflows(String name) {
-        return Optional
-            .of(projectRepository.findByName(name))
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.PROJECT_NOT_FOUND.getValue(),
-                    ErrorList.PROJECT_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            )
-            .map(ProjectEntity::getName)
-            .flatMap(projectName -> {
-                try {
-                    List<WorkflowEntity> workflows = workflowRepository.findByProject(projectName);
-                    return Optional.of(
-                        workflows
-                            .stream()
-                            .map(workflow -> workflowDTOBuilder.build(workflow, false))
-                            .collect(Collectors.toList())
-                    );
-                } catch (CustomException e) {
-                    throw new CoreException(
-                        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                        e.getMessage(),
-                        HttpStatus.INTERNAL_SERVER_ERROR
-                    );
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Error occurred while retrieving workflows.",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                )
-            );
-    }
-
-    @Override
-    public List<Secret> getProjectSecrets(String name) {
-        return Optional
-            .of(projectRepository.findByName(name))
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.PROJECT_NOT_FOUND.getValue(),
-                    ErrorList.PROJECT_NOT_FOUND.getReason(),
-                    HttpStatus.NOT_FOUND
-                )
-            )
-            .map(ProjectEntity::getName)
-            .flatMap(projectName -> {
-                try {
-                    List<SecretEntity> secrets = secretRepository.findByProject(projectName);
-                    return Optional.of(
-                        secrets
-                            .stream()
-                            .map(secret -> secretDTOBuilder.build(secret, false))
-                            .collect(Collectors.toList())
-                    );
-                } catch (CustomException e) {
-                    throw new CoreException(
-                        ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                        e.getMessage(),
-                        HttpStatus.INTERNAL_SERVER_ERROR
-                    );
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                    "Error occurred while retrieving secrets.",
-                    HttpStatus.INTERNAL_SERVER_ERROR
-                )
-            );
-    }
-
-    @Override
-    public boolean deleteProjectByName(String name) {
         try {
-            if (this.projectRepository.existsByName(name)) {
-                this.projectRepository.deleteByName(name);
-                return true;
+            Project project = entityService.get(id);
+
+            //load content
+            log.debug("load project content for project {}", String.valueOf(id));
+
+            List<Artifact> artifacts = artifactService.listLatestArtifactsByProject(id);
+            List<DataItem> dataItems = dataItemService.listLatestDataItemsByProject(id);
+            List<Function> functions = functionService.listLatestFunctionsByProject(id);
+            List<Workflow> workflows = workflowService.listLatestWorkflowsByProject(id);
+
+            //update spec
+            ProjectSpec spec = new ProjectSpec();
+            spec.configure(project.getSpec());
+
+            //embed
+            spec.setArtifacts(artifacts.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
+            spec.setDataitems(dataItems.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
+            spec.setFunctions(functions.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
+            spec.setWorkflows(workflows.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
+
+            project.setSpec(spec.toMap());
+
+            return project;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.PROJECT.toString());
+        }
+    }
+
+    @Override
+    public Project getProjectByName(@NotNull String name) throws NoSuchEntityException {
+        log.debug("get project by name {}", name);
+
+        Project project = entityService
+            .searchAll(CommonSpecification.nameEquals(name))
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new NoSuchEntityException(EntityName.PROJECT.toString()));
+
+        return getProject(project.getId());
+    }
+
+    @Override
+    public Project createProject(@NotNull Project dto) throws DuplicatedEntityException {
+        log.debug("create project");
+
+        try {
+            // Parse and export Spec
+            ProjectSpec spec = new ProjectSpec();
+            spec.configure(dto.getSpec());
+
+            //TODO validate spec via validator
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
+            //check if a project for this name already exists
+            String name = dto.getName();
+            if (!StringUtils.hasText(name)) {
+                throw new IllegalArgumentException("invalid or missing name");
             }
-            return false;
-        } catch (Exception e) {
-            throw new CoreException(
-                ErrorList.INTERNAL_SERVER_ERROR.getValue(),
-                "cannot delete project",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
+
+            Project existing = findProjectByName(dto.getName());
+            if (existing != null) {
+                throw new DuplicatedEntityException(EntityName.PROJECT.toString(), name);
+            }
+
+            //create as new
+            return entityService.create(dto);
+        } catch (DuplicatedEntityException e) {
+            throw new DuplicatedEntityException(EntityName.PROJECT.toString(), dto.getId());
         }
     }
 
     @Override
-    public Map<String, String> getProjectSecretData(String name, Set<String> keys) {
-        return secretService.getSecretData(name, keys);
+    public Project updateProject(@NotNull String id, @NotNull Project dto) throws NoSuchEntityException {
+        log.debug("update project with id {}", String.valueOf(id));
+        try {
+            // Parse and export Spec
+            ProjectSpec spec = new ProjectSpec();
+            spec.configure(dto.getSpec());
+
+            //TODO validate spec via validator
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
+            //full update, project is modifiable
+            return entityService.update(id, dto);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.PROJECT.toString());
+        }
     }
 
     @Override
-    public void storeProjectSecretData(String name, Map<String, String> values) {
-        secretService.storeSecretData(name, values);
+    public void deleteProject(@NotNull String id, @Nullable Boolean cascade) {
+        log.debug("delete project with id {}", String.valueOf(id));
+
+        Project prj = findProject(id);
+        if (prj != null) {
+            if (Boolean.TRUE.equals(cascade)) {
+                String project = prj.getName();
+
+                log.debug("cascade delete artifacts for project with id {}", String.valueOf(id));
+                artifactService.deleteArtifactsByProject(project);
+
+                log.debug("cascade delete dataItems for project with id {}", String.valueOf(id));
+                dataItemService.deleteDataItemsByProject(project);
+
+                log.debug("cascade delete functions for project with id {}", String.valueOf(id));
+                functionService.deleteFunctionsByProject(project);
+
+                log.debug("cascade delete workflows for project with id {}", String.valueOf(id));
+                workflowService.deleteWorkflowsByProject(project);
+
+                log.debug("cascade delete secrets for project with id {}", String.valueOf(id));
+                secretService.deleteSecretsByProject(project);
+            }
+
+            //delete the project
+            entityService.delete(id);
+        }
+
+        entityService.delete(id);
     }
 }

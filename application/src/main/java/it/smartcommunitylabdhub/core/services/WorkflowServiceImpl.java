@@ -53,6 +53,17 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
     }
 
     @Override
+    public List<Workflow> listLatestWorkflowsByProject(@NotNull String project) {
+        log.debug("list workflows for project {}", project);
+        Specification<WorkflowEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
     public Page<Workflow> listLatestWorkflowsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list workflows for project {}  page {}", project, pageable);
         Specification<WorkflowEntity> specification = Specification.allOf(
@@ -200,5 +211,12 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
 
         long count = entityService.deleteAll(spec);
         log.debug("deleted count {}", count);
+    }
+
+    @Override
+    public void deleteWorkflowsByProject(@NotNull String project) {
+        log.debug("delete workflows for project {}", project);
+
+        entityService.deleteAll(CommonSpecification.projectEquals(project));
     }
 }

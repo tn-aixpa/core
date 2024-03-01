@@ -170,6 +170,27 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
+    public void deleteSecretsByProject(@NotNull String project) {
+        log.debug("delete secrets for project {}", project);
+
+        //clear data first
+        if (secretHelper != null) {
+            try {
+                secretHelper.deleteSecret(getProjectSecretName(project));
+            } catch (ApiException e) {
+                log.error("error deleting secret data for project {}:{}", project, e.getMessage());
+                throw new RuntimeException("error reading secrets");
+            }
+        }
+
+        //delete entities
+        entityService.deleteAll(CommonSpecification.projectEquals(project));
+    }
+
+    /*
+     * Secret data (via provider)
+     */
+    @Override
     public Map<String, String> getSecretData(@NotNull String project, @NotNull Set<String> names) {
         if (names == null || names.isEmpty()) return Collections.emptyMap();
 

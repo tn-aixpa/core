@@ -21,7 +21,15 @@ public interface WorkflowService {
     Page<Workflow> listWorkflows(Pageable pageable);
 
     /**
-     * List the latest version of every workflow,
+     * List the latest version of every workflow for a project
+     * @param project
+     * @param filter
+     * @return
+     */
+    List<Workflow> listLatestWorkflowsByProject(@NotNull String project);
+
+    /**
+     * List the latest version of every workflow for a project
      * @param project
      * @param pageable
      * @param filter
@@ -100,4 +108,10 @@ public interface WorkflowService {
      * @param name
      */
     void deleteWorkflows(@NotNull String project, @NotNull String name);
+
+    /**
+     * Delete all workflows for a given project, with cascade.
+     * @param project
+     */
+    void deleteWorkflowsByProject(@NotNull String project);
 }

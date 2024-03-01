@@ -27,15 +27,7 @@ public class ProjectSavedListener {
         // Trigger a custom event when an entity is saved
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                projectDTOBuilder.build(
-                    (ProjectEntity) entity,
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    false
-                ),
+                projectDTOBuilder.build((ProjectEntity) entity),
                 entity,
                 Project.class,
                 EntityAction.CREATE
@@ -48,15 +40,7 @@ public class ProjectSavedListener {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                projectDTOBuilder.build(
-                    (ProjectEntity) entity,
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    false
-                ),
+                projectDTOBuilder.build((ProjectEntity) entity),
                 entity,
                 Project.class,
                 EntityAction.UPDATE
@@ -69,15 +53,7 @@ public class ProjectSavedListener {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                projectDTOBuilder.build(
-                    (ProjectEntity) entity,
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    List.of(),
-                    false
-                ),
+                projectDTOBuilder.build((ProjectEntity) entity),
                 entity,
                 Project.class,
                 EntityAction.UPDATE

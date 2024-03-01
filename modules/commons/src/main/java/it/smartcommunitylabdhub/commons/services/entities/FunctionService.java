@@ -21,7 +21,14 @@ public interface FunctionService {
     Page<Function> listFunctions(Pageable pageable);
 
     /**
-     * List the latest version of every function
+     * List the latest version of every function for a project
+     * @param project
+     * @return
+     */
+    List<Function> listLatestFunctionsByProject(@NotNull String project);
+
+    /**
+     * List the latest version of every function for a project
      * @param project
      * @param pageable
      * @return
@@ -99,4 +106,10 @@ public interface FunctionService {
      * @param name
      */
     void deleteFunctions(@NotNull String project, @NotNull String name);
+
+    /**
+     * Delete all functions for a given project, with cascade.
+     * @param project
+     */
+    void deleteFunctionsByProject(@NotNull String project);
 }

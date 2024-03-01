@@ -44,8 +44,6 @@ public class ProjectEntity implements BaseEntity {
     @Column(nullable = false)
     private String kind;
 
-    private String description;
-
     private String source;
 
     @Lob
