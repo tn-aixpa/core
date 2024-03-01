@@ -14,7 +14,6 @@ package it.smartcommunitylabdhub.fsm;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 
-
 public class Transaction<S, E, C> {
 
     private E event;
@@ -54,5 +53,3 @@ public class Transaction<S, E, C> {
         return guard;
     }
 }
-
-
