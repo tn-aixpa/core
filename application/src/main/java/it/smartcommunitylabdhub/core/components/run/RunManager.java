@@ -104,41 +104,14 @@ public class RunManager {
             }
         );
         fsm.setStateChangeListener((state, context) -> {
+            // Update entity state
             runEntity.setState(state);
+
+            // Save entity
             runRepository.save(runEntity);
             log.info("State Change Listener: " + state + ", context: " + context);
         });
 
         return fsm;
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////////////         OLD ACTION FOR FMS       ////////////////////////////////////////
-        //                    .withExitAction(
-        //                State.CREATED,
-        //                context -> {
-        //                    context.ifPresent(c -> {
-        //                        // update run state
-        //                        runEntity.setState(State.READY);
-        //                        runRepository.save(runEntity);
-        //                    });
-        //                }
-        //            )
-        //            .withEntryAction(
-        //                State.RUNNING,
-        //                context -> {
-        //                    context.ifPresent(c -> {
-        //                        runEntity.setState(State.RUNNING);
-        //                        runRepository.save(runEntity);
-        //                    });
-        //                }
-        //            )
-        //            .withEntryAction(
-        //                State.ERROR,
-        //                context -> {
-        //                    context.ifPresent(c -> {
-        //                        runEntity.setState(State.ERROR);
-        //                        runRepository.save(runEntity);
-        //                    });
-        //                }
-        //            )
     }
 }
