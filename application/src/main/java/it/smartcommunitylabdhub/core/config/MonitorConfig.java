@@ -13,11 +13,13 @@ import org.springframework.util.Assert;
 @Configuration
 @ConditionalOnKubernetes
 public class MonitorConfig {
-    public MonitorConfig(PollingService pollingService,
-                         List<K8sBaseMonitor<?>> k8sJobMonitors,
-                         @Value("${monitors.delay}") int delay,
-                         @Value("${monitors.min-delay}") int minDelay) {
 
+    public MonitorConfig(
+        PollingService pollingService,
+        List<K8sBaseMonitor<?>> k8sJobMonitors,
+        @Value("${monitors.delay}") int delay,
+        @Value("${monitors.min-delay}") int minDelay
+    ) {
         Assert.isTrue(delay >= minDelay, "Delay must be greater than 0");
 
         k8sJobMonitors.forEach(monitor -> {
@@ -26,11 +28,11 @@ public class MonitorConfig {
                 MonitorComponent annotation = builderClass.getAnnotation(MonitorComponent.class);
 
                 pollingService.createPoller(
-                        annotation.framework(),
-                        WorkflowFactory.builder().step(i -> monitor.monitor()).build(),
-                        delay,
-                        true,
-                        false
+                    annotation.framework(),
+                    WorkflowFactory.builder().step(i -> monitor.monitor()).build(),
+                    delay,
+                    true,
+                    false
                 );
 
                 pollingService.startOne(annotation.framework());

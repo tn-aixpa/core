@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "runs")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({AuditingEntityListener.class, RunSavedListener.class})
+@EntityListeners({ AuditingEntityListener.class, RunSavedListener.class })
 public class RunEntity implements BaseEntity {
 
     @Id

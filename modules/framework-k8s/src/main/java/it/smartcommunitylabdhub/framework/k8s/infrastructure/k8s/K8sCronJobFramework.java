@@ -58,31 +58,31 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             throw new K8sFrameworkException("missing or invalid schedule in spec");
         }
 
-        K8sJobRunnable k8sJobRunnable = K8sJobRunnable.builder()
-                .id(runnable.getId())
-                .args(runnable.getArgs())
-                .affinity(runnable.getAffinity())
-                .backoffLimit(runnable.getBackoffLimit())
-                .command(runnable.getCommand())
-                .envs(runnable.getEnvs())
-                .image(runnable.getImage())
-                .labels(runnable.getLabels())
-                .nodeSelector(runnable.getNodeSelector())
-                .project(runnable.getProject())
-                .resources(runnable.getResources())
-                .runtime(runnable.getRuntime())
-                .secrets(runnable.getSecrets())
-                .task(runnable.getTask())
-                .tolerations(runnable.getTolerations())
-                .volumes(runnable.getVolumes())
-                .state(State.READY.name())
-                .build();
-
+        K8sJobRunnable k8sJobRunnable = K8sJobRunnable
+            .builder()
+            .id(runnable.getId())
+            .args(runnable.getArgs())
+            .affinity(runnable.getAffinity())
+            .backoffLimit(runnable.getBackoffLimit())
+            .command(runnable.getCommand())
+            .envs(runnable.getEnvs())
+            .image(runnable.getImage())
+            .labels(runnable.getLabels())
+            .nodeSelector(runnable.getNodeSelector())
+            .project(runnable.getProject())
+            .resources(runnable.getResources())
+            .runtime(runnable.getRuntime())
+            .secrets(runnable.getSecrets())
+            .task(runnable.getTask())
+            .tolerations(runnable.getTolerations())
+            .volumes(runnable.getVolumes())
+            .state(State.READY.name())
+            .build();
 
         V1Job job = jobFramework.build(k8sJobRunnable);
         V1CronJobSpec cronJobSpec = new V1CronJobSpec()
-                .schedule(runnable.getSchedule())
-                .jobTemplate(new V1JobTemplateSpec().spec(job.getSpec()));
+            .schedule(runnable.getSchedule())
+            .jobTemplate(new V1JobTemplateSpec().spec(job.getSpec()));
 
         return new V1CronJob().metadata(metadata).spec(cronJobSpec);
     }

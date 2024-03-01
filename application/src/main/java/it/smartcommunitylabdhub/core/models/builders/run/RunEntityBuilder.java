@@ -48,43 +48,43 @@ public class RunEntityBuilder implements Converter<Run, RunEntity> {
         runSpec.configure(spec);
 
         return EntityFactory.combine(
-                RunEntity.builder().build(),
-                builder ->
-                        builder
-                                // check id
-                                .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
-                                .with(e -> e.setProject(dto.getProject()))
-                                .with(e -> e.setKind(dto.getKind()))
-                                .with(e ->
-                                        e.setTask(
-                                                Optional
-                                                        .ofNullable(StringUtils.hasText(runSpec.getTask()) ? runSpec.getTask() : null)
-                                                        .orElseThrow(() ->
-                                                                new CoreException(
-                                                                        ErrorList.TASK_NOT_FOUND.getValue(),
-                                                                        ErrorList.TASK_NOT_FOUND.getReason(),
-                                                                        HttpStatus.INTERNAL_SERVER_ERROR
-                                                                )
-                                                        )
-                                        )
+            RunEntity.builder().build(),
+            builder ->
+                builder
+                    // check id
+                    .withIf(dto.getId() != null, e -> e.setId(dto.getId()))
+                    .with(e -> e.setProject(dto.getProject()))
+                    .with(e -> e.setKind(dto.getKind()))
+                    .with(e ->
+                        e.setTask(
+                            Optional
+                                .ofNullable(StringUtils.hasText(runSpec.getTask()) ? runSpec.getTask() : null)
+                                .orElseThrow(() ->
+                                    new CoreException(
+                                        ErrorList.TASK_NOT_FOUND.getValue(),
+                                        ErrorList.TASK_NOT_FOUND.getReason(),
+                                        HttpStatus.INTERNAL_SERVER_ERROR
+                                    )
                                 )
-                                .with(e -> e.setTaskId(runSpec.getTaskId()))
-                                .withIfElse(
-                                        (statusFieldAccessor.getState() == null),
-                                        (e, condition) -> {
-                                            if (condition) {
-                                                e.setState(State.CREATED);
-                                            } else {
-                                                e.setState(State.valueOf(statusFieldAccessor.getState()));
-                                            }
-                                        }
-                                )
-                                .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
-                                .with(e -> e.setSpec(cborConverter.convert(spec)))
-                                .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
-                                .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
-                                .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
-                                .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
+                        )
+                    )
+                    .with(e -> e.setTaskId(runSpec.getTaskId()))
+                    .withIfElse(
+                        (statusFieldAccessor.getState() == null),
+                        (e, condition) -> {
+                            if (condition) {
+                                e.setState(State.CREATED);
+                            } else {
+                                e.setState(State.valueOf(statusFieldAccessor.getState()));
+                            }
+                        }
+                    )
+                    .with(e -> e.setMetadata(cborConverter.convert(dto.getMetadata())))
+                    .with(e -> e.setSpec(cborConverter.convert(spec)))
+                    .with(e -> e.setStatus(cborConverter.convert(dto.getStatus())))
+                    .with(e -> e.setExtra(cborConverter.convert(dto.getExtra())))
+                    .withIf(metadata.getCreated() != null, e -> e.setCreated(metadata.getCreated()))
+                    .withIf(metadata.getUpdated() != null, e -> e.setUpdated(metadata.getUpdated()))
         );
     }
 
@@ -114,21 +114,21 @@ public class RunEntityBuilder implements Converter<Run, RunEntity> {
      */
     public RunEntity doUpdate(RunEntity run, RunEntity newRun) {
         return EntityFactory.combine(
-                run,
-                builder ->
-                        builder
-                                .withIfElse(
-                                        newRun.getState().name().equals(State.NONE.name()),
-                                        (e, condition) -> {
-                                            if (condition) {
-                                                e.setState(State.CREATED);
-                                            } else {
-                                                e.setState(newRun.getState());
-                                            }
-                                        }
-                                )
-                                .with(e -> e.setStatus(newRun.getStatus()))
-                                .with(e -> e.setMetadata(newRun.getMetadata()))
+            run,
+            builder ->
+                builder
+                    .withIfElse(
+                        newRun.getState().name().equals(State.NONE.name()),
+                        (e, condition) -> {
+                            if (condition) {
+                                e.setState(State.CREATED);
+                            } else {
+                                e.setState(newRun.getState());
+                            }
+                        }
+                    )
+                    .with(e -> e.setStatus(newRun.getStatus()))
+                    .with(e -> e.setMetadata(newRun.getMetadata()))
         );
     }
 }

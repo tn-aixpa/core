@@ -39,8 +39,7 @@ public class K8sServeRunnableListener {
             runnable = k8sServeFramework.execute(runnable);
 
             log.debug("Update runnable {} via framework", runnable.getId());
-            runnableStore.update(runnable.getId(), runnable);
-           
+            runnableStore.store(runnable.getId(), runnable);
         } catch (K8sFrameworkException e) {
             log.error("Error with k8s: {}", e.getMessage());
         } finally {

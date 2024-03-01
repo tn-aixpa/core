@@ -28,15 +28,15 @@ public class StateMachineTest {
 
         // Create the state machine using the builder
         Fsm.Builder<String, String, Map<String, Object>> builder = Fsm
-                .<String, String, Map<String, Object>>builder(initialState, Optional.of(initialContext))
-                .withState("State1", state1)
-                .withState("State2", state2)
-                .withState("State3", state3)
-                .withState("State4", state4)
-                .withErrorState("ErrorState", errorState)
-                .withStateChangeListener((newState, context) ->
-                        System.out.println("State Change Listener: " + newState + ", context: " + context)
-                );
+            .<String, String, Map<String, Object>>builder(initialState, initialContext)
+            .withState("State1", state1)
+            .withState("State2", state2)
+            .withState("State3", state3)
+            .withState("State4", state4)
+            .withErrorState("ErrorState", errorState)
+            .withStateChangeListener((newState, context) ->
+                System.out.println("State Change Listener: " + newState + ", context: " + context)
+            );
 
         // Define transactions for state 1
         state1.addTransaction(new Transaction<>("Event1", "State2", context -> true));
@@ -51,51 +51,63 @@ public class StateMachineTest {
         state4.addTransaction(new Transaction<>("Event4", "State1", context -> true));
 
         // Set internal logic for state 1
-        state1.setInternalLogic((context, stateMachine) -> {
+        state1.setInternalLogic((context, input, stateMachine) -> {
             System.out.println("Executing internal logic of State1 with context: " + context);
-            context.put("value", 1);
+            context.ifPresent(c -> c.put("value", 1));
             return Optional.of("State1 Result");
         });
 
         // Set internal logic for state 2
-        state2.setInternalLogic((context, stateMachine) -> {
+        state2.setInternalLogic((context, input, stateMachine) -> {
             System.out.println("Executing internal logic of State2 with  context: " + context);
-            context.put("value", 2);
+            context.ifPresent(c -> c.put("value", 2));
             return Optional.of("State2 Result");
         });
 
         // Set internal logic for state 3
-        state3.setInternalLogic((context, stateMachine) -> {
+        state3.setInternalLogic((context, input, stateMachine) -> {
             System.out.println("Executing internal logic of State3 with context: " + context);
-            context.put("value", 3);
+            context.ifPresent(c -> c.put("value", 3));
             return Optional.of("State3 Result");
         });
 
         // Set internal logic for state 4
-        state4.setInternalLogic((context, stateMachine) -> {
+        state4.setInternalLogic((context, input, stateMachine) -> {
             System.out.println("Executing internal logic of State4 with  context: " + context);
-            context.put("value", 4);
+            context.ifPresent(c -> c.put("value", 4));
             return Optional.of("State4 Result");
         });
 
         // Set internal logic for the error state
-        errorState.setInternalLogic((context, stateMachine) -> {
+        errorState.setInternalLogic((context, input, stateMachine) -> {
             System.out.println("Error state reached. context: " + context);
             // Handle error logic here
             return Optional.empty(); // No result for error state
         });
 
         // Add event listeners
-        builder.withEventListener("Event1", context -> System.out.println("Event1 Listener: context: " + context));
-        builder.withEventListener("Event2", context -> System.out.println("Event2 Listener: context: " + context));
-        builder.withEventListener("Event3", context -> System.out.println("Event3 Listener: context: " + context));
-        builder.withEventListener("Event4", context -> System.out.println("Event4 Listener: context: " + context));
+        builder.withEventListener(
+            "Event1",
+            (context, input) -> System.out.println("Event1 Listener: context: " + context)
+        );
+        builder.withEventListener(
+            "Event2",
+            (context, input) -> System.out.println("Event2 Listener: context: " + context)
+        );
+        builder.withEventListener(
+            "Event3",
+            (context, input) -> System.out.println("Event3 Listener: context: " + context)
+        );
+        builder.withEventListener(
+            "Event4",
+            (context, input) -> System.out.println("Event4 Listener: context: " + context)
+        );
 
         builder.withExitAction(
-                "State1",
-                context -> {
-                    System.out.println("exit action for state 1");
-                }
+            "State1",
+            context -> {
+                System.out.println("exit action for state 1");
+            }
         );
 
         // Build the state machine

@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.commons.events;
 
-
 import java.io.Serializable;
 import lombok.*;
 

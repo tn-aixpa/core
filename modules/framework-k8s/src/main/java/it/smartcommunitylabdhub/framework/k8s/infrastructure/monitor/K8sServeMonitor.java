@@ -26,59 +26,67 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
     private final ApplicationEventPublisher eventPublisher;
     private final K8sDeploymentFramework deploymentFramework;
 
-
-    public K8sServeMonitor(K8sServeFramework k8sServeFramework,
-                           RunnableStore<K8sServeRunnable> runnableStore,
-                           ApplicationEventPublisher eventPublisher,
-                           K8sDeploymentFramework deploymentFramework) {
+    public K8sServeMonitor(
+        K8sServeFramework k8sServeFramework,
+        RunnableStore<K8sServeRunnable> runnableStore,
+        ApplicationEventPublisher eventPublisher,
+        K8sDeploymentFramework deploymentFramework
+    ) {
         this.k8sServeFramework = k8sServeFramework;
         this.runnableStore = runnableStore;
         this.eventPublisher = eventPublisher;
         this.deploymentFramework = deploymentFramework;
     }
 
-
     @Override
     public Void monitor() {
-        runnableStore.findAll().stream()
-                .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
-                .flatMap(runnable -> {
-                    try {
-                        V1Deployment v1Deployment = deploymentFramework.get(k8sServeFramework.buildDeployment(runnable));
-                        V1Service v1Service = k8sServeFramework.get(k8sServeFramework.build(runnable));
+        runnableStore
+            .findAll()
+            .stream()
+            .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
+            .flatMap(runnable -> {
+                try {
+                    V1Deployment v1Deployment = deploymentFramework.get(k8sServeFramework.buildDeployment(runnable));
+                    V1Service v1Service = k8sServeFramework.get(k8sServeFramework.build(runnable));
 
-                        // check status
-                        Assert.notNull(Objects.requireNonNull(v1Deployment.getStatus()).getReadyReplicas(), "Deployment not ready");
-                        Assert.isTrue(v1Deployment.getStatus().getReadyReplicas() > 0, "Deployment not ready");
-                        Assert.notNull(v1Service.getStatus(), "Service not ready");
+                    // check status
+                    Assert.notNull(
+                        Objects.requireNonNull(v1Deployment.getStatus()).getReadyReplicas(),
+                        "Deployment not ready"
+                    );
+                    Assert.isTrue(v1Deployment.getStatus().getReadyReplicas() > 0, "Deployment not ready");
+                    Assert.notNull(v1Service.getStatus(), "Service not ready");
 
-                        System.out.println("deployment status: " + v1Deployment.getStatus().getReadyReplicas());
-                        System.out.println("service status: " + v1Service.getStatus());
-                        return Stream.of(runnable);
-                    } catch (K8sFrameworkException e) {
+                    System.out.println("deployment status: " + v1Deployment.getStatus().getReadyReplicas());
+                    System.out.println("service status: " + v1Service.getStatus());
+                    return Stream.of(runnable);
+                } catch (K8sFrameworkException e) {
+                    // Set Runnable to ERROR state
+                    runnable.setState(State.ERROR.name());
+                    return Stream.of(runnable);
+                }
+            })
+            .forEach(runnable -> {
+                // Update the runnable
+                runnableStore.store(runnable.getId(), runnable);
 
-                        // Set Runnable to ERROR state
-                        runnable.setState(State.ERROR.name());
-                        return Stream.of(runnable);
-                    }
-                }).forEach(runnable -> {
-
-                            // Update the runnable
-                            runnableStore.update(runnable.getId(), runnable);
-
-                            // Send message to Serve manager
-                            eventPublisher.publishEvent(RunChangedEvent.builder()
-                                    .runMonitorObject(RunMonitorObject.builder()
-                                            .runId(runnable.getId())
-                                            .stateId(runnable.getState())
-                                            .project(runnable.getProject())
-                                            .framework(runnable.getFramework())
-                                            .task(runnable.getTask()).build()
-
-                                    ).build());
-                        }
-
+                // Send message to Serve manager
+                eventPublisher.publishEvent(
+                    RunChangedEvent
+                        .builder()
+                        .runMonitorObject(
+                            RunMonitorObject
+                                .builder()
+                                .runId(runnable.getId())
+                                .stateId(runnable.getState())
+                                .project(runnable.getProject())
+                                .framework(runnable.getFramework())
+                                .task(runnable.getTask())
+                                .build()
+                        )
+                        .build()
                 );
+            });
 
         //        //TODO cleanup monitoring!
         //        if (pollingService == null || runStateMachine == null || logService == null || runService == null) {

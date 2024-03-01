@@ -16,7 +16,7 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
-import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
+import it.smartcommunitylabdhub.fsm.types.RunStateMachineFactory;
 import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     //TODO drop from framework, this should be delegated to run listener/service
     //the framework has NO concept of runs, only RUNNABLEs
     @Autowired
-    RunStateMachine runStateMachine;
+    RunStateMachineFactory runStateMachine;
 
     //TODO drop, logs must be handled by a listener
     @Autowired
@@ -75,14 +75,14 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
         // Generate deploymentName and ContainerName
         String deploymentName = k8sBuilderHelper.getDeploymentName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
         String containerName = k8sBuilderHelper.getContainerName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
 
         // Create labels for job
@@ -108,25 +108,25 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
         // Build Container
         V1Container container = new V1Container()
-                .name(containerName)
-                .image(runnable.getImage())
-                .imagePullPolicy("Always")
-                .imagePullPolicy("IfNotPresent")
-                .command(command)
-                .args(args)
-                .resources(resources)
-                .volumeMounts(volumeMounts)
-                .envFrom(envFrom)
-                .env(env);
+            .name(containerName)
+            .image(runnable.getImage())
+            .imagePullPolicy("Always")
+            .imagePullPolicy("IfNotPresent")
+            .command(command)
+            .args(args)
+            .resources(resources)
+            .volumeMounts(volumeMounts)
+            .envFrom(envFrom)
+            .env(env);
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
-                .containers(Collections.singletonList(container))
-                .nodeSelector(buildNodeSelector(runnable))
-                .affinity(runnable.getAffinity())
-                .tolerations(buildTolerations(runnable))
-                .volumes(volumes)
-                .restartPolicy("Always");
+            .containers(Collections.singletonList(container))
+            .nodeSelector(buildNodeSelector(runnable))
+            .affinity(runnable.getAffinity())
+            .tolerations(buildTolerations(runnable))
+            .volumes(volumes)
+            .restartPolicy("Always");
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
@@ -135,9 +135,9 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
         // Create the JobSpec with the PodTemplateSpec
         V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
-                .replicas(replicas)
-                .selector(new V1LabelSelector().matchLabels(labels))
-                .template(podTemplateSpec);
+            .replicas(replicas)
+            .selector(new V1LabelSelector().matchLabels(labels))
+            .template(podTemplateSpec);
 
         // Create the V1Deployment object with metadata and JobSpec
         return new V1Deployment().metadata(metadata).spec(deploymentSpec);
@@ -152,12 +152,12 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
             //dispatch deployment via api
             V1Deployment createdDeployment = appsV1Api.createNamespacedDeployment(
-                    namespace,
-                    deployment,
-                    null,
-                    null,
-                    null,
-                    null
+                namespace,
+                deployment,
+                null,
+                null,
+                null,
+                null
             );
             log.info("Deployment created: {}", Objects.requireNonNull(createdDeployment.getMetadata()).getName());
             return createdDeployment;
@@ -264,18 +264,18 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         // Delete the Pod associated with the Deployment
         try {
             V1PodList v1PodList = coreV1Api.listNamespacedPod(
-                    namespace,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
             );
 
             for (V1Pod pod : v1PodList.getItems()) {
@@ -285,21 +285,21 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
                         // Delete the Pod
                         V1Pod v1Pod = coreV1Api.deleteNamespacedPod(
-                                podName,
-                                namespace,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null
+                            podName,
+                            namespace,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
                         );
                         log.info("Pod deleted: " + podName);
 
                         try {
                             writeLog(
-                                    runnable,
-                                    JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
+                                runnable,
+                                JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
                             );
                         } catch (JsonProcessingException e) {
                             log.error(e.toString());

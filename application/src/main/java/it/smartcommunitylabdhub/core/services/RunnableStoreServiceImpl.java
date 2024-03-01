@@ -7,10 +7,11 @@ import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons.infrastructure.Runnable>
-        implements RunnableStore<T> {
+    implements RunnableStore<T> {
 
     private final Class<T> clazz;
     private final RunnableRepository runnableRepository;
@@ -21,12 +22,13 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
     }
 
     public T find(String id) {
-        RunnableEntity entity = runnableRepository.findById(id);
-        if (entity != null) {
+        Optional<RunnableEntity> runnableEntity = runnableRepository.findById(id);
+        if (runnableEntity.isPresent()) {
             try {
-                return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
+                return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(runnableEntity.get().getData(), clazz);
             } catch (IOException e) {
                 // Handle deserialization error
+                return null;
             }
         }
         return null;
@@ -38,22 +40,9 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
 
             RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
 
-            runnableRepository.save(entity);
-
-        } catch (IOException ex) {
-            // Handle serialization error
-        }
-    }
-
-    @Override
-    public void update(String id, T e) {
-        try {
-            byte[] data = JacksonMapper.CBOR_OBJECT_MAPPER.writeValueAsBytes(e);
-
-            RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
-
-            runnableRepository.update(entity);
-            
+            Optional
+                .ofNullable(find(id))
+                .ifPresentOrElse(it -> runnableRepository.update(entity), () -> runnableRepository.save(entity));
         } catch (IOException ex) {
             // Handle serialization error
         }
@@ -62,17 +51,17 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
     public List<T> findAll() {
         List<RunnableEntity> entities = runnableRepository.findAll();
         return entities
-                .stream()
-                .map(entity -> {
-                    try {
-                        return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
-                    } catch (IOException e) {
-                        // Handle deserialization error
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+            .stream()
+            .map(entity -> {
+                try {
+                    return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
+                } catch (IOException e) {
+                    // Handle deserialization error
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
     public void delete(String id) {

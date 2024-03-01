@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.repositories;
 
 import it.smartcommunitylabdhub.core.models.entities.runnable.RunnableEntity;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,14 +24,15 @@ public class RunnableRepository {
         jdbcTemplate.update(sql, entity.getData(), entity.getId());
     }
 
-
-    public RunnableEntity findById(String id) {
-        String sql = "SELECT * FROM runnable WHERE id = ?";
-        return jdbcTemplate.queryForObject(
-                sql,
-                new Object[] {id},
-                BeanPropertyRowMapper.newInstance(RunnableEntity.class)
-        );
+    public Optional<RunnableEntity> findById(String id) {
+        try {
+            String sql = "SELECT * FROM runnable WHERE id = ?";
+            return Optional.ofNullable(
+                jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class), id)
+            );
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     public List<RunnableEntity> findAll() {

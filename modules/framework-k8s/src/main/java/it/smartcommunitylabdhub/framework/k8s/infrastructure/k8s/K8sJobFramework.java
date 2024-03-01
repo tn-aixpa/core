@@ -16,7 +16,7 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
-import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
+import it.smartcommunitylabdhub.fsm.types.RunStateMachineFactory;
 import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     //TODO drop from framework, this should be delegated to run listener/service
     //the framework has NO concept of runs, only RUNNABLEs
     @Autowired
-    RunStateMachine runStateMachine;
+    RunStateMachineFactory runStateMachine;
 
     //TODO drop, logs must be handled by a listener
     @Autowired
@@ -85,9 +85,9 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         // Generate jobName and ContainerName
         String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
         String containerName = k8sBuilderHelper.getContainerName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
 
         //build labels
@@ -113,25 +113,25 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         // Build Container
         V1Container container = new V1Container()
-                .name(containerName)
-                .image(runnable.getImage())
-                .imagePullPolicy("Always")
-                .imagePullPolicy("IfNotPresent")
-                .command(command)
-                .args(args)
-                .resources(resources)
-                .volumeMounts(volumeMounts)
-                .envFrom(envFrom)
-                .env(env);
+            .name(containerName)
+            .image(runnable.getImage())
+            .imagePullPolicy("Always")
+            .imagePullPolicy("IfNotPresent")
+            .command(command)
+            .args(args)
+            .resources(resources)
+            .volumeMounts(volumeMounts)
+            .envFrom(envFrom)
+            .env(env);
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
-                .containers(Collections.singletonList(container))
-                .nodeSelector(buildNodeSelector(runnable))
-                .affinity(runnable.getAffinity())
-                .tolerations(buildTolerations(runnable))
-                .volumes(volumes)
-                .restartPolicy("Never");
+            .containers(Collections.singletonList(container))
+            .nodeSelector(buildNodeSelector(runnable))
+            .affinity(runnable.getAffinity())
+            .tolerations(buildTolerations(runnable))
+            .volumes(volumes)
+            .restartPolicy("Never");
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
@@ -140,12 +140,12 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         // Create the JobSpec with the PodTemplateSpec
         V1JobSpec jobSpec = new V1JobSpec()
-                .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
-                //TODO support work-queue style/parallel jobs
-                .parallelism(1)
-                .completions(1)
-                .backoffLimit(backoffLimit)
-                .template(podTemplateSpec);
+            .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
+            //TODO support work-queue style/parallel jobs
+            .parallelism(1)
+            .completions(1)
+            .backoffLimit(backoffLimit)
+            .template(podTemplateSpec);
 
         // Create the V1Job object with metadata and JobSpec
         return new V1Job().metadata(metadata).spec(jobSpec);
@@ -302,18 +302,18 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         try {
             // Retrieve and print the logs of the associated Pod
             V1PodList v1PodList = coreV1Api.listNamespacedPod(
-                    namespace,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
             );
 
             for (V1Pod pod : v1PodList.getItems()) {
@@ -321,17 +321,17 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                     if (pod.getMetadata().getName().startsWith(jobName)) {
                         String podName = pod.getMetadata().getName();
                         String logs = coreV1Api.readNamespacedPodLog(
-                                podName,
-                                namespace,
-                                cName,
-                                false,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null
+                            podName,
+                            namespace,
+                            cName,
+                            false,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
                         );
 
                         log.info("Logs for Pod: " + podName);
@@ -356,18 +356,18 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         // Delete the Pod associated with the Job
         try {
             V1PodList v1PodList = coreV1Api.listNamespacedPod(
-                    namespace,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
             );
 
             for (V1Pod pod : v1PodList.getItems()) {
@@ -377,21 +377,21 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
                         // Delete the Pod
                         V1Pod v1Pod = coreV1Api.deleteNamespacedPod(
-                                podName,
-                                namespace,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null
+                            podName,
+                            namespace,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
                         );
                         log.info("Pod deleted: " + podName);
 
                         try {
                             writeLog(
-                                    runnable,
-                                    JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
+                                runnable,
+                                JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
                             );
                         } catch (JsonProcessingException e) {
                             log.error(e.toString());
@@ -399,14 +399,14 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
                         // Delete the Job
                         V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
-                                jobName,
-                                "default",
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null
+                            jobName,
+                            "default",
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
                         );
 
                         try {
