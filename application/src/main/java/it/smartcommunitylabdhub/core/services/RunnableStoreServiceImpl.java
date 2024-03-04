@@ -8,12 +8,13 @@ import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons.infrastructure.Runnable>
-    implements RunnableStore<T> {
+        implements RunnableStore<T> {
 
     private final Class<T> clazz;
     private final RunnableRepository runnableRepository;
@@ -47,18 +48,18 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
 
         List<RunnableEntity> entities = runnableRepository.findAll();
         return entities
-            .stream()
-            .map(entity -> {
-                try {
-                    return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
-                } catch (IOException e) {
-                    // Handle deserialization error
-                    log.error("error deserializing runnable: {}", e.getMessage());
-                    return null;
-                }
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .stream()
+                .map(entity -> {
+                    try {
+                        return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
+                    } catch (IOException e) {
+                        // Handle deserialization error
+                        log.error("error deserializing runnable: {}", e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -68,7 +69,9 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
             byte[] data = JacksonMapper.CBOR_OBJECT_MAPPER.writeValueAsBytes(e);
             RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
 
-            runnableRepository.save(entity);
+            Optional.ofNullable(find(id)).ifPresentOrElse(
+                    (r) -> runnableRepository.update(entity),
+                    () -> runnableRepository.save(entity));
         } catch (IOException ex) {
             // Handle serialization error
             log.error("error deserializing runnable: {}", ex.getMessage());

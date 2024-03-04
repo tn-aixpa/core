@@ -11,6 +11,7 @@
 
 package it.smartcommunitylabdhub.fsm;
 
+import jakarta.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,15 +21,16 @@ import java.util.function.Consumer;
 public class FsmState<S, E, C> {
 
     private final Map<E, Transaction<S, E, C>> transactions;
-    private Optional<StateLogic<S, E, C, ?>> internalLogic;
-    private Consumer<Optional<C>> entryAction;
-    private Consumer<Optional<C>> exitAction;
+    @Nullable
+    private StateLogic<S, E, C, ?> internalLogic;
+    private Consumer<C> entryAction;
+    private Consumer<C> exitAction;
 
     /**
      * Constructs a new FsmState object with default values.
      */
     public FsmState() {
-        internalLogic = Optional.empty();
+        internalLogic = null;
         transactions = new HashMap<>();
     }
 
@@ -38,7 +40,7 @@ public class FsmState<S, E, C> {
      * @return The internal logic as a StateLogic instance.
      */
     public Optional<StateLogic<S, E, C, ?>> getInternalLogic() {
-        return internalLogic;
+        return Optional.ofNullable(internalLogic);
     }
 
     /**
@@ -47,8 +49,8 @@ public class FsmState<S, E, C> {
      * @param internalLogic The internal logic as a StateLogic instance.
      * @param <T>           The type of the result from the internal logic.
      */
-    public <T> void setInternalLogic(StateLogic<S, E, C, T> internalLogic) {
-        this.internalLogic = Optional.ofNullable(internalLogic);
+    public <T> void setInternalLogic(@Nullable StateLogic<S, E, C, T> internalLogic) {
+        this.internalLogic = internalLogic;
     }
 
     /**
@@ -79,7 +81,7 @@ public class FsmState<S, E, C> {
      *
      * @return The entry action as a Consumer instance.
      */
-    public Consumer<Optional<C>> getEntryAction() {
+    public Consumer<C> getEntryAction() {
         return entryAction;
     }
 
@@ -88,7 +90,7 @@ public class FsmState<S, E, C> {
      *
      * @param action The entry action as a Consumer instance.
      */
-    public void setEntryAction(Consumer<Optional<C>> action) {
+    public void setEntryAction(Consumer<C> action) {
         entryAction = action;
     }
 
@@ -97,7 +99,7 @@ public class FsmState<S, E, C> {
      *
      * @return The exit action as a Consumer instance.
      */
-    public Consumer<Optional<C>> getExitAction() {
+    public Consumer<C> getExitAction() {
         return exitAction;
     }
 
@@ -106,7 +108,7 @@ public class FsmState<S, E, C> {
      *
      * @param action The exit action as a Consumer instance.
      */
-    public void setExitAction(Consumer<Optional<C>> action) {
+    public void setExitAction(Consumer<C> action) {
         exitAction = action;
     }
 
@@ -192,7 +194,7 @@ public class FsmState<S, E, C> {
          * @param action The entry action as a Consumer instance.
          * @return The StateBuilder instance.
          */
-        public StateBuilder<S, E, C> withEntryAction(Consumer<Optional<C>> action) {
+        public StateBuilder<S, E, C> withEntryAction(Consumer<C> action) {
             stateDefinition.setEntryAction(action);
             return this;
         }
@@ -203,7 +205,7 @@ public class FsmState<S, E, C> {
          * @param action The exit action as a Consumer instance.
          * @return The StateBuilder instance.
          */
-        public StateBuilder<S, E, C> withExitAction(Consumer<Optional<C>> action) {
+        public StateBuilder<S, E, C> withExitAction(Consumer<C> action) {
             stateDefinition.setExitAction(action);
             return this;
         }

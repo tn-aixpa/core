@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.fsm;
 
-import java.util.Optional;
+import jakarta.annotation.Nullable;
 import lombok.*;
 
 @Setter
@@ -10,5 +10,6 @@ import lombok.*;
 @Builder
 public class Context<C> {
 
-    private Optional<C> value;
+    @Nullable
+    private C value;
 }

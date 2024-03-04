@@ -29,9 +29,9 @@ public class RunManager {
     private final LogRepository logRepository;
 
     public RunManager(
-        RunStateMachineFactory runStateMachine,
-        RunRepository runRepository,
-        LogRepository logRepository
+            RunStateMachineFactory runStateMachine,
+            RunRepository runRepository,
+            LogRepository logRepository
     ) {
         this.runStateMachine = runStateMachine;
         this.runRepository = runRepository;
@@ -46,20 +46,20 @@ public class RunManager {
 
         // Find the related RunEntity
         runRepository
-            .findById(runMonitorObject.getRunId())
-            .stream()
-            .filter(runEntity -> !runEntity.getState().name().equals(runMonitorObject.getStateId()))
-            .findAny()
-            .ifPresentOrElse(
-                runEntity -> {
-                    // Try to move forward state machine based on current state
-                    createFsm(runEntity).goToState(State.valueOf(runMonitorObject.getStateId()), Optional.empty());
-                },
-                () -> {
-                    error(runMonitorObject.getRunId());
-                    log.error("Run with id {} not found", runMonitorObject.getRunId());
-                }
-            );
+                .findById(runMonitorObject.getRunId())
+                .stream()
+                .filter(runEntity -> !runEntity.getState().name().equals(runMonitorObject.getStateId()))
+                .findAny()
+                .ifPresentOrElse(
+                        runEntity -> {
+                            // Try to move forward state machine based on current state
+                            createFsm(runEntity).goToState(State.valueOf(runMonitorObject.getStateId()), null);
+                        },
+                        () -> {
+                            error(runMonitorObject.getRunId());
+                            log.error("Run with id {} not found", runMonitorObject.getRunId());
+                        }
+                );
     }
 
     @Async
@@ -68,40 +68,41 @@ public class RunManager {
         logRepository.save(logEntity);
     }
 
-    public void error(String id) {}
+    public void error(String id) {
+    }
 
     private Fsm<State, RunEvent, Map<String, Serializable>> createFsm(RunEntity runEntity) {
         // INITIALIZE STATE MACHINE AND TRANSACTION
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = runStateMachine.builder(
-            State.valueOf(runEntity.getState().name()),
-            Map.of("runId", runEntity.getId())
+                State.valueOf(runEntity.getState().name()),
+                Map.of("runId", runEntity.getId())
         );
 
         // DEFINING CUSTOM STATE MACHINE BEHAVIOUR
         fsm
-            .getState(State.READY)
-            .setExitAction(context -> {
-                log.info("EXITING FROM READY STATE");
-            });
+                .getState(State.READY)
+                .setExitAction(context -> {
+                    log.info("EXITING FROM READY STATE");
+                });
         fsm
-            .getState(State.READY)
-            .setInternalLogic((context, input, fsmInstance) -> {
-                log.info("READY INTERNAL LOGIC");
-                return Optional.of("Hello");
-            });
+                .getState(State.READY)
+                .setInternalLogic((context, input, fsmInstance) -> {
+                    log.info("READY INTERNAL LOGIC");
+                    return Optional.of("Hello");
+                });
         fsm
-            .getState(State.RUNNING)
-            .setInternalLogic((context, input, fsmInstance) -> {
-                log.info("RUNNING INTERNAL LOGIC");
-                return Optional.of("Hello");
-            });
+                .getState(State.RUNNING)
+                .setInternalLogic((context, input, fsmInstance) -> {
+                    log.info("RUNNING INTERNAL LOGIC");
+                    return Optional.of("Hello");
+                });
         fsm.setEventListener(
-            RunEvent.ERROR,
-            (context, input) -> {
-                // do something
-                // notifiy log when error happend
-                // applicationEventPublisher.publishEvent(context);
-            }
+                RunEvent.ERROR,
+                (context, input) -> {
+                    // do something
+                    // notifiy log when error happend
+                    // applicationEventPublisher.publishEvent(context);
+                }
         );
         fsm.setStateChangeListener((state, context) -> {
             // Update entity state

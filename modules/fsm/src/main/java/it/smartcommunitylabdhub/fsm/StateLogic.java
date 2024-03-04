@@ -11,6 +11,7 @@
 
 package it.smartcommunitylabdhub.fsm;
 
+import jakarta.annotation.Nullable;
 import java.util.Optional;
 
 @FunctionalInterface
@@ -23,5 +24,5 @@ public interface StateLogic<S, E, C, T> {
      * @param stateMachine The state machine instance.
      * @return The optional result from applying the logic.
      */
-    Optional<T> applyLogic(Optional<C> context, Optional<C> input, Fsm<S, E, C> stateMachine);
+    Optional<T> applyLogic(@Nullable C context, @Nullable C input, Fsm<S, E, C> stateMachine);
 }
