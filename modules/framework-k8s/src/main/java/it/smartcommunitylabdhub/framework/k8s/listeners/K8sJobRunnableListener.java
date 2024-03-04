@@ -43,7 +43,6 @@ public class K8sJobRunnableListener {
 
                 log.debug("Update runnable {} via framework", runnable.getId());
                 runnableStore.store(runnable.getId(), runnable);
-                //TODO send run event to RunManager(todo) create an object of type RunState with stateId, runId, project, framework....
             } catch (K8sFrameworkException e) {
                 log.error("Error with k8s: {}", e.getMessage());
             } finally {

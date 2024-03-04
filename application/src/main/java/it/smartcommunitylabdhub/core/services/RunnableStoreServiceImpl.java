@@ -28,7 +28,7 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
     public T find(String id) throws StoreException {
         log.debug("find runnable {} with id {}", clazz.getName(), id);
 
-        RunnableEntity runnableEntity = runnableRepository.findById(id);
+        RunnableEntity runnableEntity = runnableRepository.findById(clazz.getName(), id);
         if (runnableEntity == null) {
             return null;
         }
@@ -46,7 +46,7 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
     public List<T> findAll() {
         log.debug("find all runnable {}", clazz.getName());
 
-        List<RunnableEntity> entities = runnableRepository.findAll();
+        List<RunnableEntity> entities = runnableRepository.findAll(clazz.getName());
         return entities
                 .stream()
                 .map(entity -> {
@@ -70,8 +70,8 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
             RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
 
             Optional.ofNullable(find(id)).ifPresentOrElse(
-                    (r) -> runnableRepository.update(entity),
-                    () -> runnableRepository.save(entity));
+                    (r) -> runnableRepository.update(clazz.getName(), entity),
+                    () -> runnableRepository.save(clazz.getName(), entity));
         } catch (IOException ex) {
             // Handle serialization error
             log.error("error deserializing runnable: {}", ex.getMessage());
@@ -83,6 +83,6 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
     public void remove(String id) throws StoreException {
         log.debug("remove runnable {} with id {}", clazz.getName(), id);
 
-        runnableRepository.delete(id);
+        runnableRepository.delete(id, clazz.getName());
     }
 }
