@@ -9,7 +9,8 @@ import java.util.Map;
 public interface BaseDTO extends Serializable {
     String getId();
 
-    @NotNull
+    void setId(String id);
+
     String getName();
 
     @NotNull
@@ -18,13 +19,18 @@ public interface BaseDTO extends Serializable {
     String getProject();
 
     Map<String, Serializable> getMetadata();
+
+    void setMetadata(Map<String, Serializable> metadata);
+
     Map<String, Serializable> getSpec();
+
+    void setSpec(Map<String, Serializable> spec);
+
     Map<String, Serializable> getStatus();
+
+    void setStatus(Map<String, Serializable> status);
+
     Map<String, Serializable> getExtra();
 
-    void setId(String id);
-    void setMetadata(Map<String, Serializable> metadata);
-    void setSpec(Map<String, Serializable> spec);
-    void setStatus(Map<String, Serializable> status);
     void setExtra(Map<String, Serializable> extra);
 }

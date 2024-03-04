@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.core.repositories;
 
 import it.smartcommunitylabdhub.core.models.entities.runnable.RunnableEntity;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,13 +24,23 @@ public class RunnableRepository {
     }
 
     public RunnableEntity findById(String id) {
-        String sql = "SELECT * FROM runnable WHERE id = ?";
-        return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class), id);
+
+        try {
+            String sql = "SELECT * FROM runnable WHERE id = ?";
+            return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class), id);
+        } catch (Exception e) {
+            return null;
+        }
+
     }
 
     public List<RunnableEntity> findAll() {
-        String sql = "SELECT * FROM runnable";
-        return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class));
+        try {
+            String sql = "SELECT * FROM runnable";
+            return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class));
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     public void delete(String id) {

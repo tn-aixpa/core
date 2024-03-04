@@ -1,10 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.entities.run;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.*;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import jakarta.validation.constraints.NotNull;
@@ -12,11 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.lang.Nullable;
 
 @AllArgsConstructor
@@ -66,7 +58,7 @@ public class Run implements BaseDTO {
     }
 
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return id;
     }
 }
