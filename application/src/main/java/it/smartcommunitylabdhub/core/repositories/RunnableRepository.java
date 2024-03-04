@@ -24,15 +24,9 @@ public class RunnableRepository {
         jdbcTemplate.update(sql, entity.getData(), entity.getId());
     }
 
-    public Optional<RunnableEntity> findById(String id) {
-        try {
-            String sql = "SELECT * FROM runnable WHERE id = ?";
-            return Optional.ofNullable(
-                jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class), id)
-            );
-        } catch (Exception e) {
-            return Optional.empty();
-        }
+    public RunnableEntity findById(String id) {
+        String sql = "SELECT * FROM runnable WHERE id = ?";
+        return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class), id);
     }
 
     public List<RunnableEntity> findAll() {

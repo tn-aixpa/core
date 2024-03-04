@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.commons.models.entities.project;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.commons.models.base.BaseMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;

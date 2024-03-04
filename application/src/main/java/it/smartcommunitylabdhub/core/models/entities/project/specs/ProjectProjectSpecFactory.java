@@ -6,16 +6,16 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ProjectProjectSpecFactory implements SpecFactory<ProjectProjectSpec> {
+public class ProjectProjectSpecFactory implements SpecFactory<ProjectSpec> {
 
     @Override
-    public ProjectProjectSpec create() {
-        return new ProjectProjectSpec();
+    public ProjectSpec create() {
+        return new ProjectSpec();
     }
 
     @Override
-    public ProjectProjectSpec create(Map<String, Serializable> data) {
-        ProjectProjectSpec spec = new ProjectProjectSpec();
+    public ProjectSpec create(Map<String, Serializable> data) {
+        ProjectSpec spec = new ProjectSpec();
         spec.configure(data);
 
         return spec;

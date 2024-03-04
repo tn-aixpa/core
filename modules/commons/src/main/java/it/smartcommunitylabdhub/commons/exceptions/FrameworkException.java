@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.commons.exceptions;
 
-public abstract class FrameworkException extends Exception {
+public class FrameworkException extends Exception {
 
-    protected FrameworkException(String msg, Throwable cause) {
+    public FrameworkException(String msg, Throwable cause) {
         super(msg, cause);
     }
 
-    protected FrameworkException(String msg) {
+    public FrameworkException(String msg) {
         super(msg);
     }
 }

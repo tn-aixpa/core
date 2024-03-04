@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.core.models.entities.runnable.RunnableEntity;
@@ -7,9 +8,10 @@ import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons.infrastructure.Runnable>
     implements RunnableStore<T> {
 
@@ -21,34 +23,28 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
         this.runnableRepository = runnableRepository;
     }
 
-    public T find(String id) {
-        Optional<RunnableEntity> runnableEntity = runnableRepository.findById(id);
-        if (runnableEntity.isPresent()) {
-            try {
-                return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(runnableEntity.get().getData(), clazz);
-            } catch (IOException e) {
-                // Handle deserialization error
-                return null;
-            }
+    @Override
+    public T find(String id) throws StoreException {
+        log.debug("find runnable {} with id {}", clazz.getName(), id);
+
+        RunnableEntity runnableEntity = runnableRepository.findById(id);
+        if (runnableEntity == null) {
+            return null;
         }
-        return null;
-    }
 
-    public void store(String id, T e) {
         try {
-            byte[] data = JacksonMapper.CBOR_OBJECT_MAPPER.writeValueAsBytes(e);
-
-            RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
-
-            Optional
-                .ofNullable(find(id))
-                .ifPresentOrElse(it -> runnableRepository.update(entity), () -> runnableRepository.save(entity));
+            return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(runnableEntity.getData(), clazz);
         } catch (IOException ex) {
             // Handle serialization error
+            log.error("error deserializing runnable: {}", ex.getMessage());
+            throw new StoreException("error deserializing runnable");
         }
     }
 
+    @Override
     public List<T> findAll() {
+        log.debug("find all runnable {}", clazz.getName());
+
         List<RunnableEntity> entities = runnableRepository.findAll();
         return entities
             .stream()
@@ -57,6 +53,7 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
                     return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
                 } catch (IOException e) {
                     // Handle deserialization error
+                    log.error("error deserializing runnable: {}", e.getMessage());
                     return null;
                 }
             })
@@ -64,7 +61,25 @@ public class RunnableStoreServiceImpl<T extends it.smartcommunitylabdhub.commons
             .collect(Collectors.toList());
     }
 
-    public void delete(String id) {
+    @Override
+    public void store(String id, T e) throws StoreException {
+        log.debug("store runnable {} with id {}", clazz.getName(), id);
+        try {
+            byte[] data = JacksonMapper.CBOR_OBJECT_MAPPER.writeValueAsBytes(e);
+            RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
+
+            runnableRepository.save(entity);
+        } catch (IOException ex) {
+            // Handle serialization error
+            log.error("error deserializing runnable: {}", ex.getMessage());
+            throw new StoreException("error deserializing runnable");
+        }
+    }
+
+    @Override
+    public void remove(String id) throws StoreException {
+        log.debug("remove runnable {} with id {}", clazz.getName(), id);
+
         runnableRepository.delete(id);
     }
 }

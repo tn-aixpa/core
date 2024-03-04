@@ -1,11 +1,29 @@
 package it.smartcommunitylabdhub.core.models.queries.specifications;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 public class CommonSpecification {
+
+    public static <T extends BaseEntity> Specification<T> projectEquals(String project) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("project"), project);
+        };
+    }
+
+    public static <T extends BaseEntity> Specification<T> nameEquals(String name) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("name"), name);
+        };
+    }
+
+    public static <T extends BaseEntity> Specification<T> kindEquals(String kind) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("kind"), kind);
+        };
+    }
 
     public static <T extends BaseEntity> Specification<T> latestByProject(String project) {
         return (root, query, criteriaBuilder) -> {

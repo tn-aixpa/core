@@ -8,7 +8,7 @@
 package it.smartcommunitylabdhub.fsm.types;
 
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.RunService;
+import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.FsmState;
 import it.smartcommunitylabdhub.fsm.Transaction;

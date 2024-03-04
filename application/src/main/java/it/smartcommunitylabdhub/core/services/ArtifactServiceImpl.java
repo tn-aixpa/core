@@ -1,162 +1,226 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.CustomException;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.ArtifactService;
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
-import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
-import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
-import jakarta.transaction.Transactional;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity_;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
-public class ArtifactServiceImpl
-    extends AbstractSpecificationService<ArtifactEntity, ArtifactEntityFilter>
-    implements ArtifactService {
+@Slf4j
+public class ArtifactServiceImpl implements SearchableArtifactService {
 
     @Autowired
-    ArtifactRepository artifactRepository;
+    private EntityService<Artifact, ArtifactEntity> entityService;
 
     @Autowired
-    ArtifactEntityBuilder artifactEntityBuilder;
-
-    @Autowired
-    ArtifactEntityFilter artifactEntityFilter;
-
-    @Autowired
-    ArtifactDTOBuilder artifactDTOBuilder;
+    SpecRegistry specRegistry;
 
     @Override
-    public Page<Artifact> getArtifacts(Map<String, String> filter, Pageable pageable) {
+    public Page<Artifact> listArtifacts(Pageable pageable) {
+        log.debug("list artifacts page {}", pageable);
+
+        return entityService.list(pageable);
+    }
+
+    @Override
+    public Page<Artifact> searchArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter) {
+        log.debug("search artifacts page {}, filter {}", pageable, String.valueOf(filter));
+
+        Specification<ArtifactEntity> specification = filter != null ? filter.toSpecification() : null;
+        if (specification != null) {
+            return entityService.search(specification, pageable);
+        } else {
+            return entityService.list(pageable);
+        }
+    }
+
+    @Override
+    public List<Artifact> listLatestArtifactsByProject(@NotNull String project) {
+        log.debug("list artifacts for project {}  ", project);
+        Specification<ArtifactEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<Artifact> listLatestArtifactsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list artifacts for project {}  page {}", project, pageable);
+        Specification<ArtifactEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Page<Artifact> searchLatestArtifactsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<ArtifactEntity> filter
+    ) {
+        log.debug("list artifacts for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<ArtifactEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<ArtifactEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project),
+            filterSpecification
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public List<Artifact> findArtifacts(@NotNull String project, @NotNull String name) {
+        log.debug("find artifacts for project {} with name {}", project, name);
+
+        //fetch all versions ordered by date DESC
+        Specification<ArtifactEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+        Specification<ArtifactEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(ArtifactEntity_.CREATED)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<Artifact> findArtifacts(@NotNull String project, @NotNull String name, Pageable pageable) {
+        log.debug("find artifacts for project {} with name {} page {}", project, name, pageable);
+
+        //fetch all versions ordered by date DESC
+        Specification<ArtifactEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+        Specification<ArtifactEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(ArtifactEntity_.CREATED)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Artifact findArtifact(@NotNull String id) {
+        log.debug("find artifact with id {}", String.valueOf(id));
+
+        return entityService.find(id);
+    }
+
+    @Override
+    public Artifact getArtifact(@NotNull String id) throws NoSuchEntityException {
+        log.debug("get artifact with id {}", String.valueOf(id));
+
         try {
-            artifactEntityFilter.setName(filter.get("name"));
-            artifactEntityFilter.setKind(filter.get("kind"));
-            artifactEntityFilter.setCreatedDate(filter.get("created"));
-            Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
-            artifactEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
-
-            Specification<ArtifactEntity> specification = createSpecification(filter, artifactEntityFilter);
-
-            Page<ArtifactEntity> artifactPage = this.artifactRepository.findAll(specification, pageable);
-
-            return new PageImpl<>(
-                artifactPage
-                    .getContent()
-                    .stream()
-                    .map(artifact -> artifactDTOBuilder.build(artifact, false))
-                    .collect(Collectors.toList()),
-                pageable,
-                artifactPage.getTotalElements()
-            );
-        } catch (CustomException e) {
-            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return entityService.get(id);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
         }
     }
 
     @Override
-    public Artifact createArtifact(Artifact artifactDTO) {
-        if (artifactDTO.getId() != null && artifactRepository.existsById(artifactDTO.getId())) {
-            throw new CoreException(
-                "DuplicateArtifactId",
-                "Cannot create the artifact",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-        Optional<ArtifactEntity> savedArtifact = Optional
-            .of(artifactDTO)
-            .map(artifactEntityBuilder::build)
-            .map(this.artifactRepository::saveAndFlush);
+    public Artifact getLatestArtifact(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
+        log.debug("get latest artifact for project {} with name {}", project, name);
 
-        return savedArtifact
-            .map(artifact -> artifactDTOBuilder.build(artifact, false))
-            .orElseThrow(() ->
-                new CoreException("InternalServerError", "Error saving artifact", HttpStatus.INTERNAL_SERVER_ERROR)
-            );
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLatestArtifact'");
     }
 
     @Override
-    public Artifact getArtifact(String uuid) {
-        return artifactRepository
-            .findById(uuid)
-            .map(artifact -> {
-                try {
-                    return artifactDTOBuilder.build(artifact, false);
-                } catch (CustomException e) {
-                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    "ArtifactNotFound",
-                    "The artifact you are searching for does not exist.",
-                    HttpStatus.NOT_FOUND
-                )
-            );
-    }
-
-    @Override
-    public Artifact updateArtifact(Artifact artifactDTO, String uuid) {
-        if (!artifactDTO.getId().equals(uuid)) {
-            throw new CoreException(
-                "ArtifactNotMatch",
-                "Trying to update an artifact with a UUID different from the one passed in the request.",
-                HttpStatus.NOT_FOUND
-            );
+    public Artifact createArtifact(@NotNull Artifact dto) throws DuplicatedEntityException {
+        log.debug("create artifact");
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", dto);
         }
 
-        return artifactRepository
-            .findById(uuid)
-            .map(artifact -> {
-                try {
-                    ArtifactEntity artifactUpdated = artifactEntityBuilder.update(artifact, artifactDTO);
-                    artifactRepository.saveAndFlush(artifactUpdated);
-                    return artifactDTOBuilder.build(artifactUpdated, false);
-                } catch (CustomException e) {
-                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    "ArtifactNotFound",
-                    "The artifact you are searching for does not exist.",
-                    HttpStatus.NOT_FOUND
-                )
-            );
-    }
+        // Parse and export Spec
+        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.ARTIFACT, dto.getSpec());
+        if (spec == null) {
+            throw new IllegalArgumentException("invalid kind");
+        }
 
-    @Override
-    public boolean deleteArtifact(String uuid) {
+        //TODO validate
+
+        //update spec as exported
+        dto.setSpec(spec.toMap());
+
         try {
-            if (this.artifactRepository.existsById(uuid)) {
-                this.artifactRepository.deleteById(uuid);
-                return true;
+            if (log.isTraceEnabled()) {
+                log.trace("storable dto: {}", dto);
             }
-            throw new CoreException(
-                "ArtifactNotFound",
-                "The artifact you are trying to delete does not exist.",
-                HttpStatus.NOT_FOUND
-            );
-        } catch (Exception e) {
-            throw new CoreException("InternalServerError", "cannot delete artifact", HttpStatus.INTERNAL_SERVER_ERROR);
+
+            return entityService.create(dto);
+        } catch (DuplicatedEntityException e) {
+            throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), dto.getId());
         }
+    }
+
+    @Override
+    public Artifact updateArtifact(@NotNull String id, @NotNull Artifact artifactDTO) throws NoSuchEntityException {
+        log.debug("update artifact with id {}", String.valueOf(id));
+        try {
+            //fetch current and merge
+            Artifact current = entityService.get(id);
+
+            //spec is not modificable: enforce current
+            artifactDTO.setSpec(current.getSpec());
+
+            //update
+            return entityService.update(id, artifactDTO);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        }
+    }
+
+    @Override
+    public void deleteArtifact(@NotNull String id) {
+        log.debug("delete artifact with id {}", String.valueOf(id));
+
+        entityService.delete(id);
+    }
+
+    @Override
+    public void deleteArtifacts(@NotNull String project, @NotNull String name) {
+        log.debug("delete artifacts for project {} with name {}", project, name);
+
+        Specification<ArtifactEntity> spec = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+
+        long count = entityService.deleteAll(spec);
+        log.debug("deleted count {}", count);
+    }
+
+    @Override
+    public void deleteArtifactsByProject(@NotNull String project) {
+        log.debug("delete artifacts for project {}", project);
+
+        entityService.deleteAll(CommonSpecification.projectEquals(project));
     }
 }

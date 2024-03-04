@@ -2,92 +2,111 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
-import it.smartcommunitylabdhub.commons.models.entities.log.Log;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.services.LogService;
-import it.smartcommunitylabdhub.commons.services.RunService;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
 import jakarta.validation.Valid;
-import java.util.Map;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/runs")
 @ApiVersion("v1")
-@Tag(name = "Run base API", description = "Endpoints related to runs management out of the Context")
+@RequestMapping("/runs")
+//TODO evaluate permissions for project via lookup in dto
 @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@Validated
+@Slf4j
+@Tag(name = "Run base API", description = "Endpoints related to runs management out of the Context")
 public class RunController {
 
     @Autowired
-    RunService runService;
+    SearchableRunService runService;
 
-    @Autowired
-    LogService logService;
-
-    @Operation(summary = "Get a run", description = "Given an uuid return the related Run")
-    @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Run> getRun(@ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
-        return ResponseEntity.ok(this.runService.getRun(uuid));
-    }
-
-    @Operation(summary = "Run log list", description = "Return the log list for a specific run")
-    @GetMapping(path = "/{uuid}/log", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<Log>> getRunLog(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
-        Pageable pageable
-    ) {
-        return ResponseEntity.ok(this.logService.getLogsByRunUuid(uuid, pageable));
-    }
-
-    @Operation(summary = "Run list", description = "Return a list of all runs")
-    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<Run>> getRuns(@RequestParam Map<String, String> filter, Pageable pageable) {
-        return ResponseEntity.ok(this.runService.getRuns(filter, pageable));
-    }
-
-    @Operation(summary = "Create and execute a run", description = "Create a run and then execute it")
+    @Operation(summary = "Create run and exec", description = "Create a run and exec")
     @PostMapping(
-        path = "",
+        value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Run> createRun(@Valid @RequestBody Run inputRunDTO) {
-        return ResponseEntity.ok(this.runService.createRun(inputRunDTO));
+    public Run createRun(@RequestBody @Valid @NotNull Run dto) throws DuplicatedEntityException {
+        return runService.createRun(dto);
     }
 
-    @Operation(summary = "Update specific run", description = "Update and return the update run")
-    @PutMapping(
-        path = "/{uuid}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
-    )
-    public ResponseEntity<Run> updateRun(@Valid @RequestBody Run runDTO, @ValidateField @PathVariable String uuid) {
-        return ResponseEntity.ok(this.runService.updateRun(runDTO, uuid));
-    }
-
-    @Operation(summary = "Delete a run", description = "Delete a specific run")
-    @DeleteMapping(path = "/{uuid}")
-    public ResponseEntity<Boolean> deleteRun(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
-        @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade
+    @Operation(summary = "List runs", description = "Return a list of all runs")
+    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
+    public Page<Run> getRuns(
+        @ParameterObject @RequestParam(required = false) @Valid @Nullable RunEntityFilter filter,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+            { @SortDefault(sort = "created", direction = Direction.DESC) }
+        ) Pageable pageable
     ) {
-        return ResponseEntity.ok(this.runService.deleteRun(uuid, cascade));
+        SearchFilter<RunEntity> sf = null;
+        if (filter != null) {
+            sf = filter.toSearchFilter();
+        }
+
+        return runService.searchRuns(pageable, sf);
+    }
+
+    @Operation(summary = "Get a run by id", description = "Return a run")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
+    public Run getRun(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
+        throws NoSuchEntityException {
+        return runService.getRun(id);
+    }
+
+    @Operation(summary = "Update specific run", description = "Update and return the run")
+    @PutMapping(
+        path = "/{id}",
+        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
+        produces = "application/json; charset=UTF-8"
+    )
+    public Run updateRun(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestBody @Valid @NotNull Run dto
+    ) throws NoSuchEntityException {
+        return runService.updateRun(id, dto);
+    }
+
+    @Operation(summary = "Delete a run", description = "Delete a specific run, with optional cascade on logs")
+    @DeleteMapping(path = "/{id}")
+    public void deleteRun(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
+    ) {
+        runService.deleteRun(id, cascade);
     }
 
     @Operation(summary = "Stop a run", description = "Stop a specific run")
     @PostMapping(
-        path = "/{uuid}/stop",
+        path = "/{id}/stop",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Boolean> stopRun(@ValidateField @PathVariable String uuid) {
+    public ResponseEntity<Boolean> stopRun(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) {
         //TODO move to service!
         // Runnable runnable = runnableStoreService.find(uuid);
         //TODO refactor! the framework is responsible for managing runs, not the controller

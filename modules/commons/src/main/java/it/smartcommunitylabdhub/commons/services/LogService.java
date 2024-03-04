@@ -4,6 +4,9 @@ import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+/*
+ * Service for managing artifacts
+ */
 public interface LogService {
     Page<Log> getLogs(Pageable pageable);
 

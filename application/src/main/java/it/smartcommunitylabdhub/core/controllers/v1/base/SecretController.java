@@ -2,15 +2,20 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
-import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,19 +26,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/secrets")
 @ApiVersion("v1")
-@Tag(name = "Secret base API", description = "Endpoints related to secret management out of the Context")
+@RequestMapping("/secrets")
+//TODO evaluate permissions for project via lookup in dto
 @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@Validated
+@Slf4j
+@Tag(name = "Secret base API", description = "Endpoints related to secret management out of the Context")
 public class SecretController {
 
     @Autowired
-    ProjectSecretService secretService;
+    SecretService secretService;
 
-    @Operation(summary = "Get specific secret", description = "Given a uuid return a specific secret")
-    @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Secret> getSecret(@ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
-        return ResponseEntity.ok(this.secretService.getProjectSecret(uuid));
+    @Operation(summary = "Get specific secret", description = "Given a id return a specific secret")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
+    public Secret getSecret(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
+        throws NoSuchEntityException {
+        return secretService.getSecret(id);
     }
 
     @Operation(summary = "Create a secret", description = "Create and return a new secret")
@@ -42,28 +51,26 @@ public class SecretController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Secret> createSecret(@Valid @RequestBody Secret secretDTO) {
-        return ResponseEntity.ok(this.secretService.createProjectSecret(secretDTO));
+    public Secret createSecret(@Valid @RequestBody Secret secretDTO) throws DuplicatedEntityException {
+        return secretService.createSecret(secretDTO);
     }
 
     @Operation(summary = "Update a secret", description = "Update and return a secret")
     @PutMapping(
-        path = "/{uuid}",
+        path = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Secret> updateSecret(
-        @Valid @RequestBody Secret functionDTO,
-        @ValidateField @PathVariable String uuid
-    ) {
-        return ResponseEntity.ok(this.secretService.updateProjectSecret(functionDTO, uuid));
+    public Secret updateSecret(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestBody @Valid @NotNull Secret functionDTO
+    ) throws NoSuchEntityException {
+        return secretService.updateSecret(id, functionDTO);
     }
 
     @Operation(summary = "Delete a secret", description = "Delete a specific secret")
-    @DeleteMapping(path = "/{uuid}")
-    public ResponseEntity<Boolean> deleteSecret(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid
-    ) {
-        return ResponseEntity.ok(this.secretService.deleteProjectSecret(uuid));
+    @DeleteMapping(path = "/{id}")
+    public void deleteSecret(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
+        secretService.deleteSecret(id);
     }
 }

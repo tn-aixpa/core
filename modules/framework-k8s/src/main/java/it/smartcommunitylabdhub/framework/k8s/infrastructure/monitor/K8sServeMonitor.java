@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.events.RunChangedEvent;
 import it.smartcommunitylabdhub.commons.events.RunMonitorObject;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
@@ -18,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
 
 @Slf4j
+@ConditionalOnKubernetes
 @MonitorComponent(framework = "serve")
 public class K8sServeMonitor implements K8sBaseMonitor<Void> {
 

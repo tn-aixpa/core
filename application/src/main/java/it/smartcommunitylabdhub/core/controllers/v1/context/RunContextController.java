@@ -2,18 +2,34 @@ package it.smartcommunitylabdhub.core.controllers.v1.context;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.services.RunService;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.LogService;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.services.context.interfaces.RunContextService;
+import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
 import jakarta.validation.Valid;
-import java.util.Map;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,86 +37,148 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @ApiVersion("v1")
+@RequestMapping("/-/{project}/runs")
+@PreAuthorize(
+    "hasAuthority('ROLE_ADMIN') or (hasAuthority(#project+':ROLE_USER') or hasAuthority(#project+':ROLE_ADMIN'))"
+)
 @Validated
-@Tag(name = "Run context API", description = "Endpoints related to runs management in Context")
-public class RunContextController extends AbstractContextController {
+@Slf4j
+@Tag(name = "Run context API", description = "Endpoints related to runs management for project")
+public class RunContextController {
 
     @Autowired
-    RunContextService RunContextService;
+    SearchableRunService runService;
 
     @Autowired
-    RunService runService;
+    LogService logService;
 
-    @Operation(
-        summary = "Create a Run in a project context",
-        description = "First check if project exist and then create the Run for the project (context)"
-    )
+    @Operation(summary = "Create a run in a project context", description = "create the run for the project (context)")
     @PostMapping(
-        value = "/runs",
+        value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Run> createRun(@ValidateField @PathVariable String project, @Valid @RequestBody Run RunDTO) {
-        return ResponseEntity.ok(this.RunContextService.createRun(project, RunDTO));
+    public Run createRun(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @Valid @NotNull @RequestBody Run dto
+    ) throws DuplicatedEntityException {
+        //enforce project match
+        dto.setProject(project);
+
+        //create as new, will check for duplicated
+        return runService.createRun(dto);
     }
 
     @Operation(
-        summary = "Retrive only the latest version of all Run",
-        description = "First check if project exist and then return a list of Runs related with the project)"
+        summary = "Retrieve all runs for the project, with optional filter",
+        description = "return a list of all runs related to a project"
     )
-    @GetMapping(path = "/runs", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<Run>> getLatestRuns(
-        @RequestParam Map<String, String> filter,
-        @ValidateField @PathVariable String project,
-        Pageable pageable
+    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
+    public Page<Run> getRunsByProject(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @ParameterObject @RequestParam(required = false) @Valid @Nullable RunEntityFilter filter,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+            { @SortDefault(sort = "created", direction = Direction.DESC) }
+        ) Pageable pageable
     ) {
-        return ResponseEntity.ok(this.RunContextService.getAllRunsByProjectName(filter, project, pageable));
+        SearchFilter<RunEntity> sf = null;
+        if (filter != null) {
+            sf = filter.toSearchFilter();
+        }
+
+        return runService.searchRunsByProject(project, pageable, sf);
     }
 
     @Operation(
-        summary = "Retrieve a specific Run given the Run uuid",
-        description = "First check if project exist and then return a specific version of the Run identified by the uuid)"
+        summary = "Retrieve a specific run given the run id",
+        description = "return a specific run identified by the id"
     )
-    @GetMapping(path = "/runs/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Run> getRunByUuid(
-        @ValidateField @PathVariable String project,
-        @ValidateField @PathVariable String uuid
-    ) {
-        return ResponseEntity.ok(this.RunContextService.getByProjectAndRunUuid(project, uuid));
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
+    public Run getRunById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project match
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return run;
     }
 
     @Operation(
-        summary = "Update if exist a Run in a project context",
-        description = "First check if project exist, if Run exist update."
+        summary = "Update if exist a run in a project context",
+        description = "First check if project exist, if run exist update."
     )
     @PutMapping(
-        value = "/runs/{uuid}",
+        value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Run> updateUpdateRun(
-        @ValidateField @PathVariable String project,
-        @ValidateField @PathVariable String uuid,
-        @Valid @RequestBody Run RunDTO
-    ) {
-        return ResponseEntity.ok(this.RunContextService.updateRun(project, uuid, RunDTO));
+    public Run updateRun(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestBody @Valid @NotNull Run runDTO
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project match
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return runService.updateRun(id, runDTO);
     }
 
     @Operation(
-        summary = "Delete a specific Run version",
-        description = "First check if project exist, then delete a specific Run version"
+        summary = "Delete a specific run, with optional cascade",
+        description = "First check if project exist, then delete a specific run"
     )
-    @DeleteMapping(path = "/runs/{uuid}")
-    public ResponseEntity<Boolean> deleteSpecificRunVersion(
-        @ValidateField @PathVariable String project,
-        @ValidateField @PathVariable String uuid
-    ) {
-        // Remove Run and return
-        return ResponseEntity.ok(this.RunContextService.deleteSpecificRunVersion(project, uuid));
+    @DeleteMapping(path = "/{id}")
+    public void deleteRun(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project  match
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        //TODO stop via manager if running
+
+        runService.deleteRun(id, cascade);
+    }
+
+    /*
+     * Logs
+     */
+
+    @Operation(summary = "List logs for a given run", description = "Return a list of logs defined for a specific run")
+    @GetMapping(path = "/{id}/logs", produces = "application/json; charset=UTF-8")
+    public List<Log> getLogs(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        //TODO update logService and enable
+        // return logService.getLogsByRunId(id);
+        return Collections.emptyList();
     }
 }
