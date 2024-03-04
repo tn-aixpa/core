@@ -137,8 +137,8 @@ public class Fsm<S, E, C> {
                                                 notifyEventListeners(eventName, input)
                                             );
 
-                                    // Update the current state and notify state change listener
-                                    currentState = nextState;
+                                            // Update the current state and notify state change listener
+                                            currentState = nextState;
 
                                             // Notify listener for state changed
                                             notifyStateChangeListener(currentState);

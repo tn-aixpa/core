@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import org.springframework.core.convert.converter.Converter;
@@ -47,9 +47,7 @@ public class RunEntityBuilder implements Converter<Run, RunEntity> {
             .task(runSpec.getTask())
             .state(
                 // Store status if not present
-                statusFieldAccessor.getState() == null
-                    ? RunState.CREATED
-                    : RunState.valueOf(statusFieldAccessor.getState())
+                statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
             )
             // Metadata Extraction
             .created(metadata.getCreated())

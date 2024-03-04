@@ -34,12 +34,6 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
         ApplicationEventPublisher eventPublisher,
         K8sDeploymentFramework deploymentFramework
     ) {
-    public K8sServeMonitor(
-        K8sServeFramework k8sServeFramework,
-        RunnableStore<K8sServeRunnable> runnableStore,
-        ApplicationEventPublisher eventPublisher,
-        K8sDeploymentFramework deploymentFramework
-    ) {
         this.k8sServeFramework = k8sServeFramework;
         this.runnableStore = runnableStore;
         this.eventPublisher = eventPublisher;

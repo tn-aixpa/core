@@ -26,11 +26,7 @@ public class RunnableRepository {
 
     public RunnableEntity findById(String id) {
         String sql = "SELECT * FROM runnable WHERE id = ?";
-        return jdbcTemplate.queryForObject(
-            sql,
-            new Object[] { id },
-            BeanPropertyRowMapper.newInstance(RunnableEntity.class)
-        );
+        return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class), id);
     }
 
     public List<RunnableEntity> findAll() {

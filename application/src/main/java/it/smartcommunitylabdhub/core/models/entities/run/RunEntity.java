@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.models.entities.run;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.RunSavedListener;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;

@@ -9,9 +9,9 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunState;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
@@ -244,7 +244,7 @@ public class RunServiceImpl implements SearchableRunService {
                 dto.setSpec(runSpecBuilt.toMap());
 
                 // Update run state to BUILT
-                dto.getStatus().put("state", RunState.BUILT.toString());
+                dto.getStatus().put("state", State.BUILT.toString());
 
                 if (log.isTraceEnabled()) {
                     log.trace("built run: {}", dto);
