@@ -6,7 +6,6 @@ public enum State {
     CREATING,
     READY,
     PENDING,
-
     CREATED,
     RUNNING,
     COMPLETED,
@@ -15,12 +14,10 @@ public enum State {
     ONLINE,
     IDLE,
     ERROR,
-
     FSM_ERROR,
-
     SUCCESS,
     STOPPED,
-
+    UNKNOWN,
     NONE,
     RUN_ERROR,
 }
