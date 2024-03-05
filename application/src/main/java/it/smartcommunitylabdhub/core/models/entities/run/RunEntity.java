@@ -1,10 +1,11 @@
 package it.smartcommunitylabdhub.core.models.entities.run;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.RunSavedListener;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.UUID;
 import lombok.*;
@@ -38,9 +39,6 @@ public class RunEntity implements BaseEntity {
     @Column(nullable = false)
     private String project;
 
-    @Column(nullable = false, name = "task_id")
-    private String taskId;
-
     @Lob
     private byte[] metadata;
 
@@ -68,5 +66,10 @@ public class RunEntity implements BaseEntity {
         if (id == null) {
             this.id = UUID.randomUUID().toString();
         }
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return id;
     }
 }

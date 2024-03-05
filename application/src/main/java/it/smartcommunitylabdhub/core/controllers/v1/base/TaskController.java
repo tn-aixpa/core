@@ -2,18 +2,31 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.services.TaskService;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.TaskEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;
 import jakarta.validation.Valid;
-import java.util.Map;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,56 +38,70 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/tasks")
 @ApiVersion("v1")
-@Tag(name = "Task base API", description = "Endpoints related to tasks management out of the Context")
+@RequestMapping("/tasks")
+//TODO evaluate permissions for project via lookup in dto
 @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@Validated
+@Slf4j
+@Tag(name = "Task base API", description = "Endpoints related to tasks management out of the Context")
 public class TaskController {
 
     @Autowired
-    TaskService taskService;
+    SearchableTaskService taskService;
 
-    @Operation(summary = "Get specific task", description = "Given a uuid return a specific task")
-    @GetMapping(path = "/{uuid}", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Task> getTask(@ValidateField @PathVariable(name = "uuid", required = true) String uuid) {
-        return ResponseEntity.ok(this.taskService.getTask(uuid));
-    }
-
-    @Operation(summary = "List of tasks", description = "Return the list of all tasks")
-    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public ResponseEntity<Page<Task>> getTasks(@RequestParam Map<String, String> filter, Pageable pageable) {
-        return ResponseEntity.ok(this.taskService.getTasks(filter, pageable));
-    }
-
-    @Operation(summary = "Create a task", description = "Create and return a new task")
+    @Operation(summary = "Create task", description = "Create a task and return")
     @PostMapping(
-        path = "",
+        value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Task> createTask(@Valid @RequestBody Task taskDTO) {
-        return ResponseEntity.ok(this.taskService.createTask(taskDTO));
+    public Task createTask(@RequestBody @Valid @NotNull Task dto) throws DuplicatedEntityException {
+        return taskService.createTask(dto);
     }
 
-    @Operation(summary = "Update a task", description = "Update and return a task")
+    @Operation(summary = "List tasks", description = "Return a list of all tasks")
+    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
+    public Page<Task> getTasks(
+        @ParameterObject @RequestParam(required = false) @Valid @Nullable TaskEntityFilter filter,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+            { @SortDefault(sort = "kind", direction = Direction.ASC) }
+        ) Pageable pageable
+    ) {
+        SearchFilter<TaskEntity> sf = null;
+        if (filter != null) {
+            sf = filter.toSearchFilter();
+        }
+
+        return taskService.searchTasks(pageable, sf);
+    }
+
+    @Operation(summary = "Get a task by id", description = "Return a task")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
+    public Task getTask(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
+        throws NoSuchEntityException {
+        return taskService.getTask(id);
+    }
+
+    @Operation(summary = "Update specific task", description = "Update and return the task")
     @PutMapping(
-        path = "/{uuid}",
+        path = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public ResponseEntity<Task> updateTask(
-        @Valid @RequestBody Task functionDTO,
-        @ValidateField @PathVariable String uuid
-    ) {
-        return ResponseEntity.ok(this.taskService.updateTask(functionDTO, uuid));
+    public Task updateTask(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestBody @Valid @NotNull Task dto
+    ) throws NoSuchEntityException {
+        return taskService.updateTask(id, dto);
     }
 
-    @Operation(summary = "Delete a task", description = "Delete a specific task")
-    @DeleteMapping(path = "/{uuid}")
-    public ResponseEntity<Boolean> deleteTask(
-        @ValidateField @PathVariable(name = "uuid", required = true) String uuid,
-        @RequestParam(name = "cascade", defaultValue = "false") Boolean cascade
+    @Operation(summary = "Delete a task", description = "Delete a specific task, with optional cascade on runs")
+    @DeleteMapping(path = "/{id}")
+    public void deleteTask(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
     ) {
-        return ResponseEntity.ok(this.taskService.deleteTask(uuid, cascade));
+        taskService.deleteTask(id, cascade);
     }
 }

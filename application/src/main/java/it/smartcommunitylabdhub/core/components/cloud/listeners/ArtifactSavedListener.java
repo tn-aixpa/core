@@ -26,7 +26,7 @@ public class ArtifactSavedListener {
         // Trigger a custom event when an entity is saved
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                artifactDTOBuilder.build((ArtifactEntity) entity, false),
+                artifactDTOBuilder.build((ArtifactEntity) entity),
                 entity,
                 Artifact.class,
                 EntityAction.CREATE
@@ -39,7 +39,7 @@ public class ArtifactSavedListener {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                artifactDTOBuilder.build((ArtifactEntity) entity, false),
+                artifactDTOBuilder.build((ArtifactEntity) entity),
                 entity,
                 Artifact.class,
                 EntityAction.UPDATE
@@ -52,7 +52,7 @@ public class ArtifactSavedListener {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                artifactDTOBuilder.build((ArtifactEntity) entity, false),
+                artifactDTOBuilder.build((ArtifactEntity) entity),
                 entity,
                 Artifact.class,
                 EntityAction.UPDATE

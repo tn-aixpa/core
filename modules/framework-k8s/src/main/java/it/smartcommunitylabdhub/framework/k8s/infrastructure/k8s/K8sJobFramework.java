@@ -11,12 +11,12 @@ import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.LogService;
-import it.smartcommunitylabdhub.commons.services.RunService;
+import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
-import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
+import it.smartcommunitylabdhub.fsm.types.RunStateMachineFactory;
 import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     //TODO drop from framework, this should be delegated to run listener/service
     //the framework has NO concept of runs, only RUNNABLEs
     @Autowired
-    RunStateMachine runStateMachine;
+    RunStateMachineFactory runStateMachine;
 
     //TODO drop, logs must be handled by a listener
     @Autowired
@@ -73,8 +73,6 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         // Update runnable state..
         runnable.setState(State.RUNNING.name());
 
-        //TODO refactor
-        //        monitor(runnable, job);
         return runnable;
     }
 

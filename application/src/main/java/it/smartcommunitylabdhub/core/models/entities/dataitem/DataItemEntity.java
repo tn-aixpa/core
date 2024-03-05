@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.core.models.entities.dataitem;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.DataItemSavedListener;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;

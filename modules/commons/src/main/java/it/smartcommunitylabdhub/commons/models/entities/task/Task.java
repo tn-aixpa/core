@@ -1,13 +1,23 @@
 package it.smartcommunitylabdhub.commons.models.entities.task;
 
-import com.fasterxml.jackson.annotation.*;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.lang.Nullable;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,14 +27,17 @@ import lombok.*;
 @JsonPropertyOrder(alphabetic = true)
 public class Task implements BaseDTO {
 
-    @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
+    @Nullable
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String id;
 
     @NotNull
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String project;
 
     @NotNull
-    private String kind; // for instance build
+    @Pattern(regexp = Keys.SLUG_PATTERN)
+    private String kind;
 
     @Builder.Default
     private Map<String, Serializable> metadata = new HashMap<>();
@@ -34,11 +47,11 @@ public class Task implements BaseDTO {
     private Map<String, Serializable> spec = new HashMap<>();
 
     @Builder.Default
-    @JsonIgnore
-    private Map<String, Serializable> extra = new HashMap<>();
+    private Map<String, Serializable> status = new HashMap<>();
 
     @Builder.Default
-    private Map<String, Serializable> status = new HashMap<>();
+    @JsonIgnore
+    private Map<String, Serializable> extra = new HashMap<>();
 
     @JsonAnyGetter
     public Map<String, Serializable> getExtra() {
@@ -50,5 +63,10 @@ public class Task implements BaseDTO {
         if (value != null) {
             extra.put(key, value);
         }
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return id;
     }
 }

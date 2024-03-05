@@ -1,9 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.base;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;

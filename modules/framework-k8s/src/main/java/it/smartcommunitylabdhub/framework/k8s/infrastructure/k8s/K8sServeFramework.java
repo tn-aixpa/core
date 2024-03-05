@@ -7,12 +7,12 @@ import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.LogService;
-import it.smartcommunitylabdhub.commons.services.RunService;
+import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.fsm.pollers.PollingService;
-import it.smartcommunitylabdhub.fsm.types.RunStateMachine;
+import it.smartcommunitylabdhub.fsm.types.RunStateMachineFactory;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
@@ -29,23 +29,27 @@ import org.springframework.util.Assert;
 public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Service> {
 
     public static final String FRAMEWORK = "k8sserve";
+
     //TODO drop
     @Autowired
     PollingService pollingService;
+
     //TODO drop from framework, this should be delegated to run listener/service
     //the framework has NO concept of runs, only RUNNABLEs
     @Autowired
-    RunStateMachine runStateMachine;
+    RunStateMachineFactory runStateMachine;
+
     //TODO drop, logs must be handled by a listener
     @Autowired
     LogService logService;
+
     //TODO drop from framework, this should be delegated to run listener/service
     //the framework has NO concept of runs, only RUNNABLEs
     @Autowired
     RunService runService;
+
     @Autowired
     private K8sDeploymentFramework deploymentFramework;
-
 
     public K8sServeFramework(ApiClient apiClient) {
         super(apiClient);
@@ -55,7 +59,6 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     // caller.
     @Override
     public K8sServeRunnable execute(K8sServeRunnable runnable) throws K8sFrameworkException {
-
         V1Deployment deployment = buildDeployment(runnable);
         deployment = deploymentFramework.apply(deployment);
 
@@ -68,25 +71,26 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     }
 
     public V1Deployment buildDeployment(K8sServeRunnable runnable) throws K8sFrameworkException {
-        K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable.builder()
-                .id(runnable.getId())
-                .args(runnable.getArgs())
-                .image(runnable.getImage())
-                .command(runnable.getCommand())
-                .affinity(runnable.getAffinity())
-                .labels(runnable.getLabels())
-                .envs(runnable.getEnvs())
-                .nodeSelector(runnable.getNodeSelector())
-                .replicas(runnable.getReplicas())
-                .resources(runnable.getResources())
-                .project(runnable.getProject())
-                .runtime(runnable.getRuntime())
-                .secrets(runnable.getSecrets())
-                .task(runnable.getTask())
-                .state(State.READY.name())
-                .tolerations(runnable.getTolerations())
-                .volumes(runnable.getVolumes())
-                .build();
+        K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable
+            .builder()
+            .id(runnable.getId())
+            .args(runnable.getArgs())
+            .image(runnable.getImage())
+            .command(runnable.getCommand())
+            .affinity(runnable.getAffinity())
+            .labels(runnable.getLabels())
+            .envs(runnable.getEnvs())
+            .nodeSelector(runnable.getNodeSelector())
+            .replicas(runnable.getReplicas())
+            .resources(runnable.getResources())
+            .project(runnable.getProject())
+            .runtime(runnable.getRuntime())
+            .secrets(runnable.getSecrets())
+            .task(runnable.getTask())
+            .state(State.READY.name())
+            .tolerations(runnable.getTolerations())
+            .volumes(runnable.getVolumes())
+            .build();
 
         return deploymentFramework.build(k8sDeploymentRunnable);
     }
@@ -97,9 +101,9 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         // Generate deploymentName and ContainerName
         String serviceName = k8sBuilderHelper.getServiceName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
         Map<String, String> labels = buildLabels(runnable);
         // Create the V1 service
@@ -110,13 +114,12 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
 
         //build ports
-        List<V1ServicePort> ports = runnable.getServicePorts()
-                .stream()
-                .filter(p -> p.port() != null && p.targetPort() != null)
-                .map(p -> new V1ServicePort()
-                        .port(p.port())
-                        .targetPort(new IntOrString(p.targetPort())).protocol("TCP"))
-                .collect(Collectors.toList());
+        List<V1ServicePort> ports = runnable
+            .getServicePorts()
+            .stream()
+            .filter(p -> p.port() != null && p.targetPort() != null)
+            .map(p -> new V1ServicePort().port(p.port()).targetPort(new IntOrString(p.targetPort())).protocol("TCP"))
+            .collect(Collectors.toList());
 
         // service type (ClusterIP or NodePort)
         String type = Optional.of(runnable.getServiceType().name()).orElse("NodePort");

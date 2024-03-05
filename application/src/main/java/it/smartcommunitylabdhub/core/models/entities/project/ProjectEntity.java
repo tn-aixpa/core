@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.core.models.entities.project;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.smartcommunitylabdhub.commons.models.base.BaseEntity;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.ProjectSavedListener;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -44,8 +44,6 @@ public class ProjectEntity implements BaseEntity {
     @Column(nullable = false)
     private String kind;
 
-    private String description;
-
     private String source;
 
     @Lob
@@ -75,5 +73,10 @@ public class ProjectEntity implements BaseEntity {
         if (id == null) {
             this.id = this.name;
         }
+    }
+
+    @Override
+    public String getProject() {
+        return name;
     }
 }

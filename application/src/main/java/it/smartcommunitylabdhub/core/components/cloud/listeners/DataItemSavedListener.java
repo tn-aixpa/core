@@ -26,7 +26,7 @@ public class DataItemSavedListener {
         // Trigger a custom event when an entity is saved
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                dataItemDTOBuilder.build((DataItemEntity) entity, false),
+                dataItemDTOBuilder.build((DataItemEntity) entity),
                 entity,
                 DataItem.class,
                 EntityAction.CREATE
@@ -39,7 +39,7 @@ public class DataItemSavedListener {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                dataItemDTOBuilder.build((DataItemEntity) entity, false),
+                dataItemDTOBuilder.build((DataItemEntity) entity),
                 entity,
                 DataItem.class,
                 EntityAction.UPDATE
@@ -52,7 +52,7 @@ public class DataItemSavedListener {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                dataItemDTOBuilder.build((DataItemEntity) entity, false),
+                dataItemDTOBuilder.build((DataItemEntity) entity),
                 entity,
                 DataItem.class,
                 EntityAction.UPDATE

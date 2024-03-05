@@ -1,26 +1,26 @@
 package it.smartcommunitylabdhub.commons.models.utils;
 
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
-import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
+import jakarta.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//TODO remove
-@Deprecated(forRemoval = true)
 public class RunUtils {
 
-    public static final Pattern RUN_PATTERN = Pattern.compile("([^:/]+)://([^/]+)/([^/]+):(.+)");
+    public static final Pattern TASK_PARTS = Pattern.compile("([^:/]+)://([^/]+)/([^/]+):(.+)");
+    public static final Pattern TASK_PATTERN = Pattern.compile(Keys.PATH_PATTERN);
 
     private RunUtils() {}
 
     //TODO this goes into the accessor, via a with()
-    public static RunSpecAccessor parseRun(String value) {
-        Matcher matcher = RUN_PATTERN.matcher(value);
+    public static RunSpecAccessor parseTask(String value) {
+        Matcher matcher = TASK_PARTS.matcher(value);
         if (matcher.matches()) {
             String task = matcher.group(1);
             String project = matcher.group(2);
@@ -39,16 +39,22 @@ public class RunUtils {
         throw new IllegalArgumentException("Cannot create accessor for the given Run string.");
     }
 
-    //TODO this should be removed, core shouldn't need this info
-    public static <T extends BaseDTO> String buildRunString(T type, Task task) {
-        if (type instanceof Function) {
-            Function f = (Function) type;
-            return (task.getKind() + "://" + f.getProject() + "/" + f.getName() + ":" + f.getId());
-        } else if (type instanceof Workflow) {
-            Workflow w = (Workflow) type;
-            return (task.getKind() + "://" + w.getProject() + "/" + w.getName() + ":" + w.getId());
-        } else {
-            throw new IllegalArgumentException("Cannot compose Run field for the given object.");
+    public static String buildTaskString(@NotNull Task task) {
+        TaskBaseSpec taskSpec = new TaskBaseSpec();
+        taskSpec.configure(task.getSpec());
+
+        String function = taskSpec.getFunction();
+
+        //run task matches function in task except for identifier
+        Matcher matcher = TASK_PATTERN.matcher(function);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("invalid or missing function in task spec");
         }
+
+        return (task.getKind() + "://" + matcher.group(2));
+    }
+
+    public static String buildWorkflowString(Workflow w, Task task) {
+        return (task.getKind() + "://" + w.getProject() + "/" + w.getName() + ":" + w.getId());
     }
 }

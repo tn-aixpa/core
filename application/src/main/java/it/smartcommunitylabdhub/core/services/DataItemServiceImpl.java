@@ -1,162 +1,224 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.commons.exceptions.CustomException;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.DataItemService;
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
-import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractSpecificationService;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
-import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity_;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
+import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-public class DataItemServiceImpl
-    extends AbstractSpecificationService<DataItemEntity, DataItemEntityFilter>
-    implements DataItemService {
+@Slf4j
+public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Autowired
-    DataItemRepository dataItemRepository;
+    private EntityService<DataItem, DataItemEntity> entityService;
 
     @Autowired
-    DataItemEntityBuilder dataItemEntityBuilder;
-
-    @Autowired
-    DataItemEntityFilter dataItemEntityFilter;
-
-    @Autowired
-    DataItemDTOBuilder dataItemDTOBuilder;
+    SpecRegistry specRegistry;
 
     @Override
-    public Page<DataItem> getDataItems(Map<String, String> filter, Pageable pageable) {
+    public Page<DataItem> listDataItems(Pageable pageable) {
+        log.debug("list dataItems page {}", pageable);
+
+        return entityService.list(pageable);
+    }
+
+    @Override
+    public Page<DataItem> searchDataItems(Pageable pageable, SearchFilter<DataItemEntity> filter) {
+        log.debug("list dataItems page {}, filter {}", pageable, String.valueOf(filter));
+
+        Specification<DataItemEntity> specification = filter != null ? filter.toSpecification() : null;
+        if (specification != null) {
+            return entityService.search(specification, pageable);
+        } else {
+            return entityService.list(pageable);
+        }
+    }
+
+    @Override
+    public List<DataItem> listLatestDataItemsByProject(@NotNull String project) {
+        log.debug("list dataItems for project {}", project);
+        Specification<DataItemEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<DataItem> listLatestDataItemsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list dataItems for project {} page {}", project, pageable);
+        Specification<DataItemEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Page<DataItem> searchLatestDataItemsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        SearchFilter<DataItemEntity> filter
+    ) {
+        log.debug("list dataItems for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<DataItemEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<DataItemEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.latestByProject(project),
+            filterSpecification
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public List<DataItem> findDataItems(@NotNull String project, @NotNull String name) {
+        log.debug("find artifacts for project {} with name {}", project, name);
+
+        //fetch all versions ordered by date DESC
+        Specification<DataItemEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+
+        Specification<DataItemEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(DataItemEntity_.CREATED)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<DataItem> findDataItems(@NotNull String project, @NotNull String name, Pageable pageable) {
+        log.debug("find artifacts for project {} with name {} page {}", project, name, pageable);
+
+        //fetch all versions ordered by date DESC
+        Specification<DataItemEntity> where = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+        Specification<DataItemEntity> specification = (root, query, builder) -> {
+            query.orderBy(builder.desc(root.get(DataItemEntity_.CREATED)));
+            return where.toPredicate(root, query, builder);
+        };
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public DataItem findDataItem(@NotNull String id) {
+        log.debug("find dataItem with id {}", String.valueOf(id));
+
+        return entityService.find(id);
+    }
+
+    @Override
+    public DataItem getDataItem(@NotNull String id) throws NoSuchEntityException {
+        log.debug("get dataItem with id {}", String.valueOf(id));
+
         try {
-            dataItemEntityFilter.setCreatedDate(filter.get("created"));
-            dataItemEntityFilter.setName(filter.get("name"));
-            dataItemEntityFilter.setKind(filter.get("kind"));
-            Optional<State> stateOptional = Stream
-                .of(State.values())
-                .filter(state -> state.name().equals(filter.get("state")))
-                .findAny();
-            dataItemEntityFilter.setState(stateOptional.map(Enum::name).orElse(null));
-
-            Specification<DataItemEntity> specification = createSpecification(filter, dataItemEntityFilter);
-
-            Page<DataItemEntity> dataItemPage = this.dataItemRepository.findAll(specification, pageable);
-
-            return new PageImpl<>(
-                dataItemPage
-                    .getContent()
-                    .stream()
-                    .map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
-                    .collect(Collectors.toList()),
-                pageable,
-                dataItemPage.getTotalElements()
-            );
-        } catch (CustomException e) {
-            throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return entityService.get(id);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
         }
     }
 
     @Override
-    public DataItem createDataItem(DataItem dataItemDTO) {
-        if (dataItemDTO.getId() != null && dataItemRepository.existsById(dataItemDTO.getId())) {
-            throw new CoreException(
-                "DuplicateDataItemId",
-                "Cannot create the dataItem",
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-        Optional<DataItemEntity> savedDataItem = Optional
-            .of(dataItemDTO)
-            .map(dataItemEntityBuilder::build)
-            .map(this.dataItemRepository::saveAndFlush);
-
-        return savedDataItem
-            .map(dataItem -> dataItemDTOBuilder.build(dataItem, false))
-            .orElseThrow(() ->
-                new CoreException("InternalServerError", "Error saving dataItem", HttpStatus.INTERNAL_SERVER_ERROR)
-            );
+    public DataItem getLatestDataItem(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getLatestDataItem'");
     }
 
     @Override
-    public DataItem getDataItem(String uuid) {
-        return dataItemRepository
-            .findById(uuid)
-            .map(dataItem -> {
-                try {
-                    return dataItemDTOBuilder.build(dataItem, false);
-                } catch (CustomException e) {
-                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    "DataItemNotFound",
-                    "The dataItem you are searching for does not exist.",
-                    HttpStatus.NOT_FOUND
-                )
-            );
-    }
-
-    @Override
-    public DataItem updateDataItem(DataItem dataItemDTO, String uuid) {
-        if (!dataItemDTO.getId().equals(uuid)) {
-            throw new CoreException(
-                "DataItemNotMatch",
-                "Trying to update a DataItem with a UUID different from the one passed in the request.",
-                HttpStatus.NOT_FOUND
-            );
+    public DataItem createDataItem(@NotNull DataItem dto) throws DuplicatedEntityException {
+        log.debug("create dataItem");
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", dto);
         }
 
-        return dataItemRepository
-            .findById(uuid)
-            .map(dataItem -> {
-                try {
-                    DataItemEntity dataItemUpdated = dataItemEntityBuilder.update(dataItem, dataItemDTO);
-                    dataItemRepository.saveAndFlush(dataItemUpdated);
-                    return dataItemDTOBuilder.build(dataItemUpdated, false);
-                } catch (CustomException e) {
-                    throw new CoreException("InternalServerError", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            })
-            .orElseThrow(() ->
-                new CoreException(
-                    "DataItemNotFound",
-                    "The dataItem you are searching for does not exist.",
-                    HttpStatus.NOT_FOUND
-                )
-            );
-    }
+        // Parse and export Spec
+        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.DATAITEM, dto.getSpec());
+        if (spec == null) {
+            throw new IllegalArgumentException("invalid kind");
+        }
 
-    @Override
-    public boolean deleteDataItem(String uuid) {
+        //TODO validate
+
+        //update spec as exported
+        dto.setSpec(spec.toMap());
+
         try {
-            if (this.dataItemRepository.existsById(uuid)) {
-                this.dataItemRepository.deleteById(uuid);
-                return true;
+            if (log.isTraceEnabled()) {
+                log.trace("storable dto: {}", dto);
             }
-            throw new CoreException(
-                "DataItemNotFound",
-                "The dataItem you are trying to delete does not exist.",
-                HttpStatus.NOT_FOUND
-            );
-        } catch (Exception e) {
-            throw new CoreException("InternalServerError", "cannot delete dataItem", HttpStatus.INTERNAL_SERVER_ERROR);
+
+            return entityService.create(dto);
+        } catch (DuplicatedEntityException e) {
+            throw new DuplicatedEntityException(EntityName.DATAITEM.toString(), dto.getId());
         }
+    }
+
+    @Override
+    public DataItem updateDataItem(@NotNull String id, @NotNull DataItem dataItemDTO) throws NoSuchEntityException {
+        log.debug("dataItem artifact with id {}", String.valueOf(id));
+        try {
+            //fetch current and merge
+            DataItem current = entityService.get(id);
+
+            //spec is not modificable: enforce current
+            dataItemDTO.setSpec(current.getSpec());
+
+            //update
+            return entityService.update(id, dataItemDTO);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+        }
+    }
+
+    @Override
+    public void deleteDataItem(@NotNull String id) {
+        log.debug("delete dataItem with id {}", String.valueOf(id));
+
+        entityService.delete(id);
+    }
+
+    @Override
+    public void deleteDataItems(@NotNull String project, @NotNull String name) {
+        log.debug("delete dataItems for project {} with name {}", project, name);
+
+        Specification<DataItemEntity> spec = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            CommonSpecification.nameEquals(name)
+        );
+
+        long count = entityService.deleteAll(spec);
+        log.debug("deleted count {}", count);
+    }
+
+    @Override
+    public void deleteDataItemsByProject(@NotNull String project) {
+        log.debug("delete dataItems for project {}", project);
+
+        entityService.deleteAll(CommonSpecification.projectEquals(project));
     }
 }

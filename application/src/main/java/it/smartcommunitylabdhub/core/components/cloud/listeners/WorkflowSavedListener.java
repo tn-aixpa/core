@@ -26,7 +26,7 @@ public class WorkflowSavedListener {
         // Trigger a custom event when an entity is saved
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                workflowDTOBuilder.build((WorkflowEntity) entity, false),
+                workflowDTOBuilder.build((WorkflowEntity) entity),
                 entity,
                 Workflow.class,
                 EntityAction.CREATE
@@ -39,7 +39,7 @@ public class WorkflowSavedListener {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                workflowDTOBuilder.build((WorkflowEntity) entity, false),
+                workflowDTOBuilder.build((WorkflowEntity) entity),
                 entity,
                 Workflow.class,
                 EntityAction.UPDATE
@@ -52,7 +52,7 @@ public class WorkflowSavedListener {
         // Trigger a custom event when an entity is removed
         eventPublisher.publishEvent(
             new EntityEvent<>(
-                workflowDTOBuilder.build((WorkflowEntity) entity, false),
+                workflowDTOBuilder.build((WorkflowEntity) entity),
                 entity,
                 Workflow.class,
                 EntityAction.UPDATE

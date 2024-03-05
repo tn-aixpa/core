@@ -1,6 +1,6 @@
 /**
  * Transaction.java
- *
+ * <p>
  * This class represents a transition in the State Machine. It defines the event, next state, guard,
  * and auto-flag for the transition.
  *
@@ -11,15 +11,15 @@
 
 package it.smartcommunitylabdhub.fsm;
 
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
 public class Transaction<S, E, C> {
 
     private E event;
     private S nextState;
-    private Predicate<C> guard;
+    private BiPredicate<C, C> guard;
 
-    public Transaction(E event, S nextState, Predicate<C> guard) {
+    public Transaction(E event, S nextState, BiPredicate<C, C> guard) {
         this.event = event;
         this.nextState = nextState;
         this.guard = guard;
@@ -48,7 +48,7 @@ public class Transaction<S, E, C> {
      *
      * @return The guard function.
      */
-    public Predicate<C> getGuard() {
+    public BiPredicate<C, C> getGuard() {
         return guard;
     }
 }

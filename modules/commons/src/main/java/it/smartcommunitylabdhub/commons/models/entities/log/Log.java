@@ -1,12 +1,15 @@
 package it.smartcommunitylabdhub.commons.models.entities.log;
 
 import com.fasterxml.jackson.annotation.*;
-import it.smartcommunitylabdhub.commons.annotations.validators.ValidateField;
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.*;
+import org.springframework.lang.Nullable;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,8 +19,11 @@ import lombok.*;
 @JsonPropertyOrder(alphabetic = true)
 public class Log implements BaseDTO {
 
-    @ValidateField(allowNull = true, fieldType = "uuid", message = "Invalid UUID4 string")
+    @Nullable
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String id;
+
+    private String project;
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -43,5 +49,25 @@ public class Log implements BaseDTO {
         if (value != null) {
             extra.put(key, value);
         }
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return id;
+    }
+
+    @Override
+    public @NotNull String getKind() {
+        return "log";
+    }
+
+    @Override
+    public Map<String, Serializable> getSpec() {
+        return body;
+    }
+
+    @Override
+    public void setSpec(Map<String, Serializable> spec) {
+        // nothing to do
     }
 }

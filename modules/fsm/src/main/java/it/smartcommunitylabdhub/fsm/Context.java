@@ -1,21 +1,15 @@
 package it.smartcommunitylabdhub.fsm;
 
-import java.io.Serializable;
-import java.util.Optional;
+import jakarta.annotation.Nullable;
+import lombok.*;
 
-class Context<C> implements Serializable {
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class Context<C> {
 
-    private Optional<C> value;
-
-    public Context(Optional<C> data) {
-        this.value = data;
-    }
-
-    public Optional<C> getValue() {
-        return value;
-    }
-
-    public void setValue(Optional<C> data) {
-        this.value = data;
-    }
+    @Nullable
+    private C value;
 }

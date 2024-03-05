@@ -5,8 +5,10 @@ import io.kubernetes.client.openapi.models.V1Service;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.events.RunChangedEvent;
 import it.smartcommunitylabdhub.commons.events.RunMonitorObject;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
@@ -18,6 +20,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
 
 @Slf4j
+@ConditionalOnKubernetes
 @MonitorComponent(framework = "serve")
 public class K8sServeMonitor implements K8sBaseMonitor<Void> {
 
@@ -26,21 +29,23 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
     private final ApplicationEventPublisher eventPublisher;
     private final K8sDeploymentFramework deploymentFramework;
 
-
-    public K8sServeMonitor(K8sServeFramework k8sServeFramework,
-                           RunnableStore<K8sServeRunnable> runnableStore,
-                           ApplicationEventPublisher eventPublisher,
-                           K8sDeploymentFramework deploymentFramework) {
+    public K8sServeMonitor(
+            K8sServeFramework k8sServeFramework,
+            RunnableStore<K8sServeRunnable> runnableStore,
+            ApplicationEventPublisher eventPublisher,
+            K8sDeploymentFramework deploymentFramework
+    ) {
         this.k8sServeFramework = k8sServeFramework;
         this.runnableStore = runnableStore;
         this.eventPublisher = eventPublisher;
         this.deploymentFramework = deploymentFramework;
     }
 
-
     @Override
     public Void monitor() {
-        runnableStore.findAll().stream()
+        runnableStore
+                .findAll()
+                .stream()
                 .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
                 .flatMap(runnable -> {
                     try {
@@ -48,7 +53,10 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
                         V1Service v1Service = k8sServeFramework.get(k8sServeFramework.build(runnable));
 
                         // check status
-                        Assert.notNull(Objects.requireNonNull(v1Deployment.getStatus()).getReadyReplicas(), "Deployment not ready");
+                        Assert.notNull(
+                                Objects.requireNonNull(v1Deployment.getStatus()).getReadyReplicas(),
+                                "Deployment not ready"
+                        );
                         Assert.isTrue(v1Deployment.getStatus().getReadyReplicas() > 0, "Deployment not ready");
                         Assert.notNull(v1Service.getStatus(), "Service not ready");
 
@@ -56,29 +64,35 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
                         System.out.println("service status: " + v1Service.getStatus());
                         return Stream.of(runnable);
                     } catch (K8sFrameworkException e) {
-
                         // Set Runnable to ERROR state
                         runnable.setState(State.ERROR.name());
                         return Stream.of(runnable);
                     }
-                }).forEach(runnable -> {
+                })
+                .forEach(runnable -> {
+                    // Update the runnable
+                    try {
+                        runnableStore.store(runnable.getId(), runnable);
 
-                            // Update the runnable
-                            runnableStore.update(runnable.getId(), runnable);
-
-                            // Send message to Serve manager
-                            eventPublisher.publishEvent(RunChangedEvent.builder()
-                                    .runMonitorObject(RunMonitorObject.builder()
-                                            .runId(runnable.getId())
-                                            .stateId(runnable.getState())
-                                            .project(runnable.getProject())
-                                            .framework(runnable.getFramework())
-                                            .task(runnable.getTask()).build()
-
-                                    ).build());
-                        }
-
-                );
+                        // Send message to Serve manager
+                        eventPublisher.publishEvent(
+                                RunChangedEvent
+                                        .builder()
+                                        .runMonitorObject(
+                                                RunMonitorObject
+                                                        .builder()
+                                                        .runId(runnable.getId())
+                                                        .stateId(runnable.getState())
+                                                        .project(runnable.getProject())
+                                                        .framework(runnable.getFramework())
+                                                        .task(runnable.getTask())
+                                                        .build()
+                                        )
+                                        .build());
+                    } catch (StoreException e) {
+                        log.error("Error with runnable store: {}", e.getMessage());
+                    }
+                });
 
         //        //TODO cleanup monitoring!
         //        if (pollingService == null || runStateMachine == null || logService == null || runService == null) {

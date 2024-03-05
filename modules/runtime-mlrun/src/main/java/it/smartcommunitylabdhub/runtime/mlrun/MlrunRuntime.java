@@ -8,7 +8,7 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.services.ProjectSecretService;
+import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunMlrunBuilder;
 import it.smartcommunitylabdhub.runtime.mlrun.runners.MlrunMlrunRunner;
@@ -27,7 +27,7 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8
     private final MlrunMlrunBuilder builder = new MlrunMlrunBuilder();
 
     @Autowired
-    ProjectSecretService secretService;
+    SecretService secretService;
 
     @Value("${runtime.mlrun.image}")
     private String image;
@@ -56,7 +56,7 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8
 
         // Create string run accessor from task
         //TODO drop the utils and get the task accessor from the spec.
-        RunSpecAccessor runAccessor = RunUtils.parseRun(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
 
         return switch (runAccessor.getTask()) {
             case TaskMlrunSpec.KIND -> new MlrunMlrunRunner(

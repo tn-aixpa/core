@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.listeners;
 
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
@@ -31,23 +32,26 @@ public class K8sJobRunnableListener {
 
         log.info("Receive runnable for execution: {}", runnable.getId());
 
-        //store runnable
-        runnableStore.store(runnable.getId(), runnable);
-
-        // if READY call execute else STOP(future)
         try {
-            log.debug("Execute runnable {} via framework", runnable.getId());
-            runnable = k8sJobFramework.execute(runnable);
+            //store runnable
+            runnableStore.store(runnable.getId(), runnable);
 
-            log.debug("Update runnable {} via framework", runnable.getId());
-            runnableStore.update(runnable.getId(), runnable);
-            //TODO send run event to RunManager(todo) create an object of type RunState with stateId, runId, project, framework....
-        } catch (K8sFrameworkException e) {
-            log.error("Error with k8s: {}", e.getMessage());
-        } finally {
-            //remove after execution
-            //TODO, needs to cleanup FSM usage in framework
-            log.debug("Completed runnable {}", runnable.getId());
+            // if READY call execute else STOP(future)
+            try {
+                log.debug("Execute runnable {} via framework", runnable.getId());
+                runnable = k8sJobFramework.execute(runnable);
+
+                log.debug("Update runnable {} via framework", runnable.getId());
+                runnableStore.store(runnable.getId(), runnable);
+            } catch (K8sFrameworkException e) {
+                log.error("Error with k8s: {}", e.getMessage());
+            } finally {
+                //remove after execution
+                //TODO, needs to cleanup FSM usage in framework
+                log.debug("Completed runnable {}", runnable.getId());
+            }
+        } catch (StoreException e) {
+            log.error("error with runnable store: {}", e.getMessage());
         }
     }
 }
