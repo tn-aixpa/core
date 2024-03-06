@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.runtime.nefertem;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -24,12 +23,13 @@ import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskInferSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskMetricSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskProfileSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.status.RunNefertemStatus;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 @RuntimeComponent(runtime = NefertemRuntime.RUNTIME)
-public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNefertemSpec, K8sJobRunnable> {
+public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNefertemSpec, RunNefertemStatus, K8sJobRunnable> {
 
     public static final String RUNTIME = "nefertem";
     private final NefertemInferBuilder inferBuilder = new NefertemInferBuilder();
@@ -69,7 +69,7 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
                 return metricBuilder.build(functionSpec, taskMetricSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -84,32 +84,51 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
 
         return switch (runAccessor.getTask()) {
             case TaskInferSpec.KIND -> new NefertemInferRunner(
-                image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskInferSpec().getSecrets())
+                    image,
+                    secretService.groupSecrets(run.getProject(), runSpec.getTaskInferSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskValidateSpec.KIND -> new NefertemValidateRunner(
-                image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskValidateSpec().getSecrets())
+                    image,
+                    secretService.groupSecrets(run.getProject(), runSpec.getTaskValidateSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskProfileSpec.KIND -> new NefertemProfileRunner(
-                image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskProfileSpec().getSecrets())
+                    image,
+                    secretService.groupSecrets(run.getProject(), runSpec.getTaskProfileSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskMetricSpec.KIND -> new NefertemMetricRunner(
-                image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskMetricSpec().getSecrets())
+                    image,
+                    secretService.groupSecrets(run.getProject(), runSpec.getTaskMetricSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
 
     @Override
-    public RunStatus parse() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'parse'");
+    public K8sJobRunnable stop(Run runDTO) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onRunning(Run runDTO, K8sJobRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onComplete(Run runDTO, K8sJobRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onError(Run runDTO, K8sJobRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onStopped(Run runDTO, K8sJobRunnable runnable) {
+        return null;
     }
 }

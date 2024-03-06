@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.runtime.mlrun;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -15,12 +14,13 @@ import it.smartcommunitylabdhub.runtime.mlrun.runners.MlrunMlrunRunner;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.status.RunMlrunStatus;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 @RuntimeComponent(runtime = MlrunRuntime.RUNTIME)
-public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8sJobRunnable> {
+public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, RunMlrunStatus, K8sJobRunnable> {
 
     public static final String RUNTIME = "mlrun";
 
@@ -45,7 +45,7 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8
                 return builder.build(functionSpec, taskMlrunSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -60,17 +60,36 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, K8
 
         return switch (runAccessor.getTask()) {
             case TaskMlrunSpec.KIND -> new MlrunMlrunRunner(
-                image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
+                    image,
+                    secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
 
     @Override
-    public RunStatus parse() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'parse'");
+    public K8sJobRunnable stop(Run runDTO) {
+        return null;
+    }
+
+    @Override
+    public RunMlrunStatus onRunning(Run runDTO, K8sJobRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunMlrunStatus onComplete(Run runDTO, K8sJobRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunMlrunStatus onError(Run runDTO, K8sJobRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunMlrunStatus onStopped(Run runDTO, K8sJobRunnable runnable) {
+        return null;
     }
 }

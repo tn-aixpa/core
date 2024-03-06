@@ -39,58 +39,71 @@ public class RunStateMachineFactory {
      * @return The configured StateMachine instance.
      */
     public Fsm<State, RunEvent, Map<String, Serializable>> builder(
-        State initialState,
-        Map<String, Serializable> initialContext
+            State initialState,
+            Map<String, Serializable> initialContext
     ) {
         // Create a new StateMachine builder with the initial state and context
         Fsm.Builder<State, RunEvent, Map<String, Serializable>> builder = new Fsm.Builder<>(
-            initialState,
-            initialContext
+                initialState,
+                initialContext
         );
 
         // Configure the StateMachine with the defined states and transitions
-        builder
-            .withState(State.CREATED, new FsmState<>())
-            .withTransactions(
-                List.of(
-                    new Transaction<>(RunEvent.BUILD, State.READY, (context, input) -> true),
-                    new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+        builder.withState(
+                        State.CREATED,
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.CREATED)
+                                .withTransactions(List.of(
+                                        new Transaction<>(RunEvent.BUILD, State.BUILT, (context, input) -> true),
+                                        new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                                )).build()
                 )
-            )
-            .withFsm()
-            .withState(State.BUILT, new FsmState<>())
-            .withTransactions(
-                List.of(
-                    new Transaction<>(RunEvent.BUILD, State.READY, (context, input) -> true),
-                    new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                .withState(
+                        State.BUILT,
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.BUILT)
+                                .withTransactions(List.of(
+                                        new Transaction<>(RunEvent.RUN, State.READY, (context, input) -> true),
+                                        new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                                )).build()
                 )
-            )
-            .withFsm()
-            .withState(State.READY, new FsmState<>())
-            .withTransactions(
-                List.of(
-                    new Transaction<>(RunEvent.RUNNING, State.RUNNING, (context, input) -> true),
-                    new Transaction<>(RunEvent.PENDING, State.READY, (context, input) -> true),
-                    new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, (context, input) -> true),
-                    new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                .withState(
+                        State.READY,
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.READY)
+                                .withTransactions(List.of(
+                                        new Transaction<>(RunEvent.EXECUTE, State.RUNNING, (context, input) -> true),
+                                        new Transaction<>(RunEvent.PENDING, State.READY, (context, input) -> true),
+                                        new Transaction<>(RunEvent.COMPLETE, State.COMPLETED, (context, input) -> true),
+                                        new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                                )).build()
                 )
-            )
-            .withFsm()
-            .withState(State.RUNNING, new FsmState<>())
-            .withTransactions(
-                List.of(
-                    new Transaction<>(RunEvent.COMPLETED, State.COMPLETED, (context, input) -> true),
-                    new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                .withState(
+                        State.STOPPED,
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.STOPPED)
+                                .withTransactions(
+                                        List.of(
+                                                new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                                        )
+                                )
+                                .build())
+                .withState(
+                        State.RUNNING,
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.RUNNING)
+                                .withTransactions(List.of(
+                                        new Transaction<>(RunEvent.COMPLETE, State.COMPLETED, (context, input) -> true),
+                                        new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
+                                        new Transaction<>(RunEvent.STOP, State.STOPPED, (context, input) -> true)
+                                )).build()
                 )
-            )
-            .withFsm()
-            .withState(State.COMPLETED, new FsmState<>())
-            .withFsm()
-            .withState(State.ERROR, new FsmState<>())
-            .withFsm()
-            .withErrorState(State.FSM_ERROR, new FsmState<>());
+                .withState(
+                        State.COMPLETED,
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.COMPLETED).build()
+                )
+                .withState(
+                        State.ERROR,
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.ERROR).build())
+                .build();
 
         // Return the builder
+
         return builder.build();
     }
 }

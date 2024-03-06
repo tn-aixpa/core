@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -21,11 +20,12 @@ import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
+import it.smartcommunitylabdhub.runtime.container.status.RunContainerStatus;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
-public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunContainerSpec, Runnable> {
+public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, Runnable> {
 
     public static final String RUNTIME = "container";
 
@@ -58,7 +58,7 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
                 return serveBuilder.build(funSpec, taskServeSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -73,27 +73,46 @@ public class ContainerRuntime implements Runtime<FunctionContainerSpec, RunConta
 
         return switch (runAccessor.getTask()) {
             case TaskDeploySpec.KIND -> new ContainerDeployRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskJobSpec.KIND -> new ContainerJobRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskServeSpec.KIND -> new ContainerServeRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
 
     @Override
-    public RunStatus parse() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'parse'");
+    public Runnable stop(Run runDTO) {
+        return null;
+    }
+
+    @Override
+    public RunContainerStatus onRunning(Run runDTO, Runnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunContainerStatus onComplete(Run runDTO, Runnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunContainerStatus onError(Run runDTO, Runnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunContainerStatus onStopped(Run runDTO, Runnable runnable) {
+        return null;
     }
 }

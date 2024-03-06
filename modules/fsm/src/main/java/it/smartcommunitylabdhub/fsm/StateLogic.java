@@ -15,7 +15,7 @@ import jakarta.annotation.Nullable;
 import java.util.Optional;
 
 @FunctionalInterface
-public interface StateLogic<S, E, C, T> {
+public interface StateLogic<S, E, C, R> {
     /**
      * Apply the internal logic of the state.
      *
@@ -24,5 +24,5 @@ public interface StateLogic<S, E, C, T> {
      * @param stateMachine The state machine instance.
      * @return The optional result from applying the logic.
      */
-    Optional<T> applyLogic(@Nullable C context, @Nullable C input, Fsm<S, E, C> stateMachine);
+    Optional<R> applyLogic(@Nullable C context, @Nullable C input, Fsm<S, E, C> stateMachine);
 }

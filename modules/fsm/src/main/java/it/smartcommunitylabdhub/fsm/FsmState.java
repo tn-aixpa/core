@@ -11,106 +11,52 @@
 
 package it.smartcommunitylabdhub.fsm;
 
-import jakarta.annotation.Nullable;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import lombok.Getter;
+import lombok.Setter;
 
 public class FsmState<S, E, C> {
 
-    private final Map<E, Transaction<S, E, C>> transactions;
-    @Nullable
-    private StateLogic<S, E, C, ?> internalLogic;
+
+    @Getter
+    private final List<Transaction<S, E, C, ?>> transactions;
+    private final S state;
+    @Getter
+    @Setter
     private Consumer<C> entryAction;
+    @Getter
+    @Setter
     private Consumer<C> exitAction;
 
-    /**
-     * Constructs a new FsmState object with default values.
-     */
+
     public FsmState() {
-        internalLogic = null;
-        transactions = new HashMap<>();
+        this.transactions = new ArrayList<>();
+        this.entryAction = null;
+        this.exitAction = null;
+        this.state = null;
     }
 
-    /**
-     * Get the internal logic associated with this state.
-     *
-     * @return The internal logic as a StateLogic instance.
-     */
-    public Optional<StateLogic<S, E, C, ?>> getInternalLogic() {
-        return Optional.ofNullable(internalLogic);
+    public FsmState(S state, List<Transaction<S, E, C, ?>> transactions, Consumer<C> entryAction, Consumer<C> exitAction) {
+        this.transactions = Collections.unmodifiableList(transactions);
+        this.entryAction = entryAction;
+        this.exitAction = exitAction;
+        this.state = state;
     }
 
-    /**
-     * Set the internal logic for this state.
-     *
-     * @param internalLogic The internal logic as a StateLogic instance.
-     * @param <T>           The type of the result from the internal logic.
-     */
-    public <T> void setInternalLogic(@Nullable StateLogic<S, E, C, T> internalLogic) {
-        this.internalLogic = internalLogic;
+
+    public Transaction<S, E, C, ?> getTransaction(E event) {
+        for (Transaction<S, E, C, ?> transaction : transactions) {
+            if (transaction.getEvent().equals(event)) {
+                return transaction;
+            }
+        }
+        return null;
     }
 
-    /**
-     * Add a transaction associated with this state.
-     *
-     * @param transaction The transaction to add.
-     */
-    public void setTransaction(Transaction<S, E, C> transaction) {
-        transactions.put(transaction.getEvent(), transaction);
-    }
-
-    /**
-     * Get the transactions associated with this state.
-     *
-     * @return The map of transactions, where the key is the event and the value is the
-     * corresponding transaction.
-     */
-    public Map<E, Transaction<S, E, C>> getTransactions() {
-        return transactions;
-    }
-
-    public void setTransactions(List<Transaction<S, E, C>> transactionList) {
-        transactionList.forEach(transaction -> transactions.put(transaction.getEvent(), transaction));
-    }
-
-    /**
-     * Get the entry action associated with this state.
-     *
-     * @return The entry action as a Consumer instance.
-     */
-    public Consumer<C> getEntryAction() {
-        return entryAction;
-    }
-
-    /**
-     * Add an entry action associated with this state.
-     *
-     * @param action The entry action as a Consumer instance.
-     */
-    public void setEntryAction(Consumer<C> action) {
-        entryAction = action;
-    }
-
-    /**
-     * Get the exit action associated with this state.
-     *
-     * @return The exit action as a Consumer instance.
-     */
-    public Consumer<C> getExitAction() {
-        return exitAction;
-    }
-
-    /**
-     * Add an exit action associated with this state.
-     *
-     * @param action The exit action as a Consumer instance.
-     */
-    public void setExitAction(Consumer<C> action) {
-        exitAction = action;
-    }
 
     /**
      * Retrieves the transition event associated with a given next state.
@@ -119,15 +65,15 @@ public class FsmState<S, E, C> {
      * @return An Optional containing the transition event if found, or an empty Optional if not
      * found.
      */
-    public Optional<E> getTransitionEvent(S nextState) {
-        // Iterate over the transitions to find the event associated with the next state
-        for (Map.Entry<E, Transaction<S, E, C>> entry : transactions.entrySet()) {
-            if (entry.getValue().getNextState().equals(nextState)) {
-                return Optional.of(entry.getKey()); // Found the matching event
+    public <R> Optional<Transaction<S, E, C, R>> getTransition(S nextState) {
+        for (Transaction<S, E, C, ?> transaction : transactions) {
+            if (transaction.getNextState().equals(nextState)) {
+                return Optional.of((Transaction<S, E, C, R>) transaction);
             }
         }
         return Optional.empty(); // No matching event found
     }
+
 
     /**
      * A builder class for constructing FsmState objects.
@@ -138,33 +84,25 @@ public class FsmState<S, E, C> {
      */
     public static class StateBuilder<S, E, C> {
 
+        private final List<Transaction<S, E, C, ?>> transactions;
         private final S state;
-        private final Fsm.Builder<S, E, C> parentBuilder;
-        private final FsmState<S, E, C> stateDefinition;
+        private Consumer<C> entryAction;
+        private Consumer<C> exitAction;
 
         /**
          * Constructs a new StateBuilder object.
          *
-         * @param state           The state to build.
-         * @param parentBuilder   The parent builder instance.
-         * @param stateDefinition The state definition to modify.
+         * @param state the name of the state
          */
-        public StateBuilder(S state, Fsm.Builder<S, E, C> parentBuilder, FsmState<S, E, C> stateDefinition) {
+        public StateBuilder(S state) {
             this.state = state;
-            this.parentBuilder = parentBuilder;
-            this.stateDefinition = stateDefinition;
+
+            transactions = new ArrayList<>();
+            entryAction = null;
+            exitAction = null;
+
         }
 
-        /**
-         * Set the internal logic for this state.
-         *
-         * @param internalLogic The internal logic as a StateLogic instance.
-         * @return The StateBuilder instance.
-         */
-        public StateBuilder<S, E, C> withInternalLogic(StateLogic<S, E, C, ?> internalLogic) {
-            stateDefinition.setInternalLogic(internalLogic);
-            return this;
-        }
 
         /**
          * Add a transaction associated with this state.
@@ -172,19 +110,19 @@ public class FsmState<S, E, C> {
          * @param transaction The transaction to add.
          * @return The StateBuilder instance.
          */
-        public StateBuilder<S, E, C> withTransaction(Transaction<S, E, C> transaction) {
-            stateDefinition.setTransaction(transaction);
+        public <T> StateBuilder<S, E, C> withTransaction(Transaction<S, E, C, T> transaction) {
+            transactions.add(transaction);
             return this;
         }
 
         /**
          * Add a transaction associated with this state.
          *
-         * @param transactions List of transactions
+         * @param transactionList List of transactions
          * @return The StateBuilder instance.
          */
-        public StateBuilder<S, E, C> withTransactions(List<Transaction<S, E, C>> transactions) {
-            stateDefinition.setTransactions(transactions);
+        public <T> StateBuilder<S, E, C> withTransactions(List<Transaction<S, E, C, T>> transactionList) {
+            transactions.addAll(transactionList);
             return this;
         }
 
@@ -195,7 +133,7 @@ public class FsmState<S, E, C> {
          * @return The StateBuilder instance.
          */
         public StateBuilder<S, E, C> withEntryAction(Consumer<C> action) {
-            stateDefinition.setEntryAction(action);
+            entryAction = action;
             return this;
         }
 
@@ -206,7 +144,7 @@ public class FsmState<S, E, C> {
          * @return The StateBuilder instance.
          */
         public StateBuilder<S, E, C> withExitAction(Consumer<C> action) {
-            stateDefinition.setExitAction(action);
+            exitAction = action;
             return this;
         }
 
@@ -215,9 +153,8 @@ public class FsmState<S, E, C> {
          *
          * @return The parent builder instance.
          */
-        public Fsm.Builder<S, E, C> withFsm() {
-            parentBuilder.withState(state, stateDefinition);
-            return parentBuilder;
+        public FsmState<S, E, C> build() {
+            return new FsmState<>(state, transactions, entryAction, exitAction);
         }
     }
 }

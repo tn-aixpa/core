@@ -27,6 +27,10 @@ public class K8sJobRunnableListener {
     @Async
     @EventListener
     public void listen(K8sJobRunnable runnable) {
+
+        //TODO 
+        // check if ready call execute..
+        // if stop call stop.
         Assert.notNull(runnable, "runnable can not be null");
         Assert.hasText(runnable.getId(), "runnable id can not be null or empty");
 

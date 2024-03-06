@@ -2,9 +2,11 @@ package it.smartcommunitylabdhub.fsm.enums;
 
 public enum RunEvent {
     BUILD,
-    RUNNING,
+
+    RUN,
+    EXECUTE,
     PENDING,
-    COMPLETED,
+    COMPLETE,
     ERROR,
     STOP,
 }
