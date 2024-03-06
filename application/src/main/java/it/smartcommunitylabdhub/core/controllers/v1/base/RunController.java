@@ -12,6 +12,7 @@ import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
+import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -45,21 +46,21 @@ public class RunController {
 
     @Operation(summary = "Create run and exec", description = "Create a run and exec")
     @PostMapping(
-        value = "",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            value = "",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
-    public Run createRun(@RequestBody @Valid @NotNull Run dto) throws DuplicatedEntityException {
+    public Run createRun(@RequestBody @Valid @NotNull Run dto) throws DuplicatedEntityException, NoSuchEntityException, InvalidTransactionException {
         return runService.createRun(dto);
     }
 
     @Operation(summary = "List runs", description = "Return a list of all runs")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Run> getRuns(
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable RunEntityFilter filter,
-        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
-            { @SortDefault(sort = "created", direction = Direction.DESC) }
-        ) Pageable pageable
+            @ParameterObject @RequestParam(required = false) @Valid @Nullable RunEntityFilter filter,
+            @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+                    {@SortDefault(sort = "created", direction = Direction.DESC)}
+            ) Pageable pageable
     ) {
         SearchFilter<RunEntity> sf = null;
         if (filter != null) {
@@ -72,19 +73,19 @@ public class RunController {
     @Operation(summary = "Get a run by id", description = "Return a run")
     @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
     public Run getRun(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
-        throws NoSuchEntityException {
+            throws NoSuchEntityException {
         return runService.getRun(id);
     }
 
     @Operation(summary = "Update specific run", description = "Update and return the run")
     @PutMapping(
-        path = "/{id}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "/{id}",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public Run updateRun(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestBody @Valid @NotNull Run dto
+            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+            @RequestBody @Valid @NotNull Run dto
     ) throws NoSuchEntityException {
         return runService.updateRun(id, dto);
     }
@@ -92,20 +93,20 @@ public class RunController {
     @Operation(summary = "Delete a run", description = "Delete a specific run, with optional cascade on logs")
     @DeleteMapping(path = "/{id}")
     public void deleteRun(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestParam(required = false) Boolean cascade
+            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+            @RequestParam(required = false) Boolean cascade
     ) {
         runService.deleteRun(id, cascade);
     }
 
     @Operation(summary = "Stop a run", description = "Stop a specific run")
     @PostMapping(
-        path = "/{id}/stop",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
+            path = "/{id}/stop",
+            consumes = {MediaType.APPLICATION_JSON_VALUE, "application/x-yaml"},
+            produces = "application/json; charset=UTF-8"
     )
     public ResponseEntity<Boolean> stopRun(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) {
         //TODO move to service!
         // Runnable runnable = runnableStoreService.find(uuid);

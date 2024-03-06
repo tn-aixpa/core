@@ -93,7 +93,7 @@ public class Fsm<S, E, C> {
      * @param input       The input associated with the transition.
      * @param <R>         The type of the input.
      */
-    public <R> Optional<R> goToState(S targetState, @Nullable C input) {
+    public <R> Optional<R> goToState(S targetState, @Nullable C input) throws InvalidTransactionException {
         return acquireLock()
                 .flatMap(lockAcquired -> {
                     if (lockAcquired) {
@@ -102,8 +102,7 @@ public class Fsm<S, E, C> {
                             List<S> path = findPath(currentState, targetState);
                             if (path.isEmpty()) {
                                 // No valid path exists; transition to the error state
-                                throw new InvalidTransactionException(
-                                        "No path to target state: " + targetState + " from current state: " + currentState);
+                                throw new InvalidTransactionException(currentState.toString(), targetState.toString());
                             }
 
                             // Follow the path for all element except the last transaction
