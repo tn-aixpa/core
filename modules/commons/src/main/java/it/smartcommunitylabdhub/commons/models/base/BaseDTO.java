@@ -18,6 +18,8 @@ public interface BaseDTO extends Serializable {
 
     String getProject();
 
+    String getKey();
+
     Map<String, Serializable> getMetadata();
 
     void setMetadata(Map<String, Serializable> metadata);

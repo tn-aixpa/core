@@ -70,4 +70,18 @@ public class Log implements BaseDTO {
     public void setSpec(Map<String, Serializable> spec) {
         // nothing to do
     }
+
+    @Override
+    public String getKey() {
+        return (
+            Keys.STORE_PREFIX +
+            getProject() +
+            Keys.PATH_DIVIDER +
+            "logs" +
+            Keys.PATH_DIVIDER +
+            getKind() +
+            Keys.PATH_DIVIDER +
+            getId()
+        );
+    }
 }

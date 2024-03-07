@@ -67,18 +67,8 @@ public class DataItemContextController {
         //enforce project match
         dto.setProject(project);
 
-        String name = dto.getName();
-
-        try {
-            @SuppressWarnings("unused")
-            DataItem dataItem = dataItemService.getLatestDataItem(project, name);
-
-            //there is already an entity with the same name
-            throw new DuplicatedEntityException(name);
-        } catch (NoSuchEntityException e) {
-            //create as new
-            return dataItemService.createDataItem(dto);
-        }
+        //create as new
+        return dataItemService.createDataItem(dto);
     }
 
     @Operation(

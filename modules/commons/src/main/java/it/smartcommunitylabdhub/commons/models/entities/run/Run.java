@@ -61,4 +61,18 @@ public class Run implements BaseDTO {
     public String getName() {
         return id;
     }
+
+    @Override
+    public String getKey() {
+        return (
+            Keys.STORE_PREFIX +
+            getProject() +
+            Keys.PATH_DIVIDER +
+            "runs" +
+            Keys.PATH_DIVIDER +
+            getKind() +
+            Keys.PATH_DIVIDER +
+            getId()
+        );
+    }
 }

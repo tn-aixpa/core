@@ -65,18 +65,8 @@ public class FunctionContextController {
         //enforce project match
         dto.setProject(project);
 
-        String name = dto.getName();
-
-        try {
-            @SuppressWarnings("unused")
-            Function function = functionService.getLatestFunction(project, name);
-
-            //there is already an entity with the same name
-            throw new DuplicatedEntityException(name);
-        } catch (NoSuchEntityException e) {
-            //create as new
-            return functionService.createFunction(dto);
-        }
+        //create as new
+        return functionService.createFunction(dto);
     }
 
     @Operation(
