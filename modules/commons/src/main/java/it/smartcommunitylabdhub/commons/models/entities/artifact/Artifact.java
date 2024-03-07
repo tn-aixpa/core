@@ -71,4 +71,20 @@ public class Artifact implements BaseDTO {
             extra.put(key, value);
         }
     }
+
+    @Override
+    public String getKey() {
+        return (
+            Keys.STORE_PREFIX +
+            getProject() +
+            Keys.PATH_DIVIDER +
+            "artifacts" +
+            Keys.PATH_DIVIDER +
+            getKind() +
+            Keys.PATH_DIVIDER +
+            getName() +
+            Keys.ID_DIVIDER +
+            getId()
+        );
+    }
 }

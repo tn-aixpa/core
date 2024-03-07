@@ -67,18 +67,8 @@ public class ArtifactContextController {
         //enforce project match
         dto.setProject(project);
 
-        String name = dto.getName();
-
-        try {
-            @SuppressWarnings("unused")
-            Artifact artifact = artifactService.getLatestArtifact(project, name);
-
-            //there is already an entity with the same name
-            throw new DuplicatedEntityException(name);
-        } catch (NoSuchEntityException e) {
-            //create as new
-            return artifactService.createArtifact(dto);
-        }
+        //create as new
+        return artifactService.createArtifact(dto);
     }
 
     @Operation(
