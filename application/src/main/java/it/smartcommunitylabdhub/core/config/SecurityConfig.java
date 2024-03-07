@@ -151,7 +151,7 @@ public class SecurityConfig {
                 List<String> roles = source.getClaimAsStringList(claim);
                 if (roles != null) {
                     roles.forEach(r -> {
-                        if (r.contains(":")) {
+                        if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
                             //use as is
                             authorities.add(new SimpleGrantedAuthority(r));
                         } else {
