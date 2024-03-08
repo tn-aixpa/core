@@ -32,6 +32,7 @@ public class Fsm<S, E, C> {
     @Setter
     private String uuid;
 
+    @Getter
     private S currentState;
 
     private Map<S, FsmState<S, E, C>> states;
@@ -124,7 +125,6 @@ public class Fsm<S, E, C> {
                 });
     }
 
-
     /**
      * Add a single event listener to the map if not present
      *
@@ -135,11 +135,9 @@ public class Fsm<S, E, C> {
         eventListeners.putIfAbsent(event, listener);
     }
 
-
     public FsmState<S, E, C> getState(S state) {
         return states.get(state);
     }
-
 
     /**
      * Find a path from the source state to the target state in the state machine.
@@ -166,7 +164,6 @@ public class Fsm<S, E, C> {
         }
     }
 
-
     private <R> Optional<R> execute(S stateInPath, S nextStateInPath, C input) {
         // Get state definition
         //S stateInPath = path.get(i);
@@ -182,14 +179,11 @@ public class Fsm<S, E, C> {
                 .ofNullable(nextStateInPath)
                 .flatMap(nextState -> {
                     // Retrieve the transition event dynamically
-                    Optional<Transaction<S, E, C, R>> transaction =
-                            stateDefinition.getTransition(nextState);
+                    Optional<Transaction<S, E, C, R>> transaction = stateDefinition.getTransition(nextState);
 
                     // Check if a transition event exists and if guard condition is satisfied
                     return transaction.map(transition -> {
                         if (transition.getGuard().test(context.getValue(), input)) {
-
-
                             // Notify event listeners for the transition event
                             notifyEventListeners(transition.getEvent(), input);
 
@@ -213,13 +207,13 @@ public class Fsm<S, E, C> {
                                     .ifPresent(entryAction -> entryAction.accept(context.getValue()));
 
                             return result;
-
                         } else {
                             return Optional.<R>empty();
                             // Guard condition not satisfied, skip this transition
                         }
                     });
-                }).orElse(Optional.empty());
+                })
+                .orElse(Optional.empty());
     }
 
     /**
@@ -248,13 +242,15 @@ public class Fsm<S, E, C> {
         // Get the current state's definition
         FsmState<S, E, C> stateDefinition = states.get(currentState);
 
-        // Iterate over the transitions from the current state
-        for (Transaction<S, E, C, ?> transaction : stateDefinition.getTransactions()) {
-            // Check if the next state in the transaction is unvisited
-            if (!visited.contains(transaction.getNextState())) {
-                // Recursively search for a path from the next state to the target state
-                if (this.<R>dfs(transaction.getNextState(), targetState, visited, path)) {
-                    return true; // A valid path is found
+        if (stateDefinition != null) {
+            // Iterate over the transitions from the current state
+            for (Transaction<S, E, C, ?> transaction : stateDefinition.getTransactions()) {
+                // Check if the next state in the transaction is unvisited
+                if (!visited.contains(transaction.getNextState())) {
+                    // Recursively search for a path from the next state to the target state
+                    if (this.<R>dfs(transaction.getNextState(), targetState, visited, path)) {
+                        return true; // A valid path is found
+                    }
                 }
             }
         }
@@ -326,6 +322,7 @@ public class Fsm<S, E, C> {
 
         @Getter
         private final Map<S, FsmState<S, E, C>> states;
+
         private final ConcurrentHashMap<E, BiConsumer<C, C>> eventListeners;
         private final Context<C> initialContext;
         private BiConsumer<S, C> stateChangeListener;
@@ -349,7 +346,6 @@ public class Fsm<S, E, C> {
             return this;
         }
 
-
         /**
          * Adds an event listener to the builder's configuration.
          *
@@ -372,7 +368,6 @@ public class Fsm<S, E, C> {
             stateChangeListener = listener;
             return this;
         }
-
 
         public Fsm<S, E, C> build() {
             Fsm<S, E, C> stateMachine = new Fsm<>(currentState, initialContext);

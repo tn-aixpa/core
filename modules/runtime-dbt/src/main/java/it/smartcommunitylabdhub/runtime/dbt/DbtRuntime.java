@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.runtime.dbt;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -46,7 +47,7 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtSt
                 return builder.build(functionSpec, taskTransformSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
-                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -62,36 +63,47 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtSt
 
         return switch (runAccessor.getTask()) {
             case TaskTransformSpec.KIND -> new DbtTransformRunner(
-                    image,
-                    secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
+                image,
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
             )
-                    .produce(run);
+                .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
 
     @Override
-    public K8sJobRunnable stop(Run runDTO) {
+    public K8sJobRunnable stop(Run run) {
+        //
         return null;
     }
 
     @Override
-    public RunDbtStatus onRunning(Run runDTO, K8sJobRunnable runnable) {
+    public K8sJobRunnable delete(Run run) {
         return null;
     }
 
     @Override
-    public RunDbtStatus onComplete(Run runDTO, K8sJobRunnable runnable) {
+    public RunDbtStatus onRunning(Run run, RunRunnable runnable) {
         return null;
     }
 
     @Override
-    public RunDbtStatus onError(Run runDTO, K8sJobRunnable runnable) {
+    public RunDbtStatus onComplete(Run run, RunRunnable runnable) {
         return null;
     }
 
     @Override
-    public RunDbtStatus onStopped(Run runDTO, K8sJobRunnable runnable) {
+    public RunDbtStatus onError(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onStopped(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onDeleted(Run run, RunRunnable runnable) {
         return null;
     }
 }

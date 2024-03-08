@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.fsm.exceptions;
 import java.text.MessageFormat;
 
 public class InvalidTransactionException extends RuntimeException {
+
     public static final String DEFAULT_MESSAGE = "Invalid transaction from state {0} to state {1}.";
 
     public InvalidTransactionException() {
@@ -16,7 +17,6 @@ public class InvalidTransactionException extends RuntimeException {
     public InvalidTransactionException(Throwable cause) {
         super(build("StateA", "StateB"), cause);
     }
-
 
     public InvalidTransactionException(String from, String to, Throwable cause) {
         super(build(from, to), cause);

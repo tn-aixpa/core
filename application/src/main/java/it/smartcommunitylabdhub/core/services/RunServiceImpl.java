@@ -21,7 +21,6 @@ import it.smartcommunitylabdhub.core.models.entities.run.RunEntity_;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -44,14 +43,19 @@ public class RunServiceImpl implements SearchableRunService {
 
     @Autowired
     SpecRegistry specRegistry;
+
     @Autowired
     RunManager runManager;
+
     @Autowired
     private EntityService<Run, RunEntity> entityService;
+
     @Autowired
     private EntityService<Task, TaskEntity> taskEntityService;
+
     @Autowired
     private EntityService<Function, FunctionEntity> functionEntityService;
+
     //TODO move to RunManager
     @Autowired
     private RuntimeFactory runtimeFactory;
@@ -89,15 +93,15 @@ public class RunServiceImpl implements SearchableRunService {
 
     @Override
     public Page<Run> searchRunsByProject(
-            @NotNull String project,
-            Pageable pageable,
-            @Nullable SearchFilter<RunEntity> filter
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<RunEntity> filter
     ) {
         log.debug("list runs for project {} with {} page {}", project, String.valueOf(filter), pageable);
         Specification<RunEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
         Specification<RunEntity> specification = Specification.allOf(
-                CommonSpecification.projectEquals(project),
-                filterSpecification
+            CommonSpecification.projectEquals(project),
+            filterSpecification
         );
 
         return entityService.search(specification, pageable);
@@ -114,8 +118,8 @@ public class RunServiceImpl implements SearchableRunService {
 
         //define a spec for runs building task path
         Specification<RunEntity> where = Specification.allOf(
-                CommonSpecification.projectEquals(task.getProject()),
-                createTaskSpecification(RunUtils.buildTaskString(task))
+            CommonSpecification.projectEquals(task.getProject()),
+            createTaskSpecification(RunUtils.buildTaskString(task))
         );
 
         //fetch all runs ordered by created DESC
@@ -146,7 +150,7 @@ public class RunServiceImpl implements SearchableRunService {
     }
 
     @Override
-    public Run createRun(@NotNull Run dto) throws DuplicatedEntityException, InvalidTransactionException, NoSuchEntityException {
+    public Run createRun(@NotNull Run dto) throws DuplicatedEntityException {
         log.debug("create run");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
@@ -214,9 +218,9 @@ public class RunServiceImpl implements SearchableRunService {
         // retrieve task by looking up value
         // define a spec for matching task
         Specification<TaskEntity> where = Specification.allOf(
-                CommonSpecification.projectEquals(function.getProject()),
-                createFunctionSpecification(TaskUtils.buildFunctionString(function)),
-                createTaskKindSpecification(runSpecAccessor.getTask())
+            CommonSpecification.projectEquals(function.getProject()),
+            createFunctionSpecification(TaskUtils.buildFunctionString(function)),
+            createTaskKindSpecification(runSpecAccessor.getTask())
         );
 
         Task task = taskEntityService.searchAll(where).stream().findFirst().orElse(null);
@@ -225,21 +229,10 @@ public class RunServiceImpl implements SearchableRunService {
         }
 
         try {
-
-            dto = entityService.create(dto);
-
-            dto = runManager.build(dto);
-
-            dto = runManager.run(dto);
-
-            return dto;
-
+            // store the run in db
+            return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
             throw new DuplicatedEntityException(EntityName.RUN.toString(), dto.getId());
-        } catch (InvalidTransactionException e) {
-            throw new InvalidTransactionException(e);
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(e);
         }
     }
 

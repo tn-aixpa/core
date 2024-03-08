@@ -24,14 +24,12 @@ public class RunnableRepository {
     }
 
     public RunnableEntity findById(String clazz, String id) {
-
         try {
             String sql = "SELECT * FROM runnable WHERE id = ? and clazz = ?";
             return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(RunnableEntity.class), id, clazz);
         } catch (Exception e) {
             return null;
         }
-
     }
 
     public List<RunnableEntity> findAll(String clazz) {

@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.config;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
-import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
@@ -23,20 +23,22 @@ public class InfrastructureConfig {
 
     @Bean
     protected RuntimeFactory runtimeFactory(
-            List<Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends RunBaseStatus, ? extends Runnable>> runtimes
+        List<
+            Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends RunBaseStatus, ? extends RunRunnable>
+        > runtimes
     ) {
         return new RuntimeFactory(runtimes);
     }
 
     @Bean
     protected BuilderFactory builderFactory(
-            List<Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
+        List<Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
     ) {
         return new BuilderFactory(builders);
     }
 
     @Bean
-    protected RunnerFactory runnerFactory(List<Runner<? extends Runnable>> runners) {
+    protected RunnerFactory runnerFactory(List<Runner<? extends RunRunnable>> runners) {
         return new RunnerFactory(runners);
     }
 
@@ -44,7 +46,7 @@ public class InfrastructureConfig {
     protected RunnableStore.StoreSupplier runnableStoreService(RunnableRepository runnableRepository) {
         return new RunnableStore.StoreSupplier() {
             @Override
-            public <T extends Runnable> RunnableStore<T> get(Class<T> clazz) {
+            public <T extends RunRunnable> RunnableStore<T> get(Class<T> clazz) {
                 return new RunnableStoreServiceImpl<>(clazz, runnableRepository);
             }
         };

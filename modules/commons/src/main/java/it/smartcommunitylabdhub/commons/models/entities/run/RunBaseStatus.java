@@ -13,12 +13,13 @@ import lombok.*;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RunBaseStatus extends BaseSpec {
-    private String status;
+
+    private String state;
 
     @Override
     public void configure(Map<String, Serializable> data) {
         RunBaseStatus meta = mapper.convertValue(data, RunBaseStatus.class);
 
-        this.status = meta.getStatus();
+        this.state = meta.getState();
     }
 }

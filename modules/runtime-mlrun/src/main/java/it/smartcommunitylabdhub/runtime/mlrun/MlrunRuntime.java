@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.runtime.mlrun;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -45,7 +47,7 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
                 return builder.build(functionSpec, taskMlrunSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
-                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -60,36 +62,46 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
 
         return switch (runAccessor.getTask()) {
             case TaskMlrunSpec.KIND -> new MlrunMlrunRunner(
-                    image,
-                    secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
+                image,
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
             )
-                    .produce(run);
+                .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
 
     @Override
-    public K8sJobRunnable stop(Run runDTO) {
+    public K8sJobRunnable stop(Run run) throws StoreException {
         return null;
     }
 
     @Override
-    public RunMlrunStatus onRunning(Run runDTO, K8sJobRunnable runnable) {
+    public K8sJobRunnable delete(Run run) {
         return null;
     }
 
     @Override
-    public RunMlrunStatus onComplete(Run runDTO, K8sJobRunnable runnable) {
+    public RunMlrunStatus onRunning(Run run, RunRunnable runnable) {
         return null;
     }
 
     @Override
-    public RunMlrunStatus onError(Run runDTO, K8sJobRunnable runnable) {
+    public RunMlrunStatus onComplete(Run run, RunRunnable runnable) {
         return null;
     }
 
     @Override
-    public RunMlrunStatus onStopped(Run runDTO, K8sJobRunnable runnable) {
+    public RunMlrunStatus onError(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunMlrunStatus onStopped(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunMlrunStatus onDeleted(Run run, RunRunnable runnable) {
         return null;
     }
 }

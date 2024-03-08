@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.commons.events;
 
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import lombok.*;
 
 @Builder
@@ -7,7 +8,8 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RunChangedEvent {
+public class RunChangedEvent<R extends RunRunnable> {
 
     private RunMonitorObject runMonitorObject;
+    private R runnable;
 }

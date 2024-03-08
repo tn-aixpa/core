@@ -37,7 +37,6 @@ public class Transaction<S, E, C, R> {
         internalLogic = null;
     }
 
-
     /**
      * Get the internal logic associated with this state.
      *
@@ -55,5 +54,4 @@ public class Transaction<S, E, C, R> {
     public <T> void setInternalLogic(@Nullable StateLogic<S, E, C, T> internalLogic) {
         this.internalLogic = (StateLogic<S, E, C, R>) internalLogic; // Type casting
     }
-
 }

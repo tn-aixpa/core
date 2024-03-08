@@ -21,17 +21,18 @@ import lombok.Setter;
 
 public class FsmState<S, E, C> {
 
-
     @Getter
     private final List<Transaction<S, E, C, ?>> transactions;
+
     private final S state;
+
     @Getter
     @Setter
     private Consumer<C> entryAction;
+
     @Getter
     @Setter
     private Consumer<C> exitAction;
-
 
     public FsmState() {
         this.transactions = new ArrayList<>();
@@ -40,13 +41,17 @@ public class FsmState<S, E, C> {
         this.state = null;
     }
 
-    public FsmState(S state, List<Transaction<S, E, C, ?>> transactions, Consumer<C> entryAction, Consumer<C> exitAction) {
+    public FsmState(
+        S state,
+        List<Transaction<S, E, C, ?>> transactions,
+        Consumer<C> entryAction,
+        Consumer<C> exitAction
+    ) {
         this.transactions = Collections.unmodifiableList(transactions);
         this.entryAction = entryAction;
         this.exitAction = exitAction;
         this.state = state;
     }
-
 
     public Transaction<S, E, C, ?> getTransaction(E event) {
         for (Transaction<S, E, C, ?> transaction : transactions) {
@@ -56,7 +61,6 @@ public class FsmState<S, E, C> {
         }
         return null;
     }
-
 
     /**
      * Retrieves the transition event associated with a given next state.
@@ -73,7 +77,6 @@ public class FsmState<S, E, C> {
         }
         return Optional.empty(); // No matching event found
     }
-
 
     /**
      * A builder class for constructing FsmState objects.
@@ -100,9 +103,7 @@ public class FsmState<S, E, C> {
             transactions = new ArrayList<>();
             entryAction = null;
             exitAction = null;
-
         }
-
 
         /**
          * Add a transaction associated with this state.

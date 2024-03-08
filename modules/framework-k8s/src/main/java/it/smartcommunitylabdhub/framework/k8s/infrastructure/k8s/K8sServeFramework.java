@@ -6,13 +6,9 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.LogService;
-import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-import it.smartcommunitylabdhub.fsm.pollers.PollingService;
-import it.smartcommunitylabdhub.fsm.types.RunStateMachineFactory;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
@@ -30,24 +26,6 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
     public static final String FRAMEWORK = "k8sserve";
 
-    //TODO drop
-    @Autowired
-    PollingService pollingService;
-
-    //TODO drop from framework, this should be delegated to run listener/service
-    //the framework has NO concept of runs, only RUNNABLEs
-    @Autowired
-    RunStateMachineFactory runStateMachine;
-
-    //TODO drop, logs must be handled by a listener
-    @Autowired
-    LogService logService;
-
-    //TODO drop from framework, this should be delegated to run listener/service
-    //the framework has NO concept of runs, only RUNNABLEs
-    @Autowired
-    RunService runService;
-
     @Autowired
     private K8sDeploymentFramework deploymentFramework;
 
@@ -58,7 +36,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
-    public K8sServeRunnable execute(K8sServeRunnable runnable) throws K8sFrameworkException {
+    public K8sServeRunnable run(K8sServeRunnable runnable) throws K8sFrameworkException {
         V1Deployment deployment = buildDeployment(runnable);
         deployment = deploymentFramework.apply(deployment);
 
@@ -66,6 +44,19 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         service = apply(service);
 
         runnable.setState(State.RUNNING.name());
+
+        return runnable;
+    }
+
+    @Override
+    public K8sServeRunnable delete(K8sServeRunnable runnable) throws K8sFrameworkException {
+        V1Deployment deployment = buildDeployment(runnable);
+        deployment = deploymentFramework.apply(deployment);
+
+        V1Service service = build(runnable);
+        service = apply(service);
+
+        runnable.setState(State.DELETED.name());
 
         return runnable;
     }

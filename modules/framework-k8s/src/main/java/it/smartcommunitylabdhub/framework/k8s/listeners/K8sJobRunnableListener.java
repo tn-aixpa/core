@@ -27,8 +27,7 @@ public class K8sJobRunnableListener {
     @Async
     @EventListener
     public void listen(K8sJobRunnable runnable) {
-
-        //TODO 
+        //TODO
         // check if ready call execute..
         // if stop call stop.
         Assert.notNull(runnable, "runnable can not be null");
@@ -37,13 +36,21 @@ public class K8sJobRunnableListener {
         log.info("Receive runnable for execution: {}", runnable.getId());
 
         try {
+            // Read action from runnable
+            // if run execute
+            // if stop stop
+            ///
+            //...
+
+            /// store runnable
+
             //store runnable
             runnableStore.store(runnable.getId(), runnable);
 
             // if READY call execute else STOP(future)
             try {
                 log.debug("Execute runnable {} via framework", runnable.getId());
-                runnable = k8sJobFramework.execute(runnable);
+                runnable = k8sJobFramework.run(runnable);
 
                 log.debug("Update runnable {} via framework", runnable.getId());
                 runnableStore.store(runnable.getId(), runnable);

@@ -38,7 +38,7 @@ public class K8sDeploymentRunnableListener {
 
             try {
                 log.debug("Execute runnable {} via framework", runnable.getId());
-                runnable = k8sDeployFramework.execute(runnable);
+                runnable = k8sDeployFramework.run(runnable);
 
                 log.debug("Update runnable {} via framework", runnable.getId());
                 runnableStore.store(runnable.getId(), runnable);
