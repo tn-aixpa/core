@@ -21,6 +21,21 @@ public interface FunctionService {
     Page<Function> listFunctions(Pageable pageable);
 
     /**
+     * List all versions of every function for a project
+     * @param project
+     * @return
+     */
+    List<Function> listFunctionsByProject(@NotNull String project);
+
+    /**
+     * List all versions of every function for a project
+     * @param project
+     * @param pageable
+     * @return
+     */
+    Page<Function> listFunctionsByProject(@NotNull String project, Pageable pageable);
+
+    /**
      * List the latest version of every function for a project
      * @param project
      * @return

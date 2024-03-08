@@ -58,7 +58,7 @@ public class RunContextController {
     @Autowired
     LogService logService;
 
-    @Operation(summary = "Create a run in a project context", description = "create the run for the project (context)")
+    @Operation(summary = "Create a run in a project context")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
@@ -75,14 +75,11 @@ public class RunContextController {
         return runService.createRun(dto);
     }
 
-    @Operation(
-        summary = "Retrieve all runs for the project, with optional filter",
-        description = "return a list of all runs related to a project"
-    )
+    @Operation(summary = "Retrieve all runs for the project, with optional filter")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public Page<Run> getRunsByProject(
+    public Page<Run> searchRuns(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable RunEntityFilter filter,
+        @ParameterObject @Valid @Nullable RunEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
@@ -95,10 +92,7 @@ public class RunContextController {
         return runService.searchRunsByProject(project, pageable, sf);
     }
 
-    @Operation(
-        summary = "Retrieve a specific run given the run id",
-        description = "return a specific run identified by the id"
-    )
+    @Operation(summary = "Retrieve a specific run given the run id")
     @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
     public Run getRunById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
@@ -114,16 +108,13 @@ public class RunContextController {
         return run;
     }
 
-    @Operation(
-        summary = "Update if exist a run in a project context",
-        description = "First check if project exist, if run exist update."
-    )
+    @Operation(summary = "Update if exist a run in a project context")
     @PutMapping(
         value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Run updateRun(
+    public Run updateRunById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Run runDTO
@@ -138,12 +129,9 @@ public class RunContextController {
         return runService.updateRun(id, runDTO);
     }
 
-    @Operation(
-        summary = "Delete a specific run, with optional cascade",
-        description = "First check if project exist, then delete a specific run"
-    )
+    @Operation(summary = "Delete a specific run, with optional cascade")
     @DeleteMapping(path = "/{id}")
-    public void deleteRun(
+    public void deleteRunById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam(required = false) Boolean cascade
@@ -166,7 +154,7 @@ public class RunContextController {
 
     @Operation(summary = "List logs for a given run", description = "Return a list of logs defined for a specific run")
     @GetMapping(path = "/{id}/logs", produces = "application/json; charset=UTF-8")
-    public List<Log> getLogs(
+    public List<Log> getLogsByRunId(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {

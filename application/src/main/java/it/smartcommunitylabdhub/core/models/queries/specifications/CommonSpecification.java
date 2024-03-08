@@ -43,4 +43,23 @@ public class CommonSpecification {
             );
         };
     }
+
+    public static <T extends BaseEntity> Specification<T> latestByProject(String project, String name) {
+        return (root, query, criteriaBuilder) -> {
+            Subquery<Number> subquery = query.subquery(Number.class);
+            Root<T> subqueryRoot = (Root<T>) subquery.from(root.getJavaType());
+
+            subquery.select(criteriaBuilder.max(subqueryRoot.get("created")));
+            subquery.where(
+                criteriaBuilder.equal(subqueryRoot.get("project"), project),
+                criteriaBuilder.equal(subqueryRoot.get("name"), name)
+            );
+
+            return criteriaBuilder.and(
+                criteriaBuilder.equal(root.get("project"), project),
+                criteriaBuilder.equal(root.get("name"), name),
+                criteriaBuilder.in(root.get("created")).value(subquery)
+            );
+        };
+    }
 }

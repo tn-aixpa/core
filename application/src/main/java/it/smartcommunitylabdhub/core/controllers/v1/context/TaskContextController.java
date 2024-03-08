@@ -57,10 +57,7 @@ public class TaskContextController {
     @Autowired
     RunService runService;
 
-    @Operation(
-        summary = "Create a task in a project context",
-        description = "create the task for the project (context)"
-    )
+    @Operation(summary = "Create a task in a project context")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
@@ -77,14 +74,11 @@ public class TaskContextController {
         return taskService.createTask(dto);
     }
 
-    @Operation(
-        summary = "Retrieve all tasks for the project, with optional filter",
-        description = "return a list of all tasks related to a project"
-    )
+    @Operation(summary = "Search tasks, with optional filter")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public Page<Task> getTasksByProject(
+    public Page<Task> searchTasks(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable TaskEntityFilter filter,
+        @ParameterObject @Valid @Nullable TaskEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
@@ -97,10 +91,7 @@ public class TaskContextController {
         return taskService.searchTasksByProject(project, pageable, sf);
     }
 
-    @Operation(
-        summary = "Retrieve a specific task given the task id",
-        description = "return a specific task identified by the id"
-    )
+    @Operation(summary = "Retrieve a specific task given the task id")
     @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
     public Task getTaskById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
@@ -116,16 +107,13 @@ public class TaskContextController {
         return task;
     }
 
-    @Operation(
-        summary = "Update if exist a task in a project context",
-        description = "First check if project exist, if task exist update."
-    )
+    @Operation(summary = "Update if exist a task in a project context")
     @PutMapping(
         value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Task updateTask(
+    public Task updateTaskById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Task taskDTO
@@ -140,12 +128,9 @@ public class TaskContextController {
         return taskService.updateTask(id, taskDTO);
     }
 
-    @Operation(
-        summary = "Delete a specific task, with optional cascade",
-        description = "First check if project exist, then delete a specific task"
-    )
+    @Operation(summary = "Delete a specific task, with optional cascade")
     @DeleteMapping(path = "/{id}")
-    public void deleteTask(
+    public void deleteTaskById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam(required = false) Boolean cascade
@@ -164,12 +149,9 @@ public class TaskContextController {
      * Runs
      */
 
-    @Operation(
-        summary = "List runs for a given task",
-        description = "Return a list of runs defined for a specific task"
-    )
+    @Operation(summary = "List runs for a given task")
     @GetMapping(path = "/{id}/runs", produces = "application/json; charset=UTF-8")
-    public List<Run> getRuns(
+    public List<Run> getRunsByTaskId(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {

@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -49,10 +50,7 @@ public class FunctionContextController {
     @Autowired
     TaskService taskService;
 
-    @Operation(
-        summary = "Create a function in a project context",
-        description = "create the function for the project (context)"
-    )
+    @Operation(summary = "Create a function in a project context")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
@@ -69,14 +67,12 @@ public class FunctionContextController {
         return functionService.createFunction(dto);
     }
 
-    @Operation(
-        summary = "Retrieve only the latest version of all functions",
-        description = "return a list of the latest version of each function related to a project"
-    )
+    @Operation(summary = "Search functions")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public Page<Function> getLatestFunctions(
+    public Page<Function> searchFunctions(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable FunctionEntityFilter filter,
+        @ParameterObject @Valid @Nullable FunctionEntityFilter filter,
+        @ParameterObject @RequestParam(required = false, defaultValue = "latest") String versions,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
@@ -86,57 +82,18 @@ public class FunctionContextController {
             sf = filter.toSearchFilter();
         }
 
-        return functionService.searchLatestFunctionsByProject(project, pageable, sf);
+        if ("all".equals(versions)) {
+            return functionService.searchFunctionsByProject(project, pageable, sf);
+        } else {
+            return functionService.searchLatestFunctionsByProject(project, pageable, sf);
+        }
     }
 
-    @Operation(
-        summary = "Retrieve all versions of the function sort by creation",
-        description = "return a list of all version of the function sort by creation"
-    )
-    @GetMapping(path = "/{name}", produces = "application/json; charset=UTF-8")
-    public Page<Function> getAllFunctionVersion(
+    @Operation(summary = "Delete all version of a function")
+    @DeleteMapping(path = "")
+    public void deleteAllFunction(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
-        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
-            { @SortDefault(sort = "created", direction = Direction.DESC) }
-        ) Pageable pageable
-    ) {
-        return functionService.findFunctions(project, name, pageable);
-    }
-
-    @Operation(
-        summary = "Create a new version of a function in a project context",
-        description = "if function exist create a new version of the function"
-    )
-    @PostMapping(
-        value = "/{name}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
-    )
-    public Function createOrUpdateFunction(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
-        @RequestBody @Valid @NotNull Function dto
-    ) throws NoSuchEntityException, DuplicatedEntityException {
-        //enforce project match
-        dto.setProject(project);
-        dto.setName(name);
-
-        @SuppressWarnings("unused")
-        Function function = functionService.getLatestFunction(project, name);
-        function = functionService.createFunction(dto);
-
-        return function;
-    }
-
-    @Operation(
-        summary = "Delete all version of a function",
-        description = "First check if project exist, then delete a specific function version"
-    )
-    @DeleteMapping(path = "/{name}")
-    public void deleteFunction(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
+        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
     ) {
         functionService.deleteFunctions(project, name);
     }
@@ -145,79 +102,55 @@ public class FunctionContextController {
      * Versions
      */
 
-    @Operation(
-        summary = "Retrieve the latest version of a function",
-        description = "return the latest version of a function"
-    )
-    @GetMapping(path = "/{name}/latest", produces = "application/json; charset=UTF-8")
-    public Function getLatestFunctionByName(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
-    ) throws NoSuchEntityException {
-        return functionService.getLatestFunction(project, name);
-    }
-
-    @Operation(
-        summary = "Retrieve a specific function version given the function id",
-        description = "return a specific version of the function identified by the id"
-    )
-    @GetMapping(path = "/{name}/{id}", produces = "application/json; charset=UTF-8")
+    @Operation(summary = "Retrieve a specific function version given the function id")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
     public Function getFunctionById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
         Function function = functionService.getFunction(id);
 
         //check for project and name match
-        if (!function.getProject().equals(project) || !function.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!function.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project ");
         }
 
         return function;
     }
 
-    @Operation(
-        summary = "Update if exist a function in a project context",
-        description = "First check if project exist, if function exist update."
-    )
+    @Operation(summary = "Update if exist a function in a project context")
     @PutMapping(
-        value = "/{name}/{id}",
+        value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Function updateFunction(
+    public Function updateFunctionById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Function functionDTO
     ) throws NoSuchEntityException {
         Function function = functionService.getFunction(id);
 
         //check for project and name match
-        if (!function.getProject().equals(project) || !function.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!function.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project ");
         }
 
         return functionService.updateFunction(id, functionDTO);
     }
 
-    @Operation(
-        summary = "Delete a specific function version, with optional cascade",
-        description = "First check if project exist, then delete a specific function version"
-    )
-    @DeleteMapping(path = "/{name}/{id}")
-    public void deleteFunction(
+    @Operation(summary = "Delete a specific function version, with optional cascade")
+    @DeleteMapping(path = "/{id}")
+    public void deleteFunctionById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam(required = false) Boolean cascade
     ) throws NoSuchEntityException {
         Function function = functionService.getFunction(id);
 
         //check for project and name match
-        if (!function.getProject().equals(project) || !function.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!function.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
         }
 
         functionService.deleteFunction(id, cascade);
@@ -227,21 +160,17 @@ public class FunctionContextController {
      * Tasks
      */
 
-    @Operation(
-        summary = "List tasks for a given function",
-        description = "Return a list of tasks defined for a specific function"
-    )
-    @GetMapping(path = "/{name}/{id}/tasks", produces = "application/json; charset=UTF-8")
+    @Operation(summary = "List tasks for a given function")
+    @GetMapping(path = "/{id}/tasks", produces = "application/json; charset=UTF-8")
     public List<Task> getTasks(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
         Function function = functionService.getFunction(id);
 
         //check for project and name match
-        if (!function.getProject().equals(project) || !function.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!function.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
         }
 
         return taskService.getTasksByFunctionId(id);
