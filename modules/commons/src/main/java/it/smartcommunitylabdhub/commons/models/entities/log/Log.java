@@ -52,7 +52,7 @@ public class Log implements BaseDTO {
     }
 
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return id;
     }
 

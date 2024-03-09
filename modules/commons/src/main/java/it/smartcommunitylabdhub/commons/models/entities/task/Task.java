@@ -66,7 +66,7 @@ public class Task implements BaseDTO {
     }
 
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return id;
     }
 

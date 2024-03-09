@@ -16,6 +16,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+        <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-commons</artifactId>
             <version>${revision}</version>

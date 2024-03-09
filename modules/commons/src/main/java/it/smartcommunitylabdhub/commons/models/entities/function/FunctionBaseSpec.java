@@ -12,12 +12,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class FunctionBaseSpec extends BaseSpec {
 
-    private String source;
-
     @Override
-    public void configure(Map<String, Serializable> data) {
-        FunctionBaseSpec functionBaseSpec = mapper.convertValue(data, FunctionBaseSpec.class);
-
-        this.setSource(functionBaseSpec.getSource());
-    }
+    public void configure(Map<String, Serializable> data) {}
 }
