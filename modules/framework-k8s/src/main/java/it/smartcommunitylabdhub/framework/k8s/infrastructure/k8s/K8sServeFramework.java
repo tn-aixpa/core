@@ -50,41 +50,71 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
     @Override
     public K8sServeRunnable delete(K8sServeRunnable runnable) throws K8sFrameworkException {
-        V1Deployment deployment = buildDeployment(runnable);
-        deployment = deploymentFramework.apply(deployment);
 
+        // Build the deployment
+        K8sDeploymentRunnable k8sDeploymentRunnable = getDeployment(runnable);
+
+        // Delete the deployment
+        k8sDeploymentRunnable = deploymentFramework.delete(k8sDeploymentRunnable);
+
+        //Build the service
         V1Service service = build(runnable);
-        service = apply(service);
+        Assert.notNull(service.getMetadata(), "metadata can not be null");
 
-        runnable.setState(State.DELETED.name());
+        // Delete also the Service
+        try {
+            if (k8sDeploymentRunnable.getState().equals(State.DELETED.name())) {
+                coreV1Api.deleteNamespacedService(
+                        service.getMetadata().getName(),
+                        namespace, null, null,
+                        null, null,
+                        null, null);
+
+                runnable.setState(State.DELETED.name());
+            }
+
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
 
         return runnable;
     }
 
-    public V1Deployment buildDeployment(K8sServeRunnable runnable) throws K8sFrameworkException {
-        K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable
-            .builder()
-            .id(runnable.getId())
-            .args(runnable.getArgs())
-            .image(runnable.getImage())
-            .command(runnable.getCommand())
-            .affinity(runnable.getAffinity())
-            .labels(runnable.getLabels())
-            .envs(runnable.getEnvs())
-            .nodeSelector(runnable.getNodeSelector())
-            .replicas(runnable.getReplicas())
-            .resources(runnable.getResources())
-            .project(runnable.getProject())
-            .runtime(runnable.getRuntime())
-            .secrets(runnable.getSecrets())
-            .task(runnable.getTask())
-            .state(State.READY.name())
-            .tolerations(runnable.getTolerations())
-            .volumes(runnable.getVolumes())
-            .build();
 
+    public K8sDeploymentRunnable getDeployment(K8sServeRunnable runnable) throws K8sFrameworkException {
+        return K8sDeploymentRunnable
+                .builder()
+                .id(runnable.getId())
+                .args(runnable.getArgs())
+                .image(runnable.getImage())
+                .command(runnable.getCommand())
+                .affinity(runnable.getAffinity())
+                .labels(runnable.getLabels())
+                .envs(runnable.getEnvs())
+                .nodeSelector(runnable.getNodeSelector())
+                .replicas(runnable.getReplicas())
+                .resources(runnable.getResources())
+                .project(runnable.getProject())
+                .runtime(runnable.getRuntime())
+                .secrets(runnable.getSecrets())
+                .task(runnable.getTask())
+                .state(runnable.getState())
+                .tolerations(runnable.getTolerations())
+                .volumes(runnable.getVolumes())
+                .build();
+    }
+
+    public V1Deployment buildDeployment(K8sServeRunnable runnable) throws K8sFrameworkException {
+
+        K8sDeploymentRunnable k8sDeploymentRunnable = getDeployment(runnable);
         return deploymentFramework.build(k8sDeploymentRunnable);
     }
+
 
     public V1Service build(K8sServeRunnable runnable) throws K8sFrameworkException {
         // Log service execution initiation
@@ -92,9 +122,9 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         // Generate deploymentName and ContainerName
         String serviceName = k8sBuilderHelper.getServiceName(
-            runnable.getRuntime(),
-            runnable.getTask(),
-            runnable.getId()
+                runnable.getRuntime(),
+                runnable.getTask(),
+                runnable.getId()
         );
         Map<String, String> labels = buildLabels(runnable);
         // Create the V1 service
@@ -106,11 +136,11 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         //build ports
         List<V1ServicePort> ports = runnable
-            .getServicePorts()
-            .stream()
-            .filter(p -> p.port() != null && p.targetPort() != null)
-            .map(p -> new V1ServicePort().port(p.port()).targetPort(new IntOrString(p.targetPort())).protocol("TCP"))
-            .collect(Collectors.toList());
+                .getServicePorts()
+                .stream()
+                .filter(p -> p.port() != null && p.targetPort() != null)
+                .map(p -> new V1ServicePort().port(p.port()).targetPort(new IntOrString(p.targetPort())).protocol("TCP"))
+                .collect(Collectors.toList());
 
         // service type (ClusterIP or NodePort)
         String type = Optional.of(runnable.getServiceType().name()).orElse("NodePort");

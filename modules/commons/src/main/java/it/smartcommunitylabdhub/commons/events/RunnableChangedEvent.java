@@ -8,8 +8,8 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RunChangedEvent<R extends RunRunnable> {
+public class RunnableChangedEvent<R extends RunRunnable> {
 
-    private RunMonitorObject runMonitorObject;
+    private RunnableMonitorObject runMonitorObject;
     private R runnable;
 }

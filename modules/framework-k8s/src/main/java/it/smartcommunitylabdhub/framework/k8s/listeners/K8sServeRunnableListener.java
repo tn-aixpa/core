@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.listeners;
 
-import it.smartcommunitylabdhub.commons.events.RunChangedEvent;
-import it.smartcommunitylabdhub.commons.events.RunMonitorObject;
+import it.smartcommunitylabdhub.commons.events.RunnableChangedEvent;
+import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
@@ -60,11 +60,11 @@ public class K8sServeRunnableListener {
                     runnableStore.store(runnable.getId(), runnable);
                     // Publish event to Run Manager
                     eventPublisher.publishEvent(
-                            RunChangedEvent
+                            RunnableChangedEvent
                                     .builder()
                                     .runnable(runnable)
                                     .runMonitorObject(
-                                            RunMonitorObject
+                                            RunnableMonitorObject
                                                     .builder()
                                                     .runId(runnable.getId())
                                                     .stateId(runnable.getState())
@@ -88,11 +88,11 @@ public class K8sServeRunnableListener {
                 runnableStore.store(runnable.getId(), runnable);
                 // Publish event to Run Manager
                 eventPublisher.publishEvent(
-                        RunChangedEvent
+                        RunnableChangedEvent
                                 .builder()
                                 .runnable(runnable)
                                 .runMonitorObject(
-                                        RunMonitorObject
+                                        RunnableMonitorObject
                                                 .builder()
                                                 .runId(runnable.getId())
                                                 .stateId(runnable.getState())

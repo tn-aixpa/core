@@ -2,8 +2,8 @@ package it.smartcommunitylabdhub.core.components.run;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
-import it.smartcommunitylabdhub.commons.events.RunChangedEvent;
-import it.smartcommunitylabdhub.commons.events.RunMonitorObject;
+import it.smartcommunitylabdhub.commons.events.RunnableChangedEvent;
+import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
@@ -309,16 +309,16 @@ public class RunManager {
 
     @Async
     @EventListener
-    public void onChangedEvent(RunChangedEvent<RunRunnable> event) throws NoSuchEntityException {
+    public void onChangedEvent(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
         // Retrieve the RunMonitorObject from the event
-        RunMonitorObject runMonitorObject = event.getRunMonitorObject();
+        RunnableMonitorObject runnableMonitorObject = event.getRunMonitorObject();
 
         // Use service to retrieve the run and check if state is changed
         Optional
-                .of(entityService.find(runMonitorObject.getRunId()))
+                .of(entityService.find(runnableMonitorObject.getRunId()))
                 .ifPresentOrElse((run) -> {
-                    if (!Objects.equals(StatusFieldAccessor.with(run.getStatus()).getState(), runMonitorObject.getStateId())) {
-                        switch (State.valueOf(runMonitorObject.getStateId())) {
+                    if (!Objects.equals(StatusFieldAccessor.with(run.getStatus()).getState(), runnableMonitorObject.getStateId())) {
+                        switch (State.valueOf(runnableMonitorObject.getStateId())) {
                             case COMPLETED:
                                 onComplete(event);
                                 break;
@@ -337,23 +337,23 @@ public class RunManager {
                             default:
                                 log.info(
                                         "State {} for run id {} not found",
-                                        runMonitorObject.getStateId(),
-                                        runMonitorObject.getRunId()
+                                        runnableMonitorObject.getStateId(),
+                                        runnableMonitorObject.getRunId()
                                 );
                                 break;
                         }
                     } else {
-                        log.info("State {} for run id {} not changed", runMonitorObject.getStateId(), runMonitorObject.getRunId());
+                        log.info("State {} for run id {} not changed", runnableMonitorObject.getStateId(), runnableMonitorObject.getRunId());
                     }
                 }, () -> {
                     onError(event);
-                    log.error("Run with id {} not found", runMonitorObject.getRunId());
+                    log.error("Run with id {} not found", runnableMonitorObject.getRunId());
                 });
 
     }
 
     // Callback Methods
-    private void onRunning(RunChangedEvent<RunRunnable> event) throws NoSuchEntityException {
+    private void onRunning(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
         Run run = entityService.find(event.getRunMonitorObject().getRunId());
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -408,7 +408,7 @@ public class RunManager {
      * @param event the RunChangedEvent triggering the error
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onComplete(RunChangedEvent<RunRunnable> event) throws NoSuchEntityException {
+    private void onComplete(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
         Run run = entityService.find(event.getRunMonitorObject().getRunId());
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -464,7 +464,7 @@ public class RunManager {
      * @param event the RunChangedEvent triggering the stop
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onStop(RunChangedEvent<RunRunnable> event) throws NoSuchEntityException {
+    private void onStop(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
         Run run = entityService.find(event.getRunMonitorObject().getRunId());
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -520,7 +520,7 @@ public class RunManager {
      * @param event the RunChangedEvent triggering the error
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onError(RunChangedEvent<RunRunnable> event) throws NoSuchEntityException {
+    private void onError(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
         Run run = entityService.find(event.getRunMonitorObject().getRunId());
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -607,7 +607,7 @@ public class RunManager {
             );
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {X} to state {}", State.ERROR);
+            log.error("Invalid transaction from state {} to state {}", e.getFromState(), e.getToState());
         }
     }
 
@@ -617,7 +617,7 @@ public class RunManager {
      * @param event the RunChangedEvent triggering the delete
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onDeleted(RunChangedEvent<RunRunnable> event) throws NoSuchEntityException {
+    private void onDeleted(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
         Run run = entityService.find(event.getRunMonitorObject().getRunId());
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
