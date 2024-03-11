@@ -18,7 +18,6 @@ import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
-import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
@@ -68,7 +67,6 @@ public class RunManager {
             EntityService<Run, RunEntity> entityService,
             EntityService<Task, TaskEntity> taskEntityService,
             EntityService<Function, FunctionEntity> functionEntityService,
-            RunEntityBuilder runEntityBuilder,
             RuntimeFactory runtimeFactory,
             ApplicationEventPublisher eventPublisher
     ) {
@@ -144,8 +142,8 @@ public class RunManager {
             return run;
         } catch (InvalidTransactionException e) {
             // log error
-            log.error("Invalid transaction from state {}  to state {}", State.CREATED, State.BUILT);
-            throw new InvalidTransactionException(State.CREATED.toString(), State.BUILT.toString());
+            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw new InvalidTransactionException(e.getFromState(), e.getToState());
         }
     }
 
@@ -197,8 +195,8 @@ public class RunManager {
             return run;
         } catch (InvalidTransactionException e) {
             // log error
-            log.error("Invalid transaction from state {}  to state {}", State.BUILT, State.READY);
-            throw new InvalidTransactionException(State.BUILT.toString(), State.READY.toString());
+            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw new InvalidTransactionException(e.getFromState(), e.getToState());
         }
     }
 
@@ -257,8 +255,56 @@ public class RunManager {
 
 
     public Run delete(@NotNull Run run) {
-        //TODO run as stop above;
-        return null;
+        // GET state machine, init state machine with status
+        RunBaseSpec runBaseSpec = new RunBaseSpec();
+        runBaseSpec.configure(run.getSpec());
+        RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
+
+        // Retrieve Function
+        String functionId = runSpecAccessor.getVersion();
+        Function function = functionEntityService.get(functionId);
+
+        // Retrieve state machine
+        Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
+
+        fsm
+                .getState(State.RUNNING)
+                .getTransaction(RunEvent.STOP)
+                .setInternalLogic((context, input, stateMachine) -> {
+                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                        // Retrieve Runtime and build run
+                        Runtime<
+                                ? extends FunctionBaseSpec,
+                                ? extends RunBaseSpec,
+                                ? extends RunBaseStatus,
+                                ? extends RunRunnable
+                                > runtime = runtimeFactory.getRuntime(function.getKind());
+                        // Create Runnable
+                        RunRunnable runnable = runtime.stop(run);
+
+                        return Optional.of(runnable);
+                    } else {
+                        return Optional.empty();
+                    }
+                });
+
+        try {
+            Optional<RunRunnable> runnable = fsm.goToState(State.DELETED, null);
+            runnable.ifPresent(r -> {
+                // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
+                eventPublisher.publishEvent(r);
+
+                // Update run state to READY
+                run.getStatus().put("state", State.DELETED.toString());
+            });
+            entityService.update(run.getId(), run);
+
+            return run;
+        } catch (InvalidTransactionException e) {
+            // log error
+            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw new InvalidTransactionException(e.getFromState(), e.getToState());
+        }
     }
 
     @Async
@@ -270,44 +316,40 @@ public class RunManager {
         // Use service to retrieve the run and check if state is changed
         Optional
                 .of(entityService.find(runMonitorObject.getRunId()))
-                .stream()
-                .filter(run -> !Objects.equals(StatusFieldAccessor.with(run.getStatus()).getState(), runMonitorObject.getStateId()))
-                .findAny()
-                .ifPresentOrElse(
-                        run -> {
-                            switch (State.valueOf(runMonitorObject.getStateId())) {
-                                case COMPLETED:
-                                    onComplete(event);
-                                    break;
-                                case ERROR:
-                                    onError(event);
-                                    break;
-                                case RUNNING:
-                                    onRunning(event);
-                                    break;
-                                case STOPPED:
-                                    onStop(event);
-                                    break;
-                                case DELETED:
-                                    onDeleted(event);
-                                    break;
-                                default:
-                                    log.info(
-                                            "State {} for run id {} not found",
-                                            runMonitorObject.getStateId(),
-                                            runMonitorObject.getRunId()
-                                    );
-                                    break;
-                            }
-
-                            // do something else....
-                            log.info("....still running");
-                        },
-                        () -> {
-                            onError(event);
-                            log.error("Run with id {} not found", runMonitorObject.getRunId());
+                .ifPresentOrElse((run) -> {
+                    if (!Objects.equals(StatusFieldAccessor.with(run.getStatus()).getState(), runMonitorObject.getStateId())) {
+                        switch (State.valueOf(runMonitorObject.getStateId())) {
+                            case COMPLETED:
+                                onComplete(event);
+                                break;
+                            case ERROR:
+                                onError(event);
+                                break;
+                            case RUNNING:
+                                onRunning(event);
+                                break;
+                            case STOPPED:
+                                onStop(event);
+                                break;
+                            case DELETED:
+                                onDeleted(event);
+                                break;
+                            default:
+                                log.info(
+                                        "State {} for run id {} not found",
+                                        runMonitorObject.getStateId(),
+                                        runMonitorObject.getRunId()
+                                );
+                                break;
                         }
-                );
+                    } else {
+                        log.info("State {} for run id {} not changed", runMonitorObject.getStateId(), runMonitorObject.getRunId());
+                    }
+                }, () -> {
+                    onError(event);
+                    log.error("Run with id {} not found", runMonitorObject.getRunId());
+                });
+
     }
 
     // Callback Methods
@@ -411,7 +453,8 @@ public class RunManager {
             );
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {}  to state {}", State.RUNNING, State.COMPLETED);
+            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw new InvalidTransactionException(e.getFromState(), e.getToState());
         }
     }
 
@@ -466,7 +509,8 @@ public class RunManager {
             );
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {}  to state {}", State.RUNNING, State.STOPPED);
+            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw new InvalidTransactionException(e.getFromState(), e.getToState());
         }
     }
 
@@ -618,7 +662,8 @@ public class RunManager {
             );
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {}  to state {}", State.STOPPED, State.DELETED);
+            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw new InvalidTransactionException(e.getFromState(), e.getToState());
         }
     }
 

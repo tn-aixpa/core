@@ -4,6 +4,7 @@ package it.smartcommunitylabdhub.commons.models.enums;
 public enum State {
     BUILT,
     CREATING,
+
     READY,
     PENDING,
 
