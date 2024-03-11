@@ -22,6 +22,19 @@ public interface SearchableFunctionService extends FunctionService {
     Page<Function> searchFunctions(Pageable pageable, @Nullable SearchFilter<FunctionEntity> filter);
 
     /**
+     * List all version of every function, with optional filters
+     * @param project
+     * @param pageable
+     * @param filter
+     * @return
+     */
+    Page<Function> searchFunctionsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<FunctionEntity> filter
+    );
+
+    /**
      * List the latest version of every function, with optional filters
      * @param project
      * @param pageable

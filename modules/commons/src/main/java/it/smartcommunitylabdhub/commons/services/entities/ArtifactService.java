@@ -19,6 +19,20 @@ public interface ArtifactService {
      * @return
      */
     Page<Artifact> listArtifacts(Pageable pageable);
+    /**
+     * List all versions of every artifact for a project
+     * @param project
+     * @return
+     */
+    List<Artifact> listArtifactsByProject(@NotNull String project);
+
+    /**
+     * List all versions of every artifact for a project
+     * @param project
+     * @param pageable
+     * @return
+     */
+    Page<Artifact> listArtifactsByProject(@NotNull String project, Pageable pageable);
 
     /**
      * List the latest version of every artifact for a project

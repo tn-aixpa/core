@@ -53,6 +53,22 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
     }
 
     @Override
+    public List<Artifact> listArtifactsByProject(@NotNull String project) {
+        log.debug("list all artifacts for project {}  ", project);
+        Specification<ArtifactEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<Artifact> listArtifactsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list all artifacts for project {}  page {}", project, pageable);
+        Specification<ArtifactEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
     public List<Artifact> listLatestArtifactsByProject(@NotNull String project) {
         log.debug("list artifacts for project {}  ", project);
         Specification<ArtifactEntity> specification = Specification.allOf(
@@ -75,12 +91,28 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
     }
 
     @Override
+    public Page<Artifact> searchArtifactsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<ArtifactEntity> filter
+    ) {
+        log.debug("search all artifacts for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<ArtifactEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<ArtifactEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            filterSpecification
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
     public Page<Artifact> searchLatestArtifactsByProject(
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<ArtifactEntity> filter
     ) {
-        log.debug("list artifacts for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        log.debug("search latest artifacts for project {} with {} page {}", project, String.valueOf(filter), pageable);
         Specification<ArtifactEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
         Specification<ArtifactEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
@@ -147,8 +179,9 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
     public Artifact getLatestArtifact(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
         log.debug("get latest artifact for project {} with name {}", project, name);
 
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getLatestArtifact'");
+        //fetch latest version ordered by date DESC
+        Specification<ArtifactEntity> specification = CommonSpecification.latestByProject(project, name);
+        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
     }
 
     @Override

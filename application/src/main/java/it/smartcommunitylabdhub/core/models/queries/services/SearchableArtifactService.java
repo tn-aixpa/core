@@ -22,6 +22,19 @@ public interface SearchableArtifactService extends ArtifactService {
     Page<Artifact> searchArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter);
 
     /**
+     * List all versions of every artifact, with optional filters
+     * @param project
+     * @param pageable
+     * @param filter
+     * @return
+     */
+    Page<Artifact> searchArtifactsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<ArtifactEntity> filter
+    );
+
+    /**
      * List the latest version of every artifact, with optional filters
      * @param project
      * @param pageable

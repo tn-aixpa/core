@@ -53,8 +53,24 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
     }
 
     @Override
+    public List<Workflow> listWorkflowsByProject(@NotNull String project) {
+        log.debug("list all workflows for project {}", project);
+        Specification<WorkflowEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<Workflow> listWorkflowsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list all workflows for project {}  page {}", project, pageable);
+        Specification<WorkflowEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
     public List<Workflow> listLatestWorkflowsByProject(@NotNull String project) {
-        log.debug("list workflows for project {}", project);
+        log.debug("list latest workflows for project {}", project);
         Specification<WorkflowEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
@@ -65,10 +81,26 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
 
     @Override
     public Page<Workflow> listLatestWorkflowsByProject(@NotNull String project, Pageable pageable) {
-        log.debug("list workflows for project {}  page {}", project, pageable);
+        log.debug("list latest workflows for project {}  page {}", project, pageable);
         Specification<WorkflowEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Page<Workflow> searchWorkflowsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<WorkflowEntity> filter
+    ) {
+        log.debug("search all workflows for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<WorkflowEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<WorkflowEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            filterSpecification
         );
 
         return entityService.search(specification, pageable);
@@ -80,7 +112,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
         Pageable pageable,
         @Nullable SearchFilter<WorkflowEntity> filter
     ) {
-        log.debug("list workflows for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        log.debug("search latest workflows for project {} with {} page {}", project, String.valueOf(filter), pageable);
         Specification<WorkflowEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
         Specification<WorkflowEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
@@ -147,8 +179,9 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
     public Workflow getLatestWorkflow(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
         log.debug("get latest workflow for project {} with name {}", project, name);
 
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getLatestWorkflow'");
+        //fetch latest version ordered by date DESC
+        Specification<WorkflowEntity> specification = CommonSpecification.latestByProject(project, name);
+        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
     }
 
     @Override
