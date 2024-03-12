@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RunMonitorObject implements Serializable {
+public class RunnableMonitorObject implements Serializable {
 
     //TODO send run event to RunManager(todo) create an object of type RunState with stateId, runId, project, framework....
     private String runId;

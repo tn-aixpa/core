@@ -2,8 +2,9 @@ package it.smartcommunitylabdhub.runtime.nefertem;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -24,12 +25,14 @@ import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskInferSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskMetricSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskProfileSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.status.RunNefertemStatus;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 @RuntimeComponent(runtime = NefertemRuntime.RUNTIME)
-public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNefertemSpec, K8sJobRunnable> {
+public class NefertemRuntime
+    implements Runtime<FunctionNefertemSpec, RunNefertemSpec, RunNefertemStatus, K8sJobRunnable> {
 
     public static final String RUNTIME = "nefertem";
     private final NefertemInferBuilder inferBuilder = new NefertemInferBuilder();
@@ -108,8 +111,37 @@ public class NefertemRuntime implements Runtime<FunctionNefertemSpec, RunNeferte
     }
 
     @Override
-    public RunStatus parse() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'parse'");
+    public K8sJobRunnable stop(Run run) throws StoreException {
+        return null;
+    }
+
+    @Override
+    public K8sJobRunnable delete(Run run) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onRunning(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onComplete(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onError(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onStopped(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunNefertemStatus onDeleted(Run run, RunRunnable runnable) {
+        return null;
     }
 }

@@ -9,9 +9,11 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.components.run.RunManager;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
+import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -43,14 +45,26 @@ public class RunController {
     @Autowired
     SearchableRunService runService;
 
+    @Autowired
+    RunManager runManager;
+
     @Operation(summary = "Create run and exec", description = "Create a run and exec")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Run createRun(@RequestBody @Valid @NotNull Run dto) throws DuplicatedEntityException {
-        return runService.createRun(dto);
+    public Run createRun(@RequestBody @Valid @NotNull Run dto)
+        throws DuplicatedEntityException, NoSuchEntityException, InvalidTransactionException {
+        Run run = runService.createRun(dto);
+
+        // Build the run
+        run = runManager.build(run);
+
+        // Run the run
+        run = runManager.run(run);
+
+        return run;
     }
 
     @Operation(summary = "List runs", description = "Return a list of all runs")

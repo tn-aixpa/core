@@ -4,6 +4,7 @@ create table if not exists public.runnable
         primary key,
     created timestamp(6) with time zone default CURRENT_TIMESTAMP,
     data    bytea,
+    clazz   varchar(255) not null,
     updated timestamp(6) with time zone default CURRENT_TIMESTAMP
 );
 

@@ -87,6 +87,7 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
         entity.setSpec(e.getSpec());
         entity.setStatus(e.getStatus());
         entity.setExtra(e.getExtra());
+        entity.setState(e.getState());
 
         //persist
         entity = repository.saveAndFlush(entity);

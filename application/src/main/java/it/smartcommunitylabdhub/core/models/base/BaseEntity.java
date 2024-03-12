@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.base;
 
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Date;
@@ -22,15 +23,26 @@ public interface BaseEntity extends Serializable {
     String getProject();
 
     byte[] getMetadata();
-    byte[] getSpec();
-    byte[] getStatus();
-    byte[] getExtra();
-
-    Date getCreated();
-    Date getUpdated();
 
     void setMetadata(byte[] metadata);
+
+    byte[] getSpec();
+
     void setSpec(byte[] spec);
+
+    byte[] getStatus();
+
     void setStatus(byte[] status);
+
+    byte[] getExtra();
+
     void setExtra(byte[] extra);
+
+    State getState();
+
+    void setState(State state);
+
+    Date getCreated();
+
+    Date getUpdated();
 }

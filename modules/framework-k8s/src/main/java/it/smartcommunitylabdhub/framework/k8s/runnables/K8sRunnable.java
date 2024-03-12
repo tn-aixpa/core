@@ -1,13 +1,8 @@
 package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreToleration;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
+import it.smartcommunitylabdhub.framework.k8s.objects.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +17,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class K8sRunnable implements it.smartcommunitylabdhub.commons.infrastructure.Runnable {
+public class K8sRunnable implements RunRunnable {
 
     private String id;
 

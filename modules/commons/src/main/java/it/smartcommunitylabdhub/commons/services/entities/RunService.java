@@ -26,10 +26,12 @@ public interface RunService {
      * Tasks
      */
     List<Run> getRunsByTaskId(@NotNull String taskId);
+
     void deleteRunsByTaskId(@NotNull String taskId);
 
     /**
      * List all runs
+     *
      * @param pageable
      * @return
      */
@@ -37,6 +39,7 @@ public interface RunService {
 
     /**
      * List all runs for a given project
+     *
      * @param project
      * @param pageable
      * @return
@@ -45,6 +48,7 @@ public interface RunService {
 
     /**
      * Find a specific run via unique ID. Returns null if not found
+     *
      * @param id
      * @return
      */
@@ -53,6 +57,7 @@ public interface RunService {
 
     /**
      * Get a specific run via unique ID. Throws exception if not found
+     *
      * @param id
      * @return
      * @throws NoSuchEntityException
@@ -61,14 +66,16 @@ public interface RunService {
 
     /**
      * Create a new run and store it
+     *
      * @param runDTO
      * @return
      * @throws DuplicatedEntityException
      */
-    Run createRun(@NotNull Run runDTO) throws DuplicatedEntityException;
+    Run createRun(@NotNull Run runDTO) throws DuplicatedEntityException, NoSuchEntityException;
 
     /**
      * Update a specific run
+     *
      * @param id
      * @param runDTO
      * @return
@@ -78,6 +85,7 @@ public interface RunService {
 
     /**
      * Delete a specific run via unique ID, with optional cascade
+     *
      * @param id
      * @param cascade
      */

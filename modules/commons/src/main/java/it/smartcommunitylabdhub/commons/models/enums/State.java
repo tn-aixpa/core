@@ -4,6 +4,7 @@ package it.smartcommunitylabdhub.commons.models.enums;
 public enum State {
     BUILT,
     CREATING,
+
     READY,
     PENDING,
 
@@ -11,16 +12,16 @@ public enum State {
     RUNNING,
     COMPLETED,
     CANCELLED,
+    DELETING,
     DELETED,
     ONLINE,
     IDLE,
     ERROR,
-
     FSM_ERROR,
-
     SUCCESS,
     STOPPED,
-
+    STOP,
+    UNKNOWN,
     NONE,
     RUN_ERROR,
 }

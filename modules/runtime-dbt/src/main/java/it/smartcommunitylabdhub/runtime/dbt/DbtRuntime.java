@@ -2,8 +2,8 @@ package it.smartcommunitylabdhub.runtime.dbt;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -15,12 +15,13 @@ import it.smartcommunitylabdhub.runtime.dbt.runners.DbtTransformRunner;
 import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.run.RunDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
+import it.smartcommunitylabdhub.runtime.dbt.status.RunDbtStatus;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 @RuntimeComponent(runtime = DbtRuntime.RUNTIME)
-public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRunnable> {
+public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtStatus, K8sJobRunnable> {
 
     public static final String RUNTIME = "dbt";
 
@@ -71,8 +72,38 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
     }
 
     @Override
-    public RunStatus parse() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'parse'");
+    public K8sJobRunnable stop(Run run) {
+        //
+        return null;
+    }
+
+    @Override
+    public K8sJobRunnable delete(Run run) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onRunning(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onComplete(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onError(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onStopped(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onDeleted(Run run, RunRunnable runnable) {
+        return null;
     }
 }

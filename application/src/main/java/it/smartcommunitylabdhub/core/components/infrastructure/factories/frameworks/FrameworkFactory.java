@@ -8,7 +8,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.framew
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
-import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -35,7 +35,7 @@ public class FrameworkFactory {
      * @param builder The Framework for which to extract the framework string.
      * @return The framework string extracted from the @FrameworkComponent annotation.
      * @throws IllegalArgumentException If no @FrameworkComponent annotation is found for the
-     *         builder.
+     *                                  builder.
      */
     private String getBuilderNameFromAnnotation(Framework<?> builder) {
         Class<?> builderClass = builder.getClass();
@@ -53,12 +53,12 @@ public class FrameworkFactory {
      * Get the Framework for the given framework.
      *
      * @param framework the framework kind.
-     * @param <R> Is a runnable that extends Runnable
+     * @param <R>       Is a runnable that extends Runnable
      * @return The Framework for the specified framework.
      * @throws IllegalArgumentException If no Framework is found for the given framework.
      */
     @Deprecated
-    public <R extends Runnable> Framework<R> getFramework(String framework) {
+    public <R extends RunRunnable> Framework<R> getFramework(String framework) {
         @SuppressWarnings("unchecked")
         Framework<R> builder = (Framework<R>) builderMap.get(framework);
         if (builder == null) {

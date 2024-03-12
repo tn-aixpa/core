@@ -3,21 +3,18 @@ package it.smartcommunitylabdhub.core.services;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.infrastructure.Runnable;
-import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
+import it.smartcommunitylabdhub.core.components.run.RunManager;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity_;
@@ -29,7 +26,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -46,6 +42,12 @@ import org.springframework.util.StringUtils;
 public class RunServiceImpl implements SearchableRunService {
 
     @Autowired
+    SpecRegistry specRegistry;
+
+    @Autowired
+    RunManager runManager;
+
+    @Autowired
     private EntityService<Run, RunEntity> entityService;
 
     @Autowired
@@ -53,9 +55,6 @@ public class RunServiceImpl implements SearchableRunService {
 
     @Autowired
     private EntityService<Function, FunctionEntity> functionEntityService;
-
-    @Autowired
-    SpecRegistry specRegistry;
 
     //TODO move to RunManager
     @Autowired
@@ -230,44 +229,8 @@ public class RunServiceImpl implements SearchableRunService {
         }
 
         try {
-            //TODO move build+exec to dedicated methods and handle state changes!
-            if (Optional.ofNullable(runSpec.getLocalExecution()).orElse(Boolean.FALSE).booleanValue() == false) {
-                // Retrieve Runtime and build run
-                Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime =
-                    runtimeFactory.getRuntime(function.getKind());
-
-                // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
-                // an exception occur! for.
-                RunBaseSpec runSpecBuilt = runtime.build(function, task, dto);
-
-                // Update run spec
-                dto.setSpec(runSpecBuilt.toMap());
-
-                // Update run state to BUILT
-                dto.getStatus().put("state", State.BUILT.toString());
-
-                if (log.isTraceEnabled()) {
-                    log.trace("built run: {}", dto);
-                }
-            }
-
-            //create as new
-            Run run = entityService.create(dto);
-
-            //TODO move build+exec to dedicated methods and handle state changes!
-            if (Optional.ofNullable(runSpec.getLocalExecution()).orElse(Boolean.FALSE).booleanValue() == false) {
-                // Retrieve Runtime and build run
-                Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends Runnable> runtime =
-                    runtimeFactory.getRuntime(function.getKind());
-
-                // Create Runnable
-                Runnable runnable = runtime.run(run);
-
-                // Dispatch Runnable
-                eventPublisher.publishEvent(runnable);
-            }
-
-            return run;
+            // store the run in db
+            return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
             throw new DuplicatedEntityException(EntityName.RUN.toString(), dto.getId());
         }
@@ -328,20 +291,14 @@ public class RunServiceImpl implements SearchableRunService {
     }
 
     private Specification<RunEntity> createTaskSpecification(String task) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("task"), task);
-        };
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("task"), task);
     }
 
     private Specification<TaskEntity> createFunctionSpecification(String function) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("function"), function);
-        };
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("function"), function);
     }
 
     private Specification<TaskEntity> createTaskKindSpecification(String kind) {
-        return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("kind"), kind);
-        };
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("kind"), kind);
     }
 }
