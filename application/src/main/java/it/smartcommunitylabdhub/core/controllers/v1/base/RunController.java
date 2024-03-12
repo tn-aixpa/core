@@ -70,7 +70,7 @@ public class RunController {
     @Operation(summary = "List runs", description = "Return a list of all runs")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Run> getRuns(
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable RunEntityFilter filter,
+        @ParameterObject @Valid @Nullable RunEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable

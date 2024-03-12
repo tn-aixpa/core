@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
@@ -40,7 +41,11 @@ public final class SchemaUtils {
         )
             .with(jacksonModule)
             .with(jakartaModule)
-            .with(swagger2Module);
+            .with(swagger2Module)
+            //options
+            .with(Option.DEFINITIONS_FOR_ALL_OBJECTS)
+            .with(Option.MAP_VALUES_AS_ADDITIONAL_PROPERTIES)
+            .with(Option.PLAIN_DEFINITION_KEYS);
 
         GENERATOR = new SchemaGenerator(configBuilder.build());
     }

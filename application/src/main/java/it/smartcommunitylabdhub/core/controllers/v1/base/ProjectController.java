@@ -45,7 +45,7 @@ public class ProjectController {
     @Operation(summary = "List project", description = "Return a list of all projects")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Project> getProjects(
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable ProjectEntityFilter filter,
+        @ParameterObject @Valid @Nullable ProjectEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "name", direction = Direction.ASC) }
         ) Pageable pageable

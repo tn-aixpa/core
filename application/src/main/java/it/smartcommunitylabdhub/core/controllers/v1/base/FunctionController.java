@@ -55,7 +55,7 @@ public class FunctionController {
     @Operation(summary = "List functions", description = "Return a list of all functions")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Function> getFunctions(
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable FunctionEntityFilter filter,
+        @ParameterObject @Valid @Nullable FunctionEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "id", direction = Direction.ASC) }
         ) Pageable pageable
