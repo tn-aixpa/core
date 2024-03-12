@@ -41,19 +41,58 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     @Override
     public K8sDeploymentRunnable delete(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
 
-        V1Deployment deployment = get(build(runnable));
-        Assert.notNull(deployment.getMetadata(), "metadata can not be null");
-
         try {
-            appsV1Api.deleteNamespacedDeployment(
-                    deployment.getMetadata().getName(),
-                    namespace,
-                    null, null,
-                    null, null,
-                    null, null);
+            V1Deployment deployment = get(build(runnable));
 
+            if (deployment != null) {
+
+                Assert.notNull(deployment.getMetadata(), "metadata can not be null");
+                Assert.notNull(deployment.getSpec(), "spec can not be null");
+                // TODO try to get deployment if exist
+                appsV1Api.deleteNamespacedDeployment(
+                        deployment.getMetadata().getName(),
+                        namespace,
+                        null, null,
+                        null, null,
+                        null, null);
+
+                runnable.setState(State.DELETED.name());
+            }
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
 
             runnable.setState(State.DELETED.name());
+        } catch (K8sFrameworkException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            runnable.setState(State.DELETED.name());
+        }
+
+        return runnable;
+    }
+
+
+    @Override
+    public K8sDeploymentRunnable stop(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+        V1Deployment deployment = get(build(runnable));
+        Assert.notNull(deployment.getMetadata(), "metadata can not be null");
+        Assert.notNull(deployment.getSpec(), "spec can not be null");
+
+        try {
+            deployment.getSpec().setReplicas(0);
+            appsV1Api.replaceNamespacedDeployment(
+                    deployment.getMetadata().getName(),
+                    namespace,
+                    deployment,
+                    null,
+                    null,
+                    null,
+                    null);
+
+
+            runnable.setState(State.STOPPED.name());
 
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
@@ -64,8 +103,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             throw new K8sFrameworkException(e.getMessage());
         }
         return runnable;
-
-
     }
 
     //TODO: instead of void define a Result object that have to be merged with the run from the

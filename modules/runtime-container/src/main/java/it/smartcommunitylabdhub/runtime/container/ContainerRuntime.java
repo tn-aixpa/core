@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 @RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
 public class ContainerRuntime
-    implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, RunRunnable> {
+        implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, RunRunnable> {
 
     public static final String RUNTIME = "container";
 
@@ -77,7 +77,7 @@ public class ContainerRuntime
                 return serveBuilder.build(funSpec, taskServeSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -91,20 +91,20 @@ public class ContainerRuntime
 
         return switch (runAccessor.getTask()) {
             case TaskDeploySpec.KIND -> new ContainerDeployRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskJobSpec.KIND -> new ContainerJobRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             case TaskServeSpec.KIND -> new ContainerServeRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
             )
-                .produce(run);
+                    .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
@@ -164,7 +164,7 @@ public class ContainerRuntime
                     if (k8sDeploymentRunnable == null) {
                         throw new NoSuchEntityException("Deployment not found");
                     }
-                    k8sDeploymentRunnable.setState(State.DELETED.name());
+                    k8sDeploymentRunnable.setState(State.DELETING.name());
                     yield k8sDeploymentRunnable;
                 }
                 case TaskJobSpec.KIND -> {
@@ -172,7 +172,7 @@ public class ContainerRuntime
                     if (k8sJobRunnable == null) {
                         throw new NoSuchEntityException("JobDeployment not found");
                     }
-                    k8sJobRunnable.setState(State.DELETED.name());
+                    k8sJobRunnable.setState(State.DELETING.name());
                     yield k8sJobRunnable;
                 }
                 case TaskServeSpec.KIND -> {
@@ -180,7 +180,7 @@ public class ContainerRuntime
                     if (k8sServeRunnable == null) {
                         throw new NoSuchEntityException("ServeDeployment not found");
                     }
-                    k8sServeRunnable.setState(State.DELETED.name());
+                    k8sServeRunnable.setState(State.DELETING.name());
                     yield k8sServeRunnable;
                 }
                 default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

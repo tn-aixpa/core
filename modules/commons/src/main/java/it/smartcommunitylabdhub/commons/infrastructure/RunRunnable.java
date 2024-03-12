@@ -8,4 +8,6 @@ public interface RunRunnable extends Serializable {
     String getProject();
 
     String getId();
+
+    void setState(String state);
 }

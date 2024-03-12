@@ -48,18 +48,18 @@ public class RunnableStoreServiceImpl<T extends RunRunnable> implements Runnable
 
         List<RunnableEntity> entities = runnableRepository.findAll(clazz.getName());
         return entities
-            .stream()
-            .map(entity -> {
-                try {
-                    return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
-                } catch (IOException e) {
-                    // Handle deserialization error
-                    log.error("error deserializing runnable: {}", e.getMessage());
-                    return null;
-                }
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .stream()
+                .map(entity -> {
+                    try {
+                        return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
+                    } catch (IOException e) {
+                        // Handle deserialization error
+                        log.error("error deserializing runnable: {}", e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -70,11 +70,11 @@ public class RunnableStoreServiceImpl<T extends RunRunnable> implements Runnable
             RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
 
             Optional
-                .ofNullable(find(id))
-                .ifPresentOrElse(
-                    r -> runnableRepository.update(clazz.getName(), entity),
-                    () -> runnableRepository.save(clazz.getName(), entity)
-                );
+                    .ofNullable(find(id))
+                    .ifPresentOrElse(
+                            r -> runnableRepository.update(clazz.getName(), entity),
+                            () -> runnableRepository.save(clazz.getName(), entity)
+                    );
         } catch (IOException ex) {
             // Handle serialization error
             log.error("error deserializing runnable: {}", ex.getMessage());
@@ -86,6 +86,6 @@ public class RunnableStoreServiceImpl<T extends RunRunnable> implements Runnable
     public void remove(String id) throws StoreException {
         log.debug("remove runnable {} with id {}", clazz.getName(), id);
 
-        runnableRepository.delete(id, clazz.getName());
+        runnableRepository.delete(clazz.getName(), id);
     }
 }

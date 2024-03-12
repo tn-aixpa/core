@@ -12,6 +12,7 @@ public enum State {
     RUNNING,
     COMPLETED,
     CANCELLED,
+    DELETING,
     DELETED,
     ONLINE,
     IDLE,

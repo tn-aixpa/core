@@ -23,7 +23,7 @@ import org.springframework.util.Assert;
 
 @Slf4j
 public abstract class K8sBaseFramework<T extends K8sRunnable, K extends KubernetesObject>
-    implements Framework<T>, InitializingBean {
+        implements Framework<T>, InitializingBean {
 
     protected final CoreV1Api coreV1Api;
 
@@ -95,16 +95,16 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected Map<String, String> buildLabels(T runnable) {
         // Create labels for job
         Map<String, String> labels = Map.of(
-            "app.kubernetes.io/instance",
-            "dhcore-" + runnable.getId(),
-            "app.kubernetes.io/version",
-            version,
-            "app.kubernetes.io/component",
-            "dhcore-k8s",
-            "app.kubernetes.io/part-of",
-            "dhcore",
-            "app.kubernetes.io/managed-by",
-            "dhcore"
+                "app.kubernetes.io/instance",
+                "dhcore-" + runnable.getId(),
+                "app.kubernetes.io/version",
+                version,
+                "app.kubernetes.io/component",
+                "dhcore-k8s",
+                "app.kubernetes.io/part-of",
+                "dhcore",
+                "app.kubernetes.io/managed-by",
+                "dhcore"
         );
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
@@ -123,10 +123,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         // function specific envs
         List<V1EnvVar> functionEnvs = runnable
-            .getEnvs()
-            .stream()
-            .map(env -> new V1EnvVar().name(env.name()).value(env.value()))
-            .collect(Collectors.toList());
+                .getEnvs()
+                .stream()
+                .map(env -> new V1EnvVar().name(env.name()).value(env.value()))
+                .collect(Collectors.toList());
 
         //merge all avoiding duplicates
         Map<String, V1EnvVar> envs = new HashMap<>();
@@ -147,13 +147,13 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         List<V1Volume> volumes = new LinkedList<>();
         if (runnable.getVolumes() != null) {
             runnable
-                .getVolumes()
-                .forEach(volumeMap -> {
-                    V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
-                    if (volume != null) {
-                        volumes.add(volume);
-                    }
-                });
+                    .getVolumes()
+                    .forEach(volumeMap -> {
+                        V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
+                        if (volume != null) {
+                            volumes.add(volume);
+                        }
+                    });
         }
 
         return volumes;
@@ -164,13 +164,13 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         List<V1VolumeMount> volumeMounts = new LinkedList<>();
         if (runnable.getVolumes() != null) {
             runnable
-                .getVolumes()
-                .forEach(volumeMap -> {
-                    V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
-                    if (mount != null) {
-                        volumeMounts.add(mount);
-                    }
-                });
+                    .getVolumes()
+                    .forEach(volumeMap -> {
+                        V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
+                        if (mount != null) {
+                            volumeMounts.add(mount);
+                        }
+                    });
         }
 
         return volumeMounts;
@@ -180,22 +180,22 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         V1ResourceRequirements resources = new V1ResourceRequirements();
         if (runnable.getResources() != null) {
             resources.setRequests(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.requests() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
-                )
+                    k8sBuilderHelper.convertResources(
+                            runnable
+                                    .getResources()
+                                    .stream()
+                                    .filter(r -> r.requests() != null)
+                                    .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
+                    )
             );
             resources.setLimits(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.limits() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
-                )
+                    k8sBuilderHelper.convertResources(
+                            runnable
+                                    .getResources()
+                                    .stream()
+                                    .filter(r -> r.limits() != null)
+                                    .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
+                    )
             );
         }
 
@@ -205,9 +205,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected @Nullable Map<String, String> buildNodeSelector(T runnable) {
         if (runnable.getNodeSelector() != null && !runnable.getNodeSelector().isEmpty()) {
             return runnable
-                .getNodeSelector()
-                .stream()
-                .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value));
+                    .getNodeSelector()
+                    .stream()
+                    .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value));
         }
 
         return null;

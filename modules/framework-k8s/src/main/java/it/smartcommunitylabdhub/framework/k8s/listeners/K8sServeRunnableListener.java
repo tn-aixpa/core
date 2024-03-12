@@ -47,7 +47,7 @@ public class K8sServeRunnableListener {
                         case State.STOP: {
                             yield k8sServeFramework.stop(runnable);
                         }
-                        case State.DELETED: {
+                        case State.DELETING: {
                             yield k8sServeFramework.delete(runnable);
                         }
                         default: {
@@ -57,7 +57,12 @@ public class K8sServeRunnableListener {
 
             if (runnable != null) {
                 try {
-                    runnableStore.store(runnable.getId(), runnable);
+                    // If runnable is deleted, remove from store
+                    if (runnable.getState().equals(State.DELETED.name())) {
+                        runnableStore.remove(runnable.getId());
+                    } else {
+                        runnableStore.store(runnable.getId(), runnable);
+                    }
                     // Publish event to Run Manager
                     eventPublisher.publishEvent(
                             RunnableChangedEvent

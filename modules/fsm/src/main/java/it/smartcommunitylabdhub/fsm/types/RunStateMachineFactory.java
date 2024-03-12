@@ -51,9 +51,9 @@ public class RunStateMachineFactory {
                         new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.CREATED)
                                 .withTransactions(
                                         List.of(
-                                                new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true),
                                                 new Transaction<>(RunEvent.BUILD, State.BUILT, (context, input) -> true),
-                                                new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                                                new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
+                                                new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true)
                                         )
                                 )
                                 .build()
@@ -63,9 +63,9 @@ public class RunStateMachineFactory {
                         new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.BUILT)
                                 .withTransactions(
                                         List.of(
-                                                new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true),
                                                 new Transaction<>(RunEvent.RUN, State.READY, (context, input) -> true),
-                                                new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true)
+                                                new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
+                                                new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true)
                                         )
                                 )
                                 .build()
@@ -77,7 +77,6 @@ public class RunStateMachineFactory {
                                         List.of(
                                                 new Transaction<>(RunEvent.EXECUTE, State.RUNNING, (context, input) -> true),
                                                 new Transaction<>(RunEvent.PENDING, State.READY, (context, input) -> true),
-//                            new Transaction<>(RunEvent.COMPLETE, State.COMPLETED, (context, input) -> true),
                                                 new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
                                                 new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true)
                                         )
@@ -90,6 +89,7 @@ public class RunStateMachineFactory {
                                 .withTransactions(
                                         List.of(
                                                 new Transaction<>(RunEvent.STOP, State.STOPPED, (context, input) -> true),
+                                                new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
                                                 new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true)
                                         )
                                 )
@@ -126,8 +126,15 @@ public class RunStateMachineFactory {
                 )
                 .withState(
                         State.ERROR,
-                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.ERROR).build()
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.ERROR)
+                                .withTransactions(
+                                        List.of(
+                                                new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true)
+                                        )
+                                ).build()
                 )
+                .withState(State.DELETED,
+                        new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.DELETED).build())
                 .build();
 
         // Return the builder
