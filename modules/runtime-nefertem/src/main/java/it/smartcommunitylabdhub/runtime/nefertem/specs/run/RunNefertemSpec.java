@@ -22,8 +22,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem+run", entity = EntityName.RUN)
+@SpecType(runtime = NefertemRuntime.RUNTIME, kind = RunNefertemSpec.KIND, entity = EntityName.RUN)
 public class RunNefertemSpec extends RunBaseSpec {
+
+    public static final String KIND = NefertemRuntime.RUNTIME + "+run";
 
     private Map<String, Object> inputs = new HashMap<>();
 

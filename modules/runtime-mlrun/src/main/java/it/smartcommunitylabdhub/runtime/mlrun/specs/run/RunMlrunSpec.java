@@ -17,8 +17,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = MlrunRuntime.RUNTIME, kind = "mlrun+run", entity = EntityName.RUN)
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = RunMlrunSpec.KIND, entity = EntityName.RUN)
 public class RunMlrunSpec extends RunBaseSpec {
+
+    public static final String KIND = MlrunRuntime.RUNTIME + "+run";
 
     private Map<String, Object> inputs = new HashMap<>();
 

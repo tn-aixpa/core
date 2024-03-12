@@ -41,9 +41,9 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         V1Deployment deployment = buildDeployment(runnable);
         deployment = deploymentFramework.create(deployment);
 
+        //create the service
         V1Service service = build(runnable);
         service = create(service);
-
         runnable.setState(State.RUNNING.name());
 
         return runnable;
@@ -56,18 +56,27 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             // Retrieve the deployment
             deployment = deploymentFramework.get(buildDeployment(runnable));
         } catch (K8sFrameworkException e) {
+            deployment = null;
+        }
+
+        if (deployment != null) {
+            // Delete the deployment
+            deploymentFramework.delete(deployment);
+        }
+
+        V1Service service;
+        try {
+            // Retrieve the service
+            service = get(build(runnable));
+        } catch (K8sFrameworkException e) {
             runnable.setState(State.DELETED.name());
             return runnable;
         }
 
-        // Delete the deployment
-        deploymentFramework.delete(deployment);
-
-        // Retrieve the service
-        V1Service service = build(runnable);
-
+        //Delete the service
         delete(service);
 
+        //update state
         runnable.setState(State.DELETED.name());
 
         return runnable;
@@ -75,13 +84,11 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
     @Override
     public K8sServeRunnable stop(K8sServeRunnable runnable) throws K8sFrameworkException {
-        V1Deployment deployment = deploymentFramework.get(buildDeployment(runnable));
+        //stop deployment and delete service
+        deploymentFramework.stop(getDeployment(runnable));
 
-        deploymentFramework.apply(deployment);
-
-        V1Service service = build(runnable);
-
-        service = apply(service);
+        V1Service service = get(build(runnable));
+        delete(service);
 
         runnable.setState(State.STOP.name());
 
@@ -127,28 +134,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
     @Override
     public V1Service apply(@NotNull V1Service service) throws K8sFrameworkException {
-        try {
-            // Delete the deployment
-            Assert.notNull(service.getMetadata(), "metadata can not be null");
-
-            return coreV1Api.deleteNamespacedService(
-                service.getMetadata().getName(),
-                namespace,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-            );
-        } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
-            }
-
-            throw new K8sFrameworkException(e.getMessage());
-        }
+        //nothing to do
+        return service;
     }
 
     @Override

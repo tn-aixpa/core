@@ -23,7 +23,7 @@ import org.springframework.util.Assert;
 public class K8sDeploymentRunnableListener {
 
     @Autowired
-    K8sDeploymentFramework k8sDeploymentFramework;
+    K8sDeploymentFramework k8sFramework;
 
     @Autowired
     ApplicationEventPublisher eventPublisher;
@@ -41,22 +41,18 @@ public class K8sDeploymentRunnableListener {
         try {
             runnable =
                 switch (State.valueOf(runnable.getState())) {
-                    case State.READY:
-                        {
-                            yield k8sDeploymentFramework.run(runnable);
-                        }
-                    case State.STOP:
-                        {
-                            yield k8sDeploymentFramework.stop(runnable);
-                        }
-                    case State.DELETING:
-                        {
-                            yield k8sDeploymentFramework.delete(runnable);
-                        }
-                    default:
-                        {
-                            yield null;
-                        }
+                    case State.READY -> {
+                        yield k8sFramework.run(runnable);
+                    }
+                    case State.STOP -> {
+                        yield k8sFramework.stop(runnable);
+                    }
+                    case State.DELETING -> {
+                        yield k8sFramework.delete(runnable);
+                    }
+                    default -> {
+                        yield null;
+                    }
                 };
 
             if (runnable != null) {
@@ -67,23 +63,6 @@ public class K8sDeploymentRunnableListener {
                     } else {
                         runnableStore.store(runnable.getId(), runnable);
                     }
-                    // Publish event to Run Manager
-                    eventPublisher.publishEvent(
-                        RunnableChangedEvent
-                            .builder()
-                            .runnable(runnable)
-                            .runMonitorObject(
-                                RunnableMonitorObject
-                                    .builder()
-                                    .runId(runnable.getId())
-                                    .stateId(runnable.getState())
-                                    .project(runnable.getProject())
-                                    .framework(runnable.getFramework())
-                                    .task(runnable.getTask())
-                                    .build()
-                            )
-                            .build()
-                    );
                 } catch (StoreException e) {
                     log.error("Error with store: {}", e.getMessage());
                 }
@@ -95,6 +74,13 @@ public class K8sDeploymentRunnableListener {
 
             try {
                 runnableStore.store(runnable.getId(), runnable);
+            } catch (StoreException e1) {
+                log.error("Error with store: {}", e.getMessage());
+            }
+        } finally {
+            if (runnable != null) {
+                log.debug("Processed runnable {}", runnable.getId());
+
                 // Publish event to Run Manager
                 eventPublisher.publishEvent(
                     RunnableChangedEvent
@@ -112,13 +98,7 @@ public class K8sDeploymentRunnableListener {
                         )
                         .build()
                 );
-            } catch (StoreException sex) {
-                log.error("Error with store: {}", sex.getMessage());
             }
-        } finally {
-            //remove after execution
-            //TODO, needs to cleanup FSM usage in framework
-            log.debug("Completed runnable {}", runnable.getId());
         }
     }
 }

@@ -33,7 +33,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     public K8sDeploymentRunnable run(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
         V1Deployment deployment = build(runnable);
         deployment = create(deployment);
-
         runnable.setState(State.RUNNING.name());
 
         return runnable;
@@ -50,7 +49,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
 
         delete(deployment);
-
         runnable.setState(State.DELETED.name());
 
         return runnable;
@@ -59,6 +57,9 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     @Override
     public K8sDeploymentRunnable stop(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
         V1Deployment deployment = get(build(runnable));
+
+        //stop by setting replicas to 0
+        deployment.getSpec().setReplicas(0);
         apply(deployment);
 
         runnable.setState(State.STOPPED.name());
@@ -150,7 +151,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             // Log service execution initiation
             log.info("----------------- APPLY KUBERNETES Deployment ----------------");
 
-            deployment.getSpec().setReplicas(0);
             V1Deployment updatedDeployment = appsV1Api.replaceNamespacedDeployment(
                 deployment.getMetadata().getName(),
                 namespace,

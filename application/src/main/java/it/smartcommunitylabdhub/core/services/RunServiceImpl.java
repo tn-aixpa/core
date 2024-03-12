@@ -243,8 +243,11 @@ public class RunServiceImpl implements SearchableRunService {
             //fetch current and merge
             Run current = entityService.get(id);
 
-            //spec is not modifiable
-            runDTO.setSpec(current.getSpec());
+            //spec is not modifiable unless in specific states
+            //TODO: implement logic to disable spec update in some states
+            // runDTO.setSpec(current.getSpec());
+
+            //TODO: implement logic to update status only in some states
 
             //full update, run is modifiable
             return entityService.update(id, runDTO);

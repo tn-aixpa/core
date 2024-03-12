@@ -58,6 +58,13 @@ public class ContainerRuntime
 
     @Override
     public RunContainerSpec build(@NotNull Function function, @NotNull Task task, @NotNull Run run) {
+        //check run kind
+        if (!RunContainerSpec.KIND.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
+            );
+        }
+
         FunctionContainerSpec funSpec = new FunctionContainerSpec(function.getSpec());
         RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
 
@@ -85,6 +92,13 @@ public class ContainerRuntime
 
     @Override
     public RunRunnable run(@NotNull Run run) {
+        //check run kind
+        if (!RunContainerSpec.KIND.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
+            );
+        }
+
         RunContainerSpec runContainerSpec = new RunContainerSpec(run.getSpec());
 
         // Create string run accessor from task
@@ -112,6 +126,13 @@ public class ContainerRuntime
 
     @Override
     public RunRunnable stop(Run run) throws NoSuchEntityException {
+        //check run kind
+        if (!RunContainerSpec.KIND.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
+            );
+        }
+
         RunContainerSpec runContainerSpec = new RunContainerSpec(run.getSpec());
 
         // Create string run accessor from task
@@ -125,7 +146,7 @@ public class ContainerRuntime
                         if (k8sDeploymentRunnable == null) {
                             throw new NoSuchEntityException("Deployment not found");
                         }
-                        k8sDeploymentRunnable.setState(State.STOPPED.name());
+                        k8sDeploymentRunnable.setState(State.STOP.name());
                         yield k8sDeploymentRunnable;
                     }
                     throw new CoreRuntimeException("Deploy Store is not available");
@@ -136,7 +157,7 @@ public class ContainerRuntime
                         if (k8sJobRunnable == null) {
                             throw new NoSuchEntityException("JobDeployment not found");
                         }
-                        k8sJobRunnable.setState(State.STOPPED.name());
+                        k8sJobRunnable.setState(State.STOP.name());
                         yield k8sJobRunnable;
                     }
                     throw new CoreRuntimeException("Job Store is not available");
@@ -147,7 +168,7 @@ public class ContainerRuntime
                         if (k8sServeRunnable == null) {
                             throw new NoSuchEntityException("ServeDeployment not found");
                         }
-                        k8sServeRunnable.setState(State.STOPPED.name());
+                        k8sServeRunnable.setState(State.STOP.name());
                         yield k8sServeRunnable;
                     }
 
@@ -163,6 +184,13 @@ public class ContainerRuntime
 
     @Override
     public RunRunnable delete(Run run) throws NoSuchEntityException {
+        //check run kind
+        if (!RunContainerSpec.KIND.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
+            );
+        }
+
         RunContainerSpec runContainerSpec = new RunContainerSpec(run.getSpec());
 
         // Create string run accessor from task

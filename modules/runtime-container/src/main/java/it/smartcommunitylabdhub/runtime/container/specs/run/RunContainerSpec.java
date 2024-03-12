@@ -18,8 +18,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container+run", entity = EntityName.RUN)
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = RunContainerSpec.KIND, entity = EntityName.RUN)
 public class RunContainerSpec extends RunBaseSpec {
+
+    public static final String KIND = ContainerRuntime.RUNTIME + "+run";
 
     @JsonProperty("job_spec")
     private TaskJobSpec taskJobSpec;

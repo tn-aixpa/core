@@ -17,8 +17,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = DbtRuntime.RUNTIME, kind = "dbt+run", entity = EntityName.RUN)
+@SpecType(runtime = DbtRuntime.RUNTIME, kind = RunDbtSpec.KIND, entity = EntityName.RUN)
 public class RunDbtSpec extends RunBaseSpec {
+
+    public static final String KIND = DbtRuntime.RUNTIME + "+run";
 
     private Map<String, Object> inputs = new HashMap<>();
 
