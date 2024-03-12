@@ -189,6 +189,14 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         }
     }
 
+    @Override
+    public V1Job create(V1Job object) throws K8sFrameworkException {
+        return null;
+    }
+
+    @Override
+    public void delete(V1Job object) throws K8sFrameworkException {}
+
     //TODO delete refactor method below
 
     private void writeLog(K8sJobRunnable runnable, String log) {

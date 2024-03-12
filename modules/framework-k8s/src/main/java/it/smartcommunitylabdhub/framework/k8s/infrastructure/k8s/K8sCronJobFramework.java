@@ -133,4 +133,12 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
     public K8sCronJobRunnable delete(K8sCronJobRunnable runnable) throws FrameworkException {
         return null;
     }
+
+    @Override
+    public V1CronJob create(V1CronJob object) throws K8sFrameworkException {
+        return null;
+    }
+
+    @Override
+    public void delete(V1CronJob object) throws K8sFrameworkException {}
 }

@@ -50,8 +50,7 @@ public class Fsm<S, E, C> {
     /**
      * Default constructor to create an empty StateMachine.
      */
-    public Fsm() {
-    }
+    public Fsm() {}
 
     /**
      * Constructor to create a StateMachine with the initial state and context.
@@ -96,33 +95,33 @@ public class Fsm<S, E, C> {
      */
     public <R> Optional<R> goToState(S targetState, @Nullable C input) throws InvalidTransactionException {
         return acquireLock()
-                .flatMap(lockAcquired -> {
-                    if (lockAcquired) {
-                        try {
-                            // Check if a valid path exists from the current state to the target state
-                            List<S> path = findPath(currentState, targetState);
-                            if (path.isEmpty()) {
-                                // No valid path exists; transition to the error state
-                                throw new InvalidTransactionException(currentState.toString(), targetState.toString());
-                            }
-
-                            // Follow the path for all element except the last transaction
-                            // Execute ExitAction
-                            // Verify the Guard of the transaction
-                            // Execute Transaction, and it's internal logic
-                            // Execute EnterAction
-                            for (int i = 0; i < path.size() - 2; i++) {
-                                execute(path.get(i), path.get(i + 1), input);
-                            }
-
-                            // Execute last transaction and collect result.
-                            return execute(path.get(path.size() - 2), path.getLast(), input);
-                        } finally {
-                            stateLock.unlock();
+            .flatMap(lockAcquired -> {
+                if (lockAcquired) {
+                    try {
+                        // Check if a valid path exists from the current state to the target state
+                        List<S> path = findPath(currentState, targetState);
+                        if (path.isEmpty()) {
+                            // No valid path exists; transition to the error state
+                            throw new InvalidTransactionException(currentState.toString(), targetState.toString());
                         }
+
+                        // Follow the path for all element except the last transaction
+                        // Execute ExitAction
+                        // Verify the Guard of the transaction
+                        // Execute Transaction, and it's internal logic
+                        // Execute EnterAction
+                        for (int i = 0; i < path.size() - 2; i++) {
+                            execute(path.get(i), path.get(i + 1), input);
+                        }
+
+                        // Execute last transaction and collect result.
+                        return execute(path.get(path.size() - 2), path.getLast(), input);
+                    } finally {
+                        stateLock.unlock();
                     }
-                    return Optional.empty();
-                });
+                }
+                return Optional.empty();
+            });
     }
 
     /**
@@ -171,49 +170,49 @@ public class Fsm<S, E, C> {
 
         // execute exit action
         Optional
-                .ofNullable(stateDefinition.getExitAction())
-                .ifPresent(exitAction -> exitAction.accept(context.getValue()));
+            .ofNullable(stateDefinition.getExitAction())
+            .ifPresent(exitAction -> exitAction.accept(context.getValue()));
 
         // Get next state if exist and execute logic
         return Optional
-                .ofNullable(nextStateInPath)
-                .flatMap(nextState -> {
-                    // Retrieve the transition event dynamically
-                    Optional<Transaction<S, E, C, R>> transaction = stateDefinition.getTransition(nextState);
+            .ofNullable(nextStateInPath)
+            .flatMap(nextState -> {
+                // Retrieve the transition event dynamically
+                Optional<Transaction<S, E, C, R>> transaction = stateDefinition.getTransition(nextState);
 
-                    // Check if a transition event exists and if guard condition is satisfied
-                    return transaction.map(transition -> {
-                        if (transition.getGuard().test(context.getValue(), input)) {
-                            // Notify event listeners for the transition event
-                            notifyEventListeners(transition.getEvent(), input);
+                // Check if a transition event exists and if guard condition is satisfied
+                return transaction.map(transition -> {
+                    if (transition.getGuard().test(context.getValue(), input)) {
+                        // Notify event listeners for the transition event
+                        notifyEventListeners(transition.getEvent(), input);
 
-                            // Apply internal logic of the target state
-                            Optional<R> result = transition
-                                    .getInternalLogic()
-                                    .flatMap(internalFunc -> applyInternalFunc(internalFunc, input));
+                        // Apply internal logic of the target state
+                        Optional<R> result = transition
+                            .getInternalLogic()
+                            .flatMap(internalFunc -> applyInternalFunc(internalFunc, input));
 
-                            // Update the current state and notify state change listener
-                            currentState = nextState;
+                        // Update the current state and notify state change listener
+                        currentState = nextState;
 
-                            // Notify listener for state changed
-                            notifyStateChangeListener(currentState);
+                        // Notify listener for state changed
+                        notifyStateChangeListener(currentState);
 
-                            // Retrieve the current state definition
-                            FsmState<?, ?, C> currentStateDefinition = states.get(currentState);
+                        // Retrieve the current state definition
+                        FsmState<?, ?, C> currentStateDefinition = states.get(currentState);
 
-                            // Execute entry action
-                            Optional
-                                    .ofNullable(currentStateDefinition.getEntryAction())
-                                    .ifPresent(entryAction -> entryAction.accept(context.getValue()));
+                        // Execute entry action
+                        Optional
+                            .ofNullable(currentStateDefinition.getEntryAction())
+                            .ifPresent(entryAction -> entryAction.accept(context.getValue()));
 
-                            return result;
-                        } else {
-                            return Optional.<R>empty();
-                            // Guard condition not satisfied, skip this transition
-                        }
-                    });
-                })
-                .orElse(Optional.empty());
+                        return result;
+                    } else {
+                        return Optional.<R>empty();
+                        // Guard condition not satisfied, skip this transition
+                    }
+                });
+            })
+            .orElse(Optional.empty());
     }
 
     /**

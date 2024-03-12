@@ -28,9 +28,9 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
     protected final Converter<E, D> dtoBuilder;
 
     public BaseEntityServiceImpl(
-            JpaRepository<E, String> repository,
-            Converter<D, E> entityBuilder,
-            Converter<E, D> dtoBuilder
+        JpaRepository<E, String> repository,
+        Converter<D, E> entityBuilder,
+        Converter<E, D> dtoBuilder
     ) {
         Assert.notNull(repository, "repository can not be null");
         Assert.notNull(entityBuilder, "entity builder can not be null");
@@ -108,14 +108,14 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
         log.debug("delete with id {}", id);
 
         repository
-                .findById(id)
-                .ifPresent(e -> {
-                    if (log.isTraceEnabled()) {
-                        log.trace("entity: {}", e);
-                    }
+            .findById(id)
+            .ifPresent(e -> {
+                if (log.isTraceEnabled()) {
+                    log.trace("entity: {}", e);
+                }
 
-                    repository.delete(e);
-                });
+                repository.delete(e);
+            });
     }
 
     @Override
@@ -184,9 +184,9 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
 
         if (repository instanceof JpaSpecificationExecutor) {
             return ((JpaSpecificationExecutor<E>) repository).findAll(specification)
-                    .stream()
-                    .map(e -> dtoBuilder.convert(e))
-                    .collect(Collectors.toList());
+                .stream()
+                .map(e -> dtoBuilder.convert(e))
+                .collect(Collectors.toList());
         }
 
         throw new UnsupportedOperationException();

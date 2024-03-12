@@ -57,19 +57,18 @@ public class RunManager {
 
     private final EntityService<Function, FunctionEntity> functionEntityService;
 
-
     private final RuntimeFactory runtimeFactory;
 
     private final ApplicationEventPublisher eventPublisher;
 
     public RunManager(
-            RunStateMachineFactory runStateMachine,
-            LogRepository logRepository,
-            EntityService<Run, RunEntity> entityService,
-            EntityService<Task, TaskEntity> taskEntityService,
-            EntityService<Function, FunctionEntity> functionEntityService,
-            RuntimeFactory runtimeFactory,
-            ApplicationEventPublisher eventPublisher
+        RunStateMachineFactory runStateMachine,
+        LogRepository logRepository,
+        EntityService<Run, RunEntity> entityService,
+        EntityService<Task, TaskEntity> taskEntityService,
+        EntityService<Function, FunctionEntity> functionEntityService,
+        RuntimeFactory runtimeFactory,
+        ApplicationEventPublisher eventPublisher
     ) {
         this.runStateMachine = runStateMachine;
         this.logRepository = logRepository;
@@ -92,9 +91,9 @@ public class RunManager {
 
         // Retrieve Task
         Specification<TaskEntity> where = Specification.allOf(
-                CommonSpecification.projectEquals(function.getProject()),
-                createFunctionSpecification(TaskUtils.buildFunctionString(function)),
-                createTaskKindSpecification(runSpecAccessor.getTask())
+            CommonSpecification.projectEquals(function.getProject()),
+            createFunctionSpecification(TaskUtils.buildFunctionString(function)),
+            createTaskKindSpecification(runSpecAccessor.getTask())
         );
         Task task = taskEntityService.searchAll(where).stream().findFirst().orElse(null);
 
@@ -103,26 +102,26 @@ public class RunManager {
 
         // Add Internal logic to be executed when state change from CREATED to READY
         fsm
-                .getState(State.CREATED)
-                .getTransaction(RunEvent.BUILD)
-                .setInternalLogic((context, input, fsmInstance) -> {
-                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                        // Retrieve Runtime and build run
-                        Runtime<
-                                ? extends FunctionBaseSpec,
-                                ? extends RunBaseSpec,
-                                ? extends RunBaseStatus,
-                                ? extends RunRunnable
-                                > runtime = runtimeFactory.getRuntime(function.getKind());
+            .getState(State.CREATED)
+            .getTransaction(RunEvent.BUILD)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                    // Retrieve Runtime and build run
+                    Runtime<
+                        ? extends FunctionBaseSpec,
+                        ? extends RunBaseSpec,
+                        ? extends RunBaseStatus,
+                        ? extends RunRunnable
+                    > runtime = runtimeFactory.getRuntime(function.getKind());
 
-                        // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
-                        // an exception occur! for.
-                        RunBaseSpec runSpecBuilt = runtime.build(function, task, run);
+                    // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
+                    // an exception occur! for.
+                    RunBaseSpec runSpecBuilt = runtime.build(function, task, run);
 
-                        return Optional.of(runSpecBuilt);
-                    }
-                    return Optional.empty();
-                });
+                    return Optional.of(runSpecBuilt);
+                }
+                return Optional.empty();
+            });
 
         try {
             // Update run state to BUILT
@@ -162,25 +161,25 @@ public class RunManager {
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
         fsm
-                .getState(State.BUILT)
-                .getTransaction(RunEvent.RUN)
-                .setInternalLogic((context, input, stateMachine) -> {
-                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                        // Retrieve Runtime and build run
-                        Runtime<
-                                ? extends FunctionBaseSpec,
-                                ? extends RunBaseSpec,
-                                ? extends RunBaseStatus,
-                                ? extends RunRunnable
-                                > runtime = runtimeFactory.getRuntime(function.getKind());
-                        // Create Runnable
-                        RunRunnable runnable = runtime.run(run);
+            .getState(State.BUILT)
+            .getTransaction(RunEvent.RUN)
+            .setInternalLogic((context, input, stateMachine) -> {
+                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                    // Retrieve Runtime and build run
+                    Runtime<
+                        ? extends FunctionBaseSpec,
+                        ? extends RunBaseSpec,
+                        ? extends RunBaseStatus,
+                        ? extends RunRunnable
+                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    // Create Runnable
+                    RunRunnable runnable = runtime.run(run);
 
-                        return Optional.of(runnable);
-                    } else {
-                        return Optional.empty();
-                    }
-                });
+                    return Optional.of(runnable);
+                } else {
+                    return Optional.empty();
+                }
+            });
 
         try {
             Optional<RunRunnable> runnable = fsm.goToState(State.READY, null);
@@ -215,25 +214,25 @@ public class RunManager {
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
         fsm
-                .getState(State.RUNNING)
-                .getTransaction(RunEvent.STOP)
-                .setInternalLogic((context, input, stateMachine) -> {
-                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                        // Retrieve Runtime and build run
-                        Runtime<
-                                ? extends FunctionBaseSpec,
-                                ? extends RunBaseSpec,
-                                ? extends RunBaseStatus,
-                                ? extends RunRunnable
-                                > runtime = runtimeFactory.getRuntime(function.getKind());
-                        // Create Runnable
-                        RunRunnable runnable = runtime.stop(run);
+            .getState(State.RUNNING)
+            .getTransaction(RunEvent.STOP)
+            .setInternalLogic((context, input, stateMachine) -> {
+                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                    // Retrieve Runtime and build run
+                    Runtime<
+                        ? extends FunctionBaseSpec,
+                        ? extends RunBaseSpec,
+                        ? extends RunBaseStatus,
+                        ? extends RunRunnable
+                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    // Create Runnable
+                    RunRunnable runnable = runtime.stop(run);
 
-                        return Optional.of(runnable);
-                    } else {
-                        return Optional.empty();
-                    }
-                });
+                    return Optional.of(runnable);
+                } else {
+                    return Optional.empty();
+                }
+            });
 
         try {
             Optional<RunRunnable> runnable = fsm.goToState(State.STOP, null);
@@ -254,7 +253,6 @@ public class RunManager {
         }
     }
 
-
     public Run delete(@NotNull Run run) {
         // GET state machine, init state machine with status
         RunBaseSpec runBaseSpec = new RunBaseSpec();
@@ -269,88 +267,88 @@ public class RunManager {
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
         fsm
-                .getState(State.RUNNING)
-                .getTransaction(RunEvent.DELETING)
-                .setInternalLogic((context, input, stateMachine) -> {
-                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                        // Retrieve Runtime and build run
-                        Runtime<
-                                ? extends FunctionBaseSpec,
-                                ? extends RunBaseSpec,
-                                ? extends RunBaseStatus,
-                                ? extends RunRunnable
-                                > runtime = runtimeFactory.getRuntime(function.getKind());
-                        // Create Runnable
-                        RunRunnable runnable = runtime.delete(run);
+            .getState(State.RUNNING)
+            .getTransaction(RunEvent.DELETING)
+            .setInternalLogic((context, input, stateMachine) -> {
+                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                    // Retrieve Runtime and build run
+                    Runtime<
+                        ? extends FunctionBaseSpec,
+                        ? extends RunBaseSpec,
+                        ? extends RunBaseStatus,
+                        ? extends RunRunnable
+                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    // Create Runnable
+                    RunRunnable runnable = runtime.delete(run);
 
-                        return Optional.of(runnable);
-                    } else {
-                        return Optional.empty();
-                    }
-                });
-
-        fsm
-                .getState(State.CREATED)
-                .getTransaction(RunEvent.DELETING)
-                .setInternalLogic((context, input, stateMachine) -> {
-                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                        // Retrieve Runtime and build run
-                        Runtime<
-                                ? extends FunctionBaseSpec,
-                                ? extends RunBaseSpec,
-                                ? extends RunBaseStatus,
-                                ? extends RunRunnable
-                                > runtime = runtimeFactory.getRuntime(function.getKind());
-                        // Create Runnable
-                        RunRunnable runnable = runtime.delete(run);
-
-                        return Optional.of(runnable);
-                    } else {
-                        return Optional.empty();
-                    }
-                });
+                    return Optional.of(runnable);
+                } else {
+                    return Optional.empty();
+                }
+            });
 
         fsm
-                .getState(State.ERROR)
-                .getTransaction(RunEvent.DELETING)
-                .setInternalLogic((context, input, stateMachine) -> {
-                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                        // Retrieve Runtime and build run
-                        Runtime<
-                                ? extends FunctionBaseSpec,
-                                ? extends RunBaseSpec,
-                                ? extends RunBaseStatus,
-                                ? extends RunRunnable
-                                > runtime = runtimeFactory.getRuntime(function.getKind());
-                        // Create Runnable
-                        RunRunnable runnable = runtime.delete(run);
+            .getState(State.CREATED)
+            .getTransaction(RunEvent.DELETING)
+            .setInternalLogic((context, input, stateMachine) -> {
+                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                    // Retrieve Runtime and build run
+                    Runtime<
+                        ? extends FunctionBaseSpec,
+                        ? extends RunBaseSpec,
+                        ? extends RunBaseStatus,
+                        ? extends RunRunnable
+                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    // Create Runnable
+                    RunRunnable runnable = runtime.delete(run);
 
-                        return Optional.of(runnable);
-                    } else {
-                        return Optional.empty();
-                    }
-                });
+                    return Optional.of(runnable);
+                } else {
+                    return Optional.empty();
+                }
+            });
 
         fsm
-                .getState(State.BUILT)
-                .getTransaction(RunEvent.DELETING)
-                .setInternalLogic((context, input, stateMachine) -> {
-                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                        // Retrieve Runtime and build run
-                        Runtime<
-                                ? extends FunctionBaseSpec,
-                                ? extends RunBaseSpec,
-                                ? extends RunBaseStatus,
-                                ? extends RunRunnable
-                                > runtime = runtimeFactory.getRuntime(function.getKind());
-                        // Create Runnable
-                        RunRunnable runnable = runtime.delete(run);
+            .getState(State.ERROR)
+            .getTransaction(RunEvent.DELETING)
+            .setInternalLogic((context, input, stateMachine) -> {
+                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                    // Retrieve Runtime and build run
+                    Runtime<
+                        ? extends FunctionBaseSpec,
+                        ? extends RunBaseSpec,
+                        ? extends RunBaseStatus,
+                        ? extends RunRunnable
+                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    // Create Runnable
+                    RunRunnable runnable = runtime.delete(run);
 
-                        return Optional.of(runnable);
-                    } else {
-                        return Optional.empty();
-                    }
-                });
+                    return Optional.of(runnable);
+                } else {
+                    return Optional.empty();
+                }
+            });
+
+        fsm
+            .getState(State.BUILT)
+            .getTransaction(RunEvent.DELETING)
+            .setInternalLogic((context, input, stateMachine) -> {
+                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                    // Retrieve Runtime and build run
+                    Runtime<
+                        ? extends FunctionBaseSpec,
+                        ? extends RunBaseSpec,
+                        ? extends RunBaseStatus,
+                        ? extends RunRunnable
+                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    // Create Runnable
+                    RunRunnable runnable = runtime.delete(run);
+
+                    return Optional.of(runnable);
+                } else {
+                    return Optional.empty();
+                }
+            });
 
         try {
             Optional<RunRunnable> runnable = fsm.goToState(State.DELETING, null);
@@ -376,9 +374,15 @@ public class RunManager {
 
         // Use service to retrieve the run and check if state is changed
         Optional
-                .of(entityService.find(runnableMonitorObject.getRunId()))
-                .ifPresentOrElse((run) -> {
-                    if (!Objects.equals(StatusFieldAccessor.with(run.getStatus()).getState(), runnableMonitorObject.getStateId())) {
+            .of(entityService.find(runnableMonitorObject.getRunId()))
+            .ifPresentOrElse(
+                run -> {
+                    if (
+                        !Objects.equals(
+                            StatusFieldAccessor.with(run.getStatus()).getState(),
+                            runnableMonitorObject.getStateId()
+                        )
+                    ) {
                         switch (State.valueOf(runnableMonitorObject.getStateId())) {
                             case COMPLETED:
                                 onCompleted(event);
@@ -397,20 +401,25 @@ public class RunManager {
                                 break;
                             default:
                                 log.info(
-                                        "State {} for run id {} not found",
-                                        runnableMonitorObject.getStateId(),
-                                        runnableMonitorObject.getRunId()
+                                    "State {} for run id {} not found",
+                                    runnableMonitorObject.getStateId(),
+                                    runnableMonitorObject.getRunId()
                                 );
                                 break;
                         }
                     } else {
-                        log.info("State {} for run id {} not changed", runnableMonitorObject.getStateId(), runnableMonitorObject.getRunId());
+                        log.info(
+                            "State {} for run id {} not changed",
+                            runnableMonitorObject.getStateId(),
+                            runnableMonitorObject.getRunId()
+                        );
                     }
-                }, () -> {
+                },
+                () -> {
                     onError(event);
                     log.error("Run with id {} not found", runnableMonitorObject.getRunId());
-                });
-
+                }
+            );
     }
 
     // Callback Methods
@@ -423,39 +432,39 @@ public class RunManager {
 
         // Define logic for state READY
         fsm
-                .getState(State.READY)
-                .getTransaction(RunEvent.EXECUTE)
-                .setInternalLogic((context, input, fsmInstance) -> {
-                    log.info(
-                            "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
-                            RunEvent.EXECUTE,
-                            context,
-                            input
-                    );
-                    // Retrieve Runtime
-                    Runtime<
-                            ? extends FunctionBaseSpec,
-                            ? extends RunBaseSpec,
-                            ? extends RunBaseStatus,
-                            ? extends RunRunnable
-                            > runtime = runtimeFactory.getRuntime(function.getKind());
+            .getState(State.READY)
+            .getTransaction(RunEvent.EXECUTE)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                log.info(
+                    "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
+                    RunEvent.EXECUTE,
+                    context,
+                    input
+                );
+                // Retrieve Runtime
+                Runtime<
+                    ? extends FunctionBaseSpec,
+                    ? extends RunBaseSpec,
+                    ? extends RunBaseStatus,
+                    ? extends RunRunnable
+                > runtime = runtimeFactory.getRuntime(function.getKind());
 
-                    RunBaseStatus runStatus = runtime.onRunning(run, event.getRunnable());
-                    return Optional.ofNullable(runStatus);
-                });
+                RunBaseStatus runStatus = runtime.onRunning(run, event.getRunnable());
+                return Optional.ofNullable(runStatus);
+            });
 
         try {
             Optional<RunBaseStatus> runStatus = fsm.goToState(State.RUNNING, null);
             runStatus.ifPresentOrElse(
-                    runBaseStatus -> {
-                        run.setStatus(
-                                MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.RUNNING.toString()))
-                        );
-                    },
-                    () -> {
-                        // Update run state to RUNNING
-                        run.getStatus().put("state", State.RUNNING.toString());
-                    }
+                runBaseStatus -> {
+                    run.setStatus(
+                        MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.RUNNING.toString()))
+                    );
+                },
+                () -> {
+                    // Update run state to RUNNING
+                    run.getStatus().put("state", State.RUNNING.toString());
+                }
             );
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
@@ -478,49 +487,47 @@ public class RunManager {
 
         // Retrieve Runtime
         Runtime<
-                ? extends FunctionBaseSpec,
-                ? extends RunBaseSpec,
-                ? extends RunBaseStatus,
-                ? extends RunRunnable
-                > runtime = runtimeFactory.getRuntime(function.getKind());
+            ? extends FunctionBaseSpec,
+            ? extends RunBaseSpec,
+            ? extends RunBaseStatus,
+            ? extends RunRunnable
+        > runtime = runtimeFactory.getRuntime(function.getKind());
 
         // Define logic for state RUNNING
         fsm
-                .getState(State.RUNNING)
-                .getTransaction(RunEvent.COMPLETE)
-                .setInternalLogic((context, input, fsmInstance) -> {
-                    log.info(
-                            "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
-                            RunEvent.COMPLETE,
-                            context,
-                            input
-                    );
+            .getState(State.RUNNING)
+            .getTransaction(RunEvent.COMPLETE)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                log.info(
+                    "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
+                    RunEvent.COMPLETE,
+                    context,
+                    input
+                );
 
-                    RunBaseStatus runStatus = runtime.onComplete(run, event.getRunnable());
-                    return Optional.ofNullable(runStatus);
-                });
+                RunBaseStatus runStatus = runtime.onComplete(run, event.getRunnable());
+                return Optional.ofNullable(runStatus);
+            });
 
         try {
             Optional<RunBaseStatus> runStatus = fsm.goToState(State.COMPLETED, null);
             runStatus.ifPresentOrElse(
-                    runBaseStatus -> {
-                        run.setStatus(
-                                MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.COMPLETED.toString()))
-                        );
-                    },
-                    () -> {
-                        // Update run state to RUNNING
-                        run.getStatus().put("state", State.COMPLETED.toString());
-                    }
+                runBaseStatus -> {
+                    run.setStatus(
+                        MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.COMPLETED.toString()))
+                    );
+                },
+                () -> {
+                    // Update run state to RUNNING
+                    run.getStatus().put("state", State.COMPLETED.toString());
+                }
             );
             entityService.update(run.getId(), run);
-
 
             // Delete Runnable
             event.getRunnable().setState(State.DELETED.toString());
             RunRunnable runRunnable = runtime.delete(run);
             eventPublisher.publishEvent(runRunnable);
-
         } catch (InvalidTransactionException e) {
             log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
             throw new InvalidTransactionException(e.getFromState(), e.getToState());
@@ -542,32 +549,33 @@ public class RunManager {
         try {
             // Retrieve Runtime
             Runtime<
-                    ? extends FunctionBaseSpec,
-                    ? extends RunBaseSpec,
-                    ? extends RunBaseStatus,
-                    ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                ? extends FunctionBaseSpec,
+                ? extends RunBaseSpec,
+                ? extends RunBaseStatus,
+                ? extends RunRunnable
+            > runtime = runtimeFactory.getRuntime(function.getKind());
 
             RunBaseStatus runStatus = runtime.onStopped(run, event.getRunnable());
 
-            Optional.ofNullable(runStatus).ifPresentOrElse(
+            Optional
+                .ofNullable(runStatus)
+                .ifPresentOrElse(
                     runBaseStatus -> {
                         run.setStatus(
-                                MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.STOPPED.toString()))
+                            MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.STOPPED.toString()))
                         );
                     },
                     () -> {
                         // Update run state to RUNNING
                         run.getStatus().put("state", State.STOPPED.toString());
                     }
-            );
+                );
             entityService.update(run.getId(), run);
 
             // Delete Runnable
             event.getRunnable().setState(State.DELETED.toString());
             RunRunnable runRunnable = runtime.delete(run);
             eventPublisher.publishEvent(runRunnable);
-
         } catch (InvalidTransactionException e) {
             log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
             throw new InvalidTransactionException(e.getFromState(), e.getToState());
@@ -587,81 +595,81 @@ public class RunManager {
         Function function = retrieveFunction(run);
 
         Runtime<
-                ? extends FunctionBaseSpec,
-                ? extends RunBaseSpec,
-                ? extends RunBaseStatus,
-                ? extends RunRunnable
-                > runtime = runtimeFactory.getRuntime(function.getKind());
+            ? extends FunctionBaseSpec,
+            ? extends RunBaseSpec,
+            ? extends RunBaseStatus,
+            ? extends RunRunnable
+        > runtime = runtimeFactory.getRuntime(function.getKind());
 
         // Define logic for state READY
         fsm
-                .getState(State.READY)
-                .getTransaction(RunEvent.ERROR)
-                .setInternalLogic((context, input, fsmInstance) -> {
-                    log.info(
-                            "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
-                            RunEvent.ERROR,
-                            context,
-                            input
-                    );
+            .getState(State.READY)
+            .getTransaction(RunEvent.ERROR)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                log.info(
+                    "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
+                    RunEvent.ERROR,
+                    context,
+                    input
+                );
 
-                    RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
-                    return Optional.ofNullable(runStatus);
-                });
+                RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
+                return Optional.ofNullable(runStatus);
+            });
         fsm
-                .getState(State.BUILT)
-                .getTransaction(RunEvent.ERROR)
-                .setInternalLogic((context, input, fsmInstance) -> {
-                    log.info(
-                            "Executing internal logic for state BUILT, " + "event :{}, context: {}, input: {}",
-                            RunEvent.ERROR,
-                            context,
-                            input
-                    );
-                    RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
-                    return Optional.of(runStatus);
-                });
+            .getState(State.BUILT)
+            .getTransaction(RunEvent.ERROR)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                log.info(
+                    "Executing internal logic for state BUILT, " + "event :{}, context: {}, input: {}",
+                    RunEvent.ERROR,
+                    context,
+                    input
+                );
+                RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
+                return Optional.of(runStatus);
+            });
         fsm
-                .getState(State.RUNNING)
-                .getTransaction(RunEvent.ERROR)
-                .setInternalLogic((context, input, fsmInstance) -> {
-                    log.info(
-                            "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
-                            RunEvent.ERROR,
-                            context,
-                            input
-                    );
+            .getState(State.RUNNING)
+            .getTransaction(RunEvent.ERROR)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                log.info(
+                    "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
+                    RunEvent.ERROR,
+                    context,
+                    input
+                );
 
-                    RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
-                    return Optional.ofNullable(runStatus);
-                });
+                RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
+                return Optional.ofNullable(runStatus);
+            });
 
         fsm
-                .getState(State.STOP)
-                .getTransaction(RunEvent.ERROR)
-                .setInternalLogic((context, input, fsmInstance) -> {
-                    log.info(
-                            "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
-                            RunEvent.ERROR,
-                            context,
-                            input
-                    );
-                    RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
-                    return Optional.ofNullable(runStatus);
-                });
+            .getState(State.STOP)
+            .getTransaction(RunEvent.ERROR)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                log.info(
+                    "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
+                    RunEvent.ERROR,
+                    context,
+                    input
+                );
+                RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
+                return Optional.ofNullable(runStatus);
+            });
 
         try {
             Optional<RunBaseStatus> runStatus = fsm.goToState(State.ERROR, null);
             runStatus.ifPresentOrElse(
-                    runBaseStatus -> {
-                        run.setStatus(
-                                MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.ERROR.toString()))
-                        );
-                    },
-                    () -> {
-                        // Update run state to RUNNING
-                        run.getStatus().put("state", State.ERROR.toString());
-                    }
+                runBaseStatus -> {
+                    run.setStatus(
+                        MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.ERROR.toString()))
+                    );
+                },
+                () -> {
+                    // Update run state to RUNNING
+                    run.getStatus().put("state", State.ERROR.toString());
+                }
             );
             entityService.update(run.getId(), run);
 
@@ -669,7 +677,6 @@ public class RunManager {
             event.getRunnable().setState(State.DELETED.toString());
             RunRunnable runRunnable = runtime.delete(run);
             eventPublisher.publishEvent(runRunnable);
-
         } catch (InvalidTransactionException e) {
             log.error("Invalid transaction from state {} to state {}", e.getFromState(), e.getToState());
         }
@@ -694,21 +701,19 @@ public class RunManager {
         try {
             // Retrieve Runtime
             Runtime<
-                    ? extends FunctionBaseSpec,
-                    ? extends RunBaseSpec,
-                    ? extends RunBaseStatus,
-                    ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                ? extends FunctionBaseSpec,
+                ? extends RunBaseSpec,
+                ? extends RunBaseStatus,
+                ? extends RunRunnable
+            > runtime = runtimeFactory.getRuntime(function.getKind());
 
             RunBaseStatus runStatus = runtime.onDeleted(run, event.getRunnable());
 
-            Optional.ofNullable(runStatus).ifPresent(
-                    runBaseStatus -> {
-                        run.setStatus(
-                                MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", state))
-                        );
-                    }
-            );
+            Optional
+                .ofNullable(runStatus)
+                .ifPresent(runBaseStatus -> {
+                    run.setStatus(MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", state)));
+                });
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
             log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
@@ -731,8 +736,8 @@ public class RunManager {
 
         // Initialize state machine
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = runStateMachine.builder(
-                State.valueOf(StatusFieldAccessor.with(run.getStatus()).getState()),
-                ctx
+            State.valueOf(StatusFieldAccessor.with(run.getStatus()).getState()),
+            ctx
         );
 
         // On state change delegate state machine to update the run

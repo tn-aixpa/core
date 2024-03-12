@@ -40,20 +40,24 @@ public class K8sDeploymentRunnableListener {
 
         try {
             runnable =
-                    switch (State.valueOf(runnable.getState())) {
-                        case State.READY: {
+                switch (State.valueOf(runnable.getState())) {
+                    case State.READY:
+                        {
                             yield k8sDeploymentFramework.run(runnable);
                         }
-                        case State.STOP: {
+                    case State.STOP:
+                        {
                             yield k8sDeploymentFramework.stop(runnable);
                         }
-                        case State.DELETING: {
+                    case State.DELETING:
+                        {
                             yield k8sDeploymentFramework.delete(runnable);
                         }
-                        default: {
+                    default:
+                        {
                             yield null;
                         }
-                    };
+                };
 
             if (runnable != null) {
                 try {
@@ -65,24 +69,24 @@ public class K8sDeploymentRunnableListener {
                     }
                     // Publish event to Run Manager
                     eventPublisher.publishEvent(
-                            RunnableChangedEvent
+                        RunnableChangedEvent
+                            .builder()
+                            .runnable(runnable)
+                            .runMonitorObject(
+                                RunnableMonitorObject
                                     .builder()
-                                    .runnable(runnable)
-                                    .runMonitorObject(
-                                            RunnableMonitorObject
-                                                    .builder()
-                                                    .runId(runnable.getId())
-                                                    .stateId(runnable.getState())
-                                                    .project(runnable.getProject())
-                                                    .framework(runnable.getFramework())
-                                                    .task(runnable.getTask())
-                                                    .build()
-                                    )
-                                    .build());
+                                    .runId(runnable.getId())
+                                    .stateId(runnable.getState())
+                                    .project(runnable.getProject())
+                                    .framework(runnable.getFramework())
+                                    .task(runnable.getTask())
+                                    .build()
+                            )
+                            .build()
+                    );
                 } catch (StoreException e) {
                     log.error("Error with store: {}", e.getMessage());
                 }
-
             }
         } catch (K8sFrameworkException e) {
             // Set runnable to error state send event
@@ -93,20 +97,21 @@ public class K8sDeploymentRunnableListener {
                 runnableStore.store(runnable.getId(), runnable);
                 // Publish event to Run Manager
                 eventPublisher.publishEvent(
-                        RunnableChangedEvent
+                    RunnableChangedEvent
+                        .builder()
+                        .runnable(runnable)
+                        .runMonitorObject(
+                            RunnableMonitorObject
                                 .builder()
-                                .runnable(runnable)
-                                .runMonitorObject(
-                                        RunnableMonitorObject
-                                                .builder()
-                                                .runId(runnable.getId())
-                                                .stateId(runnable.getState())
-                                                .project(runnable.getProject())
-                                                .framework(runnable.getFramework())
-                                                .task(runnable.getTask())
-                                                .build()
-                                )
-                                .build());
+                                .runId(runnable.getId())
+                                .stateId(runnable.getState())
+                                .project(runnable.getProject())
+                                .framework(runnable.getFramework())
+                                .task(runnable.getTask())
+                                .build()
+                        )
+                        .build()
+                );
             } catch (StoreException sex) {
                 log.error("Error with store: {}", sex.getMessage());
             }

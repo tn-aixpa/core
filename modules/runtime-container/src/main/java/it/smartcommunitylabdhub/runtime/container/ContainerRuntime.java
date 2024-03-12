@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.runtime.container;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
@@ -35,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 @RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
 public class ContainerRuntime
-        implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, RunRunnable> {
+    implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, RunRunnable> {
 
     public static final String RUNTIME = "container";
 
@@ -46,13 +47,13 @@ public class ContainerRuntime
     @Autowired
     private SecretService secretService;
 
-    @Autowired
+    @Autowired(required = false)
     private RunnableStore<K8sServeRunnable> serveRunnableStore;
 
-    @Autowired
+    @Autowired(required = false)
     private RunnableStore<K8sDeploymentRunnable> deployRunnableStore;
 
-    @Autowired
+    @Autowired(required = false)
     private RunnableStore<K8sJobRunnable> jobRunnableStore;
 
     @Override
@@ -77,7 +78,7 @@ public class ContainerRuntime
                 return serveBuilder.build(funSpec, taskServeSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
-                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -91,20 +92,20 @@ public class ContainerRuntime
 
         return switch (runAccessor.getTask()) {
             case TaskDeploySpec.KIND -> new ContainerDeployRunner(
-                    runContainerSpec.getFunctionSpec(),
-                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
+                runContainerSpec.getFunctionSpec(),
+                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
             )
-                    .produce(run);
+                .produce(run);
             case TaskJobSpec.KIND -> new ContainerJobRunner(
-                    runContainerSpec.getFunctionSpec(),
-                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
+                runContainerSpec.getFunctionSpec(),
+                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
             )
-                    .produce(run);
+                .produce(run);
             case TaskServeSpec.KIND -> new ContainerServeRunner(
-                    runContainerSpec.getFunctionSpec(),
-                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
+                runContainerSpec.getFunctionSpec(),
+                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
             )
-                    .produce(run);
+                .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
@@ -119,28 +120,38 @@ public class ContainerRuntime
         try {
             return switch (runAccessor.getTask()) {
                 case TaskDeploySpec.KIND -> {
-                    K8sDeploymentRunnable k8sDeploymentRunnable = deployRunnableStore.find(run.getId());
-                    if (k8sDeploymentRunnable == null) {
-                        throw new NoSuchEntityException("Deployment not found");
+                    if (deployRunnableStore != null) {
+                        K8sDeploymentRunnable k8sDeploymentRunnable = deployRunnableStore.find(run.getId());
+                        if (k8sDeploymentRunnable == null) {
+                            throw new NoSuchEntityException("Deployment not found");
+                        }
+                        k8sDeploymentRunnable.setState(State.STOPPED.name());
+                        yield k8sDeploymentRunnable;
                     }
-                    k8sDeploymentRunnable.setState(State.STOPPED.name());
-                    yield k8sDeploymentRunnable;
+                    throw new CoreRuntimeException("Deploy Store is not available");
                 }
                 case TaskJobSpec.KIND -> {
-                    K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
-                    if (k8sJobRunnable == null) {
-                        throw new NoSuchEntityException("JobDeployment not found");
+                    if (jobRunnableStore != null) {
+                        K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
+                        if (k8sJobRunnable == null) {
+                            throw new NoSuchEntityException("JobDeployment not found");
+                        }
+                        k8sJobRunnable.setState(State.STOPPED.name());
+                        yield k8sJobRunnable;
                     }
-                    k8sJobRunnable.setState(State.STOPPED.name());
-                    yield k8sJobRunnable;
+                    throw new CoreRuntimeException("Job Store is not available");
                 }
                 case TaskServeSpec.KIND -> {
-                    K8sServeRunnable k8sServeRunnable = serveRunnableStore.find(run.getId());
-                    if (k8sServeRunnable == null) {
-                        throw new NoSuchEntityException("ServeDeployment not found");
+                    if (serveRunnableStore != null) {
+                        K8sServeRunnable k8sServeRunnable = serveRunnableStore.find(run.getId());
+                        if (k8sServeRunnable == null) {
+                            throw new NoSuchEntityException("ServeDeployment not found");
+                        }
+                        k8sServeRunnable.setState(State.STOPPED.name());
+                        yield k8sServeRunnable;
                     }
-                    k8sServeRunnable.setState(State.STOPPED.name());
-                    yield k8sServeRunnable;
+
+                    throw new CoreRuntimeException("Serve Store is not available");
                 }
                 default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
             };
@@ -160,28 +171,37 @@ public class ContainerRuntime
         try {
             return switch (runAccessor.getTask()) {
                 case TaskDeploySpec.KIND -> {
-                    K8sDeploymentRunnable k8sDeploymentRunnable = deployRunnableStore.find(run.getId());
-                    if (k8sDeploymentRunnable == null) {
-                        throw new NoSuchEntityException("Deployment not found");
+                    if (deployRunnableStore != null) {
+                        K8sDeploymentRunnable k8sDeploymentRunnable = deployRunnableStore.find(run.getId());
+                        if (k8sDeploymentRunnable == null) {
+                            throw new NoSuchEntityException("Deployment not found");
+                        }
+                        k8sDeploymentRunnable.setState(State.DELETING.name());
+                        yield k8sDeploymentRunnable;
                     }
-                    k8sDeploymentRunnable.setState(State.DELETING.name());
-                    yield k8sDeploymentRunnable;
+                    throw new CoreRuntimeException("Deploy Store is not available");
                 }
                 case TaskJobSpec.KIND -> {
-                    K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
-                    if (k8sJobRunnable == null) {
-                        throw new NoSuchEntityException("JobDeployment not found");
+                    if (jobRunnableStore != null) {
+                        K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
+                        if (k8sJobRunnable == null) {
+                            throw new NoSuchEntityException("JobDeployment not found");
+                        }
+                        k8sJobRunnable.setState(State.DELETING.name());
+                        yield k8sJobRunnable;
                     }
-                    k8sJobRunnable.setState(State.DELETING.name());
-                    yield k8sJobRunnable;
+                    throw new CoreRuntimeException("Job Store is not available");
                 }
                 case TaskServeSpec.KIND -> {
-                    K8sServeRunnable k8sServeRunnable = serveRunnableStore.find(run.getId());
-                    if (k8sServeRunnable == null) {
-                        throw new NoSuchEntityException("ServeDeployment not found");
+                    if (serveRunnableStore != null) {
+                        K8sServeRunnable k8sServeRunnable = serveRunnableStore.find(run.getId());
+                        if (k8sServeRunnable == null) {
+                            throw new NoSuchEntityException("ServeDeployment not found");
+                        }
+                        k8sServeRunnable.setState(State.DELETING.name());
+                        yield k8sServeRunnable;
                     }
-                    k8sServeRunnable.setState(State.DELETING.name());
-                    yield k8sServeRunnable;
+                    throw new CoreRuntimeException("Serve Store is not available");
                 }
                 default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
             };
