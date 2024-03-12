@@ -9,6 +9,8 @@ import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,11 +24,11 @@ public class RunDbtSpec extends RunBaseSpec {
 
     public static final String KIND = DbtRuntime.RUNTIME + "+run";
 
-    private Map<String, Object> inputs = new HashMap<>();
+    private List<Map.Entry<String, Serializable>> inputs = new LinkedList<>();
 
-    private Map<String, Object> outputs = new HashMap<>();
+    private List<Map.Entry<String, Serializable>> outputs = new LinkedList<>();
 
-    private Map<String, Object> parameters = new HashMap<>();
+    private Map<String, Serializable> parameters = new HashMap<>();
 
     @JsonProperty("transform_spec")
     private TaskTransformSpec taskSpec;

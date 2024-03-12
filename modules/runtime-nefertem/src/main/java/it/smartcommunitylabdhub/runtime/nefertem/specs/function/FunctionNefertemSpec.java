@@ -18,9 +18,9 @@ import lombok.Setter;
 @SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem", entity = EntityName.FUNCTION)
 public class FunctionNefertemSpec extends FunctionBaseSpec {
 
-    private List<Map<String, Object>> constraints;
+    private List<Map<String, Serializable>> constraints;
 
-    private List<Map<String, Object>> metrics;
+    private List<Map<String, Serializable>> metrics;
 
     @JsonProperty("error_report")
     private String errorReport;

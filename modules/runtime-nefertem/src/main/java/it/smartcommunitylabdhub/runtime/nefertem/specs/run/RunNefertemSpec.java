@@ -12,6 +12,8 @@ import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskProfileSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,11 +29,11 @@ public class RunNefertemSpec extends RunBaseSpec {
 
     public static final String KIND = NefertemRuntime.RUNTIME + "+run";
 
-    private Map<String, Object> inputs = new HashMap<>();
+    private List<Map.Entry<String, Serializable>> inputs = new LinkedList<>();
 
-    private Map<String, Object> outputs = new HashMap<>();
+    private List<Map.Entry<String, Serializable>> outputs = new LinkedList<>();
 
-    private Map<String, Object> parameters = new HashMap<>();
+    private Map<String, Serializable> parameters = new HashMap<>();
 
     @JsonProperty("infer_spec")
     private TaskInferSpec taskInferSpec;

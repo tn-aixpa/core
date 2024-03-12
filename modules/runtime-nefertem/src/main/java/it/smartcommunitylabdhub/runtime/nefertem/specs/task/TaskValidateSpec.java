@@ -22,7 +22,7 @@ public class TaskValidateSpec extends K8sTaskBaseSpec {
     private String framework;
 
     @JsonProperty("exec_args")
-    private Map<String, Object> execArgs;
+    private Map<String, Serializable> execArgs;
 
     private Boolean parallel;
 
