@@ -57,15 +57,31 @@ public class Function implements BaseDTO {
     @Builder.Default
     private Map<String, Serializable> status = new HashMap<>();
 
-    @JsonAnyGetter
-    public Map<String, Serializable> getExtra() {
-        return this.extra;
-    }
+    // @JsonAnyGetter
+    // public Map<String, Serializable> getExtra() {
+    //     return this.extra;
+    // }
 
-    @JsonAnySetter
-    public void setExtra(String key, Serializable value) {
-        if (value != null) {
-            extra.put(key, value);
-        }
+    // @JsonAnySetter
+    // public void setExtra(String key, Serializable value) {
+    //     if (value != null) {
+    //         extra.put(key, value);
+    //     }
+    // }
+
+    @Override
+    public String getKey() {
+        return (
+            Keys.STORE_PREFIX +
+            getProject() +
+            Keys.PATH_DIVIDER +
+            "functions" +
+            Keys.PATH_DIVIDER +
+            getKind() +
+            Keys.PATH_DIVIDER +
+            getName() +
+            Keys.ID_DIVIDER +
+            getId()
+        );
     }
 }

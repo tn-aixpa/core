@@ -81,14 +81,12 @@ public class WorkflowContextController {
         }
     }
 
-    @Operation(
-        summary = "Retrieve only the latest version of all workflows",
-        description = "return a list of the latest version of each workflow related to a project"
-    )
+    @Operation(summary = "Search workflows")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Workflow> getLatestWorkflows(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable WorkflowEntityFilter filter,
+        @ParameterObject @Valid @Nullable WorkflowEntityFilter filter,
+        @ParameterObject @RequestParam(required = false, defaultValue = "latest") String versions,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
@@ -97,58 +95,21 @@ public class WorkflowContextController {
         if (filter != null) {
             sf = filter.toSearchFilter();
         }
-
-        return workflowService.searchLatestWorkflowsByProject(project, pageable, sf);
-    }
-
-    @Operation(
-        summary = "Retrieve all versions of the workflow sort by creation",
-        description = "return a list of all version of the workflow sort by creation"
-    )
-    @GetMapping(path = "/{name}", produces = "application/json; charset=UTF-8")
-    public Page<Workflow> getAllWorkflows(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
-        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
-            { @SortDefault(sort = "created", direction = Direction.DESC) }
-        ) Pageable pageable
-    ) {
-        return workflowService.findWorkflows(project, name, pageable);
-    }
-
-    @Operation(
-        summary = "Create a new version of a workflow in a project context",
-        description = "if workflow exist create a new version of the workflow"
-    )
-    @PostMapping(
-        value = "/{name}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
-    )
-    public Workflow createOrUpdateWorkflow(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
-        @RequestBody @Valid @NotNull Workflow dto
-    ) throws NoSuchEntityException, DuplicatedEntityException {
-        //enforce project match
-        dto.setProject(project);
-        dto.setName(name);
-
-        @SuppressWarnings("unused")
-        Workflow workflow = workflowService.getLatestWorkflow(project, name);
-        workflow = workflowService.createWorkflow(dto);
-
-        return workflow;
+        if ("all".equals(versions)) {
+            return workflowService.searchWorkflowsByProject(project, pageable, sf);
+        } else {
+            return workflowService.searchLatestWorkflowsByProject(project, pageable, sf);
+        }
     }
 
     @Operation(
         summary = "Delete all version of a workflow",
         description = "First check if project exist, then delete a specific workflow version"
     )
-    @DeleteMapping(path = "/{name}")
-    public void deleteWorkflow(
+    @DeleteMapping(path = "")
+    public void deleteAllWorkflow(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
+        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
     ) {
         workflowService.deleteWorkflows(project, name);
     }
@@ -157,77 +118,53 @@ public class WorkflowContextController {
      * Versions
      */
 
-    @Operation(
-        summary = "Retrieve the latest version of a workflow",
-        description = "return the latest version of a workflow"
-    )
-    @GetMapping(path = "/{name}/latest", produces = "application/json; charset=UTF-8")
-    public Workflow getLatestWorkflowByName(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
-    ) throws NoSuchEntityException {
-        return workflowService.getLatestWorkflow(project, name);
-    }
-
-    @Operation(
-        summary = "Retrieve a specific workflow version given the workflow id",
-        description = "return a specific version of the workflow identified by the id"
-    )
-    @GetMapping(path = "/{name}/{id}", produces = "application/json; charset=UTF-8")
+    @Operation(summary = "Retrieve a specific workflow version given the workflow id")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
     public Workflow getWorkflowById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
         Workflow workflow = workflowService.getWorkflow(id);
 
         //check for project and name match
-        if (!workflow.getProject().equals(project) || !workflow.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!workflow.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
         }
 
         return workflow;
     }
 
-    @Operation(
-        summary = "Update if exist a workflow in a project context",
-        description = "First check if project exist, if workflow exist update."
-    )
+    @Operation(summary = "Update if exist a workflow in a project context")
     @PutMapping(
-        value = "/{name}/{id}",
+        value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
     public Workflow updateWorkflow(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Workflow workflowDTO
     ) throws NoSuchEntityException {
         Workflow workflow = workflowService.getWorkflow(id);
 
         //check for project and name match
-        if (!workflow.getProject().equals(project) || !workflow.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!workflow.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
         }
 
         return workflowService.updateWorkflow(id, workflowDTO);
     }
 
-    @Operation(
-        summary = "Delete a specific workflow version",
-        description = "First check if project exist, then delete a specific workflow version"
-    )
-    @DeleteMapping(path = "/{name}/{id}")
+    @Operation(summary = "Delete a specific workflow version")
+    @DeleteMapping(path = "/{id}")
     public void deleteWorkflow(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
         Workflow workflow = workflowService.getWorkflow(id);
 
         //check for project and name match
-        if (!workflow.getProject().equals(project) || !workflow.getName().equals(name)) {
+        if (!workflow.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project or name");
         }
 

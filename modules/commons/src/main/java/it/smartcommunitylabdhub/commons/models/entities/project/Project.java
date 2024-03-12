@@ -68,4 +68,9 @@ public class Project implements BaseDTO {
     public String getProject() {
         return name;
     }
+
+    @Override
+    public String getKey() {
+        return (Keys.STORE_PREFIX + getProject());
+    }
 }

@@ -52,8 +52,24 @@ public class DataItemServiceImpl implements SearchableDataItemService {
     }
 
     @Override
+    public List<DataItem> listDataItemsByProject(@NotNull String project) {
+        log.debug("list all dataItems for project {}", project);
+        Specification<DataItemEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<DataItem> listDataItemsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list all dataItems for project {} page {}", project, pageable);
+        Specification<DataItemEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
     public List<DataItem> listLatestDataItemsByProject(@NotNull String project) {
-        log.debug("list dataItems for project {}", project);
+        log.debug("list latest dataItems for project {}", project);
         Specification<DataItemEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
@@ -64,10 +80,26 @@ public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Override
     public Page<DataItem> listLatestDataItemsByProject(@NotNull String project, Pageable pageable) {
-        log.debug("list dataItems for project {} page {}", project, pageable);
+        log.debug("list latest dataItems for project {} page {}", project, pageable);
         Specification<DataItemEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Page<DataItem> searchDataItemsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        SearchFilter<DataItemEntity> filter
+    ) {
+        log.debug("search all dataItems for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<DataItemEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<DataItemEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
+            filterSpecification
         );
 
         return entityService.search(specification, pageable);
@@ -79,7 +111,7 @@ public class DataItemServiceImpl implements SearchableDataItemService {
         Pageable pageable,
         SearchFilter<DataItemEntity> filter
     ) {
-        log.debug("list dataItems for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        log.debug("search latest dataItems for project {} with {} page {}", project, String.valueOf(filter), pageable);
         Specification<DataItemEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
         Specification<DataItemEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
@@ -145,8 +177,11 @@ public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Override
     public DataItem getLatestDataItem(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getLatestDataItem'");
+        log.debug("get latest dataItem for project {} with name {}", project, name);
+
+        //fetch latest version ordered by date DESC
+        Specification<DataItemEntity> specification = CommonSpecification.latestByProject(project, name);
+        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
     }
 
     @Override

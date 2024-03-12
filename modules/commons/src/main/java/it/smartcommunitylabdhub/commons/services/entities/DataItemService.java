@@ -21,6 +21,21 @@ public interface DataItemService {
     Page<DataItem> listDataItems(Pageable pageable);
 
     /**
+     * List all versions of every dataItem for a project
+     * @param project
+     * @return
+     */
+    List<DataItem> listDataItemsByProject(@NotNull String project);
+
+    /**
+     * List all versions of every dataItem for a project
+     * @param project
+     * @param pageable
+     * @return
+     */
+    Page<DataItem> listDataItemsByProject(@NotNull String project, Pageable pageable);
+
+    /**
      * List the latest version of every dataItem for a project
      * @param project
      * @return

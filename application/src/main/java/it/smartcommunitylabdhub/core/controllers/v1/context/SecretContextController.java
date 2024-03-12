@@ -49,10 +49,7 @@ public class SecretContextController {
     @Autowired
     SecretService secretService;
 
-    @Operation(
-        summary = "Create a secret in a project context",
-        description = "First check if project exist and then create the secret for the project (context)"
-    )
+    @Operation(summary = "Create a secret in a project context")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
@@ -68,12 +65,9 @@ public class SecretContextController {
         return secretService.createSecret(dto);
     }
 
-    @Operation(
-        summary = "Retrieve all secrets for the project",
-        description = "First check if project exist and then return a list of secrets related with the project)"
-    )
+    @Operation(summary = "Retrieve all secrets for the project")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public Page<Secret> getSecretsByProject(
+    public Page<Secret> searchSecrets(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "name", direction = Direction.ASC) }
@@ -82,12 +76,9 @@ public class SecretContextController {
         return secretService.listSecretsByProject(project, pageable);
     }
 
-    @Operation(
-        summary = "Retrieve a specific secret given the secret id",
-        description = "First check if project exist and then return a specific version of the secret identified by the id)"
-    )
+    @Operation(summary = "Retrieve a specific secret given the secret id")
     @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
-    public Secret getSecretByUuid(
+    public Secret getSecretById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
@@ -101,16 +92,13 @@ public class SecretContextController {
         return secret;
     }
 
-    @Operation(
-        summary = "Update if exist a secret in a project context",
-        description = "First check if project exist, if secret exist update."
-    )
+    @Operation(summary = "Update if exist a secret in a project context")
     @PutMapping(
         value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Secret updateUpdateSecret(
+    public Secret updateSecretById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Secret secretDTO
@@ -125,12 +113,9 @@ public class SecretContextController {
         return secretService.updateSecret(id, secretDTO);
     }
 
-    @Operation(
-        summary = "Delete a specific secret version",
-        description = "First check if project exist, then delete a specific secret version"
-    )
+    @Operation(summary = "Delete a specific secret version")
     @DeleteMapping(path = "/{id}")
-    public void deleteSpecificSecretVersion(
+    public void deleteSecretById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
@@ -150,7 +135,7 @@ public class SecretContextController {
      */
     @Operation(summary = "Read project secret data", description = "Get project secrets data for the specified keys")
     @GetMapping(path = "/data", produces = "application/json; charset=UTF-8")
-    public Map<String, String> projectSecretData(
+    public Map<String, String> getSecretData(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @RequestParam @Valid @NotNull Set<String> keys
     ) {
@@ -159,7 +144,7 @@ public class SecretContextController {
 
     @Operation(summary = "Store project secret data", description = "Store project secrets data")
     @PutMapping(path = "/data", produces = "application/json; charset=UTF-8")
-    public void storeProjectSecretData(
+    public void storeSecretData(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @RequestBody @Valid @NotNull Map<String, String> values
     ) {

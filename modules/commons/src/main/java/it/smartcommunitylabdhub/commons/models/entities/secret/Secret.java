@@ -68,4 +68,18 @@ public class Secret implements BaseDTO {
             extra.put(key, value);
         }
     }
+
+    @Override
+    public String getKey() {
+        return (
+            Keys.STORE_PREFIX +
+            getProject() +
+            Keys.PATH_DIVIDER +
+            "secrets" +
+            Keys.PATH_DIVIDER +
+            getKind() +
+            Keys.PATH_DIVIDER +
+            getName()
+        );
+    }
 }

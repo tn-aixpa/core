@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.commons.models.entities.dataitem;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -12,14 +14,14 @@ import lombok.Setter;
 @NoArgsConstructor
 public class DataItemBaseSpec extends BaseSpec {
 
-    private String key;
+    @NotBlank
+    @JsonProperty("path")
     private String path;
 
     @Override
     public void configure(Map<String, Serializable> data) {
         DataItemBaseSpec concreteSpec = mapper.convertValue(data, DataItemBaseSpec.class);
 
-        this.setKey(concreteSpec.getKey());
         this.setPath(concreteSpec.getPath());
     }
 }

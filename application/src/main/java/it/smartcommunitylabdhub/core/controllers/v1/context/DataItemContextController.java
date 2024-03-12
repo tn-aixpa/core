@@ -51,10 +51,7 @@ public class DataItemContextController {
     @Autowired
     SearchableDataItemService dataItemService;
 
-    @Operation(
-        summary = "Create a dataItem in a project context",
-        description = "create the dataItem for the project (context)"
-    )
+    @Operation(summary = "Create a dataItem in a project context")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
@@ -67,28 +64,16 @@ public class DataItemContextController {
         //enforce project match
         dto.setProject(project);
 
-        String name = dto.getName();
-
-        try {
-            @SuppressWarnings("unused")
-            DataItem dataItem = dataItemService.getLatestDataItem(project, name);
-
-            //there is already an entity with the same name
-            throw new DuplicatedEntityException(name);
-        } catch (NoSuchEntityException e) {
-            //create as new
-            return dataItemService.createDataItem(dto);
-        }
+        //create as new
+        return dataItemService.createDataItem(dto);
     }
 
-    @Operation(
-        summary = "Retrieve only the latest version of all dataItems",
-        description = "return a list of the latest version of each dataItem related to a project"
-    )
+    @Operation(summary = "Search dataItems")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public Page<DataItem> getLatestDataItems(
+    public Page<DataItem> searchDataItems(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable DataItemEntityFilter filter,
+        @ParameterObject @Valid @Nullable DataItemEntityFilter filter,
+        @ParameterObject @RequestParam(required = false, defaultValue = "latest") String versions,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
@@ -98,57 +83,18 @@ public class DataItemContextController {
             sf = filter.toSearchFilter();
         }
 
-        return dataItemService.searchLatestDataItemsByProject(project, pageable, sf);
+        if ("all".equals(versions)) {
+            return dataItemService.searchDataItemsByProject(project, pageable, sf);
+        } else {
+            return dataItemService.searchLatestDataItemsByProject(project, pageable, sf);
+        }
     }
 
-    @Operation(
-        summary = "Retrieve all versions of the dataItem sort by creation",
-        description = "return a list of all version of the dataItem sort by creation"
-    )
-    @GetMapping(path = "/{name}", produces = "application/json; charset=UTF-8")
-    public Page<DataItem> getAllDataItemVersion(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
-        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
-            { @SortDefault(sort = "created", direction = Direction.DESC) }
-        ) Pageable pageable
-    ) {
-        return dataItemService.findDataItems(project, name, pageable);
-    }
-
-    @Operation(
-        summary = "Create a new version of a dataItem in a project context",
-        description = "if dataItem exist create a new version of the dataItem"
-    )
-    @PostMapping(
-        value = "/{name}",
-        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
-        produces = "application/json; charset=UTF-8"
-    )
-    public DataItem createOrUpdateDataItem(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
-        @RequestBody @Valid @NotNull DataItem dto
-    ) throws NoSuchEntityException, DuplicatedEntityException {
-        //enforce project match
-        dto.setProject(project);
-        dto.setName(name);
-
-        @SuppressWarnings("unused")
-        DataItem dataItem = dataItemService.getLatestDataItem(project, name);
-        dataItem = dataItemService.createDataItem(dto);
-
-        return dataItem;
-    }
-
-    @Operation(
-        summary = "Delete all version of a dataItem",
-        description = "First check if project exist, then delete a specific dataItem version"
-    )
+    @Operation(summary = "Delete all version of a dataItem")
     @DeleteMapping(path = "/{name}")
-    public void deleteDataItem(
+    public void deleteAllDataItem(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
+        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
     ) {
         dataItemService.deleteDataItems(project, name);
     }
@@ -157,58 +103,38 @@ public class DataItemContextController {
      * Versions
      */
 
-    @Operation(
-        summary = "Retrieve the latest version of a dataItem",
-        description = "return the latest version of a dataItem"
-    )
-    @GetMapping(path = "/{name}/latest", produces = "application/json; charset=UTF-8")
-    public DataItem getLatestDataItemByName(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
-    ) throws NoSuchEntityException {
-        return dataItemService.getLatestDataItem(project, name);
-    }
-
-    @Operation(
-        summary = "Retrieve a specific dataItem version given the dataItem id",
-        description = "return a specific version of the dataItem identified by the id"
-    )
-    @GetMapping(path = "/{name}/{id}", produces = "application/json; charset=UTF-8")
+    @Operation(summary = "Retrieve a specific dataItem version given the dataItem id")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
     public DataItem getDataItemById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
         DataItem dataItem = dataItemService.getDataItem(id);
 
         //check for project and name match
-        if (!dataItem.getProject().equals(project) || !dataItem.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!dataItem.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
         }
 
         return dataItem;
     }
 
-    @Operation(
-        summary = "Update if exist a dataItem in a project context",
-        description = "First check if project exist, if dataItem exist update."
-    )
+    @Operation(summary = "Update if exist a dataItem in a project context")
     @PutMapping(
-        value = "/{name}/{id}",
+        value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public DataItem updateDataItem(
+    public DataItem updateDataItemById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull DataItem dataItemDTO
     ) throws NoSuchEntityException {
         DataItem dataItem = dataItemService.getDataItem(id);
 
         //check for project and name match
-        if (!dataItem.getProject().equals(project) || !dataItem.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!dataItem.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
         }
 
         return dataItemService.updateDataItem(id, dataItemDTO);
@@ -218,17 +144,16 @@ public class DataItemContextController {
         summary = "Delete a specific dataItem version",
         description = "First check if project exist, then delete a specific dataItem version"
     )
-    @DeleteMapping(path = "/{name}/{id}")
-    public void deleteDataItem(
+    @DeleteMapping(path = "/{id}")
+    public void deleteDataItemById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
         DataItem dataItem = dataItemService.getDataItem(id);
 
         //check for project and name match
-        if (!dataItem.getProject().equals(project) || !dataItem.getName().equals(name)) {
-            throw new IllegalArgumentException("invalid project or name");
+        if (!dataItem.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
         }
 
         dataItemService.deleteDataItem(id);

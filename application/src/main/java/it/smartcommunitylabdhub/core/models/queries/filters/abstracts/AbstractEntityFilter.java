@@ -33,6 +33,9 @@ import org.springframework.util.StringUtils;
 public abstract class AbstractEntityFilter<T extends BaseEntity> {
 
     @Nullable
+    protected String q;
+
+    @Nullable
     @Pattern(regexp = Keys.SLUG_PATTERN)
     @Schema(example = "my-function-1", defaultValue = "", description = "Name identifier")
     protected String name;
@@ -58,10 +61,18 @@ public abstract class AbstractEntityFilter<T extends BaseEntity> {
     public SearchFilter<T> toSearchFilter() {
         //build default search fields in AND
         List<SearchCriteria<T>> criteria = new ArrayList<>();
+
+        //TODO handle q in OR with name+description+version
+        Optional
+            .ofNullable(q)
+            .ifPresent(value ->
+                criteria.add(new BaseEntitySearchCriteria<>("name", value, SearchCriteria.Operation.like))
+            );
+
         Optional
             .ofNullable(name)
             .ifPresent(value ->
-                criteria.add(new BaseEntitySearchCriteria<>("name", value, SearchCriteria.Operation.like))
+                criteria.add(new BaseEntitySearchCriteria<>("name", value, SearchCriteria.Operation.equal))
             );
 
         Optional

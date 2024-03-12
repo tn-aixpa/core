@@ -66,7 +66,21 @@ public class Task implements BaseDTO {
     }
 
     @Override
-    public @NotNull String getName() {
+    public String getName() {
         return id;
+    }
+
+    @Override
+    public String getKey() {
+        return (
+            Keys.STORE_PREFIX +
+            getProject() +
+            Keys.PATH_DIVIDER +
+            "tasks" +
+            Keys.PATH_DIVIDER +
+            getKind() +
+            Keys.PATH_DIVIDER +
+            getId()
+        );
     }
 }

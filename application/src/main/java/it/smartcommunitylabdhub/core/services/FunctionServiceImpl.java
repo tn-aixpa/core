@@ -57,8 +57,24 @@ public class FunctionServiceImpl implements SearchableFunctionService {
     }
 
     @Override
-    public List<Function> listLatestFunctionsByProject(@NotNull String project) {
+    public List<Function> listFunctionsByProject(@NotNull String project) {
         log.debug("list functions for project {}", project);
+        Specification<FunctionEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.searchAll(specification);
+    }
+
+    @Override
+    public Page<Function> listFunctionsByProject(@NotNull String project, Pageable pageable) {
+        log.debug("list functions for project {} page {}", project, pageable);
+        Specification<FunctionEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public List<Function> listLatestFunctionsByProject(@NotNull String project) {
+        log.debug("list latest functions for project {}", project);
         Specification<FunctionEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
@@ -69,7 +85,7 @@ public class FunctionServiceImpl implements SearchableFunctionService {
 
     @Override
     public Page<Function> listLatestFunctionsByProject(@NotNull String project, Pageable pageable) {
-        log.debug("list functions for project {} page {}", project, pageable);
+        log.debug("list latest functions for project {} page {}", project, pageable);
         Specification<FunctionEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
@@ -84,11 +100,27 @@ public class FunctionServiceImpl implements SearchableFunctionService {
         Pageable pageable,
         @Nullable SearchFilter<FunctionEntity> filter
     ) {
-        log.debug("list functions for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        log.debug("search latest functions for project {} with {} page {}", project, String.valueOf(filter), pageable);
         Specification<FunctionEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
         Specification<FunctionEntity> specification = Specification.allOf(
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project),
+            filterSpecification
+        );
+
+        return entityService.search(specification, pageable);
+    }
+
+    @Override
+    public Page<Function> searchFunctionsByProject(
+        @NotNull String project,
+        Pageable pageable,
+        @Nullable SearchFilter<FunctionEntity> filter
+    ) {
+        log.debug("search functions for project {} with {} page {}", project, String.valueOf(filter), pageable);
+        Specification<FunctionEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<FunctionEntity> specification = Specification.allOf(
+            CommonSpecification.projectEquals(project),
             filterSpecification
         );
 
@@ -151,8 +183,9 @@ public class FunctionServiceImpl implements SearchableFunctionService {
     public Function getLatestFunction(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
         log.debug("get latest function for project {} with name {}", project, name);
 
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getLatestFunction'");
+        //fetch latest version ordered by date DESC
+        Specification<FunctionEntity> specification = CommonSpecification.latestByProject(project, name);
+        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
     }
 
     @Override

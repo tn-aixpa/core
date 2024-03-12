@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.exceptions;
 
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,14 @@ public class CustomExceptionHandler {
         errorResponse.setErrorCode(ex.getErrorCode());
 
         return ResponseEntity.status(ex.getStatus()).body(errorResponse);
+    }
+
+    @ExceptionHandler(NoSuchEntityException.class)
+    public ResponseEntity<?> handleNoSuchEntityException(NoSuchEntityException ex) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatus(HttpStatus.NOT_FOUND.value());
+        errorResponse.setMessage(ex.getMessage());
+        return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
     }
 
     @ExceptionHandler(BindException.class)

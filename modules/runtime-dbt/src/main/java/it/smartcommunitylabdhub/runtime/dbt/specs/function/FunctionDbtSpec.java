@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.runtime.dbt.specs.function;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
 import java.io.Serializable;
 import java.util.Map;
@@ -16,7 +17,7 @@ import lombok.Setter;
 @SpecType(runtime = DbtRuntime.RUNTIME, kind = "dbt", entity = EntityName.FUNCTION)
 public class FunctionDbtSpec extends FunctionBaseSpec {
 
-    private String sql;
+    private SourceCode sql;
 
     public FunctionDbtSpec(Map<String, Serializable> data) {
         configure(data);
