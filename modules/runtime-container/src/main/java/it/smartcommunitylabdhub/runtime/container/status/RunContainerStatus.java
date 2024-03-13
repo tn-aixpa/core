@@ -17,6 +17,5 @@ public class RunContainerStatus extends RunBaseStatus {
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
-        RunContainerStatus meta = mapper.convertValue(data, RunContainerStatus.class);
     }
 }

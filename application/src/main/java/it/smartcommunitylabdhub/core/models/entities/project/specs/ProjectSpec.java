@@ -35,10 +35,10 @@ public class ProjectSpec extends ProjectBaseSpec {
     public void configure(Map<String, Serializable> data) {
         ProjectSpec concreteSpec = mapper.convertValue(data, ProjectSpec.class);
 
-        this.setFunctions(concreteSpec.getFunctions());
-        this.setArtifacts(concreteSpec.getArtifacts());
-        this.setDataitems(concreteSpec.getDataitems());
-        this.setWorkflows(concreteSpec.getWorkflows());
+        this.functions = concreteSpec.getFunctions();
+        this.artifacts = concreteSpec.getArtifacts();
+        this.dataitems = concreteSpec.getDataitems();
+        this.workflows = concreteSpec.getWorkflows();
 
         super.configure(data);
     }

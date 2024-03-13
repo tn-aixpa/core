@@ -45,11 +45,11 @@ public class RunDbtSpec extends RunBaseSpec {
         super.configure(data);
 
         RunDbtSpec spec = mapper.convertValue(data, RunDbtSpec.class);
-        this.setInputs(spec.getInputs());
-        this.setOutputs(spec.getOutputs());
-        this.setParameters(spec.getParameters());
+        this.inputs = spec.getInputs();
+        this.outputs = spec.getOutputs();
+        this.parameters = spec.getParameters();
 
-        this.setTaskSpec(spec.getTaskSpec());
-        this.setFuncSpec(spec.getFuncSpec());
+        this.taskSpec = spec.getTaskSpec();
+        this.funcSpec = spec.getFuncSpec();
     }
 }

@@ -59,14 +59,14 @@ public class RunNefertemSpec extends RunBaseSpec {
         super.configure(data);
 
         RunNefertemSpec spec = mapper.convertValue(data, RunNefertemSpec.class);
-        this.setInputs(spec.getInputs());
-        this.setOutputs(spec.getOutputs());
-        this.setParameters(spec.getParameters());
+        this.inputs = spec.getInputs();
+        this.outputs = spec.getOutputs();
+        this.parameters = spec.getParameters();
 
-        this.setTaskInferSpec(spec.getTaskInferSpec());
-        this.setTaskMetricSpec(spec.getTaskMetricSpec());
-        this.setTaskProfileSpec(spec.getTaskProfileSpec());
-        this.setTaskValidateSpec(spec.getTaskValidateSpec());
-        this.setFuncSpec(spec.getFuncSpec());
+        this.taskInferSpec = spec.getTaskInferSpec();
+        this.taskMetricSpec = spec.getTaskMetricSpec();
+        this.taskProfileSpec = spec.getTaskProfileSpec();
+        this.taskValidateSpec = spec.getTaskValidateSpec();
+        this.funcSpec = spec.getFuncSpec();
     }
 }

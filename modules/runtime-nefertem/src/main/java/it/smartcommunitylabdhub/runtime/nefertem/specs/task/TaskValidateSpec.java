@@ -39,9 +39,9 @@ public class TaskValidateSpec extends K8sTaskBaseSpec {
 
         TaskValidateSpec taskValidateSpec = mapper.convertValue(data, TaskValidateSpec.class);
 
-        this.setFramework(taskValidateSpec.getFramework());
-        this.setExecArgs(taskValidateSpec.getExecArgs());
-        this.setParallel(taskValidateSpec.getParallel());
-        this.setNumWorker(taskValidateSpec.getNumWorker());
+        this.framework = taskValidateSpec.getFramework();
+        this.execArgs = taskValidateSpec.getExecArgs();
+        this.parallel = taskValidateSpec.getParallel();
+        this.numWorker = taskValidateSpec.getNumWorker();
     }
 }

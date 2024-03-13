@@ -22,6 +22,6 @@ public class DataItemBaseSpec extends BaseSpec {
     public void configure(Map<String, Serializable> data) {
         DataItemBaseSpec concreteSpec = mapper.convertValue(data, DataItemBaseSpec.class);
 
-        this.setPath(concreteSpec.getPath());
+        this.path = concreteSpec.getPath();
     }
 }
