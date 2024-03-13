@@ -63,7 +63,7 @@ public class DataItemController {
     @Operation(summary = "List dataItems", description = "Return a list of all dataItems")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<DataItem> getDataItems(
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable DataItemEntityFilter filter,
+        @ParameterObject @Valid @Nullable DataItemEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable

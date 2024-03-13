@@ -3,18 +3,14 @@ package it.smartcommunitylabdhub.runtime.container.runners;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * ContainerDeployRunner
@@ -52,7 +48,7 @@ public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
             .builder()
             .runtime(ContainerRuntime.RUNTIME)
             .task(TASK)
-            .state(statusFieldAccessor.getState())
+            .state(State.READY.name())
             //base
             .image(functionSpec.getImage())
             .command(functionSpec.getCommand())

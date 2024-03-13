@@ -41,7 +41,7 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
     @Override
     public K8sRunnable produce(Run run) {
         RunKFPSpec runSpec = new RunKFPSpec(run.getSpec());
-        TaskPipelineSpec taskSpec = runSpec.getTaskPipelineSpec();
+        TaskPipelineSpec taskSpec = runSpec.getTaskSpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(

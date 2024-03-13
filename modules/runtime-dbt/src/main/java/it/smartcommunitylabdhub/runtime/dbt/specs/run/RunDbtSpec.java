@@ -9,6 +9,8 @@ import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,14 +19,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = DbtRuntime.RUNTIME, kind = "dbt+run", entity = EntityName.RUN)
+@SpecType(runtime = DbtRuntime.RUNTIME, kind = RunDbtSpec.KIND, entity = EntityName.RUN)
 public class RunDbtSpec extends RunBaseSpec {
 
-    private Map<String, Object> inputs = new HashMap<>();
+    public static final String KIND = DbtRuntime.RUNTIME + "+run";
 
-    private Map<String, Object> outputs = new HashMap<>();
+    private List<Map.Entry<String, Serializable>> inputs = new LinkedList<>();
 
-    private Map<String, Object> parameters = new HashMap<>();
+    private List<Map.Entry<String, Serializable>> outputs = new LinkedList<>();
+
+    private Map<String, Serializable> parameters = new HashMap<>();
 
     @JsonProperty("transform_spec")
     private TaskTransformSpec taskSpec;
@@ -41,11 +45,11 @@ public class RunDbtSpec extends RunBaseSpec {
         super.configure(data);
 
         RunDbtSpec spec = mapper.convertValue(data, RunDbtSpec.class);
-        this.setInputs(spec.getInputs());
-        this.setOutputs(spec.getOutputs());
-        this.setParameters(spec.getParameters());
+        this.inputs = spec.getInputs();
+        this.outputs = spec.getOutputs();
+        this.parameters = spec.getParameters();
 
-        this.setTaskSpec(spec.getTaskSpec());
-        this.setFuncSpec(spec.getFuncSpec());
+        this.taskSpec = spec.getTaskSpec();
+        this.funcSpec = spec.getFuncSpec();
     }
 }

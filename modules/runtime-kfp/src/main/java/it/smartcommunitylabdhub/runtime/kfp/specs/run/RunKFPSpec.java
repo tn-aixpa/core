@@ -9,6 +9,9 @@ import it.smartcommunitylabdhub.runtime.kfp.specs.function.FunctionKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,14 +20,23 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = KFPRuntime.RUNTIME, kind = "kfp+run", entity = EntityName.RUN)
+@SpecType(runtime = KFPRuntime.RUNTIME, kind = RunKFPSpec.KIND, entity = EntityName.RUN)
 public class RunKFPSpec extends RunBaseSpec {
 
-    @JsonProperty("pipeline_spec")
-    private TaskPipelineSpec taskPipelineSpec;
+    public static final String KIND = KFPRuntime.RUNTIME + "+run";
+
+    private List<Map.Entry<String, Serializable>> inputs = new LinkedList<>();
+
+    private List<Map.Entry<String, Serializable>> outputs = new LinkedList<>();
+
+    private Map<String, Serializable> parameters = new HashMap<>();
 
     @JsonProperty("function_spec")
-    private FunctionKFPSpec functionSpec;
+    private FunctionKFPSpec funcSpec;
+
+    @JsonProperty("pipeline_spec")
+    private TaskPipelineSpec taskSpec;
+
 
     public RunKFPSpec(Map<String, Serializable> data) {
         configure(data);
@@ -34,9 +46,12 @@ public class RunKFPSpec extends RunBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        RunKFPSpec runContainerSpec = mapper.convertValue(data, RunKFPSpec.class);
+        RunKFPSpec spec = mapper.convertValue(data, RunKFPSpec.class);
+        this.inputs = spec.getInputs();
+        this.outputs = spec.getOutputs();
+        this.parameters = spec.getParameters();
 
-        this.setTaskPipelineSpec(runContainerSpec.getTaskPipelineSpec());
-        this.setFunctionSpec(runContainerSpec.getFunctionSpec());
+        this.taskSpec = spec.getTaskSpec();
+        this.funcSpec = spec.getFuncSpec();
     }
 }

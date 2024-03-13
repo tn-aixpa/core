@@ -1,7 +1,11 @@
 package it.smartcommunitylabdhub.core.models.entities.project.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,22 +23,22 @@ import lombok.Setter;
 @SpecType(kind = "project", entity = EntityName.PROJECT)
 public class ProjectSpec extends ProjectBaseSpec {
 
-    private List<Object> functions = new ArrayList<>();
+    private List<Function> functions = new ArrayList<>();
 
-    private List<Object> artifacts = new ArrayList<>();
+    private List<Artifact> artifacts = new ArrayList<>();
 
-    private List<Object> workflows = new ArrayList<>();
+    private List<Workflow> workflows = new ArrayList<>();
 
-    private List<Object> dataitems = new ArrayList<>();
+    private List<DataItem> dataitems = new ArrayList<>();
 
     @Override
     public void configure(Map<String, Serializable> data) {
         ProjectSpec concreteSpec = mapper.convertValue(data, ProjectSpec.class);
 
-        this.setFunctions(concreteSpec.getFunctions());
-        this.setArtifacts(concreteSpec.getArtifacts());
-        this.setDataitems(concreteSpec.getDataitems());
-        this.setWorkflows(concreteSpec.getWorkflows());
+        this.functions = concreteSpec.getFunctions();
+        this.artifacts = concreteSpec.getArtifacts();
+        this.dataitems = concreteSpec.getDataitems();
+        this.workflows = concreteSpec.getWorkflows();
 
         super.configure(data);
     }

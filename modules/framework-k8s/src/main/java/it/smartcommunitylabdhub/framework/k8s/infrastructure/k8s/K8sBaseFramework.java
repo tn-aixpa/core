@@ -82,11 +82,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     public abstract K apply(K object) throws K8sFrameworkException;
 
+    public abstract K create(K object) throws K8sFrameworkException;
+
     public abstract K get(K object) throws K8sFrameworkException;
 
-    public void destroy(K object) throws K8sFrameworkException {
-        throw new UnsupportedOperationException();
-    }
+    public abstract void delete(K object) throws K8sFrameworkException;
 
     /*
      * Builder helpers

@@ -63,7 +63,7 @@ public class TaskController {
     @Operation(summary = "List tasks", description = "Return a list of all tasks")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Task> getTasks(
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable TaskEntityFilter filter,
+        @ParameterObject @Valid @Nullable TaskEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "kind", direction = Direction.ASC) }
         ) Pageable pageable

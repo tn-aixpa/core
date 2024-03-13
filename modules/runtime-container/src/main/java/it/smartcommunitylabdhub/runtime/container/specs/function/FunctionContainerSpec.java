@@ -17,17 +17,21 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container", entity = EntityName.FUNCTION)
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = ContainerRuntime.RUNTIME, entity = EntityName.FUNCTION)
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
     @NotBlank
-    @Schema(defaultValue = "", description = "Container image name")
+    @Schema(description = "Container image name")
     private String image;
 
+    @Schema(description = "Container image name to be used for building the final image")
     @JsonProperty("base_image")
     private String baseImage;
 
+    @Schema(description = "Override the command run in the container")
     private String command;
+
+    @Schema(description = "Override the arguments passed to command")
     private List<String> args;
 
     public FunctionContainerSpec(Map<String, Serializable> data) {
@@ -38,11 +42,11 @@ public class FunctionContainerSpec extends FunctionBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        FunctionContainerSpec functionContainerSpec = mapper.convertValue(data, FunctionContainerSpec.class);
+        FunctionContainerSpec spec = mapper.convertValue(data, FunctionContainerSpec.class);
 
-        this.setCommand(functionContainerSpec.getCommand());
-        this.setImage(functionContainerSpec.getImage());
-        this.setBaseImage(functionContainerSpec.getBaseImage());
-        this.setArgs(functionContainerSpec.getArgs());
+        this.command = spec.getCommand();
+        this.image = spec.getImage();
+        this.baseImage = spec.getBaseImage();
+        this.args = spec.getArgs();
     }
 }

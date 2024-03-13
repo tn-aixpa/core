@@ -22,7 +22,7 @@ public class TaskMetricSpec extends K8sTaskBaseSpec {
     private String framework;
 
     @JsonProperty("exec_args")
-    private Map<String, Object> execArgs;
+    private Map<String, Serializable> execArgs;
 
     private Boolean parallel;
 
@@ -39,9 +39,9 @@ public class TaskMetricSpec extends K8sTaskBaseSpec {
 
         TaskMetricSpec taskMetricSpec = mapper.convertValue(data, TaskMetricSpec.class);
 
-        this.setFramework(taskMetricSpec.getFramework());
-        this.setExecArgs(taskMetricSpec.getExecArgs());
-        this.setParallel(taskMetricSpec.getParallel());
-        this.setNumWorker(taskMetricSpec.getNumWorker());
+        this.framework = taskMetricSpec.getFramework();
+        this.execArgs = taskMetricSpec.getExecArgs();
+        this.parallel = taskMetricSpec.getParallel();
+        this.numWorker = taskMetricSpec.getNumWorker();
     }
 }

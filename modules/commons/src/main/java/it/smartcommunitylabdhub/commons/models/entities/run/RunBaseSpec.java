@@ -24,7 +24,7 @@ public class RunBaseSpec extends BaseSpec {
     public void configure(Map<String, Serializable> data) {
         RunBaseSpec runBaseSpec = mapper.convertValue(data, RunBaseSpec.class);
 
-        this.setTask(runBaseSpec.getTask());
-        this.setLocalExecution(runBaseSpec.getLocalExecution());
+        this.task = runBaseSpec.getTask();
+        this.localExecution = runBaseSpec.getLocalExecution();
     }
 }

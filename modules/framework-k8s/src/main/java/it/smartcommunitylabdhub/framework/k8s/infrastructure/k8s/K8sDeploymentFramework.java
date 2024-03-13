@@ -1,29 +1,21 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.services.LogService;
-import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
-import it.smartcommunitylabdhub.fsm.exceptions.StopPoller;
-import it.smartcommunitylabdhub.fsm.pollers.PollingService;
-import it.smartcommunitylabdhub.fsm.types.RunStateMachineFactory;
 import jakarta.validation.constraints.NotNull;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 //TODO: le operazioni di clean del deployment vanno fatte nel framework
+//TODO: instead of void define a Result object that have to be merged with the run from the
+// caller.
 @Slf4j
 @FrameworkComponent(framework = K8sDeploymentFramework.FRAMEWORK)
 public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnable, V1Deployment> {
@@ -32,56 +24,64 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
     private final AppsV1Api appsV1Api;
 
-    //TODO drop
-    @Autowired
-    PollingService pollingService;
-
-    //TODO drop from framework, this should be delegated to run listener/service
-    //the framework has NO concept of runs, only RUNNABLEs
-    @Autowired
-    RunStateMachineFactory runStateMachine;
-
-    //TODO drop, logs must be handled by a listener
-    @Autowired
-    LogService logService;
-
-    //TODO drop from framework, this should be delegated to run listener/service
-    //the framework has NO concept of runs, only RUNNABLEs
-    @Autowired
-    RunService runService;
-
     public K8sDeploymentFramework(ApiClient apiClient) {
         super(apiClient);
         appsV1Api = new AppsV1Api(apiClient);
     }
 
     @Override
-    public K8sDeploymentRunnable execute(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+    public K8sDeploymentRunnable run(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
         V1Deployment deployment = build(runnable);
-        deployment = apply(deployment);
-
+        deployment = create(deployment);
         runnable.setState(State.RUNNING.name());
 
         return runnable;
     }
 
-    // TODO: instead of void define a Result object that have to be merged with the run from the
-    // caller.
+    @Override
+    public K8sDeploymentRunnable delete(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+        V1Deployment deployment;
+        try {
+            deployment = get(build(runnable));
+        } catch (K8sFrameworkException e) {
+            runnable.setState(State.DELETED.name());
+            return runnable;
+        }
 
+        delete(deployment);
+        runnable.setState(State.DELETED.name());
+
+        return runnable;
+    }
+
+    @Override
+    public K8sDeploymentRunnable stop(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+        V1Deployment deployment = get(build(runnable));
+
+        //stop by setting replicas to 0
+        deployment.getSpec().setReplicas(0);
+        apply(deployment);
+
+        runnable.setState(State.STOPPED.name());
+
+        return runnable;
+    }
+
+    @Override
     public V1Deployment build(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
         // Log service execution initiation
         log.info("----------------- PREPARE KUBERNETES Deployment ----------------");
 
         // Generate deploymentName and ContainerName
         String deploymentName = k8sBuilderHelper.getDeploymentName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
         String containerName = k8sBuilderHelper.getContainerName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
 
         // Create labels for job
@@ -107,59 +107,63 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
         // Build Container
         V1Container container = new V1Container()
-                .name(containerName)
-                .image(runnable.getImage())
-                .imagePullPolicy("Always")
-                .imagePullPolicy("IfNotPresent")
-                .command(command)
-                .args(args)
-                .resources(resources)
-                .volumeMounts(volumeMounts)
-                .envFrom(envFrom)
-                .env(env);
+            .name(containerName)
+            .image(runnable.getImage())
+            .imagePullPolicy("Always")
+            .imagePullPolicy("IfNotPresent")
+            .command(command)
+            .args(args)
+            .resources(resources)
+            .volumeMounts(volumeMounts)
+            .envFrom(envFrom)
+            .env(env);
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
-                .containers(Collections.singletonList(container))
-                .nodeSelector(buildNodeSelector(runnable))
-                .affinity(runnable.getAffinity())
-                .tolerations(buildTolerations(runnable))
-                .volumes(volumes)
-                .restartPolicy("Always");
+            .containers(Collections.singletonList(container))
+            .nodeSelector(buildNodeSelector(runnable))
+            .affinity(runnable.getAffinity())
+            .tolerations(buildTolerations(runnable))
+            .volumes(volumes)
+            .restartPolicy("Always");
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
 
-        int replicas = Optional.ofNullable(runnable.getReplicas()).orElse(1).intValue();
+        int replicas = Optional.ofNullable(runnable.getReplicas()).orElse(1);
 
         // Create the JobSpec with the PodTemplateSpec
         V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
-                .replicas(replicas)
-                .selector(new V1LabelSelector().matchLabels(labels))
-                .template(podTemplateSpec);
+            .replicas(replicas)
+            .selector(new V1LabelSelector().matchLabels(labels))
+            .template(podTemplateSpec);
 
         // Create the V1Deployment object with metadata and JobSpec
         return new V1Deployment().metadata(metadata).spec(deploymentSpec);
     }
 
+    @Override
     public V1Deployment apply(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
+        Assert.notNull(deployment.getSpec(), "spec can not be null");
 
         try {
             // Log service execution initiation
             log.info("----------------- APPLY KUBERNETES Deployment ----------------");
 
-            //dispatch deployment via api
-            V1Deployment createdDeployment = appsV1Api.createNamespacedDeployment(
-                    namespace,
-                    deployment,
-                    null,
-                    null,
-                    null,
-                    null
+            V1Deployment updatedDeployment = appsV1Api.replaceNamespacedDeployment(
+                deployment.getMetadata().getName(),
+                namespace,
+                deployment,
+                null,
+                null,
+                null,
+                null
             );
-            log.info("Deployment created: {}", Objects.requireNonNull(createdDeployment.getMetadata()).getName());
-            return createdDeployment;
+            //dispatch deployment via api
+
+            log.info("Deployment created: {}", Objects.requireNonNull(updatedDeployment.getMetadata()).getName());
+            return updatedDeployment;
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {
@@ -170,6 +174,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
     }
 
+    @Override
     public V1Deployment get(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
 
@@ -188,17 +193,68 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
     }
 
-    //TODO drop
-    private void writeLog(K8sDeploymentRunnable runnable, String log) {
-        if (logService != null) {
-            LogMetadata logMetadata = new LogMetadata();
-            logMetadata.setProject(runnable.getProject());
-            logMetadata.setRun(runnable.getId());
-            Log logDTO = Log.builder().body(Map.of("content", log)).metadata(logMetadata.toMap()).build();
-            logService.createLog(logDTO);
+    @Override
+    public V1Deployment create(V1Deployment deployment) throws K8sFrameworkException {
+        Assert.notNull(deployment.getMetadata(), "metadata can not be null");
+        try {
+            // Log service execution initiation
+            log.info("----------------- CREATE KUBERNETES Deployment ----------------");
+
+            return appsV1Api.createNamespacedDeployment(namespace, deployment, null, null, null, null);
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getResponseBody());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getResponseBody());
         }
     }
 
+    @Override
+    public void delete(@NotNull V1Deployment deployment) throws K8sFrameworkException {
+        Assert.notNull(deployment.getMetadata(), "metadata can not be null");
+        try {
+            // Log service execution initiation
+            log.info("----------------- DELETE KUBERNETES Deployment ----------------");
+
+            appsV1Api.deleteNamespacedDeployment(
+                deployment.getMetadata().getName(),
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getResponseBody());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getResponseBody());
+        }
+    }
+    // TODO NEED TO CHECK IF IMPLEMENT THE CODE BELOW
+
+    //    private void writeLog(K8sDeploymentRunnable runnable, String log) {
+    //        if (logService != null) {
+    //            LogMetadata logMetadata = new LogMetadata();
+    //            logMetadata.setProject(runnable.getProject());
+    //            logMetadata.setRun(runnable.getId());
+    //            Log logDTO = Log.builder().body(Map.of("content", log)).metadata(logMetadata.toMap()).build();
+    //            logService.createLog(logDTO);
+    //        }
+    //    }
+
+    //    /**
+    //     * Delete job
+    //     *
+    //     * @param jobName  the name of the Deployment
+    //     * @param runnable the runnable Type in this case K8SJobRunnable
+    //     */
     // /**
     //  * Logging pod
     //  *
@@ -252,76 +308,70 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     //         //throw new RuntimeException(e);
     //     }
     // }
-
-    /**
-     * Delete job
-     *
-     * @param jobName  the name of the Deployment
-     * @param runnable the runnable Type in this case K8SJobRunnable
-     */
-    private void deleteAssociatedPodAndJob(String jobName, String namespace, K8sDeploymentRunnable runnable) {
-        // Delete the Pod associated with the Deployment
-        try {
-            V1PodList v1PodList = coreV1Api.listNamespacedPod(
-                    namespace,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            );
-
-            for (V1Pod pod : v1PodList.getItems()) {
-                if (pod.getMetadata() != null && pod.getMetadata().getName() != null) {
-                    if (pod.getMetadata().getName().startsWith(jobName)) {
-                        String podName = pod.getMetadata().getName();
-
-                        // Delete the Pod
-                        V1Pod v1Pod = coreV1Api.deleteNamespacedPod(
-                                podName,
-                                namespace,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null
-                        );
-                        log.info("Pod deleted: " + podName);
-
-                        try {
-                            writeLog(
-                                    runnable,
-                                    JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
-                            );
-                        } catch (JsonProcessingException e) {
-                            log.error(e.toString());
-                        }
-
-                        // // Delete the Deployment
-                        // V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
-                        //         jobName, "default", null,
-                        //         null, null, null,
-                        //         null, null);
-
-                        // try {
-                        //     writeLog(runnable, JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(deleteStatus));
-                        // } catch (JsonProcessingException e) {
-                        //     log.error(e.toString());
-                        // }
-                        log.info("Deployment deleted: " + jobName);
-                    }
-                }
-            }
-            throw new StopPoller("POLLER STOP SUCCESSFULLY");
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    //    private void deleteAssociatedPodAndJob(String jobName, String namespace, K8sDeploymentRunnable runnable) {
+    //        // Delete the Pod associated with the Deployment
+    //        try {
+    //
+    //            V1PodList v1PodList = coreV1Api.listNamespacedPod(
+    //                    namespace,
+    //                    null,
+    //                    null,
+    //                    null,
+    //                    null,
+    //                    null,
+    //                    null,
+    //                    null,
+    //                    null,
+    //                    null,
+    //                    null,
+    //                    null
+    //            );
+    //
+    //            for (V1Pod pod : v1PodList.getItems()) {
+    //                if (pod.getMetadata() != null && pod.getMetadata().getName() != null) {
+    //                    if (pod.getMetadata().getName().startsWith(jobName)) {
+    //                        String podName = pod.getMetadata().getName();
+    //
+    //                        // Delete the Pod
+    //                        V1Pod v1Pod = coreV1Api.deleteNamespacedPod(
+    //                                podName,
+    //                                namespace,
+    //                                null,
+    //                                null,
+    //                                null,
+    //                                null,
+    //                                null,
+    //                                null
+    //                        );
+    //                        log.info("Pod deleted: " + podName);
+    //
+    //                        try {
+    //                            writeLog(
+    //                                    runnable,
+    //                                    JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
+    //                            );
+    //                        } catch (JsonProcessingException e) {
+    //                            log.error(e.toString());
+    //                        }
+    //
+    //                        // // Delete the Deployment
+    //                        // V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
+    //                        //         jobName, "default", null,
+    //                        //         null, null, null,
+    //                        //         null, null);
+    //
+    //                        // try {
+    //                        //     writeLog(runnable, JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(deleteStatus));
+    //                        // } catch (JsonProcessingException e) {
+    //                        //     log.error(e.toString());
+    //                        // }
+    //                        log.info("Deployment deleted: " + jobName);
+    //                    }
+    //                }
+    //            }
+    //            throw new StopPoller("POLLER STOP SUCCESSFULLY");
+    //        } catch (ApiException e) {
+    //            throw new RuntimeException(e);
+    //        }
+    //    }
 }

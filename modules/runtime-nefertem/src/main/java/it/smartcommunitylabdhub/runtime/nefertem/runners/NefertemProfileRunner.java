@@ -3,16 +3,13 @@ package it.smartcommunitylabdhub.runtime.nefertem.runners;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskProfileSpec;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * DbtProfileRunner
@@ -63,7 +60,7 @@ public class NefertemProfileRunner implements Runner<K8sJobRunnable> {
             .labels(taskSpec.getLabels())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
-            .state(statusFieldAccessor.getState())
+            .state(State.READY.name())
             .build();
 
         k8sJobRunnable.setId(run.getId());

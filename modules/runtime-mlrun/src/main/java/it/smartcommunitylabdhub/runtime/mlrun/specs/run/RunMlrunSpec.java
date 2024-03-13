@@ -9,6 +9,8 @@ import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,14 +19,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = MlrunRuntime.RUNTIME, kind = "mlrun+run", entity = EntityName.RUN)
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = RunMlrunSpec.KIND, entity = EntityName.RUN)
 public class RunMlrunSpec extends RunBaseSpec {
 
-    private Map<String, Object> inputs = new HashMap<>();
+    public static final String KIND = MlrunRuntime.RUNTIME + "+run";
 
-    private Map<String, Object> outputs = new HashMap<>();
+    private List<Map.Entry<String, Serializable>> inputs = new LinkedList<>();
 
-    private Map<String, Object> parameters = new HashMap<>();
+    private List<Map.Entry<String, Serializable>> outputs = new LinkedList<>();
+
+    private Map<String, Serializable> parameters = new HashMap<>();
 
     @JsonProperty("mlrun_spec")
     private TaskMlrunSpec taskSpec;
@@ -41,11 +45,11 @@ public class RunMlrunSpec extends RunBaseSpec {
         super.configure(data);
 
         RunMlrunSpec spec = mapper.convertValue(data, RunMlrunSpec.class);
-        this.setInputs(spec.getInputs());
-        this.setOutputs(spec.getOutputs());
-        this.setParameters(spec.getParameters());
+        this.inputs = spec.getInputs();
+        this.outputs = spec.getOutputs();
+        this.parameters = spec.getParameters();
 
-        this.setTaskSpec(spec.getTaskSpec());
-        this.setFuncSpec(spec.getFuncSpec());
+        this.taskSpec = spec.getTaskSpec();
+        this.funcSpec = spec.getFuncSpec();
     }
 }

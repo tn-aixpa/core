@@ -15,12 +15,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = NefertemRuntime.RUNTIME, kind = "nefertem", entity = EntityName.FUNCTION)
+@SpecType(runtime = NefertemRuntime.RUNTIME, kind = NefertemRuntime.RUNTIME, entity = EntityName.FUNCTION)
 public class FunctionNefertemSpec extends FunctionBaseSpec {
 
-    private List<Map<String, Object>> constraints;
-
-    private List<Map<String, Object>> metrics;
+    private List<Map<String, Serializable>> constraints;
+    private List<Map<String, Serializable>> metrics;
 
     @JsonProperty("error_report")
     private String errorReport;
@@ -33,10 +32,10 @@ public class FunctionNefertemSpec extends FunctionBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        FunctionNefertemSpec functionNefertemSpec = mapper.convertValue(data, FunctionNefertemSpec.class);
+        FunctionNefertemSpec spec = mapper.convertValue(data, FunctionNefertemSpec.class);
 
-        this.setConstraints(functionNefertemSpec.getConstraints());
-        this.setMetrics(functionNefertemSpec.getMetrics());
-        this.setErrorReport(functionNefertemSpec.getErrorReport());
+        this.constraints = spec.getConstraints();
+        this.metrics = spec.getMetrics();
+        this.errorReport = spec.getErrorReport();
     }
 }

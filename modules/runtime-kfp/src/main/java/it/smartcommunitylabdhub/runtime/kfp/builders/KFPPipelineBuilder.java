@@ -20,15 +20,15 @@ public class KFPPipelineBuilder implements Builder<FunctionKFPSpec, TaskPipeline
 
     @Override
     public RunKFPSpec build(FunctionKFPSpec funSpec, TaskPipelineSpec taskSpec, RunKFPSpec runSpec) {
-        RunKFPSpec containerSpec = new RunKFPSpec(runSpec.toMap());
-        containerSpec.setTaskPipelineSpec(taskSpec);
-        containerSpec.setFunctionSpec(funSpec);
+        RunKFPSpec spec = new RunKFPSpec(runSpec.toMap());
+        spec.setTaskSpec(taskSpec);
+        spec.setFuncSpec(funSpec);
 
         //let run override k8s specs
         Optional
-            .ofNullable(runSpec.getTaskPipelineSpec())
-            .ifPresent(k8sSpec -> containerSpec.getTaskPipelineSpec().configure(k8sSpec.toMap()));
+            .ofNullable(runSpec.getTaskSpec())
+            .ifPresent(k8sSpec -> spec.getTaskSpec().configure(k8sSpec.toMap()));
 
-        return containerSpec;
+        return spec;
     }
 }

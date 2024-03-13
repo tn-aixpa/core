@@ -18,8 +18,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = ContainerRuntime.RUNTIME, kind = "container+run", entity = EntityName.RUN)
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = RunContainerSpec.KIND, entity = EntityName.RUN)
 public class RunContainerSpec extends RunBaseSpec {
+
+    public static final String KIND = ContainerRuntime.RUNTIME + "+run";
 
     @JsonProperty("job_spec")
     private TaskJobSpec taskJobSpec;
@@ -41,11 +43,11 @@ public class RunContainerSpec extends RunBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        RunContainerSpec runContainerSpec = mapper.convertValue(data, RunContainerSpec.class);
+        RunContainerSpec spec = mapper.convertValue(data, RunContainerSpec.class);
 
-        this.setTaskJobSpec(runContainerSpec.getTaskJobSpec());
-        this.setTaskDeploySpec(runContainerSpec.getTaskDeploySpec());
-        this.setTaskServeSpec(runContainerSpec.getTaskServeSpec());
-        this.setFunctionSpec(runContainerSpec.getFunctionSpec());
+        this.taskJobSpec = spec.getTaskJobSpec();
+        this.taskDeploySpec = spec.getTaskDeploySpec();
+        this.taskServeSpec = spec.getTaskServeSpec();
+        this.functionSpec = spec.getFunctionSpec();
     }
 }

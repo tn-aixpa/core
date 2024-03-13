@@ -3,13 +3,17 @@ package it.smartcommunitylabdhub.runtime.kfp.specs.function;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
+import jakarta.validation.constraints.NotNull;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,20 +21,28 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = KFPRuntime.RUNTIME, kind = "kfp", entity = EntityName.FUNCTION)
+@SpecType(runtime = KFPRuntime.RUNTIME, kind = KFPRuntime.RUNTIME, entity = EntityName.FUNCTION)
 public class FunctionKFPSpec extends FunctionBaseSpec {
 
+    @NotNull
+    @Schema(description = "Source code")
+    private SourceCode source;
+
+    @Schema(description = "Container image name")
     private String image;
+
+    @Schema(description = "Container image tag")
     private String tag;
+
+    @Schema(description = "Handler method inside the function")
     private String handler;
+
+    @Schema(description = "Override the command run in the container")
     private String command;
+
+    @Schema(description = "Requirements list, as used by the runtime")
     private List<Serializable> requirements;
-    @JsonProperty("function_source_code")
-    private String functionSourceCode;
-    @JsonProperty("code_origin")
-    private String codeOrigin;
-    @JsonProperty("origin_filename")
-    private String originFilename;
+
 
     public FunctionKFPSpec(Map<String, Serializable> data) {
         configure(data);
@@ -40,15 +52,13 @@ public class FunctionKFPSpec extends FunctionBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        FunctionKFPSpec functionKFPSpec = mapper.convertValue(data, FunctionKFPSpec.class);
+        FunctionKFPSpec spec = mapper.convertValue(data, FunctionKFPSpec.class);
 
-        this.setImage(functionKFPSpec.getImage());
-        this.setTag(functionKFPSpec.getTag());
-        this.setHandler(functionKFPSpec.getHandler());
-        this.setCommand(functionKFPSpec.getCommand());
-        this.setRequirements(functionKFPSpec.getRequirements());
-        this.setOriginFilename(functionKFPSpec.getOriginFilename());
-        this.setCodeOrigin(functionKFPSpec.getCodeOrigin());
-        this.setFunctionSourceCode(functionKFPSpec.getFunctionSourceCode());
+        this.source = spec.getSource();
+        this.image = spec.getImage();
+        this.tag = spec.getTag();
+        this.handler = spec.getHandler();
+        this.command = spec.getCommand();
+        this.requirements = spec.getRequirements();
     }
 }

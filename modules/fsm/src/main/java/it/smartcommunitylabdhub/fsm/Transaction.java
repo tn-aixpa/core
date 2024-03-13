@@ -11,44 +11,47 @@
 
 package it.smartcommunitylabdhub.fsm;
 
+import jakarta.annotation.Nullable;
+import java.util.Optional;
 import java.util.function.BiPredicate;
+import lombok.Getter;
 
-public class Transaction<S, E, C> {
+public class Transaction<S, E, C, R> {
 
+    @Getter
     private E event;
+
+    @Getter
     private S nextState;
+
+    @Getter
     private BiPredicate<C, C> guard;
+
+    @Nullable
+    private StateLogic<S, E, C, R> internalLogic;
 
     public Transaction(E event, S nextState, BiPredicate<C, C> guard) {
         this.event = event;
         this.nextState = nextState;
         this.guard = guard;
+        internalLogic = null;
     }
 
     /**
-     * Get the event associated with this transaction.
+     * Get the internal logic associated with this state.
      *
-     * @return The event.
+     * @return The internal logic as a StateLogic instance.
      */
-    public E getEvent() {
-        return event;
+    public Optional<StateLogic<S, E, C, R>> getInternalLogic() {
+        return Optional.ofNullable(internalLogic);
     }
 
     /**
-     * Get the next state to transition to.
+     * Set the internal logic for this state.
      *
-     * @return The next state.
+     * @param internalLogic The internal logic as a StateLogic instance.
      */
-    public S getNextState() {
-        return nextState;
-    }
-
-    /**
-     * Get the guard function associated with this transaction.
-     *
-     * @return The guard function.
-     */
-    public BiPredicate<C, C> getGuard() {
-        return guard;
+    public <T> void setInternalLogic(@Nullable StateLogic<S, E, C, T> internalLogic) {
+        this.internalLogic = (StateLogic<S, E, C, R>) internalLogic; // Type casting
     }
 }

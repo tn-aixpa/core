@@ -21,6 +21,6 @@ public class ProjectBaseSpec extends BaseSpec {
     public void configure(Map<String, Serializable> data) {
         ProjectBaseSpec concreteSpec = mapper.convertValue(data, ProjectBaseSpec.class);
 
-        this.setContext(concreteSpec.getContext());
+        this.context = concreteSpec.getContext();
     }
 }

@@ -7,10 +7,13 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.components.run.RunManager;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
@@ -56,6 +59,9 @@ public class RunContextController {
     SearchableRunService runService;
 
     @Autowired
+    RunManager runManager;
+
+    @Autowired
     LogService logService;
 
     @Operation(summary = "Create a run in a project context")
@@ -72,7 +78,18 @@ public class RunContextController {
         dto.setProject(project);
 
         //create as new, will check for duplicated
-        return runService.createRun(dto);
+        Run run = runService.createRun(dto);
+
+        //if !local then also build+run
+        RunBaseSpec runBaseSpec = new RunBaseSpec();
+        runBaseSpec.configure(run.getSpec());
+
+        if (Boolean.FALSE.equals(runBaseSpec.getLocalExecution())) {
+            run = runManager.build(run);
+            run = runManager.run(run);
+        }
+
+        return run;
     }
 
     @Operation(summary = "Retrieve all runs for the project, with optional filter")
@@ -131,7 +148,7 @@ public class RunContextController {
 
     @Operation(summary = "Delete a specific run, with optional cascade")
     @DeleteMapping(path = "/{id}")
-    public void deleteRunById(
+    public void deleteRun(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam(required = false) Boolean cascade
@@ -143,9 +160,82 @@ public class RunContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        //TODO stop via manager if running
+        //delete via manager
+        runManager.delete(run);
 
+        //remove
         runService.deleteRun(id, cascade);
+    }
+
+    /*
+     * Actions
+     */
+    @Operation(summary = "Build a specific run")
+    @PostMapping(path = "/{id}/build")
+    public Run buildRunById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project  match
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        // via manager
+        return runManager.build(run);
+    }
+
+    @Operation(summary = "Execute a specific run")
+    @PostMapping(path = "/{id}/run")
+    public Run runRunById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project  match
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        // via manager
+        return runManager.run(run);
+    }
+
+    @Operation(summary = "Stop a specific run execution")
+    @PostMapping(path = "/{id}/stop")
+    public Run stopRunById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project  match
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        // via manager
+        return runManager.stop(run);
+    }
+
+    @Operation(summary = "Delete a specific run execution")
+    @PostMapping(path = "/{id}/delete")
+    public Run deleteRunById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project  match
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        // via manager
+        return runManager.delete(run);
     }
 
     /*

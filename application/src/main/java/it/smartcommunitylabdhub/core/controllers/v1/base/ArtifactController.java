@@ -63,7 +63,7 @@ public class ArtifactController {
     @Operation(summary = "List artifacts", description = "Return a list of all artifacts")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Artifact> getArtifacts(
-        @ParameterObject @RequestParam(required = false) @Valid @Nullable ArtifactEntityFilter filter,
+        @ParameterObject @Valid @Nullable ArtifactEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable

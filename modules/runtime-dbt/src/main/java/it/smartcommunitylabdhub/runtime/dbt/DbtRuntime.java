@@ -2,12 +2,17 @@ package it.smartcommunitylabdhub.runtime.dbt;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.base.RunStatus;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.builders.DbtTransformBuilder;
@@ -15,12 +20,15 @@ import it.smartcommunitylabdhub.runtime.dbt.runners.DbtTransformRunner;
 import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.run.RunDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
+import it.smartcommunitylabdhub.runtime.dbt.status.RunDbtStatus;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 @RuntimeComponent(runtime = DbtRuntime.RUNTIME)
-public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRunnable> {
+@Slf4j
+public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtStatus, K8sJobRunnable> {
 
     public static final String RUNTIME = "dbt";
 
@@ -29,11 +37,21 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
     @Autowired
     SecretService secretService;
 
+    @Autowired(required = false)
+    private RunnableStore<K8sJobRunnable> jobRunnableStore;
+
     @Value("${runtime.dbt.image}")
     private String image;
 
     @Override
     public RunDbtSpec build(@NotNull Function function, @NotNull Task task, @NotNull Run run) {
+        //check run kind
+        if (!RunDbtSpec.KIND.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunDbtSpec.KIND)
+            );
+        }
+
         FunctionDbtSpec functionSpec = new FunctionDbtSpec(function.getSpec());
         RunDbtSpec runSpec = new RunDbtSpec(run.getSpec());
 
@@ -53,6 +71,13 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
 
     @Override
     public K8sJobRunnable run(Run run) {
+        //check run kind
+        if (!RunDbtSpec.KIND.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunDbtSpec.KIND)
+            );
+        }
+
         // Crete spec for run
         RunDbtSpec runSpec = new RunDbtSpec(run.getSpec());
 
@@ -71,8 +96,83 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, K8sJobRu
     }
 
     @Override
-    public RunStatus parse() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'parse'");
+    public K8sJobRunnable stop(Run run) {
+        //check run kind
+        if (!RunDbtSpec.KIND.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunDbtSpec.KIND)
+            );
+        }
+
+        if (jobRunnableStore == null) {
+            throw new CoreRuntimeException("Job Store is not available");
+        }
+        try {
+            K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
+            if (k8sJobRunnable == null) {
+                throw new NoSuchEntityException("JobRunnable not found");
+            }
+
+            //set state to STOP to signal framework to stop the runnable
+            k8sJobRunnable.setState(State.STOP.name());
+
+            return k8sJobRunnable;
+        } catch (StoreException e) {
+            log.error("Error stopping run", e);
+            throw new NoSuchEntityException("Error stopping run", e);
+        }
+    }
+
+    @Override
+    public K8sJobRunnable delete(Run run) {
+        //check run kind
+        if (!RunDbtSpec.KIND.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunDbtSpec.KIND)
+            );
+        }
+
+        if (jobRunnableStore == null) {
+            throw new CoreRuntimeException("Job Store is not available");
+        }
+        try {
+            K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
+            if (k8sJobRunnable == null) {
+                throw new NoSuchEntityException("JobRunnable not found");
+            }
+
+            //set state to DELETING to signal framework to delete the runnable
+            k8sJobRunnable.setState(State.DELETING.name());
+
+            return k8sJobRunnable;
+        } catch (StoreException e) {
+            log.error("Error stopping run", e);
+            throw new NoSuchEntityException("Error stopping run", e);
+        }
+    }
+
+    @Override
+    public RunDbtStatus onRunning(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onComplete(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onError(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onStopped(Run run, RunRunnable runnable) {
+        return null;
+    }
+
+    @Override
+    public RunDbtStatus onDeleted(Run run, RunRunnable runnable) {
+        return null;
     }
 }
