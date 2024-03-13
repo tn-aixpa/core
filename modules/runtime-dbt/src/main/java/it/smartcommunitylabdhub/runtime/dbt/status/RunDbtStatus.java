@@ -14,6 +14,6 @@ public class RunDbtStatus extends RunBaseStatus {
 
     @Override
     public void configure(Map<String, Serializable> data) {
-        RunDbtStatus meta = mapper.convertValue(data, RunDbtStatus.class);
+        super.configure(data);
     }
 }

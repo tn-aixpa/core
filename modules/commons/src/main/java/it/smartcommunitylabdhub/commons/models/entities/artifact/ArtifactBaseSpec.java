@@ -23,9 +23,9 @@ public class ArtifactBaseSpec extends BaseSpec {
 
     @Override
     public void configure(Map<String, Serializable> data) {
-        ArtifactBaseSpec concreteSpec = mapper.convertValue(data, ArtifactBaseSpec.class);
+        ArtifactBaseSpec spec = mapper.convertValue(data, ArtifactBaseSpec.class);
 
-        this.setSrcPath(concreteSpec.getSrcPath());
-        this.setPath(concreteSpec.getPath());
+        this.srcPath = spec.getSrcPath();
+        this.path = spec.getPath();
     }
 }

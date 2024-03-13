@@ -14,6 +14,6 @@ public class RunNefertemStatus extends RunBaseStatus {
 
     @Override
     public void configure(Map<String, Serializable> data) {
-        RunNefertemStatus meta = mapper.convertValue(data, RunNefertemStatus.class);
+        super.configure(data);
     }
 }

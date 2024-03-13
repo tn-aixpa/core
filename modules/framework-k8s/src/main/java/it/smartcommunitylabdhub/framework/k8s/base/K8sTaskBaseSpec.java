@@ -41,15 +41,15 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        K8sTaskBaseSpec concreteSpec = mapper.convertValue(data, K8sTaskBaseSpec.class);
+        K8sTaskBaseSpec spec = mapper.convertValue(data, K8sTaskBaseSpec.class);
 
-        this.setVolumes(concreteSpec.getVolumes());
-        this.setNodeSelector(concreteSpec.getNodeSelector());
-        this.setEnvs(concreteSpec.getEnvs());
-        this.setResources(concreteSpec.getResources());
-        this.setSecrets(concreteSpec.getSecrets());
-        this.setAffinity(concreteSpec.getAffinity());
-        this.setLabels(concreteSpec.getLabels());
-        this.setTolerations(concreteSpec.getTolerations());
+        this.volumes = spec.getVolumes();
+        this.nodeSelector = spec.getNodeSelector();
+        this.envs = spec.getEnvs();
+        this.resources = spec.getResources();
+        this.secrets = spec.getSecrets();
+        this.affinity = spec.getAffinity();
+        this.labels = spec.getLabels();
+        this.tolerations = spec.getTolerations();
     }
 }

@@ -37,11 +37,11 @@ public class TaskInferSpec extends K8sTaskBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        TaskInferSpec taskInferSpec = mapper.convertValue(data, TaskInferSpec.class);
+        TaskInferSpec spec = mapper.convertValue(data, TaskInferSpec.class);
 
-        this.setFramework(taskInferSpec.getFramework());
-        this.setExecArgs(taskInferSpec.getExecArgs());
-        this.setParallel(taskInferSpec.getParallel());
-        this.setNumWorker(taskInferSpec.getNumWorker());
+        this.framework = spec.getFramework();
+        this.execArgs = spec.getExecArgs();
+        this.parallel = spec.getParallel();
+        this.numWorker = spec.getNumWorker();
     }
 }

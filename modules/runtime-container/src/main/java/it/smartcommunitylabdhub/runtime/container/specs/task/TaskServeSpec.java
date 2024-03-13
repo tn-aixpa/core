@@ -37,9 +37,9 @@ public class TaskServeSpec extends TaskDeploySpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        TaskServeSpec taskServeSpec = mapper.convertValue(data, TaskServeSpec.class);
+        TaskServeSpec spec = mapper.convertValue(data, TaskServeSpec.class);
 
-        this.setServicePorts(taskServeSpec.getServicePorts());
-        this.setServiceType(taskServeSpec.getServiceType());
+        this.setServicePorts(spec.getServicePorts());
+        this.setServiceType(spec.getServiceType());
     }
 }

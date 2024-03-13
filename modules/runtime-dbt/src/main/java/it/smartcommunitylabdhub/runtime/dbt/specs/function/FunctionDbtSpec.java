@@ -1,10 +1,12 @@
 package it.smartcommunitylabdhub.runtime.dbt.specs.function;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -14,10 +16,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = DbtRuntime.RUNTIME, kind = "dbt", entity = EntityName.FUNCTION)
+@SpecType(runtime = DbtRuntime.RUNTIME, kind = DbtRuntime.RUNTIME, entity = EntityName.FUNCTION)
 public class FunctionDbtSpec extends FunctionBaseSpec {
 
-    private SourceCode sql;
+    @NotNull
+    @Schema(description = "Source code for the dbt function")
+    private SourceCode source;
 
     public FunctionDbtSpec(Map<String, Serializable> data) {
         configure(data);
@@ -27,8 +31,7 @@ public class FunctionDbtSpec extends FunctionBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        FunctionDbtSpec functionDbtSpec = mapper.convertValue(data, FunctionDbtSpec.class);
-
-        this.setSql(functionDbtSpec.getSql());
+        FunctionDbtSpec spec = mapper.convertValue(data, FunctionDbtSpec.class);
+        this.source = spec.getSource();
     }
 }

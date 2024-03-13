@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SecretBaseSpec extends BaseSpec {
 
+    //TODO remove, these are for `secret` kind
     String path;
     String provider;
 
@@ -19,7 +20,7 @@ public class SecretBaseSpec extends BaseSpec {
     public void configure(Map<String, Serializable> data) {
         SecretBaseSpec concreteSpec = mapper.convertValue(data, SecretBaseSpec.class);
 
-        this.setPath(concreteSpec.getPath());
-        this.setProvider(concreteSpec.getProvider());
+        this.path = concreteSpec.getPath();
+        this.provider = concreteSpec.getProvider();
     }
 }

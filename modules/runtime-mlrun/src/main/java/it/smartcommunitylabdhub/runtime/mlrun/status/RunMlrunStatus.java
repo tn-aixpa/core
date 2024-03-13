@@ -14,6 +14,6 @@ public class RunMlrunStatus extends RunBaseStatus {
 
     @Override
     public void configure(Map<String, Serializable> data) {
-        RunMlrunStatus meta = mapper.convertValue(data, RunMlrunStatus.class);
+        super.configure(data);
     }
 }

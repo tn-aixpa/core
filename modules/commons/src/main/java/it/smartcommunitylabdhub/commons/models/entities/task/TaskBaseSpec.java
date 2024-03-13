@@ -18,6 +18,6 @@ public class TaskBaseSpec extends BaseSpec {
     public void configure(Map<String, Serializable> data) {
         TaskBaseSpec concreteSpec = mapper.convertValue(data, TaskBaseSpec.class);
 
-        this.setFunction(concreteSpec.getFunction());
+        this.function = concreteSpec.getFunction();
     }
 }
