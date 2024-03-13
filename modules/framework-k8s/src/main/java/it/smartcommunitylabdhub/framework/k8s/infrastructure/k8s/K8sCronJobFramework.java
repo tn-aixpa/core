@@ -5,7 +5,6 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.exceptions.FrameworkException;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
@@ -38,13 +37,46 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
     // caller.
     @Override
     public K8sCronJobRunnable run(K8sCronJobRunnable runnable) throws K8sFrameworkException {
+        V1CronJob job = build(runnable);
+        job = create(job);
+
+        // Update runnable state..
+        runnable.setState(State.RUNNING.name());
+
+        return runnable;
+    }
+
+    @Override
+    public K8sCronJobRunnable stop(K8sCronJobRunnable runnable) throws K8sFrameworkException {
+        V1CronJob job = get(build(runnable));
+
+        //stop by deleting
+        delete(job);
+        runnable.setState(State.STOPPED.name());
+
+        return runnable;
+    }
+
+    @Override
+    public K8sCronJobRunnable delete(K8sCronJobRunnable runnable) throws K8sFrameworkException {
+        V1CronJob job;
+        try {
+            job = get(build(runnable));
+        } catch (K8sFrameworkException e) {
+            runnable.setState(State.DELETED.name());
+            return runnable;
+        }
+
+        delete(job);
+        runnable.setState(State.DELETED.name());
+
         return runnable;
     }
 
     @Override
     public V1CronJob build(K8sCronJobRunnable runnable) throws K8sFrameworkException {
         // Log service execution initiation
-        log.info("----------------- BUILD KUBERNETES JOB ----------------");
+        log.info("----------------- BUILD KUBERNETES CRON JOB ----------------");
 
         // Generate jobName and ContainerName
         String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
@@ -90,11 +122,35 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
 
     @Override
     public V1CronJob apply(@NotNull V1CronJob job) throws K8sFrameworkException {
+        return job;
+    }
+
+    @Override
+    public V1CronJob get(@NotNull V1CronJob job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
         try {
             // Log service execution initiation
-            log.info("----------------- RUN KUBERNETES JOB ----------------");
+            log.info("----------------- GET KUBERNETES CRON JOB ----------------");
+
+            return batchV1Api.readNamespacedCronJob(job.getMetadata().getName(), namespace, null);
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
+    }
+
+    @Override
+    public V1CronJob create(V1CronJob job) throws K8sFrameworkException {
+        Assert.notNull(job.getMetadata(), "metadata can not be null");
+
+        try {
+            // Log service execution initiation
+            log.info("----------------- RUN KUBERNETES CRON JOB ----------------");
 
             //dispatch job via api
             V1CronJob createdJob = batchV1Api.createNamespacedCronJob(namespace, job, null, null, null, null);
@@ -111,34 +167,30 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
     }
 
     @Override
-    public V1CronJob get(@NotNull V1CronJob job) throws K8sFrameworkException {
+    public void delete(V1CronJob job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
         try {
             // Log service execution initiation
-            log.info("----------------- GET KUBERNETES JOB ----------------");
+            log.info("----------------- RUN KUBERNETES CRON JOB ----------------");
 
-            return batchV1Api.readNamespacedCronJob(job.getMetadata().getName(), namespace, null);
+            batchV1Api.deleteNamespacedCronJob(
+                job.getMetadata().getName(),
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
         } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getMessage());
+            log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {
                 log.debug("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getResponseBody());
         }
     }
-
-    @Override
-    public K8sCronJobRunnable delete(K8sCronJobRunnable runnable) throws FrameworkException {
-        return null;
-    }
-
-    @Override
-    public V1CronJob create(V1CronJob object) throws K8sFrameworkException {
-        return null;
-    }
-
-    @Override
-    public void delete(V1CronJob object) throws K8sFrameworkException {}
 }

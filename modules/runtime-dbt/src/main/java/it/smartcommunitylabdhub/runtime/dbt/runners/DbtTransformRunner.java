@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.runtime.dbt.runners;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
@@ -59,7 +60,7 @@ public class DbtTransformRunner implements Runner<K8sJobRunnable> {
             .labels(taskSpec.getLabels())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
-            .state(statusFieldAccessor.getState())
+            .state(State.READY.name())
             .build();
 
         k8sJobRunnable.setId(run.getId());

@@ -57,9 +57,6 @@ public class K8sJobMonitor implements K8sBaseMonitor<Void> {
                     } else if (v1Job.getStatus().getActive() != null && v1Job.getStatus().getActive() > 0) {
                         // Job is active and is running
                         runnable.setState(State.RUNNING.name());
-                    } else {
-                        // Job is on unknown state
-                        runnable.setState(State.UNKNOWN.name());
                     }
 
                     return Stream.of(runnable);
@@ -78,6 +75,7 @@ public class K8sJobMonitor implements K8sBaseMonitor<Void> {
                     eventPublisher.publishEvent(
                         RunnableChangedEvent
                             .builder()
+                            .runnable(runnable)
                             .runMonitorObject(
                                 RunnableMonitorObject
                                     .builder()

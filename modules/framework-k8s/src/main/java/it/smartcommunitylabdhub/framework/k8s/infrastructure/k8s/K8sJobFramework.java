@@ -199,7 +199,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         try {
             // Log service execution initiation
-            log.info("----------------- RUN KUBERNETES JOB ----------------");
+            log.info("----------------- DELETE KUBERNETES JOB ----------------");
 
             batchV1Api.deleteNamespacedJob(job.getMetadata().getName(), namespace, null, null, null, null, null, null);
         } catch (ApiException e) {
