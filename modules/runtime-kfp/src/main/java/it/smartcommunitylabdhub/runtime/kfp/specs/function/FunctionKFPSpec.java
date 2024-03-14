@@ -26,7 +26,7 @@ public class FunctionKFPSpec extends FunctionBaseSpec {
 
     @NotNull
     @Schema(description = "Source code")
-    private SourceCode source;
+    private SourceCode<KFPSourceCodeLanguages> source;
 
     @Schema(description = "Container image name")
     private String image;
@@ -60,5 +60,9 @@ public class FunctionKFPSpec extends FunctionBaseSpec {
         this.handler = spec.getHandler();
         this.command = spec.getCommand();
         this.requirements = spec.getRequirements();
+    }
+
+    public enum KFPSourceCodeLanguages {
+        python,
     }
 }
