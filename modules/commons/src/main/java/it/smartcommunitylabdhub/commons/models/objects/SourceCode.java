@@ -12,7 +12,7 @@ import org.springframework.lang.Nullable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SourceCode implements Serializable {
+public class SourceCode<T extends Enum<?>> implements Serializable {
 
     @Nullable
     @Schema(description = "Source reference")
@@ -25,5 +25,5 @@ public class SourceCode implements Serializable {
     private String base64;
 
     @Schema(description = "Source code language (hint)")
-    private String lang;
+    private T lang;
 }

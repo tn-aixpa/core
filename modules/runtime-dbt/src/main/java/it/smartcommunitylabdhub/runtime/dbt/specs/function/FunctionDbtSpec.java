@@ -21,7 +21,7 @@ public class FunctionDbtSpec extends FunctionBaseSpec {
 
     @NotNull
     @Schema(description = "Source code for the dbt function")
-    private SourceCode source;
+    private SourceCode<DbtSourceCodeLanguages> source;
 
     public FunctionDbtSpec(Map<String, Serializable> data) {
         configure(data);
@@ -33,5 +33,10 @@ public class FunctionDbtSpec extends FunctionBaseSpec {
 
         FunctionDbtSpec spec = mapper.convertValue(data, FunctionDbtSpec.class);
         this.source = spec.getSource();
+    }
+
+    public enum DbtSourceCodeLanguages {
+        sql,
+        python,
     }
 }

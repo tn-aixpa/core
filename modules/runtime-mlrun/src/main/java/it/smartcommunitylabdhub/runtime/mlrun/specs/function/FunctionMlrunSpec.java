@@ -22,7 +22,7 @@ public class FunctionMlrunSpec extends FunctionBaseSpec {
 
     @NotNull
     @Schema(description = "Source code")
-    private SourceCode source;
+    private SourceCode<MlrunSourceCodeLanguages> source;
 
     @Schema(description = "Container image name")
     private String image;
@@ -55,5 +55,9 @@ public class FunctionMlrunSpec extends FunctionBaseSpec {
         this.handler = spec.getHandler();
         this.command = spec.getCommand();
         this.requirements = spec.getRequirements();
+    }
+
+    public enum MlrunSourceCodeLanguages {
+        python,
     }
 }
