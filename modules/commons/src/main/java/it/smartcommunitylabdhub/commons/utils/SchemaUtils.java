@@ -45,7 +45,8 @@ public final class SchemaUtils {
             //options
             .with(Option.DEFINITIONS_FOR_ALL_OBJECTS)
             .with(Option.MAP_VALUES_AS_ADDITIONAL_PROPERTIES)
-            .with(Option.PLAIN_DEFINITION_KEYS);
+            .with(Option.PLAIN_DEFINITION_KEYS)
+            .with(Option.ENUM_KEYWORD_FOR_SINGLE_VALUES);
 
         GENERATOR = new SchemaGenerator(configBuilder.build());
     }
