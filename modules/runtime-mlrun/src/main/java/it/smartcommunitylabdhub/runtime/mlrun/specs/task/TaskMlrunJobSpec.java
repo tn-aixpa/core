@@ -13,12 +13,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = MlrunRuntime.RUNTIME, kind = TaskMlrunSpec.KIND, entity = EntityName.TASK)
-public class TaskMlrunSpec extends K8sTaskBaseSpec {
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = TaskMlrunJobSpec.KIND, entity = EntityName.TASK)
+public class TaskMlrunJobSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "mlrun+job";
 
-    public TaskMlrunSpec(Map<String, Serializable> data) {
+    public TaskMlrunJobSpec(Map<String, Serializable> data) {
         configure(data);
     }
 

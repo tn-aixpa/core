@@ -8,7 +8,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunJobSpec;
 import java.util.*;
 
 /**
@@ -34,7 +34,7 @@ public class MlrunMlrunRunner implements Runner<K8sJobRunnable> {
     public K8sJobRunnable produce(Run run) {
         // Retrieve information about RunMlrunSpec
         RunMlrunSpec runSpec = new RunMlrunSpec(run.getSpec());
-        TaskMlrunSpec taskSpec = runSpec.getTaskSpec();
+        TaskMlrunJobSpec taskSpec = runSpec.getJobSpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(

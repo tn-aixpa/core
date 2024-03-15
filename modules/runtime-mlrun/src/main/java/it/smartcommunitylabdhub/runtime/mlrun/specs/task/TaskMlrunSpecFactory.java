@@ -6,15 +6,15 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TaskMlrunSpecFactory implements SpecFactory<TaskMlrunSpec> {
+public class TaskMlrunSpecFactory implements SpecFactory<TaskMlrunJobSpec> {
 
     @Override
-    public TaskMlrunSpec create() {
-        return new TaskMlrunSpec();
+    public TaskMlrunJobSpec create() {
+        return new TaskMlrunJobSpec();
     }
 
     @Override
-    public TaskMlrunSpec create(Map<String, Serializable> data) {
-        return new TaskMlrunSpec(data);
+    public TaskMlrunJobSpec create(Map<String, Serializable> data) {
+        return new TaskMlrunJobSpec(data);
     }
 }

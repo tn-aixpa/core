@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunJobSpec;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,8 +30,8 @@ public class RunMlrunSpec extends RunBaseSpec {
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
-    @JsonProperty("mlrun_spec")
-    private TaskMlrunSpec taskSpec;
+    @JsonProperty("job_spec")
+    private TaskMlrunJobSpec jobSpec;
 
     @JsonProperty("function_spec")
     private FunctionMlrunSpec funcSpec;
@@ -49,7 +49,7 @@ public class RunMlrunSpec extends RunBaseSpec {
         this.outputs = spec.getOutputs();
         this.parameters = spec.getParameters();
 
-        this.taskSpec = spec.getTaskSpec();
+        this.jobSpec = spec.getJobSpec();
         this.funcSpec = spec.getFuncSpec();
     }
 }
