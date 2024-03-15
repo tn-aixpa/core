@@ -42,11 +42,11 @@ management:
 # Runtimes
 runtime:
   nefertem:
-    image: ${RUNTIME_NEFERTEM_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-nefertem:latest}
+    image: ${RUNTIME_NEFERTEM_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-nefertem:latest}
   dbt:
-    image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-dbt:latest}
+    image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-dbt:latest}
   mlrun:
-    image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
+    image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-mlrun:latest}
 
 # Spring Docs
 springdoc:
