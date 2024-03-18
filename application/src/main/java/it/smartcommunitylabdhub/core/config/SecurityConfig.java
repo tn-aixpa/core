@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

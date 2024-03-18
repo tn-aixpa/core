@@ -18,6 +18,13 @@
             "mainClass": "it.smartcommunitylabdhub.core.CoreApplication",
             "projectName": "core",
             "vmArgs": "-Dspring.profiles.active=local",
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome against localhost",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}"
         }
     ]
 }
