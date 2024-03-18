@@ -76,6 +76,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -235,6 +239,12 @@
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-mlrun</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-console</artifactId>
             <version>${revision}</version>
         </dependency>
     </dependencies>

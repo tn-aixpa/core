@@ -85,8 +85,11 @@ security:
     password: ${DH_AUTH_BASIC_PASSWORD:}
   jwt:
     issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:}
-    audience: ${DH_AUTH_JWT_AUDIENCE:dhcore}
+    audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
+  oidc:    
+    client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
+    scope: 
 
 
 

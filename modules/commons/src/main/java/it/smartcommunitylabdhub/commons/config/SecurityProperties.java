@@ -1,5 +1,6 @@
-package it.smartcommunitylabdhub.core.config;
+package it.smartcommunitylabdhub.commons.config;
 
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -19,12 +20,19 @@ public class SecurityProperties {
     @NestedConfigurationProperty
     private JwtAuthenticationProperties jwt;
 
+    @NestedConfigurationProperty
+    private OidcAuthenticationProperties oidc;
+
     public boolean isBasicAuthEnabled() {
         return basic != null && basic.isEnabled();
     }
 
     public boolean isJwtAuthEnabled() {
         return jwt != null && jwt.isEnabled();
+    }
+
+    public boolean isOidcAuthEnabled() {
+        return oidc != null && oidc.isEnabled();
     }
 
     public boolean isRequired() {
@@ -53,6 +61,18 @@ public class SecurityProperties {
 
         public boolean isEnabled() {
             return StringUtils.hasText(issuerUri) && StringUtils.hasText(audience);
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class OidcAuthenticationProperties {
+
+        private String clientId;
+        private List<String> scope;
+
+        public boolean isEnabled() {
+            return StringUtils.hasText(clientId);
         }
     }
 }
