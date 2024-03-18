@@ -122,8 +122,8 @@ public class SolrIndexManager {
         if (StringUtils.hasText(q)) {
             filters.put("q", Arrays.asList(q));
             String query = String.format(
-                "metadata.name:\"%1$s\" OR  metadata.description:\"%1$s\" OR metadata.project:\"%1$s\"" +
-                " OR metadata.version:\"%1$s\" OR metadata.labels:\"%1$s\"",
+                "metadata.name:%1$s OR metadata.description:%1$s OR metadata.project:%1$s" +
+                " OR metadata.version:%1$s OR metadata.labels:%1$s",
                 q.trim()
             );
             MultiMapSolrParams.addParam("q", query, queryParamMap);
