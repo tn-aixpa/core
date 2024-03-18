@@ -1,36 +1,8 @@
 package it.smartcommunitylabdhub.core.controllers.v1.base;
 
-import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.components.solr.ItemResult;
-import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
-import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
-import it.smartcommunitylabdhub.core.components.solr.SolrPage;
-import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.run.RunDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.secret.SecretDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
-import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
-import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
-import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
-import it.smartcommunitylabdhub.core.repositories.RunRepository;
-import it.smartcommunitylabdhub.core.repositories.SecretRepository;
-import it.smartcommunitylabdhub.core.repositories.WorkflowRepository;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +14,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.components.solr.ItemResult;
+import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
+import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
+import it.smartcommunitylabdhub.core.components.solr.SolrPage;
+import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
+import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
+import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
+import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
+import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
+import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 
 @RestController
 @RequestMapping("/solr")
@@ -69,24 +59,6 @@ public class SolrController {
 
     @Autowired
     ArtifactDTOBuilder artifactDTOBuilder;
-
-    @Autowired
-    RunRepository runRepository;
-
-    @Autowired
-    RunDTOBuilder runDTOBuilder;
-
-    @Autowired
-    SecretRepository secretRepository;
-
-    @Autowired
-    SecretDTOBuilder secretDTOBuilder;
-
-    @Autowired
-    WorkflowRepository workflowRepository;
-
-    @Autowired
-    WorkflowDTOBuilder workflowDTOBuilder;
 
     @GetMapping(path = "/clear", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Void> clearIndex() {
@@ -137,45 +109,45 @@ public class SolrController {
             }
             pageNumber++;
         } while (!finished);
-        finished = false;
-        pageNumber = 0;
-        do {
-            Page<RunEntity> page = runRepository.findAll(PageRequest.of(pageNumber, 1000));
-            if (page.getContent().size() == 0) {
-                finished = true;
-            } else {
-                List<Run> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(runDTOBuilder.build(e)));
-                solrComponent.indexBounceRun(items);
-            }
-            pageNumber++;
-        } while (!finished);
-        finished = false;
-        pageNumber = 0;
-        do {
-            Page<SecretEntity> page = secretRepository.findAll(PageRequest.of(pageNumber, 1000));
-            if (page.getContent().size() == 0) {
-                finished = true;
-            } else {
-                List<Secret> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(secretDTOBuilder.build(e)));
-                solrComponent.indexBounceSecret(items);
-            }
-            pageNumber++;
-        } while (!finished);
-        finished = false;
-        pageNumber = 0;
-        do {
-            Page<WorkflowEntity> page = workflowRepository.findAll(PageRequest.of(pageNumber, 1000));
-            if (page.getContent().size() == 0) {
-                finished = true;
-            } else {
-                List<Workflow> items = new ArrayList<>();
-                page.getContent().forEach(e -> items.add(workflowDTOBuilder.build(e)));
-                solrComponent.indexBounceWorkflow(items);
-            }
-            pageNumber++;
-        } while (!finished);
+//        finished = false;
+//        pageNumber = 0;
+//        do {
+//            Page<RunEntity> page = runRepository.findAll(PageRequest.of(pageNumber, 1000));
+//            if (page.getContent().size() == 0) {
+//                finished = true;
+//            } else {
+//                List<Run> items = new ArrayList<>();
+//                page.getContent().forEach(e -> items.add(runDTOBuilder.build(e)));
+//                solrComponent.indexBounceRun(items);
+//            }
+//            pageNumber++;
+//        } while (!finished);
+//        finished = false;
+//        pageNumber = 0;
+//        do {
+//            Page<SecretEntity> page = secretRepository.findAll(PageRequest.of(pageNumber, 1000));
+//            if (page.getContent().size() == 0) {
+//                finished = true;
+//            } else {
+//                List<Secret> items = new ArrayList<>();
+//                page.getContent().forEach(e -> items.add(secretDTOBuilder.build(e)));
+//                solrComponent.indexBounceSecret(items);
+//            }
+//            pageNumber++;
+//        } while (!finished);
+//        finished = false;
+//        pageNumber = 0;
+//        do {
+//            Page<WorkflowEntity> page = workflowRepository.findAll(PageRequest.of(pageNumber, 1000));
+//            if (page.getContent().size() == 0) {
+//                finished = true;
+//            } else {
+//                List<Workflow> items = new ArrayList<>();
+//                page.getContent().forEach(e -> items.add(workflowDTOBuilder.build(e)));
+//                solrComponent.indexBounceWorkflow(items);
+//            }
+//            pageNumber++;
+//        } while (!finished);
 
         return ResponseEntity.ok(null);
     }
