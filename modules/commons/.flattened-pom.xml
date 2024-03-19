@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>it.smartcommunitylabdhub</groupId>
   <artifactId>dh-commons</artifactId>
-  <version>0.0.29</version>
+  <version>0.0.32</version>
   <dependencies>
     <dependency>
       <groupId>org.projectlombok</groupId>

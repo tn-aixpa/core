@@ -13,20 +13,7 @@ else
     exit
 fi
 
-PROFILE=$1
-if [[ $# == 0 ]]; then
-    PROFILE="default"
-fi
 
-PWD=`pwd`
-if [ ! -d "${PWD}/application/target" ]; then
-  ./build.sh
-fi
-
-
-
-DB="${PWD}/data/db"
-# Run the application
-echo "Running Spring Boot application with profile $PROFILE, using $DB..."
-export JDBC_URL="jdbc:h2:file:${DB}"
-./mvnw spring-boot:run -pl application  -Dspring-boot.run.profiles=$PROFILE
+# Build Root Project
+echo "Building project"
+./mvnw clean install -DskipTests
