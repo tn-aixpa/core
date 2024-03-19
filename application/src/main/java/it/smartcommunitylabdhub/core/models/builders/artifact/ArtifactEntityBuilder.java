@@ -50,12 +50,12 @@ public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity
             .embedded(metadata.getEmbedded() == null ? Boolean.FALSE : metadata.getEmbedded())
             .created(
                 metadata.getCreated() != null
-                    ? Date.from(metadata.getCreated().atZone(ZoneOffset.UTC).toInstant())
+                    ? Date.from(metadata.getCreated().atZoneSameInstant(ZoneOffset.UTC).toInstant())
                     : null
             )
             .updated(
                 metadata.getUpdated() != null
-                    ? Date.from(metadata.getUpdated().atZone(ZoneOffset.UTC).toInstant())
+                    ? Date.from(metadata.getUpdated().atZoneSameInstant(ZoneOffset.UTC).toInstant())
                     : null
             )
             .build();
