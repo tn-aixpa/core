@@ -4,7 +4,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import java.io.Serializable;
 import java.util.Map;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor

@@ -4,19 +4,26 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
+import jakarta.persistence.AttributeConverter;
+import java.io.Serializable;
 import java.time.ZoneOffset;
 import java.util.Date;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SecretEntityBuilder implements Converter<Secret, SecretEntity> {
 
-    @Autowired
-    CBORConverter cborConverter;
+    private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
+
+    public SecretEntityBuilder(
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> converter
+    ) {
+        this.converter = converter;
+    }
 
     /**
      * Build a secret from a secretDTO and store extra values as f cbor
@@ -37,10 +44,10 @@ public class SecretEntityBuilder implements Converter<Secret, SecretEntity> {
             .name(dto.getName())
             .kind(dto.getKind())
             .project(dto.getProject())
-            .metadata(cborConverter.convert(dto.getMetadata()))
-            .spec(cborConverter.convert(dto.getSpec()))
-            .status(cborConverter.convert(dto.getStatus()))
-            .extra(cborConverter.convert(dto.getExtra()))
+            .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
+            .spec(converter.convertToDatabaseColumn(dto.getSpec()))
+            .status(converter.convertToDatabaseColumn(dto.getStatus()))
+            .extra(converter.convertToDatabaseColumn(dto.getExtra()))
             .state(
                 // Store status if not present
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())

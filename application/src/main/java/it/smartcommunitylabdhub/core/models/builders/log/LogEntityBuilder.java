@@ -4,20 +4,25 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
+import jakarta.persistence.AttributeConverter;
+import java.io.Serializable;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LogEntityBuilder implements Converter<Log, LogEntity> {
 
-    private final CBORConverter cborConverter;
+    private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
 
-    public LogEntityBuilder(CBORConverter cborConverter) {
-        this.cborConverter = cborConverter;
+    public LogEntityBuilder(
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+    ) {
+        this.converter = cborConverter;
     }
 
     /**
@@ -35,10 +40,10 @@ public class LogEntityBuilder implements Converter<Log, LogEntity> {
             .builder()
             .id(dto.getId())
             .project(dto.getProject())
-            .metadata(cborConverter.convert(dto.getMetadata()))
-            .body(cborConverter.convert(dto.getBody()))
-            .status(cborConverter.convert(dto.getStatus()))
-            .extra(cborConverter.convert(dto.getExtra()))
+            .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
+            .body(converter.convertToDatabaseColumn(dto.getBody()))
+            .status(converter.convertToDatabaseColumn(dto.getStatus()))
+            .extra(converter.convertToDatabaseColumn(dto.getExtra()))
             //extract data
             .run(metadata.getRun())
             .state(

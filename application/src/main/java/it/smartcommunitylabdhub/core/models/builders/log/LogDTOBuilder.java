@@ -3,27 +3,30 @@ package it.smartcommunitylabdhub.core.models.builders.log;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
+import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LogDTOBuilder implements Converter<LogEntity, Log> {
 
-    private final CBORConverter cborConverter;
+    private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
 
-    public LogDTOBuilder(CBORConverter cborConverter) {
-        this.cborConverter = cborConverter;
+    public LogDTOBuilder(
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+    ) {
+        this.converter = cborConverter;
     }
 
     public Log build(LogEntity entity) {
         //read metadata as-is
-        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
+        Map<String, Serializable> meta = converter.convertToEntityAttribute(entity.getMetadata());
 
         // Set Metadata for log
         LogMetadata metadata = new LogMetadata();
@@ -47,11 +50,11 @@ public class LogDTOBuilder implements Converter<LogEntity, Log> {
             .id(entity.getId())
             .project(entity.getProject())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .body(cborConverter.reverseConvert(entity.getBody()))
-            .extra(cborConverter.reverseConvert(entity.getExtra()))
+            .body(converter.convertToEntityAttribute(entity.getBody()))
+            .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(
                 MapUtils.mergeMultipleMaps(
-                    cborConverter.reverseConvert(entity.getStatus()),
+                    converter.convertToEntityAttribute(entity.getStatus()),
                     Map.of("state", entity.getState().toString())
                 )
             )

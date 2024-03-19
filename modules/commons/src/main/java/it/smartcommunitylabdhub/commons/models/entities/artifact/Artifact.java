@@ -74,17 +74,15 @@ public class Artifact implements BaseDTO {
 
     @Override
     public String getKey() {
-        return (
-            Keys.STORE_PREFIX +
-            getProject() +
-            Keys.PATH_DIVIDER +
-            "artifacts" +
-            Keys.PATH_DIVIDER +
-            getKind() +
-            Keys.PATH_DIVIDER +
-            getName() +
-            Keys.ID_DIVIDER +
-            getId()
-        );
+        StringBuilder sb = new StringBuilder();
+        sb.append(Keys.STORE_PREFIX).append(getProject());
+        sb.append(Keys.PATH_DIVIDER).append("artifacts");
+        sb.append(Keys.PATH_DIVIDER).append(getKind());
+        sb.append(Keys.PATH_DIVIDER).append(getName());
+        if (getId() != null) {
+            sb.append(Keys.ID_DIVIDER).append(getId());
+        }
+
+        return sb.toString();
     }
 }

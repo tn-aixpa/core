@@ -5,20 +5,25 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import jakarta.persistence.AttributeConverter;
+import java.io.Serializable;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProjectEntityBuilder implements Converter<Project, ProjectEntity> {
 
-    private final CBORConverter cborConverter;
+    private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
 
-    public ProjectEntityBuilder(CBORConverter cborConverter) {
-        this.cborConverter = cborConverter;
+    public ProjectEntityBuilder(
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+    ) {
+        this.converter = cborConverter;
     }
 
     /**
@@ -44,10 +49,10 @@ public class ProjectEntityBuilder implements Converter<Project, ProjectEntity> {
             .id(dto.getId())
             .name(dto.getName())
             .kind(dto.getKind())
-            .metadata(cborConverter.convert(dto.getMetadata()))
-            .spec(cborConverter.convert(spec.toMap()))
-            .status(cborConverter.convert(dto.getStatus()))
-            .extra(cborConverter.convert(dto.getExtra()))
+            .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
+            .spec(converter.convertToDatabaseColumn(spec.toMap()))
+            .status(converter.convertToDatabaseColumn(dto.getStatus()))
+            .extra(converter.convertToDatabaseColumn(dto.getExtra()))
             .state(
                 // Store status if not present
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())

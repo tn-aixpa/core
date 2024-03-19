@@ -5,20 +5,25 @@ import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import jakarta.persistence.AttributeConverter;
+import java.io.Serializable;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
 
-    private final CBORConverter cborConverter;
+    private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
 
-    public TaskEntityBuilder(CBORConverter cborConverter) {
-        this.cborConverter = cborConverter;
+    public TaskEntityBuilder(
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+    ) {
+        this.converter = cborConverter;
     }
 
     /**
@@ -42,10 +47,10 @@ public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
             .id(dto.getId())
             .kind(dto.getKind())
             .project(dto.getProject())
-            .metadata(cborConverter.convert(dto.getMetadata()))
-            .spec(cborConverter.convert(dto.getSpec()))
-            .status(cborConverter.convert(dto.getStatus()))
-            .extra(cborConverter.convert(dto.getExtra()))
+            .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
+            .spec(converter.convertToDatabaseColumn(dto.getSpec()))
+            .status(converter.convertToDatabaseColumn(dto.getStatus()))
+            .extra(converter.convertToDatabaseColumn(dto.getExtra()))
             //extract function
             .function(taskSpec.getFunction())
             .state(

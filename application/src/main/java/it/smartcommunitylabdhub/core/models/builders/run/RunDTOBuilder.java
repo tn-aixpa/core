@@ -3,12 +3,13 @@ package it.smartcommunitylabdhub.core.models.builders.run;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -16,15 +17,17 @@ import org.springframework.util.StringUtils;
 @Component
 public class RunDTOBuilder implements Converter<RunEntity, Run> {
 
-    private final CBORConverter cborConverter;
+    private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
 
-    public RunDTOBuilder(CBORConverter cborConverter) {
-        this.cborConverter = cborConverter;
+    public RunDTOBuilder(
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+    ) {
+        this.converter = cborConverter;
     }
 
     public Run build(RunEntity entity) {
         //read metadata map as-is
-        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
+        Map<String, Serializable> meta = converter.convertToEntityAttribute(entity.getMetadata());
 
         // build metadata
         RunMetadata metadata = new RunMetadata();
@@ -54,11 +57,11 @@ public class RunDTOBuilder implements Converter<RunEntity, Run> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .spec(cborConverter.reverseConvert(entity.getSpec()))
-            .extra(cborConverter.reverseConvert(entity.getExtra()))
+            .spec(converter.convertToEntityAttribute(entity.getSpec()))
+            .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(
                 MapUtils.mergeMultipleMaps(
-                    cborConverter.reverseConvert(entity.getStatus()),
+                    converter.convertToEntityAttribute(entity.getStatus()),
                     Map.of("state", entity.getState().toString())
                 )
             )
