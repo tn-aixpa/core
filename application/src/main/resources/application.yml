@@ -20,12 +20,6 @@ spring:
     username: ${JDBC_USER:sa}
     url: ${JDBC_URL:jdbc:h2:file:./data/db}
 
-  data:
-    web:
-      pageable:
-        one-indexed-parameters: 'true'
-        max-page-size: '100'
-        default-page-size: '10'
   h2:
     console:
       enabled: ${H2_CONSOLE:false}
