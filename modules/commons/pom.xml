@@ -15,7 +15,7 @@
     <description>DHCore commons</description>
 
     <properties>
-        <jsonschema.version>4.33.1</jsonschema.version>
+        <jsonschema.version>4.34.0</jsonschema.version>
     </properties>
     <dependencies>
         <dependency>

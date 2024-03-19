@@ -7,6 +7,8 @@ import it.smartcommunitylabdhub.commons.models.entities.project.ProjectMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import java.time.ZoneOffset;
+import java.util.Date;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -52,8 +54,16 @@ public class ProjectEntityBuilder implements Converter<Project, ProjectEntity> {
             )
             // Metadata Extraction
             .source(metadata.getSource())
-            .created(metadata.getCreated())
-            .updated(metadata.getUpdated())
+            .created(
+                metadata.getCreated() != null
+                    ? Date.from(metadata.getCreated().atZone(ZoneOffset.UTC).toInstant())
+                    : null
+            )
+            .updated(
+                metadata.getUpdated() != null
+                    ? Date.from(metadata.getUpdated().atZone(ZoneOffset.UTC).toInstant())
+                    : null
+            )
             .build();
     }
 
