@@ -1,6 +1,10 @@
 package it.smartcommunitylabdhub.core.exceptions;
 
+import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
+import it.smartcommunitylabdhub.commons.exceptions.FrameworkException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,5 +59,23 @@ public class CustomExceptionHandler {
         errorResponse.setMessage(ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(InvalidTransactionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTransactionException(InvalidTransactionException ex) {
+        // Create and return the error response
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+        errorResponse.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler({ FrameworkException.class, CoreRuntimeException.class, StoreException.class })
+    public ResponseEntity<ErrorResponse> handleInternalErrorExceptions(Exception ex) {
+        // Create and return the error response
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        errorResponse.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 }

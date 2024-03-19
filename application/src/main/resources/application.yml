@@ -42,9 +42,9 @@ management:
 # Runtimes
 runtime:
   nefertem:
-    image: ${RUNTIME_NEFERTEM_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-nefertem:latest}
+    image: ${RUNTIME_NEFERTEM_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-nefertem:latest}
   dbt:
-    image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-dbt:latest}
+    image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-dbt:latest}
   mlrun:
     image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
   kfp:
@@ -87,8 +87,11 @@ security:
     password: ${DH_AUTH_BASIC_PASSWORD:}
   jwt:
     issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:}
-    audience: ${DH_AUTH_JWT_AUDIENCE:dhcore}
+    audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
+  oidc:    
+    client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
+    scope: 
 
 
 

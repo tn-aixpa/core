@@ -19,7 +19,7 @@ import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunMlrunBuilder;
 import it.smartcommunitylabdhub.runtime.mlrun.runners.MlrunMlrunRunner;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunJobSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.status.RunMlrunStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -58,8 +58,8 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
         String kind = task.getKind();
         // Retrieve builder using task kind
         switch (kind) {
-            case TaskMlrunSpec.KIND -> {
-                TaskMlrunSpec taskMlrunSpec = new TaskMlrunSpec(task.getSpec());
+            case TaskMlrunJobSpec.KIND -> {
+                TaskMlrunJobSpec taskMlrunSpec = new TaskMlrunJobSpec(task.getSpec());
                 return builder.build(functionSpec, taskMlrunSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
@@ -84,9 +84,9 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
         RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
 
         return switch (runAccessor.getTask()) {
-            case TaskMlrunSpec.KIND -> new MlrunMlrunRunner(
+            case TaskMlrunJobSpec.KIND -> new MlrunMlrunRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getJobSpec().getSecrets())
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

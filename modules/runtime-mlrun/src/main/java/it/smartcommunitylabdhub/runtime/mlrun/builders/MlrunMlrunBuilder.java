@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.runtime.mlrun.builders;
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunJobSpec;
 import java.util.Optional;
 
 /**
@@ -15,18 +15,18 @@ import java.util.Optional;
  * @BuilderComponent(runtime = "mlrun", task = "mlrun")
  */
 
-public class MlrunMlrunBuilder implements Builder<FunctionMlrunSpec, TaskMlrunSpec, RunMlrunSpec> {
+public class MlrunMlrunBuilder implements Builder<FunctionMlrunSpec, TaskMlrunJobSpec, RunMlrunSpec> {
 
     @Override
-    public RunMlrunSpec build(FunctionMlrunSpec funSpec, TaskMlrunSpec taskSpec, RunMlrunSpec runSpec) {
+    public RunMlrunSpec build(FunctionMlrunSpec funSpec, TaskMlrunJobSpec taskSpec, RunMlrunSpec runSpec) {
         RunMlrunSpec runMlrunSpec = new RunMlrunSpec(runSpec.toMap());
-        runMlrunSpec.setTaskSpec(taskSpec);
+        runMlrunSpec.setJobSpec(taskSpec);
         runMlrunSpec.setFuncSpec(funSpec);
 
         //let run override k8s specs
         Optional
-            .ofNullable(runSpec.getTaskSpec())
-            .ifPresent(k8sSpec -> runSpec.getTaskSpec().configure(k8sSpec.toMap()));
+            .ofNullable(runSpec.getJobSpec())
+            .ifPresent(k8sSpec -> runSpec.getJobSpec().configure(k8sSpec.toMap()));
 
         // Return a run spec
         return runMlrunSpec;

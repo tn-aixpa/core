@@ -1,5 +1,6 @@
 FROM maven:3-eclipse-temurin-21-alpine AS build
 COPY application /tmp/application
+COPY frontend /tmp/frontend
 COPY modules /tmp/modules
 COPY pom.xml /tmp/pom.xml
 WORKDIR /tmp
