@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.commons.models.base;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -25,11 +25,11 @@ public class BaseMetadata extends BaseSpec {
     protected String name;
     protected String description;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-ddTHH:mm:ss.SSSZ")
-    protected LocalDateTime created;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    protected OffsetDateTime created;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-ddTHH:mm:ss.SSSZ")
-    protected LocalDateTime updated;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    protected OffsetDateTime updated;
 
     protected Set<String> labels;
 

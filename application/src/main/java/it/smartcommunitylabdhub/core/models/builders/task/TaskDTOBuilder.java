@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import org.springframework.core.convert.converter.Converter;
@@ -45,12 +45,12 @@ public class TaskDTOBuilder implements Converter<TaskEntity, Task> {
         metadata.setProject(entity.getProject());
         metadata.setCreated(
             entity.getCreated() != null
-                ? LocalDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
+                ? OffsetDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
                 : null
         );
         metadata.setUpdated(
             entity.getUpdated() != null
-                ? LocalDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
+                ? OffsetDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
                 : null
         );
 

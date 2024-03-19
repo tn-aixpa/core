@@ -19,20 +19,6 @@ public class ProjectMetadata extends BaseMetadata {
 
     private String source;
 
-    @Builder
-    public ProjectMetadata(
-        String project,
-        String name,
-        String description,
-        LocalDateTime created,
-        LocalDateTime updated,
-        Set<String> labels,
-        String source
-    ) {
-        super(project, name, description, created, updated, labels);
-        this.source = source;
-    }
-
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);

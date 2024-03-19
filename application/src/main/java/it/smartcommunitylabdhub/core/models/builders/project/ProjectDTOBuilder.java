@@ -8,8 +8,7 @@ import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectSpec;
 import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import org.springframework.core.convert.converter.Converter;
@@ -40,12 +39,12 @@ public class ProjectDTOBuilder implements Converter<ProjectEntity, Project> {
         metadata.setSource(entity.getSource());
         metadata.setCreated(
             entity.getCreated() != null
-                ? LocalDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
+                ? OffsetDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
                 : null
         );
         metadata.setUpdated(
             entity.getUpdated() != null
-                ? LocalDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
+                ? OffsetDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
                 : null
         );
 

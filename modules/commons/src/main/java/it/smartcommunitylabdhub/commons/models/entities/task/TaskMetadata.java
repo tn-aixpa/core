@@ -21,22 +21,6 @@ public class TaskMetadata extends BaseMetadata {
 
     private Boolean embedded;
 
-    @Builder
-    public TaskMetadata(
-        String project,
-        String name,
-        String description,
-        LocalDateTime created,
-        LocalDateTime updated,
-        Set<String> labels,
-        String version,
-        Boolean embedded
-    ) {
-        super(project, name, description, created, updated, labels);
-        this.version = version;
-        this.embedded = embedded;
-    }
-
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);

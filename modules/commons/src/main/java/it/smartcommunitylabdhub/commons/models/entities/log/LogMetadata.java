@@ -19,20 +19,6 @@ public class LogMetadata extends BaseMetadata {
 
     private String run;
 
-    @Builder
-    public LogMetadata(
-        String project,
-        String name,
-        String description,
-        LocalDateTime created,
-        LocalDateTime updated,
-        Set<String> labels,
-        String run
-    ) {
-        super(project, name, description, created, updated, labels);
-        this.run = run;
-    }
-
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
