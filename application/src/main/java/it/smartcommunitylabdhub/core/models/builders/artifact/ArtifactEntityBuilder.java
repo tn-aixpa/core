@@ -6,6 +6,8 @@ import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadat
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import java.time.ZoneOffset;
+import java.util.Date;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -46,8 +48,16 @@ public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity
             )
             // Metadata Extraction
             .embedded(metadata.getEmbedded() == null ? Boolean.FALSE : metadata.getEmbedded())
-            .created(metadata.getCreated())
-            .updated(metadata.getUpdated())
+            .created(
+                metadata.getCreated() != null
+                    ? Date.from(metadata.getCreated().atZone(ZoneOffset.UTC).toInstant())
+                    : null
+            )
+            .updated(
+                metadata.getUpdated() != null
+                    ? Date.from(metadata.getUpdated().atZone(ZoneOffset.UTC).toInstant())
+                    : null
+            )
             .build();
     }
 

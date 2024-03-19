@@ -7,6 +7,8 @@ import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import java.time.ZoneOffset;
+import java.util.Date;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -51,8 +53,16 @@ public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
             )
             // Metadata Extraction
-            .created(metadata.getCreated())
-            .updated(metadata.getUpdated())
+            .created(
+                metadata.getCreated() != null
+                    ? Date.from(metadata.getCreated().atZone(ZoneOffset.UTC).toInstant())
+                    : null
+            )
+            .updated(
+                metadata.getUpdated() != null
+                    ? Date.from(metadata.getUpdated().atZone(ZoneOffset.UTC).toInstant())
+                    : null
+            )
             .build();
     }
 

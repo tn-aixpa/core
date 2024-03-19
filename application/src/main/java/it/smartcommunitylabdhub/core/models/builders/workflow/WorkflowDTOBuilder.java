@@ -6,6 +6,8 @@ import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
@@ -36,8 +38,16 @@ public class WorkflowDTOBuilder implements Converter<WorkflowEntity, Workflow> {
         }
         metadata.setProject(entity.getProject());
         metadata.setEmbedded(entity.getEmbedded());
-        metadata.setCreated(entity.getCreated());
-        metadata.setUpdated(entity.getUpdated());
+        metadata.setCreated(
+            entity.getCreated() != null
+                ? LocalDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
+                : null
+        );
+        metadata.setUpdated(
+            entity.getUpdated() != null
+                ? LocalDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
+                : null
+        );
 
         return Workflow
             .builder()
