@@ -1,8 +1,8 @@
 package it.smartcommunitylabdhub.runtime.kfp.runners;
 
-import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
@@ -42,7 +42,6 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
     public K8sRunnable produce(Run run) {
         RunKFPSpec runSpec = new RunKFPSpec(run.getSpec());
         TaskPipelineSpec taskSpec = runSpec.getTaskSpec();
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(
@@ -69,7 +68,7 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
             .labels(taskSpec.getLabels())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
-            .state(statusFieldAccessor.getState())
+            .state(State.READY.name())
             .build();
 
         if (StringUtils.hasText(taskSpec.getSchedule())) {
@@ -91,7 +90,7 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
                     .labels(taskSpec.getLabels())
                     .affinity(taskSpec.getAffinity())
                     .tolerations(taskSpec.getTolerations())
-                    .state(statusFieldAccessor.getState())        
+                    .state(State.READY.name())
                     .schedule(taskSpec.getSchedule())
                     .build();
         }
