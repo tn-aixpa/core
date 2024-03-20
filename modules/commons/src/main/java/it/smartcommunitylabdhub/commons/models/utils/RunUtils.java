@@ -13,14 +13,13 @@ import java.util.regex.Pattern;
 
 public class RunUtils {
 
-    public static final Pattern TASK_PARTS = Pattern.compile("([^:/]+)://([^/]+)/([^/]+):(.+)");
     public static final Pattern TASK_PATTERN = Pattern.compile(Keys.PATH_PATTERN);
 
     private RunUtils() {}
 
     //TODO this goes into the accessor, via a with()
     public static RunSpecAccessor parseTask(String value) {
-        Matcher matcher = TASK_PARTS.matcher(value);
+        Matcher matcher = TASK_PATTERN.matcher(value);
         if (matcher.matches()) {
             String task = matcher.group(1);
             String project = matcher.group(2);
@@ -51,7 +50,7 @@ public class RunUtils {
             throw new IllegalArgumentException("invalid or missing function in task spec");
         }
 
-        return (task.getKind() + "://" + matcher.group(2));
+        return (task.getKind() + "://" + matcher.group(2) + "/" + matcher.group(3) + ":" + matcher.group(4));
     }
 
     public static String buildWorkflowString(Workflow w, Task task) {
