@@ -14,6 +14,7 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunMlrunBuilder;
 import it.smartcommunitylabdhub.runtime.mlrun.runners.MlrunMlrunRunner;
@@ -57,15 +58,15 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
 
         String kind = task.getKind();
         // Retrieve builder using task kind
-        switch (kind) {
+        return switch (kind) {
             case TaskMlrunJobSpec.KIND -> {
                 TaskMlrunJobSpec taskMlrunSpec = new TaskMlrunJobSpec(task.getSpec());
-                return builder.build(functionSpec, taskMlrunSpec, runSpec);
+                yield builder.build(functionSpec, taskMlrunSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
                 "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
-        }
+        };
     }
 
     @Override
@@ -84,11 +85,16 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
         RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
 
         return switch (runAccessor.getTask()) {
-            case TaskMlrunJobSpec.KIND -> new MlrunMlrunRunner(
-                image,
-                secretService.groupSecrets(run.getProject(), runSpec.getJobSpec().getSecrets())
-            )
-                .produce(run);
+            case TaskMlrunJobSpec.KIND -> {
+                TaskMlrunJobSpec taskSpec = runSpec.getJobSpec();
+                if (taskSpec == null) {
+                    throw new CoreRuntimeException("null or empty task definition");
+                }
+                K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
+
+                yield new MlrunMlrunRunner(image, secretService.groupSecrets(run.getProject(), k8s.getSecrets()))
+                    .produce(run);
+            }
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }

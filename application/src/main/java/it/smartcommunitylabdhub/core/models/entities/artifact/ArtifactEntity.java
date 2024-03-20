@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.cloud.listeners.ArtifactSavedListener;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
@@ -69,7 +71,6 @@ public class ArtifactEntity implements BaseEntity {
 
     private Boolean embedded;
 
-    @Enumerated(EnumType.STRING)
     private State state;
 
     @PrePersist

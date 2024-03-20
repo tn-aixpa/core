@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.base;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +13,10 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class BaseSpec implements Spec {
 
+    @JsonIgnore
     protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
+
+    @JsonIgnore
     protected static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
         HashMap<String, Serializable>
     >() {};

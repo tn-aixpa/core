@@ -3,10 +3,13 @@ package it.smartcommunitylabdhub.core.models.builders.artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -14,15 +17,17 @@ import org.springframework.util.StringUtils;
 @Component
 public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
 
-    private final CBORConverter cborConverter;
+    private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
 
-    public ArtifactDTOBuilder(CBORConverter cborConverter) {
-        this.cborConverter = cborConverter;
+    public ArtifactDTOBuilder(
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+    ) {
+        this.converter = cborConverter;
     }
 
     public Artifact build(ArtifactEntity entity) {
         //read metadata map as-is
-        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
+        Map<String, Serializable> meta = converter.convertToEntityAttribute(entity.getMetadata());
 
         // build metadata
         ArtifactMetadata metadata = new ArtifactMetadata();
@@ -36,8 +41,16 @@ public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
         }
         metadata.setProject(entity.getProject());
         metadata.setEmbedded(entity.getEmbedded());
-        metadata.setCreated(entity.getCreated());
-        metadata.setUpdated(entity.getUpdated());
+        metadata.setCreated(
+            entity.getCreated() != null
+                ? OffsetDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
+                : null
+        );
+        metadata.setUpdated(
+            entity.getUpdated() != null
+                ? OffsetDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
+                : null
+        );
 
         return Artifact
             .builder()
@@ -46,11 +59,11 @@ public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .spec(cborConverter.reverseConvert(entity.getSpec()))
-            .extra(cborConverter.reverseConvert(entity.getExtra()))
+            .spec(converter.convertToEntityAttribute(entity.getSpec()))
+            .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(
                 MapUtils.mergeMultipleMaps(
-                    cborConverter.reverseConvert(entity.getStatus()),
+                    converter.convertToEntityAttribute(entity.getStatus()),
                     Map.of("state", entity.getState().toString())
                 )
             )

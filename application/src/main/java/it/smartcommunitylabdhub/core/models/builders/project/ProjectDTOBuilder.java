@@ -4,11 +4,14 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.converters.types.CBORConverter;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectSpec;
+import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -16,15 +19,17 @@ import org.springframework.util.StringUtils;
 @Component
 public class ProjectDTOBuilder implements Converter<ProjectEntity, Project> {
 
-    private final CBORConverter cborConverter;
+    private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
 
-    public ProjectDTOBuilder(CBORConverter cborConverter) {
-        this.cborConverter = cborConverter;
+    public ProjectDTOBuilder(
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+    ) {
+        this.converter = cborConverter;
     }
 
     public Project build(ProjectEntity entity) {
         //read metadata map as-is
-        Map<String, Serializable> meta = cborConverter.reverseConvert(entity.getMetadata());
+        Map<String, Serializable> meta = converter.convertToEntityAttribute(entity.getMetadata());
 
         // build metadata
         ProjectMetadata metadata = new ProjectMetadata();
@@ -35,12 +40,20 @@ public class ProjectDTOBuilder implements Converter<ProjectEntity, Project> {
         }
         metadata.setProject(entity.getProject());
         metadata.setSource(entity.getSource());
-        metadata.setCreated(entity.getCreated());
-        metadata.setUpdated(entity.getUpdated());
+        metadata.setCreated(
+            entity.getCreated() != null
+                ? OffsetDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
+                : null
+        );
+        metadata.setUpdated(
+            entity.getUpdated() != null
+                ? OffsetDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
+                : null
+        );
 
         //transform base spec to full spec
         ProjectBaseSpec baseSpec = new ProjectBaseSpec();
-        baseSpec.configure(cborConverter.reverseConvert(entity.getSpec()));
+        baseSpec.configure(converter.convertToEntityAttribute(entity.getSpec()));
         ProjectSpec spec = new ProjectSpec();
         spec.configure(baseSpec.toMap());
 
@@ -49,11 +62,11 @@ public class ProjectDTOBuilder implements Converter<ProjectEntity, Project> {
             .id(entity.getId())
             .name(entity.getName())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
-            .spec(cborConverter.reverseConvert(entity.getSpec()))
-            .extra(cborConverter.reverseConvert(entity.getExtra()))
+            .spec(converter.convertToEntityAttribute(entity.getSpec()))
+            .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(
                 MapUtils.mergeMultipleMaps(
-                    cborConverter.reverseConvert(entity.getStatus()),
+                    converter.convertToEntityAttribute(entity.getStatus()),
                     Map.of("state", entity.getState().toString())
                 )
             )

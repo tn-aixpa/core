@@ -7,8 +7,6 @@ import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
@@ -65,7 +63,6 @@ public class ProjectEntity implements BaseEntity {
     @LastModifiedDate
     private Date updated;
 
-    @Enumerated(EnumType.STRING)
     private State state;
 
     @PrePersist

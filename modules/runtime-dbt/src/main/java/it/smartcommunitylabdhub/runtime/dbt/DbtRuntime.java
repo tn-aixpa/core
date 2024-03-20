@@ -14,6 +14,7 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.builders.DbtTransformBuilder;
 import it.smartcommunitylabdhub.runtime.dbt.runners.DbtTransformRunner;
@@ -86,11 +87,16 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtSt
         RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
 
         return switch (runAccessor.getTask()) {
-            case TaskTransformSpec.KIND -> new DbtTransformRunner(
-                image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskSpec().getSecrets())
-            )
-                .produce(run);
+            case TaskTransformSpec.KIND -> {
+                TaskTransformSpec taskSpec = runSpec.getTaskSpec();
+                if (taskSpec == null) {
+                    throw new CoreRuntimeException("null or empty task definition");
+                }
+                K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
+
+                yield new DbtTransformRunner(image, secretService.groupSecrets(run.getProject(), k8s.getSecrets()))
+                    .produce(run);
+            }
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }

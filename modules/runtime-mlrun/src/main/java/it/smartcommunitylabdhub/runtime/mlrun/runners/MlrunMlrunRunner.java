@@ -1,9 +1,11 @@
 package it.smartcommunitylabdhub.runtime.mlrun.runners;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
@@ -35,13 +37,18 @@ public class MlrunMlrunRunner implements Runner<K8sJobRunnable> {
         // Retrieve information about RunMlrunSpec
         RunMlrunSpec runSpec = new RunMlrunSpec(run.getSpec());
         TaskMlrunJobSpec taskSpec = runSpec.getJobSpec();
+        if (taskSpec == null) {
+            throw new CoreRuntimeException("null or empty task definition");
+        }
+
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
+        K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
-        Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
+        Optional.ofNullable(k8s.getEnvs()).ifPresent(coreEnvList::addAll);
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
@@ -51,14 +58,14 @@ public class MlrunMlrunRunner implements Runner<K8sJobRunnable> {
             .image(image)
             .command("python")
             .args(List.of("wrapper.py").toArray(String[]::new))
-            .resources(taskSpec.getResources())
-            .nodeSelector(taskSpec.getNodeSelector())
-            .volumes(taskSpec.getVolumes())
+            .resources(k8s.getResources())
+            .nodeSelector(k8s.getNodeSelector())
+            .volumes(k8s.getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
-            .labels(taskSpec.getLabels())
-            .affinity(taskSpec.getAffinity())
-            .tolerations(taskSpec.getTolerations())
+            .labels(k8s.getLabels())
+            .affinity(k8s.getAffinity())
+            .tolerations(k8s.getTolerations())
             .state(State.READY.name())
             .build();
 

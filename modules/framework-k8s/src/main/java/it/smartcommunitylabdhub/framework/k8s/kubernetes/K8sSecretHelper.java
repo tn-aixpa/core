@@ -52,6 +52,13 @@ public class K8sSecretHelper {
     }
 
     public void deleteSecret(String secretName) throws ApiException {
+        try {
+            V1Secret secret = api.readNamespacedSecret(secretName, namespace, "");
+        } catch (ApiException e) {
+            return;
+        }
+
+        //delete
         api.deleteNamespacedSecret(secretName, namespace, null, null, 0, null, "Foreground", new V1DeleteOptions());
     }
 

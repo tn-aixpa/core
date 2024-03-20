@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -27,7 +28,7 @@ public class CustomExceptionHandler {
     }
 
     @ExceptionHandler(NoSuchEntityException.class)
-    public ResponseEntity<?> handleNoSuchEntityException(NoSuchEntityException ex) {
+    public ResponseEntity<ErrorResponse> handleNoSuchEntityException(NoSuchEntityException ex) {
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setStatus(HttpStatus.NOT_FOUND.value());
         errorResponse.setMessage(ex.getMessage());
@@ -35,7 +36,7 @@ public class CustomExceptionHandler {
     }
 
     @ExceptionHandler(BindException.class)
-    public ResponseEntity<?> handleValidationException(BindException ex) {
+    public ResponseEntity<ErrorResponse> handleValidationException(BindException ex) {
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
         errorResponse.setMessage(ex.getMessage());
@@ -58,6 +59,15 @@ public class CustomExceptionHandler {
         errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
         errorResponse.setMessage(ex.getMessage());
 
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponse> handlePropertyReferenceException(PropertyReferenceException ex) {
+        // Create and return the error response
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+        errorResponse.setMessage(ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 

@@ -1,8 +1,9 @@
 package it.smartcommunitylabdhub.commons.models.base;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -24,8 +25,11 @@ public class BaseMetadata extends BaseSpec {
     protected String name;
     protected String description;
 
-    protected Date created;
-    protected Date updated;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    protected OffsetDateTime created;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    protected OffsetDateTime updated;
 
     protected Set<String> labels;
 
