@@ -112,22 +112,22 @@ public class NefertemRuntime
         return switch (runAccessor.getTask()) {
             case TaskInferSpec.KIND -> new NefertemInferRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskInferSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskInferSpec().getK8s().getSecrets())
             )
                 .produce(run);
             case TaskValidateSpec.KIND -> new NefertemValidateRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskValidateSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskValidateSpec().getK8s().getSecrets())
             )
                 .produce(run);
             case TaskProfileSpec.KIND -> new NefertemProfileRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskProfileSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskProfileSpec().getK8s().getSecrets())
             )
                 .produce(run);
             case TaskMetricSpec.KIND -> new NefertemMetricRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskMetricSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runSpec.getTaskMetricSpec().getK8s().getSecrets())
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
