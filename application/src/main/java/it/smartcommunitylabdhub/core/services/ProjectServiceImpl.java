@@ -21,7 +21,7 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectSe
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -10,7 +10,6 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import it.smartcommunitylabdhub.runtime.kfp.specs.run.RunKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
     private final String image;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public KFPPipelineRunner(String image,  Map<String, Set<String>> groupedSecrets) {
+    public KFPPipelineRunner(String image, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.groupedSecrets = groupedSecrets;
     }
@@ -45,7 +44,7 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(
-                new CoreEnv("PROJECT_NAME", run.getProject()), 
+                new CoreEnv("PROJECT_NAME", run.getProject()),
                 new CoreEnv("RUN_ID", run.getId()),
                 new CoreEnv("DIGITALHUB_CORE_WORKFLOW_IMAGE", image)
             )

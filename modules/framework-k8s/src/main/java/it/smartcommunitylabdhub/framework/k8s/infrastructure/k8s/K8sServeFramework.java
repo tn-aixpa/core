@@ -102,9 +102,9 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         // Generate deploymentName and ContainerName
         String serviceName = k8sBuilderHelper.getServiceName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
         Map<String, String> labels = buildLabels(runnable);
         // Create the V1 service
@@ -116,11 +116,11 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         //build ports
         List<V1ServicePort> ports = runnable
-                .getServicePorts()
-                .stream()
-                .filter(p -> p.port() != null && p.targetPort() != null)
-                .map(p -> new V1ServicePort().port(p.port()).targetPort(new IntOrString(p.targetPort())).protocol("TCP"))
-                .collect(Collectors.toList());
+            .getServicePorts()
+            .stream()
+            .filter(p -> p.port() != null && p.targetPort() != null)
+            .map(p -> new V1ServicePort().port(p.port()).targetPort(new IntOrString(p.targetPort())).protocol("TCP"))
+            .collect(Collectors.toList());
 
         // service type (ClusterIP or NodePort)
         String type = Optional.of(runnable.getServiceType().name()).orElse("NodePort");
@@ -189,14 +189,14 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             log.info("----------------- DELETE KUBERNETES Serve ----------------");
 
             coreV1Api.deleteNamespacedService(
-                    service.getMetadata().getName(),
-                    namespace,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+                service.getMetadata().getName(),
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
             );
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
@@ -227,24 +227,24 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
      */
     private K8sDeploymentRunnable getDeployment(K8sServeRunnable runnable) {
         return K8sDeploymentRunnable
-                .builder()
-                .id(runnable.getId())
-                .args(runnable.getArgs())
-                .image(runnable.getImage())
-                .command(runnable.getCommand())
-                .affinity(runnable.getAffinity())
-                .labels(runnable.getLabels())
-                .envs(runnable.getEnvs())
-                .nodeSelector(runnable.getNodeSelector())
-                .replicas(runnable.getReplicas())
-                .resources(runnable.getResources())
-                .project(runnable.getProject())
-                .runtime(runnable.getRuntime())
-                .secrets(runnable.getSecrets())
-                .task(runnable.getTask())
-                .state(runnable.getState())
-                .tolerations(runnable.getTolerations())
-                .volumes(runnable.getVolumes())
-                .build();
+            .builder()
+            .id(runnable.getId())
+            .args(runnable.getArgs())
+            .image(runnable.getImage())
+            .command(runnable.getCommand())
+            .affinity(runnable.getAffinity())
+            .labels(runnable.getLabels())
+            .envs(runnable.getEnvs())
+            .nodeSelector(runnable.getNodeSelector())
+            .replicas(runnable.getReplicas())
+            .resources(runnable.getResources())
+            .project(runnable.getProject())
+            .runtime(runnable.getRuntime())
+            .secrets(runnable.getSecrets())
+            .task(runnable.getTask())
+            .state(runnable.getState())
+            .tolerations(runnable.getTolerations())
+            .volumes(runnable.getVolumes())
+            .build();
     }
 }

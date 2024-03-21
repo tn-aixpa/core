@@ -11,7 +11,11 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * DbtValidateRunner

@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.kfp.specs.function.FunctionKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.run.RunKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
-
 import java.util.Optional;
 
 /**
@@ -25,9 +24,7 @@ public class KFPPipelineBuilder implements Builder<FunctionKFPSpec, TaskPipeline
         spec.setFuncSpec(funSpec);
 
         //let run override k8s specs
-        Optional
-            .ofNullable(runSpec.getTaskSpec())
-            .ifPresent(k8sSpec -> spec.getTaskSpec().configure(k8sSpec.toMap()));
+        Optional.ofNullable(runSpec.getTaskSpec()).ifPresent(k8sSpec -> spec.getTaskSpec().configure(k8sSpec.toMap()));
 
         return spec;
     }

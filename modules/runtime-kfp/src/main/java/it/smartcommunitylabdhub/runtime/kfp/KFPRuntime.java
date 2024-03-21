@@ -24,7 +24,6 @@ import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
 import it.smartcommunitylabdhub.status.RunKfpStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -77,7 +76,7 @@ public class KFPRuntime implements Runtime<FunctionKFPSpec, RunKFPSpec, RunKfpSt
                 "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunKFPSpec.KIND)
             );
         }
-        
+
         // Create spec for run
         RunKFPSpec runKfpSpec = new RunKFPSpec(run.getSpec());
 
@@ -89,10 +88,11 @@ public class KFPRuntime implements Runtime<FunctionKFPSpec, RunKFPSpec, RunKfpSt
                 image,
                 secretService.groupSecrets(run.getProject(), runKfpSpec.getTaskSpec().getSecrets())
             )
-            .produce(run);
+                .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
+
     @Override
     public K8sJobRunnable stop(Run run) {
         //check run kind

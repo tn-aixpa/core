@@ -7,7 +7,6 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import it.smartcommunitylabdhub.runtime.kfp.specs.function.FunctionKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,7 +35,6 @@ public class RunKFPSpec extends RunBaseSpec {
 
     @JsonProperty("pipeline_spec")
     private TaskPipelineSpec taskSpec;
-
 
     public RunKFPSpec(Map<String, Serializable> data) {
         configure(data);

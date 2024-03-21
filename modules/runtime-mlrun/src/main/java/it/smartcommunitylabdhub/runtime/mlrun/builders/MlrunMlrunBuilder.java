@@ -24,9 +24,7 @@ public class MlrunMlrunBuilder implements Builder<FunctionMlrunSpec, TaskMlrunJo
         runMlrunSpec.setFuncSpec(funSpec);
 
         //let run override k8s specs
-        Optional
-            .ofNullable(runSpec.getJobSpec())
-            .ifPresent(k8sSpec -> runSpec.getJobSpec().configure(k8sSpec.toMap()));
+        Optional.ofNullable(runSpec.getJobSpec()).ifPresent(k8sSpec -> runSpec.getJobSpec().configure(k8sSpec.toMap()));
 
         // Return a run spec
         return runMlrunSpec;
