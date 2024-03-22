@@ -4,10 +4,14 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.events.EntityAction;
+import it.smartcommunitylabdhub.core.models.events.EntityEvent;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,6 +31,8 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
     protected final Converter<D, E> entityBuilder;
     protected final Converter<E, D> dtoBuilder;
 
+    private ApplicationEventPublisher eventPublisher;
+
     public BaseEntityServiceImpl(
         JpaRepository<E, String> repository,
         Converter<D, E> entityBuilder,
@@ -39,6 +45,11 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
         this.repository = repository;
         this.entityBuilder = entityBuilder;
         this.dtoBuilder = dtoBuilder;
+    }
+
+    @Autowired
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -60,6 +71,17 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
         entity = repository.saveAndFlush(entity);
         if (log.isTraceEnabled()) {
             log.trace("entity: {}", entity);
+        }
+
+        //publish
+        if (eventPublisher != null) {
+            log.debug("publish event: create for {}", entity.getId());
+            EntityEvent<E> event = new EntityEvent<>(entity, EntityAction.CREATE);
+            if (log.isTraceEnabled()) {
+                log.trace("event: {}", String.valueOf(event));
+            }
+
+            eventPublisher.publishEvent(event);
         }
 
         D res = dtoBuilder.convert(entity);
@@ -95,6 +117,17 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
             log.trace("entity: {}", entity);
         }
 
+        //publish
+        if (eventPublisher != null) {
+            log.debug("publish event: update for {}", id);
+            EntityEvent<E> event = new EntityEvent<>(entity, EntityAction.UPDATE);
+            if (log.isTraceEnabled()) {
+                log.trace("event: {}", String.valueOf(event));
+            }
+
+            eventPublisher.publishEvent(event);
+        }
+
         D res = dtoBuilder.convert(entity);
         if (log.isTraceEnabled()) {
             log.trace("res: {}", res);
@@ -109,12 +142,23 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
 
         repository
             .findById(id)
-            .ifPresent(e -> {
+            .ifPresent(entity -> {
                 if (log.isTraceEnabled()) {
-                    log.trace("entity: {}", e);
+                    log.trace("entity: {}", entity);
                 }
 
-                repository.delete(e);
+                repository.delete(entity);
+
+                //publish
+                if (eventPublisher != null) {
+                    log.debug("publish event: delete for {}", id);
+                    EntityEvent<E> event = new EntityEvent<>(entity, EntityAction.DELETE);
+                    if (log.isTraceEnabled()) {
+                        log.trace("event: {}", String.valueOf(event));
+                    }
+
+                    eventPublisher.publishEvent(event);
+                }
             });
     }
 

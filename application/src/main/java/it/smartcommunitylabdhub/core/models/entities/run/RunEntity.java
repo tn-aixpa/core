@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.core.models.entities.run;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.components.cloud.listeners.RunSavedListener;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,6 +18,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -28,10 +28,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @Setter
 @Builder
+@ToString
 @Entity
 @Table(name = "runs")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({ AuditingEntityListener.class, RunSavedListener.class })
+@EntityListeners({ AuditingEntityListener.class })
 public class RunEntity implements BaseEntity {
 
     @Id
@@ -50,15 +51,19 @@ public class RunEntity implements BaseEntity {
     private String project;
 
     @Lob
+    @ToString.Exclude
     private byte[] metadata;
 
     @Lob
+    @ToString.Exclude
     private byte[] spec;
 
     @Lob
+    @ToString.Exclude
     private byte[] extra;
 
     @Lob
+    @ToString.Exclude
     private byte[] status;
 
     @CreatedDate

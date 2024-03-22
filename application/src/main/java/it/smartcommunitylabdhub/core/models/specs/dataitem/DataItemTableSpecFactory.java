@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.entities.dataitem.specs;
+package it.smartcommunitylabdhub.core.models.specs.dataitem;
 
 import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import java.io.Serializable;

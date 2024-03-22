@@ -7,7 +7,9 @@ import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
-import it.smartcommunitylabdhub.core.components.cloud.events.EntityEvent;
+import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.events.EntityEvent;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +58,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     }
 
     @EventListener
-    public <T extends BaseDTO> void handleEntitySavedEvent(EntityEvent<T> event) {
+    public void handleArtifactSavedEvent(CloudEntityEvent<Artifact> event) {
         switch (event.getAction()) {
             case CREATE:
             case UPDATE:
@@ -64,7 +66,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
                 break;
             case DELETE:
                 try {
-                    indexManager.removeDoc(getId(event));
+                    indexManager.removeDoc(event.getDto().getId());
                 } catch (Exception e) {
                     SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
                 }
@@ -72,32 +74,66 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
         }
     }
 
-    private <T extends BaseDTO> void indexDoc(EntityEvent<T> event) {
-        if (event.getBaseDTO() instanceof DataItem) {
-            DataItem entity = (DataItem) event.getBaseDTO();
+    @EventListener
+    public void handleDataItemSavedEvent(CloudEntityEvent<DataItem> event) {
+        switch (event.getAction()) {
+            case CREATE:
+            case UPDATE:
+                indexDoc(event);
+                break;
+            case DELETE:
+                try {
+                    indexManager.removeDoc(event.getDto().getId());
+                } catch (Exception e) {
+                    SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
+                }
+                break;
+        }
+    }
+
+    @EventListener
+    public void handleFunctionSavedEvent(CloudEntityEvent<Function> event) {
+        switch (event.getAction()) {
+            case CREATE:
+            case UPDATE:
+                indexDoc(event);
+                break;
+            case DELETE:
+                try {
+                    indexManager.removeDoc(event.getDto().getId());
+                } catch (Exception e) {
+                    SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
+                }
+                break;
+        }
+    }
+
+    private <T extends BaseDTO> void indexDoc(CloudEntityEvent<T> event) {
+        if (event.getDto() instanceof DataItem) {
+            DataItem entity = (DataItem) event.getDto();
             indexDoc(entity);
-        } else if (event.getBaseDTO() instanceof Function) {
-            Function entity = (Function) event.getBaseDTO();
+        } else if (event.getDto() instanceof Function) {
+            Function entity = (Function) event.getDto();
             indexDoc(entity);
-        } else if (event.getBaseDTO() instanceof Artifact) {
-            Artifact entity = (Artifact) event.getBaseDTO();
+        } else if (event.getDto() instanceof Artifact) {
+            Artifact entity = (Artifact) event.getDto();
             indexDoc(entity);
         }
     }
 
-    private <T extends BaseDTO> String getId(EntityEvent<T> event) {
-        if (event.getBaseDTO() instanceof DataItem) {
-            DataItem entity = (DataItem) event.getBaseDTO();
-            return entity.getId();
-        } else if (event.getBaseDTO() instanceof Function) {
-            Function entity = (Function) event.getBaseDTO();
-            return entity.getId();
-        } else if (event.getBaseDTO() instanceof Artifact) {
-            Artifact entity = (Artifact) event.getBaseDTO();
-            return entity.getId();
-        }
-        return null;
-    }
+    // private <T extends BaseEntity> String getId(EntityEvent<T> event) {
+    //     if (event.getBaseDTO() instanceof DataItem) {
+    //         DataItem entity = (DataItem) event.getBaseDTO();
+    //         return entity.getId();
+    //     } else if (event.getBaseDTO() instanceof Function) {
+    //         Function entity = (Function) event.getBaseDTO();
+    //         return entity.getId();
+    //     } else if (event.getBaseDTO() instanceof Artifact) {
+    //         Artifact entity = (Artifact) event.getBaseDTO();
+    //         return entity.getId();
+    //     }
+    //     return null;
+    // }
 
     private void indexDoc(DataItem item) {
         try {

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.entities.dataitem.specs;
+package it.smartcommunitylabdhub.core.models.specs.dataitem;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
@@ -10,11 +10,19 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@SpecType(kind = "dataitem", entity = EntityName.DATAITEM)
-public class DataItemDataItemSpec extends DataItemBaseSpec {
+@SpecType(kind = "table", entity = EntityName.DATAITEM)
+public class DataItemTableSpec extends DataItemBaseSpec {
+
+    //TODO adopt tableschema
+    //see https://github.com/frictionlessdata/tableschema-java
+    private Map<String, Serializable> schema;
 
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
+
+        DataItemTableSpec spec = mapper.convertValue(data, DataItemTableSpec.class);
+
+        this.schema = spec.getSchema();
     }
 }

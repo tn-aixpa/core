@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.core.models.entities.project;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.components.cloud.listeners.ProjectSavedListener;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,6 +16,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -26,10 +26,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 @Entity
 @Table(name = "projects")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({ AuditingEntityListener.class, ProjectSavedListener.class })
+@EntityListeners({ AuditingEntityListener.class })
 public class ProjectEntity implements BaseEntity {
 
     @Id
@@ -45,15 +46,19 @@ public class ProjectEntity implements BaseEntity {
     private String source;
 
     @Lob
+    @ToString.Exclude
     private byte[] metadata;
 
     @Lob
+    @ToString.Exclude
     private byte[] spec;
 
     @Lob
+    @ToString.Exclude
     private byte[] extra;
 
     @Lob
+    @ToString.Exclude
     private byte[] status;
 
     @CreatedDate
