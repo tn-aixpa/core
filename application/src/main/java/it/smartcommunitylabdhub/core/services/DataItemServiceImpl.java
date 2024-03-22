@@ -3,12 +3,14 @@ package it.smartcommunitylabdhub.core.services;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity_;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
@@ -28,6 +31,9 @@ public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
+
+    @Autowired
+    private EntityService<Project, ProjectEntity> projectService;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -189,6 +195,12 @@ public class DataItemServiceImpl implements SearchableDataItemService {
         log.debug("create dataItem");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
+        }
+
+        //validate project
+        String projectId = dto.getProject();
+        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+            throw new IllegalArgumentException("invalid or missing project");
         }
 
         // Parse and export Spec

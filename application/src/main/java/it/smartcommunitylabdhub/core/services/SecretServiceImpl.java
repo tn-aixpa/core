@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.kubernetes.client.openapi.ApiException;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
@@ -11,6 +12,7 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.models.specs.secret.SecretSecretSpec;
@@ -47,6 +49,9 @@ public class SecretServiceImpl implements SecretService {
 
     @Autowired
     private EntityService<Secret, SecretEntity> entityService;
+
+    @Autowired
+    private EntityService<Project, ProjectEntity> projectService;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -98,6 +103,12 @@ public class SecretServiceImpl implements SecretService {
     @Override
     public Secret createSecret(@NotNull Secret dto) throws DuplicatedEntityException {
         log.debug("create secret");
+
+        //validate project
+        String projectId = dto.getProject();
+        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+            throw new IllegalArgumentException("invalid or missing project");
+        }
 
         try {
             //parse base

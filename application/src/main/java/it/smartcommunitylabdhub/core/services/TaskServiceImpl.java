@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -13,6 +14,7 @@ import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity_;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;
@@ -44,6 +46,9 @@ public class TaskServiceImpl implements SearchableTaskService {
 
     @Autowired
     private EntityService<Function, FunctionEntity> functionEntityService;
+
+    @Autowired
+    private EntityService<Project, ProjectEntity> projectService;
 
     @Autowired
     private RunService runService;
@@ -139,6 +144,12 @@ public class TaskServiceImpl implements SearchableTaskService {
     @Override
     public Task createTask(@NotNull Task dto) throws DuplicatedEntityException {
         log.debug("create task");
+
+        //validate project
+        String projectId = dto.getProject();
+        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+            throw new IllegalArgumentException("invalid or missing project");
+        }
 
         try {
             //check if the same task already exists for the function

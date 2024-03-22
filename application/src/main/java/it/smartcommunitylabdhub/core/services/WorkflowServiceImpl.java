@@ -2,11 +2,13 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity_;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
@@ -21,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
@@ -29,6 +32,9 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
 
     @Autowired
     private EntityService<Workflow, WorkflowEntity> entityService;
+
+    @Autowired
+    private EntityService<Project, ProjectEntity> projectService;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -189,6 +195,12 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
         log.debug("create workflow");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
+        }
+
+        //validate project
+        String projectId = dto.getProject();
+        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+            throw new IllegalArgumentException("invalid or missing project");
         }
 
         // Parse and export Spec
