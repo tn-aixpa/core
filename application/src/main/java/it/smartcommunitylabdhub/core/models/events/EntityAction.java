@@ -1,7 +1,8 @@
-package it.smartcommunitylabdhub.core.components.cloud.events;
+package it.smartcommunitylabdhub.core.models.events;
 
 public enum EntityAction {
     CREATE,
+    READ,
     UPDATE,
     DELETE,
 }

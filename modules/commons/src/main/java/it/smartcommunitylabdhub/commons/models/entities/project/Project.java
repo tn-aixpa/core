@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.lang.Nullable;
 
 @AllArgsConstructor
@@ -24,6 +25,7 @@ import org.springframework.lang.Nullable;
 @Getter
 @Setter
 @Builder
+@ToString
 @JsonPropertyOrder(alphabetic = true)
 public class Project implements BaseDTO {
 
@@ -50,6 +52,7 @@ public class Project implements BaseDTO {
 
     @Builder.Default
     @JsonIgnore
+    @ToString.Exclude
     private Map<String, Serializable> extra = new HashMap<>();
 
     @JsonAnyGetter

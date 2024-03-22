@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -16,6 +17,7 @@ import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.components.run.RunManager;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity_;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
@@ -55,6 +57,9 @@ public class RunServiceImpl implements SearchableRunService {
 
     @Autowired
     private EntityService<Function, FunctionEntity> functionEntityService;
+
+    @Autowired
+    private EntityService<Project, ProjectEntity> projectService;
 
     //TODO move to RunManager
     @Autowired
@@ -157,11 +162,10 @@ public class RunServiceImpl implements SearchableRunService {
         }
 
         //validate project
-        String project = dto.getProject();
-        if (!StringUtils.hasText(project)) {
+        String projectId = dto.getProject();
+        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
             throw new IllegalArgumentException("invalid or missing project");
         }
-
         //TODO check if project exists?
 
         //check base run spec
@@ -189,7 +193,7 @@ public class RunServiceImpl implements SearchableRunService {
         }
 
         //check project match
-        if (!project.equals(runSpecAccessor.getProject())) {
+        if (!projectId.equals(runSpecAccessor.getProject())) {
             throw new IllegalArgumentException("project mismatch");
         }
         if (!StringUtils.hasText(runSpecAccessor.getTask())) {
@@ -208,7 +212,7 @@ public class RunServiceImpl implements SearchableRunService {
         if (function == null) {
             throw new IllegalArgumentException("invalid function");
         }
-        if (!project.equals(function.getProject())) {
+        if (!projectId.equals(function.getProject())) {
             throw new IllegalArgumentException("project mismatch");
         }
         if (!function.getName().equals(runSpecAccessor.getFunction())) {

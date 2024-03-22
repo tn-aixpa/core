@@ -2,15 +2,10 @@ package it.smartcommunitylabdhub.core.models.entities.artifact;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.components.cloud.listeners.ArtifactSavedListener;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
-import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
@@ -22,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -31,10 +27,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @Setter
 @Builder
+@ToString
 @Entity
 @Table(name = "artifacts")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({ AuditingEntityListener.class, ArtifactSavedListener.class })
+@EntityListeners({ AuditingEntityListener.class })
 public class ArtifactEntity implements BaseEntity {
 
     @Id
@@ -51,15 +48,19 @@ public class ArtifactEntity implements BaseEntity {
     private String name;
 
     @Lob
+    @ToString.Exclude
     private byte[] metadata;
 
     @Lob
+    @ToString.Exclude
     private byte[] spec;
 
     @Lob
+    @ToString.Exclude
     private byte[] extra;
 
     @Lob
+    @ToString.Exclude
     private byte[] status;
 
     @CreatedDate

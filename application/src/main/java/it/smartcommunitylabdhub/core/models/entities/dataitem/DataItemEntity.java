@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.core.models.entities.dataitem;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.components.cloud.listeners.DataItemSavedListener;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +17,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -27,10 +27,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @Setter
 @Builder
+@ToString
 @Entity
 @Table(name = "dataitems")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@EntityListeners({ AuditingEntityListener.class, DataItemSavedListener.class })
+@EntityListeners({ AuditingEntityListener.class })
 public class DataItemEntity implements BaseEntity {
 
     @Id
@@ -47,15 +48,19 @@ public class DataItemEntity implements BaseEntity {
     private String name;
 
     @Lob
+    @ToString.Exclude
     private byte[] metadata;
 
     @Lob
+    @ToString.Exclude
     private byte[] spec;
 
     @Lob
+    @ToString.Exclude
     private byte[] extra;
 
     @Lob
+    @ToString.Exclude
     private byte[] status;
 
     @CreatedDate

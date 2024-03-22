@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.entities.project.specs;
+package it.smartcommunitylabdhub.core.models.specs.project;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;

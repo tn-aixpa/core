@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.entities.workflow.specs;
+package it.smartcommunitylabdhub.core.models.specs.workflow;
 
 import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import java.io.Serializable;

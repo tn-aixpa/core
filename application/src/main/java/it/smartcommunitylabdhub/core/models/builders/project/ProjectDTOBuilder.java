@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.entities.project.specs.ProjectSpec;
+import it.smartcommunitylabdhub.core.models.specs.project.ProjectSpec;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
