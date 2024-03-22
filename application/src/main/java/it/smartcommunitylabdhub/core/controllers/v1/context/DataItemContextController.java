@@ -91,7 +91,7 @@ public class DataItemContextController {
     }
 
     @Operation(summary = "Delete all version of a dataItem")
-    @DeleteMapping(path = "/{name}")
+    @DeleteMapping(path = "")
     public void deleteAllDataItem(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
