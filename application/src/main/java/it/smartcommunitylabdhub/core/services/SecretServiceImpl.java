@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -128,6 +129,15 @@ public class SecretServiceImpl implements SecretService {
 
             //TODO validate
             dto.setSpec(spec.toMap());
+
+            //check if a secret with this name already exists for the project
+            Optional<Secret> existingSecret = listSecretsByProject(projectId)
+                .stream()
+                .filter(s -> s.getName().equals(dto.getName()))
+                .findFirst();
+            if (existingSecret.isPresent()) {
+                throw new DuplicatedEntityException(EntityName.SECRET.toString(), dto.getName());
+            }
 
             // store in DB, do not create physically the secret
             return entityService.create(dto);

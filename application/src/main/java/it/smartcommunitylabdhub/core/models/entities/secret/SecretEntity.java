@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.Date;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -29,7 +30,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Builder
 @ToString
 @Entity
-@Table(name = "secrets")
+@Table(name = "secrets", uniqueConstraints = { @UniqueConstraint(columnNames = { "project", "name" }) })
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @EntityListeners({ AuditingEntityListener.class })
 public class SecretEntity implements BaseEntity {
