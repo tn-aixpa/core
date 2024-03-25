@@ -14,7 +14,6 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.components.run.RunManager;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
@@ -30,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -60,14 +58,6 @@ public class RunServiceImpl implements SearchableRunService {
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
-
-    //TODO move to RunManager
-    @Autowired
-    private RuntimeFactory runtimeFactory;
-
-    //TODO move to RunManager
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public Page<Run> listRuns(Pageable pageable) {

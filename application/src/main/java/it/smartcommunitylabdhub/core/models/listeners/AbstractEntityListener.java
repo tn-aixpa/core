@@ -16,7 +16,7 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
 
     protected final Converter<E, T> converter;
     protected ApplicationEventPublisher eventPublisher;
-    private final Class<T> clazz;
+    protected final Class<T> clazz;
 
     protected AbstractEntityListener(Converter<E, T> converter) {
         this.converter = converter;

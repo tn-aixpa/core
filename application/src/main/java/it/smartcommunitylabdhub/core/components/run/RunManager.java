@@ -312,7 +312,13 @@ public class RunManager {
             // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
             runnable.ifPresent(eventPublisher::publishEvent);
 
-            run.getStatus().put("state", State.DELETING.toString());
+            //if runnable we are deleting in async, otherwise nothing to do
+            runnable.ifPresentOrElse(
+                r -> run.getStatus().put("state", State.DELETING.toString()),
+                () -> run.getStatus().put("state", State.DELETED.toString())
+            );
+
+            //update
             entityService.update(run.getId(), run);
 
             return run;
@@ -325,7 +331,7 @@ public class RunManager {
 
     @Async
     @EventListener
-    public void onChangedEvent(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
+    public void onChangedEvent(RunnableChangedEvent<RunRunnable> event) {
         // Retrieve the RunMonitorObject from the event
         RunnableMonitorObject runnableMonitorObject = event.getRunMonitorObject();
 
@@ -342,23 +348,23 @@ public class RunManager {
                     ) {
                         switch (State.valueOf(runnableMonitorObject.getStateId())) {
                             case COMPLETED:
-                                onCompleted(event);
+                                onCompleted(run, event);
                                 break;
                             case ERROR:
-                                onError(event);
+                                onError(run, event);
                                 break;
                             case RUNNING:
-                                onRunning(event);
+                                onRunning(run, event);
                                 break;
                             case STOPPED:
-                                onStopped(event);
+                                onStopped(run, event);
                                 break;
                             case DELETED:
-                                onDeleted(event);
+                                onDeleted(run, event);
                                 break;
                             default:
                                 log.info(
-                                    "State {} for run id {} not found",
+                                    "State {} for run id {} not managed",
                                     runnableMonitorObject.getStateId(),
                                     runnableMonitorObject.getRunId()
                                 );
@@ -373,15 +379,13 @@ public class RunManager {
                     }
                 },
                 () -> {
-                    onError(event);
                     log.error("Run with id {} not found", runnableMonitorObject.getRunId());
                 }
             );
     }
 
     // Callback Methods
-    private void onRunning(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
-        Run run = entityService.find(event.getRunMonitorObject().getRunId());
+    private void onRunning(Run run, RunnableChangedEvent<RunRunnable> event) {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
@@ -436,8 +440,7 @@ public class RunManager {
      * @param event the RunChangedEvent triggering the error
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onCompleted(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
-        Run run = entityService.find(event.getRunMonitorObject().getRunId());
+    private void onCompleted(Run run, RunnableChangedEvent<RunRunnable> event) {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
@@ -497,8 +500,7 @@ public class RunManager {
      * @param event the RunChangedEvent triggering the stop
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onStopped(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
-        Run run = entityService.find(event.getRunMonitorObject().getRunId());
+    private void onStopped(Run run, RunnableChangedEvent<RunRunnable> event) {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
@@ -558,8 +560,7 @@ public class RunManager {
      * @param event the RunChangedEvent triggering the error
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onError(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
-        Run run = entityService.find(event.getRunMonitorObject().getRunId());
+    private void onError(Run run, RunnableChangedEvent<RunRunnable> event) {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
         Function function = retrieveFunction(run);
@@ -629,18 +630,12 @@ public class RunManager {
      * @param event the RunChangedEvent triggering the delete
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onDeleted(RunnableChangedEvent<RunRunnable> event) throws NoSuchEntityException {
-        Run run = entityService.find(event.getRunMonitorObject().getRunId());
-
-        String state = StatusFieldAccessor.with(run.getStatus()).getState();
-        Assert.notNull(state, "State cannot be null");
-
+    private void onDeleted(Run run, RunnableChangedEvent<RunRunnable> event) {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
-        Function function = retrieveFunction(run);
-
         // Retrieve Runtime
+        Function function = retrieveFunction(run);
         Runtime<
             ? extends FunctionBaseSpec,
             ? extends RunBaseSpec,
@@ -729,10 +724,6 @@ public class RunManager {
         // Retrieve Function
         String functionId = runSpecAccessor.getVersion();
         return functionEntityService.get(functionId);
-    }
-
-    private Specification<RunEntity> createTaskSpecification(String task) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("task"), task);
     }
 
     private Specification<TaskEntity> createFunctionSpecification(String function) {

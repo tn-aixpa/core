@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
+import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -17,6 +18,8 @@ import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity_;
+import it.smartcommunitylabdhub.core.models.events.EntityAction;
+import it.smartcommunitylabdhub.core.models.events.EntityOperation;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
@@ -29,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -55,6 +59,9 @@ public class TaskServiceImpl implements SearchableTaskService {
 
     @Autowired
     SpecRegistry specRegistry;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Override
     public Page<Task> listTasks(Pageable pageable) {
@@ -252,7 +259,19 @@ public class TaskServiceImpl implements SearchableTaskService {
         if (task != null) {
             if (Boolean.TRUE.equals(cascade)) {
                 log.debug("cascade delete runs for task with id {}", String.valueOf(id));
-                runService.deleteRunsByTaskId(id);
+
+                //delete via async event to let manager do cleanups
+                runService
+                    .getRunsByTaskId(id)
+                    .forEach(run -> {
+                        log.debug("publish op: delete for {}", run.getId());
+                        EntityOperation<Run> event = new EntityOperation<>(run, EntityAction.DELETE);
+                        if (log.isTraceEnabled()) {
+                            log.trace("event: {}", String.valueOf(event));
+                        }
+
+                        eventPublisher.publishEvent(event);
+                    });
             }
 
             //delete the task
