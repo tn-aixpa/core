@@ -66,6 +66,8 @@ runtime:
     image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
   kfp:
     image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
+  kaniko:
+    image: ${RUNTIME_KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
 
 # Spring Docs
 springdoc:
