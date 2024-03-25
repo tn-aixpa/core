@@ -122,11 +122,19 @@ public class RunStateMachineFactory {
             )
             .withState(
                 State.COMPLETED,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.COMPLETED).build()
+                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.COMPLETED)
+                    .withTransactions(
+                        List.of(new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true))
+                    )
+                    .build()
             )
             .withState(
                 State.ERROR,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.ERROR).build()
+                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.ERROR)
+                    .withTransactions(
+                        List.of(new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true))
+                    )
+                    .build()
             )
             .withState(
                 State.DELETING,
