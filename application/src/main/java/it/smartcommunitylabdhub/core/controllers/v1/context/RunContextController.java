@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -150,8 +149,7 @@ public class RunContextController {
     @DeleteMapping(path = "/{id}")
     public void deleteRun(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestParam(required = false) Boolean cascade
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
         Run run = runService.getRun(id);
 
@@ -162,9 +160,6 @@ public class RunContextController {
 
         //delete via manager
         runManager.delete(run);
-
-        //remove
-        runService.deleteRun(id, cascade);
     }
 
     /*

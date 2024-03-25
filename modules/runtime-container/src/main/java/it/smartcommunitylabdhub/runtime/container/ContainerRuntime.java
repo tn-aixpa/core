@@ -14,6 +14,9 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
@@ -246,21 +249,64 @@ public class ContainerRuntime
 
     @Override
     public RunContainerStatus onComplete(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunContainerStatus onError(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunContainerStatus onStopped(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunContainerStatus onDeleted(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
+    }
+
+    private void cleanup(RunRunnable runnable) {
+        try {
+            RunnableStore<?> store = getStore(runnable);
+            if (store != null && store.find(runnable.getId()) != null) {
+                store.remove(runnable.getId());
+            }
+        } catch (StoreException e) {
+            log.error("Error deleting runnable", e);
+            throw new NoSuchEntityException("Error deleting runnable", e);
+        }
+    }
+
+    private RunnableStore<?> getStore(RunRunnable runnable) {
+        return switch (runnable.getFramework()) {
+            case K8sDeploymentFramework.FRAMEWORK -> {
+                yield deployRunnableStore;
+            }
+            case K8sJobFramework.FRAMEWORK -> {
+                yield jobRunnableStore;
+            }
+            case K8sServeFramework.FRAMEWORK -> {
+                yield serveRunnableStore;
+            }
+            default -> null;
+        };
     }
 }

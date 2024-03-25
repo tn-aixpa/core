@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.models.listeners;
 
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
-import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.core.components.run.RunManager;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityAction;
@@ -20,17 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class RunEntityListener extends AbstractEntityListener<RunEntity, Run> {
 
-    private RunService runService;
-
     private RunManager runManager;
 
     public RunEntityListener(Converter<RunEntity, Run> converter) {
         super(converter);
-    }
-
-    @Autowired
-    public void setRunService(RunService runService) {
-        this.runService = runService;
     }
 
     @Autowired
@@ -62,18 +54,11 @@ public class RunEntityListener extends AbstractEntityListener<RunEntity, Run> {
             log.trace("{}: {}", clazz.getSimpleName(), String.valueOf(dto));
         }
 
-        String id = dto.getId();
-
         if (EntityAction.DELETE == event.getAction()) {
             //handle delete via manager
             if (runManager != null) {
                 //delete via manager
                 runManager.delete(dto);
-            }
-
-            //remove via service
-            if (runService != null) {
-                runService.deleteRun(id, Boolean.TRUE);
             }
         }
     }

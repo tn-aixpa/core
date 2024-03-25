@@ -45,9 +45,6 @@ public class RunServiceImpl implements SearchableRunService {
     SpecRegistry specRegistry;
 
     @Autowired
-    RunManager runManager;
-
-    @Autowired
     private EntityService<Run, RunEntity> entityService;
 
     @Autowired
@@ -264,8 +261,6 @@ public class RunServiceImpl implements SearchableRunService {
             //delete the run
             entityService.delete(id);
         }
-
-        entityService.delete(id);
     }
 
     @Override

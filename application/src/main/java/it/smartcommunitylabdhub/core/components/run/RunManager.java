@@ -16,14 +16,13 @@ import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
 import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.repositories.LogRepository;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.enums.RunEvent;
@@ -36,48 +35,37 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 @Slf4j
 @Component
 public class RunManager {
 
-    private final RunStateMachineFactory runStateMachine;
+    @Autowired
+    private RunStateMachineFactory runStateMachine;
 
-    private final LogRepository logRepository;
+    @Autowired
+    private EntityService<Run, RunEntity> entityService;
 
-    private final EntityService<Run, RunEntity> entityService;
+    @Autowired
+    private EntityService<Task, TaskEntity> taskEntityService;
 
-    private final EntityService<Task, TaskEntity> taskEntityService;
+    @Autowired
+    private EntityService<Function, FunctionEntity> functionEntityService;
 
-    private final EntityService<Function, FunctionEntity> functionEntityService;
+    @Autowired
+    private RunService runService;
 
-    private final RuntimeFactory runtimeFactory;
+    @Autowired
+    private RuntimeFactory runtimeFactory;
 
-    private final ApplicationEventPublisher eventPublisher;
-
-    public RunManager(
-        RunStateMachineFactory runStateMachine,
-        LogRepository logRepository,
-        EntityService<Run, RunEntity> entityService,
-        EntityService<Task, TaskEntity> taskEntityService,
-        EntityService<Function, FunctionEntity> functionEntityService,
-        RuntimeFactory runtimeFactory,
-        ApplicationEventPublisher eventPublisher
-    ) {
-        this.runStateMachine = runStateMachine;
-        this.logRepository = logRepository;
-        this.entityService = entityService;
-        this.taskEntityService = taskEntityService;
-        this.functionEntityService = functionEntityService;
-        this.runtimeFactory = runtimeFactory;
-        this.eventPublisher = eventPublisher;
-    }
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     public Run build(@NotNull Run run) throws NoSuchEntityException {
         // GET state machine, init state machine with status
@@ -312,14 +300,15 @@ public class RunManager {
             // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
             runnable.ifPresent(eventPublisher::publishEvent);
 
-            //if runnable we are deleting in async, otherwise nothing to do
-            runnable.ifPresentOrElse(
-                r -> run.getStatus().put("state", State.DELETING.toString()),
-                () -> run.getStatus().put("state", State.DELETED.toString())
-            );
-
             //update
+            run.getStatus().put("state", State.DELETING.toString());
             entityService.update(run.getId(), run);
+
+            //if runnable we are deleting in async, otherwise move to delete
+            if (runnable.isEmpty()) {
+                //dispatch event
+                onDeleted(run, null);
+            }
 
             return run;
         } catch (InvalidTransactionException e) {
@@ -483,11 +472,9 @@ public class RunManager {
                     run.getStatus().put("state", State.COMPLETED.toString());
                 }
             );
-            entityService.update(run.getId(), run);
 
-            // Delete Runnable
-            RunRunnable runRunnable = runtime.delete(run);
-            eventPublisher.publishEvent(runRunnable);
+            //update
+            entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
             log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
             throw new InvalidTransactionException(e.getFromState(), e.getToState());
@@ -543,11 +530,9 @@ public class RunManager {
                     run.getStatus().put("state", State.STOPPED.toString());
                 }
             );
-            entityService.update(run.getId(), run);
 
-            // Delete Runnable
-            RunRunnable runRunnable = runtime.delete(run);
-            eventPublisher.publishEvent(runRunnable);
+            //update
+            entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
             log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
             throw new InvalidTransactionException(e.getFromState(), e.getToState());
@@ -614,11 +599,8 @@ public class RunManager {
                     run.getStatus().put("state", State.ERROR.toString());
                 }
             );
-            entityService.update(run.getId(), run);
 
-            // Delete Runnable
-            RunRunnable runRunnable = runtime.delete(run);
-            eventPublisher.publishEvent(runRunnable);
+            entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
             log.error("Invalid transaction from state {} to state {}", e.getFromState(), e.getToState());
         }
@@ -672,11 +654,13 @@ public class RunManager {
                     run.getStatus().put("state", State.DELETED.toString());
                 }
             );
+
+            //update run with DELETED
+            //explicit before delete to let external event handlers receive the msg
             entityService.update(run.getId(), run);
 
-            // Delete Runnable
-            RunRunnable runRunnable = runtime.delete(run);
-            eventPublisher.publishEvent(runRunnable);
+            //delete run via service to handle cascade
+            runService.deleteRun(run.getId(), Boolean.TRUE);
         } catch (InvalidTransactionException e) {
             log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
             throw new InvalidTransactionException(e.getFromState(), e.getToState());
@@ -732,13 +716,5 @@ public class RunManager {
 
     private Specification<TaskEntity> createTaskKindSpecification(String kind) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("kind"), kind);
-    }
-
-    //TODO check if those methods below are necessaries
-    // dont know if this method are needed
-    @Async
-    @EventListener
-    public void log(LogEntity logEntity) {
-        logRepository.save(logEntity);
     }
 }

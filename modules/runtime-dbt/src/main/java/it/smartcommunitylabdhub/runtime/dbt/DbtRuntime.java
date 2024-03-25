@@ -164,21 +164,48 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtSt
 
     @Override
     public RunDbtStatus onComplete(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunDbtStatus onError(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunDbtStatus onStopped(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunDbtStatus onDeleted(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
+    }
+
+    private void cleanup(RunRunnable runnable) {
+        try {
+            if (jobRunnableStore != null && jobRunnableStore.find(runnable.getId()) != null) {
+                jobRunnableStore.remove(runnable.getId());
+            }
+        } catch (StoreException e) {
+            log.error("Error deleting runnable", e);
+            throw new NoSuchEntityException("Error deleting runnable", e);
+        }
     }
 }

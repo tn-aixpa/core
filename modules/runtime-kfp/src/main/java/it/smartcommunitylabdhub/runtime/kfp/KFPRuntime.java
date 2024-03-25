@@ -157,21 +157,48 @@ public class KFPRuntime implements Runtime<FunctionKFPSpec, RunKFPSpec, RunKfpSt
 
     @Override
     public RunKfpStatus onComplete(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunKfpStatus onError(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunKfpStatus onStopped(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
     }
 
     @Override
     public RunKfpStatus onDeleted(Run run, RunRunnable runnable) {
+        if (runnable != null) {
+            cleanup(runnable);
+        }
+
         return null;
+    }
+
+    private void cleanup(RunRunnable runnable) {
+        try {
+            if (jobRunnableStore != null && jobRunnableStore.find(runnable.getId()) != null) {
+                jobRunnableStore.remove(runnable.getId());
+            }
+        } catch (StoreException e) {
+            log.error("Error deleting runnable", e);
+            throw new NoSuchEntityException("Error deleting runnable", e);
+        }
     }
 }

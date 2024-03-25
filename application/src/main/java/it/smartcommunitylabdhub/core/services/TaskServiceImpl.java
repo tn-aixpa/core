@@ -277,8 +277,6 @@ public class TaskServiceImpl implements SearchableTaskService {
             //delete the task
             entityService.delete(id);
         }
-
-        entityService.delete(id);
     }
 
     @Override

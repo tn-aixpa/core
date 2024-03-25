@@ -104,11 +104,11 @@ public class RunController {
 
     @Operation(summary = "Delete a run", description = "Delete a specific run, with optional cascade on logs")
     @DeleteMapping(path = "/{id}")
-    public void deleteRun(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestParam(required = false) Boolean cascade
-    ) {
-        runService.deleteRun(id, cascade);
+    public void deleteRun(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
+        Run run = runService.getRun(id);
+
+        // via manager
+        runManager.delete(run);
     }
 
     @Operation(summary = "Build a specific run")
