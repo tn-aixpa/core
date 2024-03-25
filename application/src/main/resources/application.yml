@@ -72,6 +72,11 @@ application:
   profiles: ${spring.profiles.active:default}
 
 
+logging:
+   level:
+      ROOT: INFO
+      it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
+
 security:
   api:
     cors:
