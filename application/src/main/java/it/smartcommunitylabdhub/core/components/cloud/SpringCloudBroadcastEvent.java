@@ -1,14 +1,14 @@
 package it.smartcommunitylabdhub.core.components.cloud;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.jackson.mixins.CborMixin;
 import it.smartcommunitylabdhub.core.models.events.EntityAction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,41 +16,24 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class SpringCloudBroadcastEvent {
 
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+    private static final ObjectMapper mapper = JacksonMapper.CBOR_OBJECT_MAPPER;
 
-    //TODO : This should receive the wrapped classes from
+    private final RabbitTemplate rabbitTemplate;
+
+    public SpringCloudBroadcastEvent(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
+
+    @Async
     @EventListener
     public void handleEntitySavedEvent(CloudEntityEvent<?> event) {
         // Broadcast event on rabbit amqp
         try {
-            // TODO: need to add DELETE in the future.
             if (event.getAction() != EntityAction.DELETE) {
-                JacksonMapper.OBJECT_MAPPER.addMixIn(event.getClazz(), CborMixin.class);
-
-                String serializedEntity = JacksonMapper.OBJECT_MAPPER.writeValueAsString(event.getDto());
-
-                rabbitTemplate.convertAndSend("entityTopic", "entityRoutingKey", serializedEntity);
+                rabbitTemplate.convertAndSend("entityTopic", "entityRoutingKey", mapper.writeValueAsString(event));
             }
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            log.error("Error serializing cloud event for rabbit", e.getMessage());
         }
     }
-    // //TODO : This should receive the wrapped classes from
-    // @EventListener
-    // public <T extends BaseDTO> void handleEntitySavedEvent(EntityEvent<T> event) {
-    //     // Broadcast event on rabbit amqp
-    //     try {
-    //         // TODO: need to add DELETE in the future.
-    //         if (event.getAction() != EntityAction.DELETE) {
-    //             JacksonMapper.OBJECT_MAPPER.addMixIn(event.getClazz(), CborMixin.class);
-
-    //             String serializedEntity = JacksonMapper.OBJECT_MAPPER.writeValueAsString(event.getWrappedEntity());
-
-    //             rabbitTemplate.convertAndSend("entityTopic", "entityRoutingKey", serializedEntity);
-    //         }
-    //     } catch (JsonProcessingException e) {
-    //         throw new RuntimeException(e);
-    //     }
-    // }
 }
