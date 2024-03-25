@@ -1,5 +1,9 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
+import java.util.Date;
+
+import org.apache.solr.common.SolrInputDocument;
+
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
@@ -7,10 +11,11 @@ import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadat
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import org.apache.solr.common.SolrInputDocument;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SolrBaseEntityParser {
-
+	
     public static String getKeyGroup(String kind, String project, String name) {
         return kind + "_" + project + "_" + name;
     }
@@ -30,9 +35,13 @@ public class SolrBaseEntityParser {
         doc.addField("metadata.description", metadata.getDescription());
         doc.addField("metadata.project", metadata.getProject());
         doc.addField("metadata.version", metadata.getVersion());
-        doc.addField("metadata.created", metadata.getCreated());
-        doc.addField("metadata.updated", metadata.getUpdated());
         doc.addField("metadata.labels", metadata.getLabels());
+        try {
+            doc.addField("metadata.created", Date.from(metadata.getCreated().toInstant()));
+            doc.addField("metadata.updated", Date.from(metadata.getUpdated().toInstant()));			
+		} catch (Exception e) {
+			SolrBaseEntityParser.log.warn("parser DataItem:" + e.getMessage());
+		}
 
         return doc;
     }
@@ -52,9 +61,13 @@ public class SolrBaseEntityParser {
         doc.addField("metadata.description", metadata.getDescription());
         doc.addField("metadata.project", metadata.getProject());
         doc.addField("metadata.version", metadata.getVersion());
-        doc.addField("metadata.created", metadata.getCreated());
-        doc.addField("metadata.updated", metadata.getUpdated());
         doc.addField("metadata.labels", metadata.getLabels());
+        try {
+            doc.addField("metadata.created", Date.from(metadata.getCreated().toInstant()));
+            doc.addField("metadata.updated", Date.from(metadata.getUpdated().toInstant()));			
+		} catch (Exception e) {
+			SolrBaseEntityParser.log.warn("parser Function:" + e.getMessage());
+		}
 
         return doc;
     }
@@ -74,9 +87,13 @@ public class SolrBaseEntityParser {
         doc.addField("metadata.description", metadata.getDescription());
         doc.addField("metadata.project", metadata.getProject());
         doc.addField("metadata.version", metadata.getVersion());
-        doc.addField("metadata.created", metadata.getCreated());
-        doc.addField("metadata.updated", metadata.getUpdated());
         doc.addField("metadata.labels", metadata.getLabels());
+        try {
+            doc.addField("metadata.created", Date.from(metadata.getCreated().toInstant()));
+            doc.addField("metadata.updated", Date.from(metadata.getUpdated().toInstant()));			
+		} catch (Exception e) {
+			SolrBaseEntityParser.log.warn("parser Artifact:" + e.getMessage());
+		}
 
         return doc;
     }

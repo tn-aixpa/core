@@ -8,8 +8,6 @@ import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadat
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
 import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
-import it.smartcommunitylabdhub.core.models.base.BaseEntity;
-import it.smartcommunitylabdhub.core.models.events.EntityEvent;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
