@@ -36,5 +36,5 @@ public interface Runtime<
     Z onStopped(@NotNull Run run, RunRunnable runnable);
 
     @Nullable
-    Z onDeleted(@NotNull Run run, RunRunnable runnable);
+    Z onDeleted(@NotNull Run run, @Nullable RunRunnable runnable);
 }

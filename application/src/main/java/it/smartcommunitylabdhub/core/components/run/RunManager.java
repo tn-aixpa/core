@@ -321,6 +321,10 @@ public class RunManager {
     @Async
     @EventListener
     public void onChangedEvent(RunnableChangedEvent<RunRunnable> event) {
+        if (event.getRunMonitorObject() == null) {
+            return;
+        }
+
         // Retrieve the RunMonitorObject from the event
         RunnableMonitorObject runnableMonitorObject = event.getRunMonitorObject();
 
@@ -400,7 +404,8 @@ public class RunManager {
                     input
                 );
 
-                RunBaseStatus runStatus = runtime.onRunning(run, event.getRunnable());
+                RunRunnable runnable = event != null ? event.getRunnable() : null;
+                RunBaseStatus runStatus = runtime.onRunning(run, runnable);
                 return Optional.ofNullable(runStatus);
             });
 
@@ -455,7 +460,8 @@ public class RunManager {
                     input
                 );
 
-                RunBaseStatus runStatus = runtime.onComplete(run, event.getRunnable());
+                RunRunnable runnable = event != null ? event.getRunnable() : null;
+                RunBaseStatus runStatus = runtime.onComplete(run, runnable);
                 return Optional.ofNullable(runStatus);
             });
 
@@ -513,7 +519,8 @@ public class RunManager {
                     input
                 );
 
-                RunBaseStatus runStatus = runtime.onStopped(run, event.getRunnable());
+                RunRunnable runnable = event != null ? event.getRunnable() : null;
+                RunBaseStatus runStatus = runtime.onStopped(run, runnable);
                 return Optional.ofNullable(runStatus);
             });
 
@@ -568,7 +575,8 @@ public class RunManager {
                     input
                 );
 
-                RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
+                RunRunnable runnable = event != null ? event.getRunnable() : null;
+                RunBaseStatus runStatus = runtime.onError(run, runnable);
                 return Optional.ofNullable(runStatus);
             });
 
@@ -582,7 +590,8 @@ public class RunManager {
                     context,
                     input
                 );
-                RunBaseStatus runStatus = runtime.onError(run, event.getRunnable());
+                RunRunnable runnable = event != null ? event.getRunnable() : null;
+                RunBaseStatus runStatus = runtime.onError(run, runnable);
                 return Optional.ofNullable(runStatus);
             });
 
@@ -637,7 +646,8 @@ public class RunManager {
                     input
                 );
 
-                RunBaseStatus runStatus = runtime.onDeleted(run, event.getRunnable());
+                RunRunnable runnable = event != null ? event.getRunnable() : null;
+                RunBaseStatus runStatus = runtime.onDeleted(run, runnable);
                 return Optional.ofNullable(runStatus);
             });
 
