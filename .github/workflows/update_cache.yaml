@@ -4,8 +4,8 @@ on:
     branches:
       - main
     paths:
-      - '**.pom.xml'
-      - '**.package.json'
+      - '**pom.xml'
+      - '**package.json'
     tags-ignore:
       - "*"
 env:
