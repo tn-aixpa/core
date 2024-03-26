@@ -5,7 +5,11 @@ COPY modules /tmp/modules
 COPY pom.xml /tmp/pom.xml
 WORKDIR /tmp
 RUN mvn dependency:go-offline
+RUN mvn clean generate-resources -pl frontend
 
 FROM scratch
 LABEL org.opencontainers.image.source=https://github.com/scc-digitalhub/digitalhub-core
-COPY --from=cache /root/.m2 /root/.m2
+WORKDIR /cache
+COPY --from=cache /root/.m2 /cache/.m2
+COPY --from=cache /tmp/frontend/target /cache/frontend/target
+COPY --from=cache /tmp/frontend/console/node_modules /cache/frontend/console/node_modules
