@@ -21,9 +21,11 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.annotation.Validated;
 
 @Component
 @Slf4j
+@Validated
 public class SpecRegistryImpl implements SpecRegistry {
 
     // A map to store spec types and their corresponding classes.
@@ -38,7 +40,7 @@ public class SpecRegistryImpl implements SpecRegistry {
     }
 
     @Override
-    public void registerSpec(@NotNull SpecType type, @NotNull Class<? extends Spec> spec) {
+    public void registerSpec(SpecType type, Class<? extends Spec> spec) {
         String kind = type.kind();
         EntityName entity = type.entity();
 
@@ -67,11 +69,7 @@ public class SpecRegistryImpl implements SpecRegistry {
      * @return An instance of the specified spec type, or null if not found or in case of errors.
      */
     @Override
-    public <S extends Spec> S createSpec(
-        @NotNull String kind,
-        @NotNull EntityName entity,
-        Map<String, Serializable> data
-    ) {
+    public <S extends Spec> S createSpec(String kind, EntityName entity, Map<String, Serializable> data) {
         // Retrieve the class associated with the specified spec type.
         Class<? extends Spec> specClass = retrieveSpec(kind, entity);
 
@@ -98,7 +96,7 @@ public class SpecRegistryImpl implements SpecRegistry {
         return spec;
     }
 
-    private Class<? extends Spec> retrieveSpec(@NotNull String kind, @NotNull EntityName entity) {
+    private Class<? extends Spec> retrieveSpec(String kind, EntityName entity) {
         return specs
             .entrySet()
             .stream()
@@ -109,7 +107,7 @@ public class SpecRegistryImpl implements SpecRegistry {
     }
 
     @Override
-    public Schema getSchema(@NotNull String kind, @NotNull EntityName entity) {
+    public Schema getSchema(String kind, EntityName entity) {
         Schema schema = retrieveSchema(kind, entity);
         if (schema == null) {
             throw new IllegalArgumentException("missing schema");
@@ -119,17 +117,17 @@ public class SpecRegistryImpl implements SpecRegistry {
     }
 
     @Override
-    public Collection<Schema> listSchemas(@NotNull EntityName entity) {
+    public Collection<Schema> listSchemas(EntityName name) {
         return schemas
             .entrySet()
             .stream()
-            .filter(e -> entity == e.getKey().entity())
+            .filter(e -> name == e.getKey().entity())
             .map(Entry::getValue)
             .collect(Collectors.toList());
     }
 
     @Override
-    public Collection<Schema> getSchemas(@NotNull EntityName entity, @NotNull String runtime) {
+    public Collection<Schema> getSchemas(EntityName entity, String runtime) {
         return schemas
             .entrySet()
             .stream()

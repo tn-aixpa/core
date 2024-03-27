@@ -4,10 +4,13 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+@Valid
 public interface SpecRegistry {
     /**
      * Create an instance of a spec based on its type and configure it with data.
@@ -17,11 +20,11 @@ public interface SpecRegistry {
      * @param <S>  The generic type for the spec.
      * @return An instance of the specified spec type, or null if not found or in case of errors.
      */
-    <S extends Spec> S createSpec(String kind, EntityName entity, Map<String, Serializable> data);
+    <S extends Spec> S createSpec(@NotNull String kind, @NotNull EntityName entity, Map<String, Serializable> data);
 
-    void registerSpec(SpecType spec, Class<? extends Spec> clazz);
+    void registerSpec(@NotNull SpecType spec, @NotNull Class<? extends Spec> clazz);
 
-    Schema getSchema(String kind, EntityName name);
-    Collection<Schema> getSchemas(EntityName name, String runtime);
-    Collection<Schema> listSchemas(EntityName name);
+    Schema getSchema(@NotNull String kind, @NotNull EntityName name);
+    Collection<Schema> getSchemas(@NotNull EntityName name, @NotNull String runtime);
+    Collection<Schema> listSchemas(@NotNull EntityName name);
 }
