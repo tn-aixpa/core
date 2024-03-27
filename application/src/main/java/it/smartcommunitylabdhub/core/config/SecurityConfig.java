@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -53,22 +53,18 @@ public class SecurityConfig {
     @Value("${security.api.cors.origins}")
     private String corsOrigins;
 
+    @Value("${management.server.port}")
+    private int managementPort;
+
+    @Value("${management.endpoints.web.base-path}")
+    private String managementBasePath;
+
     @Bean("apiSecurityFilterChain")
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher(getRequestMatcher())
+            .securityMatcher(getApiRequestMatcher())
             .authorizeHttpRequests(auth -> {
-                // if (properties.isRequired()) {
-                auth
-                    .requestMatchers(getRequestMatcher())
-                    .hasRole("USER")
-                    .requestMatchers("/error")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated();
-                // } else {
-                //     auth.anyRequest().permitAll();
-                // }
+                auth.requestMatchers(getApiRequestMatcher()).hasRole("USER").anyRequest().authenticated();
             })
             // disable request cache
             .requestCache(requestCache -> requestCache.disable())
@@ -168,7 +164,7 @@ public class SecurityConfig {
         return converter;
     }
 
-    @Bean
+    @Bean("coreSecurityFilterChain")
     public SecurityFilterChain coreSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
             .authorizeHttpRequests(auth -> {
@@ -179,7 +175,25 @@ public class SecurityConfig {
             .build();
     }
 
-    public RequestMatcher getRequestMatcher() {
+    @Bean("monitoringSecurityFilterChain")
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // match only actuator endpoints
+        http
+            .securityMatcher(getManagementRequestMatcher())
+            .authorizeHttpRequests(auth -> {
+                auth.anyRequest().permitAll();
+            })
+            .exceptionHandling(handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        return http.build();
+    }
+
+    public RequestMatcher getManagementRequestMatcher() {
+        return (HttpServletRequest request) -> managementPort == request.getLocalPort();
+    }
+
+    public RequestMatcher getApiRequestMatcher() {
         return new AntPathRequestMatcher(API_PREFIX + "/**");
     }
 

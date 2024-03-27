@@ -1,8 +1,22 @@
+# server config
+server:
+   host: ${SERVER_HOST:localhost}
+   port: ${SERVER_PORT:8080}
+   servlet:
+     context-path: ${SERVER_CONTEXT:/}
+   tomcat:
+     remoteip:
+      remote_ip_header: ${SERVER_TOMCAT_REMOTE_IP_HEADER:x-forwarded-for}
+      protocol_header: ${SERVER_TOMCAT_PROTOCOL_HEADER:x-forwarded-proto}
+   max-http-request-header-size: 32000
+   error:
+      include-stacktrace: never
+
 # Spring configuration
 spring:
   sql:
     init:
-      schema-locations: ${JDBC_TABLE:classpath:db/schema-h2.sql}
+      schema-locations: classpath:db/schema-${platform}.sql
       mode: always
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
@@ -24,14 +38,22 @@ spring:
     console:
       enabled: ${H2_CONSOLE:false}
 
-server.error.include-stacktrace: never
 
 # Management Endpoints
 management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'
+    server:
+      port: ${MANAGEMENT_PORT:8081}
+    endpoints:
+      enabled-by-default: false
+      web:
+        base-path:
+        exposure.include: "health,info,metrics"
+    endpoint:
+      info:
+        enabled: true
+      health:
+        enabled: true
+
 
 # Runtimes
 runtime:
