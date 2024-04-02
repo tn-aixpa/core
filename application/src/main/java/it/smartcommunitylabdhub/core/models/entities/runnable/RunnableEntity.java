@@ -16,11 +16,11 @@ public class RunnableEntity {
 
     private String id;
 
-    private byte[] data;
-
-    private String clazz;
-
     private Date created;
 
     private Date updated;
+
+    private String clazz;
+
+    private byte[] data;
 }

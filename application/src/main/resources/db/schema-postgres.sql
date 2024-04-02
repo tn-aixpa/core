@@ -1,13 +1,13 @@
-create table if not exists public.runnable
-(
-    id      varchar(255) not null
-        primary key,
-    created timestamp(6) with time zone default CURRENT_TIMESTAMP,
-    data    bytea,
-    clazz   varchar(255) not null,
-    updated timestamp(6) with time zone default CURRENT_TIMESTAMP
-);
+CREATE TABLE
+    IF NOT EXISTS public.runnables (
+        id VARCHAR(255) NOT NULL PRIMARY KEY,
+        created TIMESTAMP(6) WITH TIME ZONE,
+        updated TIMESTAMP(6) WITH TIME ZONE,
+        _clazz VARCHAR(255) NOT NULL,
+        _data BYTEA
+    );
+
+CREATE INDEX runnables_id_index ON public.runnables (id, _clazz);
 
 -- alter table public.runnable
 --     owner to postgres;
-

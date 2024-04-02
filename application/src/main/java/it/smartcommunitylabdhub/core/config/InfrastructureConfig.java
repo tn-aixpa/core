@@ -13,7 +13,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.factories.builder
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
-import it.smartcommunitylabdhub.core.services.RunnableStoreServiceImpl;
+import it.smartcommunitylabdhub.core.services.RunnableStoreImpl;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,7 +47,7 @@ public class InfrastructureConfig {
         return new RunnableStore.StoreSupplier() {
             @Override
             public <T extends RunRunnable> RunnableStore<T> get(Class<T> clazz) {
-                return new RunnableStoreServiceImpl<>(clazz, runnableRepository);
+                return new RunnableStoreImpl<>(clazz, runnableRepository);
             }
         };
     }

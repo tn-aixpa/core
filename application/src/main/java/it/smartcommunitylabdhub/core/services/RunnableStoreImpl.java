@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
@@ -12,29 +13,39 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
 
 @Slf4j
-public class RunnableStoreServiceImpl<T extends RunRunnable> implements RunnableStore<T> {
+public class RunnableStoreImpl<T extends RunRunnable> implements RunnableStore<T> {
 
     private final Class<T> clazz;
     private final RunnableRepository runnableRepository;
+    private ObjectMapper objectMapper;
 
-    public RunnableStoreServiceImpl(Class<T> clazz, RunnableRepository runnableRepository) {
+    public RunnableStoreImpl(Class<T> clazz, RunnableRepository runnableRepository) {
         this.clazz = clazz;
         this.runnableRepository = runnableRepository;
+
+        //use CBOR mapper as default
+        this.objectMapper = JacksonMapper.CBOR_OBJECT_MAPPER;
+    }
+
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        Assert.notNull(objectMapper, "object mapper can not be null");
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public T find(String id) throws StoreException {
         log.debug("find runnable {} with id {}", clazz.getName(), id);
 
-        RunnableEntity runnableEntity = runnableRepository.findById(clazz.getName(), id);
+        RunnableEntity runnableEntity = runnableRepository.find(clazz.getName(), id);
         if (runnableEntity == null) {
             return null;
         }
 
         try {
-            return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(runnableEntity.getData(), clazz);
+            return objectMapper.readValue(runnableEntity.getData(), clazz);
         } catch (IOException ex) {
             // Handle serialization error
             log.error("error deserializing runnable: {}", ex.getMessage());
@@ -51,7 +62,7 @@ public class RunnableStoreServiceImpl<T extends RunRunnable> implements Runnable
             .stream()
             .map(entity -> {
                 try {
-                    return JacksonMapper.CBOR_OBJECT_MAPPER.readValue(entity.getData(), clazz);
+                    return objectMapper.readValue(entity.getData(), clazz);
                 } catch (IOException e) {
                     // Handle deserialization error
                     log.error("error deserializing runnable: {}", e.getMessage());
@@ -66,13 +77,13 @@ public class RunnableStoreServiceImpl<T extends RunRunnable> implements Runnable
     public void store(String id, T e) throws StoreException {
         log.debug("store runnable {} with id {}", clazz.getName(), id);
         try {
-            byte[] data = JacksonMapper.CBOR_OBJECT_MAPPER.writeValueAsBytes(e);
+            byte[] data = objectMapper.writeValueAsBytes(e);
             RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
 
             Optional
                 .ofNullable(find(id))
                 .ifPresentOrElse(
-                    r -> runnableRepository.update(clazz.getName(), entity),
+                    r -> runnableRepository.update(clazz.getName(), r.getId(), entity),
                     () -> runnableRepository.save(clazz.getName(), entity)
                 );
         } catch (IOException ex) {
