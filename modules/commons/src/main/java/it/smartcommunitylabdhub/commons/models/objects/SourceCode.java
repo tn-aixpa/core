@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.lang.Nullable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SourceCode<T extends Enum<?>> implements Serializable {
 
     @Nullable

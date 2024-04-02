@@ -15,7 +15,8 @@ public class DataItemTableSpec extends DataItemBaseSpec {
 
     //TODO adopt tableschema
     //see https://github.com/frictionlessdata/tableschema-java
-    private Map<String, Serializable> schema;
+    // private Map<String, Serializable> schema;
+    private TableSchema schema;
 
     @Override
     public void configure(Map<String, Serializable> data) {

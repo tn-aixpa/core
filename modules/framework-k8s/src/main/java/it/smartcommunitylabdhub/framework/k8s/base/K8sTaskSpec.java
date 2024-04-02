@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.base;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -22,6 +23,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class K8sTaskSpec {
 
     @Nullable
