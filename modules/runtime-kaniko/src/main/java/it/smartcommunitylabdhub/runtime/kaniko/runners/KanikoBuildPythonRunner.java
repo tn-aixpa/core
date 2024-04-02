@@ -10,7 +10,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.kaniko.KanikoRuntime;
 import it.smartcommunitylabdhub.runtime.kaniko.specs.run.RunKanikoSpec;
-import it.smartcommunitylabdhub.runtime.kaniko.specs.task.TaskBuildJavaSpec;
+import it.smartcommunitylabdhub.runtime.kaniko.specs.task.TaskBuildPythonSpec;
 import java.util.*;
 
 /**
@@ -21,14 +21,14 @@ import java.util.*;
  *
  * @RunnerComponent(runtime = "dbt", task = "transform")
  */
-public class KanikoBuildRunner implements Runner<K8sJobRunnable> {
+public class KanikoBuildPythonRunner implements Runner<K8sJobRunnable> {
 
     private static final String TASK = "build";
 
     private final String image;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public KanikoBuildRunner(String image, Map<String, Set<String>> groupedSecrets) {
+    public KanikoBuildPythonRunner(String image, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.groupedSecrets = groupedSecrets;
     }
@@ -37,7 +37,7 @@ public class KanikoBuildRunner implements Runner<K8sJobRunnable> {
     public K8sJobRunnable produce(Run run) {
         // Retrieve information about RunKanikoSpec
         RunKanikoSpec runSpec = new RunKanikoSpec(run.getSpec());
-        TaskBuildJavaSpec taskSpec = runSpec.getTaskSpec();
+        TaskBuildPythonSpec taskSpec = runSpec.getTaskBuildPythonSpec();
         if (taskSpec == null) {
             throw new CoreRuntimeException("null or empty task definition");
         }

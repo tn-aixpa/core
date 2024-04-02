@@ -17,6 +17,8 @@ import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.kaniko.builders.KanikoBuildJavaBuilder;
 import it.smartcommunitylabdhub.runtime.kaniko.builders.KanikoBuildPythonBuilder;
+import it.smartcommunitylabdhub.runtime.kaniko.runners.KanikoBuildJavaRunner;
+import it.smartcommunitylabdhub.runtime.kaniko.runners.KanikoBuildPythonRunner;
 import it.smartcommunitylabdhub.runtime.kaniko.specs.function.FunctionKanikoSpec;
 import it.smartcommunitylabdhub.runtime.kaniko.specs.run.RunKanikoSpec;
 import it.smartcommunitylabdhub.runtime.kaniko.specs.task.TaskBuildJavaSpec;
@@ -32,7 +34,7 @@ import org.springframework.beans.factory.annotation.Value;
 public class KanikoRuntime
         implements Runtime<FunctionKanikoSpec, RunKanikoSpec, RunKanikoStatus, K8sJobRunnable> {
 
-    public static final String RUNTIME = "nefertem";
+    public static final String RUNTIME = "kaniko";
 
     private final KanikoBuildJavaBuilder javaBuilder = new KanikoBuildJavaBuilder();
     private final KanikoBuildPythonBuilder pythonBuilder = new KanikoBuildPythonBuilder();
@@ -43,7 +45,7 @@ public class KanikoRuntime
     @Autowired(required = false)
     private RunnableStore<K8sJobRunnable> jobRunnableStore;
 
-    @Value("${runtime.nefertem.image}")
+    @Value("${runtime.kaniko.image}")
     private String image;
 
     @Override
@@ -95,16 +97,6 @@ public class KanikoRuntime
             case TaskBuildJavaSpec.KIND -> new KanikoBuildJavaRunner(
                     image,
                     secretService.groupSecrets(run.getProject(), runSpec.getTaskBuildJavaSpec().getK8s().getSecrets())
-            )
-                    .produce(run);
-            case TaskBuildPythonSpec.KIND -> new KanikoBuildPythonRunner(
-                    image,
-                    secretService.groupSecrets(run.getProject(), runSpec.getTaskBuildPythonSpec().getK8s().getSecrets())
-            )
-                    .produce(run);
-            case TaskProfileSpec.KIND -> new KanikoProfileRunner(
-                    image,
-                    secretService.groupSecrets(run.getProject(), runSpec.getTaskProfileSpec().getK8s().getSecrets())
             )
                     .produce(run);
             case TaskBuildPythonSpec.KIND -> new KanikoBuildPythonRunner(

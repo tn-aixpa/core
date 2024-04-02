@@ -20,13 +20,13 @@ public class KanikoBuildPythonBuilder implements Builder<FunctionKanikoSpec, Tas
     @Override
     public RunKanikoSpec build(FunctionKanikoSpec funSpec, TaskBuildPythonSpec taskSpec, RunKanikoSpec runSpec) {
         RunKanikoSpec runKanikoSpec = new RunKanikoSpec(runSpec.toMap());
-        runKanikoSpec.setTaskSpec(taskSpec);
+        runKanikoSpec.setTaskBuildPythonSpec(taskSpec);
         runKanikoSpec.setFuncSpec(funSpec);
 
         //let run override k8s specs
         Optional
-                .ofNullable(runSpec.getTaskSpec())
-                .ifPresent(k8sSpec -> runKanikoSpec.getTaskSpec().configure(k8sSpec.toMap()));
+                .ofNullable(runSpec.getTaskBuildPythonSpec())
+                .ifPresent(k8sSpec -> runKanikoSpec.getTaskBuildJavaSpec().configure(k8sSpec.toMap()));
 
         return runKanikoSpec;
     }

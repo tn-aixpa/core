@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.runtime.kaniko.kaniko;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
 
 public class DockerfileGenerator {
 
@@ -13,11 +12,8 @@ public class DockerfileGenerator {
 
         String templateContent = Files.readString(templatePath);
 
-        String additionalCommands = buildConfig
-                .getAdditionalCommands()
-                .stream()
-                .map(entry -> entry)
-                .collect(Collectors.joining("\n"));
+        String additionalCommands = String.join("\n", buildConfig
+                .getAdditionalCommands());
 
         // Replace placeholders with actual values
         String dockerfileContent = templateContent
