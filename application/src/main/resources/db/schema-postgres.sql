@@ -7,7 +7,7 @@ CREATE TABLE
         _data BYTEA
     );
 
-CREATE INDEX runnables_id_index ON public.runnables (id, _clazz);
+CREATE INDEX IF NOT EXISTS runnables_id_index ON public.runnables (id, _clazz);
 
 -- alter table public.runnable
 --     owner to postgres;

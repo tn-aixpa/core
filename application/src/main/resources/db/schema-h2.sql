@@ -3,8 +3,8 @@ CREATE TABLE
         id VARCHAR(255) NOT NULL PRIMARY KEY,
         created TIMESTAMP,
         updated TIMESTAMP,
-        _data BINARY LARGE OBJECT,
-        _clazz VARCHAR(255)
+        _clazz VARCHAR(255),
+        _data BINARY LARGE OBJECT
     );
 
-CREATE INDEX runnables_id_index ON runnables (id, _clazz);
+CREATE INDEX IF NOT EXISTS runnables_id_index ON runnables (id, _clazz);
