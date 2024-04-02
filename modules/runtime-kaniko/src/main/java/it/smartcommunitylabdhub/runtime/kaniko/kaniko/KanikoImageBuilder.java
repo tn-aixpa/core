@@ -8,6 +8,8 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
+import it.smartcommunitylabdhub.runtime.kaniko.specs.docker.DockerfileGenerator;
+import it.smartcommunitylabdhub.runtime.kaniko.specs.docker.DockerfileGeneratorFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,11 +53,49 @@ import org.springframework.scheduling.annotation.Async;
 @Slf4j
 public class KanikoImageBuilder {
 
+    /**
+     * Kaniko / Docker authentication.
+     * Is used to push the image built by kaniko on hub.docker.io
+     *
+     * @return String
+     */
+    private static byte[] getDockerConfigJson() {
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+
+        // Replace with your Docker Hub credentials
+        String username = dotenv.get("DOCKER_USERNAME");
+        String password = dotenv.get("DOCKER_PASSWORD");
+        String email = dotenv.get("DOCKER_EMAIL");
+
+        // Create the Docker config JSON
+        Map<String, Object> auths = new HashMap<>();
+        Map<String, String> auth = new HashMap<>();
+        auth.put("username", username);
+        auth.put("password", password);
+        auth.put("email", email);
+        auth.put("auth", Base64.getEncoder().encodeToString((username + ":" + password).getBytes()));
+        auths.put("https://index.docker.io/v1/", auth);
+
+        Map<String, Object> configData = new HashMap<>();
+        configData.put("auths", auths);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(configData);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to create Docker config JSON.", e);
+        }
+
+        // Base64 encode the JSON
+        return json.getBytes();
+    }
+
     // [x]: DONE! this builder work for FOLDER strategy building.
     @Async
     public static CompletableFuture<?> buildDockerImage(
             ApiClient apiClient,
-            DockerBuildConfig buildConfig,
+            DockerfileGeneratorFactory buildConfig,
             JobBuildConfig jobBuildConfig
     ) {
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -63,8 +103,19 @@ public class KanikoImageBuilder {
         BatchV1Api batchV1Api = new BatchV1Api(apiClient);
 
         try {
+
+            // Docker file generator
+            DockerfileGenerator dockerfileGenerator = DockerfileGeneratorFactory
+                    .newInstance()
+                    .from("openjdk:11")
+                    .workdir("/app")
+                    .copy(".", "/app")
+                    .run("javac ./HelloWorld.java")
+                    .entrypoint(List.of("java", "HelloWorld")).build();
+
             // Generate the Dockerfile
-            String dockerFileContent = DockerfileGenerator.generateDockerfile(buildConfig);
+            //TODO here get the java function from function
+            String dockerFileContent = dockerfileGenerator.generateDockerfile();
             String javaFile = Files.readString(
                     Path.of("/home/ltrubbiani/Labs/digitalhub-core/kubernetes/target/HelloWorld.java")
             );
@@ -248,43 +299,5 @@ public class KanikoImageBuilder {
         }
 
         return future;
-    }
-
-    /**
-     * Kaniko / Docker authentication.
-     * Is used to push the image built by kaniko on hub.docker.io
-     *
-     * @return String
-     */
-    private static byte[] getDockerConfigJson() {
-        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-
-        // Replace with your Docker Hub credentials
-        String username = dotenv.get("DOCKER_USERNAME");
-        String password = dotenv.get("DOCKER_PASSWORD");
-        String email = dotenv.get("DOCKER_EMAIL");
-
-        // Create the Docker config JSON
-        Map<String, Object> auths = new HashMap<>();
-        Map<String, String> auth = new HashMap<>();
-        auth.put("username", username);
-        auth.put("password", password);
-        auth.put("email", email);
-        auth.put("auth", Base64.getEncoder().encodeToString((username + ":" + password).getBytes()));
-        auths.put("https://index.docker.io/v1/", auth);
-
-        Map<String, Object> configData = new HashMap<>();
-        configData.put("auths", auths);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json;
-        try {
-            json = objectMapper.writeValueAsString(configData);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to create Docker config JSON.", e);
-        }
-
-        // Base64 encode the JSON
-        return json.getBytes();
     }
 }

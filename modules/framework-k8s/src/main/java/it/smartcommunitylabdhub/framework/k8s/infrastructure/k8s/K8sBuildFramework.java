@@ -13,7 +13,6 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sBuildRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -131,26 +130,6 @@ public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job>
 
                         })
                         .collect(Collectors.toList()));
-
-        List.of(new V1Container()
-                .name("kaniko-init" + jobBuildConfig.getIdentifier())
-                .image("alpine:latest")
-                .volumeMounts(
-                        List.of(
-                                new V1VolumeMount().name("shared-dir").mountPath("/shared")
-                        )
-                )
-                .command(
-                        List.of(
-                                "sh",
-                                "-c",
-                                "wget " +
-                                        buildConfig.getSharedData() +
-                                        " -O /shared/data.tgz && tar xf /shared/data.tgz -C /shared"
-                        )
-                )
-        )
-                            );
 
 
         return new V1Job().metadata(metadata).spec(job.getSpec());
