@@ -18,7 +18,7 @@
     <groupId>it.smartcommunitylabdhub</groupId>
     <artifactId>core</artifactId>
     <name>core</name>
-    <version>0.3.0-beta3</version>
+    <version>0.3.0-beta5</version>
     <description>Digital Hub Core</description>
     <properties>
         <revision>0.3.0-SNAPSHOT</revision>
