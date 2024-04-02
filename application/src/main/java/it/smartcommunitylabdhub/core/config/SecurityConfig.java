@@ -61,25 +61,20 @@ public class SecurityConfig {
 
     @Bean("apiSecurityFilterChain")
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
+        HttpSecurity securityChain = http
             .securityMatcher(getApiRequestMatcher())
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(getApiRequestMatcher()).hasRole("USER").anyRequest().authenticated();
             })
             // disable request cache
             .requestCache(requestCache -> requestCache.disable())
-            .exceptionHandling(handling -> {
-                handling
-                    .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
-                    .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
-            })
             //disable csrf
             .csrf(csrf -> csrf.disable())
             // we don't want a session for these endpoints, each request should be evaluated
             .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // allow cors
-        http.cors(cors -> {
+        securityChain.cors(cors -> {
             if (StringUtils.hasText(corsOrigins)) {
                 cors.configurationSource(corsConfigurationSource(corsOrigins));
             } else {
@@ -90,20 +85,28 @@ public class SecurityConfig {
         //authentication (when configured)
         if (properties.isRequired()) {
             if (properties.isBasicAuthEnabled()) {
-                http.httpBasic(withDefaults()).userDetailsService(userDetailsService());
+                securityChain
+                    .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+                    .userDetailsService(userDetailsService());
             }
             if (properties.isJwtAuthEnabled()) {
-                http.oauth2ResourceServer(oauth2 ->
+                securityChain.oauth2ResourceServer(oauth2 ->
                     oauth2.jwt(jwt -> jwt.decoder(jwtDecoder()).jwtAuthenticationConverter(jwtAuthenticationConverter())
                     )
                 );
             }
         } else {
             //assign both USER and ADMIN to anon user to bypass all scoped permission checks
-            http.anonymous(anon -> anon.authorities("ROLE_USER", "ROLE_ADMIN"));
+            securityChain.anonymous(anon -> anon.authorities("ROLE_USER", "ROLE_ADMIN"));
         }
 
-        return http.build();
+        securityChain.exceptionHandling(handling -> {
+            handling
+                .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+                .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
+        });
+
+        return securityChain.build();
     }
 
     public UserDetailsService userDetailsService() {
@@ -178,15 +181,14 @@ public class SecurityConfig {
     @Bean("monitoringSecurityFilterChain")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // match only actuator endpoints
-        http
+        return http
             .securityMatcher(getManagementRequestMatcher())
             .authorizeHttpRequests(auth -> {
                 auth.anyRequest().permitAll();
             })
             .exceptionHandling(handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        return http.build();
+            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .build();
     }
 
     public RequestMatcher getManagementRequestMatcher() {

@@ -33,7 +33,7 @@ public class ConsoleSecurityConfig {
 
     @Bean("consoleSecurityFilterChain")
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
+        return http
             .securityMatcher(getRequestMatcher())
             .authorizeHttpRequests(auth -> {
                 auth.anyRequest().permitAll();
@@ -41,18 +41,16 @@ public class ConsoleSecurityConfig {
             //disable csrf
             .csrf(csrf -> csrf.disable())
             // we don't want a session for these endpoints, each request should be evaluated
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        // allow cors
-        http.cors(cors -> {
-            if (StringUtils.hasText(corsOrigins)) {
-                cors.configurationSource(corsConfigurationSource(corsOrigins));
-            } else {
-                cors.disable();
-            }
-        });
-
-        return http.build();
+            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // allow cors
+            .cors(cors -> {
+                if (StringUtils.hasText(corsOrigins)) {
+                    cors.configurationSource(corsConfigurationSource(corsOrigins));
+                } else {
+                    cors.disable();
+                }
+            })
+            .build();
     }
 
     private CorsConfigurationSource corsConfigurationSource(String origins) {

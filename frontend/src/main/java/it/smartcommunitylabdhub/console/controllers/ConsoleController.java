@@ -7,10 +7,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -53,14 +57,18 @@ public class ConsoleController {
         Map<String, String> config = new HashMap<>();
         config.put("REACT_APP_APPLICATION_URL", applicationUrl);
         config.put("REACT_APP_API_URL", "/api/v1");
-
         config.put("REACT_APP_CONTEXT_PATH", CONSOLE_CONTEXT);
-        config.put("REACT_APP_AUTH", "none");
+
+        config.put("VITE_APP_NAME", applicationProperties.getDescription());
+        config.put("REACT_APP_VERSION", applicationProperties.getVersion());
+
         if (securityProperties.isBasicAuthEnabled()) {
+            config.put("REACT_APP_AUTH_URL", "/api");
             config.put("REACT_APP_LOGIN_URL", "/auth");
         }
 
         if (securityProperties.isOidcAuthEnabled()) {
+            config.put("REACT_APP_AUTH_URL", "/api");
             config.put("REACT_APP_ISSUER_URI", securityProperties.getJwt().getIssuerUri());
             config.put("REACT_APP_CLIENT_ID", securityProperties.getOidc().getClientId());
             if (securityProperties.getOidc().getScope() != null) {
@@ -70,5 +78,14 @@ public class ConsoleController {
 
         model.addAttribute("config", config);
         return "console.html";
+    }
+
+    @RequestMapping(value = "/api/auth", method = { RequestMethod.GET, RequestMethod.POST })
+    public ResponseEntity<Object> auth(Authentication auth) {
+        if (auth == null) {
+            return ResponseEntity.internalServerError().build();
+        }
+
+        return ResponseEntity.ok(auth.getPrincipal());
     }
 }
