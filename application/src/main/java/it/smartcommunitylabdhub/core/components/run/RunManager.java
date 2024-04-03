@@ -130,8 +130,8 @@ public class RunManager {
             return run;
         } catch (InvalidTransactionException e) {
             // log error
-            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw new InvalidTransactionException(e.getFromState(), e.getToState());
+            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw e;
         }
     }
 
@@ -183,8 +183,8 @@ public class RunManager {
             return run;
         } catch (InvalidTransactionException e) {
             // log error
-            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw new InvalidTransactionException(e.getFromState(), e.getToState());
+            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw e;
         }
     }
 
@@ -236,8 +236,8 @@ public class RunManager {
             return run;
         } catch (InvalidTransactionException e) {
             // log error
-            log.error("Invalid transaction from state {}  to state {}", State.RUNNING, State.STOPPED);
-            throw new InvalidTransactionException(State.RUNNING.toString(), State.STOPPED.toString());
+            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw e;
         }
     }
 
@@ -313,8 +313,8 @@ public class RunManager {
             return run;
         } catch (InvalidTransactionException e) {
             // log error
-            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw new InvalidTransactionException(e.getFromState(), e.getToState());
+            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+            throw e;
         }
     }
 
@@ -424,7 +424,7 @@ public class RunManager {
             );
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {}  to state {}", State.READY, State.RUNNING);
+            log.debug("Invalid transaction from state {}  to state {}", State.READY, State.RUNNING);
         }
     }
 
@@ -482,8 +482,7 @@ public class RunManager {
             //update
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw new InvalidTransactionException(e.getFromState(), e.getToState());
+            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
         }
     }
 
@@ -541,8 +540,7 @@ public class RunManager {
             //update
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw new InvalidTransactionException(e.getFromState(), e.getToState());
+            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
         }
     }
 
@@ -611,7 +609,7 @@ public class RunManager {
 
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {} to state {}", e.getFromState(), e.getToState());
+            log.debug("Invalid transaction from state {} to state {}", e.getFromState(), e.getToState());
         }
     }
 
@@ -672,8 +670,7 @@ public class RunManager {
             //delete run via service to handle cascade
             runService.deleteRun(run.getId(), Boolean.TRUE);
         } catch (InvalidTransactionException e) {
-            log.error("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw new InvalidTransactionException(e.getFromState(), e.getToState());
+            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
         }
     }
 

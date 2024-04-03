@@ -101,28 +101,52 @@ public class Fsm<S, E, C> {
      * @param <R>         The type of the input.
      */
     public <R> Optional<R> goToState(S targetState, @Nullable C input) throws InvalidTransactionException {
+        log.debug("transition to state {}", targetState);
+
         return acquireLock()
             .flatMap(lockAcquired -> {
                 if (lockAcquired) {
+                    log.debug("lock acquired for transition to {}", targetState);
+
                     try {
                         // Check if a valid path exists from the current state to the target state
                         List<S> path = findPath(currentState, targetState);
+                        if (log.isTraceEnabled()) {
+                            log.trace("path found for transition to {}:{}", targetState, String.valueOf(path));
+                        }
+
                         if (path.isEmpty()) {
                             // No valid path exists; transition to the error state
                             throw new InvalidTransactionException(currentState.toString(), targetState.toString());
                         }
 
-                        // Follow the path for all element except the last transaction
-                        // Execute ExitAction
-                        // Verify the Guard of the transaction
-                        // Execute Transaction, and it's internal logic
-                        // Execute EnterAction
-                        for (int i = 0; i < path.size() - 2; i++) {
-                            execute(path.get(i), path.get(i + 1), input);
+                        //if path is single and state matches we are in the same state
+                        if (path.size() == 1 && path.get(0).equals(targetState)) {
+                            log.debug("found path from {} to the same state", targetState);
+                            throw new InvalidTransactionException(currentState.toString(), targetState.toString());
                         }
 
-                        // Execute last transaction and collect result.
-                        return execute(path.get(path.size() - 2), path.getLast(), input);
+                        //if path is single and state does not match we have an error
+                        if (path.size() == 1 && !path.get(0).equals(targetState)) {
+                            log.error("error with path to {}", targetState);
+                            throw new InvalidTransactionException(currentState.toString(), targetState.toString());
+                        }
+
+                        //sanity check: avoid loops
+                        Set<S> route = new HashSet<>(path);
+                        if (path.size() > route.size()) {
+                            log.error("loops detected in path to {}", targetState);
+                            throw new InvalidTransactionException(currentState.toString(), targetState.toString());
+                        }
+
+                        // only a single step is allowed for a single transaction
+                        if (path.size() > 2) {
+                            log.debug("path from {} to {} has more than 1-step", currentState, targetState);
+                            throw new InvalidTransactionException(currentState.toString(), targetState.toString());
+                        }
+
+                        // Execute the transaction and collect result.
+                        return execute(path.get(0), path.get(1), input);
                     } finally {
                         stateLock.unlock();
                     }
