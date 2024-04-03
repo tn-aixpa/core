@@ -8,6 +8,7 @@ import java.sql.Types;
 import java.util.List;
 import javax.sql.DataSource;
 import org.joda.time.Instant;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -66,8 +67,11 @@ public class RunnableRepository {
         if (clazz == null || id == null) {
             throw new IllegalArgumentException("invalid data");
         }
-
-        return jdbcTemplate.queryForObject(SELECT_SQL, rowMapper, id, clazz);
+        try {
+            return jdbcTemplate.queryForObject(SELECT_SQL, rowMapper, id, clazz);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 
     public List<RunnableEntity> findAll(String clazz) {

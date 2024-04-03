@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.commons.jackson;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
@@ -26,6 +27,7 @@ public class JacksonMapper {
         // Configure the ObjectMapper to not fail on unknown properties
         CUSTOM_OBJECT_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         CUSTOM_OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        CUSTOM_OBJECT_MAPPER.setSerializationInclusion(Include.NON_EMPTY);
         CUSTOM_OBJECT_MAPPER.registerModule(new JavaTimeModule());
         CUSTOM_OBJECT_MAPPER.addMixIn(BaseSpec.class, ConcreteSpecMixin.class); // Replace TaskTransformSpec with your concrete class
     }
