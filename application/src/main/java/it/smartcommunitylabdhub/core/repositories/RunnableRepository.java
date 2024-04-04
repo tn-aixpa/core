@@ -19,8 +19,7 @@ public class RunnableRepository {
 
     private static final String INSERT_SQL =
         "INSERT INTO runnables (id, created, updated, _clazz, _data) VALUES (?, ?, ?, ?, ?)";
-    private static final String UPDATE_SQL =
-        "UPDATE runnables SET data = ? and updated = ? WHERE id = ? and _clazz = ?";
+    private static final String UPDATE_SQL = "UPDATE runnables SET _data = ?, updated = ? WHERE id = ? AND _clazz = ?";
     private static final String SELECT_SQL = "SELECT * FROM runnables WHERE id = ? and _clazz = ?";
     private static final String SELECT_ALL_SQL = "SELECT * FROM runnables WHERE _clazz = ?";
     private static final String DELETE_SQL = "DELETE FROM runnables WHERE id = ? AND _clazz = ?";
@@ -68,7 +67,12 @@ public class RunnableRepository {
             throw new IllegalArgumentException("invalid data");
         }
         try {
-            return jdbcTemplate.queryForObject(SELECT_SQL, rowMapper, id, clazz);
+            return jdbcTemplate.queryForObject(
+                SELECT_SQL,
+                new Object[] { id, clazz },
+                new int[] { Types.VARCHAR, Types.VARCHAR },
+                rowMapper
+            );
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
@@ -79,7 +83,7 @@ public class RunnableRepository {
             throw new IllegalArgumentException("invalid data");
         }
 
-        return jdbcTemplate.query(SELECT_ALL_SQL, rowMapper, clazz);
+        return jdbcTemplate.query(SELECT_ALL_SQL, new Object[] { clazz }, new int[] { Types.VARCHAR }, rowMapper);
     }
 
     public void delete(String clazz, String id) {
