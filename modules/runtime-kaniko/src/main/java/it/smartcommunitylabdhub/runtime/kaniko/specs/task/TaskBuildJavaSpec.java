@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.runtime.kaniko.specs.task;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.runtime.kaniko.KanikoRuntime;
@@ -15,7 +14,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @SpecType(runtime = KanikoRuntime.RUNTIME, kind = TaskBuildJavaSpec.KIND, entity = EntityName.TASK)
-public class TaskBuildJavaSpec extends TaskBaseSpec {
+public class TaskBuildJavaSpec extends TaskBaseKanikoSpec {
 
     public static final String KIND = "kaniko+buildjava";
 

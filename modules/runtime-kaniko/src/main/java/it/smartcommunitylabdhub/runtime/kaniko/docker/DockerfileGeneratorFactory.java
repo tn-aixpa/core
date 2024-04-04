@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.kaniko.specs.docker;
+package it.smartcommunitylabdhub.runtime.kaniko.docker;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,17 +44,17 @@ public class DockerfileGeneratorFactory {
     }
 
     public DockerfileGeneratorFactory from(String baseImage) {
-        generator.addInstruction("baseImage", "FROM " + baseImage);
+        generator.addInstruction(DockerfileInstruction.FROM, "FROM " + baseImage);
         return this;
     }
 
     public DockerfileGeneratorFactory run(String run) {
-        generator.addInstruction("run", "RUN " + run);
+        generator.addInstruction(DockerfileInstruction.RUN, "RUN " + run);
         return this;
     }
 
     public DockerfileGeneratorFactory entrypoint(List<String> entrypoint) {
-        generator.addInstruction("entrypoint", "ENTRYPOINT [" +
+        generator.addInstruction(DockerfileInstruction.ENTRYPOINT, "ENTRYPOINT [" +
                 entrypoint
                         .stream()
                         .map(s -> "\"" + s + "\"").collect(Collectors.joining(", "))
@@ -63,7 +63,7 @@ public class DockerfileGeneratorFactory {
     }
 
     public DockerfileGeneratorFactory cmd(List<String> command) {
-        generator.addInstruction("cmd", "CMD [" +
+        generator.addInstruction(DockerfileInstruction.CMD, "CMD [" +
                 command
                         .stream()
                         .map(s -> "\"" + s + "\"").collect(Collectors.joining(", "))
@@ -72,17 +72,17 @@ public class DockerfileGeneratorFactory {
     }
 
     public DockerfileGeneratorFactory label(String label) {
-        generator.addInstruction("label", "LABEL " + label);
+        generator.addInstruction(DockerfileInstruction.LABEL, "LABEL " + label);
         return this;
     }
 
     public DockerfileGeneratorFactory copy(String source, String destination) {
-        generator.addInstruction("copy", "COPY " + source + " " + destination);
+        generator.addInstruction(DockerfileInstruction.COPY, "COPY " + source + " " + destination);
         return this;
     }
 
     public DockerfileGeneratorFactory expose(String port) {
-        generator.addInstruction("expose", "EXPOSE " + port);
+        generator.addInstruction(DockerfileInstruction.EXPOSE, "EXPOSE " + port);
         return this;
     }
 

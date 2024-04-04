@@ -27,7 +27,7 @@ public class KanikoBuildJavaBuilder implements Builder<FunctionKanikoSpec, TaskB
         Optional
                 .ofNullable(runSpec.getTaskBuildJavaSpec())
                 .ifPresent(k8sSpec -> runKanikoSpec.getTaskBuildPythonSpec().configure(k8sSpec.toMap()));
-
+        
         return runKanikoSpec;
     }
 }

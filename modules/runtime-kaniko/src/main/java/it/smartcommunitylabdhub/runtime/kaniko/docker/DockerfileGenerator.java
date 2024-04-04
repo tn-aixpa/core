@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.kaniko.specs.docker;
+package it.smartcommunitylabdhub.runtime.kaniko.docker;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DockerfileGenerator {
 
-    private final Map<String, List<String>> instructions = new HashMap<>();
+    private final Map<DockerfileInstruction, List<String>> instructions = new HashMap<>();
     private final List<String> directives = new ArrayList<>();
 
     @Getter
@@ -71,7 +71,7 @@ public class DockerfileGenerator {
      * @param type        The type of instruction.
      * @param instruction The instruction to append.
      */
-    public void addInstruction(String type, String instruction) {
+    public void addInstruction(DockerfileInstruction type, String instruction) {
         instructions.computeIfAbsent(type, k -> new ArrayList<>()).add(instruction);
     }
 
