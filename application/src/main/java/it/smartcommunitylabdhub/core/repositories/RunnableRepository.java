@@ -11,6 +11,7 @@ import org.joda.time.Instant;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.support.SqlLobValue;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
@@ -40,10 +41,11 @@ public class RunnableRepository {
         }
 
         Timestamp now = new Timestamp(Instant.now().toDate().getTime());
+        SqlLobValue lob = new SqlLobValue(entity.getData());
 
         jdbcTemplate.update(
             INSERT_SQL,
-            new Object[] { entity.getId(), now, now, clazz, entity.getData() },
+            new Object[] { entity.getId(), now, now, clazz, lob },
             new int[] { Types.VARCHAR, Types.TIMESTAMP, Types.TIMESTAMP, Types.VARCHAR, Types.BLOB }
         );
     }
@@ -54,10 +56,11 @@ public class RunnableRepository {
         }
 
         Timestamp now = new Timestamp(Instant.now().toDate().getTime());
+        SqlLobValue lob = new SqlLobValue(entity.getData());
 
         jdbcTemplate.update(
             UPDATE_SQL,
-            new Object[] { entity.getData(), now, id, clazz },
+            new Object[] { lob, now, id, clazz },
             new int[] { Types.BLOB, Types.TIMESTAMP, Types.VARCHAR, Types.VARCHAR }
         );
     }
