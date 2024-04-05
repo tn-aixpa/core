@@ -158,7 +158,7 @@ public class KanikoImageBuilder {
                                                                             "sh",
                                                                             "-c",
                                                                             "wget " +
-                                                                                    buildConfig.getSharedData() +
+                                                                                    "http://example-of-shared-data.tgz" +
                                                                                     " -O /shared/data.tgz && tar xf /shared/data.tgz -C /shared"
                                                                     )
                                                             )

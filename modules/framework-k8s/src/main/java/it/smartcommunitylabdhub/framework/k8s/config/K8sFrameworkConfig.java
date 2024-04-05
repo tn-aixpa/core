@@ -4,10 +4,12 @@ import io.kubernetes.client.openapi.ApiClient;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBuildFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sBuildRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
@@ -39,6 +41,13 @@ public class K8sFrameworkConfig {
 
     @Bean
     @ConditionalOnKubernetes
+    public RunnableStore<K8sBuildRunnable> k8sbuildRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
+        return storeSupplier.get(K8sBuildRunnable.class);
+    }
+
+
+    @Bean
+    @ConditionalOnKubernetes
     public RunnableStore<K8sCronJobRunnable> k8scronJobRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
         return storeSupplier.get(K8sCronJobRunnable.class);
     }
@@ -65,5 +74,11 @@ public class K8sFrameworkConfig {
     @ConditionalOnKubernetes
     public K8sServeFramework k8sServeFramework(ApiClient apiClient) {
         return new K8sServeFramework(apiClient);
+    }
+
+    @Bean
+    @ConditionalOnKubernetes
+    public K8sBuildFramework k8sBuildFramework(ApiClient apiClient) {
+        return new K8sBuildFramework(apiClient);
     }
 }

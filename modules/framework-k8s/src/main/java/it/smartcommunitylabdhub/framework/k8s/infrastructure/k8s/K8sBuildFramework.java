@@ -24,7 +24,7 @@ import org.springframework.util.Assert;
 @FrameworkComponent(framework = K8sBuildFramework.FRAMEWORK)
 public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job> {
 
-    public static final String FRAMEWORK = "k8scronjob";
+    public static final String FRAMEWORK = "k8sbuild";
 
     private final BatchV1Api batchV1Api;
 

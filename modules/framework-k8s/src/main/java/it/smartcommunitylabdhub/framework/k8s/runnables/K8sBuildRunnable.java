@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableComponent;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBuildFramework;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreContainer;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-@RunnableComponent(framework = K8sCronJobFramework.FRAMEWORK)
+@RunnableComponent(framework = K8sBuildFramework.FRAMEWORK)
 @SuperBuilder
 @Getter
 @Setter
@@ -28,6 +28,6 @@ public class K8sBuildRunnable extends K8sRunnable {
 
     @Override
     public String getFramework() {
-        return K8sCronJobFramework.FRAMEWORK;
+        return K8sBuildFramework.FRAMEWORK;
     }
 }
