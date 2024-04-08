@@ -113,6 +113,12 @@ public class KanikoImageBuilder {
                     .run("javac ./HelloWorld.java")
                     .entrypoint(List.of("java", "HelloWorld")).build();
 
+            // 1. prendo la function
+            // 2. prendo task
+            // 3. prendo run
+            // 4. materializza la function
+            // 5. materializza il dockerfile
+
             // Generate the Dockerfile
             //TODO here get the java function from function
             String dockerFileContent = dockerfileGenerator.generateDockerfile();

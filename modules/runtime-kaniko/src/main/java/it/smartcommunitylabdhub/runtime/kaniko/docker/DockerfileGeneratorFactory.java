@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  */
 public class DockerfileGeneratorFactory {
 
-    private DockerfileGenerator generator;
+    private final DockerfileGenerator generator;
 
     private DockerfileGeneratorFactory() {
         generator = new DockerfileGenerator();
