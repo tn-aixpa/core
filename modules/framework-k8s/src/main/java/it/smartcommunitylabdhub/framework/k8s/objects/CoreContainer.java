@@ -18,9 +18,5 @@ public class CoreContainer implements Serializable {
     List<String> args;
     String workingDir;
     List<CoreEnv> envs;
-    List<CoreResource> resources;
-    List<CoreVolume> volumes;
-    List<CoreLabel> labels;
-
 
 }

@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sBuildRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.kaniko.KanikoRuntime;
 import it.smartcommunitylabdhub.runtime.kaniko.specs.run.RunKanikoSpec;
 import it.smartcommunitylabdhub.runtime.kaniko.specs.task.TaskBuildPythonSpec;
@@ -21,7 +21,7 @@ import java.util.*;
  *
  * @RunnerComponent(runtime = "dbt", task = "transform")
  */
-public class KanikoBuildPythonRunner implements Runner<K8sBuildRunnable> {
+public class KanikoBuildPythonRunner implements Runner<K8sKanikoRunnable> {
 
     private static final String TASK = "build";
 
@@ -34,7 +34,7 @@ public class KanikoBuildPythonRunner implements Runner<K8sBuildRunnable> {
     }
 
     @Override
-    public K8sBuildRunnable produce(Run run) {
+    public K8sKanikoRunnable produce(Run run) {
         // Retrieve information about RunKanikoSpec
         RunKanikoSpec runSpec = new RunKanikoSpec(run.getSpec());
         TaskBuildPythonSpec taskSpec = runSpec.getTaskBuildPythonSpec();
@@ -52,7 +52,7 @@ public class KanikoBuildPythonRunner implements Runner<K8sBuildRunnable> {
         Optional.ofNullable(k8s.getEnvs()).ifPresent(coreEnvList::addAll);
 
         //TODO: Create runnable using information from Run completed spec.
-        K8sBuildRunnable k8sBuildRunnable = K8sBuildRunnable
+        K8sKanikoRunnable k8sBuildRunnable = K8sKanikoRunnable
                 .builder()
                 .runtime(KanikoRuntime.RUNTIME)
                 .task(TASK)

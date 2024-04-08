@@ -33,6 +33,7 @@
         <module>modules/runtime-kaniko</module>
         <module>frontend</module>
         <module>application</module>
+        <module>modules/framework-kaniko</module>
     </modules>
 
 

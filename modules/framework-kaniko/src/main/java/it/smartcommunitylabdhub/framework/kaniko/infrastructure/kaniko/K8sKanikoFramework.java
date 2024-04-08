@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
+package it.smartcommunitylabdhub.framework.kaniko.infrastructure.kaniko;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -10,19 +10,22 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sBuildRunnable;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 @Slf4j
-@FrameworkComponent(framework = K8sBuildFramework.FRAMEWORK)
-public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job> {
+@FrameworkComponent(framework = K8sKanikoFramework.FRAMEWORK)
+public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Job> {
 
     public static final String FRAMEWORK = "k8sbuild";
 
@@ -31,7 +34,7 @@ public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job>
     @Autowired
     private K8sJobFramework jobFramework;
 
-    public K8sBuildFramework(ApiClient apiClient) {
+    public K8sKanikoFramework(ApiClient apiClient) {
         super(apiClient);
         this.batchV1Api = new BatchV1Api(apiClient);
     }
@@ -39,7 +42,7 @@ public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job>
     // TODO: instead of void define a Result object that have to be merged with the run from the
     // caller.
     @Override
-    public K8sBuildRunnable run(K8sBuildRunnable runnable) throws K8sFrameworkException {
+    public K8sKanikoRunnable run(K8sKanikoRunnable runnable) throws K8sFrameworkException {
         V1Job job = build(runnable);
         job = create(job);
 
@@ -50,7 +53,7 @@ public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job>
     }
 
     @Override
-    public K8sBuildRunnable stop(K8sBuildRunnable runnable) throws K8sFrameworkException {
+    public K8sKanikoRunnable stop(K8sKanikoRunnable runnable) throws K8sFrameworkException {
         V1Job job = get(build(runnable));
 
         //stop by deleting
@@ -61,7 +64,7 @@ public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job>
     }
 
     @Override
-    public K8sBuildRunnable delete(K8sBuildRunnable runnable) throws K8sFrameworkException {
+    public K8sKanikoRunnable delete(K8sKanikoRunnable runnable) throws K8sFrameworkException {
         V1Job job;
         try {
             job = get(build(runnable));
@@ -77,7 +80,7 @@ public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job>
     }
 
     @Override
-    public V1Job build(K8sBuildRunnable runnable) throws K8sFrameworkException {
+    public V1Job build(K8sKanikoRunnable runnable) throws K8sFrameworkException {
         // Log service execution initiation
         log.info("----------------- BUILD KUBERNETES CRON JOB ----------------");
 
@@ -90,6 +93,9 @@ public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job>
         // Create the Job metadata
         V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
 
+
+        CoreVolume sharedVolume = new CoreVolume("empty_dir", "/shared", "shared-dir", Map.of());
+        runnable.getVolumes().add(sharedVolume);
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
                 .builder()
                 .id(runnable.getId())
@@ -113,24 +119,16 @@ public class K8sBuildFramework extends K8sBaseFramework<K8sBuildRunnable, V1Job>
 
         V1Job job = jobFramework.build(k8sJobRunnable);
 
+
         //TODO Add here additional spec from build runnable
-        Objects.requireNonNull(Objects.requireNonNull(job.getSpec()).getTemplate().getSpec())
-                .initContainers(runnable.getInitContainers().stream().map(initContainer -> {
-
-                            //TODO Add here additional spec from build runnable
-                            return new V1Container()
-                                    .name(initContainer.getName())
-                                    .image(initContainer.getImage())
-                                    .volumeMounts(
-                                            initContainer
-                                                    .getVolumes().stream()
-                                                    .map(volumeMount -> new V1VolumeMount().name(volumeMount.name())
-                                                            .mountPath(volumeMount.mountPath())).collect(Collectors.toList()))
-                                    .command(initContainer.getCommand());
-
-                        })
-                        .collect(Collectors.toList()));
-
+        V1Container initContainer = new V1Container()
+                .name(runnable.getInitContainer().getName())
+                .image(runnable.getInitContainer().getImage())
+                .volumeMounts(
+                        List.of(
+                                new V1VolumeMount().name("shared-dir").mountPath("/shared")
+                        )
+                ).command(runnable.getInitContainer().getCommand());
 
         return new V1Job().metadata(metadata).spec(job.getSpec());
     }

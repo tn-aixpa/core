@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sBuildRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.kaniko.builders.KanikoBuildJavaBuilder;
 import it.smartcommunitylabdhub.runtime.kaniko.builders.KanikoBuildPythonBuilder;
 import it.smartcommunitylabdhub.runtime.kaniko.runners.KanikoBuildJavaRunner;
@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 @RuntimeComponent(runtime = KanikoRuntime.RUNTIME)
 @Slf4j
 public class KanikoRuntime
-        implements Runtime<FunctionKanikoSpec, RunKanikoSpec, RunKanikoStatus, K8sBuildRunnable> {
+        implements Runtime<FunctionKanikoSpec, RunKanikoSpec, RunKanikoStatus, K8sKanikoRunnable> {
 
     public static final String RUNTIME = "kaniko";
 
@@ -43,7 +43,7 @@ public class KanikoRuntime
     SecretService secretService;
 
     @Autowired(required = false)
-    private RunnableStore<K8sBuildRunnable> buildRunnableStore;
+    private RunnableStore<K8sKanikoRunnable> buildRunnableStore;
 
     @Value("${runtime.kaniko.image}")
     private String image;
@@ -79,7 +79,7 @@ public class KanikoRuntime
     }
 
     @Override
-    public K8sBuildRunnable run(Run run) {
+    public K8sKanikoRunnable run(Run run) {
         //check run kind
         if (!RunKanikoSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
@@ -109,7 +109,7 @@ public class KanikoRuntime
     }
 
     @Override
-    public K8sBuildRunnable stop(Run run) {
+    public K8sKanikoRunnable stop(Run run) {
         //check run kind
         if (!RunKanikoSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
@@ -121,7 +121,7 @@ public class KanikoRuntime
             throw new CoreRuntimeException("Job Store is not available");
         }
         try {
-            K8sBuildRunnable k8sBuildRunnable = buildRunnableStore.find(run.getId());
+            K8sKanikoRunnable k8sBuildRunnable = buildRunnableStore.find(run.getId());
             if (k8sBuildRunnable == null) {
                 throw new NoSuchEntityException("JobRunnable not found");
             }
@@ -137,7 +137,7 @@ public class KanikoRuntime
     }
 
     @Override
-    public K8sBuildRunnable delete(Run run) {
+    public K8sKanikoRunnable delete(Run run) {
         //check run kind
         if (!RunKanikoSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
@@ -148,7 +148,7 @@ public class KanikoRuntime
             throw new CoreRuntimeException("Job Store is not available");
         }
         try {
-            K8sBuildRunnable k8sBuildRunnable = buildRunnableStore.find(run.getId());
+            K8sKanikoRunnable k8sBuildRunnable = buildRunnableStore.find(run.getId());
             if (k8sBuildRunnable == null) {
                 throw new NoSuchEntityException("JobRunnable not found");
             }

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
+package it.smartcommunitylabdhub.framework.kaniko.infrastructure.monitor;
 
 import io.kubernetes.client.openapi.models.V1Job;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
@@ -9,8 +9,9 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBuildFramework;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sBuildRunnable;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
+import it.smartcommunitylabdhub.framework.kaniko.infrastructure.kaniko.K8sKanikoFramework;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -20,15 +21,15 @@ import org.springframework.util.Assert;
 @Slf4j
 @ConditionalOnKubernetes
 @MonitorComponent(framework = "build")
-public class K8sBuildMonitor implements K8sBaseMonitor<Void> {
+public class K8sKanikoMonitor implements K8sBaseMonitor<Void> {
 
-    private final K8sBuildFramework k8sBuildFramework;
-    private final RunnableStore<K8sBuildRunnable> runnableStore;
+    private final K8sKanikoFramework k8sBuildFramework;
+    private final RunnableStore<K8sKanikoRunnable> runnableStore;
     private final ApplicationEventPublisher eventPublisher;
 
-    public K8sBuildMonitor(
-            K8sBuildFramework k8sBuildFramework,
-            RunnableStore<K8sBuildRunnable> runnableStore,
+    public K8sKanikoMonitor(
+            K8sKanikoFramework k8sBuildFramework,
+            RunnableStore<K8sKanikoRunnable> runnableStore,
             ApplicationEventPublisher eventPublisher
     ) {
         this.k8sBuildFramework = k8sBuildFramework;
@@ -95,7 +96,7 @@ public class K8sBuildMonitor implements K8sBaseMonitor<Void> {
         return null;
     }
 
-    private void monitor(K8sBuildRunnable runnable, V1Job job) {
+    private void monitor(K8sKanikoRunnable runnable, V1Job job) {
         //        // FIXME: DELETE THIS IS ONLY FOR DEBUG
         //        String threadName = Thread.currentThread().getName();
         //
