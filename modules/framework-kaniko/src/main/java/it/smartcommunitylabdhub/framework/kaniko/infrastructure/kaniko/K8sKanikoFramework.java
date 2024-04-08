@@ -117,10 +117,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 .state(State.READY.name())
                 .build();
 
+        // Build the Job
         V1Job job = jobFramework.build(k8sJobRunnable);
 
-
-        //TODO Add here additional spec from build runnable
+        // Build the Init Container
         V1Container initContainer = new V1Container()
                 .name(runnable.getInitContainer().getName())
                 .image(runnable.getInitContainer().getImage())
@@ -130,6 +130,12 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                         )
                 ).command(runnable.getInitContainer().getCommand());
 
+        // Add Init Container
+        Objects.requireNonNull(Objects.requireNonNull(job.getSpec()).getTemplate().getSpec())
+                .getContainers()
+                .add(initContainer);
+
+        // Create a new job with updated metadata and spec.
         return new V1Job().metadata(metadata).spec(job.getSpec());
     }
 

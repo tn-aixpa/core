@@ -222,6 +222,11 @@
         </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-framework-kaniko</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-container</artifactId>
             <version>${revision}</version>
         </dependency>
@@ -238,11 +243,6 @@
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-mlrun</artifactId>
-            <version>${revision}</version>
-        </dependency>
-        <dependency>
-            <groupId>it.smartcommunitylabdhub</groupId>
-            <artifactId>dh-framework-kaniko</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
