@@ -29,7 +29,7 @@ public class ConsoleController {
 
     public static final String CONSOLE_CONTEXT = Keys.CONSOLE_CONTEXT;
 
-    @GetMapping("/")
+    @GetMapping(value = { "/", CONSOLE_CONTEXT })
     public ModelAndView root() {
         return new ModelAndView("redirect:" + CONSOLE_CONTEXT + "/");
     }
