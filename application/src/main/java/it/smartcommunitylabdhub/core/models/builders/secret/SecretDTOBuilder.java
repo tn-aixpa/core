@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
+import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -58,9 +58,9 @@ public class SecretDTOBuilder implements Converter<SecretEntity, Secret> {
             .name(entity.getName())
             .kind(entity.getKind())
             .project(entity.getProject())
+            .user(entity.getCreatedBy())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
-            .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(
                 MapUtils.mergeMultipleMaps(
                     converter.convertToEntityAttribute(entity.getStatus()),

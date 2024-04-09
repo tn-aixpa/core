@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.entities.AbstractEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityAction;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
 import jakarta.validation.constraints.NotNull;
@@ -104,15 +105,19 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
         //build entity
         E e = entityBuilder.convert(dto);
 
-        //update allowed fields
-        entity.setMetadata(e.getMetadata());
-        entity.setSpec(e.getSpec());
-        entity.setStatus(e.getStatus());
-        entity.setExtra(e.getExtra());
-        entity.setState(e.getState());
+        if (e instanceof AbstractEntity) {
+            AbstractEntity ae = (AbstractEntity) e;
+            //enforce non-modifiable fields
+            ae.setId(entity.getId());
+            ae.setKind(entity.getKind());
+            ae.setProject(entity.getProject());
+
+            ae.setCreated(entity.getCreated());
+            ae.setCreatedBy(entity.getCreatedBy());
+        }
 
         //persist
-        entity = repository.saveAndFlush(entity);
+        entity = repository.saveAndFlush(e);
         if (log.isTraceEnabled()) {
             log.trace("entity: {}", entity);
         }

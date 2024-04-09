@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.repositories;
 
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

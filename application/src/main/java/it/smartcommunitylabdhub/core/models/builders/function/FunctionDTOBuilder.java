@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.function;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -58,9 +58,9 @@ public class FunctionDTOBuilder implements Converter<FunctionEntity, Function> {
             .name(entity.getName())
             .kind(entity.getKind())
             .project(entity.getProject())
+            .user(entity.getCreatedBy())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
-            .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(
                 MapUtils.mergeMultipleMaps(
                     converter.convertToEntityAttribute(entity.getStatus()),

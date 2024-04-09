@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.ZoneOffset;

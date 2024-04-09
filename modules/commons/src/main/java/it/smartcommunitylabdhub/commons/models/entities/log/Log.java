@@ -32,6 +32,7 @@ public class Log implements BaseDTO {
     private String id;
 
     private String project;
+    private String user;
 
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)

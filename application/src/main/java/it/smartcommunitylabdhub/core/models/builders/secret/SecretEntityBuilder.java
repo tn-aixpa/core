@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.entities.secret.SecretEntity;
+import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.ZoneOffset;
@@ -47,7 +47,6 @@ public class SecretEntityBuilder implements Converter<Secret, SecretEntity> {
             .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
             .spec(converter.convertToDatabaseColumn(dto.getSpec()))
             .status(converter.convertToDatabaseColumn(dto.getStatus()))
-            .extra(converter.convertToDatabaseColumn(dto.getExtra()))
             .state(
                 // Store status if not present
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())

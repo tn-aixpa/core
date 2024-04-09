@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
+import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.TaskEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;
 import jakarta.validation.Valid;

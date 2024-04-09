@@ -7,16 +7,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -95,9 +98,15 @@ public class SecurityConfig {
                     )
                 );
             }
+
+            //disable anonymous
+            securityChain.anonymous(anon -> anon.disable());
         } else {
             //assign both USER and ADMIN to anon user to bypass all scoped permission checks
-            securityChain.anonymous(anon -> anon.authorities("ROLE_USER", "ROLE_ADMIN"));
+            securityChain.anonymous(anon -> {
+                anon.authorities("ROLE_USER", "ROLE_ADMIN");
+                anon.principal("anonymous");
+            });
         }
 
         securityChain.exceptionHandling(handling -> {
@@ -167,6 +176,22 @@ public class SecurityConfig {
         return converter;
     }
 
+    @Bean("h2SecurityFilterChain")
+    public SecurityFilterChain h2SecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .securityMatcher(new AntPathRequestMatcher("/h2-console/**"))
+            .authorizeHttpRequests(auth -> {
+                auth.anyRequest().permitAll();
+            })
+            //disable csrf
+            .csrf(csrf -> csrf.disable())
+            // we don't want a session for these endpoints, each request should be evaluated
+            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // enable frame options
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+            .build();
+    }
+
     @Bean("coreSecurityFilterChain")
     public SecurityFilterChain coreSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -208,5 +233,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    AuditorAware<String> auditorProvider() {
+        return () -> Optional.of(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 }

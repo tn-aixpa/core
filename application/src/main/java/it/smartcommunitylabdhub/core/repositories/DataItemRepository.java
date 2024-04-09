@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.repositories;
 
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

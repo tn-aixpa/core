@@ -40,6 +40,8 @@ public class Project implements BaseDTO {
     @Pattern(regexp = Keys.SLUG_PATTERN)
     private final String kind = "project";
 
+    private String user;
+
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Serializable> spec = new HashMap<>();

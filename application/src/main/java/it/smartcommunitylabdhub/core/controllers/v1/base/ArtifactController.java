@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import jakarta.validation.Valid;

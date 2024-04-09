@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.repositories;
 
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.WorkflowEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import jakarta.validation.Valid;

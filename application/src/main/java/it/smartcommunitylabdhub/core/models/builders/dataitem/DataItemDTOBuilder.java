@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.dataitem;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -58,9 +58,9 @@ public class DataItemDTOBuilder implements Converter<DataItemEntity, DataItem> {
             .name(entity.getName())
             .kind(entity.getKind())
             .project(entity.getProject())
+            .user(entity.getCreatedBy())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
-            .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(
                 MapUtils.mergeMultipleMaps(
                     converter.convertToEntityAttribute(entity.getStatus()),

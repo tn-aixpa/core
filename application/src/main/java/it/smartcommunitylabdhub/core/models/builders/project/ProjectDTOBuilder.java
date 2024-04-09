@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.specs.project.ProjectSpec;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
@@ -61,6 +61,7 @@ public class ProjectDTOBuilder implements Converter<ProjectEntity, Project> {
             .builder()
             .id(entity.getId())
             .name(entity.getName())
+            .user(entity.getCreatedBy())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
             .extra(converter.convertToEntityAttribute(entity.getExtra()))

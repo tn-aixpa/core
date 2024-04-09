@@ -1,79 +1,74 @@
-package it.smartcommunitylabdhub.core.models.entities.secret;
+package it.smartcommunitylabdhub.core.models.entities;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.util.Date;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+@MappedSuperclass
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 @Getter
 @Setter
-@Builder
 @ToString
-@Entity
-@Table(name = "secrets", uniqueConstraints = { @UniqueConstraint(columnNames = { "project", "name" }) })
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @EntityListeners({ AuditingEntityListener.class })
-public class SecretEntity implements BaseEntity {
+public abstract class AbstractEntity implements BaseEntity {
 
     @Id
-    @Column(unique = true)
-    private String id;
+    @Column(unique = true, updatable = false)
+    protected String id;
 
-    @Column(nullable = false)
-    private String kind;
+    @Column(nullable = false, updatable = false)
+    protected String kind;
 
-    @Column(nullable = false)
-    private String project;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Lob
-    @ToString.Exclude
-    private byte[] metadata;
-
-    @Lob
-    @ToString.Exclude
-    private byte[] spec;
-
-    @Lob
-    @ToString.Exclude
-    private byte[] extra;
-
-    @Lob
-    @ToString.Exclude
-    private byte[] status;
+    @Column(nullable = false, updatable = false)
+    protected String project;
 
     @CreatedDate
     @Column(updatable = false)
-    private Date created;
+    protected Date created;
 
     @LastModifiedDate
-    private Date updated;
+    protected Date updated;
 
-    private Boolean embedded;
+    @CreatedBy
+    @Column(name = "created_by", updatable = false)
+    protected String createdBy;
 
-    private State state;
+    @LastModifiedBy
+    @Column(name = "updated_by")
+    protected String updatedBy;
+
+    @Lob
+    @ToString.Exclude
+    protected byte[] metadata;
+
+    @Lob
+    @ToString.Exclude
+    protected byte[] spec;
+
+    @Lob
+    @ToString.Exclude
+    protected byte[] status;
 
     @PrePersist
     public void prePersist() {

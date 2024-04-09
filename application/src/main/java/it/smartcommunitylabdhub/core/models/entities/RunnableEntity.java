@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.entities.runnable;
+package it.smartcommunitylabdhub.core.models.entities;
 
 import java.util.Date;
 import lombok.AllArgsConstructor;

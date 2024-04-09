@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.run;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -56,6 +56,7 @@ public class RunDTOBuilder implements Converter<RunEntity, Run> {
             .id(entity.getId())
             .kind(entity.getKind())
             .project(entity.getProject())
+            .user(entity.getCreatedBy())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
             .extra(converter.convertToEntityAttribute(entity.getExtra()))

@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
+import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.ZoneOffset;

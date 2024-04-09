@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.log;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
+import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -49,6 +49,7 @@ public class LogDTOBuilder implements Converter<LogEntity, Log> {
             .builder()
             .id(entity.getId())
             .project(entity.getProject())
+            .user(entity.getCreatedBy())
             .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
             .body(converter.convertToEntityAttribute(entity.getBody()))
             .extra(converter.convertToEntityAttribute(entity.getExtra()))

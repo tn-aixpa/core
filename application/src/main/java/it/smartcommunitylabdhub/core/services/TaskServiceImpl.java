@@ -14,10 +14,10 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
-import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity;
-import it.smartcommunitylabdhub.core.models.entities.task.TaskEntity_;
+import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
+import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityAction;
 import it.smartcommunitylabdhub.core.models.events.EntityOperation;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;
@@ -123,7 +123,7 @@ public class TaskServiceImpl implements SearchableTaskService {
 
         //fetch all tasks ordered by kind ASC
         Specification<TaskEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.asc(root.get(TaskEntity_.KIND)));
+            query.orderBy(builder.asc(root.get(AbstractEntity_.KIND)));
             return where.toPredicate(root, query, builder);
         };
 

@@ -2,8 +2,8 @@ package it.smartcommunitylabdhub.core.models.listeners;
 
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
-import it.smartcommunitylabdhub.core.models.entities.function.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import lombok.extern.slf4j.Slf4j;

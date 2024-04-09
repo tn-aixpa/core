@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.ZoneOffset;

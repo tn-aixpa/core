@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import jakarta.validation.Valid;

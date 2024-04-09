@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.queries.services;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
-import it.smartcommunitylabdhub.core.models.entities.run.RunEntity;
+import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;

@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
-import it.smartcommunitylabdhub.core.models.entities.runnable.RunnableEntity;
+import it.smartcommunitylabdhub.core.models.entities.RunnableEntity;
 import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
 import java.io.IOException;
 import java.util.List;

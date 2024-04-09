@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.models.base.BaseEntityFilter;
 import it.smartcommunitylabdhub.core.models.base.BaseEntitySearchCriteria;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;

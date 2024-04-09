@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ProjectEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectService;
 import jakarta.validation.Valid;

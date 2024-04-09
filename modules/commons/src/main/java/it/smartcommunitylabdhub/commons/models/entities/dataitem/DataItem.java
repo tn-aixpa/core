@@ -45,6 +45,8 @@ public class DataItem implements BaseDTO {
     @Pattern(regexp = Keys.SLUG_PATTERN)
     private String project;
 
+    private String user;
+
     @Builder.Default
     private Map<String, Serializable> metadata = new HashMap<>();
 

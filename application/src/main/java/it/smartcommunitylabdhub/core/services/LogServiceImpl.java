@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import it.smartcommunitylabdhub.core.models.builders.log.LogDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.log.LogEntityBuilder;
-import it.smartcommunitylabdhub.core.models.entities.log.LogEntity;
+import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import it.smartcommunitylabdhub.core.repositories.LogRepository;
 import jakarta.transaction.Transactional;
 import java.util.Optional;
