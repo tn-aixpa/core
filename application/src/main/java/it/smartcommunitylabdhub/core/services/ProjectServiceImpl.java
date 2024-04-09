@@ -12,6 +12,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
 import it.smartcommunitylabdhub.commons.services.entities.DataItemService;
 import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
+import it.smartcommunitylabdhub.commons.services.entities.LabelService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
@@ -40,6 +41,7 @@ public class ProjectServiceImpl implements SearchableProjectService {
     @Autowired
     private EntityService<Project, ProjectEntity> entityService;
 
+    //TODO convert dependant services for cascade into callable (callback) functions
     @Autowired
     private FunctionService functionService;
 
@@ -54,6 +56,9 @@ public class ProjectServiceImpl implements SearchableProjectService {
 
     @Autowired
     private SecretService secretService;
+
+    @Autowired
+    private LabelService labelService;
 
     @Override
     public Page<Project> listProjects(Pageable pageable) {
@@ -214,6 +219,9 @@ public class ProjectServiceImpl implements SearchableProjectService {
 
                 log.debug("cascade delete secrets for project with id {}", String.valueOf(id));
                 secretService.deleteSecretsByProject(project);
+
+                log.debug("cascade delete labels for project with id {}", String.valueOf(id));
+                labelService.deleteLabelsByProject(project);
             }
 
             //delete the project
