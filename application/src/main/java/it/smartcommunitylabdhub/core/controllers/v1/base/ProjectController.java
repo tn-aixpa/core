@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
@@ -26,14 +27,15 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @ApiVersion("v1")
 @RequestMapping("/projects")
-//TODO evaluate permissions for project via lookup in dto
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@PreAuthorize("hasAuthority('ROLE_USER')")
 @Validated
 @Slf4j
 @Tag(name = "Project base API", description = "Endpoints related to project management")
@@ -41,6 +43,9 @@ public class ProjectController {
 
     @Autowired
     SearchableProjectService projectService;
+
+    @Autowired
+    private AuditorAware<String> auditor;
 
     @Operation(summary = "List project", description = "Return a list of all projects")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
@@ -83,8 +88,28 @@ public class ProjectController {
     )
     public Project updateProject(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestBody @Valid @NotNull Project dto
+        @RequestBody @Valid @NotNull Project dto,
+        Authentication auth
     ) throws NoSuchEntityException {
+        //custom authorization check: only owner or with (scoped) admin role can update
+        //TODO move to bean
+        if (auth == null || auditor == null) {
+            throw new InsufficientAuthenticationException("missing valid authentication");
+        }
+
+        String user = auditor
+            .getCurrentAuditor()
+            .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
+
+        Project project = projectService.getProject(id);
+        if (
+            auth.getAuthorities().stream().noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())) &&
+            auth.getAuthorities().stream().noneMatch(a -> (id + ":ROLE_ADMIN").equals(a.getAuthority())) &&
+            !user.equals(project.getUser())
+        ) {
+            throw new InsufficientAuthenticationException("current user is not authorized");
+        }
+
         return projectService.updateProject(id, dto);
     }
 
@@ -92,26 +117,31 @@ public class ProjectController {
     @DeleteMapping(path = "/{id}")
     public void deleteProject(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestParam(required = false) Boolean cascade
+        @RequestParam(required = false) Boolean cascade,
+        Authentication auth
     ) {
-        projectService.deleteProject(id, cascade);
-    }
-    // @Operation(summary = "Read project secret data", description = "Get project secrets data for the specified keys")
-    // @GetMapping(path = "/{name}/secrets/data", produces = "application/json; charset=UTF-8")
-    // public Map<String, String>> projectSecretData(
-    //     @ValidateField @PathVariable String name,
-    //     @RequestParam Set<String> keys
-    // ) {
-    //     return projectService.getProjectSecretData(name, keys));
-    // }
+        //custom authorization check: only owner or with (scoped) admin role can delete
+        //TODO move to bean
+        if (auth == null || auditor == null) {
+            throw new InsufficientAuthenticationException("missing valid authentication");
+        }
 
-    // @Operation(summary = "Store project secret data", description = "Store project secrets data")
-    // @PutMapping(path = "/{name}/secrets/data", produces = "application/json; charset=UTF-8")
-    // public Void> storeProjectSecretData(
-    //     @ValidateField @PathVariable String name,
-    //     @RequestBody Map<String, String> values
-    // ) {
-    //     this.projectService.storeProjectSecretData(name, values);
-    //     return ResponseEntity.ok().build();
-    // }
+        String user = auditor
+            .getCurrentAuditor()
+            .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
+
+        Project project = projectService.findProject(id);
+
+        if (project != null) {
+            if (
+                auth.getAuthorities().stream().noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())) &&
+                auth.getAuthorities().stream().noneMatch(a -> (id + ":ROLE_ADMIN").equals(a.getAuthority())) &&
+                !user.equals(project.getUser())
+            ) {
+                throw new InsufficientAuthenticationException("current user is not authorized");
+            }
+
+            projectService.deleteProject(id, cascade);
+        }
+    }
 }
