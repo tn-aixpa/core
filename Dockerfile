@@ -11,7 +11,7 @@ RUN --mount=type=cache,target=/root/.m2,source=/cache/.m2,from=ghcr.io/scc-digit
     --mount=type=cache,target=/tmp/frontend/console/node_modules,source=/cache/frontend/console/node_modules,from=ghcr.io/scc-digitalhub/digitalhub-core:cache \ 
     mvn install -pl frontend
 RUN --mount=type=cache,target=/root/.m2,source=/cache/.m2,from=ghcr.io/scc-digitalhub/digitalhub-core:cache \ 
-    mvn package -DskipTests -pl '!frontend'
+    mvn package -pl '!frontend'
 
 FROM maven:3-eclipse-temurin-21-alpine as builder
 WORKDIR /tmp

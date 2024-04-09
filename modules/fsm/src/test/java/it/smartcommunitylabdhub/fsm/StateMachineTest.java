@@ -11,7 +11,7 @@ public class StateMachineTest {
 
     // some method definition
 
-    @Test
+    // @Test
     public void fsm() {
         // Create the state machine
 

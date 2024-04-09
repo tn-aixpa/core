@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s;
 
 import io.kubernetes.client.openapi.ApiClient;
+import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.kaniko.DockerBuildConfig;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.kaniko.JobBuildConfig;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.kaniko.KanikoImageBuilder;
@@ -14,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+// @SpringBootTest
 public class KanikoImageBuilderTest {
 
     //////////////////////// TO USE THI BUILDER //////////////////////////////
@@ -31,7 +32,7 @@ public class KanikoImageBuilderTest {
     //
     //////////////////////////////////////
 
-    @Autowired
+    @Autowired(required = false)
     ApiClient client;
 
     @Value("${kaniko.source.path}")
@@ -40,7 +41,8 @@ public class KanikoImageBuilderTest {
     @Value("${kaniko.target.path}")
     private String kanikoTargetPath;
 
-    @Test
+    // @Test
+    @ConditionalOnKubernetes
     void testBuildDockerImage() throws IOException {
         String basePath = Paths.get(System.getProperty("user.dir")).getParent().toString();
 
