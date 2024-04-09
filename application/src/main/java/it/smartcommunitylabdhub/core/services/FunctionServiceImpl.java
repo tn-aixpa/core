@@ -51,6 +51,13 @@ public class FunctionServiceImpl implements SearchableFunctionService {
     }
 
     @Override
+    public List<Function> listFunctionsByUser(@NotNull String user) {
+        log.debug("list all functions for user {}  ", user);
+
+        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+    }
+
+    @Override
     public Page<Function> searchFunctions(Pageable pageable, @Nullable SearchFilter<FunctionEntity> filter) {
         log.debug("list functions page {}, filter {}", pageable, String.valueOf(filter));
 

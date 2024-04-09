@@ -68,6 +68,13 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
+    public List<Secret> listSecretsByUser(@NotNull String user) {
+        log.debug("list all secrets for user {}  ", user);
+
+        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+    }
+
+    @Override
     public List<Secret> listSecretsByProject(@NotNull String project) {
         log.debug("list secrets for project {}", project);
         Specification<SecretEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));

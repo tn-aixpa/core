@@ -63,6 +63,13 @@ public class ProjectServiceImpl implements SearchableProjectService {
     }
 
     @Override
+    public List<Project> listProjectsByUser(@NotNull String user) {
+        log.debug("list all projects for user {}", user);
+
+        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+    }
+
+    @Override
     public Page<Project> searchProjects(Pageable pageable, @Nullable SearchFilter<ProjectEntity> filter) {
         log.debug("list projects page {}, filter {}", pageable, String.valueOf(filter));
 

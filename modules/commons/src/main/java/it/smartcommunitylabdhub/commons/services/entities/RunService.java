@@ -38,6 +38,22 @@ public interface RunService {
     Page<Run> listRuns(Pageable pageable);
 
     /**
+     * List all runs for a given user
+     *
+     * @param user
+     * @return
+     */
+    List<Run> listRunsByUser(@NotNull String user);
+
+    /**
+     * List all runs for a given project
+     *
+     * @param project
+     * @return
+     */
+    List<Run> listRunsByProject(@NotNull String project);
+
+    /**
      * List all runs for a given project
      *
      * @param project

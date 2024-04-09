@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
@@ -18,6 +19,13 @@ public interface ProjectService {
      * @return
      */
     Page<Project> listProjects(Pageable pageable);
+
+    /**
+     * List all projects by user
+     * @param user
+     * @return
+     */
+    List<Project> listProjectsByUser(@NotNull String user);
 
     /**
      * Find a specific project  via unique ID. Returns null if not found

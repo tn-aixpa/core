@@ -23,6 +23,13 @@ public interface SecretService {
     Page<Secret> listSecrets(Pageable pageable);
 
     /**
+     * List all the project secrets for user
+     * @param user
+     * @return
+     */
+    List<Secret> listSecretsByUser(@NotNull String user);
+
+    /**
      * List all the project secrets for the project with the specified name
      * @param project
      * @return

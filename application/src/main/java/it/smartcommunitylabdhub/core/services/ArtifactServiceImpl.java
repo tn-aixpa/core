@@ -47,6 +47,13 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
     }
 
     @Override
+    public List<Artifact> listArtifactsByUser(@NotNull String user) {
+        log.debug("list all artifacts for user {}  ", user);
+
+        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+    }
+
+    @Override
     public Page<Artifact> searchArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter) {
         log.debug("search artifacts page {}, filter {}", pageable, String.valueOf(filter));
 

@@ -63,6 +63,20 @@ public class RunServiceImpl implements SearchableRunService {
     }
 
     @Override
+    public List<Run> listRunsByUser(@NotNull String user) {
+        log.debug("list all runs for user {}  ", user);
+
+        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+    }
+
+    @Override
+    public List<Run> listRunsByProject(@NotNull String project) {
+        log.debug("list all runs for project {}  ", project);
+
+        return entityService.searchAll(CommonSpecification.projectEquals(project));
+    }
+
+    @Override
     public Page<Run> searchRuns(Pageable pageable, @Nullable SearchFilter<RunEntity> filter) {
         log.debug("list runs page {}, filter {}", pageable, String.valueOf(filter));
 

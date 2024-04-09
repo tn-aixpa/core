@@ -50,6 +50,9 @@ public abstract class AbstractEntityFilter<T extends BaseEntity> {
     protected String project;
 
     @Nullable
+    protected String user;
+
+    @Nullable
     protected String state;
 
     @Nullable
@@ -85,6 +88,12 @@ public abstract class AbstractEntityFilter<T extends BaseEntity> {
             .ofNullable(project)
             .ifPresent(value ->
                 criteria.add(new BaseEntitySearchCriteria<>("project", value, SearchCriteria.Operation.equal))
+            );
+
+        Optional
+            .ofNullable(user)
+            .ifPresent(value ->
+                criteria.add(new BaseEntitySearchCriteria<>("createdBy", value, SearchCriteria.Operation.equal))
             );
 
         Optional

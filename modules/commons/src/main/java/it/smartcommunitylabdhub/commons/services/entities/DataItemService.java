@@ -21,6 +21,13 @@ public interface DataItemService {
     Page<DataItem> listDataItems(Pageable pageable);
 
     /**
+     * List all versions of every dataItem for a user
+     * @param user
+     * @return
+     */
+    List<DataItem> listDataItemsByUser(@NotNull String user);
+
+    /**
      * List all versions of every dataItem for a project
      * @param project
      * @return

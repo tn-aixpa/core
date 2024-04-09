@@ -71,6 +71,20 @@ public class TaskServiceImpl implements SearchableTaskService {
     }
 
     @Override
+    public List<Task> listTasksByUser(@NotNull String user) {
+        log.debug("list all tasks for user {}  ", user);
+
+        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+    }
+
+    @Override
+    public List<Task> listTasksByProject(@NotNull String project) {
+        log.debug("list all tasks for project {}  ", project);
+
+        return entityService.searchAll(CommonSpecification.projectEquals(project));
+    }
+
+    @Override
     public Page<Task> searchTasks(Pageable pageable, @Nullable SearchFilter<TaskEntity> filter) {
         log.debug("list tasks page {}, filter {}", pageable, String.valueOf(filter));
 

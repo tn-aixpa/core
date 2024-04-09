@@ -47,6 +47,13 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
     }
 
     @Override
+    public List<Workflow> listWorkflowsByUser(@NotNull String user) {
+        log.debug("list all workflows for user {}  ", user);
+
+        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+    }
+
+    @Override
     public Page<Workflow> searchWorkflows(Pageable pageable, @Nullable SearchFilter<WorkflowEntity> filter) {
         log.debug("search workflows page {}, filter {}", pageable, String.valueOf(filter));
 

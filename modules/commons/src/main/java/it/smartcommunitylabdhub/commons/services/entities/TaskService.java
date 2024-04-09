@@ -28,6 +28,20 @@ public interface TaskService {
     Page<Task> listTasks(Pageable pageable);
 
     /**
+     * List all tasks for a given user
+     * @param user
+     * @return
+     */
+    List<Task> listTasksByUser(@NotNull String user);
+
+    /**
+     * List all tasks for a given project
+     * @param project
+     * @return
+     */
+    List<Task> listTasksByProject(@NotNull String project);
+
+    /**
      * List all tasks for a given project
      * @param project
      * @param pageable

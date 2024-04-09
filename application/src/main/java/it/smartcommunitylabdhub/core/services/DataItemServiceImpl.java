@@ -46,6 +46,13 @@ public class DataItemServiceImpl implements SearchableDataItemService {
     }
 
     @Override
+    public List<DataItem> listDataItemsByUser(@NotNull String user) {
+        log.debug("list all dataItems for user {}", user);
+
+        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+    }
+
+    @Override
     public Page<DataItem> searchDataItems(Pageable pageable, SearchFilter<DataItemEntity> filter) {
         log.debug("list dataItems page {}, filter {}", pageable, String.valueOf(filter));
 
