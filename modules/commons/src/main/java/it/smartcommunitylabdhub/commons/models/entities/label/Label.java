@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.entities.label;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,7 +18,6 @@ public class Label {
     private String id;
 
     private String project;
-    
-    private String label;
 
+    private String label;
 }
