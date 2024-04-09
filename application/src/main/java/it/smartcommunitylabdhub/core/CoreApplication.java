@@ -6,7 +6,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication(scanBasePackages = { "it.smartcommunitylabdhub" })
-@EnableJpaAuditing
+@EnableJpaAuditing(auditorAwareRef = "auditorProvider")
 @ComponentScan(basePackages = { "it.smartcommunitylabdhub" })
 public class CoreApplication {
 

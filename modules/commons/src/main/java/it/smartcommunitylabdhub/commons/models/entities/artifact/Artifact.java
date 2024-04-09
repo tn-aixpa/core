@@ -45,6 +45,8 @@ public class Artifact implements BaseDTO {
     @Pattern(regexp = Keys.SLUG_PATTERN)
     private String project;
 
+    private String user;
+
     @Nullable
     @Builder.Default
     private Map<String, Serializable> metadata = new HashMap<>();

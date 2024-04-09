@@ -8,9 +8,9 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.entities.artifact.ArtifactEntity_;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
+import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.validation.constraints.NotNull;
@@ -139,7 +139,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
             CommonSpecification.nameEquals(name)
         );
         Specification<ArtifactEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.desc(root.get(ArtifactEntity_.CREATED)));
+            query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
 
@@ -156,7 +156,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
             CommonSpecification.nameEquals(name)
         );
         Specification<ArtifactEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.desc(root.get(ArtifactEntity_.CREATED)));
+            query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
 

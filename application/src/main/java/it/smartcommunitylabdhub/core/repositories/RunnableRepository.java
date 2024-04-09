@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.repositories;
 
-import it.smartcommunitylabdhub.core.models.entities.runnable.RunnableEntity;
+import it.smartcommunitylabdhub.core.models.entities.RunnableEntity;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;

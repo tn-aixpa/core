@@ -17,8 +17,6 @@ public class EmbedUtils {
         //no specs
         dto.setSpec(null);
         dto.setStatus(null);
-        //clear extra
-        dto.setExtra(null);
 
         //TODO evaluate removing metadata
         // dto.setMetadata(null);

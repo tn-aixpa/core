@@ -20,6 +20,8 @@ public interface BaseDTO extends Serializable {
 
     String getProject();
 
+    String getUser();
+
     String getKey();
 
     Map<String, Serializable> getMetadata();
@@ -33,8 +35,4 @@ public interface BaseDTO extends Serializable {
     Map<String, Serializable> getStatus();
 
     void setStatus(Map<String, Serializable> status);
-
-    Map<String, Serializable> getExtra();
-
-    void setExtra(Map<String, Serializable> extra);
 }

@@ -8,9 +8,9 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity_;
+import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
+import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
@@ -139,7 +139,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
             CommonSpecification.nameEquals(name)
         );
         Specification<WorkflowEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.desc(root.get(WorkflowEntity_.CREATED)));
+            query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
 
@@ -156,7 +156,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
             CommonSpecification.nameEquals(name)
         );
         Specification<WorkflowEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.desc(root.get(WorkflowEntity_.CREATED)));
+            query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
 

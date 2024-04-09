@@ -34,10 +34,6 @@ public interface BaseEntity extends Serializable {
 
     void setStatus(byte[] status);
 
-    byte[] getExtra();
-
-    void setExtra(byte[] extra);
-
     State getState();
 
     void setState(State state);
@@ -45,4 +41,8 @@ public interface BaseEntity extends Serializable {
     Date getCreated();
 
     Date getUpdated();
+
+    String getCreatedBy();
+
+    String getUpdatedBy();
 }

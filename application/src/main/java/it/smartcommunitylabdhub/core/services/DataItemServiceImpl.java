@@ -8,9 +8,9 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.entities.dataitem.DataItemEntity_;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
+import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
@@ -139,7 +139,7 @@ public class DataItemServiceImpl implements SearchableDataItemService {
         );
 
         Specification<DataItemEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.desc(root.get(DataItemEntity_.CREATED)));
+            query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
 
@@ -156,7 +156,7 @@ public class DataItemServiceImpl implements SearchableDataItemService {
             CommonSpecification.nameEquals(name)
         );
         Specification<DataItemEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.desc(root.get(DataItemEntity_.CREATED)));
+            query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
 

@@ -4,11 +4,11 @@ import it.smartcommunitylabdhub.core.config.filters.RequestLoggingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+// @Configuration
 public class RequestLoggingConfig {
-
-    @Bean
-    public RequestLoggingFilter requestLoggingFilter() {
-        return new RequestLoggingFilter();
-    }
+    //DISABLED, wraps requests and breaks stuff!
+    // @Bean
+    // public RequestLoggingFilter requestLoggingFilter() {
+    //     return new RequestLoggingFilter();
+    // }
 }

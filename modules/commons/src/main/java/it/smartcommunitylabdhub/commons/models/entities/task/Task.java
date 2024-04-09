@@ -37,6 +37,8 @@ public class Task implements BaseDTO {
     @Pattern(regexp = Keys.SLUG_PATTERN)
     private String project;
 
+    private String user;
+
     @NotNull
     @Pattern(regexp = Keys.SLUG_PATTERN)
     private String kind;
