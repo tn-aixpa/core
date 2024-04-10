@@ -236,7 +236,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    AuditorAware<String> auditorProvider() {
-        return () -> Optional.of(SecurityContextHolder.getContext().getAuthentication().getName());
+    public AuditorAware<String> auditorProvider() {
+        return () -> Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication()).map(a -> a.getName());
     }
 }
