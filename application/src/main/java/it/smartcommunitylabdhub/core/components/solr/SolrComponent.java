@@ -1,21 +1,12 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
-import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+
 import javax.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.solr.client.solrj.impl.Http2SolrClient;
+
 import org.apache.solr.common.SolrInputDocument;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,6 +15,16 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
+import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
@@ -37,14 +38,12 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 
     @Value("${solr.collection}")
     private String solrCollection;
-
+    
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         try {
-            Http2SolrClient solrClient = new Http2SolrClient.Builder(solrUrl)
-                .withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
-                .build();
-            indexManager = new SolrIndexManager(solrClient, solrCollection);
+        	if(indexManager == null)
+        		indexManager = new SolrIndexManager(solrUrl, solrCollection);
         } catch (Exception e) {
             SolrComponent.log.error("onApplicationEvent", e);
         }
@@ -54,58 +53,26 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     public void close() {
         indexManager.close();
     }
-
+    
     @EventListener
-    public void handleArtifactSavedEvent(CloudEntityEvent<Artifact> event) {
+    public void receive(CloudEntityEvent<? extends BaseDTO> event) {
         switch (event.getAction()) {
-            case CREATE:
-            case UPDATE:
-                indexDoc(event);
-                break;
-            case DELETE:
-                try {
-                    indexManager.removeDoc(event.getDto().getId());
-                } catch (Exception e) {
-                    SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
-                }
-                break;
+	        case CREATE:
+	        case UPDATE:
+	            indexDoc(event);
+	            break;
+	        case DELETE:
+	            try {
+	                indexManager.removeDoc(event.getDto().getId());
+	            } catch (Exception e) {
+	                SolrComponent.log.error("receive:DELETE", e);
+	            }
+	            break;
+	        case READ:
+	        	break;
         }
     }
-
-    @EventListener
-    public void handleDataItemSavedEvent(CloudEntityEvent<DataItem> event) {
-        switch (event.getAction()) {
-            case CREATE:
-            case UPDATE:
-                indexDoc(event);
-                break;
-            case DELETE:
-                try {
-                    indexManager.removeDoc(event.getDto().getId());
-                } catch (Exception e) {
-                    SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
-                }
-                break;
-        }
-    }
-
-    @EventListener
-    public void handleFunctionSavedEvent(CloudEntityEvent<Function> event) {
-        switch (event.getAction()) {
-            case CREATE:
-            case UPDATE:
-                indexDoc(event);
-                break;
-            case DELETE:
-                try {
-                    indexManager.removeDoc(event.getDto().getId());
-                } catch (Exception e) {
-                    SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
-                }
-                break;
-        }
-    }
-
+    
     private <T extends BaseDTO> void indexDoc(CloudEntityEvent<T> event) {
         if (event.getDto() instanceof DataItem) {
             DataItem entity = (DataItem) event.getDto();
@@ -118,20 +85,6 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
             indexDoc(entity);
         }
     }
-
-    // private <T extends BaseEntity> String getId(EntityEvent<T> event) {
-    //     if (event.getBaseDTO() instanceof DataItem) {
-    //         DataItem entity = (DataItem) event.getBaseDTO();
-    //         return entity.getId();
-    //     } else if (event.getBaseDTO() instanceof Function) {
-    //         Function entity = (Function) event.getBaseDTO();
-    //         return entity.getId();
-    //     } else if (event.getBaseDTO() instanceof Artifact) {
-    //         Artifact entity = (Artifact) event.getBaseDTO();
-    //         return entity.getId();
-    //     }
-    //     return null;
-    // }
 
     private void indexDoc(DataItem item) {
         try {
