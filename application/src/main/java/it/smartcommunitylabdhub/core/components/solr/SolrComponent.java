@@ -1,20 +1,16 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
-import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
-import java.io.Serializable;
-import java.util.ArrayList;
+import it.smartcommunitylabdhub.core.models.indexers.ArtifactEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.DataItemEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.FunctionEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.WorkflowEntityIndexer;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.PreDestroy;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.common.SolrInputDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,8 +51,9 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         try {
-        	if(indexManager == null)
-        		indexManager = new SolrIndexManager(solrUrl, solrCollection);
+            if (indexManager == null) {
+                indexManager = new SolrIndexManager(solrUrl, solrCollection);
+            }
 
             //init
             indexManager.init();

@@ -1,14 +1,19 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import it.smartcommunitylabdhub.core.exceptions.CoreException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.solr.client.solrj.SolrServerException;
 import java.util.concurrent.TimeUnit;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.client.solrj.response.Group;
 import org.apache.solr.client.solrj.response.GroupCommand;
@@ -28,116 +33,118 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import it.smartcommunitylabdhub.core.exceptions.CoreException;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 public class SolrIndexManager {
 
     private Http2SolrClient solrClient;
     private String solrUrl;
     private String solrCollection;
-    
+
     private RestTemplate restTemplate;
-    
-    private ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    
+
+    private ObjectMapper mapper = new ObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     public SolrIndexManager(String url, String collection) {
         solrUrl = url;
-    	solrCollection = collection;
-        solrClient = new Http2SolrClient.Builder(solrUrl)
-                .withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
-                .build();        
+        solrCollection = collection;
+        solrClient = new Http2SolrClient.Builder(solrUrl).withConnectionTimeout(5000, TimeUnit.MILLISECONDS).build();
         restTemplate = new RestTemplate();
+    }
+
+    public void init() throws SolrServerException, IOException {
+        solrClient.ping(solrCollection);
+
         initFields();
     }
-    
+
     private void initFields() {
         String baseUri = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String fieldsUri = baseUri + solrCollection + "/schema/fields";
         //check existing fields
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(fieldsUri, String.class);
-        if(responseEntity.getStatusCode().is2xxSuccessful()) {
-        	String schemaUri = baseUri + solrCollection + "/schema";
-        	try {
-				JsonNode wrapperNode = mapper.readTree(responseEntity.getBody());
-				JsonNode fieldsNode = wrapperNode.path("fields");
-				if(!fieldsNode.isMissingNode()) {
-					List<String> names = new ArrayList<>();
-					//collect fields names
-					fieldsNode.elements().forEachRemaining(node -> names.add(node.get("name").asText()));
-					//add the new fields
-					if(!names.contains("name")) {
-						addField("name", "text_en", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("project")) {
-						addField("project", "text_en", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("kind")) {
-						addField("kind", "string", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("type")) {
-						addField("type", "string", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("keyGroup")) {
-						addField("keyGroup", "string", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("metadata.name")) {
-						addField("metadata.name", "text_en", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("metadata.description")) {
-						addField("metadata.description", "text_en", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("metadata.project")) {
-						addField("metadata.project", "text_en", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("metadata.version")) {
-						addField("metadata.version", "text_en", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("metadata.created")) {
-						addField("metadata.created", "pdate", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("metadata.updated")) {
-						addField("metadata.updated", "pdate", true, false, true, true, schemaUri);
-					}
-					if(!names.contains("metadata.labels")) {
-						addField("metadata.labels", "text_en", true, true, true, true, schemaUri);
-					}
-				}
-			} catch (Exception e) {
-				log.error("initFields", e);
-			}
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            String schemaUri = baseUri + solrCollection + "/schema";
+            try {
+                JsonNode wrapperNode = mapper.readTree(responseEntity.getBody());
+                JsonNode fieldsNode = wrapperNode.path("fields");
+                if (!fieldsNode.isMissingNode()) {
+                    List<String> names = new ArrayList<>();
+                    //collect fields names
+                    fieldsNode.elements().forEachRemaining(node -> names.add(node.get("name").asText()));
+
+                    //TODO move fields generation to indexers
+                    //add the new fields
+                    if (!names.contains("name")) {
+                        addField("name", "text_en", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("project")) {
+                        addField("project", "text_en", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("kind")) {
+                        addField("kind", "string", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("type")) {
+                        addField("type", "string", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("keyGroup")) {
+                        addField("keyGroup", "string", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("metadata.name")) {
+                        addField("metadata.name", "text_en", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("metadata.description")) {
+                        addField("metadata.description", "text_en", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("metadata.project")) {
+                        addField("metadata.project", "text_en", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("metadata.version")) {
+                        addField("metadata.version", "text_en", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("metadata.created")) {
+                        addField("metadata.created", "pdate", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("metadata.updated")) {
+                        addField("metadata.updated", "pdate", true, false, true, true, schemaUri);
+                    }
+                    if (!names.contains("metadata.labels")) {
+                        addField("metadata.labels", "text_en", true, true, true, true, schemaUri);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("initFields", e);
+            }
         }
-    }    	
-    
-    private void addField(String name, String type, boolean indexed, boolean multiValued, boolean stored, boolean uninvertible, String uri) {
+    }
+
+    private void addField(
+        String name,
+        String type,
+        boolean indexed,
+        boolean multiValued,
+        boolean stored,
+        boolean uninvertible,
+        String uri
+    ) {
         ObjectNode rootNode = mapper.createObjectNode();
         ObjectNode addNode = rootNode.putObject("add-field");
-        addNode.put("name", name)
-        	.put("type", type)
-        	.put("multiValued", multiValued)
-        	.put("indexed", indexed)
-        	.put("stored", stored)
-        	.put("uninvertible", uninvertible);
+        addNode
+            .put("name", name)
+            .put("type", type)
+            .put("multiValued", multiValued)
+            .put("indexed", indexed)
+            .put("stored", stored)
+            .put("uninvertible", uninvertible);
         HttpEntity<ObjectNode> request = new HttpEntity<>(rootNode);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
-        if(response.getStatusCode().isError()) {
-        	throw new CoreException(String.valueOf(response.getStatusCode().value()), 
-        			"SolrIndexManager schema error", HttpStatus.valueOf(response.getStatusCode().value()));
+        if (response.getStatusCode().isError()) {
+            throw new CoreException(
+                String.valueOf(response.getStatusCode().value()),
+                "SolrIndexManager schema error",
+                HttpStatus.valueOf(response.getStatusCode().value())
+            );
         }
-    }
-
-    public void init() throws SolrServerException, IOException {
-        solrClient.ping(solrCollection);
-    }
-
-    public void init() throws SolrServerException, IOException {
-        solrClient.ping(solrCollection);
     }
 
     public void close() {
