@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
@@ -38,7 +39,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 
     @Value("${solr.collection}")
     private String solrCollection;
-
+    
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         try {
@@ -53,64 +54,27 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     public void close() {
         indexManager.close();
     }
-
+    
+    @Async
     @EventListener
-    public void handleArtifactSavedEvent(CloudEntityEvent<Artifact> event) {
+    public void receive(CloudEntityEvent<? extends BaseDTO> event) {
         switch (event.getAction()) {
-            case CREATE:
-            case UPDATE:
-                indexDoc(event);
-                break;
-            case DELETE:
-                try {
-                    indexManager.removeDoc(event.getDto().getId());
-                } catch (Exception e) {
-                    SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
-                }
-                break;
-            case READ:
-            	break;
+	        case CREATE:
+	        case UPDATE:
+	            indexDoc(event);
+	            break;
+	        case DELETE:
+	            try {
+	                indexManager.removeDoc(event.getDto().getId());
+	            } catch (Exception e) {
+	                SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
+	            }
+	            break;
+	        case READ:
+	        	break;
         }
     }
-
-    @EventListener
-    public void handleDataItemSavedEvent(CloudEntityEvent<DataItem> event) {
-        switch (event.getAction()) {
-            case CREATE:
-            case UPDATE:
-                indexDoc(event);
-                break;
-            case DELETE:
-                try {
-                    indexManager.removeDoc(event.getDto().getId());
-                } catch (Exception e) {
-                    SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
-                }
-                break;
-            case READ:
-            	break;
-        }
-    }
-
-    @EventListener
-    public void handleFunctionSavedEvent(CloudEntityEvent<Function> event) {
-        switch (event.getAction()) {
-            case CREATE:
-            case UPDATE:
-                indexDoc(event);
-                break;
-            case DELETE:
-                try {
-                    indexManager.removeDoc(event.getDto().getId());
-                } catch (Exception e) {
-                    SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
-                }
-                break;
-            case READ:
-            	break;
-        }
-    }
-
+    
     private <T extends BaseDTO> void indexDoc(CloudEntityEvent<T> event) {
         if (event.getDto() instanceof DataItem) {
             DataItem entity = (DataItem) event.getDto();
@@ -123,20 +87,6 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
             indexDoc(entity);
         }
     }
-
-    // private <T extends BaseEntity> String getId(EntityEvent<T> event) {
-    //     if (event.getBaseDTO() instanceof DataItem) {
-    //         DataItem entity = (DataItem) event.getBaseDTO();
-    //         return entity.getId();
-    //     } else if (event.getBaseDTO() instanceof Function) {
-    //         Function entity = (Function) event.getBaseDTO();
-    //         return entity.getId();
-    //     } else if (event.getBaseDTO() instanceof Artifact) {
-    //         Artifact entity = (Artifact) event.getBaseDTO();
-    //         return entity.getId();
-    //     }
-    //     return null;
-    // }
 
     private void indexDoc(DataItem item) {
         try {
