@@ -54,11 +54,9 @@ public class SolrIndexManager {
 
     public void init() throws SolrServerException, IOException {
         solrClient.ping(solrCollection);
-
-        initFields();
     }
 
-    private void initFields() {
+    public void initFields(Iterable<IndexField> fields) {
         String baseUri = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String fieldsUri = baseUri + solrCollection + "/schema/fields";
         //check existing fields
@@ -73,47 +71,23 @@ public class SolrIndexManager {
                     //collect fields names
                     fieldsNode.elements().forEachRemaining(node -> names.add(node.get("name").asText()));
 
-                    //TODO move fields generation to indexers
-                    //add the new fields
-                    if (!names.contains("name")) {
-                        addField("name", "text_en", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("project")) {
-                        addField("project", "text_en", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("kind")) {
-                        addField("kind", "string", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("type")) {
-                        addField("type", "string", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("keyGroup")) {
-                        addField("keyGroup", "string", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("metadata.name")) {
-                        addField("metadata.name", "text_en", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("metadata.description")) {
-                        addField("metadata.description", "text_en", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("metadata.project")) {
-                        addField("metadata.project", "text_en", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("metadata.version")) {
-                        addField("metadata.version", "text_en", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("metadata.created")) {
-                        addField("metadata.created", "pdate", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("metadata.updated")) {
-                        addField("metadata.updated", "pdate", true, false, true, true, schemaUri);
-                    }
-                    if (!names.contains("metadata.labels")) {
-                        addField("metadata.labels", "text_en", true, true, true, true, schemaUri);
-                    }
+                    //add missing fields
+                    fields.forEach(field -> {
+                        if (!names.contains(field.getName())) {
+                            addField(
+                                field.getName(),
+                                field.getType(),
+                                field.isIndexed(),
+                                field.isMultiValued(),
+                                field.isStored(),
+                                field.isUninvertible(),
+                                schemaUri
+                            );
+                        }
+                    });
                 }
             } catch (Exception e) {
-                log.error("initFields", e);
+                log.error("initFields error {}", e.getMessage());
             }
         }
     }

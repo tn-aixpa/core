@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.core.models.listeners;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
-import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
 import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
@@ -20,7 +19,6 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
     protected ApplicationEventPublisher eventPublisher;
     protected final Class<T> clazz;
 
-    protected SolrComponent solr;
     protected BaseEntityIndexer<E, T> indexer;
 
     protected AbstractEntityListener(Converter<E, T> converter) {
@@ -31,11 +29,6 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
     @Autowired
     public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
-    }
-
-    @Autowired(required = false)
-    public void setSolr(SolrComponent solr) {
-        this.solr = solr;
     }
 
     @Autowired(required = false)
@@ -58,10 +51,10 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
         T dto = converter.convert(entity);
 
         //index
-        if (solr != null && indexer != null) {
+        if (indexer != null) {
             try {
-                log.debug("index to solr with id {}", event.getEntity().getId());
-                solr.indexDoc(indexer.parse(event.getEntity()));
+                log.debug("index document with id {}", event.getEntity().getId());
+                indexer.index(event.getEntity());
             } catch (Exception e) {
                 log.error("error with solr: {}", e.getMessage());
             }

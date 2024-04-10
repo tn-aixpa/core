@@ -143,4 +143,5 @@ monitors:
 solr:
   enabled: ${ENABLE_SOLR:false}
   url: ${SOLR_URL:http://localhost:8983/solr}
-  collection: ${SOLR_COLLECTION:DigitalHub}
+  collection: ${SOLR_COLLECTION:dhcore}
+  reindex: ${SOLR_REINDEX:never}

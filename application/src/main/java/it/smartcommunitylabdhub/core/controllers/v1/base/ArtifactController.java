@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import jakarta.validation.Valid;
@@ -49,6 +50,9 @@ public class ArtifactController {
 
     @Autowired
     SearchableArtifactService artifactService;
+
+    @Autowired
+    IndexableArtifactService indexService;
 
     @Operation(summary = "Create artifact", description = "Create an artifact and return")
     @PostMapping(
@@ -100,5 +104,16 @@ public class ArtifactController {
     @DeleteMapping(path = "/{id}")
     public void deleteArtifact(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
         artifactService.deleteArtifact(id);
+    }
+
+    /*
+     * Search apis
+     */
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Reindex all artifact", description = "Reindex artifacts")
+    @PostMapping(value = "/search/reindex", produces = "application/json; charset=UTF-8")
+    public void reindexArtifacts() {
+        //via async
+        indexService.reindexArtifacts();
     }
 }

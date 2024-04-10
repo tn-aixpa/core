@@ -3,8 +3,12 @@ package it.smartcommunitylabdhub.core.models.indexers;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.metadata.VersioningMetadata;
+import it.smartcommunitylabdhub.core.components.solr.IndexField;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.common.SolrInputDocument;
 import org.springframework.stereotype.Component;
@@ -28,17 +32,12 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
     public SolrInputDocument parse(DataItemEntity entity) {
         Assert.notNull(entity, "entity can not be null");
 
-        log.debug("index dataItem {}", entity.getId());
-
-        return index(builder.convert(entity));
-    }
-
-    @Override
-    public SolrInputDocument index(DataItem item) {
+        DataItem item = builder.convert(entity);
         if (item == null) {
             throw new IllegalArgumentException("invalid or null entity");
         }
 
+        log.debug("parse dataItem {}", item.getId());
         if (log.isTraceEnabled()) {
             log.trace("item: {}", item);
         }
@@ -48,7 +47,7 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
 
         //add versioning
         VersioningMetadata versioning = VersioningMetadata.from(item.getMetadata());
-        doc.addField("version", versioning.getVersion());
+        doc.addField("metadata.version", versioning.getVersion());
 
         //TODO evaluate adding spec
 
@@ -57,5 +56,44 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
         }
 
         return doc;
+    }
+
+    @Override
+    public List<IndexField> fields() {
+        List<IndexField> fields = super.fields();
+
+        fields.add(new IndexField("metadata.version", "text_en", true, false, true, true));
+        return fields;
+    }
+
+    @Override
+    public void index(DataItemEntity entity) {
+        Assert.notNull(entity, "entity can not be null");
+
+        if (solr != null) {
+            try {
+                log.debug("index dataItem {}", entity.getId());
+
+                SolrInputDocument doc = parse(entity);
+                solr.indexDoc(doc);
+            } catch (Exception e) {
+                log.error("error with solr: {}", e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void indexAll(Collection<DataItemEntity> entities) {
+        Assert.notNull(entities, "entities can not be null");
+        log.debug("index {} dataItems", entities.size());
+
+        if (solr != null) {
+            try {
+                List<SolrInputDocument> docs = entities.stream().map(e -> parse(e)).collect(Collectors.toList());
+                solr.indexBounce(docs);
+            } catch (Exception e) {
+                log.error("error with solr: {}", e.getMessage());
+            }
+        }
     }
 }

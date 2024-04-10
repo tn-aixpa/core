@@ -1,18 +1,9 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.core.models.indexers.ArtifactEntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.DataItemEntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.FunctionEntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.WorkflowEntityIndexer;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.common.SolrInputDocument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
@@ -28,37 +19,30 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 
     private SolrIndexManager indexManager;
 
-    @Value("${solr.url}")
-    private String solrUrl;
+    @Value("${solr.reindex}")
+    private String solrReindex;
 
-    @Value("${solr.collection}")
-    private String solrCollection;
+    private boolean reindexed = false;
 
-    //indexers
-    //TODO remove
-    @Autowired
-    private ArtifactEntityIndexer artifactIndexer;
+    public SolrComponent(@Value("${solr.url}") String solrUrl, @Value("${solr.collection}") String solrCollection) {
+        Assert.hasText(solrUrl, "solr url is required");
+        Assert.hasText(solrCollection, "solr collection is required");
 
-    @Autowired
-    private DataItemEntityIndexer dataItemIndexer;
-
-    @Autowired
-    private FunctionEntityIndexer functionIndexer;
-
-    @Autowired
-    private WorkflowEntityIndexer workEntityIndexer;
+        //build manager
+        this.indexManager = new SolrIndexManager(solrUrl, solrCollection);
+    }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         try {
-            if (indexManager == null) {
-                indexManager = new SolrIndexManager(solrUrl, solrCollection);
-            }
-
             //init
             indexManager.init();
+
+            if ("always".equals(solrReindex) && !reindexed) {
+                //TODO
+            }
         } catch (Exception e) {
-            SolrComponent.log.error("onApplicationEvent", e);
+            log.error("onApplicationEvent", e);
         }
     }
 
@@ -91,6 +75,11 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
         indexManager.indexBounce(docs);
     }
 
+    public void registerFields(Iterable<IndexField> fields) throws Exception {
+        Assert.notNull(fields, "fields can not be null");
+        indexManager.initFields(fields);
+    }
+
     public SolrPage<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws Exception {
         return indexManager.groupSearch(q, fq, pageRequest);
     }
@@ -104,43 +93,6 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
             indexManager.clearIndex();
         } catch (Exception e) {
             SolrComponent.log.error("clearIndex", e);
-        }
-    }
-
-    //TODO move
-    public void indexBounceDataItem(List<DataItem> docs) {
-        try {
-            List<SolrInputDocument> solrDocs = docs
-                .stream()
-                .map(d -> dataItemIndexer.index(d))
-                .collect(Collectors.toList());
-            indexBounce(solrDocs);
-        } catch (Exception e) {
-            SolrComponent.log.error("indexBounceDataItem:DataItem", e);
-        }
-    }
-
-    public void indexBounceFunction(List<Function> docs) {
-        try {
-            List<SolrInputDocument> solrDocs = docs
-                .stream()
-                .map(d -> functionIndexer.index(d))
-                .collect(Collectors.toList());
-            indexBounce(solrDocs);
-        } catch (Exception e) {
-            SolrComponent.log.error("indexBounceDataItem:Function", e);
-        }
-    }
-
-    public void indexBounceArtifact(List<Artifact> docs) {
-        try {
-            List<SolrInputDocument> solrDocs = docs
-                .stream()
-                .map(d -> artifactIndexer.index(d))
-                .collect(Collectors.toList());
-            indexBounce(solrDocs);
-        } catch (Exception e) {
-            SolrComponent.log.error("indexBounceDataItem:Artifact", e);
         }
     }
 }

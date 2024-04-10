@@ -9,17 +9,22 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
+import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.indexers.FunctionEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableFunctionService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
@@ -29,7 +34,7 @@ import org.springframework.util.StringUtils;
 @Service
 @Transactional
 @Slf4j
-public class FunctionServiceImpl implements SearchableFunctionService {
+public class FunctionServiceImpl implements SearchableFunctionService, IndexableFunctionService {
 
     @Autowired
     private EntityService<Function, FunctionEntity> entityService;
@@ -39,6 +44,12 @@ public class FunctionServiceImpl implements SearchableFunctionService {
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private FunctionEntityIndexer indexer;
+
+    @Autowired
+    private FunctionEntityBuilder entityBuilder;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -285,5 +296,37 @@ public class FunctionServiceImpl implements SearchableFunctionService {
         entityService
             .searchAll(CommonSpecification.projectEquals(project))
             .forEach(f -> deleteFunction(f.getId(), Boolean.TRUE));
+    }
+
+    @Override
+    public void indexFunction(@NotNull String id) {
+        log.debug("index function with id {}", String.valueOf(id));
+
+        Function function = entityService.get(id);
+        indexer.index(entityBuilder.convert(function));
+    }
+
+    @Override
+    public void reindexFunctions() {
+        log.debug("reindex all functions");
+
+        //use pagination and batch
+        boolean hasMore = true;
+        int pageNumber = 0;
+        while (hasMore) {
+            hasMore = false;
+
+            try {
+                Page<Function> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                indexer.indexAll(
+                    page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
+                );
+                hasMore = page.hasNext();
+            } catch (Exception e) {
+                hasMore = false;
+
+                log.error("error with indexing: {}", e.getMessage());
+            }
+        }
     }
 }
