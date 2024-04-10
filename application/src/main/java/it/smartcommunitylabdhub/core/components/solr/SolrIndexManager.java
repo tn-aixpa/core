@@ -1,10 +1,12 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.solr.client.solrj.SolrServerException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.solr.client.solrj.impl.Http2SolrClient;
@@ -15,6 +17,7 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.MultiMapSolrParams;
 import org.springframework.data.domain.Pageable;
@@ -129,6 +132,14 @@ public class SolrIndexManager {
         }
     }
 
+    public void init() throws SolrServerException, IOException {
+        solrClient.ping(solrCollection);
+    }
+
+    public void init() throws SolrServerException, IOException {
+        solrClient.ping(solrCollection);
+    }
+
     public void close() {
         if (solrClient != null) {
             solrClient.close();
@@ -171,22 +182,22 @@ public class SolrIndexManager {
         return new SolrPageImpl<>(result, pageRequest, total, filters);
     }
 
-    public void indexDoc(SolrInputDocument doc) throws Exception {
+    public void indexDoc(SolrInputDocument doc) throws IOException, SolrException, SolrServerException {
         solrClient.add(solrCollection, doc);
         solrClient.commit(solrCollection);
     }
 
-    public void removeDoc(String id) throws Exception {
+    public void removeDoc(String id) throws IOException, SolrException, SolrServerException {
         solrClient.deleteById(solrCollection, id);
         solrClient.commit(solrCollection);
     }
 
-    public void clearIndex() throws Exception {
+    public void clearIndex() throws IOException, SolrException, SolrServerException {
         solrClient.deleteByQuery(solrCollection, "*:*");
         solrClient.commit(solrCollection);
     }
 
-    public void indexBounce(List<SolrInputDocument> docs) throws Exception {
+    public void indexBounce(Iterable<SolrInputDocument> docs) throws IOException, SolrException, SolrServerException {
         for (SolrInputDocument doc : docs) {
             solrClient.add(solrCollection, doc);
         }
@@ -255,11 +266,16 @@ public class SolrIndexManager {
 
         MultiMapSolrParams.addParam("start", String.valueOf(pageRequest.getOffset()), queryParamMap);
         MultiMapSolrParams.addParam("rows", String.valueOf(pageRequest.getPageSize()), queryParamMap);
-        if(pageRequest.getSort().isSorted()) {
-        	pageRequest.getSort().forEach(order -> {
-        		MultiMapSolrParams.addParam("sort", 
-        				order.getProperty() + " " + order.getDirection().toString(), queryParamMap);
-        	});
+        if (pageRequest.getSort().isSorted()) {
+            pageRequest
+                .getSort()
+                .forEach(order -> {
+                    MultiMapSolrParams.addParam(
+                        "sort",
+                        order.getProperty() + " " + order.getDirection().toString(),
+                        queryParamMap
+                    );
+                });
         }
 
         return solrClient.query(solrCollection, new MultiMapSolrParams(queryParamMap));

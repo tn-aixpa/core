@@ -2,8 +2,9 @@ package it.smartcommunitylabdhub.core.models.builders.artifact;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
@@ -32,10 +33,10 @@ public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity
      * @return Artifact
      */
     public ArtifactEntity build(Artifact dto) {
-        // Retrieve Field accessor
+        // Extract data
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
-        ArtifactMetadata metadata = new ArtifactMetadata();
-        metadata.configure(dto.getMetadata());
+        BaseMetadata metadata = BaseMetadata.from(dto.getMetadata());
+        EmbeddableMetadata embeddable = EmbeddableMetadata.from(dto.getMetadata());
 
         return ArtifactEntity
             .builder()
@@ -51,7 +52,7 @@ public class ArtifactEntityBuilder implements Converter<Artifact, ArtifactEntity
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
             )
             // Metadata Extraction
-            .embedded(metadata.getEmbedded() == null ? Boolean.FALSE : metadata.getEmbedded())
+            .embedded(embeddable.getEmbedded() == null ? Boolean.FALSE : embeddable.getEmbedded())
             .created(
                 metadata.getCreated() != null
                     ? Date.from(metadata.getCreated().atZoneSameInstant(ZoneOffset.UTC).toInstant())

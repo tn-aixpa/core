@@ -3,8 +3,8 @@ package it.smartcommunitylabdhub.core.models.builders.run;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
@@ -33,10 +33,9 @@ public class RunEntityBuilder implements Converter<Run, RunEntity> {
      * @return Run
      */
     public RunEntity build(Run dto) {
-        // Retrieve Field accessor
+        // Extract data
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
-        RunMetadata metadata = new RunMetadata();
-        metadata.configure(dto.getMetadata());
+        BaseMetadata metadata = BaseMetadata.from(dto.getMetadata());
 
         RunBaseSpec runSpec = new RunBaseSpec();
         runSpec.configure(dto.getSpec());

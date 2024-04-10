@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.core.models.listeners;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
+import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
+import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,9 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
     protected ApplicationEventPublisher eventPublisher;
     protected final Class<T> clazz;
 
+    protected SolrComponent solr;
+    protected BaseEntityIndexer<E, T> indexer;
+
     protected AbstractEntityListener(Converter<E, T> converter) {
         this.converter = converter;
         clazz = extractClass();
@@ -26,6 +31,16 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
     @Autowired
     public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
+    }
+
+    @Autowired(required = false)
+    public void setSolr(SolrComponent solr) {
+        this.solr = solr;
+    }
+
+    @Autowired(required = false)
+    public void setIndexer(BaseEntityIndexer<E, T> indexer) {
+        this.indexer = indexer;
     }
 
     protected void handle(EntityEvent<E> event) {
@@ -42,8 +57,18 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
 
         T dto = converter.convert(entity);
 
+        //index
+        if (solr != null && indexer != null) {
+            try {
+                log.debug("index to solr with id {}", event.getEntity().getId());
+                solr.indexDoc(indexer.parse(event.getEntity()));
+            } catch (Exception e) {
+                log.error("error with solr: {}", e.getMessage());
+            }
+        }
+
+        //publish external event
         if (eventPublisher != null) {
-            //publish external event
             log.debug("publish cloud event: {} for {} {}", event.getAction(), clazz.getSimpleName(), dto.getId());
             CloudEntityEvent<T> cloud = new CloudEntityEvent<>(dto, clazz, event.getAction());
             if (log.isTraceEnabled()) {

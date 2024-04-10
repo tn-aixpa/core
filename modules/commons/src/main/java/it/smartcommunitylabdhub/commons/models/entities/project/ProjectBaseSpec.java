@@ -14,13 +14,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ProjectBaseSpec extends BaseSpec {
 
-    @Deprecated
-    private String context;
+    private String source;
 
     @Override
     public void configure(Map<String, Serializable> data) {
         ProjectBaseSpec concreteSpec = mapper.convertValue(data, ProjectBaseSpec.class);
 
-        this.context = concreteSpec.getContext();
+        this.source = concreteSpec.getSource();
     }
 }

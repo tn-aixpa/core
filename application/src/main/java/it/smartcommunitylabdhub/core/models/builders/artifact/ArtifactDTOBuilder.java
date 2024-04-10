@@ -1,23 +1,29 @@
 package it.smartcommunitylabdhub.core.models.builders.artifact;
 
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
+import it.smartcommunitylabdhub.core.models.metadata.BaseMetadataBuilder;
+import it.smartcommunitylabdhub.core.models.metadata.VersioningMetadataBuilder;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
 
     private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
+    private BaseMetadataBuilder baseMetadataBuilder;
+    private AuditMetadataBuilder auditingMetadataBuilder;
+    private VersioningMetadataBuilder versioningMetadataBuilder;
 
     public ArtifactDTOBuilder(
         @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
@@ -25,32 +31,36 @@ public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
         this.converter = cborConverter;
     }
 
+    @Autowired
+    public void setBaseMetadataBuilder(BaseMetadataBuilder baseMetadataBuilder) {
+        this.baseMetadataBuilder = baseMetadataBuilder;
+    }
+
+    @Autowired
+    public void setAuditingMetadataBuilder(AuditMetadataBuilder auditingMetadataBuilder) {
+        this.auditingMetadataBuilder = auditingMetadataBuilder;
+    }
+
+    @Autowired
+    public void setVersioningMetadataBuilder(VersioningMetadataBuilder versioningMetadataBuilder) {
+        this.versioningMetadataBuilder = versioningMetadataBuilder;
+    }
+
     public Artifact build(ArtifactEntity entity) {
         //read metadata map as-is
         Map<String, Serializable> meta = converter.convertToEntityAttribute(entity.getMetadata());
 
         // build metadata
-        ArtifactMetadata metadata = new ArtifactMetadata();
-        metadata.configure(meta);
+        Map<String, Serializable> metadata = new HashMap<>();
+        metadata.putAll(meta);
 
-        if (!StringUtils.hasText(metadata.getVersion())) {
-            metadata.setVersion(entity.getId());
-        }
-        if (!StringUtils.hasText(metadata.getName())) {
-            metadata.setName(entity.getName());
-        }
-        metadata.setProject(entity.getProject());
-        metadata.setEmbedded(entity.getEmbedded());
-        metadata.setCreated(
-            entity.getCreated() != null
-                ? OffsetDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
-                : null
-        );
-        metadata.setUpdated(
-            entity.getUpdated() != null
-                ? OffsetDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
-                : null
-        );
+        EmbeddableMetadata embeddable = EmbeddableMetadata.from(meta);
+        embeddable.setEmbedded(entity.getEmbedded());
+        metadata.putAll(embeddable.toMap());
+
+        Optional.of(baseMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
+        Optional.of(auditingMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
+        Optional.of(versioningMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
 
         return Artifact
             .builder()
@@ -59,7 +69,7 @@ public class ArtifactDTOBuilder implements Converter<ArtifactEntity, Artifact> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .user(entity.getCreatedBy())
-            .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
+            .metadata(metadata)
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
             .status(
                 MapUtils.mergeMultipleMaps(
