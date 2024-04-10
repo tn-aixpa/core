@@ -107,7 +107,7 @@ public class SolrIndexManager {
 					}
 				}
 			} catch (Exception e) {
-				log.error("SolrIndexManager:DELETE", e);
+				log.error("initFields", e);
 			}
         }
     }    	

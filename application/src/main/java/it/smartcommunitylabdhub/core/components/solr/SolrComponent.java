@@ -65,7 +65,7 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
 	            try {
 	                indexManager.removeDoc(event.getDto().getId());
 	            } catch (Exception e) {
-	                SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
+	                SolrComponent.log.error("receive:DELETE", e);
 	            }
 	            break;
 	        case READ:
