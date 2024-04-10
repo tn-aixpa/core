@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
@@ -31,10 +32,10 @@ public class LogEntityBuilder implements Converter<Log, LogEntity> {
      * @return LogEntity
      */
     public LogEntity build(Log dto) {
-        // Retrieve field accessor
+        // Extract data
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
-        LogMetadata metadata = new LogMetadata();
-        metadata.configure(dto.getMetadata());
+        BaseMetadata metadata = BaseMetadata.from(dto.getMetadata());
+        LogMetadata logMetadata = LogMetadata.from(dto.getMetadata());
 
         return LogEntity
             .builder()
@@ -45,7 +46,7 @@ public class LogEntityBuilder implements Converter<Log, LogEntity> {
             .status(converter.convertToDatabaseColumn(dto.getStatus()))
             .extra(converter.convertToDatabaseColumn(dto.getExtra()))
             //extract data
-            .run(metadata.getRun())
+            .run(logMetadata.getRun())
             .state(
                 // Store status if not present
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())

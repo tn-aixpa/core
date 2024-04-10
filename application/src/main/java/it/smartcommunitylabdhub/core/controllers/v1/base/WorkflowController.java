@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableWorkflowService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.WorkflowEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import jakarta.validation.Valid;
@@ -49,6 +50,9 @@ public class WorkflowController {
 
     @Autowired
     SearchableWorkflowService workflowService;
+
+    @Autowired
+    IndexableWorkflowService indexService;
 
     @Operation(summary = "Create workflow", description = "Create an workflow and return")
     @PostMapping(
@@ -100,5 +104,16 @@ public class WorkflowController {
     @DeleteMapping(path = "/{id}")
     public void deleteWorkflow(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
         workflowService.deleteWorkflow(id);
+    }
+
+    /*
+     * Search apis
+     */
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Reindex all workflows", description = "Reindex workflows")
+    @PostMapping(value = "/search/reindex", produces = "application/json; charset=UTF-8")
+    public void reindexWorkflows() {
+        //via async
+        indexService.reindexWorkflows();
     }
 }

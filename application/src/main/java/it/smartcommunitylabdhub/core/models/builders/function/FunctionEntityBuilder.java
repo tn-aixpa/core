@@ -2,8 +2,9 @@ package it.smartcommunitylabdhub.core.models.builders.function;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
@@ -33,10 +34,10 @@ public class FunctionEntityBuilder implements Converter<Function, FunctionEntity
      * @return Function
      */
     public FunctionEntity build(Function dto) {
-        // Retrieve field accessor
+        // Extract data
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
-        FunctionMetadata metadata = new FunctionMetadata();
-        metadata.configure(dto.getMetadata());
+        BaseMetadata metadata = BaseMetadata.from(dto.getMetadata());
+        EmbeddableMetadata embeddable = EmbeddableMetadata.from(dto.getMetadata());
 
         return FunctionEntity
             .builder()
@@ -52,7 +53,7 @@ public class FunctionEntityBuilder implements Converter<Function, FunctionEntity
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
             )
             // Metadata Extraction
-            .embedded(metadata.getEmbedded() == null ? Boolean.FALSE : metadata.getEmbedded())
+            .embedded(embeddable.getEmbedded() == null ? Boolean.FALSE : embeddable.getEmbedded())
             .created(
                 metadata.getCreated() != null
                     ? Date.from(metadata.getCreated().atZoneSameInstant(ZoneOffset.UTC).toInstant())

@@ -2,24 +2,27 @@ package it.smartcommunitylabdhub.core.models.builders.project;
 
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.project.ProjectMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
+import it.smartcommunitylabdhub.core.models.metadata.BaseMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.specs.project.ProjectSpec;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 public class ProjectDTOBuilder implements Converter<ProjectEntity, Project> {
 
     private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
+    private BaseMetadataBuilder baseMetadataBuilder;
+    private AuditMetadataBuilder auditingMetadataBuilder;
 
     public ProjectDTOBuilder(
         @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
@@ -27,29 +30,26 @@ public class ProjectDTOBuilder implements Converter<ProjectEntity, Project> {
         this.converter = cborConverter;
     }
 
+    @Autowired
+    public void setBaseMetadataBuilder(BaseMetadataBuilder baseMetadataBuilder) {
+        this.baseMetadataBuilder = baseMetadataBuilder;
+    }
+
+    @Autowired
+    public void setAuditingMetadataBuilder(AuditMetadataBuilder auditingMetadataBuilder) {
+        this.auditingMetadataBuilder = auditingMetadataBuilder;
+    }
+
     public Project build(ProjectEntity entity) {
         //read metadata map as-is
         Map<String, Serializable> meta = converter.convertToEntityAttribute(entity.getMetadata());
 
         // build metadata
-        ProjectMetadata metadata = new ProjectMetadata();
-        metadata.configure(meta);
+        Map<String, Serializable> metadata = new HashMap<>();
+        metadata.putAll(meta);
 
-        if (!StringUtils.hasText(metadata.getName())) {
-            metadata.setName(entity.getName());
-        }
-        metadata.setProject(entity.getProject());
-        metadata.setSource(entity.getSource());
-        metadata.setCreated(
-            entity.getCreated() != null
-                ? OffsetDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
-                : null
-        );
-        metadata.setUpdated(
-            entity.getUpdated() != null
-                ? OffsetDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
-                : null
-        );
+        Optional.of(baseMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
+        Optional.of(auditingMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
 
         //transform base spec to full spec
         ProjectBaseSpec baseSpec = new ProjectBaseSpec();
@@ -62,7 +62,7 @@ public class ProjectDTOBuilder implements Converter<ProjectEntity, Project> {
             .id(entity.getId())
             .name(entity.getName())
             .user(entity.getCreatedBy())
-            .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
+            .metadata(metadata)
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
             .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(

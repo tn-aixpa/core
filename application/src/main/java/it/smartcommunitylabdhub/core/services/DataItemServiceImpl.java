@@ -8,17 +8,22 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.indexers.DataItemEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -27,13 +32,19 @@ import org.springframework.util.StringUtils;
 @Service
 @Transactional
 @Slf4j
-public class DataItemServiceImpl implements SearchableDataItemService {
+public class DataItemServiceImpl implements SearchableDataItemService, IndexableDataItemService {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
+
+    @Autowired
+    private DataItemEntityIndexer indexer;
+
+    @Autowired
+    private DataItemEntityBuilder entityBuilder;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -137,7 +148,7 @@ public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Override
     public List<DataItem> findDataItems(@NotNull String project, @NotNull String name) {
-        log.debug("find artifacts for project {} with name {}", project, name);
+        log.debug("find dataItems for project {} with name {}", project, name);
 
         //fetch all versions ordered by date DESC
         Specification<DataItemEntity> where = Specification.allOf(
@@ -155,7 +166,7 @@ public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Override
     public Page<DataItem> findDataItems(@NotNull String project, @NotNull String name, Pageable pageable) {
-        log.debug("find artifacts for project {} with name {} page {}", project, name, pageable);
+        log.debug("find dataItems for project {} with name {} page {}", project, name, pageable);
 
         //fetch all versions ordered by date DESC
         Specification<DataItemEntity> where = Specification.allOf(
@@ -234,7 +245,7 @@ public class DataItemServiceImpl implements SearchableDataItemService {
 
     @Override
     public DataItem updateDataItem(@NotNull String id, @NotNull DataItem dataItemDTO) throws NoSuchEntityException {
-        log.debug("dataItem artifact with id {}", String.valueOf(id));
+        log.debug("dataItem dataItem with id {}", String.valueOf(id));
         try {
             //fetch current and merge
             DataItem current = entityService.get(id);
@@ -274,5 +285,37 @@ public class DataItemServiceImpl implements SearchableDataItemService {
         log.debug("delete dataItems for project {}", project);
 
         entityService.deleteAll(CommonSpecification.projectEquals(project));
+    }
+
+    @Override
+    public void indexDataItem(@NotNull String id) {
+        log.debug("index dataItem with id {}", String.valueOf(id));
+
+        DataItem dataItem = entityService.get(id);
+        indexer.index(entityBuilder.convert(dataItem));
+    }
+
+    @Override
+    public void reindexDataItems() {
+        log.debug("reindex all dataItems");
+
+        //use pagination and batch
+        boolean hasMore = true;
+        int pageNumber = 0;
+        while (hasMore) {
+            hasMore = false;
+
+            try {
+                Page<DataItem> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                indexer.indexAll(
+                    page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
+                );
+                hasMore = page.hasNext();
+            } catch (Exception e) {
+                hasMore = false;
+
+                log.error("error with indexing: {}", e.getMessage());
+            }
+        }
     }
 }

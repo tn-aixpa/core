@@ -3,8 +3,8 @@ package it.smartcommunitylabdhub.core.models.builders.project;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.project.ProjectMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
@@ -34,10 +34,9 @@ public class ProjectEntityBuilder implements Converter<Project, ProjectEntity> {
      * @return Project
      */
     public ProjectEntity build(Project dto) {
-        // Retrieve field accessor
+        // Extract data
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
-        ProjectMetadata metadata = new ProjectMetadata();
-        metadata.configure(dto.getMetadata());
+        BaseMetadata metadata = BaseMetadata.from(dto.getMetadata());
 
         //store only base project spec
         //deletes embedded content
@@ -57,8 +56,8 @@ public class ProjectEntityBuilder implements Converter<Project, ProjectEntity> {
                 // Store status if not present
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
             )
+            .source(spec.getSource())
             // Metadata Extraction
-            .source(metadata.getSource())
             .created(
                 metadata.getCreated() != null
                     ? Date.from(metadata.getCreated().atZoneSameInstant(ZoneOffset.UTC).toInstant())

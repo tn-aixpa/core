@@ -8,16 +8,21 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.indexers.ArtifactEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
@@ -28,13 +33,19 @@ import org.springframework.util.StringUtils;
 @Service
 @Transactional
 @Slf4j
-public class ArtifactServiceImpl implements SearchableArtifactService {
+public class ArtifactServiceImpl implements SearchableArtifactService, IndexableArtifactService {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
+
+    @Autowired
+    private ArtifactEntityIndexer indexer;
+
+    @Autowired
+    private ArtifactEntityBuilder entityBuilder;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -274,5 +285,37 @@ public class ArtifactServiceImpl implements SearchableArtifactService {
         log.debug("delete artifacts for project {}", project);
 
         entityService.deleteAll(CommonSpecification.projectEquals(project));
+    }
+
+    @Override
+    public void indexArtifact(@NotNull String id) {
+        log.debug("index artifact with id {}", String.valueOf(id));
+
+        Artifact artifact = entityService.get(id);
+        indexer.index(entityBuilder.convert(artifact));
+    }
+
+    @Override
+    public void reindexArtifacts() {
+        log.debug("reindex all artifacts");
+
+        //use pagination and batch
+        boolean hasMore = true;
+        int pageNumber = 0;
+        while (hasMore) {
+            hasMore = false;
+
+            try {
+                Page<Artifact> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                indexer.indexAll(
+                    page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
+                );
+                hasMore = page.hasNext();
+            } catch (Exception e) {
+                hasMore = false;
+
+                log.error("error with indexing: {}", e.getMessage());
+            }
+        }
     }
 }

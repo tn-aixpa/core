@@ -8,17 +8,22 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableWorkflowService;
+import it.smartcommunitylabdhub.core.models.indexers.WorkflowEntityIndexer;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
@@ -28,13 +33,19 @@ import org.springframework.util.StringUtils;
 @Service
 @Transactional
 @Slf4j
-public class WorkflowServiceImpl implements SearchableWorkflowService {
+public class WorkflowServiceImpl implements SearchableWorkflowService, IndexableWorkflowService {
 
     @Autowired
     private EntityService<Workflow, WorkflowEntity> entityService;
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
+
+    @Autowired
+    private WorkflowEntityIndexer indexer;
+
+    @Autowired
+    private WorkflowEntityBuilder entityBuilder;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -270,5 +281,37 @@ public class WorkflowServiceImpl implements SearchableWorkflowService {
         log.debug("delete workflows for project {}", project);
 
         entityService.deleteAll(CommonSpecification.projectEquals(project));
+    }
+
+    @Override
+    public void indexWorkflow(@NotNull String id) {
+        log.debug("index workflow with id {}", String.valueOf(id));
+
+        Workflow workflow = entityService.get(id);
+        indexer.index(entityBuilder.convert(workflow));
+    }
+
+    @Override
+    public void reindexWorkflows() {
+        log.debug("reindex all workflows");
+
+        //use pagination and batch
+        boolean hasMore = true;
+        int pageNumber = 0;
+        while (hasMore) {
+            hasMore = false;
+
+            try {
+                Page<Workflow> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                indexer.indexAll(
+                    page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
+                );
+                hasMore = page.hasNext();
+            } catch (Exception e) {
+                hasMore = false;
+
+                log.error("error with indexing: {}", e.getMessage());
+            }
+        }
     }
 }
