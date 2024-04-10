@@ -1,23 +1,33 @@
 package it.smartcommunitylabdhub.core.models.builders.workflow;
 
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.Metadata;
+import it.smartcommunitylabdhub.commons.models.metadata.VersioningMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
+import it.smartcommunitylabdhub.core.models.metadata.BaseMetadataBuilder;
+import it.smartcommunitylabdhub.core.models.metadata.VersioningMetadataBuilder;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
 public class WorkflowDTOBuilder implements Converter<WorkflowEntity, Workflow> {
 
     private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
+    private BaseMetadataBuilder baseMetadataBuilder;
+    private AuditMetadataBuilder auditingMetadataBuilder;
+    private VersioningMetadataBuilder versioningMetadataBuilder;
 
     public WorkflowDTOBuilder(
         @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
@@ -25,32 +35,36 @@ public class WorkflowDTOBuilder implements Converter<WorkflowEntity, Workflow> {
         this.converter = cborConverter;
     }
 
+    @Autowired
+    public void setBaseMetadataBuilder(BaseMetadataBuilder baseMetadataBuilder) {
+        this.baseMetadataBuilder = baseMetadataBuilder;
+    }
+
+    @Autowired
+    public void setAuditingMetadataBuilder(AuditMetadataBuilder auditingMetadataBuilder) {
+        this.auditingMetadataBuilder = auditingMetadataBuilder;
+    }
+
+    @Autowired
+    public void setVersioningMetadataBuilder(VersioningMetadataBuilder versioningMetadataBuilder) {
+        this.versioningMetadataBuilder = versioningMetadataBuilder;
+    }
+
     public Workflow build(WorkflowEntity entity) {
         //read metadata map as-is
         Map<String, Serializable> meta = converter.convertToEntityAttribute(entity.getMetadata());
 
         // build metadata
-        WorkflowMetadata metadata = new WorkflowMetadata();
-        metadata.configure(meta);
+        Map<String, Serializable> metadata = new HashMap<>();
+        metadata.putAll(meta);
 
-        if (!StringUtils.hasText(metadata.getVersion())) {
-            metadata.setVersion(entity.getId());
-        }
-        if (!StringUtils.hasText(metadata.getName())) {
-            metadata.setName(entity.getName());
-        }
-        metadata.setProject(entity.getProject());
-        metadata.setEmbedded(entity.getEmbedded());
-        metadata.setCreated(
-            entity.getCreated() != null
-                ? OffsetDateTime.ofInstant(entity.getCreated().toInstant(), ZoneOffset.UTC)
-                : null
-        );
-        metadata.setUpdated(
-            entity.getUpdated() != null
-                ? OffsetDateTime.ofInstant(entity.getUpdated().toInstant(), ZoneOffset.UTC)
-                : null
-        );
+        EmbeddableMetadata embeddable = EmbeddableMetadata.from(meta);
+        embeddable.setEmbedded(entity.getEmbedded());
+        metadata.putAll(embeddable.toMap());
+
+        Optional.of(baseMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
+        Optional.of(auditingMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
+        Optional.of(versioningMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
 
         return Workflow
             .builder()
@@ -59,7 +73,7 @@ public class WorkflowDTOBuilder implements Converter<WorkflowEntity, Workflow> {
             .kind(entity.getKind())
             .project(entity.getProject())
             .user(entity.getCreatedBy())
-            .metadata(MapUtils.mergeMultipleMaps(meta, metadata.toMap()))
+            .metadata(metadata)
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
             .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(

@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.components.label;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseMetadata;
 import it.smartcommunitylabdhub.commons.models.entities.label.Label;
+import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.commons.services.entities.LabelService;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
@@ -32,8 +32,7 @@ public class LabelComponent {
             return;
         }
         Map<String, Serializable> map = converter.convertToEntityAttribute(event.getEntity().getMetadata());
-        BaseMetadata metadata = new BaseMetadata();
-        metadata.configure(map);
+        BaseMetadata metadata = BaseMetadata.from(map);
 
         if (metadata.getLabels() != null) {
             updateLabels(event.getEntity().getProject(), metadata.getLabels());

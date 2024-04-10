@@ -3,8 +3,8 @@ package it.smartcommunitylabdhub.core.models.builders.task;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
@@ -34,13 +34,11 @@ public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
      * @return Task the task entity
      */
     public TaskEntity build(Task dto) {
-        // Retrieve Field accessor
+        // Extract data
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
-        TaskMetadata metadata = new TaskMetadata();
-        metadata.configure(dto.getMetadata());
+        BaseMetadata metadata = BaseMetadata.from(dto.getMetadata());
 
-        TaskBaseSpec taskSpec = new TaskBaseSpec();
-        taskSpec.configure(dto.getSpec());
+        TaskBaseSpec taskSpec = TaskBaseSpec.from(dto.getSpec());
 
         return TaskEntity
             .builder()

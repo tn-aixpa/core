@@ -17,10 +17,9 @@ import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -164,7 +163,7 @@ public class SolrController {
             SolrPage<SearchGroupResult> page = solrComponent.groupSearch(q, fq, pageRequest);
             return ResponseEntity.ok(page);
         } catch (Exception e) {
-        	SolrController.log.error(String.format("searchGroup:", e.getMessage()));
+            SolrController.log.error(String.format("searchGroup:", e.getMessage()));
             return ResponseEntity.ok(null);
         }
     }
@@ -180,7 +179,7 @@ public class SolrController {
             SolrPage<ItemResult> page = solrComponent.itemSearch(q, fq, pageRequest);
             return ResponseEntity.ok(page);
         } catch (Exception e) {
-        	SolrController.log.error(String.format("search:", e.getMessage()));
+            SolrController.log.error(String.format("search:", e.getMessage()));
             return ResponseEntity.ok(null);
         }
     }

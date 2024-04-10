@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.validators.interfaces;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 
 public interface BaseValidator {

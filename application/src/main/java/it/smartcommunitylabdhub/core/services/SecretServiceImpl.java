@@ -7,8 +7,8 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.secret.SecretMetadata;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
@@ -269,9 +269,10 @@ public class SecretServiceImpl implements SecretService {
                 secret.setName(name);
                 secret.setProject(project);
 
-                SecretMetadata secretMetadata = new SecretMetadata();
-                secretMetadata.setEmbedded(true);
-                secret.setMetadata(secretMetadata.toMap());
+                //secrets are embedded by default
+                EmbeddableMetadata embeddableMetadata = new EmbeddableMetadata();
+                embeddableMetadata.setEmbedded(true);
+                secret.setMetadata(embeddableMetadata.toMap());
 
                 SecretBaseSpec spec = new SecretSecretSpec();
                 spec.setProvider(K8S_PROVIDER);
