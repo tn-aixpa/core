@@ -14,7 +14,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
@@ -55,7 +54,6 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
         indexManager.close();
     }
     
-    @Async
     @EventListener
     public void receive(CloudEntityEvent<? extends BaseDTO> event) {
         switch (event.getAction()) {
