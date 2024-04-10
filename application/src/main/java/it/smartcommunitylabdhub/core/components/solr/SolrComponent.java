@@ -1,21 +1,12 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
-import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+
 import javax.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.solr.client.solrj.impl.Http2SolrClient;
+
 import org.apache.solr.common.SolrInputDocument;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,6 +15,16 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemMetadata;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionMetadata;
+import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
@@ -41,10 +42,8 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         try {
-            Http2SolrClient solrClient = new Http2SolrClient.Builder(solrUrl)
-                .withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
-                .build();
-            indexManager = new SolrIndexManager(solrClient, solrCollection);
+        	if(indexManager == null)
+        		indexManager = new SolrIndexManager(solrUrl, solrCollection);
         } catch (Exception e) {
             SolrComponent.log.error("onApplicationEvent", e);
         }
@@ -69,6 +68,8 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
                     SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
                 }
                 break;
+            case READ:
+            	break;
         }
     }
 
@@ -86,6 +87,8 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
                     SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
                 }
                 break;
+            case READ:
+            	break;
         }
     }
 
@@ -103,6 +106,8 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
                     SolrComponent.log.error("handleEntitySavedEvent:DELETE", e);
                 }
                 break;
+            case READ:
+            	break;
         }
     }
 
