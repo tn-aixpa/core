@@ -49,17 +49,18 @@ public class SolrIndexManager {
     	solrCollection = collection;
         solrClient = new Http2SolrClient.Builder(solrUrl)
                 .withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
-                .build();
-        
+                .build();        
         restTemplate = new RestTemplate();
-        
-        String uri = url.endsWith("/") ? url : url + "/";
-        uri = uri + collection + "/schema/fields";
+        initFields();
+    }
+    
+    private void initFields() {
+        String baseUri = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
+        String fieldsUri = baseUri + solrCollection + "/schema/fields";
         //check existing fields
-        ResponseEntity<String> responseEntity = restTemplate.getForEntity(uri, String.class);
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(fieldsUri, String.class);
         if(responseEntity.getStatusCode().is2xxSuccessful()) {
-        	uri = url.endsWith("/") ? url : url + "/";
-        	uri = uri + collection + "/schema";
+        	String schemaUri = baseUri + solrCollection + "/schema";
         	try {
 				JsonNode wrapperNode = mapper.readTree(responseEntity.getBody());
 				JsonNode fieldsNode = wrapperNode.path("fields");
@@ -69,47 +70,47 @@ public class SolrIndexManager {
 					fieldsNode.elements().forEachRemaining(node -> names.add(node.get("name").asText()));
 					//add the new fields
 					if(!names.contains("name")) {
-						addField("name", "text_en", true, false, true, true, uri);
+						addField("name", "text_en", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("project")) {
-						addField("project", "text_en", true, false, true, true, uri);
+						addField("project", "text_en", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("kind")) {
-						addField("kind", "string", true, false, true, true, uri);
+						addField("kind", "string", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("type")) {
-						addField("type", "string", true, false, true, true, uri);
+						addField("type", "string", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("keyGroup")) {
-						addField("keyGroup", "string", true, false, true, true, uri);
+						addField("keyGroup", "string", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("metadata.name")) {
-						addField("metadata.name", "text_en", true, false, true, true, uri);
+						addField("metadata.name", "text_en", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("metadata.description")) {
-						addField("metadata.description", "text_en", true, false, true, true, uri);
+						addField("metadata.description", "text_en", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("metadata.project")) {
-						addField("metadata.project", "text_en", true, false, true, true, uri);
+						addField("metadata.project", "text_en", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("metadata.version")) {
-						addField("metadata.version", "text_en", true, false, true, true, uri);
+						addField("metadata.version", "text_en", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("metadata.created")) {
-						addField("metadata.created", "pdate", true, false, true, true, uri);
+						addField("metadata.created", "pdate", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("metadata.updated")) {
-						addField("metadata.updated", "pdate", true, false, true, true, uri);
+						addField("metadata.updated", "pdate", true, false, true, true, schemaUri);
 					}
 					if(!names.contains("metadata.labels")) {
-						addField("metadata.labels", "text_en", true, true, true, true, uri);
+						addField("metadata.labels", "text_en", true, true, true, true, schemaUri);
 					}
 				}
 			} catch (Exception e) {
 				log.error("SolrIndexManager:DELETE", e);
 			}
         }
-    }
+    }    	
     
     private void addField(String name, String type, boolean indexed, boolean multiValued, boolean stored, boolean uninvertible, String uri) {
         ObjectNode rootNode = mapper.createObjectNode();
