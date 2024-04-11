@@ -2,12 +2,14 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
@@ -46,6 +48,9 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
 
     @Autowired
     private WorkflowEntityBuilder entityBuilder;
+
+    @Autowired
+    private FunctionService functionService;
 
     @Autowired
     SpecRegistry specRegistry;
@@ -233,10 +238,38 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
         dto.setSpec(spec.toMap());
 
         try {
-            return entityService.create(dto);
+            if (log.isTraceEnabled()) {
+                log.trace("storable dto: {}", dto);
+            }
+
+            Workflow entity = entityService.create(dto);
+            Function function = workflowToFunction(entity.getId(), dto);
+            functionService.createFunction(function);
+
+            return entity;
         } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), dto.getId());
+            throw new DuplicatedEntityException(EntityName.WORKFLOW.toString(), dto.getId());
         }
+    }
+
+    private @NotNull Function workflowToFunction(String id, @NotNull Workflow wfdto) {
+        //TODO refactor
+        //HARD coded mapping from wf to fn
+
+        String fnId = "fn-" + id;
+        String fnKind = wfdto.getKind().replace("-workflow", "");
+
+        return Function
+            .builder()
+            .id(fnId)
+            .kind(fnKind)
+            .project(wfdto.getProject())
+            .name(wfdto.getName())
+            .metadata(wfdto.getMetadata())
+            .spec(wfdto.getSpec())
+            .status(wfdto.getStatus())
+            .extra(wfdto.getExtra())
+            .build();
     }
 
     @Override
@@ -250,9 +283,13 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             workflowDTO.setSpec(current.getSpec());
 
             //update
-            return entityService.update(id, workflowDTO);
+            Workflow workflow = entityService.update(id, workflowDTO);
+            Function function = workflowToFunction(id, workflowDTO);
+            functionService.updateFunction(function.getId(), function);
+
+            return workflow;
         } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+            throw new NoSuchEntityException(EntityName.WORKFLOW.toString());
         }
     }
 
@@ -260,6 +297,14 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     public void deleteWorkflow(@NotNull String id) {
         log.debug("delete workflow with id {}", String.valueOf(id));
 
+        Workflow workflow = findWorkflow(id);
+        if (workflow != null) {
+            //functions
+            log.debug("cascade delete function for workflow with id {}", String.valueOf(id));
+            Function function = workflowToFunction(id, workflow);
+            functionService.deleteFunction(function.getId(), true);
+        }
+        // delete the workflow
         entityService.delete(id);
     }
 
@@ -267,20 +312,15 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     public void deleteWorkflows(@NotNull String project, @NotNull String name) {
         log.debug("delete workflows for project {} with name {}", project, name);
 
-        Specification<WorkflowEntity> spec = Specification.allOf(
-            CommonSpecification.projectEquals(project),
-            CommonSpecification.nameEquals(name)
-        );
-
-        long count = entityService.deleteAll(spec);
-        log.debug("deleted count {}", count);
+        //delete with cascade
+        findWorkflows(project, name).forEach(w -> deleteWorkflow(w.getId()));
     }
 
     @Override
     public void deleteWorkflowsByProject(@NotNull String project) {
         log.debug("delete workflows for project {}", project);
 
-        entityService.deleteAll(CommonSpecification.projectEquals(project));
+        entityService.searchAll(CommonSpecification.projectEquals(project)).forEach(w -> deleteWorkflow(w.getId()));
     }
 
     @Override

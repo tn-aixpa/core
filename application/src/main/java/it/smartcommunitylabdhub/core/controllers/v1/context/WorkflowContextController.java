@@ -67,18 +67,8 @@ public class WorkflowContextController {
         //enforce project match
         dto.setProject(project);
 
-        String name = dto.getName();
-
-        try {
-            @SuppressWarnings("unused")
-            Workflow workflow = workflowService.getLatestWorkflow(project, name);
-
-            //there is already an entity with the same name
-            throw new DuplicatedEntityException(name);
-        } catch (NoSuchEntityException e) {
-            //create as new
-            return workflowService.createWorkflow(dto);
-        }
+        //create as new
+        return workflowService.createWorkflow(dto);
     }
 
     @Operation(summary = "Search workflows")

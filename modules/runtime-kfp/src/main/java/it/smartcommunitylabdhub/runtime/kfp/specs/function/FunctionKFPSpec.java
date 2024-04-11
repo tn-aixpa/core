@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.runtime.kfp.specs.function;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;

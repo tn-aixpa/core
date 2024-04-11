@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -100,7 +99,7 @@ public class WorkflowController {
         return workflowService.updateWorkflow(id, dto);
     }
 
-    @Operation(summary = "Delete an workflow", description = "Delete a specific workflow")
+    @Operation(summary = "Delete a workflow", description = "Delete a specific workflow")
     @DeleteMapping(path = "/{id}")
     public void deleteWorkflow(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
         workflowService.deleteWorkflow(id);
