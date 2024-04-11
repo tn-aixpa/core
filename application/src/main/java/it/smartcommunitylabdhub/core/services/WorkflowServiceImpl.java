@@ -9,17 +9,13 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableWorkflowService;
 import it.smartcommunitylabdhub.core.models.indexers.WorkflowEntityIndexer;
-import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
-import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
-import it.smartcommunitylabdhub.core.models.entities.project.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.entities.workflow.WorkflowEntity_;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
@@ -52,6 +48,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
 
     @Autowired
     private WorkflowEntityBuilder entityBuilder;
+
     private FunctionService functionService;
 
     @Autowired
@@ -253,16 +250,17 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     }
 
     private @NotNull Function workflowToFunction(String id, @NotNull Workflow wfdto) {
-        return Function.builder()
-        .id(id)
-        .kind(wfdto.getKind())
-        .project(wfdto.getProject())
-        .name(wfdto.getName())
-        .metadata(wfdto.getMetadata())
-        .spec(wfdto.getSpec())
-        .status(wfdto.getStatus())        
-        .extra(wfdto.getExtra())
-        .build();
+        return Function
+            .builder()
+            .id(id)
+            .kind(wfdto.getKind())
+            .project(wfdto.getProject())
+            .name(wfdto.getName())
+            .metadata(wfdto.getMetadata())
+            .spec(wfdto.getSpec())
+            .status(wfdto.getStatus())
+            .extra(wfdto.getExtra())
+            .build();
     }
 
     @Override
@@ -311,9 +309,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     public void deleteWorkflowsByProject(@NotNull String project) {
         log.debug("delete workflows for project {}", project);
 
-        entityService
-            .searchAll(CommonSpecification.projectEquals(project))
-            .forEach(w -> deleteWorkflow(w.getId()));
+        entityService.searchAll(CommonSpecification.projectEquals(project)).forEach(w -> deleteWorkflow(w.getId()));
     }
 
     @Override
