@@ -310,6 +310,9 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     public void reindexFunctions() {
         log.debug("reindex all functions");
 
+        //clear index
+        indexer.clearIndex();
+        
         //use pagination and batch
         boolean hasMore = true;
         int pageNumber = 0;

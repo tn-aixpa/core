@@ -88,11 +88,12 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
         return indexManager.itemSearch(q, fq, pageRequest);
     }
 
-    public void clearIndex() {
-        try {
-            indexManager.clearIndex();
-        } catch (Exception e) {
-            SolrComponent.log.error("clearIndex", e);
-        }
+    public void clearIndex() throws Exception {
+    	indexManager.clearIndex();
     }
+    
+    public void clearIndexByType(String type) throws Exception {
+    	indexManager.clearIndexByType(type);
+    }
+    
 }

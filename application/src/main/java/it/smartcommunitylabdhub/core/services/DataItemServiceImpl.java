@@ -298,7 +298,10 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
     @Override
     public void reindexDataItems() {
         log.debug("reindex all dataItems");
-
+        
+        //clear index
+        indexer.clearIndex();
+        
         //use pagination and batch
         boolean hasMore = true;
         int pageNumber = 0;

@@ -96,4 +96,15 @@ public class WorkflowEntityIndexer extends BaseEntityIndexer<WorkflowEntity, Wor
             }
         }
     }
+    
+	@Override
+	public void clearIndex() {
+		log.debug("clear index for {}", TYPE);
+		try {
+			solr.clearIndexByType(TYPE);
+		} catch (Exception e) {
+			log.error("error with solr: {}", e.getMessage());
+		}
+	}
+    
 }
