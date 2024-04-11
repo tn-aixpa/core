@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 
 @Slf4j
@@ -28,11 +29,14 @@ import org.springframework.util.Assert;
 public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Job> {
 
     public static final String FRAMEWORK = "k8sbuild";
-
     private final BatchV1Api batchV1Api;
+
+    @Value("${runtime.kaniko.image}")
+    private String image;
 
     @Autowired
     private K8sJobFramework jobFramework;
+
 
     public K8sKanikoFramework(ApiClient apiClient) {
         super(apiClient);
@@ -92,10 +96,13 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Create the Job metadata
         V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
-
-
+        
+        // Create sharedVolume
         CoreVolume sharedVolume = new CoreVolume("empty_dir", "/shared", "shared-dir", Map.of());
+
+        // Merge volumes
         runnable.getVolumes().add(sharedVolume);
+
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
                 .builder()
                 .id(runnable.getId())
@@ -104,7 +111,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 .backoffLimit(runnable.getBackoffLimit())
                 .command(runnable.getCommand())
                 .envs(runnable.getEnvs())
-                .image(runnable.getImage())
+                .image(image)
                 .labels(runnable.getLabels())
                 .nodeSelector(runnable.getNodeSelector())
                 .project(runnable.getProject())

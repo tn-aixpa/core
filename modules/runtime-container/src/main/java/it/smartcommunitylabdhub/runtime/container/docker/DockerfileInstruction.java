@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.kaniko.docker;
+package it.smartcommunitylabdhub.runtime.container.docker;
 
 public enum DockerfileInstruction {
     FROM, RUN, CMD, LABEL, COPY, ADD, WORKDIR, ENV, ARG, ENTRYPOINT, EXPOSE, VOLUME, USER, HEALTHCHECK, SHELL

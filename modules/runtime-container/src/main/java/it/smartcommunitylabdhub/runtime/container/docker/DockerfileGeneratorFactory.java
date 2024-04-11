@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.kaniko.docker;
+package it.smartcommunitylabdhub.runtime.container.docker;
 
 import java.util.List;
 import java.util.stream.Collectors;
