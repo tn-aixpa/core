@@ -32,9 +32,13 @@ public class SolrController {
         if (solrComponent == null) {
             return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
         }
-
-        solrComponent.clearIndex();
-        return ResponseEntity.ok(null);
+        try {
+            solrComponent.clearIndex();
+            return ResponseEntity.ok(null);			
+		} catch (Exception e) {
+			log.error("clearIndex:{}", e.getMessage());
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
     }
 
     @GetMapping(path = "/search/group", produces = "application/json; charset=UTF-8")
@@ -50,8 +54,8 @@ public class SolrController {
             SolrPage<SearchGroupResult> page = solrComponent.groupSearch(q, fq, pageRequest);
             return ResponseEntity.ok(page);
         } catch (Exception e) {
-            log.error(String.format("searchGroup:", e.getMessage()));
-            return ResponseEntity.ok(null);
+        	log.error("searchGroup:{}", e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -64,12 +68,11 @@ public class SolrController {
         if (solrComponent == null) {
             return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
         }
-
         try {
             SolrPage<ItemResult> page = solrComponent.itemSearch(q, fq, pageRequest);
             return ResponseEntity.ok(page);
         } catch (Exception e) {
-            log.error(String.format("search:", e.getMessage()));
+        	log.error("search:{}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

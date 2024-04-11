@@ -295,6 +295,9 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     public void reindexWorkflows() {
         log.debug("reindex all workflows");
 
+        //clear index
+        indexer.clearIndex();
+
         //use pagination and batch
         boolean hasMore = true;
         int pageNumber = 0;
