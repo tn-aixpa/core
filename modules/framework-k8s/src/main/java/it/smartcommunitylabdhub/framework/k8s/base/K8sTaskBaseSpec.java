@@ -27,7 +27,7 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
 
     private List<CoreEnv> envs;
 
-    private List<CoreResource> resources;
+    private CoreResource resources;
 
     private Set<String> secrets;
 

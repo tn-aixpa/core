@@ -38,7 +38,7 @@ public class K8sRunnable implements RunRunnable {
     // mapping secret name to the list of keys to of the secret to use
     private Map<String, Set<String>> secrets;
 
-    private List<CoreResource> resources;
+    private CoreResource resources;
 
     private List<CoreVolume> volumes;
 

@@ -37,7 +37,7 @@ public class K8sTaskSpec {
     private List<CoreEnv> envs;
 
     @Nullable
-    private List<CoreResource> resources;
+    private CoreResource resources;
 
     @Nullable
     private Set<String> secrets;

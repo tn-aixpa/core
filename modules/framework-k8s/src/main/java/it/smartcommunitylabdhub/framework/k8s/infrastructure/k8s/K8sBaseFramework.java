@@ -190,24 +190,43 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected V1ResourceRequirements buildResources(T runnable) {
         V1ResourceRequirements resources = new V1ResourceRequirements();
         if (runnable.getResources() != null) {
-            resources.setRequests(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.requests() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::requests))
-                )
-            );
-            resources.setLimits(
-                k8sBuilderHelper.convertResources(
-                    runnable
-                        .getResources()
-                        .stream()
-                        .filter(r -> r.limits() != null)
-                        .collect(Collectors.toMap(CoreResource::resourceType, CoreResource::limits))
-                )
-            );
+            //translate requests and limits
+            CoreResource res = runnable.getResources();
+            Map<String, String> requests = new HashMap<>();
+            Map<String, String> limits = new HashMap<>();
+
+            //cpu
+            Optional
+                .ofNullable(res.getCpu())
+                .ifPresent(cpu -> {
+                    if (cpu.requests() != null) {
+                        requests.put("cpu", cpu.requests());
+                    }
+                    if (cpu.limits() != null) {
+                        limits.put("cpu", cpu.limits());
+                    }
+                });
+
+            //mem
+            Optional
+                .ofNullable(res.getMem())
+                .ifPresent(mem -> {
+                    if (mem.requests() != null) {
+                        requests.put("memory", mem.requests());
+                    }
+                    if (mem.limits() != null) {
+                        limits.put("memory", mem.limits());
+                    }
+                });
+
+            //TODO gpu
+            Optional
+                .ofNullable(res.getGpu())
+                .ifPresent(cpu -> {
+                    //TODO
+                });
+            resources.setRequests(k8sBuilderHelper.convertResources(requests));
+            resources.setLimits(k8sBuilderHelper.convertResources(limits));
         }
 
         return resources;
