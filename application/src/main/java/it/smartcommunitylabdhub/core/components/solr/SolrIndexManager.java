@@ -56,7 +56,7 @@ public class SolrIndexManager {
         solrClient.ping(solrCollection);
     }
 
-    public void initFields(Iterable<IndexField> fields) {
+    public synchronized void initFields(Iterable<IndexField> fields) {
         String baseUri = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String fieldsUri = baseUri + solrCollection + "/schema/fields";
         //check existing fields
