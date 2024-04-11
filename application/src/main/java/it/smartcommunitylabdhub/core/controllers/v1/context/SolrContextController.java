@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -80,8 +81,9 @@ public class SolrContextController {
     }
     
     private List<String> setProject(List<String> fq, String project) {
-    	fq.replaceAll(element -> element.startsWith("project:") ? "project:" + project : element);
-    	return fq;
+    	List<String> result = fq.stream().filter(e -> !e.startsWith("project:")).collect(Collectors.toList());
+    	result.add("project:" + project);
+    	return result;
     }
     
 }
