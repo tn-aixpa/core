@@ -49,6 +49,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     @Autowired
     private WorkflowEntityBuilder entityBuilder;
 
+    @Autowired
     private FunctionService functionService;
 
     @Autowired
@@ -242,7 +243,9 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             }
 
             Workflow entity = entityService.create(dto);
-            functionService.createFunction(workflowToFunction(entity.getId(), dto));
+            Function function = workflowToFunction(entity.getId(), dto);
+            functionService.createFunction(function);
+
             return entity;
         } catch (DuplicatedEntityException e) {
             throw new DuplicatedEntityException(EntityName.WORKFLOW.toString(), dto.getId());
@@ -250,10 +253,16 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     }
 
     private @NotNull Function workflowToFunction(String id, @NotNull Workflow wfdto) {
+        //TODO refactor
+        //HARD coded mapping from wf to fn
+
+        String fnId = "fn-" + id;
+        String fnKind = wfdto.getKind().replace("-workflow", "");
+
         return Function
             .builder()
-            .id(id)
-            .kind(wfdto.getKind())
+            .id(fnId)
+            .kind(fnKind)
             .project(wfdto.getProject())
             .name(wfdto.getName())
             .metadata(wfdto.getMetadata())
@@ -275,7 +284,8 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
 
             //update
             Workflow workflow = entityService.update(id, workflowDTO);
-            functionService.updateFunction(id, workflowToFunction(id, workflowDTO));
+            Function function = workflowToFunction(id, workflowDTO);
+            functionService.updateFunction(function.getId(), function);
 
             return workflow;
         } catch (NoSuchEntityException e) {
@@ -291,7 +301,8 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
         if (workflow != null) {
             //functions
             log.debug("cascade delete function for workflow with id {}", String.valueOf(id));
-            functionService.deleteFunction(id, true);
+            Function function = workflowToFunction(id, workflow);
+            functionService.deleteFunction(function.getId(), true);
         }
         // delete the workflow
         entityService.delete(id);

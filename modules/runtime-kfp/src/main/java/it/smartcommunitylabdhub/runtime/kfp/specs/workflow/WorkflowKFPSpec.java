@@ -13,11 +13,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = KFPRuntime.RUNTIME, kind = KFPRuntime.RUNTIME, entity = EntityName.WORKFLOW)
+@SpecType(runtime = KFPRuntime.RUNTIME, kind = KFPRuntime.RUNTIME + "-workflow", entity = EntityName.WORKFLOW)
 public class WorkflowKFPSpec extends FunctionKFPSpec {
 
     public WorkflowKFPSpec(Map<String, Serializable> data) {
         configure(data);
     }
-
 }
