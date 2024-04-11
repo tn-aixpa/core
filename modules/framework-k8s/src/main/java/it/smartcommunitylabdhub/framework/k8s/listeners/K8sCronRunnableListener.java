@@ -7,8 +7,8 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -20,20 +20,20 @@ import org.springframework.util.Assert;
 @Component
 @ConditionalOnKubernetes
 @Slf4j
-public class K8sDeploymentRunnableListener {
+public class K8sCronRunnableListener {
 
     @Autowired
-    K8sDeploymentFramework k8sFramework;
+    K8sCronJobFramework k8sFramework;
 
     @Autowired
     ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    private RunnableStore<K8sDeploymentRunnable> runnableStore;
+    private RunnableStore<K8sCronJobRunnable> runnableStore;
 
     @Async
     @EventListener
-    public void listen(K8sDeploymentRunnable runnable) {
+    public void listen(K8sCronJobRunnable runnable) {
         Assert.notNull(runnable, "runnable can not be null");
         Assert.hasText(runnable.getId(), "runnable id can not be null or empty");
         log.info("Receive runnable for execution: {}", runnable.getId());

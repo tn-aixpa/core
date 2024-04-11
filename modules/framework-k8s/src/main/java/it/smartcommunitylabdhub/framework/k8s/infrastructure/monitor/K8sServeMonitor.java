@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
 
 @Slf4j
 @ConditionalOnKubernetes
-@MonitorComponent(framework = "serve")
+@MonitorComponent(framework = K8sServeFramework.FRAMEWORK)
 public class K8sServeMonitor implements K8sBaseMonitor<Void> {
 
     private final K8sServeFramework k8sServeFramework;

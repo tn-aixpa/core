@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
-import io.kubernetes.client.openapi.models.V1Job;
+import io.kubernetes.client.openapi.models.V1CronJob;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.events.RunnableChangedEvent;
 import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
@@ -9,8 +9,8 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -19,19 +19,19 @@ import org.springframework.util.Assert;
 
 @Slf4j
 @ConditionalOnKubernetes
-@MonitorComponent(framework = K8sJobFramework.FRAMEWORK)
-public class K8sJobMonitor implements K8sBaseMonitor<Void> {
+@MonitorComponent(framework = K8sCronJobFramework.FRAMEWORK)
+public class K8sCronJobMonitor implements K8sBaseMonitor<Void> {
 
-    private final K8sJobFramework k8sJobFramework;
-    private final RunnableStore<K8sJobRunnable> runnableStore;
+    private final K8sCronJobFramework k8sCronJobFramework;
+    private final RunnableStore<K8sCronJobRunnable> runnableStore;
     private final ApplicationEventPublisher eventPublisher;
 
-    public K8sJobMonitor(
-        K8sJobFramework k8sJobFramework,
-        RunnableStore<K8sJobRunnable> runnableStore,
+    public K8sCronJobMonitor(
+        K8sCronJobFramework k8sJobFramework,
+        RunnableStore<K8sCronJobRunnable> runnableStore,
         ApplicationEventPublisher eventPublisher
     ) {
-        this.k8sJobFramework = k8sJobFramework;
+        this.k8sCronJobFramework = k8sJobFramework;
         this.runnableStore = runnableStore;
         this.eventPublisher = eventPublisher;
     }
@@ -44,20 +44,12 @@ public class K8sJobMonitor implements K8sBaseMonitor<Void> {
             .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
             .flatMap(runnable -> {
                 try {
-                    V1Job v1Job = k8sJobFramework.get(k8sJobFramework.build(runnable));
+                    V1CronJob v1Job = k8sCronJobFramework.get(k8sCronJobFramework.build(runnable));
                     Assert.notNull(Objects.requireNonNull(v1Job.getStatus()), "Job status can not be null");
-                    log.info("Job status: {}", v1Job.getStatus().toString());
+                    log.info("Job status: {}", String.valueOf(v1Job.getStatus()));
 
-                    if (v1Job.getStatus().getSucceeded() != null) {
-                        // Job has succeeded
-                        runnable.setState(State.COMPLETED.name());
-                    } else if (v1Job.getStatus().getFailed() != null) {
-                        // Job has failed delete job and pod
-                        runnable.setState(State.ERROR.name());
-                    } else if (v1Job.getStatus().getActive() != null && v1Job.getStatus().getActive() > 0) {
-                        // Job is active and is running
-                        runnable.setState(State.RUNNING.name());
-                    }
+                    // Job is active and is running
+                    runnable.setState(State.RUNNING.name());
 
                     return Stream.of(runnable);
                 } catch (K8sFrameworkException e) {

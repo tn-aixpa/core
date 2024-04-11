@@ -74,8 +74,8 @@ public class K8sServeRunnableListener {
 
             try {
                 runnableStore.store(runnable.getId(), runnable);
-            } catch (StoreException sex) {
-                log.error("Error with store: {}", sex.getMessage());
+            } catch (StoreException se) {
+                log.error("Error with store: {}", se.getMessage());
             }
         } finally {
             if (runnable != null) {
