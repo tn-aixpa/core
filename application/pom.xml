@@ -247,11 +247,6 @@
         </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
-            <artifactId>dh-runtime-kaniko</artifactId>
-            <version>${revision}</version>
-        </dependency>
-        <dependency>
-            <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-kfp</artifactId>
             <version>${revision}</version>
         </dependency>
