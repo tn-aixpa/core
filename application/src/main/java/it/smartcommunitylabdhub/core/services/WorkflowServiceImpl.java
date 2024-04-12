@@ -257,6 +257,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
         //HARD coded mapping from wf to fn
 
         String fnId = "fn-" + id;
+        String fnName = "fn-" + wfdto.getName();
         String fnKind = wfdto.getKind().replace("-workflow", "");
 
         return Function
@@ -264,7 +265,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             .id(fnId)
             .kind(fnKind)
             .project(wfdto.getProject())
-            .name(wfdto.getName())
+            .name(fnName)
             .metadata(wfdto.getMetadata())
             .spec(wfdto.getSpec())
             .status(wfdto.getStatus())
