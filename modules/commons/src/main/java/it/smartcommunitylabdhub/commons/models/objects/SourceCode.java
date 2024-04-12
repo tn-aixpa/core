@@ -20,6 +20,10 @@ public class SourceCode<T extends Enum<?>> implements Serializable {
     @Schema(description = "Source reference")
     private String source;
 
+    @Nullable
+    @Schema(description = "Handler (in source)")
+    private String handler;
+
     @Schema(description = "Source code (plain)")
     private String code;
 
