@@ -1,16 +1,16 @@
 # server config
 server:
-   host: ${SERVER_HOST:localhost}
-   port: ${SERVER_PORT:8080}
-   servlet:
-     context-path: ${SERVER_CONTEXT:/}
-   tomcat:
-     remoteip:
+  host: ${SERVER_HOST:localhost}
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${SERVER_CONTEXT:/}
+  tomcat:
+    remoteip:
       remote_ip_header: ${SERVER_TOMCAT_REMOTE_IP_HEADER:x-forwarded-for}
       protocol_header: ${SERVER_TOMCAT_PROTOCOL_HEADER:x-forwarded-proto}
-   max-http-request-header-size: 32000
-   error:
-      include-stacktrace: never
+  max-http-request-header-size: 32000
+  error:
+    include-stacktrace: never
 
 # Spring configuration
 spring:
@@ -42,18 +42,18 @@ spring:
 
 # Management Endpoints
 management:
-    server:
-      port: ${MANAGEMENT_PORT:8081}
-    endpoints:
-      enabled-by-default: false
-      web:
-        base-path:
-        exposure.include: "health,info,metrics"
-    endpoint:
-      info:
-        enabled: true
-      health:
-        enabled: true
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path:
+      exposure.include: "health,info,metrics"
+  endpoint:
+    info:
+      enabled: true
+    health:
+      enabled: true
 
 
 # Runtimes
@@ -68,6 +68,11 @@ runtime:
     image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
   kaniko:
     image: ${RUNTIME_KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
+    init-image: ${RUNTIME_KANIKO_INIT_IMAGE:}
+    image-prefix: ${RUNTIME_KANIKO_IMAGE_PREFIX:}
+    image-registry: ${RUNTIME_KANIKO_IMAGE_REGISTRY:}
+    credentials: ${RUNTIME_KANIKO_CREDENTIALS:}
+    kaniko-args: ${RUNTIME_KANIKO_ARGS:}
 
 # Spring Docs
 springdoc:
@@ -98,9 +103,9 @@ application:
 
 
 logging:
-   level:
-      ROOT: INFO
-      it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
+  level:
+    ROOT: INFO
+    it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
 
 security:
   api:

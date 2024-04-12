@@ -20,14 +20,19 @@ import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramewo
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import it.smartcommunitylabdhub.framework.kaniko.infrastructure.kaniko.K8sKanikoFramework;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
+import it.smartcommunitylabdhub.runtime.container.builders.ContainerBuildBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerDeployBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerJobBuilder;
 import it.smartcommunitylabdhub.runtime.container.builders.ContainerServeBuilder;
+import it.smartcommunitylabdhub.runtime.container.runners.ContainerBuildRunner;
 import it.smartcommunitylabdhub.runtime.container.runners.ContainerDeployRunner;
 import it.smartcommunitylabdhub.runtime.container.runners.ContainerJobRunner;
 import it.smartcommunitylabdhub.runtime.container.runners.ContainerServeRunner;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.task.TaskBuildSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
@@ -39,13 +44,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 @RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
 public class ContainerRuntime
-    implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, RunRunnable> {
+        implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, RunRunnable> {
 
     public static final String RUNTIME = "container";
 
     private final ContainerJobBuilder jobBuilder = new ContainerJobBuilder();
     private final ContainerDeployBuilder deployBuilder = new ContainerDeployBuilder();
     private final ContainerServeBuilder serveBuilder = new ContainerServeBuilder();
+    private final ContainerBuildBuilder buildBuilder = new ContainerBuildBuilder();
 
     @Autowired
     private SecretService secretService;
@@ -59,12 +65,15 @@ public class ContainerRuntime
     @Autowired(required = false)
     private RunnableStore<K8sJobRunnable> jobRunnableStore;
 
+    @Autowired(required = false)
+    private RunnableStore<K8sKanikoRunnable> buildRunnableStore;
+
     @Override
     public RunContainerSpec build(@NotNull Executable function, @NotNull Task task, @NotNull Run run) {
         //check run kind
         if (!RunContainerSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
+                    "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
             );
         }
 
@@ -87,8 +96,12 @@ public class ContainerRuntime
                 TaskServeSpec taskServeSpec = new TaskServeSpec(task.getSpec());
                 return serveBuilder.build(funSpec, taskServeSpec, runSpec);
             }
+            case TaskBuildSpec.KIND -> {
+                TaskBuildSpec taskBuildSpec = new TaskBuildSpec(task.getSpec());
+                return buildBuilder.build(funSpec, taskBuildSpec, runSpec);
+            }
             default -> throw new IllegalArgumentException(
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         }
     }
@@ -98,7 +111,7 @@ public class ContainerRuntime
         //check run kind
         if (!RunContainerSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
+                    "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
             );
         }
 
@@ -109,20 +122,21 @@ public class ContainerRuntime
 
         return switch (runAccessor.getTask()) {
             case TaskDeploySpec.KIND -> new ContainerDeployRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
-            )
-                .produce(run);
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets())
+            ).produce(run);
             case TaskJobSpec.KIND -> new ContainerJobRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
-            )
-                .produce(run);
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets())
+            ).produce(run);
             case TaskServeSpec.KIND -> new ContainerServeRunner(
-                runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
-            )
-                .produce(run);
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets())
+            ).produce(run);
+            case TaskBuildSpec.KIND -> new ContainerBuildRunner(
+                    runContainerSpec.getFunctionSpec(),
+                    secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskBuildSpec().getSecrets())
+            ).produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
@@ -132,7 +146,7 @@ public class ContainerRuntime
         //check run kind
         if (!RunContainerSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
+                    "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
             );
         }
 
@@ -177,6 +191,18 @@ public class ContainerRuntime
 
                     throw new CoreRuntimeException("Serve Store is not available");
                 }
+                case TaskBuildSpec.KIND -> {
+                    if (buildRunnableStore != null) {
+                        K8sKanikoRunnable k8sKanikoRunnable = buildRunnableStore.find(run.getId());
+                        if (k8sKanikoRunnable == null) {
+                            throw new NoSuchEntityException("Build runnable not found");
+                        }
+                        k8sKanikoRunnable.setState(State.STOP.name());
+                        yield k8sKanikoRunnable;
+                    }
+                    throw new CoreRuntimeException("Build Store is not available");
+                }
+
                 default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
             };
         } catch (StoreException e) {
@@ -190,7 +216,7 @@ public class ContainerRuntime
         //check run kind
         if (!RunContainerSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
+                    "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunContainerSpec.KIND)
             );
         }
 
@@ -234,6 +260,18 @@ public class ContainerRuntime
                     }
                     throw new CoreRuntimeException("Serve Store is not available");
                 }
+                case TaskBuildSpec.KIND -> {
+                    if (buildRunnableStore != null) {
+                        K8sKanikoRunnable k8sKanikoRunnable = buildRunnableStore.find(run.getId());
+                        if (k8sKanikoRunnable == null) {
+                            throw new NoSuchEntityException("Build runnable not found");
+                        }
+                        k8sKanikoRunnable.setState(State.DELETING.name());
+                        yield k8sKanikoRunnable;
+                    }
+                    throw new CoreRuntimeException("Build Store is not available");
+                }
+
                 default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
             };
         } catch (StoreException e) {
@@ -305,6 +343,9 @@ public class ContainerRuntime
             }
             case K8sServeFramework.FRAMEWORK -> {
                 yield serveRunnableStore;
+            }
+            case K8sKanikoFramework.FRAMEWORK -> {
+                yield buildRunnableStore;
             }
             default -> null;
         };

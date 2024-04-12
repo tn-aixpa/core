@@ -3,22 +3,21 @@ package it.smartcommunitylabdhub.framework.kaniko.infrastructure.kaniko;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
-import io.kubernetes.client.openapi.models.V1Container;
-import io.kubernetes.client.openapi.models.V1Job;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.ContextRef;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.ContextSource;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +31,23 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     private final BatchV1Api batchV1Api;
 
     @Value("${runtime.kaniko.image}")
-    private String image;
+    private String kanikoImage;
+
+    @Value("${runtime.kaniko.init-image}")
+    private String initImage;
+
+    @Value("${runtime.kaniko.image-prefix}")
+    private String imagePrefix;
+
+    @Value("${runtime.kaniko.image-registry}")
+    private String imageRegistry;
+
+    @Value("${runtime.kaniko.credentials}")
+    private String kanikoSecret;
+
+    @Value("${runtime.kaniko.kaniko-args}")
+    private List<String> kanikoArgs;
+
 
     @Autowired
     private K8sJobFramework jobFramework;
@@ -96,12 +111,53 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Create the Job metadata
         V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
-        
-        // Create sharedVolume
-        CoreVolume sharedVolume = new CoreVolume("empty_dir", "/shared", "shared-dir", Map.of());
 
-        // Merge volumes
-        runnable.getVolumes().add(sharedVolume);
+        // Create sharedVolume
+        CoreVolume sharedVolume = new CoreVolume(
+                "empty_dir",
+                "/shared",
+                "shared-dir", Map.of("sizeLimit", "100Mi"));
+
+        // Check if runnable already contains shared-dir
+        if (runnable.getVolumes().stream().noneMatch(v -> "shared-dir".equals(v.name()))) {
+            runnable.getVolumes().add(sharedVolume);
+        }
+
+        // Create config map volume
+        CoreVolume configMapVolume = new CoreVolume(
+                "config_map",
+                "/init-config-map",
+                "init-config-map",
+                Map.of("name", "init-config-map-" + runnable.getId()));
+
+        // Add config map volume
+        runnable.getVolumes().add(configMapVolume);
+
+        // Add secret for kaniko
+        CoreVolume secretVolume = new CoreVolume(
+                "secret",
+                "/kaniko/.docker/config.json",
+                kanikoSecret,
+                Map.of()
+        );
+
+        // Add secret volume
+        runnable.getVolumes().add(secretVolume);
+
+
+        // Define the command
+        StringBuilder command = new StringBuilder().append(
+                "/kaniko/executor " +
+                        "--dockerfile=/shared/Dockerfile " +
+                        "--context=/shared " +
+                        "--destination=" +
+                        imageRegistry + "/" +
+                        imagePrefix + "-" +
+                        runnable.getImage() + ":" + runnable.getId());
+
+        // Add Kaniko args
+        kanikoArgs.forEach(k -> command.append(" ").append(k));
+
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
                 .builder()
@@ -109,9 +165,9 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 .args(runnable.getArgs())
                 .affinity(runnable.getAffinity())
                 .backoffLimit(runnable.getBackoffLimit())
-                .command(runnable.getCommand())
+                .command(command.toString())
                 .envs(runnable.getEnvs())
-                .image(image)
+                .image(kanikoImage)
                 .labels(runnable.getLabels())
                 .nodeSelector(runnable.getNodeSelector())
                 .project(runnable.getProject())
@@ -127,23 +183,70 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Build the Job
         V1Job job = jobFramework.build(k8sJobRunnable);
 
-        // Build the Init Container
-        V1Container initContainer = new V1Container()
-                .name(runnable.getInitContainer().getName())
-                .image(runnable.getInitContainer().getImage())
-                .volumeMounts(
-                        List.of(
-                                new V1VolumeMount().name("shared-dir").mountPath("/shared")
-                        )
-                ).command(runnable.getInitContainer().getCommand());
 
-        // Add Init Container
-        Objects.requireNonNull(Objects.requireNonNull(job.getSpec()).getTemplate().getSpec())
-                .getContainers()
-                .add(initContainer);
+        try {
+            // Generate Config map
+            Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
+            Optional<List<ContextSource>> contextSourcesOpt = Optional.ofNullable(runnable.getContextSources());
+            V1ConfigMap configMap = new V1ConfigMap()
+                    .metadata(new V1ObjectMeta()
+                            .name("init-config-map-" + runnable.getId()))
+                    .data(
+                            MapUtils.mergeMultipleMaps(
+                                    Map.of("runnable", runnable.getId(),
+                                            "Dockerfile", runnable.getDockerFile()),
 
-        // Create a new job with updated metadata and spec.
-        return new V1Job().metadata(metadata).spec(job.getSpec());
+                                    contextRefsOpt.map(contextRefsList ->
+                                            Map.of("context-refs.txt", contextRefsList.stream()
+                                                    .map(v -> v.getProtocol() + "," + v.getDestination() + "," + v.getSource())
+                                                    .collect(Collectors.joining("\n")))
+                                    ).orElseGet(Map::of),
+
+                                    contextSourcesOpt.map(contextSources ->
+                                            contextSources.stream()
+                                                    .collect(Collectors.toMap(
+                                                            ContextSource::getName,
+                                                            c -> Arrays.toString(Base64.getUrlDecoder().decode(c.getBase64()))
+                                                    ))
+                                    ).orElseGet(Map::of)
+                            ));
+
+            // Create ConfigMap
+            coreV1Api.createNamespacedConfigMap(
+                    namespace,
+                    configMap,
+                    null,
+                    null,
+                    null,
+                    null);
+
+
+            // Build the Init Container
+            V1Container initContainer = new V1Container()
+                    .name("init-container-" + runnable.getId())
+                    .image(initImage)
+                    .volumeMounts(
+
+                            // Return a list of V1VolumeMount based on runnable.getVolumes()
+                            runnable.getVolumes().stream()
+                                    .map(v -> new V1VolumeMount()
+                                            .name(v.name()).mountPath(v.mountPath()))
+                                    .collect(Collectors.toList())
+                    )
+                    //TODO below execute a command that is a Go script
+                    .command(List.of("/bin/sh", "-c", "./build-context.sh"));
+
+            // Add Init Container
+            Objects.requireNonNull(Objects.requireNonNull(Objects.requireNonNull(
+                    job.getSpec()).getTemplate().getSpec()).getInitContainers()
+            ).add(initContainer);
+
+            // Create a new job with updated metadata and spec.
+            return new V1Job().metadata(metadata).spec(job.getSpec());
+        } catch (ApiException e) {
+            throw new K8sFrameworkException(e.getMessage());
+        }
+
     }
 
     @Override

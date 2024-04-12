@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.task.TaskBuildSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
@@ -32,6 +33,9 @@ public class RunContainerSpec extends RunBaseSpec {
     @JsonProperty("serve_spec")
     private TaskServeSpec taskServeSpec;
 
+    @JsonProperty("build_spec")
+    private TaskBuildSpec taskBuildSpec;
+
     @JsonProperty("function_spec")
     private FunctionContainerSpec functionSpec;
 
@@ -49,5 +53,6 @@ public class RunContainerSpec extends RunBaseSpec {
         this.taskDeploySpec = spec.getTaskDeploySpec();
         this.taskServeSpec = spec.getTaskServeSpec();
         this.functionSpec = spec.getFunctionSpec();
+        this.taskBuildSpec = spec.getTaskBuildSpec();
     }
 }

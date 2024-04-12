@@ -1,0 +1,9 @@
+1. Container build runner
+ - produce Dockerfile string (docker generator)
+ - produce nome immagine che scrive nel campo image della runnable. { projectName + "-" + functionName }
+ - Definisce il contesto se specificato
+ - produce un archivio locale con tutti i files (Context) e passa riferimento alla runnable.
+
+
+ 2. K8sKanikoFramework
+   - fa il push tramite la runnable del file tgz generato.
