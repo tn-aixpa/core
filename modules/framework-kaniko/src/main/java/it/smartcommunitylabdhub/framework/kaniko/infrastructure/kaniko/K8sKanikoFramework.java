@@ -118,9 +118,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 "/shared",
                 "shared-dir", Map.of("sizeLimit", "100Mi"));
 
+        List<CoreVolume> volumes = new ArrayList<>();
+        List<CoreVolume> runnableVolumesOpt = Optional.ofNullable(runnable.getVolumes()).orElseGet(List::of);
         // Check if runnable already contains shared-dir
-        if (runnable.getVolumes().stream().noneMatch(v -> "shared-dir".equals(v.name()))) {
-            runnable.getVolumes().add(sharedVolume);
+        if (runnableVolumesOpt.stream().noneMatch(v -> "shared-dir".equals(v.name()))) {
+            volumes.add(sharedVolume);
         }
 
         // Create config map volume
@@ -130,8 +132,9 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 "init-config-map",
                 Map.of("name", "init-config-map-" + runnable.getId()));
 
-        // Add config map volume
-        runnable.getVolumes().add(configMapVolume);
+        if (runnableVolumesOpt.stream().noneMatch(v -> "init-config-map".equals(v.name()))) {
+            volumes.add(configMapVolume);
+        }
 
         // Add secret for kaniko
         CoreVolume secretVolume = new CoreVolume(
@@ -140,9 +143,14 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 kanikoSecret,
                 Map.of()
         );
+        if (runnableVolumesOpt.stream().noneMatch(v -> kanikoSecret.equals(v.name()))) {
+            volumes.add(secretVolume);
+        }
 
-        // Add secret volume
-        runnable.getVolumes().add(secretVolume);
+        //Add all volumes
+        Optional.ofNullable(runnable.getVolumes()).ifPresentOrElse(
+                volumes::addAll,
+                () -> runnable.setVolumes(volumes));
 
 
         // Define the command
@@ -196,12 +204,14 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                                     Map.of("runnable", runnable.getId(),
                                             "Dockerfile", runnable.getDockerFile()),
 
+                                    // Generate context-refs.txt if exist
                                     contextRefsOpt.map(contextRefsList ->
                                             Map.of("context-refs.txt", contextRefsList.stream()
                                                     .map(v -> v.getProtocol() + "," + v.getDestination() + "," + v.getSource())
                                                     .collect(Collectors.joining("\n")))
                                     ).orElseGet(Map::of),
 
+                                    // Generate context-sources.txt if exist
                                     contextSourcesOpt.map(contextSources ->
                                             contextSources.stream()
                                                     .collect(Collectors.toMap(

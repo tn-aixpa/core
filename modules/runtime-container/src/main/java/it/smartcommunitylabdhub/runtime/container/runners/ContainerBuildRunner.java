@@ -56,7 +56,7 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         DockerfileGenerator dockerfileGenerator = new DockerfileGenerator();
 
         // Add image to docker file
-        dockerfileGenerator.addInstruction(DockerfileInstruction.FROM, functionSpec.getImage());
+        dockerfileGenerator.addInstruction(DockerfileInstruction.FROM, "FROM " + functionSpec.getImage());
 
         // Add Instructions to docker file
         Optional.ofNullable(taskSpec.getInstructions()).ifPresent(instructions ->
