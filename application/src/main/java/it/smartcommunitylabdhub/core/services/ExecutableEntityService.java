@@ -25,15 +25,14 @@ public class ExecutableEntityService {
 
 
     public EntityService<? extends Executable, ? extends BaseEntity> getEntityServiceByRuntime(String runtime) {
-        try {
-            // throws exception if not found
-            specRegistry.getSchema(runtime, EntityName.FUNCTION);
+        Schema schema = specRegistry.getSchema(runtime);
+        if (EntityName.FUNCTION.name().equals(schema.entity())) {
             return functionEntityService;
-        } catch (Exception e) {
-            // throws exception if not found
-            specRegistry.getSchema(runtime, EntityName.WORKFLOW);            
+        }
+        if (EntityName.WORKFLOW.name().equals(schema.entity())) {
             return workflowEntityService;
         }
+        throw new IllegalArgumentException("Invalid entity for runtime " + runtime);
     }
 
     public EntityService<? extends Executable, ? extends BaseEntity> getEntityServiceByEntity(EntityName entity) {
@@ -43,16 +42,8 @@ public class ExecutableEntityService {
     }
 
     public EntityName getEntityNameByRuntime(String runtime) {
-        try {
-            // throws exception if not found
-            specRegistry.getSchema(runtime, EntityName.FUNCTION);
-            return EntityName.FUNCTION;
-        } catch (Exception e) {
-            // throws exception if not found
-            specRegistry.getSchema(runtime, EntityName.WORKFLOW);            
-            return EntityName.WORKFLOW;
-        }
-
+        Schema schema = specRegistry.getSchema(runtime);
+        return EntityName.valueOf(schema.entity());
     }
 
 }

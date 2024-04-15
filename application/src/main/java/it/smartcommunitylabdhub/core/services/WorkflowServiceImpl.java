@@ -228,7 +228,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
         }
 
         // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.WORKFLOW, dto.getSpec());
+        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
         if (spec == null) {
             throw new IllegalArgumentException("invalid kind");
         }

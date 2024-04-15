@@ -178,7 +178,7 @@ public class TaskServiceImpl implements SearchableTaskService {
             taskSpec.configure(dto.getSpec());
 
             // Parse and export Spec
-            Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.TASK, dto.getSpec());
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
             if (spec == null) {
                 throw new IllegalArgumentException("invalid kind");
             }
@@ -254,7 +254,7 @@ public class TaskServiceImpl implements SearchableTaskService {
             TaskBaseSpec taskSpec = new TaskBaseSpec();
             taskSpec.configure(dto.getSpec());
 
-            Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.TASK, dto.getSpec());
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
             if (spec == null) {
                 throw new IllegalArgumentException("invalid kind");
             }

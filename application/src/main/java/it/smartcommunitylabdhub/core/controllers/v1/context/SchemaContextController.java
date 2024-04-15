@@ -62,7 +62,7 @@ public class SchemaContextController {
         @PathVariable @Valid @NotNull EntityName entity,
         @PathVariable @NotBlank String kind
     ) {
-        Schema schema = specRegistry.getSchema(kind, entity);
+        Schema schema = specRegistry.getSchema(kind);
 
         return ResponseEntity.ok(schema);
     }
