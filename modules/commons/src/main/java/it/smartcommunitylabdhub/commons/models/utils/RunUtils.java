@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import jakarta.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +30,7 @@ public class RunUtils {
             map.put("project", project);
             map.put("function", function);
             map.put("version", version);
+            map.put("runtime", task.indexOf('+') > 0 ? task.substring(0, task.indexOf('+')) : null);
 
             return RunSpecAccessor.with(map);
         }
@@ -51,9 +51,5 @@ public class RunUtils {
         }
 
         return (task.getKind() + "://" + matcher.group(2) + "/" + matcher.group(3) + ":" + matcher.group(4));
-    }
-
-    public static String buildWorkflowString(Workflow w, Task task) {
-        return (task.getKind() + "://" + w.getProject() + "/" + w.getName() + ":" + w.getId());
     }
 }

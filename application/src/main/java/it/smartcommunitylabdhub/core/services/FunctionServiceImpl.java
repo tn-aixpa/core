@@ -273,7 +273,7 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             if (Boolean.TRUE.equals(cascade)) {
                 //tasks
                 log.debug("cascade delete tasks for function with id {}", String.valueOf(id));
-                taskService.deleteTasksByFunctionId(id);
+                taskService.deleteTasksByFunctionId(id, EntityName.FUNCTION);
             }
 
             //delete the function

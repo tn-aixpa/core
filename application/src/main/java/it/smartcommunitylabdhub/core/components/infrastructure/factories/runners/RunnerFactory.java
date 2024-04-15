@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("rawtypes")
 public class RunnerFactory {
 
     private final Map<String, ? extends Runner> runnerMap;

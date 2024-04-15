@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.commons.infrastructure;
 
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.base.Executable;
+import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
@@ -12,10 +12,9 @@ import org.springframework.lang.Nullable;
 /**
  * Runtime expose builder, run and parse method
  */
-public interface Runtime<
-    F extends FunctionBaseSpec, S extends RunBaseSpec, Z extends RunBaseStatus, R extends RunRunnable
+public interface Runtime<F extends ExecutableBaseSpec, S extends RunBaseSpec, Z extends RunBaseStatus, R extends RunRunnable
 > {
-    S build(@NotNull Function funcSpec, @NotNull Task taskSpec, @NotNull Run runSpec); // CREATED -> BUILT
+    S build(@NotNull Executable execSpec, @NotNull Task taskSpec, @NotNull Run runSpec); // CREATED -> BUILT
 
     R run(@NotNull Run run); // BUILT -> READY
 

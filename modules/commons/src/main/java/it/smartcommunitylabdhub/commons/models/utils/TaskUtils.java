@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons.models.utils;
 
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
+import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import java.util.HashMap;
@@ -36,11 +37,8 @@ public class TaskUtils {
         throw new IllegalArgumentException("Cannot create accessor for the given task string.");
     }
 
-    public static String buildFunctionString(Function f) {
-        return (f.getKind() + "://" + f.getProject() + "/" + f.getName() + ":" + f.getId());
+    public static String buildString(Executable e) {
+        return (e.getKind() + "://" + e.getProject() + "/" + e.getName() + ":" + e.getId());
     }
 
-    public static String buildWorkflowString(Workflow w) {
-        return (w.getKind() + "://" + w.getProject() + "/" + w.getName() + ":" + w.getId());
-    }
 }

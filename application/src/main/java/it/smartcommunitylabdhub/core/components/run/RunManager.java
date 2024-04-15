@@ -7,8 +7,8 @@ import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.base.Executable;
+import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
@@ -19,11 +19,11 @@ import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
-import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.services.EntityService;
+import it.smartcommunitylabdhub.core.services.ExecutableEntityService;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.enums.RunEvent;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
@@ -56,8 +56,8 @@ public class RunManager {
     private EntityService<Task, TaskEntity> taskEntityService;
 
     @Autowired
-    private EntityService<Function, FunctionEntity> functionEntityService;
-
+    private ExecutableEntityService executableEntityServiceProvider;
+    
     @Autowired
     private RunService runService;
 
@@ -73,14 +73,14 @@ public class RunManager {
         runBaseSpec.configure(run.getSpec());
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
 
-        // Retrieve Function
-        String functionId = runSpecAccessor.getVersion();
-        Function function = functionEntityService.get(functionId);
+        // Retrieve Executable
+        String executableId = runSpecAccessor.getVersion();
+        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
 
         // Retrieve Task
         Specification<TaskEntity> where = Specification.allOf(
-            CommonSpecification.projectEquals(function.getProject()),
-            createFunctionSpecification(TaskUtils.buildFunctionString(function)),
+            CommonSpecification.projectEquals(executable.getProject()),
+            createExecutableSpecification(TaskUtils.buildString(executable)),
             createTaskKindSpecification(runSpecAccessor.getTask())
         );
         Task task = taskEntityService.searchAll(where).stream().findFirst().orElse(null);
@@ -96,15 +96,15 @@ public class RunManager {
                 if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
                     // Retrieve Runtime and build run
                     Runtime<
-                        ? extends FunctionBaseSpec,
+                        ? extends ExecutableBaseSpec,
                         ? extends RunBaseSpec,
                         ? extends RunBaseStatus,
                         ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    > runtime = runtimeFactory.getRuntime(executable.getKind());
 
                     // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
                     // an exception occur! for.
-                    RunBaseSpec runSpecBuilt = runtime.build(function, task, run);
+                    RunBaseSpec runSpecBuilt = runtime.build(executable, task, run);
 
                     return Optional.of(runSpecBuilt);
                 }
@@ -141,9 +141,9 @@ public class RunManager {
         runBaseSpec.configure(run.getSpec());
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
 
-        // Retrieve Function
-        String functionId = runSpecAccessor.getVersion();
-        Function function = functionEntityService.get(functionId);
+        // Retrieve Executable
+        String executableId = runSpecAccessor.getVersion();
+        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
 
         // Retrieve state machine
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -155,11 +155,11 @@ public class RunManager {
                 if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
                     // Retrieve Runtime and build run
                     Runtime<
-                        ? extends FunctionBaseSpec,
+                        ? extends ExecutableBaseSpec,
                         ? extends RunBaseSpec,
                         ? extends RunBaseStatus,
                         ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    > runtime = runtimeFactory.getRuntime(executable.getKind());
                     // Create Runnable
                     RunRunnable runnable = runtime.run(run);
 
@@ -194,9 +194,9 @@ public class RunManager {
         runBaseSpec.configure(run.getSpec());
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
 
-        // Retrieve Function
-        String functionId = runSpecAccessor.getVersion();
-        Function function = functionEntityService.get(functionId);
+        // Retrieve Executable
+        String executableId = runSpecAccessor.getVersion();
+        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
 
         // Retrieve state machine
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -208,11 +208,11 @@ public class RunManager {
                 if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
                     // Retrieve Runtime and build run
                     Runtime<
-                        ? extends FunctionBaseSpec,
+                        ? extends ExecutableBaseSpec,
                         ? extends RunBaseSpec,
                         ? extends RunBaseStatus,
                         ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    > runtime = runtimeFactory.getRuntime(executable.getKind());
                     // Create Runnable
                     RunRunnable runnable = runtime.stop(run);
 
@@ -247,9 +247,9 @@ public class RunManager {
         runBaseSpec.configure(run.getSpec());
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
 
-        // Retrieve Function
-        String functionId = runSpecAccessor.getVersion();
-        Function function = functionEntityService.get(functionId);
+        // Retrieve Executable
+        String executableId = runSpecAccessor.getVersion();
+        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
 
         // Retrieve state machine
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -261,11 +261,11 @@ public class RunManager {
                 if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
                     // Retrieve Runtime and build run
                     Runtime<
-                        ? extends FunctionBaseSpec,
+                        ? extends ExecutableBaseSpec,
                         ? extends RunBaseSpec,
                         ? extends RunBaseStatus,
                         ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    > runtime = runtimeFactory.getRuntime(executable.getKind());
                     // Create Runnable
                     RunRunnable runnable = runtime.delete(run);
 
@@ -281,11 +281,11 @@ public class RunManager {
                 if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
                     // Retrieve Runtime and build run
                     Runtime<
-                        ? extends FunctionBaseSpec,
+                        ? extends ExecutableBaseSpec,
                         ? extends RunBaseSpec,
                         ? extends RunBaseStatus,
                         ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(function.getKind());
+                    > runtime = runtimeFactory.getRuntime(executable.getKind());
                     // Create Runnable
                     RunRunnable runnable = runtime.delete(run);
 
@@ -382,15 +382,16 @@ public class RunManager {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
-        Function function = retrieveFunction(run);
+        // Retrieve Runtime
+        Executable executable = retrieveExecutable(run);
 
         // Retrieve Runtime
         Runtime<
-            ? extends FunctionBaseSpec,
+            ? extends ExecutableBaseSpec,
             ? extends RunBaseSpec,
             ? extends RunBaseStatus,
             ? extends RunRunnable
-        > runtime = runtimeFactory.getRuntime(function.getKind());
+        > runtime = runtimeFactory.getRuntime(executable.getKind());
 
         // Define logic for state READY
         fsm
@@ -438,15 +439,16 @@ public class RunManager {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
-        Function function = retrieveFunction(run);
+        // Retrieve Runtime
+        Executable executable = retrieveExecutable(run);
 
         // Retrieve Runtime
         Runtime<
-            ? extends FunctionBaseSpec,
+            ? extends ExecutableBaseSpec,
             ? extends RunBaseSpec,
             ? extends RunBaseStatus,
             ? extends RunRunnable
-        > runtime = runtimeFactory.getRuntime(function.getKind());
+        > runtime = runtimeFactory.getRuntime(executable.getKind());
 
         // Define logic for state RUNNING
         fsm
@@ -496,15 +498,16 @@ public class RunManager {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
-        Function function = retrieveFunction(run);
+        // Retrieve Runtime
+        Executable executable = retrieveExecutable(run);
 
         // Retrieve Runtime
         Runtime<
-            ? extends FunctionBaseSpec,
+            ? extends ExecutableBaseSpec,
             ? extends RunBaseSpec,
             ? extends RunBaseStatus,
             ? extends RunRunnable
-        > runtime = runtimeFactory.getRuntime(function.getKind());
+        > runtime = runtimeFactory.getRuntime(executable.getKind());
 
         // Define logic for state STOP
         fsm
@@ -553,14 +556,15 @@ public class RunManager {
     private void onError(Run run, RunnableChangedEvent<RunRunnable> event) {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
-        Function function = retrieveFunction(run);
+        // Retrieve Runtime
+        Executable executable = retrieveExecutable(run);
 
         Runtime<
-            ? extends FunctionBaseSpec,
+            ? extends ExecutableBaseSpec,
             ? extends RunBaseSpec,
             ? extends RunBaseStatus,
             ? extends RunRunnable
-        > runtime = runtimeFactory.getRuntime(function.getKind());
+        > runtime = runtimeFactory.getRuntime(executable.getKind());
 
         fsm
             .getState(State.RUNNING)
@@ -624,13 +628,13 @@ public class RunManager {
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
         // Retrieve Runtime
-        Function function = retrieveFunction(run);
+        Executable executable = retrieveExecutable(run);
         Runtime<
-            ? extends FunctionBaseSpec,
+            ? extends ExecutableBaseSpec,
             ? extends RunBaseSpec,
             ? extends RunBaseStatus,
             ? extends RunRunnable
-        > runtime = runtimeFactory.getRuntime(function.getKind());
+        > runtime = runtimeFactory.getRuntime(executable.getKind());
 
         // Define logic for state DELETING
         fsm
@@ -701,24 +705,24 @@ public class RunManager {
     }
 
     /**
-     * Retrieve a function based on the given run.
+     * Retrieve an executable based on the given run.
      *
-     * @param run the run to retrieve the function for
-     * @return the retrieved function
+     * @param run the run to retrieve the executable for
+     * @return the retrieved executable
      */
-    private Function retrieveFunction(Run run) throws NoSuchEntityException {
+    private Executable retrieveExecutable(Run run) throws NoSuchEntityException {
         // GET state machine, init state machine with status
         RunBaseSpec runBaseSpec = new RunBaseSpec();
         runBaseSpec.configure(run.getSpec());
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
 
-        // Retrieve Function
-        String functionId = runSpecAccessor.getVersion();
-        return functionEntityService.get(functionId);
+        // Retrieve Executable
+        String executableId = runSpecAccessor.getVersion();
+        return executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
     }
 
-    private Specification<TaskEntity> createFunctionSpecification(String function) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("function"), function);
+    private Specification<TaskEntity> createExecutableSpecification(String executable) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("function"), executable);
     }
 
     private Specification<TaskEntity> createTaskKindSpecification(String kind) {

@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.services;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -14,8 +14,8 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
+import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
-import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityAction;
@@ -49,7 +49,7 @@ public class TaskServiceImpl implements SearchableTaskService {
     private EntityService<Task, TaskEntity> entityService;
 
     @Autowired
-    private EntityService<Function, FunctionEntity> functionEntityService;
+    private ExecutableEntityService executableEntityServiceProvider;
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
@@ -121,18 +121,18 @@ public class TaskServiceImpl implements SearchableTaskService {
     }
 
     @Override
-    public List<Task> getTasksByFunctionId(@NotNull String functionId) {
+    public List<Task> getTasksByFunctionId(@NotNull String functionId, @NotNull EntityName entity) {
         log.debug("list tasks for function {}", functionId);
 
-        Function function = functionEntityService.find(functionId);
-        if (function == null) {
+        Executable executable = executableEntityServiceProvider.getEntityServiceByEntity(entity).find(functionId);
+        if (executable == null) {
             return Collections.emptyList();
         }
 
         //define a spec for tasks building function path
         Specification<TaskEntity> where = Specification.allOf(
-            CommonSpecification.projectEquals(function.getProject()),
-            createFunctionSpecification(TaskUtils.buildFunctionString(function))
+            CommonSpecification.projectEquals(executable.getProject()),
+            createFunctionSpecification(TaskUtils.buildString(executable))
         );
 
         //fetch all tasks ordered by kind ASC
@@ -206,16 +206,21 @@ public class TaskServiceImpl implements SearchableTaskService {
             if (!StringUtils.hasText(taskSpecAccessor.getVersion())) {
                 throw new IllegalArgumentException("spec: missing version");
             }
+
             String functionId = taskSpecAccessor.getVersion();
 
-            //check if function exists
-            Function fn = functionEntityService.find(functionId);
-            if (fn == null) {
-                throw new IllegalArgumentException("invalid function");
+            // task may belong to function or to workflow
+            String runtime = taskSpecAccessor.getRuntime();
+            EntityService<? extends Executable, ? extends BaseEntity> executableEntityService = executableEntityServiceProvider.getEntityServiceByRuntime(runtime);
+            EntityName entityName = executableEntityServiceProvider.getEntityNameByRuntime(runtime);
+
+            Executable executable = executableEntityService.find(functionId);
+            if (executable == null) {
+                throw new IllegalArgumentException("invalid executable entity");
             }
 
             //check if a task for this kind already exists
-            Optional<Task> existingTask = getTasksByFunctionId(functionId)
+            Optional<Task> existingTask = getTasksByFunctionId(functionId, entityName)
                 .stream()
                 .filter(t -> t.getKind().equals(dto.getKind()))
                 .findFirst();
@@ -294,10 +299,10 @@ public class TaskServiceImpl implements SearchableTaskService {
     }
 
     @Override
-    public void deleteTasksByFunctionId(@NotNull String functionId) {
+    public void deleteTasksByFunctionId(@NotNull String functionId, EntityName entity) {
         log.debug("delete tasks for function {}", functionId);
 
-        getTasksByFunctionId(functionId).forEach(task -> deleteTask(task.getId(), Boolean.TRUE));
+        getTasksByFunctionId(functionId, entity).forEach(task -> deleteTask(task.getId(), Boolean.TRUE));
     }
 
     private Specification<TaskEntity> createFunctionSpecification(String function) {
