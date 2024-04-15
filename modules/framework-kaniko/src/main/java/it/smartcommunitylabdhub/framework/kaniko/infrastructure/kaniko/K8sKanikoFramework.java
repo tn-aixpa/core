@@ -244,12 +244,29 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                                     .collect(Collectors.toList())
                     )
                     //TODO below execute a command that is a Go script
-                    .command(List.of("/bin/sh", "-c", "./build-context.sh"));
+                    .command(List.of("/bin/sh", "-c", "while :; do echo 'Hit CTRL+C'; sleep 1; done"));
 
-            // Add Init Container
-            Objects.requireNonNull(Objects.requireNonNull(Objects.requireNonNull(
-                    job.getSpec()).getTemplate().getSpec()).getInitContainers()
-            ).add(initContainer);
+
+            Optional.ofNullable(job)
+                    .map(V1Job::getSpec)
+                    .map(V1JobSpec::getTemplate)
+                    .map(V1PodTemplateSpec::getSpec)
+                    .ifPresentOrElse(
+                            podSpec -> {
+                                List<V1Container> initContainers = podSpec.getInitContainers();
+                                if (initContainers == null) {
+                                    initContainers = new ArrayList<>();
+                                    podSpec.setInitContainers(initContainers);
+                                }
+                                initContainers.add(initContainer);
+                            },
+                            () -> {
+                                // Handle the case where job, spec, or template is null
+                                // For example, you might want to log an error or throw an exception
+                                log.error("One of the intermediate objects is null.");
+                            }
+                    );
+
 
             // Create a new job with updated metadata and spec.
             return new V1Job().metadata(metadata).spec(job.getSpec());
