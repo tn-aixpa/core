@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.services;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
@@ -15,7 +15,6 @@ import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
-import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
@@ -50,7 +49,7 @@ public class RunServiceImpl implements SearchableRunService {
     private EntityService<Task, TaskEntity> taskEntityService;
 
     @Autowired
-    private EntityService<Function, FunctionEntity> functionEntityService;
+    private ExecutableEntityService executableEntityServiceProvider;
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
@@ -173,7 +172,7 @@ public class RunServiceImpl implements SearchableRunService {
         runSpec.configure(dto.getSpec());
 
         // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.RUN, dto.getSpec());
+        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
         if (spec == null) {
             throw new IllegalArgumentException("invalid kind");
         }
@@ -208,22 +207,22 @@ public class RunServiceImpl implements SearchableRunService {
         String functionId = runSpecAccessor.getVersion();
 
         //check if function exists and matches
-        Function function = functionEntityService.find(functionId);
-        if (function == null) {
+        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).find(functionId);
+        if (executable == null) {
             throw new IllegalArgumentException("invalid function");
         }
-        if (!projectId.equals(function.getProject())) {
+        if (!projectId.equals(executable.getProject())) {
             throw new IllegalArgumentException("project mismatch");
         }
-        if (!function.getName().equals(runSpecAccessor.getFunction())) {
+        if (!executable.getName().equals(runSpecAccessor.getFunction())) {
             throw new IllegalArgumentException("function name mismatch");
         }
 
         // retrieve task by looking up value
         // define a spec for matching task
         Specification<TaskEntity> where = Specification.allOf(
-            CommonSpecification.projectEquals(function.getProject()),
-            createFunctionSpecification(TaskUtils.buildFunctionString(function)),
+            CommonSpecification.projectEquals(executable.getProject()),
+            createFunctionSpecification(TaskUtils.buildString(executable)),
             createTaskKindSpecification(runSpecAccessor.getTask())
         );
 

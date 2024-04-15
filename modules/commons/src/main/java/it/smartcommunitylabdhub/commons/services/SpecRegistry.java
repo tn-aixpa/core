@@ -20,11 +20,11 @@ public interface SpecRegistry {
      * @param <S>  The generic type for the spec.
      * @return An instance of the specified spec type, or null if not found or in case of errors.
      */
-    <S extends Spec> S createSpec(@NotNull String kind, @NotNull EntityName entity, Map<String, Serializable> data);
+    <S extends Spec> S createSpec(@NotNull String kind, Map<String, Serializable> data);
 
     void registerSpec(@NotNull SpecType spec, @NotNull Class<? extends Spec> clazz);
 
-    Schema getSchema(@NotNull String kind, @NotNull EntityName name);
+    Schema getSchema(@NotNull String kind);
     Collection<Schema> getSchemas(@NotNull EntityName name, @NotNull String runtime);
     Collection<Schema> listSchemas(@NotNull EntityName name);
 }

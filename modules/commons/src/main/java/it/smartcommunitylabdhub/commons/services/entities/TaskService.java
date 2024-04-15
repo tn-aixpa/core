@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.commons.services.entities;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,7 @@ public interface TaskService {
      * @param function
      * @return
      */
-    List<Task> getTasksByFunctionId(@NotNull String functionId);
+    List<Task> getTasksByFunctionId(@NotNull String functionId, @NotNull EntityName entity);
 
     /**
      * List all tasks
@@ -92,6 +93,7 @@ public interface TaskService {
     /**
      * Delete all tasks for a given function, with cascade.
      * @param function
+     * @param entity
      */
-    void deleteTasksByFunctionId(@NotNull String functionId);
+    void deleteTasksByFunctionId(@NotNull String functionId, @NotNull EntityName entity);
 }

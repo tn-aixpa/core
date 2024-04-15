@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -172,6 +173,6 @@ public class FunctionContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return taskService.getTasksByFunctionId(id);
+        return taskService.getTasksByFunctionId(id, EntityName.FUNCTION);
     }
 }

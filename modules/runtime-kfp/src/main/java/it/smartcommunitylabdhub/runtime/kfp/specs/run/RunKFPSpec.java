@@ -5,8 +5,9 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
-import it.smartcommunitylabdhub.runtime.kfp.specs.function.FunctionKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.workflow.WorkflowKFPSpec;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,8 +31,8 @@ public class RunKFPSpec extends RunBaseSpec {
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
-    @JsonProperty("function_spec")
-    private FunctionKFPSpec funcSpec;
+    @JsonProperty("workflow_spec")
+    private WorkflowKFPSpec workflowSpec;
 
     @JsonProperty("pipeline_spec")
     private TaskPipelineSpec taskSpec;
@@ -50,6 +51,6 @@ public class RunKFPSpec extends RunBaseSpec {
         this.parameters = spec.getParameters();
 
         this.taskSpec = spec.getTaskSpec();
-        this.funcSpec = spec.getFuncSpec();
+        this.workflowSpec = spec.getWorkflowSpec();
     }
 }

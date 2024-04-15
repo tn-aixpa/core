@@ -145,11 +145,12 @@ public class WorkflowContextController {
         return workflowService.updateWorkflow(id, workflowDTO);
     }
 
-    @Operation(summary = "Delete a specific workflow version")
+    @Operation(summary = "Delete a specific workflow version, with optional cascade")
     @DeleteMapping(path = "/{id}")
     public void deleteWorkflow(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
     ) throws NoSuchEntityException {
         Workflow workflow = workflowService.getWorkflow(id);
 
@@ -158,6 +159,6 @@ public class WorkflowContextController {
             throw new IllegalArgumentException("invalid project or name");
         }
 
-        workflowService.deleteWorkflow(id);
+        workflowService.deleteWorkflow(id, cascade);
     }
 }

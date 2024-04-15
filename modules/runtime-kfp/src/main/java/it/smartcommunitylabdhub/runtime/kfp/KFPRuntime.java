@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
@@ -18,9 +18,9 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.builders.KFPPipelineBuilder;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPPipelineRunner;
-import it.smartcommunitylabdhub.runtime.kfp.specs.function.FunctionKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.run.RunKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.workflow.WorkflowKFPSpec;
 import it.smartcommunitylabdhub.status.RunKfpStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 @RuntimeComponent(runtime = KFPRuntime.RUNTIME)
 @Slf4j
-public class KFPRuntime implements Runtime<FunctionKFPSpec, RunKFPSpec, RunKfpStatus, K8sRunnable> {
+public class KFPRuntime implements Runtime<WorkflowKFPSpec, RunKFPSpec, RunKfpStatus, K8sRunnable> {
 
     public static final String RUNTIME = "kfp";
 
@@ -45,14 +45,14 @@ public class KFPRuntime implements Runtime<FunctionKFPSpec, RunKFPSpec, RunKfpSt
     private RunnableStore<K8sJobRunnable> jobRunnableStore;
 
     @Override
-    public RunKFPSpec build(@NotNull Function function, @NotNull Task task, @NotNull Run run) {
+    public RunKFPSpec build(@NotNull Executable workflow, @NotNull Task task, @NotNull Run run) {
         if (!RunKFPSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
                 "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), RunKFPSpec.KIND)
             );
         }
 
-        FunctionKFPSpec funSpec = new FunctionKFPSpec(function.getSpec());
+        WorkflowKFPSpec funSpec = new WorkflowKFPSpec(workflow.getSpec());
         RunKFPSpec runSpec = new RunKFPSpec(run.getSpec());
 
         String kind = task.getKind();

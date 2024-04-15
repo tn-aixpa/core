@@ -226,7 +226,7 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
         }
 
         // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.FUNCTION, dto.getSpec());
+        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
         if (spec == null) {
             throw new IllegalArgumentException("invalid kind");
         }
@@ -273,7 +273,7 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             if (Boolean.TRUE.equals(cascade)) {
                 //tasks
                 log.debug("cascade delete tasks for function with id {}", String.valueOf(id));
-                taskService.deleteTasksByFunctionId(id);
+                taskService.deleteTasksByFunctionId(id, EntityName.FUNCTION);
             }
 
             //delete the function

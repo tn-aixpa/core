@@ -222,7 +222,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         }
 
         // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), EntityName.ARTIFACT, dto.getSpec());
+        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
         if (spec == null) {
             throw new IllegalArgumentException("invalid kind");
         }

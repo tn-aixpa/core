@@ -1,11 +1,8 @@
 package it.smartcommunitylabdhub.runtime.nefertem.specs.task;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
-import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;

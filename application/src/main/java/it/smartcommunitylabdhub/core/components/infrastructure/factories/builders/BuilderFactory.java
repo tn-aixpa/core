@@ -8,7 +8,7 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.builde
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.BuilderComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import java.util.List;
@@ -20,7 +20,7 @@ public class BuilderFactory {
 
     private final Map<
         String,
-        ? extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
+        ? extends Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
     > builderMap;
 
     /**
@@ -29,7 +29,7 @@ public class BuilderFactory {
      * @param builders The list of Builders to be managed by the factory.
      */
     public BuilderFactory(
-        List<? extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
+        List<? extends Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
     ) {
         builderMap = builders.stream().collect(Collectors.toMap(this::getBuilderFromAnnotation, Function.identity()));
     }
@@ -43,7 +43,7 @@ public class BuilderFactory {
      *                                  builder.
      */
     private <
-        B extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
+        B extends Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
     > String getBuilderFromAnnotation(B builder) {
         Class<?> builderClass = builder.getClass();
         if (builderClass.isAnnotationPresent(BuilderComponent.class)) {
@@ -64,7 +64,7 @@ public class BuilderFactory {
      * @throws IllegalArgumentException If no Builder is found for the given platform.
      */
     @SuppressWarnings("unchecked")
-    public <B extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> B getBuilder(
+    public <B extends Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> B getBuilder(
         String runtime,
         String task
     ) {
@@ -77,7 +77,7 @@ public class BuilderFactory {
 
     public Map<
         String,
-        ? extends Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
+        ? extends Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
     > getBuilders(String runtime) {
         return builderMap
             .entrySet()

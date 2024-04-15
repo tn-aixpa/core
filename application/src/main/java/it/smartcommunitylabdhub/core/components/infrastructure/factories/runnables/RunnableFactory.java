@@ -7,6 +7,7 @@ public class RunnableFactory<T extends RunRunnable> {
 
     private Class<T> clazz;
 
+    @SuppressWarnings("unchecked")
     public RunnableFactory() {
         ResolvableType resolvableType = ResolvableType.forClass(getClass());
         this.clazz = (Class<T>) resolvableType.getSuperType().getGeneric(0).resolve();

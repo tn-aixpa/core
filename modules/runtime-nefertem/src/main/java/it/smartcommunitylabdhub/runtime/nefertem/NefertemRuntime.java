@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
@@ -57,7 +57,7 @@ public class NefertemRuntime
     private String image;
 
     @Override
-    public RunNefertemSpec build(@NotNull Function function, @NotNull Task task, @NotNull Run run) {
+    public RunNefertemSpec build(@NotNull Executable function, @NotNull Task task, @NotNull Run run) {
         //check run kind
         if (!RunNefertemSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(

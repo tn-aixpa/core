@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
@@ -24,7 +24,7 @@ public class InfrastructureConfig {
     @Bean
     protected RuntimeFactory runtimeFactory(
         List<
-            Runtime<? extends FunctionBaseSpec, ? extends RunBaseSpec, ? extends RunBaseStatus, ? extends RunRunnable>
+            Runtime<? extends ExecutableBaseSpec, ? extends RunBaseSpec, ? extends RunBaseStatus, ? extends RunRunnable>
         > runtimes
     ) {
         return new RuntimeFactory(runtimes);
@@ -32,7 +32,7 @@ public class InfrastructureConfig {
 
     @Bean
     protected BuilderFactory builderFactory(
-        List<Builder<? extends FunctionBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
+        List<Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
     ) {
         return new BuilderFactory(builders);
     }

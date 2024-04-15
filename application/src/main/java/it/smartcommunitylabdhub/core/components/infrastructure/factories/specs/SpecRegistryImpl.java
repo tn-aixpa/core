@@ -28,12 +28,14 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class SpecRegistryImpl implements SpecRegistry {
 
+    private final Map<String, SpecType> specTypes = new HashMap<>();
+
     // A map to store spec types and their corresponding classes.
-    private final Map<SpecType, Class<? extends Spec>> specs = new HashMap<>();
+    private final Map<String, Class<? extends Spec>> specs = new HashMap<>();
 
     private final List<SpecFactory<? extends Spec>> factories;
 
-    private final Map<SpecType, Schema> schemas = new HashMap<>();
+    private final Map<String, Schema> schemas = new HashMap<>();
 
     public SpecRegistryImpl(List<SpecFactory<? extends Spec>> specFactories) {
         this.factories = specFactories;
@@ -44,12 +46,13 @@ public class SpecRegistryImpl implements SpecRegistry {
         String kind = type.kind();
         EntityName entity = type.entity();
 
-        if (specs.containsKey(type)) {
+        if (specs.containsKey(kind)) {
             throw new IllegalArgumentException("duplicated registration for " + entity + ":" + kind);
         }
 
         log.debug("register spec for {}:{} with class {}", entity, kind, spec.getName());
-        specs.put(type, spec);
+        specTypes.put(kind, type);
+        specs.put(kind, spec);
 
         log.debug("generate schema for spec {}:{} ", entity, kind);
         SchemaImplBuilder builder = SchemaImpl.builder().entity(entity).kind(kind).schema(SchemaUtils.schema(spec));
@@ -57,7 +60,7 @@ public class SpecRegistryImpl implements SpecRegistry {
             builder.runtime(type.runtime());
         }
         SchemaImpl schema = builder.build();
-        schemas.put(type, schema);
+        schemas.put(kind, schema);
     }
 
     /**
@@ -69,9 +72,9 @@ public class SpecRegistryImpl implements SpecRegistry {
      * @return An instance of the specified spec type, or null if not found or in case of errors.
      */
     @Override
-    public <S extends Spec> S createSpec(String kind, EntityName entity, Map<String, Serializable> data) {
+    public <S extends Spec> S createSpec(String kind, Map<String, Serializable> data) {
         // Retrieve the class associated with the specified spec type.
-        Class<? extends Spec> specClass = retrieveSpec(kind, entity);
+        Class<? extends Spec> specClass = retrieveSpec(kind);
 
         if (specClass == null) {
             throw new IllegalArgumentException("missing spec");
@@ -96,19 +99,13 @@ public class SpecRegistryImpl implements SpecRegistry {
         return spec;
     }
 
-    private Class<? extends Spec> retrieveSpec(String kind, EntityName entity) {
-        return specs
-            .entrySet()
-            .stream()
-            .filter(e -> e.getKey().kind().equals(kind) && e.getKey().entity() == entity)
-            .findFirst()
-            .map(Entry::getValue)
-            .orElse(null);
+    private Class<? extends Spec> retrieveSpec(String kind) {
+        return specs.get(kind);
     }
 
     @Override
-    public Schema getSchema(String kind, EntityName entity) {
-        Schema schema = retrieveSchema(kind, entity);
+    public Schema getSchema(String kind) {
+        Schema schema = retrieveSchema(kind);
         if (schema == null) {
             throw new IllegalArgumentException("missing schema");
         }
@@ -118,31 +115,25 @@ public class SpecRegistryImpl implements SpecRegistry {
 
     @Override
     public Collection<Schema> listSchemas(EntityName name) {
-        return schemas
+        return specTypes
             .entrySet()
             .stream()
-            .filter(e -> name == e.getKey().entity())
-            .map(Entry::getValue)
+            .filter(e -> name == e.getValue().entity())
+            .map(e -> schemas.get(e.getKey()))
             .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Schema> getSchemas(EntityName entity, String runtime) {
-        return schemas
+        return specTypes
             .entrySet()
             .stream()
-            .filter(e -> entity == e.getKey().entity() && runtime.equals(e.getKey().runtime()))
-            .map(Entry::getValue)
+            .filter(e -> entity == e.getValue().entity() && runtime.equals(e.getValue().runtime()))
+            .map(e -> schemas.get(e.getKey()))
             .collect(Collectors.toList());
     }
 
-    private Schema retrieveSchema(@NotNull String kind, @NotNull EntityName entity) {
-        return schemas
-            .entrySet()
-            .stream()
-            .filter(e -> e.getKey().kind().equals(kind) && e.getKey().entity() == entity)
-            .findFirst()
-            .map(Entry::getValue)
-            .orElse(null);
+    private Schema retrieveSchema(@NotNull String kind) {
+        return schemas.get(kind);
     }
 }
