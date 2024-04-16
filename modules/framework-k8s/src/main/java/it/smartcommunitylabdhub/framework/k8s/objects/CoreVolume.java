@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.framework.k8s.objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -15,11 +17,14 @@ import lombok.Setter;
 public class CoreVolume implements Serializable {
 
     @JsonProperty("volume_type")
+    @NotNull
     private VolumeType volumeType;
 
     @JsonProperty("mount_path")
+    @NotBlank
     private String mountPath;
 
+    @NotBlank
     private String name;
 
     private Map<String, String> spec;

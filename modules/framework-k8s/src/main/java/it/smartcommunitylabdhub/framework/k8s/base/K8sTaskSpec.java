@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreToleration;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.Min;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -53,11 +54,13 @@ public class K8sTaskSpec {
 
     @Nullable
     @JsonProperty("backoff_limit")
+    @Min(1)
     private Integer backoffLimit;
 
     @Nullable
     private String schedule;
 
     @Nullable
+    @Min(0)
     private Integer replicas;
 }
