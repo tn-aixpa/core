@@ -167,25 +167,25 @@ public class K8sBuilderHelper implements InitializingBean {
     }
 
     public V1Volume getVolume(CoreVolume coreVolume) {
-        V1Volume volume = new V1Volume().name(coreVolume.name());
-        String type = coreVolume.volumeType();
-        Map<String, String> spec = coreVolume.spec();
+        V1Volume volume = new V1Volume().name(coreVolume.getName());
+        String type = coreVolume.getVolumeType().name();
+        Map<String, String> spec = coreVolume.getSpec();
         switch (type) {
             // TODO: support items
             case "config_map":
                 return volume.configMap(
-                    new V1ConfigMapVolumeSource().name(spec.getOrDefault("name", coreVolume.name()))
+                    new V1ConfigMapVolumeSource().name(spec.getOrDefault("name", coreVolume.getName()))
                 );
             case "secret":
                 return volume.secret(
                     new V1SecretVolumeSource()
-                        .secretName(spec.getOrDefault("secret_name", coreVolume.name()))
+                        .secretName(spec.getOrDefault("secret_name", coreVolume.getName()))
                         .items(null)
                 );
             case "persistent_volume_claim":
                 return volume.persistentVolumeClaim(
                     new V1PersistentVolumeClaimVolumeSource()
-                        .claimName(spec.getOrDefault("claim_name", coreVolume.name()))
+                        .claimName(spec.getOrDefault("claim_name", coreVolume.getName()))
                 );
             case "empty_dir":
                 return volume.emptyDir(
@@ -207,7 +207,7 @@ public class K8sBuilderHelper implements InitializingBean {
     }
 
     public V1VolumeMount getVolumeMount(CoreVolume coreVolume) {
-        return new V1VolumeMount().name(coreVolume.name()).mountPath(coreVolume.mountPath());
+        return new V1VolumeMount().name(coreVolume.getName()).mountPath(coreVolume.getMountPath());
     }
 
     /*
