@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -26,6 +27,9 @@ public class ConsoleController {
 
     @Autowired
     private SecurityProperties securityProperties;
+
+    @Value("${solr.enabled}")
+    private boolean enableSolr;
 
     public static final String CONSOLE_CONTEXT = Keys.CONSOLE_CONTEXT;
 
@@ -75,6 +79,8 @@ public class ConsoleController {
                 config.put("REACT_APP_SCOPE", String.join(" ", securityProperties.getOidc().getScope()));
             }
         }
+
+        config.put("REACT_APP_ENABLE_SOLR", String.valueOf(enableSolr));
 
         model.addAttribute("config", config);
         return "console.html";
