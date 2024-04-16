@@ -8,10 +8,10 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
+import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGenerator;
+import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileInstruction;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-import it.smartcommunitylabdhub.runtime.container.docker.DockerfileGenerator;
-import it.smartcommunitylabdhub.runtime.container.docker.DockerfileInstruction;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskBuildSpec;
@@ -56,7 +56,8 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         DockerfileGenerator dockerfileGenerator = new DockerfileGenerator();
 
         // Add image to docker file
-        dockerfileGenerator.addInstruction(DockerfileInstruction.FROM, "FROM " + functionSpec.getImage());
+        dockerfileGenerator.addInstruction(
+                DockerfileInstruction.FROM, "FROM " + functionSpec.getBaseImage());
 
         // Add Instructions to docker file
         Optional.ofNullable(taskSpec.getInstructions()).ifPresent(instructions ->
@@ -67,17 +68,19 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         // Generate string docker file
         String dockerfile = dockerfileGenerator.generateDockerfile();
 
+        // Parse run spec
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runSpec.getTask());
 
-
-        K8sRunnable k8sKanikoRunnable = K8sKanikoRunnable
+        // Build runnable
+        return K8sKanikoRunnable
                 .builder()
                 .id(run.getId())
                 .project(run.getProject())
                 .runtime(ContainerRuntime.RUNTIME)
                 .task(TASK)
                 .state(State.READY.name())
-                //base
+                
+                // Base
                 .image(runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction())
                 .envs(coreEnvList)
                 .secrets(groupedSecrets)
@@ -88,16 +91,13 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
                 .tolerations(taskSpec.getTolerations())
                 .labels(taskSpec.getLabels())
 
-                //kaniko
+                // Task specific
                 .contextRefs(taskSpec.getContextRefs())
                 .contextSources(taskSpec.getContextSources())
                 .dockerFile(dockerfile)
 
-                //specific
+                // specific
                 .backoffLimit(1)
                 .build();
-
-
-        return k8sKanikoRunnable;
     }
 }

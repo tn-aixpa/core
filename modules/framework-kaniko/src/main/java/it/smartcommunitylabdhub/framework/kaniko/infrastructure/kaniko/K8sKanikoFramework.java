@@ -191,7 +191,6 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Build the Job
         V1Job job = jobFramework.build(k8sJobRunnable);
 
-
         try {
             // Generate Config map
             Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
@@ -201,8 +200,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                             .name("init-config-map-" + runnable.getId()))
                     .data(
                             MapUtils.mergeMultipleMaps(
-                                    Map.of("runnable", runnable.getId(),
-                                            "Dockerfile", runnable.getDockerFile()),
+                                    Map.of("Dockerfile", runnable.getDockerFile()),
 
                                     // Generate context-refs.txt if exist
                                     contextRefsOpt.map(contextRefsList ->
@@ -247,6 +245,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                     .command(List.of("/bin/sh", "-c", "while :; do echo 'Hit CTRL+C'; sleep 1; done"));
 
 
+            // Add the init container to the job
             Optional.ofNullable(job)
                     .map(V1Job::getSpec)
                     .map(V1JobSpec::getTemplate)

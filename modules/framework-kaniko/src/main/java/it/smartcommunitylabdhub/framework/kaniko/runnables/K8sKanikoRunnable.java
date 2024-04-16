@@ -21,13 +21,13 @@ public class K8sKanikoRunnable extends K8sRunnable {
 
 
     @JsonProperty("dockerfile")
-    String dockerFile;
+    private String dockerFile;
 
     @JsonProperty("context_refs")
-    List<ContextRef> contextRefs;
+    private List<ContextRef> contextRefs;
 
     @JsonProperty("context_sources")
-    List<ContextSource> contextSources;
+    private List<ContextSource> contextSources;
 
     @JsonProperty("backoff_limit")
     private Integer backoffLimit;

@@ -1,9 +1,9 @@
-package it.smartcommunitylabdhub.runtime.container.docker;
+package it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DockerfileGenerator {
 
-    private final Map<DockerfileInstruction, List<String>> instructions = new HashMap<>();
+    private final Map<DockerfileInstruction, List<String>> instructions = new LinkedHashMap<>();
     private final List<String> directives = new ArrayList<>();
 
     @Getter

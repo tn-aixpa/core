@@ -39,8 +39,8 @@ public class TaskBuildSpec extends K8sTaskBaseSpec {
 
         TaskBuildSpec spec = mapper.convertValue(data, TaskBuildSpec.class);
         this.replicas = spec.getReplicas();
-        this.instructions = spec.getInstructions();
-        this.contextRefs = spec.getContextRefs();
-        this.contextSources = spec.getContextSources();
+        this.instructions = spec.getInstructions(); //Dockerfile instructions
+        this.contextRefs = spec.getContextRefs(); // List of context refs that need to be materialized
+        this.contextSources = spec.getContextSources(); // List of context sources that need to be materialized
     }
 }
