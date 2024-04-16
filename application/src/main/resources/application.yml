@@ -113,7 +113,7 @@ security:
     claim: ${DH_AUTH_JWT_CLAIM:roles}
   oidc:    
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
-    scope: 
+    scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
 
 
 
