@@ -3,26 +3,11 @@ package it.smartcommunitylabdhub.framework.k8s.kubernetes;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
-import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
-import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
-import io.kubernetes.client.openapi.models.V1EnvFromSource;
-import io.kubernetes.client.openapi.models.V1EnvVar;
-import io.kubernetes.client.openapi.models.V1EnvVarSource;
-import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
-import io.kubernetes.client.openapi.models.V1SecretEnvSource;
-import io.kubernetes.client.openapi.models.V1SecretKeySelector;
-import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
-import io.kubernetes.client.openapi.models.V1Volume;
-import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -63,33 +48,33 @@ public class K8sBuilderHelper implements InitializingBean {
 
         // Remove all not present secrets
         sharedSecrets =
-            sharedSecrets
-                .stream()
-                .flatMap(secret -> {
-                    try {
-                        coreV1Api.readNamespacedSecret(secret, namespace, null);
-                        return Stream.of(secret);
-                    } catch (Exception e) {
-                        log.error("Error reading secret: " + secret, e);
-                        return Stream.empty();
-                    }
-                })
-                .toList();
+                sharedSecrets
+                        .stream()
+                        .flatMap(secret -> {
+                            try {
+                                coreV1Api.readNamespacedSecret(secret, namespace, null);
+                                return Stream.of(secret);
+                            } catch (Exception e) {
+                                log.error("Error reading secret: " + secret, e);
+                                return Stream.empty();
+                            }
+                        })
+                        .toList();
 
         // Remove all not present config maps
         sharedConfigMaps =
-            sharedConfigMaps
-                .stream()
-                .flatMap(configMap -> {
-                    try {
-                        coreV1Api.readNamespacedConfigMap(configMap, namespace, null);
-                        return Stream.of(configMap);
-                    } catch (Exception e) {
-                        log.error("Error reading configmap: " + configMap, e);
-                        return Stream.empty();
-                    }
-                })
-                .toList();
+                sharedConfigMaps
+                        .stream()
+                        .flatMap(configMap -> {
+                            try {
+                                coreV1Api.readNamespacedConfigMap(configMap, namespace, null);
+                                return Stream.of(configMap);
+                            } catch (Exception e) {
+                                log.error("Error reading configmap: " + configMap, e);
+                                return Stream.empty();
+                            }
+                        })
+                        .toList();
     }
 
     /**
@@ -178,9 +163,10 @@ public class K8sBuilderHelper implements InitializingBean {
                 );
             case "secret":
                 return volume.secret(
-                    new V1SecretVolumeSource()
-                        .secretName(spec.getOrDefault("secret_name", coreVolume.getName()))
-                        .items(null)
+                        new V1SecretVolumeSource()
+                                .secretName(spec.getOrDefault("secret_name", coreVolume.getName()))
+                                .items(coreVolume.getKeyToPath().stream()
+                                        .map(p -> new V1KeyToPath().key(p.key()).path(p.path())).toList())
                 );
             case "persistent_volume_claim":
                 return volume.persistentVolumeClaim(

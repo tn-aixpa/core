@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolumeKeyToPath;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.ContextRef;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.ContextSource;
@@ -116,7 +117,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         CoreVolume sharedVolume = new CoreVolume(
                 "empty_dir",
                 "/shared",
-                "shared-dir", Map.of("sizeLimit", "100Mi"));
+                "shared-dir", Map.of("sizeLimit", "100Mi"),
+                List.of());
 
         List<CoreVolume> volumes = new ArrayList<>();
         List<CoreVolume> runnableVolumesOpt = Optional.ofNullable(runnable.getVolumes()).orElseGet(List::of);
@@ -130,7 +132,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 "config_map",
                 "/init-config-map",
                 "init-config-map",
-                Map.of("name", "init-config-map-" + runnable.getId()));
+                Map.of("name", "init-config-map-" + runnable.getId()),
+                List.of());
 
         if (runnableVolumesOpt.stream().noneMatch(v -> "init-config-map".equals(v.name()))) {
             volumes.add(configMapVolume);
@@ -139,9 +142,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Add secret for kaniko
         CoreVolume secretVolume = new CoreVolume(
                 "secret",
-                "/kaniko/.docker/config.json",
+                "/kaniko/.docker",
                 kanikoSecret,
-                Map.of()
+                Map.of(),
+                List.of(new CoreVolumeKeyToPath(".dockerconfigjson", "config.json"))
         );
         if (runnableVolumesOpt.stream().noneMatch(v -> kanikoSecret.equals(v.name()))) {
             volumes.add(secretVolume);
@@ -156,7 +160,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         List<String> commands = new ArrayList<>(List.of(
                 "--dockerfile=/init-config-map/Dockerfile",
                 "--context=/shared",
-                "--destination=" + imageRegistry + "/" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
+                "--destination=" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
 
         ));
         // Add Kaniko args
@@ -169,7 +173,6 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 .args(runnable.getArgs())
                 .affinity(runnable.getAffinity())
                 .backoffLimit(runnable.getBackoffLimit())
-                //.command(String.join(" ", commands))
                 .args(commands.toArray(String[]::new))
                 .envs(runnable.getEnvs())
                 .image(kanikoImage)
