@@ -1,13 +1,13 @@
 package it.smartcommunitylabdhub.framework.kaniko.runnables;
 
 import java.io.Serializable;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class ContextSource implements Serializable {
 

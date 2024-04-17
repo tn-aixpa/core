@@ -147,24 +147,20 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             volumes.add(secretVolume);
         }
 
+
         //Add all volumes
         Optional.ofNullable(runnable.getVolumes()).ifPresentOrElse(
                 volumes::addAll,
                 () -> runnable.setVolumes(volumes));
 
+        List<String> commands = new ArrayList<>(List.of(
+                "--dockerfile=/init-config-map/Dockerfile",
+                "--context=/shared",
+                "--destination=" + imageRegistry + "/" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
 
-        // Define the command
-        StringBuilder command = new StringBuilder().append(
-                "/kaniko/executor " +
-                        "--dockerfile=/shared/Dockerfile " +
-                        "--context=/shared " +
-                        "--destination=" +
-                        imageRegistry + "/" +
-                        imagePrefix + "-" +
-                        runnable.getImage() + ":" + runnable.getId());
-
+        ));
         // Add Kaniko args
-        kanikoArgs.forEach(k -> command.append(" ").append(k));
+        commands.addAll(kanikoArgs);
 
 
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
@@ -173,7 +169,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 .args(runnable.getArgs())
                 .affinity(runnable.getAffinity())
                 .backoffLimit(runnable.getBackoffLimit())
-                .command(command.toString())
+                //.command(String.join(" ", commands))
+                .args(commands.toArray(String[]::new))
                 .envs(runnable.getEnvs())
                 .image(kanikoImage)
                 .labels(runnable.getLabels())
@@ -205,8 +202,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                                     // Generate context-refs.txt if exist
                                     contextRefsOpt.map(contextRefsList ->
                                             Map.of("context-refs.txt", contextRefsList.stream()
-                                                    .map(v -> v.getProtocol() + "," + v.getDestination() + "," + v.getSource())
-                                                    .collect(Collectors.joining("\n")))
+                                                    .map(v -> v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n")
+                                                    .collect(Collectors.joining("")))
                                     ).orElseGet(Map::of),
 
                                     // Generate context-sources.txt if exist
@@ -228,21 +225,26 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                     null,
                     null);
 
+            // Build Environment Variables
+            List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
+            List<V1EnvVar> env = buildEnv(runnable);
+
+            // Volumes to attach to the pod based on the volume spec with the additional volume_type
+            List<V1VolumeMount> volumeMounts = buildVolumeMounts(runnable);
+
+            // Build resources
+            V1ResourceRequirements resources = buildResources(runnable);
 
             // Build the Init Container
             V1Container initContainer = new V1Container()
                     .name("init-container-" + runnable.getId())
                     .image(initImage)
-                    .volumeMounts(
-
-                            // Return a list of V1VolumeMount based on runnable.getVolumes()
-                            runnable.getVolumes().stream()
-                                    .map(v -> new V1VolumeMount()
-                                            .name(v.name()).mountPath(v.mountPath()))
-                                    .collect(Collectors.toList())
-                    )
+                    .volumeMounts(volumeMounts)
+                    .resources(resources)
+                    .env(env)
+                    .envFrom(envFrom)
                     //TODO below execute a command that is a Go script
-                    .command(List.of("/bin/sh", "-c", "while :; do echo 'Hit CTRL+C'; sleep 1; done"));
+                    .command(List.of("/bin/sh", "-c", "/app/dh_worker.sh"));
 
 
             // Add the init container to the job

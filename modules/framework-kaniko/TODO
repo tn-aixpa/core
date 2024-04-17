@@ -7,3 +7,12 @@
 
  2. K8sKanikoFramework
    - fa il push tramite la runnable del file tgz generato.
+
+
+
+ HOST
+
+
+ s3://<bucked>/<file>.xxx
+
+

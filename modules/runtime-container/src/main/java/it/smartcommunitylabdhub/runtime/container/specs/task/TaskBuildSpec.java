@@ -21,13 +21,16 @@ import lombok.Setter;
 public class TaskBuildSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "container+build";
-    @JsonProperty("context_refs")
-    List<ContextRef> contextRefs;
-    @JsonProperty("context_sources")
-    List<ContextSource> contextSources;
-    private Integer replicas;
-    private List<String> instructions;
 
+    @JsonProperty("context_refs")
+    private List<ContextRef> contextRefs;
+
+    @JsonProperty("context_sources")
+    private List<ContextSource> contextSources;
+
+    private Integer replicas;
+
+    private List<String> instructions;
 
     public TaskBuildSpec(Map<String, Serializable> data) {
         configure(data);

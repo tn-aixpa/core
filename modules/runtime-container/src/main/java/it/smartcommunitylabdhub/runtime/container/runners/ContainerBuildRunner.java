@@ -65,6 +65,8 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
                         .addInstruction(DockerfileInstruction.RUN, "RUN " + instruction))
         );
 
+        dockerfileGenerator.addInstruction(DockerfileInstruction.COPY, "COPY . .");
+
         // Generate string docker file
         String dockerfile = dockerfileGenerator.generateDockerfile();
 
@@ -79,7 +81,7 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
                 .runtime(ContainerRuntime.RUNTIME)
                 .task(TASK)
                 .state(State.READY.name())
-                
+
                 // Base
                 .image(runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction())
                 .envs(coreEnvList)
