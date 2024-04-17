@@ -18,7 +18,7 @@ import org.springframework.util.Assert;
 @Slf4j
 public class WorkflowEntityIndexer extends BaseEntityIndexer<WorkflowEntity, Workflow> {
 
-    private static final String TYPE = EntityName.ARTIFACT.getValue();
+    private static final String TYPE = EntityName.WORKFLOW.getValue();
 
     private final WorkflowDTOBuilder builder;
 
@@ -96,15 +96,14 @@ public class WorkflowEntityIndexer extends BaseEntityIndexer<WorkflowEntity, Wor
             }
         }
     }
-    
-	@Override
-	public void clearIndex() {
-		log.debug("clear index for {}", TYPE);
-		try {
-			solr.clearIndexByType(TYPE);
-		} catch (Exception e) {
-			log.error("error with solr: {}", e.getMessage());
-		}
-	}
-    
+
+    @Override
+    public void clearIndex() {
+        log.debug("clear index for {}", TYPE);
+        try {
+            solr.clearIndexByType(TYPE);
+        } catch (Exception e) {
+            log.error("error with solr: {}", e.getMessage());
+        }
+    }
 }
