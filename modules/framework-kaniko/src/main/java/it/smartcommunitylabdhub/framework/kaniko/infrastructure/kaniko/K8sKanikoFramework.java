@@ -219,14 +219,25 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                                     ).orElseGet(Map::of)
                             ));
 
-            // Create ConfigMap
-            coreV1Api.createNamespacedConfigMap(
-                    namespace,
-                    configMap,
-                    null,
-                    null,
-                    null,
-                    null);
+            // Check if config map already exist. if not, create it
+            try {
+                coreV1Api.readNamespacedConfigMap(
+                        configMap.getMetadata().getName(),
+                        namespace,
+                        null
+                );  // ConfigMap already exist  -> do nothing
+            }   // ConfigMap does not exist -> create it
+            catch (ApiException e) {
+                log.error("Error reading configmap: " + configMap.getMetadata().getName(), e);
+                coreV1Api.createNamespacedConfigMap(
+                        namespace,
+                        configMap,
+                        null,
+                        null,
+                        null,
+                        null
+                );
+            }
 
             // Build Environment Variables
             List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
