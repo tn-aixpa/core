@@ -228,7 +228,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 );  // ConfigMap already exist  -> do nothing
             }   // ConfigMap does not exist -> create it
             catch (ApiException e) {
-                log.error("Error reading configmap: " + configMap.getMetadata().getName(), e);
+                log.error("Error reading configmap: {}", configMap.getMetadata().getName(), e);
                 coreV1Api.createNamespacedConfigMap(
                         namespace,
                         configMap,
@@ -258,7 +258,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                     .env(env)
                     .envFrom(envFrom)
                     //TODO below execute a command that is a Go script
-                    .command(List.of("/bin/sh", "-c", "/app/dh_worker.sh"));
+                    .command(List.of("/bin/bash", "-c", "/app/dh_worker.sh"));
 
 
             // Add the init container to the job
