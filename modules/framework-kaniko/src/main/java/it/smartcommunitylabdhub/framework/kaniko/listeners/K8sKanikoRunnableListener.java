@@ -74,8 +74,8 @@ public class K8sKanikoRunnableListener {
 
             try {
                 runnableStore.store(runnable.getId(), runnable);
-            } catch (StoreException sex) {
-                log.error("Error with store: {}", sex.getMessage());
+            } catch (StoreException ex) {
+                log.error("Error with store: {}", ex.getMessage());
             }
         } finally {
             if (runnable != null) {
