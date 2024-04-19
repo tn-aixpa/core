@@ -5,7 +5,9 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreItems;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -115,38 +117,38 @@ public class K8sBuilderHelper implements InitializingBean {
     public List<V1EnvFromSource> getV1EnvFromSource() {
         // Get Env var from secret and config map
         return Stream
-            .concat(
-                sharedConfigMaps
-                    .stream()
-                    .map(value -> new V1EnvFromSource().configMapRef(new V1ConfigMapEnvSource().name(value))),
-                sharedSecrets
-                    .stream()
-                    //.filter(secret -> !secret.equals("")) // skip postgres
-                    .map(secret -> new V1EnvFromSource().secretRef(new V1SecretEnvSource().name(secret)))
-            )
-            .toList();
+                .concat(
+                        sharedConfigMaps
+                                .stream()
+                                .map(value -> new V1EnvFromSource().configMapRef(new V1ConfigMapEnvSource().name(value))),
+                        sharedSecrets
+                                .stream()
+                                //.filter(secret -> !secret.equals("")) // skip postgres
+                                .map(secret -> new V1EnvFromSource().secretRef(new V1SecretEnvSource().name(secret)))
+                )
+                .toList();
     }
 
     public List<V1EnvVar> geEnvVarsFromSecrets(Map<String, Set<String>> secrets) {
         if (secrets != null) {
             return secrets
-                .entrySet()
-                .stream()
-                .filter(entry -> entry.getValue() != null)
-                .flatMap(entry ->
-                    entry
-                        .getValue()
-                        .stream()
-                        .map(key ->
-                            new V1EnvVar()
-                                .name(key)
-                                .valueFrom(
-                                    new V1EnvVarSource()
-                                        .secretKeyRef(new V1SecretKeySelector().name(entry.getKey()).key(key))
-                                )
-                        )
-                )
-                .toList();
+                    .entrySet()
+                    .stream()
+                    .filter(entry -> entry.getValue() != null)
+                    .flatMap(entry ->
+                            entry
+                                    .getValue()
+                                    .stream()
+                                    .map(key ->
+                                            new V1EnvVar()
+                                                    .name(key)
+                                                    .valueFrom(
+                                                            new V1EnvVarSource()
+                                                                    .secretKeyRef(new V1SecretKeySelector().name(entry.getKey()).key(key))
+                                                    )
+                                    )
+                    )
+                    .toList();
         }
         return Collections.emptyList();
     }
@@ -154,30 +156,39 @@ public class K8sBuilderHelper implements InitializingBean {
     public V1Volume getVolume(CoreVolume coreVolume) {
         V1Volume volume = new V1Volume().name(coreVolume.getName());
         String type = coreVolume.getVolumeType().name();
-        Map<String, String> spec = coreVolume.getSpec();
+        Map<String, Serializable> spec = coreVolume.getSpec();
         switch (type) {
             // TODO: support items
             case "config_map":
                 return volume.configMap(
-                    new V1ConfigMapVolumeSource().name(spec.getOrDefault("name", coreVolume.getName()))
+                        new V1ConfigMapVolumeSource()
+                                .name((String) spec.getOrDefault("name", coreVolume.getName()))
                 );
             case "secret":
+                CoreItems coreItems = (CoreItems)
+                        spec.getOrDefault("items", new CoreItems.Builder().build());
+
                 return volume.secret(
                         new V1SecretVolumeSource()
-                                .secretName(spec.getOrDefault("secret_name", coreVolume.getName()))
-                                .items(coreVolume.getKeyToPath().stream()
-                                        .map(p -> new V1KeyToPath().key(p.key()).path(p.path())).toList())
+                                .secretName((String) spec.getOrDefault("secret_name", coreVolume.getName()))
+                                .items(coreItems.getItems()
+                                        .stream().flatMap(map -> map.entrySet().stream())
+                                        .map(entry -> new V1KeyToPath()
+                                                .key(entry.getKey())
+                                                .path((String) entry.getValue()))
+                                        .toList())
                 );
             case "persistent_volume_claim":
                 return volume.persistentVolumeClaim(
-                    new V1PersistentVolumeClaimVolumeSource()
-                        .claimName(spec.getOrDefault("claim_name", coreVolume.getName()))
+                        new V1PersistentVolumeClaimVolumeSource()
+                                .claimName((String) spec.getOrDefault("claim_name", coreVolume.getName()))
                 );
             case "empty_dir":
                 return volume.emptyDir(
-                    new V1EmptyDirVolumeSource()
-                        .medium(spec.getOrDefault("medium", null))
-                        .sizeLimit(Quantity.fromString(spec.getOrDefault("sizeLimit", "128Mi")))
+                        new V1EmptyDirVolumeSource()
+                                .medium((String) spec.getOrDefault("medium", null))
+                                .sizeLimit(Quantity.fromString(
+                                        (String) spec.getOrDefault("sizeLimit", "128Mi")))
                 );
             default:
                 return null;
@@ -186,10 +197,10 @@ public class K8sBuilderHelper implements InitializingBean {
 
     public Map<String, Quantity> convertResources(Map<String, String> map) {
         return map
-            .entrySet()
-            .stream()
-            .map(entry -> Map.entry(entry.getKey(), Quantity.fromString(entry.getValue())))
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+                .entrySet()
+                .stream()
+                .map(entry -> Map.entry(entry.getKey(), Quantity.fromString(entry.getValue())))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
     public V1VolumeMount getVolumeMount(CoreVolume coreVolume) {

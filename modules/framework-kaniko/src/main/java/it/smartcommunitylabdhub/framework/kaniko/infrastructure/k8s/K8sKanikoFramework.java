@@ -10,8 +10,8 @@ import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreItems;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolumeKeyToPath;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.ContextRef;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.ContextSource;
@@ -117,8 +117,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         CoreVolume sharedVolume = new CoreVolume(
                 CoreVolume.VolumeType.empty_dir,
                 "/shared",
-                "shared-dir", Map.of("sizeLimit", "100Mi"),
-                List.of());
+                "shared-dir",
+                Map.of("sizeLimit", "100Mi"));
 
         List<CoreVolume> volumes = new ArrayList<>();
         List<CoreVolume> runnableVolumesOpt = Optional.ofNullable(runnable.getVolumes()).orElseGet(List::of);
@@ -132,8 +132,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 CoreVolume.VolumeType.config_map,
                 "/init-config-map",
                 "init-config-map",
-                Map.of("name", "init-config-map-" + runnable.getId()),
-                List.of());
+                Map.of("name", "init-config-map-" + runnable.getId())
+        );
 
         if (runnableVolumesOpt.stream().noneMatch(v -> "init-config-map".equals(v.getName()))) {
             volumes.add(configMapVolume);
@@ -144,8 +144,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 CoreVolume.VolumeType.secret,
                 "/kaniko/.docker",
                 kanikoSecret,
-                Map.of(),
-                List.of(new CoreVolumeKeyToPath(".dockerconfigjson", "config.json"))
+                Map.of("items", CoreItems
+                        .builder().keyToPath(Map.of(".dockerconfigjson", "config.json")).build())
         );
         if (runnableVolumesOpt.stream().noneMatch(v -> kanikoSecret.equals(v.getName()))) {
             volumes.add(secretVolume);

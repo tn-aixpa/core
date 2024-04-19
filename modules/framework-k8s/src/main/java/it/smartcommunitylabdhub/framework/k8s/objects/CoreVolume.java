@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.List;
-import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,10 +27,7 @@ public class CoreVolume implements Serializable {
     @NotBlank
     private String name;
 
-    private Map<String, String> spec;
-
-    @JsonProperty("key_to_path")
-    private List<CoreVolumeKeyToPath> keyToPath;
+    private Map<String, Serializable> spec;
 
     public enum VolumeType {
         config_map,
