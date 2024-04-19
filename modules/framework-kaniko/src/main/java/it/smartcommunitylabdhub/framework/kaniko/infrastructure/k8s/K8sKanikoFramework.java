@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.framework.kaniko.infrastructure.kaniko;
+package it.smartcommunitylabdhub.framework.kaniko.infrastructure.k8s;
 
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -258,7 +258,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                     .env(env)
                     .envFrom(envFrom)
                     //TODO below execute a command that is a Go script
-                    .command(List.of("/bin/bash", "-c", "/app/dh_worker.sh"));
+                    .command(List.of("/bin/bash", "-c", "/app/context_builder.sh"));
 
 
             // Add the init container to the job
