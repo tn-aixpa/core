@@ -11,8 +11,6 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-import it.smartcommunitylabdhub.framework.kaniko.infrastructure.kaniko.K8sKanikoFramework;
-import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -38,13 +36,6 @@ public class K8sFrameworkConfig {
     public RunnableStore<K8sJobRunnable> k8sjobRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
         return storeSupplier.get(K8sJobRunnable.class);
     }
-
-    @Bean
-    @ConditionalOnKubernetes
-    public RunnableStore<K8sKanikoRunnable> k8sbuildRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
-        return storeSupplier.get(K8sKanikoRunnable.class);
-    }
-
 
     @Bean
     @ConditionalOnKubernetes
@@ -76,9 +67,4 @@ public class K8sFrameworkConfig {
         return new K8sServeFramework(apiClient);
     }
 
-    @Bean
-    @ConditionalOnKubernetes
-    public K8sKanikoFramework k8sBuildFramework(ApiClient apiClient) {
-        return new K8sKanikoFramework(apiClient);
-    }
 }

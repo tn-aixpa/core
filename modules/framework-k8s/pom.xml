@@ -25,11 +25,6 @@
             <artifactId>dh-fsm</artifactId>
             <version>${revision}</version>
         </dependency>
-        <dependency>
-            <groupId>it.smartcommunitylabdhub</groupId>
-            <artifactId>dh-framework-kaniko</artifactId>
-            <version>${revision}</version>
-        </dependency>
 
         <dependency>
             <groupId>io.kubernetes</groupId>

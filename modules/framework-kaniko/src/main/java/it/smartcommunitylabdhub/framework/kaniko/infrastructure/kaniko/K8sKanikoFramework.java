@@ -115,7 +115,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Create sharedVolume
         CoreVolume sharedVolume = new CoreVolume(
-                "empty_dir",
+                CoreVolume.VolumeType.empty_dir,
                 "/shared",
                 "shared-dir", Map.of("sizeLimit", "100Mi"),
                 List.of());
@@ -123,31 +123,31 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         List<CoreVolume> volumes = new ArrayList<>();
         List<CoreVolume> runnableVolumesOpt = Optional.ofNullable(runnable.getVolumes()).orElseGet(List::of);
         // Check if runnable already contains shared-dir
-        if (runnableVolumesOpt.stream().noneMatch(v -> "shared-dir".equals(v.name()))) {
+        if (runnableVolumesOpt.stream().noneMatch(v -> "shared-dir".equals(v.getName()))) {
             volumes.add(sharedVolume);
         }
 
         // Create config map volume
         CoreVolume configMapVolume = new CoreVolume(
-                "config_map",
+                CoreVolume.VolumeType.config_map,
                 "/init-config-map",
                 "init-config-map",
                 Map.of("name", "init-config-map-" + runnable.getId()),
                 List.of());
 
-        if (runnableVolumesOpt.stream().noneMatch(v -> "init-config-map".equals(v.name()))) {
+        if (runnableVolumesOpt.stream().noneMatch(v -> "init-config-map".equals(v.getName()))) {
             volumes.add(configMapVolume);
         }
 
         // Add secret for kaniko
         CoreVolume secretVolume = new CoreVolume(
-                "secret",
+                CoreVolume.VolumeType.secret,
                 "/kaniko/.docker",
                 kanikoSecret,
                 Map.of(),
                 List.of(new CoreVolumeKeyToPath(".dockerconfigjson", "config.json"))
         );
-        if (runnableVolumesOpt.stream().noneMatch(v -> kanikoSecret.equals(v.name()))) {
+        if (runnableVolumesOpt.stream().noneMatch(v -> kanikoSecret.equals(v.getName()))) {
             volumes.add(secretVolume);
         }
 
