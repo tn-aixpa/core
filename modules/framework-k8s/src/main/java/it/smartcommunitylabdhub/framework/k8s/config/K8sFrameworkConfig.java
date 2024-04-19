@@ -4,15 +4,15 @@ import io.kubernetes.client.openapi.ApiClient;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBuildFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sBuildRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import it.smartcommunitylabdhub.framework.kaniko.infrastructure.kaniko.K8sKanikoFramework;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,7 +28,7 @@ public class K8sFrameworkConfig {
     @Bean
     @ConditionalOnKubernetes
     public RunnableStore<K8sDeploymentRunnable> k8sDeploymentRunnableStoreService(
-        RunnableStore.StoreSupplier storeSupplier
+            RunnableStore.StoreSupplier storeSupplier
     ) {
         return storeSupplier.get(K8sDeploymentRunnable.class);
     }
@@ -41,8 +41,8 @@ public class K8sFrameworkConfig {
 
     @Bean
     @ConditionalOnKubernetes
-    public RunnableStore<K8sBuildRunnable> k8sbuildRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
-        return storeSupplier.get(K8sBuildRunnable.class);
+    public RunnableStore<K8sKanikoRunnable> k8sbuildRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
+        return storeSupplier.get(K8sKanikoRunnable.class);
     }
 
 
@@ -78,7 +78,7 @@ public class K8sFrameworkConfig {
 
     @Bean
     @ConditionalOnKubernetes
-    public K8sBuildFramework k8sBuildFramework(ApiClient apiClient) {
-        return new K8sBuildFramework(apiClient);
+    public K8sKanikoFramework k8sBuildFramework(ApiClient apiClient) {
+        return new K8sKanikoFramework(apiClient);
     }
 }
