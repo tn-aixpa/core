@@ -19,7 +19,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class K8sKanikoRunnable extends K8sRunnable {
 
-
     @JsonProperty("dockerfile")
     private String dockerFile;
 

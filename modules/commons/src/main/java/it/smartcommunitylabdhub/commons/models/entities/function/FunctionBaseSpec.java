@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.commons.models.entities.function;
 
 import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
-
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;

@@ -211,7 +211,8 @@ public class TaskServiceImpl implements SearchableTaskService {
 
             // task may belong to function or to workflow
             String runtime = taskSpecAccessor.getRuntime();
-            EntityService<? extends Executable, ? extends BaseEntity> executableEntityService = executableEntityServiceProvider.getEntityServiceByRuntime(runtime);
+            EntityService<? extends Executable, ? extends BaseEntity> executableEntityService =
+                executableEntityServiceProvider.getEntityServiceByRuntime(runtime);
             EntityName entityName = executableEntityServiceProvider.getEntityNameByRuntime(runtime);
 
             Executable executable = executableEntityService.find(functionId);

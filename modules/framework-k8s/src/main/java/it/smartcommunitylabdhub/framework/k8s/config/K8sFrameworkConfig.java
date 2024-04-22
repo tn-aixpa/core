@@ -26,7 +26,7 @@ public class K8sFrameworkConfig {
     @Bean
     @ConditionalOnKubernetes
     public RunnableStore<K8sDeploymentRunnable> k8sDeploymentRunnableStoreService(
-            RunnableStore.StoreSupplier storeSupplier
+        RunnableStore.StoreSupplier storeSupplier
     ) {
         return storeSupplier.get(K8sDeploymentRunnable.class);
     }
@@ -66,5 +66,4 @@ public class K8sFrameworkConfig {
     public K8sServeFramework k8sServeFramework(ApiClient apiClient) {
         return new K8sServeFramework(apiClient);
     }
-
 }

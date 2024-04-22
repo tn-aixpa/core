@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-
 /**
  * DockerfileGenerator is a utility class for programmatically generating Dockerfiles.
  * It allows users to specify Dockerfile directives and instructions, set configurations such as
@@ -63,7 +62,6 @@ public class DockerfileGenerator {
     @Getter
     @Setter
     private String healthCheck;
-
 
     /**
      * Appends an instruction of the given type.

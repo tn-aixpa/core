@@ -11,13 +11,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class KanikoFrameworkConfig {
 
-
     @Bean
     @ConditionalOnKubernetes
     public RunnableStore<K8sKanikoRunnable> k8sKanikoRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
         return storeSupplier.get(K8sKanikoRunnable.class);
     }
-
 
     @Bean
     @ConditionalOnKubernetes

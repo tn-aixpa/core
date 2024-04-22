@@ -37,28 +37,27 @@ public class KanikoImageBuilderTest {
     @Test
     void testBuildDockerImage() throws IOException {
         String basePath = Paths.get(System.getProperty("user.dir")).getParent().toString();
-
         // Create a sample DockerBuildConfiguration
-//        DockerBuildConfig dockerBuildConfig = new DockerBuildConfig();
-//        dockerBuildConfig.setDockerTemplatePath(Path.of(basePath, kanikoSourcePath).toString());
-//        dockerBuildConfig.setDockerTargetPath(Path.of(basePath, kanikoTargetPath).toString());
-//        dockerBuildConfig.setSharedData("https://www.dwsamplefiles.com/?dl_id=557");
-//        dockerBuildConfig.setBaseImage("openjdk:11");
-//        dockerBuildConfig
-//                .addCommand("WORKDIR /app")
-//                .addCommand("COPY . /app")
-//                .addCommand("RUN javac ./HelloWorld.java");
-//        dockerBuildConfig.setEntrypointCommand("\"java\", \"HelloWorld\"");
-//
-//        JobBuildConfig jobBuildConfig = JobBuildConfig
-//                .builder()
-//                .type("function")
-//                .name("testfunction")
-//                .uuid(UUID.randomUUID().toString())
-//                .build();
-//        // Invoke the buildDockerImage method
-//        CompletableFuture<?> kaniko = KanikoImageBuilder.buildDockerImage(client, dockerBuildConfig, jobBuildConfig);
-//
-//        kaniko.join();
+        //        DockerBuildConfig dockerBuildConfig = new DockerBuildConfig();
+        //        dockerBuildConfig.setDockerTemplatePath(Path.of(basePath, kanikoSourcePath).toString());
+        //        dockerBuildConfig.setDockerTargetPath(Path.of(basePath, kanikoTargetPath).toString());
+        //        dockerBuildConfig.setSharedData("https://www.dwsamplefiles.com/?dl_id=557");
+        //        dockerBuildConfig.setBaseImage("openjdk:11");
+        //        dockerBuildConfig
+        //                .addCommand("WORKDIR /app")
+        //                .addCommand("COPY . /app")
+        //                .addCommand("RUN javac ./HelloWorld.java");
+        //        dockerBuildConfig.setEntrypointCommand("\"java\", \"HelloWorld\"");
+        //
+        //        JobBuildConfig jobBuildConfig = JobBuildConfig
+        //                .builder()
+        //                .type("function")
+        //                .name("testfunction")
+        //                .uuid(UUID.randomUUID().toString())
+        //                .build();
+        //        // Invoke the buildDockerImage method
+        //        CompletableFuture<?> kaniko = KanikoImageBuilder.buildDockerImage(client, dockerBuildConfig, jobBuildConfig);
+        //
+        //        kaniko.join();
     }
 }

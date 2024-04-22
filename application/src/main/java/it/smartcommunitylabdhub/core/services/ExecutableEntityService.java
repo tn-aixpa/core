@@ -1,8 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
@@ -12,17 +9,20 @@ import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 public class ExecutableEntityService {
-    
+
     @Autowired
     private EntityService<Function, FunctionEntity> functionEntityService;
+
     @Autowired
     private EntityService<Workflow, WorkflowEntity> workflowEntityService;
+
     @Autowired
     private SpecRegistry specRegistry;
-
 
     public EntityService<? extends Executable, ? extends BaseEntity> getEntityServiceByRuntime(String runtime) {
         Schema schema = specRegistry.getSchema(runtime);
@@ -36,14 +36,11 @@ public class ExecutableEntityService {
     }
 
     public EntityService<? extends Executable, ? extends BaseEntity> getEntityServiceByEntity(EntityName entity) {
-        return EntityName.FUNCTION.equals(entity) 
-        ? functionEntityService
-        : workflowEntityService;
+        return EntityName.FUNCTION.equals(entity) ? functionEntityService : workflowEntityService;
     }
 
     public EntityName getEntityNameByRuntime(String runtime) {
         Schema schema = specRegistry.getSchema(runtime);
         return EntityName.valueOf(schema.entity());
     }
-
 }

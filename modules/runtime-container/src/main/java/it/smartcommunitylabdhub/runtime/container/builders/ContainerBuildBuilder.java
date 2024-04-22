@@ -25,8 +25,8 @@ public class ContainerBuildBuilder implements Builder<FunctionContainerSpec, Tas
 
         //let run override k8s specs
         Optional
-                .ofNullable(runSpec.getTaskJobSpec())
-                .ifPresent(k8sSpec -> containerSpec.getTaskJobSpec().configure(k8sSpec.toMap()));
+            .ofNullable(runSpec.getTaskJobSpec())
+            .ifPresent(k8sSpec -> containerSpec.getTaskJobSpec().configure(k8sSpec.toMap()));
 
         return containerSpec;
     }

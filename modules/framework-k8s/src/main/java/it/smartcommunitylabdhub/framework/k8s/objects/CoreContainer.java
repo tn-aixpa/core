@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.List;
 import lombok.*;
 
-
 @Getter
 @Setter
 @AllArgsConstructor
@@ -18,5 +17,4 @@ public class CoreContainer implements Serializable {
     List<String> args;
     String workingDir;
     List<CoreEnv> envs;
-
 }

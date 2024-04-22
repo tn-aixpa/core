@@ -51,33 +51,33 @@ public class K8sBuilderHelper implements InitializingBean {
 
         // Remove all not present secrets
         sharedSecrets =
-                sharedSecrets
-                        .stream()
-                        .flatMap(secret -> {
-                            try {
-                                coreV1Api.readNamespacedSecret(secret, namespace, null);
-                                return Stream.of(secret);
-                            } catch (Exception e) {
-                                log.error("Error reading secret: " + secret, e);
-                                return Stream.empty();
-                            }
-                        })
-                        .toList();
+            sharedSecrets
+                .stream()
+                .flatMap(secret -> {
+                    try {
+                        coreV1Api.readNamespacedSecret(secret, namespace, null);
+                        return Stream.of(secret);
+                    } catch (Exception e) {
+                        log.error("Error reading secret: " + secret, e);
+                        return Stream.empty();
+                    }
+                })
+                .toList();
 
         // Remove all not present config maps
         sharedConfigMaps =
-                sharedConfigMaps
-                        .stream()
-                        .flatMap(configMap -> {
-                            try {
-                                coreV1Api.readNamespacedConfigMap(configMap, namespace, null);
-                                return Stream.of(configMap);
-                            } catch (Exception e) {
-                                log.error("Error reading configmap: " + configMap, e);
-                                return Stream.empty();
-                            }
-                        })
-                        .toList();
+            sharedConfigMaps
+                .stream()
+                .flatMap(configMap -> {
+                    try {
+                        coreV1Api.readNamespacedConfigMap(configMap, namespace, null);
+                        return Stream.of(configMap);
+                    } catch (Exception e) {
+                        log.error("Error reading configmap: " + configMap, e);
+                        return Stream.empty();
+                    }
+                })
+                .toList();
     }
 
     /**
@@ -118,38 +118,38 @@ public class K8sBuilderHelper implements InitializingBean {
     public List<V1EnvFromSource> getV1EnvFromSource() {
         // Get Env var from secret and config map
         return Stream
-                .concat(
-                        sharedConfigMaps
-                                .stream()
-                                .map(value -> new V1EnvFromSource().configMapRef(new V1ConfigMapEnvSource().name(value))),
-                        sharedSecrets
-                                .stream()
-                                //.filter(secret -> !secret.equals("")) // skip postgres
-                                .map(secret -> new V1EnvFromSource().secretRef(new V1SecretEnvSource().name(secret)))
-                )
-                .toList();
+            .concat(
+                sharedConfigMaps
+                    .stream()
+                    .map(value -> new V1EnvFromSource().configMapRef(new V1ConfigMapEnvSource().name(value))),
+                sharedSecrets
+                    .stream()
+                    //.filter(secret -> !secret.equals("")) // skip postgres
+                    .map(secret -> new V1EnvFromSource().secretRef(new V1SecretEnvSource().name(secret)))
+            )
+            .toList();
     }
 
     public List<V1EnvVar> geEnvVarsFromSecrets(Map<String, Set<String>> secrets) {
         if (secrets != null) {
             return secrets
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> entry.getValue() != null)
-                    .flatMap(entry ->
-                            entry
-                                    .getValue()
-                                    .stream()
-                                    .map(key ->
-                                            new V1EnvVar()
-                                                    .name(key)
-                                                    .valueFrom(
-                                                            new V1EnvVarSource()
-                                                                    .secretKeyRef(new V1SecretKeySelector().name(entry.getKey()).key(key))
-                                                    )
-                                    )
-                    )
-                    .toList();
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue() != null)
+                .flatMap(entry ->
+                    entry
+                        .getValue()
+                        .stream()
+                        .map(key ->
+                            new V1EnvVar()
+                                .name(key)
+                                .valueFrom(
+                                    new V1EnvVarSource()
+                                        .secretKeyRef(new V1SecretKeySelector().name(entry.getKey()).key(key))
+                                )
+                        )
+                )
+                .toList();
         }
         return Collections.emptyList();
     }
@@ -162,33 +162,35 @@ public class K8sBuilderHelper implements InitializingBean {
             // TODO: support items
             case "config_map":
                 return volume.configMap(
-                        new V1ConfigMapVolumeSource()
-                                .name((String) spec.getOrDefault("name", coreVolume.getName()))
+                    new V1ConfigMapVolumeSource().name((String) spec.getOrDefault("name", coreVolume.getName()))
                 );
             case "secret":
-                
-                CoreItems coreItems = JacksonMapper.OBJECT_MAPPER.convertValue(spec.getOrDefault("items", new HashMap<>()), CoreItems.class);
+                CoreItems coreItems = JacksonMapper.OBJECT_MAPPER.convertValue(
+                    spec.getOrDefault("items", new HashMap<>()),
+                    CoreItems.class
+                );
                 return volume.secret(
-                        new V1SecretVolumeSource()
-                                .secretName((String) spec.getOrDefault("secret_name", coreVolume.getName()))
-                                .items(coreItems.getCoreItems()
-                                        .stream().flatMap(map -> map.entrySet().stream())
-                                        .map(entry -> new V1KeyToPath()
-                                                .key(entry.getKey())
-                                                .path((String) entry.getValue()))
-                                        .toList())
+                    new V1SecretVolumeSource()
+                        .secretName((String) spec.getOrDefault("secret_name", coreVolume.getName()))
+                        .items(
+                            coreItems
+                                .getCoreItems()
+                                .stream()
+                                .flatMap(map -> map.entrySet().stream())
+                                .map(entry -> new V1KeyToPath().key(entry.getKey()).path((String) entry.getValue()))
+                                .toList()
+                        )
                 );
             case "persistent_volume_claim":
                 return volume.persistentVolumeClaim(
-                        new V1PersistentVolumeClaimVolumeSource()
-                                .claimName((String) spec.getOrDefault("claim_name", coreVolume.getName()))
+                    new V1PersistentVolumeClaimVolumeSource()
+                        .claimName((String) spec.getOrDefault("claim_name", coreVolume.getName()))
                 );
             case "empty_dir":
                 return volume.emptyDir(
-                        new V1EmptyDirVolumeSource()
-                                .medium((String) spec.getOrDefault("medium", null))
-                                .sizeLimit(Quantity.fromString(
-                                        (String) spec.getOrDefault("sizeLimit", "128Mi")))
+                    new V1EmptyDirVolumeSource()
+                        .medium((String) spec.getOrDefault("medium", null))
+                        .sizeLimit(Quantity.fromString((String) spec.getOrDefault("sizeLimit", "128Mi")))
                 );
             default:
                 return null;
@@ -197,10 +199,10 @@ public class K8sBuilderHelper implements InitializingBean {
 
     public Map<String, Quantity> convertResources(Map<String, String> map) {
         return map
-                .entrySet()
-                .stream()
-                .map(entry -> Map.entry(entry.getKey(), Quantity.fromString(entry.getValue())))
-                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+            .entrySet()
+            .stream()
+            .map(entry -> Map.entry(entry.getKey(), Quantity.fromString(entry.getValue())))
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
     public V1VolumeMount getVolumeMount(CoreVolume coreVolume) {

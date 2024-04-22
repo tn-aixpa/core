@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 public class CoreItems implements Serializable {
 
     private List<Map<String, Serializable>> coreItems;
-    
 
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
+
         private final List<Map<String, Serializable>> coreItems = new ArrayList<>();
 
         public Builder keyToPath(Map<String, Serializable> keyToPath) {

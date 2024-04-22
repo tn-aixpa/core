@@ -28,9 +28,9 @@ public class K8sKanikoMonitor implements K8sBaseMonitor<Void> {
     private final ApplicationEventPublisher eventPublisher;
 
     public K8sKanikoMonitor(
-            K8sKanikoFramework k8sBuildFramework,
-            RunnableStore<K8sKanikoRunnable> runnableStore,
-            ApplicationEventPublisher eventPublisher
+        K8sKanikoFramework k8sBuildFramework,
+        RunnableStore<K8sKanikoRunnable> runnableStore,
+        ApplicationEventPublisher eventPublisher
     ) {
         this.k8sBuildFramework = k8sBuildFramework;
         this.runnableStore = runnableStore;
@@ -40,59 +40,59 @@ public class K8sKanikoMonitor implements K8sBaseMonitor<Void> {
     @Override
     public Void monitor() {
         runnableStore
-                .findAll()
-                .stream()
-                .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
-                .flatMap(runnable -> {
-                    try {
-                        V1Job v1Job = k8sBuildFramework.get(k8sBuildFramework.build(runnable));
-                        Assert.notNull(Objects.requireNonNull(v1Job.getStatus()), "Job status can not be null");
-                        log.info("Job status: {}", v1Job.getStatus().toString());
+            .findAll()
+            .stream()
+            .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
+            .flatMap(runnable -> {
+                try {
+                    V1Job v1Job = k8sBuildFramework.get(k8sBuildFramework.build(runnable));
+                    Assert.notNull(Objects.requireNonNull(v1Job.getStatus()), "Job status can not be null");
+                    log.info("Job status: {}", v1Job.getStatus().toString());
 
-                        if (v1Job.getStatus().getSucceeded() != null) {
-                            // Job has succeeded
-                            runnable.setState(State.COMPLETED.name());
-                        } else if (v1Job.getStatus().getFailed() != null) {
-                            // Job has failed delete job and pod
-                            runnable.setState(State.ERROR.name());
-                        } else if (v1Job.getStatus().getActive() != null && v1Job.getStatus().getActive() > 0) {
-                            // Job is active and is running
-                            runnable.setState(State.RUNNING.name());
-                        }
-
-                        return Stream.of(runnable);
-                    } catch (K8sFrameworkException e) {
-                        // Set Runnable to ERROR state
+                    if (v1Job.getStatus().getSucceeded() != null) {
+                        // Job has succeeded
+                        runnable.setState(State.COMPLETED.name());
+                    } else if (v1Job.getStatus().getFailed() != null) {
+                        // Job has failed delete job and pod
                         runnable.setState(State.ERROR.name());
-                        return Stream.of(runnable);
+                    } else if (v1Job.getStatus().getActive() != null && v1Job.getStatus().getActive() > 0) {
+                        // Job is active and is running
+                        runnable.setState(State.RUNNING.name());
                     }
-                })
-                .forEach(runnable -> {
-                    // Update the runnable
-                    try {
-                        runnableStore.store(runnable.getId(), runnable);
 
-                        // Send message to Serve manager
-                        eventPublisher.publishEvent(
-                                RunnableChangedEvent
-                                        .builder()
-                                        .runnable(runnable)
-                                        .runMonitorObject(
-                                                RunnableMonitorObject
-                                                        .builder()
-                                                        .runId(runnable.getId())
-                                                        .stateId(runnable.getState())
-                                                        .project(runnable.getProject())
-                                                        .framework(runnable.getFramework())
-                                                        .task(runnable.getTask())
-                                                        .build()
-                                        )
-                                        .build()
-                        );
-                    } catch (StoreException e) {
-                        log.error("Error with runnable store: {}", e.getMessage());
-                    }
-                });
+                    return Stream.of(runnable);
+                } catch (K8sFrameworkException e) {
+                    // Set Runnable to ERROR state
+                    runnable.setState(State.ERROR.name());
+                    return Stream.of(runnable);
+                }
+            })
+            .forEach(runnable -> {
+                // Update the runnable
+                try {
+                    runnableStore.store(runnable.getId(), runnable);
+
+                    // Send message to Serve manager
+                    eventPublisher.publishEvent(
+                        RunnableChangedEvent
+                            .builder()
+                            .runnable(runnable)
+                            .runMonitorObject(
+                                RunnableMonitorObject
+                                    .builder()
+                                    .runId(runnable.getId())
+                                    .stateId(runnable.getState())
+                                    .project(runnable.getProject())
+                                    .framework(runnable.getFramework())
+                                    .task(runnable.getTask())
+                                    .build()
+                            )
+                            .build()
+                    );
+                } catch (StoreException e) {
+                    log.error("Error with runnable store: {}", e.getMessage());
+                }
+            });
         return null;
     }
 

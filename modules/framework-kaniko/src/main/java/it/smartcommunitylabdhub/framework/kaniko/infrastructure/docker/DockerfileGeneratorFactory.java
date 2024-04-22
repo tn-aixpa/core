@@ -54,20 +54,18 @@ public class DockerfileGeneratorFactory {
     }
 
     public DockerfileGeneratorFactory entrypoint(List<String> entrypoint) {
-        generator.addInstruction(DockerfileInstruction.ENTRYPOINT, "ENTRYPOINT [" +
-                entrypoint
-                        .stream()
-                        .map(s -> "\"" + s + "\"").collect(Collectors.joining(", "))
-                + "]");
+        generator.addInstruction(
+            DockerfileInstruction.ENTRYPOINT,
+            "ENTRYPOINT [" + entrypoint.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]"
+        );
         return this;
     }
 
     public DockerfileGeneratorFactory cmd(List<String> command) {
-        generator.addInstruction(DockerfileInstruction.CMD, "CMD [" +
-                command
-                        .stream()
-                        .map(s -> "\"" + s + "\"").collect(Collectors.joining(", "))
-                + "]");
+        generator.addInstruction(
+            DockerfileInstruction.CMD,
+            "CMD [" + command.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]"
+        );
         return this;
     }
 

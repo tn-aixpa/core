@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.framework.kaniko.runnables;
 import java.io.Serializable;
 import lombok.*;
 
-
 @Getter
 @Setter
 @AllArgsConstructor

@@ -40,20 +40,20 @@ public class K8sKanikoRunnableListener {
 
         try {
             runnable =
-                    switch (State.valueOf(runnable.getState())) {
-                        case State.READY -> {
-                            yield k8sFramework.run(runnable);
-                        }
-                        case State.STOP -> {
-                            yield k8sFramework.stop(runnable);
-                        }
-                        case State.DELETING -> {
-                            yield k8sFramework.delete(runnable);
-                        }
-                        default -> {
-                            yield null;
-                        }
-                    };
+                switch (State.valueOf(runnable.getState())) {
+                    case State.READY -> {
+                        yield k8sFramework.run(runnable);
+                    }
+                    case State.STOP -> {
+                        yield k8sFramework.stop(runnable);
+                    }
+                    case State.DELETING -> {
+                        yield k8sFramework.delete(runnable);
+                    }
+                    default -> {
+                        yield null;
+                    }
+                };
 
             if (runnable != null) {
                 try {
@@ -83,20 +83,20 @@ public class K8sKanikoRunnableListener {
 
                 // Publish event to Run Manager
                 eventPublisher.publishEvent(
-                        RunnableChangedEvent
+                    RunnableChangedEvent
+                        .builder()
+                        .runnable(runnable)
+                        .runMonitorObject(
+                            RunnableMonitorObject
                                 .builder()
-                                .runnable(runnable)
-                                .runMonitorObject(
-                                        RunnableMonitorObject
-                                                .builder()
-                                                .runId(runnable.getId())
-                                                .stateId(runnable.getState())
-                                                .project(runnable.getProject())
-                                                .framework(runnable.getFramework())
-                                                .task(runnable.getTask())
-                                                .build()
-                                )
+                                .runId(runnable.getId())
+                                .stateId(runnable.getState())
+                                .project(runnable.getProject())
+                                .framework(runnable.getFramework())
+                                .task(runnable.getTask())
                                 .build()
+                        )
+                        .build()
                 );
             }
         }

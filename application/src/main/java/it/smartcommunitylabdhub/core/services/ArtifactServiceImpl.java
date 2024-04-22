@@ -301,7 +301,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
 
         //clear index
         indexer.clearIndex();
-        
+
         //use pagination and batch
         boolean hasMore = true;
         int pageNumber = 0;
