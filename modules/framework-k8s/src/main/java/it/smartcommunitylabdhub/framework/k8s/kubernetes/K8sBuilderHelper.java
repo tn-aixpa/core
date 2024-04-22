@@ -4,6 +4,7 @@ import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreItems;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
@@ -165,13 +166,12 @@ public class K8sBuilderHelper implements InitializingBean {
                                 .name((String) spec.getOrDefault("name", coreVolume.getName()))
                 );
             case "secret":
-                CoreItems coreItems = (CoreItems)
-                        spec.getOrDefault("items", new CoreItems.Builder().build());
-
+                
+                CoreItems coreItems = JacksonMapper.OBJECT_MAPPER.convertValue(spec.getOrDefault("items", new HashMap<>()), CoreItems.class);
                 return volume.secret(
                         new V1SecretVolumeSource()
                                 .secretName((String) spec.getOrDefault("secret_name", coreVolume.getName()))
-                                .items(coreItems.getItems()
+                                .items(coreItems.getCoreItems()
                                         .stream().flatMap(map -> map.entrySet().stream())
                                         .map(entry -> new V1KeyToPath()
                                                 .key(entry.getKey())
