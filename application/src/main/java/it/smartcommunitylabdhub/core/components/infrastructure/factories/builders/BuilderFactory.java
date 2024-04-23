@@ -64,10 +64,9 @@ public class BuilderFactory {
      * @throws IllegalArgumentException If no Builder is found for the given platform.
      */
     @SuppressWarnings("unchecked")
-    public <B extends Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> B getBuilder(
-        String runtime,
-        String task
-    ) {
+    public <
+        B extends Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>
+    > B getBuilder(String runtime, String task) {
         B concreteBuilder = (B) builderMap.get(runtime + "+" + task);
         if (concreteBuilder == null) {
             throw new IllegalArgumentException("No builder found for name: " + runtime + "+" + task);

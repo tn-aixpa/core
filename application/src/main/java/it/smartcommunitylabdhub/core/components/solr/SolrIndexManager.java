@@ -177,7 +177,7 @@ public class SolrIndexManager {
         solrClient.deleteByQuery(solrCollection, "*:*");
         solrClient.commit(solrCollection);
     }
-    
+
     public void clearIndexByType(String type) throws IOException, SolrException, SolrServerException {
         solrClient.deleteByQuery(solrCollection, "type:" + type.trim());
         solrClient.commit(solrCollection);

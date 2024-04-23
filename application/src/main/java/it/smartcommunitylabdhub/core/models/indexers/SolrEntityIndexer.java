@@ -13,6 +13,6 @@ public interface SolrEntityIndexer<T extends BaseEntity> {
     public void indexAll(Collection<T> entities);
 
     public Collection<IndexField> fields();
-    
+
     public void clearIndex();
 }
