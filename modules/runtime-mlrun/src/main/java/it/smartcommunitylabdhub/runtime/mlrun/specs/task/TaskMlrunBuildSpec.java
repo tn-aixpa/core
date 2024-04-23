@@ -6,7 +6,11 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,6 +25,12 @@ public class TaskMlrunBuildSpec extends TaskBaseSpec {
 
     private K8sTaskSpec k8s = new K8sTaskSpec();
 
+    private List<String> commands;
+    @JsonProperty("force_build")
+    private Boolean forceBuild;
+    @JsonProperty("target_image")
+    private String targetImage;
+
     public TaskMlrunBuildSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -31,5 +41,8 @@ public class TaskMlrunBuildSpec extends TaskBaseSpec {
 
         TaskMlrunBuildSpec spec = mapper.convertValue(data, TaskMlrunBuildSpec.class);
         this.k8s = spec.getK8s();
+        this.commands = spec.getCommands();
+        this.forceBuild = spec.getForceBuild();
+        this.targetImage = spec.getTargetImage();
     }
 }
