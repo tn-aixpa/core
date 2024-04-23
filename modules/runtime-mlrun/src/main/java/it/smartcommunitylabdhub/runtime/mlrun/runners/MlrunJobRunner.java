@@ -23,15 +23,15 @@ import java.util.Set;
  * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
  * you have to register it using the following annotation:
  *
- * @RunnerComponent(runtime = "mlrun", task = "mlrun")
+ * @RunnerComponent(runtime = "mlrun", task = "job")
  */
-public class MlrunMlrunRunner implements Runner<K8sJobRunnable> {
+public class MlrunJobRunner implements Runner<K8sJobRunnable> {
 
-    private static final String TASK = "mlrun";
+    private static final String TASK = "job";
     private final String image;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public MlrunMlrunRunner(String image, Map<String, Set<String>> groupedSecrets) {
+    public MlrunJobRunner(String image, Map<String, Set<String>> groupedSecrets) {
         this.image = image;
         this.groupedSecrets = groupedSecrets;
     }

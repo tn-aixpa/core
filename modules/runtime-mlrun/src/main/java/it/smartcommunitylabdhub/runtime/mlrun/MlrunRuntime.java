@@ -16,10 +16,13 @@ import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
-import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunMlrunBuilder;
-import it.smartcommunitylabdhub.runtime.mlrun.runners.MlrunMlrunRunner;
+import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunBuildBuilder;
+import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunJobBuilder;
+import it.smartcommunitylabdhub.runtime.mlrun.runners.MlrunBuildRunner;
+import it.smartcommunitylabdhub.runtime.mlrun.runners.MlrunJobRunner;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunBuildSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunJobSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.status.RunMlrunStatus;
 import jakarta.validation.constraints.NotNull;
@@ -33,7 +36,8 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
 
     public static final String RUNTIME = "mlrun";
 
-    private final MlrunMlrunBuilder builder = new MlrunMlrunBuilder();
+    private final MlrunJobBuilder jobBuilder = new MlrunJobBuilder();
+    private final MlrunBuildBuilder buildBuilder = new MlrunBuildBuilder();
 
     @Autowired
     SecretService secretService;
@@ -61,7 +65,11 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
         return switch (kind) {
             case TaskMlrunJobSpec.KIND -> {
                 TaskMlrunJobSpec taskMlrunSpec = new TaskMlrunJobSpec(task.getSpec());
-                yield builder.build(functionSpec, taskMlrunSpec, runSpec);
+                yield jobBuilder.build(functionSpec, taskMlrunSpec, runSpec);
+            }
+            case TaskMlrunBuildSpec.KIND -> {
+                TaskMlrunBuildSpec taskMlrunSpec = new TaskMlrunBuildSpec(task.getSpec());
+                yield buildBuilder.build(functionSpec, taskMlrunSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
                 "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
@@ -92,7 +100,17 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
                 }
                 K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
 
-                yield new MlrunMlrunRunner(image, secretService.groupSecrets(run.getProject(), k8s.getSecrets()))
+                yield new MlrunJobRunner(image, secretService.groupSecrets(run.getProject(), k8s.getSecrets()))
+                    .produce(run);
+            }
+            case TaskMlrunBuildSpec.KIND -> {
+                TaskMlrunBuildSpec taskSpec = runSpec.getBuildSpec();
+                if (taskSpec == null) {
+                    throw new CoreRuntimeException("null or empty task definition");
+                }
+                K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
+
+                yield new MlrunBuildRunner(image, secretService.groupSecrets(run.getProject(), k8s.getSecrets()))
                     .produce(run);
             }
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
