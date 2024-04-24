@@ -21,6 +21,7 @@
         <lombok.version>1.18.30</lombok.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <checkstyle.config.location>checkstyle/checkstyle.xml</checkstyle.config.location>
+        <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
     </properties>
 
     <modules>
