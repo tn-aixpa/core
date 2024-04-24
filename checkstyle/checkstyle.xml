@@ -10,7 +10,9 @@
   <module name="BeforeExecutionExclusionFileFilter">
     <property name="fileNamePattern" value="module\-info\.java$" />
   </module>
-
+  <module name="LineLength">
+    <property name="max" value="120" />
+  </module>
   <module name="TreeWalker">
     <module name="OuterTypeFilename" />
     <module name="NoLineWrap">
@@ -19,7 +21,8 @@
     <module name="LeftCurly" />
     <module name="RightCurly" />
     <module name="WhitespaceAfter" />
-    <module name="WhitespaceAround">
+    <module
+      name="WhitespaceAround">
       <property name="allowEmptyConstructors" value="true" />
       <property name="allowEmptyLambdas" value="true" />
       <property name="allowEmptyMethods" value="true" />
@@ -36,7 +39,8 @@
                     NOT_EQUAL, PLUS, PLUS_ASSIGN, QUESTION, RCURLY, SL, SLIST, SL_ASSIGN, SR,
                     SR_ASSIGN, STAR, STAR_ASSIGN, LITERAL_ASSERT, TYPE_EXTENSION_AND" />
       <message key="ws.notFollowed"
-        value="WhitespaceAround: ''{0}'' is not followed by whitespace. Empty blocks may only be represented as '{}' when not part of a multi-block statement (4.1.3)" />
+        value="WhitespaceAround: ''{0}'' is not followed by whitespace. Empty blocks may only be
+    represented as '{}' when not part of a multi-block statement (4.1.3)" />
       <message key="ws.notPreceded"
         value="WhitespaceAround: ''{0}'' is not preceded with whitespace." />
     </module>
@@ -93,5 +97,29 @@
       <property name="allowSamelineSingleParameterlessAnnotation" value="false" />
       <property name="allowSamelineParameterizedAnnotation" value="false" />
     </module>
+    <module name="PackageDeclaration" />
+    <module name="AvoidStarImport" />
+    <module name="IllegalImport" />
+    <module name="UnusedImports" />
+    <module name="EmptyStatement" />
+    <module name="EqualsAvoidNull" />
+    <module name="EqualsHashCode" />
+    <module name="IllegalCatch" />
+    <module name="IllegalThrows" />
+    <module name="IllegalToken" />
+    <module name="MagicNumber" />
+    <module name="MissingSwitchDefault" />
+    <module name="ModifiedControlVariable" />
+    <module name="MultipleVariableDeclarations" />
+    <module name="NoClone" />
+    <module name="NoEnumTrailingComma" />
+    <module name="NoFinalizer" />
+    <module name="SuperClone" />
+    <module name="SuperFinalize" />
+    <module name="AvoidNoArgumentSuperConstructorCall" />
+    <module name="StringLiteralEquality" />
+    <module name="DefaultComesLast" />
+    <module name="HideUtilityClassConstructor" />
+    <module name="InnerTypeLast" />
   </module>
 </module>
