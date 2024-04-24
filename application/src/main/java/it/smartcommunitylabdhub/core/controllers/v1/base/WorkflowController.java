@@ -102,7 +102,10 @@ public class WorkflowController {
 
     @Operation(summary = "Delete a workflow", description = "Delete a specific workflow, with optional cascade")
     @DeleteMapping(path = "/{id}")
-    public void deleteWorkflow(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id, @RequestParam(required = false) Boolean cascade) {
+    public void deleteWorkflow(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
+    ) {
         workflowService.deleteWorkflow(id, cascade);
     }
 

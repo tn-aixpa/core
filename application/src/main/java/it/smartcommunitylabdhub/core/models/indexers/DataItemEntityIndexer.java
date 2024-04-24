@@ -97,13 +97,13 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
         }
     }
 
-	@Override
-	public void clearIndex() {
-		log.debug("clear index for {}", TYPE);
-		try {
-			solr.clearIndexByType(TYPE);
-		} catch (Exception e) {
-			log.error("error with solr: {}", e.getMessage());
-		}
-	}
+    @Override
+    public void clearIndex() {
+        log.debug("clear index for {}", TYPE);
+        try {
+            solr.clearIndexByType(TYPE);
+        } catch (Exception e) {
+            log.error("error with solr: {}", e.getMessage());
+        }
+    }
 }

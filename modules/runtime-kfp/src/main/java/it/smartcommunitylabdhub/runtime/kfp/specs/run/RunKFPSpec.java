@@ -7,7 +7,6 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.workflow.WorkflowKFPSpec;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;

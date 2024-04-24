@@ -57,7 +57,7 @@ public class RunManager {
 
     @Autowired
     private ExecutableEntityService executableEntityServiceProvider;
-    
+
     @Autowired
     private RunService runService;
 
@@ -75,7 +75,9 @@ public class RunManager {
 
         // Retrieve Executable
         String executableId = runSpecAccessor.getVersion();
-        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
+        Executable executable = executableEntityServiceProvider
+            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+            .get(executableId);
 
         // Retrieve Task
         Specification<TaskEntity> where = Specification.allOf(
@@ -143,7 +145,9 @@ public class RunManager {
 
         // Retrieve Executable
         String executableId = runSpecAccessor.getVersion();
-        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
+        Executable executable = executableEntityServiceProvider
+            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+            .get(executableId);
 
         // Retrieve state machine
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -196,7 +200,9 @@ public class RunManager {
 
         // Retrieve Executable
         String executableId = runSpecAccessor.getVersion();
-        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
+        Executable executable = executableEntityServiceProvider
+            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+            .get(executableId);
 
         // Retrieve state machine
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -249,7 +255,9 @@ public class RunManager {
 
         // Retrieve Executable
         String executableId = runSpecAccessor.getVersion();
-        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
+        Executable executable = executableEntityServiceProvider
+            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+            .get(executableId);
 
         // Retrieve state machine
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
@@ -718,7 +726,9 @@ public class RunManager {
 
         // Retrieve Executable
         String executableId = runSpecAccessor.getVersion();
-        return executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).get(executableId);
+        return executableEntityServiceProvider
+            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+            .get(executableId);
     }
 
     private Specification<TaskEntity> createExecutableSpecification(String executable) {

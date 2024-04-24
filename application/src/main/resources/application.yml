@@ -67,6 +67,7 @@ runtime:
   kfp:
     image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
 
+
 # Spring Docs
 springdoc:
   api-docs:
@@ -74,10 +75,12 @@ springdoc:
 
 # Kaniko config
 kaniko:
-  target:
-    path: kubernetes/target
-  source:
-    path: kubernetes/source
+  image: ${KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
+  init-image: ${KANIKO_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-builder-tool:latest}
+  image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
+  image-registry: ${KANIKO_IMAGE_REGISTRY:}
+  secret: ${KANIKO_SECRET:}
+  args: ${KANIKO_ARGS:}    
 
 # Kubernetes
 kubernetes:
@@ -108,10 +111,11 @@ security:
     username: ${DH_AUTH_BASIC_USER:admin}
     password: ${DH_AUTH_BASIC_PASSWORD:}
   jwt:
-    issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:}
+    issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:${security.oidc.issuer-uri}}
     audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
   oidc:    
+    issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
 

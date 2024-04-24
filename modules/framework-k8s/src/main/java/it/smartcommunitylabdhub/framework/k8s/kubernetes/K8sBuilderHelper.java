@@ -9,16 +9,21 @@ import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
+import io.kubernetes.client.openapi.models.V1KeyToPath;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
 import io.kubernetes.client.openapi.models.V1SecretEnvSource;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreItems;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -169,29 +174,40 @@ public class K8sBuilderHelper implements InitializingBean {
     public V1Volume getVolume(CoreVolume coreVolume) {
         V1Volume volume = new V1Volume().name(coreVolume.getName());
         String type = coreVolume.getVolumeType().name();
-        Map<String, String> spec = coreVolume.getSpec();
+        Map<String, Serializable> spec = coreVolume.getSpec();
         switch (type) {
             // TODO: support items
             case "config_map":
                 return volume.configMap(
-                    new V1ConfigMapVolumeSource().name(spec.getOrDefault("name", coreVolume.getName()))
+                    new V1ConfigMapVolumeSource().name((String) spec.getOrDefault("name", coreVolume.getName()))
                 );
             case "secret":
+                CoreItems coreItems = JacksonMapper.OBJECT_MAPPER.convertValue(
+                    spec.getOrDefault("items", new HashMap<>()),
+                    CoreItems.class
+                );
                 return volume.secret(
                     new V1SecretVolumeSource()
-                        .secretName(spec.getOrDefault("secret_name", coreVolume.getName()))
-                        .items(null)
+                        .secretName((String) spec.getOrDefault("secret_name", coreVolume.getName()))
+                        .items(
+                            coreItems
+                                .getCoreItems()
+                                .stream()
+                                .flatMap(map -> map.entrySet().stream())
+                                .map(entry -> new V1KeyToPath().key(entry.getKey()).path((String) entry.getValue()))
+                                .toList()
+                        )
                 );
             case "persistent_volume_claim":
                 return volume.persistentVolumeClaim(
                     new V1PersistentVolumeClaimVolumeSource()
-                        .claimName(spec.getOrDefault("claim_name", coreVolume.getName()))
+                        .claimName((String) spec.getOrDefault("claim_name", coreVolume.getName()))
                 );
             case "empty_dir":
                 return volume.emptyDir(
                     new V1EmptyDirVolumeSource()
-                        .medium(spec.getOrDefault("medium", null))
-                        .sizeLimit(Quantity.fromString(spec.getOrDefault("sizeLimit", "128Mi")))
+                        .medium((String) spec.getOrDefault("medium", null))
+                        .sizeLimit(Quantity.fromString((String) spec.getOrDefault("sizeLimit", "128Mi")))
                 );
             default:
                 return null;

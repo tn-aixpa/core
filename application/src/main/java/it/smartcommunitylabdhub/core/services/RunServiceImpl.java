@@ -207,7 +207,9 @@ public class RunServiceImpl implements SearchableRunService {
         String functionId = runSpecAccessor.getVersion();
 
         //check if function exists and matches
-        Executable executable = executableEntityServiceProvider.getEntityServiceByRuntime(runSpecAccessor.getRuntime()).find(functionId);
+        Executable executable = executableEntityServiceProvider
+            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+            .find(functionId);
         if (executable == null) {
             throw new IllegalArgumentException("invalid function");
         }

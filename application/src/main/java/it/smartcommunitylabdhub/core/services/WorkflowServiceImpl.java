@@ -297,7 +297,9 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     public void deleteWorkflowsByProject(@NotNull String project) {
         log.debug("delete workflows for project {}", project);
 
-        entityService.searchAll(CommonSpecification.projectEquals(project)).forEach(w -> deleteWorkflow(w.getId(), Boolean.TRUE));
+        entityService
+            .searchAll(CommonSpecification.projectEquals(project))
+            .forEach(w -> deleteWorkflow(w.getId(), Boolean.TRUE));
     }
 
     @Override

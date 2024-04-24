@@ -30,6 +30,8 @@
         <kubernetes.version>19.0.0</kubernetes.version>
         <postgresql.version>42.7.2</postgresql.version>
         <mysql.version>8.0.33</mysql.version>
+        <checkstyle.config.location>../checkstyle/checkstyle.xml</checkstyle.config.location>
+        <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
     </properties>
     <dependencies>
         <dependency>
@@ -218,6 +220,11 @@
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-framework-k8s</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-framework-kaniko</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>

@@ -12,7 +12,8 @@ import org.springframework.lang.Nullable;
 /**
  * Runtime expose builder, run and parse method
  */
-public interface Runtime<F extends ExecutableBaseSpec, S extends RunBaseSpec, Z extends RunBaseStatus, R extends RunRunnable
+public interface Runtime<
+    F extends ExecutableBaseSpec, S extends RunBaseSpec, Z extends RunBaseStatus, R extends RunRunnable
 > {
     S build(@NotNull Executable execSpec, @NotNull Task taskSpec, @NotNull Run runSpec); // CREATED -> BUILT
 

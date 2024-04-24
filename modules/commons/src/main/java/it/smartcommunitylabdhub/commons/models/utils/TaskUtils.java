@@ -40,5 +40,4 @@ public class TaskUtils {
     public static String buildString(Executable e) {
         return (e.getKind() + "://" + e.getProject() + "/" + e.getName() + ":" + e.getId());
     }
-
 }

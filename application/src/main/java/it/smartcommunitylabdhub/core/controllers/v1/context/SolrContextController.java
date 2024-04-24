@@ -1,8 +1,18 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.components.solr.ItemResult;
+import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
+import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
+import it.smartcommunitylabdhub.core.components.solr.SolrPage;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,18 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.Keys;
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.components.solr.ItemResult;
-import it.smartcommunitylabdhub.core.components.solr.SearchGroupResult;
-import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
-import it.smartcommunitylabdhub.core.components.solr.SolrPage;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import lombok.extern.slf4j.Slf4j;
-
 @RestController
 @ApiVersion("v1")
 @RequestMapping("/-/{project}/solr")
@@ -37,16 +35,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Tag(name = "Solr search context API", description = "Endpoints related to Solr search")
 public class SolrContextController {
-	
+
     @Autowired(required = false)
     SolrComponent solrComponent;
-    
+
     @GetMapping(path = "/search/group", produces = "application/json; charset=UTF-8")
     public ResponseEntity<SolrPage<SearchGroupResult>> searchGroup(
-    		@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-    		@RequestParam(required = false) String q,
-    		@RequestParam(required = false) List<String> fq,
-    		Pageable pageRequest
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @RequestParam(required = false) String q,
+        @RequestParam(required = false) List<String> fq,
+        Pageable pageRequest
     ) {
         if (solrComponent == null) {
             return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
@@ -62,10 +60,10 @@ public class SolrContextController {
 
     @GetMapping(path = "/search/item", produces = "application/json; charset=UTF-8")
     public ResponseEntity<SolrPage<ItemResult>> search(
-    		@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-    		@RequestParam(required = false) String q,
-    		@RequestParam(required = false) List<String> fq,
-    		Pageable pageRequest
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @RequestParam(required = false) String q,
+        @RequestParam(required = false) List<String> fq,
+        Pageable pageRequest
     ) {
         if (solrComponent == null) {
             return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
@@ -79,11 +77,10 @@ public class SolrContextController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
+
     private List<String> setProject(List<String> fq, String project) {
-    	List<String> result = fq.stream().filter(e -> !e.startsWith("project:")).collect(Collectors.toList());
-    	result.add("project:" + project);
-    	return result;
+        List<String> result = fq.stream().filter(e -> !e.startsWith("project:")).collect(Collectors.toList());
+        result.add("project:" + project);
+        return result;
     }
-    
 }

@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.kfp.specs.run.RunKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.workflow.WorkflowKFPSpec;
-
 import java.util.Optional;
 
 /**

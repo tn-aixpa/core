@@ -119,7 +119,7 @@ public interface WorkflowService {
     /**
      * Delete a specific workflow (version) via unique ID
      * @param id
-     * @param cascade 
+     * @param cascade
      */
     void deleteWorkflow(@NotNull String id, @Nullable Boolean cascade);
 

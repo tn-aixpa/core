@@ -89,11 +89,10 @@ public class SolrComponent implements ApplicationListener<ContextRefreshedEvent>
     }
 
     public void clearIndex() throws Exception {
-    	indexManager.clearIndex();
+        indexManager.clearIndex();
     }
-    
+
     public void clearIndexByType(String type) throws Exception {
-    	indexManager.clearIndexByType(type);
+        indexManager.clearIndexByType(type);
     }
-    
 }
