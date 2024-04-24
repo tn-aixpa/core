@@ -3,15 +3,9 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>it.smartcommunitylabdhub</groupId>
-  <artifactId>dh-runtime-container</artifactId>
+  <artifactId>dh-framework-kaniko</artifactId>
   <version>0.4.0-SNAPSHOT</version>
   <dependencies>
-    <dependency>
-      <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
-      <version>2.2.0</version>
-      <scope>compile</scope>
-    </dependency>
     <dependency>
       <groupId>it.smartcommunitylabdhub</groupId>
       <artifactId>dh-commons</artifactId>
@@ -26,8 +20,20 @@
     </dependency>
     <dependency>
       <groupId>it.smartcommunitylabdhub</groupId>
-      <artifactId>dh-framework-kaniko</artifactId>
+      <artifactId>dh-fsm</artifactId>
       <version>0.4.0-SNAPSHOT</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.kubernetes</groupId>
+      <artifactId>client-java</artifactId>
+      <version>19.0.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.github.cdimascio</groupId>
+      <artifactId>dotenv-java</artifactId>
+      <version>3.0.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

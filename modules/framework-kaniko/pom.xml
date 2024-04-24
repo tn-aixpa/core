@@ -7,24 +7,20 @@
         <groupId>it.smartcommunitylabdhub</groupId>
         <artifactId>digitalhub-core</artifactId>
         <version>${revision}</version>
-        <relativePath>../../</relativePath>
+        <relativePath>../../</relativePath> <!-- lookup parent from repository -->
     </parent>
     <groupId>it.smartcommunitylabdhub</groupId>
-    <artifactId>dh-runtime-container</artifactId>
-    <name>runtime-container</name>
-    <description>DHCore runtime-container</description>
+    <artifactId>dh-framework-kaniko</artifactId>
+    <name>framework-kaniko</name>
+    <description>DHCore framework-kaniko</description>
 
     <dependencies>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
-            <version>${springdoc.version}</version>
-        </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-commons</artifactId>
             <version>${revision}</version>
         </dependency>
+
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-framework-k8s</artifactId>
@@ -32,8 +28,19 @@
         </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
-            <artifactId>dh-framework-kaniko</artifactId>
+            <artifactId>dh-fsm</artifactId>
             <version>${revision}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.kubernetes</groupId>
+            <artifactId>client-java</artifactId>
+            <version>${kubernetes.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
         </dependency>
 
         <dependency>
@@ -42,6 +49,12 @@
             <version>${lombok.version}</version>
             <scope>compile</scope>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring-boot.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -79,5 +92,6 @@
             <version>${slf4j.version}</version> <!-- or the latest version -->
         </dependency>
     </dependencies>
+
 
 </project>
