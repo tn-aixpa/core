@@ -6,6 +6,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
@@ -13,6 +14,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
@@ -42,6 +44,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected String version;
     protected K8sBuilderHelper k8sBuilderHelper;
+    protected K8sSecretHelper k8sSecretHelper;
 
     protected K8sBaseFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
@@ -61,6 +64,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Autowired
     public void setK8sBuilderHelper(K8sBuilderHelper k8sBuilderHelper) {
         this.k8sBuilderHelper = k8sBuilderHelper;
+    }
+
+    @Autowired
+    public void setK8sSecretHelper(K8sSecretHelper k8sSecretHelper) {
+        this.k8sSecretHelper = k8sSecretHelper;
     }
 
     @Override
@@ -257,5 +265,16 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected List<String> buildArgs(T runnable) {
         return Optional.ofNullable(runnable.getArgs()).map(Arrays::asList).orElse(null);
+    }
+
+    protected V1Secret buildRunSecret(T runnable) {
+        if (runnable.getCredentials() != null) {
+            return k8sSecretHelper.convertAuthentication(
+                k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId()),
+                runnable.getCredentials()
+            );
+        }
+
+        return null;
     }
 }
