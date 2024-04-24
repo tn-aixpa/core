@@ -73,7 +73,7 @@ public class ConsoleController {
 
         if (securityProperties.isOidcAuthEnabled()) {
             config.put("REACT_APP_AUTH_URL", "/api");
-            config.put("REACT_APP_ISSUER_URI", securityProperties.getJwt().getIssuerUri());
+            config.put("REACT_APP_ISSUER_URI", securityProperties.getOidc().getIssuerUri());
             config.put("REACT_APP_CLIENT_ID", securityProperties.getOidc().getClientId());
             if (securityProperties.getOidc().getScope() != null) {
                 config.put("REACT_APP_SCOPE", String.join(" ", securityProperties.getOidc().getScope()));

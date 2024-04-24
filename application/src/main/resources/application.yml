@@ -111,10 +111,11 @@ security:
     username: ${DH_AUTH_BASIC_USER:admin}
     password: ${DH_AUTH_BASIC_PASSWORD:}
   jwt:
-    issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:}
+    issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:${security.oidc.issuer-uri}}
     audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
   oidc:    
+    issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
 

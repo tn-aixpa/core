@@ -68,11 +68,12 @@ public class SecurityProperties {
     @Setter
     public static class OidcAuthenticationProperties {
 
+        private String issuerUri;
         private String clientId;
         private List<String> scope;
 
         public boolean isEnabled() {
-            return StringUtils.hasText(clientId);
+            return StringUtils.hasText(issuerUri) && StringUtils.hasText(clientId);
         }
     }
 }
