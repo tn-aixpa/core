@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @FrameworkComponent(framework = K8sKanikoFramework.FRAMEWORK)
@@ -34,26 +35,23 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
     private int activeDeadlineSeconds = DEADLINE_SECONDS;
 
-    @Value("${runtime.kaniko.image}")
+    @Value("${kaniko.image}")
     private String kanikoImage;
 
-    @Value("${runtime.kaniko.init-image}")
+    @Value("${kaniko.init-image}")
     private String initImage;
 
-    @Value("${runtime.kaniko.image-prefix}")
+    @Value("${kaniko.image-prefix}")
     private String imagePrefix;
 
-    @Value("${runtime.kaniko.image-registry}")
+    @Value("${kaniko.image-registry}")
     private String imageRegistry;
 
-    @Value("${runtime.kaniko.credentials}")
+    @Value("${kaniko.secret}")
     private String kanikoSecret;
 
-    @Value("${runtime.kaniko.kaniko-args}")
+    @Value("${kaniko.args}")
     private List<String> kanikoArgs;
-
-    @Autowired
-    private K8sJobFramework jobFramework;
 
     public K8sKanikoFramework(ApiClient apiClient) {
         super(apiClient);
@@ -108,9 +106,9 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Generate jobName and ContainerName
         String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
         String containerName = k8sBuilderHelper.getContainerName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
 
         //build labels
@@ -121,10 +119,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Create sharedVolume
         CoreVolume sharedVolume = new CoreVolume(
-                CoreVolume.VolumeType.empty_dir,
-                "/shared",
-                "shared-dir",
-                Map.of("sizeLimit", "100Mi")
+            CoreVolume.VolumeType.empty_dir,
+            "/shared",
+            "shared-dir",
+            Map.of("sizeLimit", "100Mi")
         );
 
         List<CoreVolume> coreVolumes = new ArrayList<>();
@@ -136,10 +134,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Create config map volume
         CoreVolume configMapVolume = new CoreVolume(
-                CoreVolume.VolumeType.config_map,
-                "/init-config-map",
-                "init-config-map",
-                Map.of("name", "init-config-map-" + runnable.getId())
+            CoreVolume.VolumeType.config_map,
+            "/init-config-map",
+            "init-config-map",
+            Map.of("name", "init-config-map-" + runnable.getId())
         );
 
         if (runnableVolumesOpt.stream().noneMatch(v -> "init-config-map".equals(v.getName()))) {
@@ -147,24 +145,28 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         }
 
         // Add secret for kaniko
+        if(StringUtils.hasText(kanikoSecret)) {
         CoreVolume secretVolume = new CoreVolume(
-                CoreVolume.VolumeType.secret,
-                "/kaniko/.docker",
-                kanikoSecret,
-                Map.of("items", CoreItems.builder().keyToPath(Map.of(".dockerconfigjson", "config.json")).build())
+            CoreVolume.VolumeType.secret,
+            "/kaniko/.docker",
+            kanikoSecret,
+            Map.of("items", CoreItems.builder().keyToPath(Map.of(".dockerconfigjson", "config.json")).build())
         );
         if (runnableVolumesOpt.stream().noneMatch(v -> kanikoSecret.equals(v.getName()))) {
-            coreVolumes.add(secretVolume);
+            coreVolumes.add(secretVolume);        
+        }
         }
         //Add all volumes
-        Optional.ofNullable(runnable.getVolumes()).ifPresentOrElse(coreVolumes::addAll, () -> runnable.setVolumes(coreVolumes));
+        Optional
+            .ofNullable(runnable.getVolumes())
+            .ifPresentOrElse(coreVolumes::addAll, () -> runnable.setVolumes(coreVolumes));
 
         List<String> kanikoArgsAll = new ArrayList<>(
-                List.of(
-                        "--dockerfile=/init-config-map/Dockerfile",
-                        "--context=/shared",
-                        "--destination=" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
-                )
+            List.of(
+                "--dockerfile=/init-config-map/Dockerfile",
+                "--context=/shared",
+                "--destination=" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
+            )
         );
         // Add Kaniko args
         kanikoArgsAll.addAll(kanikoArgs);
@@ -191,25 +193,25 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Build Container
         V1Container container = new V1Container()
-                .name(containerName)
-                .image(runnable.getImage())
-                .imagePullPolicy("Always")
-                .imagePullPolicy("IfNotPresent")
-                .command(command)
-                .args(args)
-                .resources(resources)
-                .volumeMounts(volumeMounts)
-                .envFrom(envFrom)
-                .env(env);
+            .name(containerName)
+            .image(runnable.getImage())
+            .imagePullPolicy("Always")
+            .imagePullPolicy("IfNotPresent")
+            .command(command)
+            .args(args)
+            .resources(resources)
+            .volumeMounts(volumeMounts)
+            .envFrom(envFrom)
+            .env(env);
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
-                .containers(Collections.singletonList(container))
-                .nodeSelector(buildNodeSelector(runnable))
-                .affinity(runnable.getAffinity())
-                .tolerations(buildTolerations(runnable))
-                .volumes(volumes)
-                .restartPolicy("Never");
+            .containers(Collections.singletonList(container))
+            .nodeSelector(buildNodeSelector(runnable))
+            .affinity(runnable.getAffinity())
+            .tolerations(buildTolerations(runnable))
+            .volumes(volumes)
+            .restartPolicy("Never");
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
@@ -217,60 +219,75 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Add Init container to the PodTemplateSpec
         // Build the Init Container
         V1Container initContainer = new V1Container()
-                .name("init-container-" + runnable.getId())
-                .image(initImage)
-                .volumeMounts(volumeMounts)
-                .resources(resources)
-                .env(env)
-                .envFrom(envFrom)
-                //TODO below execute a command that is a Go script
-                .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
+            .name("init-container-" + runnable.getId())
+            .image(initImage)
+            .volumeMounts(volumeMounts)
+            .resources(resources)
+            .env(env)
+            .envFrom(envFrom)
+            //TODO below execute a command that is a Go script
+            .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
 
         // Set initContainer as first container in the PodSpec
         podSpec.setInitContainers(Collections.singletonList(initContainer));
-
 
         int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(3);
 
         // Create the JobSpec with the PodTemplateSpec
         V1JobSpec jobSpec = new V1JobSpec()
-                .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
-                //TODO support work-queue style/parallel jobs
-                .parallelism(1)
-                .completions(1)
-                .backoffLimit(backoffLimit)
-                .template(podTemplateSpec);
+            .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
+            //TODO support work-queue style/parallel jobs
+            .parallelism(1)
+            .completions(1)
+            .backoffLimit(backoffLimit)
+            .template(podTemplateSpec);
 
         try {
             // Generate Config map
             Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
             Optional<List<ContextSource>> contextSourcesOpt = Optional.ofNullable(runnable.getContextSources());
             V1ConfigMap configMap = new V1ConfigMap()
-                    .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()))
-                    .data(
-                            MapUtils.mergeMultipleMaps(
-                                    Map.of("Dockerfile", runnable.getDockerFile()),
-                                    // Generate context-refs.txt if exist
-                                    contextRefsOpt.map(contextRefsList ->
-                                            Map.of("context-refs.txt", contextRefsList.stream()
-                                                    .map(v -> v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n"
-                                                    ).collect(Collectors.joining(""))
-                                            )
-                                    ).orElseGet(Map::of),
-                                    // Generate context-sources.txt if exist
-                                    contextSourcesOpt.map(contextSources ->
-                                            contextSources.stream()
-                                                    .collect(Collectors.toMap(ContextSource::getName, c ->
-                                                                    Arrays.toString(Base64.getUrlDecoder().decode(c.getBase64()))
-                                                            )
-                                                    )
-                                    ).orElseGet(Map::of)
+                .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()))
+                .data(
+                    MapUtils.mergeMultipleMaps(
+                        Map.of("Dockerfile", runnable.getDockerFile()),
+                        // Generate context-refs.txt if exist
+                        contextRefsOpt
+                            .map(contextRefsList ->
+                                Map.of(
+                                    "context-refs.txt",
+                                    contextRefsList
+                                        .stream()
+                                        .map(v ->
+                                            v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n"
+                                        )
+                                        .collect(Collectors.joining(""))
+                                )
                             )
-                    );
+                            .orElseGet(Map::of),
+                        // Generate context-sources.txt if exist
+                        contextSourcesOpt
+                            .map(contextSources ->
+                                contextSources
+                                    .stream()
+                                    .collect(
+                                        Collectors.toMap(
+                                            ContextSource::getName,
+                                            c -> Arrays.toString(Base64.getUrlDecoder().decode(c.getBase64()))
+                                        )
+                                    )
+                            )
+                            .orElseGet(Map::of)
+                    )
+                );
 
             // Check if config map already exist. if not, create it
             try {
-                coreV1Api.readNamespacedConfigMap(Objects.requireNonNull(configMap.getMetadata()).getName(), namespace, null); // ConfigMap already exist  -> do nothing
+                coreV1Api.readNamespacedConfigMap(
+                    Objects.requireNonNull(configMap.getMetadata()).getName(),
+                    namespace,
+                    null
+                ); // ConfigMap already exist  -> do nothing
             } catch (ApiException e) { // ConfigMap does not exist -> create it
                 coreV1Api.createNamespacedConfigMap(namespace, configMap, null, null, null, null);
             }

@@ -66,13 +66,7 @@ runtime:
     image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
   kfp:
     image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
-  kaniko:
-    image: ${RUNTIME_KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
-    init-image: ${RUNTIME_KANIKO_INIT_IMAGE:}
-    image-prefix: ${RUNTIME_KANIKO_IMAGE_PREFIX:}
-    image-registry: ${RUNTIME_KANIKO_IMAGE_REGISTRY:}
-    credentials: ${RUNTIME_KANIKO_CREDENTIALS:}
-    kaniko-args: ${RUNTIME_KANIKO_ARGS:}
+
 
 # Spring Docs
 springdoc:
@@ -81,10 +75,12 @@ springdoc:
 
 # Kaniko config
 kaniko:
-  target:
-    path: kubernetes/target
-  source:
-    path: kubernetes/source
+  image: ${KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
+  init-image: ${KANIKO_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-builder-tools:latest}
+  image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
+  image-registry: ${KANIKO_IMAGE_REGISTRY:}
+  secret: ${KANIKO_SECRET:}
+  args: ${KANIKO_ARGS:}    
 
 # Kubernetes
 kubernetes:

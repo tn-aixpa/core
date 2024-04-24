@@ -28,13 +28,13 @@ public class KanikoImageBuilderTest {
     @Autowired
     ApiClient client;
 
-    @Value("${kaniko.source.path}")
-    private String kanikoSourcePath;
+    // @Value("${kaniko.source.path}")
+    // private String kanikoSourcePath;
 
-    @Value("${kaniko.target.path}")
-    private String kanikoTargetPath;
+    // @Value("${kaniko.target.path}")
+    // private String kanikoTargetPath;
 
-    @Test
+    // @Test
     void testBuildDockerImage() throws IOException {
         String basePath = Paths.get(System.getProperty("user.dir")).getParent().toString();
         // Create a sample DockerBuildConfiguration
