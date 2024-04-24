@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.runtime.mlrun;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
+import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
@@ -12,7 +13,9 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
@@ -29,6 +32,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.StringUtils;
 
 @RuntimeComponent(runtime = MlrunRuntime.RUNTIME)
 @Slf4j
@@ -47,6 +51,15 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
 
     @Value("${runtime.mlrun.image}")
     private String image;
+
+    @Value("${mlrun.base-image}")
+    private String baseImage;
+
+    @Value("${mlrun.image-prefix}")
+    private String imagePrefix;
+
+    @Value("${mlrun.image-registry:}")
+    private String imageRegistry;
 
     @Override
     public RunMlrunSpec build(@NotNull Executable function, @NotNull Task task, @NotNull Run run) {
@@ -69,12 +82,17 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
             }
             case TaskMlrunBuildSpec.KIND -> {
                 TaskMlrunBuildSpec taskMlrunSpec = new TaskMlrunBuildSpec(task.getSpec());
+                taskMlrunSpec.setTargetImage(createTargetImage(function.getName(), function.getId()));
                 yield buildBuilder.build(functionSpec, taskMlrunSpec, runSpec);
             }
             default -> throw new IllegalArgumentException(
                 "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
         };
+    }
+
+    private String createTargetImage(String name, String id) {
+        return (StringUtils.hasText(imageRegistry) ? imageRegistry + "/" : "") + imagePrefix + "-" + name + ":" + id;
     }
 
     @Override
@@ -105,6 +123,9 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
             }
             case TaskMlrunBuildSpec.KIND -> {
                 TaskMlrunBuildSpec taskSpec = runSpec.getBuildSpec();
+                TaskSpecAccessor accessor = TaskUtils.parseFunction(taskSpec.getFunction());
+                taskSpec.setTargetImage(createTargetImage(accessor.getFunction(), accessor.getVersion()));
+
                 if (taskSpec == null) {
                     throw new CoreRuntimeException("null or empty task definition");
                 }
