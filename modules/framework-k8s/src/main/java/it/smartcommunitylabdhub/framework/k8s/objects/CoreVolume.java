@@ -27,7 +27,7 @@ public class CoreVolume implements Serializable {
     @NotBlank
     private String name;
 
-    private Map<String, String> spec;
+    private Map<String, Serializable> spec;
 
     public enum VolumeType {
         config_map,
