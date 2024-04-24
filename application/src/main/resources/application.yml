@@ -76,7 +76,7 @@ springdoc:
 # Kaniko config
 kaniko:
   image: ${KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
-  init-image: ${KANIKO_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-builder-tools:latest}
+  init-image: ${KANIKO_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-build-tool:latest}
   image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
   image-registry: ${KANIKO_IMAGE_REGISTRY:}
   secret: ${KANIKO_SECRET:}
