@@ -1,17 +1,17 @@
-name: Create and publish build-tool image
+name: Create and publish builder-tool image
 on:
   push:
     branches:
       - main
     paths:
-      - 'core-build-tool/**'
+      - 'core-builder-tool/**'
     tags-ignore:
       - "*"
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-build-tool
+  IMAGE_NAME: ${{ github.repository }}-builder-tool
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
@@ -34,13 +34,15 @@ jobs:
         uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=true          
       - name: Build and push Docker image
         uses: docker/build-push-action@v5.1.0
         with:
-          context: ./core-build-tool
+          context: ./core-builder-tool
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          file: Dockerfile
+          file: ./core-builder-tool/Dockerfile
 
           
