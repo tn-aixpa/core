@@ -33,12 +33,6 @@ public class WorkflowKFPSpec extends WorkflowBaseSpec {
     @Schema(description = "Handler method inside the function")
     private String handler;
 
-    @Schema(description = "Override the command run in the container")
-    private String command;
-
-    @Schema(description = "Requirements list, as used by the runtime")
-    private List<Serializable> requirements;
-
     public WorkflowKFPSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -53,8 +47,6 @@ public class WorkflowKFPSpec extends WorkflowBaseSpec {
         this.image = spec.getImage();
         this.tag = spec.getTag();
         this.handler = spec.getHandler();
-        this.command = spec.getCommand();
-        this.requirements = spec.getRequirements();
     }
 
     public enum KFPSourceCodeLanguages {
