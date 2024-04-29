@@ -82,6 +82,13 @@ kaniko:
   secret: ${KANIKO_SECRET:}
   args: ${KANIKO_ARGS:}    
 
+# MLRun config
+mlrun:
+  base-image: ${MLRUN_BASE_IMAGE:mlrun/mlrun}
+  image-prefix: ${MLRUN_IMAGE_PREFIX:dhcore}
+  image-registry: ${MLRUN_IMAGE_REGISTRY:}
+
+
 # Kubernetes
 kubernetes:
   namespace: ${K8S_NAMESPACE:default}
