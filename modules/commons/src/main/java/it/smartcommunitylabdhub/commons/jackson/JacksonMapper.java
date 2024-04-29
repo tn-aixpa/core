@@ -2,7 +2,12 @@ package it.smartcommunitylabdhub.commons.jackson;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.smartcommunitylabdhub.commons.jackson.mixins.ConcreteSpecMixin;
@@ -13,7 +18,8 @@ import java.util.HashMap;
 public class JacksonMapper {
 
     public static final ObjectMapper CUSTOM_OBJECT_MAPPER = new ObjectMapper();
-    public static final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<>() {};
+    public static final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<>() {
+    };
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final ObjectMapper CBOR_OBJECT_MAPPER = new ObjectMapper(new CBORFactory());
 

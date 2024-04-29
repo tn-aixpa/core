@@ -3,8 +3,6 @@ package it.smartcommunitylabdhub.commons.models.utils;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -14,16 +12,22 @@ public class TaskUtils {
 
     private static final Pattern FUNCTION_PATTERN = Pattern.compile(Keys.PATH_PATTERN);
 
-    private TaskUtils() {}
+    private static final int first = 1;
+    private static final int second = 2;
+    private static final int third = 3;
+    private static final int fourth = 4;
+
+    private TaskUtils() {
+    }
 
     //TODO this goes into the accessor, via a with()
     public static TaskSpecAccessor parseFunction(String taskString) {
         Matcher matcher = FUNCTION_PATTERN.matcher(taskString);
         if (matcher.matches()) {
-            String runtime = matcher.group(1);
-            String project = matcher.group(2);
-            String function = matcher.group(3);
-            String version = matcher.group(4);
+            String runtime = matcher.group(first);
+            String project = matcher.group(second);
+            String function = matcher.group(third);
+            String version = matcher.group(fourth);
 
             Map<String, String> map = new HashMap<>();
             map.put("runtime", runtime);

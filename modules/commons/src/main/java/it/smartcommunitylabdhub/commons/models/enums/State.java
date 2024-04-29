@@ -23,5 +23,5 @@ public enum State {
     STOP,
     UNKNOWN,
     NONE,
-    RUN_ERROR,
+    RUN_ERROR
 }

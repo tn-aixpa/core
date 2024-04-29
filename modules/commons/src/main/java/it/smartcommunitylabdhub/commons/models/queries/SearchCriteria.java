@@ -5,7 +5,9 @@ import org.springframework.data.jpa.domain.Specification;
 
 public interface SearchCriteria<T> extends Specification<T> {
     String getField();
+
     Serializable getValue();
+
     Operation getOperation();
 
     Specification<T> toSpecification();
@@ -14,6 +16,6 @@ public interface SearchCriteria<T> extends Specification<T> {
         equal,
         gt,
         lt,
-        like,
+        like
     }
 }
