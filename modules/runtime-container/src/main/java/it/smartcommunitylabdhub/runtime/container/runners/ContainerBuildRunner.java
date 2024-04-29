@@ -48,7 +48,7 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-            List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
+                List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
@@ -59,16 +59,16 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         // Add image to docker file
         dockerfileGenerator.addInstruction(DockerfileInstruction.FROM, "FROM " + functionSpec.getBaseImage());
 
+        dockerfileGenerator.addInstruction(DockerfileInstruction.COPY, "COPY . .");
+
         // Add Instructions to docker file
         Optional
-            .ofNullable(taskSpec.getInstructions())
-            .ifPresent(instructions ->
-                instructions.forEach(instruction ->
-                    dockerfileGenerator.addInstruction(DockerfileInstruction.RUN, "RUN " + instruction)
-                )
-            );
-
-        dockerfileGenerator.addInstruction(DockerfileInstruction.COPY, "COPY . .");
+                .ofNullable(taskSpec.getInstructions())
+                .ifPresent(instructions ->
+                        instructions.forEach(instruction ->
+                                dockerfileGenerator.addInstruction(DockerfileInstruction.RUN, "RUN " + instruction)
+                        )
+                );
 
         // Generate string docker file
         String dockerfile = dockerfileGenerator.generateDockerfile();
@@ -78,28 +78,28 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
 
         // Build runnable
         return K8sKanikoRunnable
-            .builder()
-            .id(run.getId())
-            .project(run.getProject())
-            .runtime(ContainerRuntime.RUNTIME)
-            .task(TASK)
-            .state(State.READY.name())
-            // Base
-            .image(runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction())
-            .envs(coreEnvList)
-            .secrets(groupedSecrets)
-            .resources(taskSpec.getResources())
-            .volumes(taskSpec.getVolumes())
-            .nodeSelector(taskSpec.getNodeSelector())
-            .affinity(taskSpec.getAffinity())
-            .tolerations(taskSpec.getTolerations())
-            .labels(taskSpec.getLabels())
-            // Task specific
-            .contextRefs(taskSpec.getContextRefs())
-            .contextSources(taskSpec.getContextSources())
-            .dockerFile(dockerfile)
-            // specific
-            .backoffLimit(1)
-            .build();
+                .builder()
+                .id(run.getId())
+                .project(run.getProject())
+                .runtime(ContainerRuntime.RUNTIME)
+                .task(TASK)
+                .state(State.READY.name())
+                // Base
+                .image(runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction())
+                .envs(coreEnvList)
+                .secrets(groupedSecrets)
+                .resources(taskSpec.getResources())
+                .volumes(taskSpec.getVolumes())
+                .nodeSelector(taskSpec.getNodeSelector())
+                .affinity(taskSpec.getAffinity())
+                .tolerations(taskSpec.getTolerations())
+                .labels(taskSpec.getLabels())
+                // Task specific
+                .contextRefs(taskSpec.getContextRefs())
+                .contextSources(taskSpec.getContextSources())
+                .dockerFile(dockerfile)
+                // specific
+                .backoffLimit(1)
+                .build();
     }
 }
