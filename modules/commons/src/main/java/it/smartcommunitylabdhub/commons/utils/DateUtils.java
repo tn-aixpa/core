@@ -10,6 +10,8 @@ import lombok.SneakyThrows;
  */
 public class DateUtils {
 
+    private final static long MULTIPLIER = 1000;
+
     /**
      * Parse a timestamp string into a Date object.
      *
@@ -19,7 +21,7 @@ public class DateUtils {
      */
     public static Date parseDateFromTimestamp(String timestampStr, boolean isMilliseconds) {
         long timestamp = Long.parseLong(timestampStr);
-        return isMilliseconds ? new Date(timestamp) : new Date(timestamp * 1000);
+        return isMilliseconds ? new Date(timestamp) : new Date(timestamp * MULTIPLIER);
     }
 
     /**
@@ -31,7 +33,7 @@ public class DateUtils {
      * @throws IllegalArgumentException if the date interval format is invalid.
      */
     public static DateInterval parseDateIntervalFromTimestamps(String intervalStr, boolean isMilliseconds)
-        throws IllegalArgumentException {
+            throws IllegalArgumentException {
         String[] timestampArray = intervalStr.split(",");
 
         if (timestampArray.length != 2) {
@@ -41,8 +43,8 @@ public class DateUtils {
         long startTimestamp = Long.parseLong(timestampArray[0]);
         long endTimestamp = Long.parseLong(timestampArray[1]);
 
-        Date startDate = isMilliseconds ? new Date(startTimestamp) : new Date(startTimestamp * 1000);
-        Date endDate = isMilliseconds ? new Date(endTimestamp) : new Date(endTimestamp * 1000);
+        Date startDate = isMilliseconds ? new Date(startTimestamp) : new Date(startTimestamp * MULTIPLIER);
+        Date endDate = isMilliseconds ? new Date(endTimestamp) : new Date(endTimestamp * MULTIPLIER);
 
         return new DateInterval(startDate, endDate);
     }
@@ -86,5 +88,6 @@ public class DateUtils {
     /**
      * A record representing a date interval with start and end dates.
      */
-    public record DateInterval(Date startDate, Date endDate) {}
+    public record DateInterval(Date startDate, Date endDate) {
+    }
 }

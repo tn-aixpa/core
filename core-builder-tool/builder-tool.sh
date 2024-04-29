@@ -114,6 +114,11 @@ while IFS=, read -r protocol destination source; do
 
     case "$protocol" in
         "git+https")
+            echo "Protocol: $protocol"
+            echo "Downloading $rebuilt_url"
+            echo "to $destination_dir/$destination"
+
+
             username=$GIT_USERNAME
             password=$GIT_PASSWORD
             token=$GIT_TOKEN
@@ -137,10 +142,16 @@ while IFS=, read -r protocol destination source; do
 	    ;;
         "zip+s3") # for now accept a zip file - check if file is a zip, unpack zip
 	    mc alias set $minio $S3_ENDPOINT_URL $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
-            mc cp "$minio/$source" "$destination_dir/$destination"
+	          echo "Protocol: $protocol"
+            echo "Downloading $minio/$rebuilt_url"
+            echo "to $destination_dir/$destination"
+            mc cp "$minio/$rebuilt_url" "$destination_dir/$destination"
             unzip "$destination_dir/$destination"
             ;;
         "http" | "https") # for now accept only zip file - check if file is a zip. unpack zip
+            echo "Protocol: $protocol"
+            echo "Downloading $source"
+            echo "to $destination_dir/$destination"
             curl -o "$destination_dir/$destination" -L "$source"
             unzip "$destination_dir/$destination"
             ;;
@@ -153,4 +164,3 @@ while IFS=, read -r protocol destination source; do
 done < "$source_dir/context-refs.txt"
 
 ls "$destination_dir"
-

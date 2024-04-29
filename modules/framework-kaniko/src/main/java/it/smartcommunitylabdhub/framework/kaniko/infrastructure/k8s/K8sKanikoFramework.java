@@ -181,7 +181,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             List.of(
                 "--dockerfile=/init-config-map/Dockerfile",
                 "--context=/shared",
-                "--destination=" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
+                "--destination=" + imageRegistry + "/" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
             )
         );
         // Add Kaniko args

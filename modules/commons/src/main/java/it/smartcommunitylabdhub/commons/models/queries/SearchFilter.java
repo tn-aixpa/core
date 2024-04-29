@@ -12,6 +12,6 @@ public interface SearchFilter<T> {
 
     enum Condition {
         and,
-        or,
+        or
     }
 }

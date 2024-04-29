@@ -14,16 +14,22 @@ public class RunUtils {
 
     public static final Pattern TASK_PATTERN = Pattern.compile(Keys.PATH_PATTERN);
 
-    private RunUtils() {}
+    private static final int first = 1;
+    private static final int second = 2;
+    private static final int third = 3;
+    private static final int fourth = 4;
+
+    private RunUtils() {
+    }
 
     //TODO this goes into the accessor, via a with()
     public static RunSpecAccessor parseTask(String value) {
         Matcher matcher = TASK_PATTERN.matcher(value);
         if (matcher.matches()) {
-            String task = matcher.group(1);
-            String project = matcher.group(2);
-            String function = matcher.group(3);
-            String version = matcher.group(4);
+            String task = matcher.group(first);
+            String project = matcher.group(second);
+            String function = matcher.group(third);
+            String version = matcher.group(fourth);
 
             Map<String, String> map = new HashMap<>();
             map.put("task", task);
@@ -50,6 +56,6 @@ public class RunUtils {
             throw new IllegalArgumentException("invalid or missing function in task spec");
         }
 
-        return (task.getKind() + "://" + matcher.group(2) + "/" + matcher.group(3) + ":" + matcher.group(4));
+        return (task.getKind() + "://" + matcher.group(second) + "/" + matcher.group(third) + ":" + matcher.group(fourth));
     }
 }
