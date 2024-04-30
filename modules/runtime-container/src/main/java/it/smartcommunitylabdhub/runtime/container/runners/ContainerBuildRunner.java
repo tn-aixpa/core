@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
  * @RunnerComponent(runtime = "container", task = "job")
  */
 @Slf4j
-public class ContainerBuildRunner implements Runner<K8sRunnable> {
+public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
 
     private static final String TASK = "job";
 
@@ -46,7 +46,7 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
     }
 
     @Override
-    public K8sRunnable produce(Run run) {
+    public K8sKanikoRunnable produce(Run run) {
         RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
         TaskBuildSpec taskSpec = runSpec.getTaskBuildSpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
@@ -106,7 +106,6 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
             .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
-            .labels(taskSpec.getLabels())
             // Task specific
             .contextRefs(taskSpec.getContextRefs())
             .contextSources(taskSpec.getContextSources())

@@ -117,6 +117,17 @@ public interface FunctionService {
     Function updateFunction(@NotNull String id, @NotNull Function functionDTO) throws NoSuchEntityException;
 
     /**
+     * Update a specific function version
+     * @param id
+     * @param functionDTO
+     * @param force
+     * @return
+     * @throws NoSuchEntityException
+     */
+    Function updateFunction(@NotNull String id, @NotNull Function functionDTO, boolean force)
+        throws NoSuchEntityException;
+
+    /**
      * Delete a specific function (version) via unique ID, with optional cascade
      * @param id
      */

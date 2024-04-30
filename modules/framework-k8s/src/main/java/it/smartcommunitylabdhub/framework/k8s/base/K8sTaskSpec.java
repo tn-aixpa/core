@@ -50,9 +50,6 @@ public class K8sTaskSpec {
     private List<CoreToleration> tolerations;
 
     @Nullable
-    private List<CoreLabel> labels;
-
-    @Nullable
     @JsonProperty("backoff_limit")
     @Min(1)
     private Integer backoffLimit;

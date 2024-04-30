@@ -8,11 +8,13 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
@@ -67,6 +69,9 @@ public class ContainerRuntime
 
     @Autowired(required = false)
     private RunnableStore<K8sKanikoRunnable> buildRunnableStore;
+
+    @Autowired
+    private FunctionService functionService;
 
     @Override
     public RunContainerSpec build(@NotNull Executable function, @NotNull Task task, @NotNull Run run) {
@@ -291,6 +296,25 @@ public class ContainerRuntime
     public RunContainerStatus onComplete(Run run, RunRunnable runnable) {
         if (runnable != null) {
             cleanup(runnable);
+        }
+
+        RunContainerSpec runContainerSpec = new RunContainerSpec(run.getSpec());
+        RunSpecAccessor runAccessor = RunUtils.parseTask(runContainerSpec.getTask());
+
+        //update image name after build
+        if (runnable instanceof K8sKanikoRunnable) {
+            String image = ((K8sKanikoRunnable) runnable).getImage();
+
+            String functionId = runAccessor.getVersion();
+            Function function = functionService.getFunction(functionId);
+
+            log.debug("update function {} spec to use built image: {}", functionId, image);
+
+            FunctionContainerSpec funSpec = new FunctionContainerSpec(function.getSpec());
+            if (!image.equals(funSpec.getImage())) {
+                funSpec.setImage(image);
+                functionService.updateFunction(functionId, function);
+            }
         }
 
         return null;

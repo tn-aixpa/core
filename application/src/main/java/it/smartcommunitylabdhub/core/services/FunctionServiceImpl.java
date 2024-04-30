@@ -265,6 +265,18 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     }
 
     @Override
+    public Function updateFunction(@NotNull String id, @NotNull Function functionDTO, boolean force)
+        throws NoSuchEntityException {
+        log.debug("force update function with id {}", String.valueOf(id));
+        try {
+            //force update
+            return entityService.update(id, functionDTO);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.FUNCTION.toString());
+        }
+    }
+
+    @Override
     public void deleteFunction(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete function with id {}", String.valueOf(id));
 

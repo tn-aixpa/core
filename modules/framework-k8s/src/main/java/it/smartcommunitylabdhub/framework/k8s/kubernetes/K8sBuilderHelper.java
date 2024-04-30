@@ -249,4 +249,8 @@ public class K8sBuilderHelper implements InitializingBean {
     public String getServiceName(String runtime, String task, String id) {
         return "s" + "-" + runtime + "-" + task + "-" + id;
     }
+
+    public String getImageName(String image, String id) {
+        return image + ":" + id;
+    }
 }

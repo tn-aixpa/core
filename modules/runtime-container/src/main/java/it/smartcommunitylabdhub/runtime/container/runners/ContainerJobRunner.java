@@ -67,7 +67,6 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
             .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
-            .labels(taskSpec.getLabels())
             //specific
             .backoffLimit(taskSpec.getBackoffLimit())
             .build();
@@ -91,7 +90,6 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
                     .nodeSelector(taskSpec.getNodeSelector())
                     .affinity(taskSpec.getAffinity())
                     .tolerations(taskSpec.getTolerations())
-                    .labels(taskSpec.getLabels())
                     //specific
                     .backoffLimit(taskSpec.getBackoffLimit())
                     .schedule(taskSpec.getSchedule())
