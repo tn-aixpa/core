@@ -102,65 +102,67 @@ trap 'handle_error $LINENO "$BASH_COMMAND"' ERR
 rsync -av --exclude='context-refs.txt' --exclude='Dockerfile' --include='.*' "$source_dir/" "$destination_dir/"
 
 # Process context-refs.txt
-while IFS=, read -r protocol destination source; do
+if [ -f "$source_dir/context-refs.txt" ]; then
+    while IFS=, read -r protocol destination source; do
 
-    # Parse the url
-    url_parts=($(urlparse $source))
+        # Parse the url
+        url_parts=($(urlparse $source))
 
-    # Rebuild the url
-    rebuilt_url=$(rebuild_url "${url_parts[@]}")
+        # Rebuild the url
+        rebuilt_url=$(rebuild_url "${url_parts[@]}")
 
-    echo "Rebuilt URL : $rebuilt_url"
+        echo "Rebuilt URL : $rebuilt_url"
 
-    case "$protocol" in
-        "git+https")
-            echo "Protocol: $protocol"
-            echo "Downloading $rebuilt_url"
-            echo "to $destination_dir/$destination"
+        case "$protocol" in
+            "git+https")
+                echo "Protocol: $protocol"
+                echo "Downloading $rebuilt_url"
+                echo "to $destination_dir/$destination"
 
 
-            username=$GIT_USERNAME
-            password=$GIT_PASSWORD
-            token=$GIT_TOKEN
+                username=$GIT_USERNAME
+                password=$GIT_PASSWORD
+                token=$GIT_TOKEN
 
-            # Construct Git clone URL based on available authentication credentials
-            if [ -n "$token" ]; then
-                if [[ $token == github_pat_* || $token == glpat* ]]; then
-                    username="oauth2"
-                    password="$token"
+                # Construct Git clone URL based on available authentication credentials
+                if [ -n "$token" ]; then
+                    if [[ $token == github_pat_* || $token == glpat* ]]; then
+                        username="oauth2"
+                        password="$token"
+                    else
+                        username="$token"
+                        password="x-oauth-basic"
+                    fi
+                    git clone "https://$username:$password@$rebuilt_url" "$destination_dir/$destination"
+                elif [ -n "$username" ] && [ -n "$password" ]; then
+                    git clone "https://$username:$password@$rebuilt_url" "$destination_dir/$destination"
                 else
-                    username="$token"
-                    password="x-oauth-basic"
+                    git clone "https://$rebuilt_url" "$destination_dir/$destination"
                 fi
-                git clone "https://$username:$password@$rebuilt_url" "$destination_dir/$destination"
-            elif [ -n "$username" ] && [ -n "$password" ]; then
-                git clone "https://$username:$password@$rebuilt_url" "$destination_dir/$destination"
-            else
-                git clone "https://$rebuilt_url" "$destination_dir/$destination"
-            fi
-	    # if fragment do checkout of tag version.
-	    ;;
-        "zip+s3") # for now accept a zip file - check if file is a zip, unpack zip
-	    mc alias set $minio $S3_ENDPOINT_URL $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
-	          echo "Protocol: $protocol"
-            echo "Downloading $minio/$rebuilt_url"
-            echo "to $destination_dir/$destination"
-            mc cp "$minio/$rebuilt_url" "$destination_dir/$destination"
-            unzip "$destination_dir/$destination" -d "$destination_dir"
+            # if fragment do checkout of tag version.
             ;;
-        "http" | "https") # for now accept only zip file - check if file is a zip. unpack zip
-            echo "Protocol: $protocol"
-            echo "Downloading $source"
-            echo "to $destination_dir/$destination"
-            curl -o "$destination_dir/$destination" -L "$source"
-            unzip "$destination_dir/$destination" -d "$destination_dir"
-            ;;
-        # Add more cases for other protocols as needed
-        *)
-            echo "Unknown protocol: $protocol"
-            exit 1
-            ;;
-    esac
-done < "$source_dir/context-refs.txt"
+            "zip+s3") # for now accept a zip file - check if file is a zip, unpack zip
+                mc alias set $minio $S3_ENDPOINT_URL $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+                echo "Protocol: $protocol"
+                echo "Downloading $minio/$rebuilt_url"
+                echo "to $destination_dir/$destination"
+                mc cp "$minio/$rebuilt_url" "$destination_dir/$destination"
+                unzip "$destination_dir/$destination" -d "$destination_dir"
+                ;;
+            "zip+http" | "zip+https") # for now accept only zip file - check if file is a zip. unpack zip
+                echo "Protocol: $protocol"
+                echo "Downloading $source"
+                echo "to $destination_dir/$destination"
+                curl -o "$destination_dir/$destination" -L "$source"
+                unzip "$destination_dir/$destination" -d "$destination_dir"
+                ;;
+            # Add more cases for other protocols as needed
+            *)
+                echo "Unknown protocol: $protocol"
+                exit 1
+                ;;
+        esac
+    done < "$source_dir/context-refs.txt"
+fi
 
 ls "$destination_dir"
