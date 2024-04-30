@@ -112,7 +112,7 @@
     <module name="ModifiedControlVariable" />
     <module name="MultipleVariableDeclarations" />
     <module name="NoClone" />
-    <module name="NoEnumTrailingComma" />
+    <!-- <module name="NoEnumTrailingComma" /> -->
     <module name="NoFinalizer" />
     <module name="SuperClone" />
     <module name="SuperFinalize" />
