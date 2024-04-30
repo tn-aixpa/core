@@ -61,6 +61,8 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
 
         dockerfileGenerator.addInstruction(DockerfileInstruction.COPY, "COPY . .");
 
+        dockerfileGenerator.addInstruction(DockerfileInstruction.RUN, "CD /shared");
+
         // Add Instructions to docker file
         Optional
                 .ofNullable(taskSpec.getInstructions())
