@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -133,6 +134,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         return labels;
     }
 
+    @SuppressWarnings("null")
     protected List<V1EnvVar> buildEnv(T runnable) {
         //shared envs
         List<V1EnvVar> sharedEnvs = k8sBuilderHelper.getV1EnvVar();
@@ -140,6 +142,15 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         //secretd based envs
         List<V1EnvVar> secretEnvs = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
 
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        List<V1EnvVar> runSecretEnvs = new LinkedList<>();
+        if (secret != null && secret.getStringData() != null && !secret.getStringData().isEmpty()) {
+            Map<String, Set<String>> runSecretKeys = Collections.singletonMap(secret.getMetadata().getName(), secret.getStringData().keySet());
+            runSecretEnvs.addAll(k8sBuilderHelper.geEnvVarsFromSecrets(runSecretKeys));
+            runSecretEnvs.add(new V1EnvVar().name("DH_RUN_SECRET_NAME").value(secret.getMetadata().getName()));
+        }
+        
         // function specific envs
         List<V1EnvVar> functionEnvs = runnable
             .getEnvs()
@@ -152,6 +163,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         sharedEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
         secretEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
         functionEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
+        runSecretEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
 
         return envs.values().stream().toList();
     }
@@ -277,4 +289,22 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         return null;
     }
+
+    @SuppressWarnings("null")
+    protected void storeRunSecret(V1Secret secret) throws K8sFrameworkException {
+        try {
+            k8sSecretHelper.storeSecretData(secret.getMetadata().getName(), secret.getStringData());
+        } catch (Exception e) {
+            throw new K8sFrameworkException(e.getMessage());
+        }
+    }
+    protected void cleanRunSecret(T runnable) {
+        String secretName = k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
+        try {
+            k8sSecretHelper.deleteSecret(secretName);
+        } catch (Exception e) {
+            log.warn("Failed to delete secret {}", secretName, e);
+        }
+    }
+
 }

@@ -146,9 +146,9 @@ public class K8sSecretHelper {
             String username = token.getClaimAsString("preferred_username");
 
             Map<String, String> data = new HashMap<>();
-            data.put("DH_AUTH_TOKEN", jwt);
-            data.put("DH_AUTH_SUB", sub);
-            data.put("DH_USERNAME", StringUtils.hasText(username) ? username : sub);
+            data.put("DIGITALHUB_CORE_TOKEN", jwt);
+            data.put("DIGITALHUB_CORE_AUTH_SUB", sub);
+            data.put("DIGITALHUB_CORE_USER", StringUtils.hasText(username) ? username : sub);
 
             return new V1Secret()
                 .metadata(new V1ObjectMeta().name(name).namespace(namespace))

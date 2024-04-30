@@ -13,6 +13,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
@@ -47,6 +48,12 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     @Override
     public K8sDeploymentRunnable run(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
         V1Deployment deployment = build(runnable);
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        if (secret != null) {
+            storeRunSecret(secret);
+        }
+
         deployment = create(deployment);
         runnable.setState(State.RUNNING.name());
 
@@ -62,6 +69,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             runnable.setState(State.DELETED.name());
             return runnable;
         }
+        //secrets
+        cleanRunSecret(runnable);        
 
         delete(deployment);
         runnable.setState(State.DELETED.name());

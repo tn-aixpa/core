@@ -28,6 +28,8 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 @Slf4j
 @FrameworkComponent(framework = K8sJobFramework.FRAMEWORK)
 public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
@@ -55,6 +57,12 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     @Override
     public K8sJobRunnable run(K8sJobRunnable runnable) throws K8sFrameworkException {
         V1Job job = build(runnable);
+
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        if (secret != null) {
+            storeRunSecret(secret);
+        }
         job = create(job);
 
         // Update runnable state..
@@ -83,6 +91,8 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             runnable.setState(State.DELETED.name());
             return runnable;
         }
+        //secrets
+        cleanRunSecret(runnable);        
 
         delete(job);
         runnable.setState(State.DELETED.name());
@@ -118,13 +128,6 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         // resources
         V1ResourceRequirements resources = buildResources(runnable);
-
-        //secrets
-        V1Secret secret = buildRunSecret(runnable);
-        if (secret != null) {
-            //TODO create in kube and reference in job template
-
-        }
 
         //command params
         List<String> command = buildCommand(runnable);
