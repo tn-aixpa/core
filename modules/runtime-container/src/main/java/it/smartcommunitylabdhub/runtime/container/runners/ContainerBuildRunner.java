@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 /**
  * ContainerJobRunner
@@ -29,6 +31,7 @@ import java.util.Set;
  *
  * @RunnerComponent(runtime = "container", task = "job")
  */
+@Slf4j
 public class ContainerBuildRunner implements Runner<K8sRunnable> {
 
     private static final String TASK = "job";
@@ -48,7 +51,7 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-                List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
+            List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
@@ -56,21 +59,33 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         // Generate docker file
         DockerfileGenerator dockerfileGenerator = new DockerfileGenerator();
 
+        if (!StringUtils.hasText(functionSpec.getBaseImage())) {
+            throw new IllegalArgumentException("invalid or missing baseImage");
+        }
+
         // Add image to docker file
         dockerfileGenerator.addInstruction(DockerfileInstruction.FROM, "FROM " + functionSpec.getBaseImage());
 
-        dockerfileGenerator.addInstruction(DockerfileInstruction.COPY, "COPY . .");
+        // copy context content to workdir
+        dockerfileGenerator.addInstruction(DockerfileInstruction.COPY, "COPY . ./build");
+        dockerfileGenerator.addInstruction(DockerfileInstruction.WORKDIR, "/build");
 
-        dockerfileGenerator.addInstruction(DockerfileInstruction.RUN, "CD /shared");
+        if (log.isDebugEnabled()) {
+            //add debug instructions to docker file
+            dockerfileGenerator.addInstruction(
+                DockerfileInstruction.RUN,
+                "PWD=`pwd`;echo \"DEBUG: Current dir ${PWD}\";LS=`ls -R`;echo \"DEBUG: Current dir content:\" && echo \"${LS}\";"
+            );
+        }
 
         // Add Instructions to docker file
         Optional
-                .ofNullable(taskSpec.getInstructions())
-                .ifPresent(instructions ->
-                        instructions.forEach(instruction ->
-                                dockerfileGenerator.addInstruction(DockerfileInstruction.RUN, "RUN " + instruction)
-                        )
-                );
+            .ofNullable(taskSpec.getInstructions())
+            .ifPresent(instructions ->
+                instructions.forEach(instruction ->
+                    dockerfileGenerator.addInstruction(DockerfileInstruction.RUN, "RUN " + instruction)
+                )
+            );
 
         // Generate string docker file
         String dockerfile = dockerfileGenerator.generateDockerfile();
@@ -80,28 +95,28 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
 
         // Build runnable
         return K8sKanikoRunnable
-                .builder()
-                .id(run.getId())
-                .project(run.getProject())
-                .runtime(ContainerRuntime.RUNTIME)
-                .task(TASK)
-                .state(State.READY.name())
-                // Base
-                .image(runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction())
-                .envs(coreEnvList)
-                .secrets(groupedSecrets)
-                .resources(taskSpec.getResources())
-                .volumes(taskSpec.getVolumes())
-                .nodeSelector(taskSpec.getNodeSelector())
-                .affinity(taskSpec.getAffinity())
-                .tolerations(taskSpec.getTolerations())
-                .labels(taskSpec.getLabels())
-                // Task specific
-                .contextRefs(taskSpec.getContextRefs())
-                .contextSources(taskSpec.getContextSources())
-                .dockerFile(dockerfile)
-                // specific
-                .backoffLimit(1)
-                .build();
+            .builder()
+            .id(run.getId())
+            .project(run.getProject())
+            .runtime(ContainerRuntime.RUNTIME)
+            .task(TASK)
+            .state(State.READY.name())
+            // Base
+            .image(runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction())
+            .envs(coreEnvList)
+            .secrets(groupedSecrets)
+            .resources(taskSpec.getResources())
+            .volumes(taskSpec.getVolumes())
+            .nodeSelector(taskSpec.getNodeSelector())
+            .affinity(taskSpec.getAffinity())
+            .tolerations(taskSpec.getTolerations())
+            .labels(taskSpec.getLabels())
+            // Task specific
+            .contextRefs(taskSpec.getContextRefs())
+            .contextSources(taskSpec.getContextSources())
+            .dockerFile(dockerfile)
+            // specific
+            .backoffLimit(1)
+            .build();
     }
 }

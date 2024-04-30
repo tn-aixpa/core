@@ -155,10 +155,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             "init-config-map",
             Map.of("name", "init-config-map-" + runnable.getId())
         );
-
-        if (runnableVolumesOpt.stream().noneMatch(v -> "init-config-map".equals(v.getName()))) {
-            coreVolumes.add(configMapVolume);
-        }
+        coreVolumes.add(configMapVolume);
 
         // Add secret for kaniko
         if (StringUtils.hasText(kanikoSecret)) {
@@ -181,7 +178,14 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             List.of(
                 "--dockerfile=/init-config-map/Dockerfile",
                 "--context=/shared",
-                "--destination=" + imageRegistry + "/" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
+                "--destination=" +
+                imageRegistry +
+                "/" +
+                imagePrefix +
+                "-" +
+                runnable.getImage() +
+                ":" +
+                runnable.getId()
             )
         );
         // Add Kaniko args
