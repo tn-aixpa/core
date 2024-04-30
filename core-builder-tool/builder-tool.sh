@@ -146,14 +146,14 @@ while IFS=, read -r protocol destination source; do
             echo "Downloading $minio/$rebuilt_url"
             echo "to $destination_dir/$destination"
             mc cp "$minio/$rebuilt_url" "$destination_dir/$destination"
-            unzip "$destination_dir/$destination"
+            unzip "$destination_dir/$destination" -d "$destination_dir"
             ;;
         "http" | "https") # for now accept only zip file - check if file is a zip. unpack zip
             echo "Protocol: $protocol"
             echo "Downloading $source"
             echo "to $destination_dir/$destination"
             curl -o "$destination_dir/$destination" -L "$source"
-            unzip "$destination_dir/$destination"
+            unzip "$destination_dir/$destination" -d "$destination_dir"
             ;;
         # Add more cases for other protocols as needed
         *)
