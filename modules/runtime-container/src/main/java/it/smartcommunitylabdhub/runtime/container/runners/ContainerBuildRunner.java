@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGenerator;
+import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGeneratorFactory;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileInstruction;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
@@ -57,23 +58,22 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         // Generate docker file
-        DockerfileGenerator dockerfileGenerator = new DockerfileGenerator();
+        DockerfileGeneratorFactory dockerfileGenerator = DockerfileGenerator.factory();
 
         if (!StringUtils.hasText(functionSpec.getBaseImage())) {
             throw new IllegalArgumentException("invalid or missing baseImage");
         }
 
         // Add image to docker file
-        dockerfileGenerator.addInstruction(DockerfileInstruction.FROM, "FROM " + functionSpec.getBaseImage());
+        dockerfileGenerator.from(functionSpec.getBaseImage());
 
         // copy context content to workdir
-        dockerfileGenerator.addInstruction(DockerfileInstruction.COPY, "COPY . ./build");
-        dockerfileGenerator.addInstruction(DockerfileInstruction.WORKDIR, "/build");
+        dockerfileGenerator.copy(".", "./build");
+        dockerfileGenerator.workdir("/build");
 
         if (log.isDebugEnabled()) {
             //add debug instructions to docker file
-            dockerfileGenerator.addInstruction(
-                DockerfileInstruction.RUN,
+            dockerfileGenerator.run(
                 "PWD=`pwd`;echo \"DEBUG: Current dir ${PWD}\";LS=`ls -R`;echo \"DEBUG: Current dir content:\" && echo \"${LS}\";"
             );
         }
@@ -81,14 +81,10 @@ public class ContainerBuildRunner implements Runner<K8sRunnable> {
         // Add Instructions to docker file
         Optional
             .ofNullable(taskSpec.getInstructions())
-            .ifPresent(instructions ->
-                instructions.forEach(instruction ->
-                    dockerfileGenerator.addInstruction(DockerfileInstruction.RUN, "RUN " + instruction)
-                )
-            );
+            .ifPresent(instructions -> instructions.forEach(i -> dockerfileGenerator.run(i)));
 
         // Generate string docker file
-        String dockerfile = dockerfileGenerator.generateDockerfile();
+        String dockerfile = dockerfileGenerator.build().generate();
 
         // Parse run spec
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runSpec.getTask());
