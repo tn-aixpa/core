@@ -35,8 +35,6 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
 
     private List<CoreToleration> tolerations;
 
-    private List<CoreLabel> labels;
-
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
@@ -49,7 +47,6 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
         this.resources = spec.getResources();
         this.secrets = spec.getSecrets();
         this.affinity = spec.getAffinity();
-        this.labels = spec.getLabels();
         this.tolerations = spec.getTolerations();
     }
 }

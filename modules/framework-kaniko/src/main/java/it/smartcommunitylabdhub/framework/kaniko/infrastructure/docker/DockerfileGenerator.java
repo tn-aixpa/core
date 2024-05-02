@@ -1,67 +1,19 @@
 package it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.LinkedList;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-
-/**
- * DockerfileGenerator is a utility class for programmatically generating Dockerfiles.
- * It allows users to specify Dockerfile directives and instructions, set configurations such as
- * user, working directory, and health checks, and generate the Dockerfile content either directly
- * or by using a template.
- * <p>
- * Example usage:
- * <pre>{@code
- * DockerfileGenerator dockerfileGenerator = new DockerfileGenerator();
- * dockerfileGenerator.addDirective("ARG VERSION=latest\n");
- * dockerfileGenerator.addInstruction("baseImage", "FROM openjdk:11");
- * dockerfileGenerator.addInstruction("dependency", "RUN apt-get update && apt-get install -y git");
- * dockerfileGenerator.addInstruction("environmentVariable", "ENV JAVA_HOME=/usr/local/openjdk-11");
- * dockerfileGenerator.addInstruction("command", "RUN git clone https://github.com/example/repo.git");
- * dockerfileGenerator.addInstruction("command", "RUN cd repo && mvn clean package");
- * dockerfileGenerator.addInstruction("copiedFile", "COPY target/*.jar /app/app.jar");
- * dockerfileGenerator.addInstruction("exposedPort", "EXPOSE 8080");
- * dockerfileGenerator.setUser("myuser");
- * dockerfileGenerator.setWorkdir("/app");
- * dockerfileGenerator.setHealthCheck("--interval=30s --timeout=30s CMD curl -f http://localhost/ || exit 1");
- * <p>
- * String dockerfileContent = dockerfileGenerator.generateDockerfile();
- * System.out.println("Generated Dockerfile:\n" + dockerfileContent);
- * <p>
- * dockerfileGenerator.writeToFile("Dockerfile");
- * System.out.println("Dockerfile written to file.");
- * }</pre>
- * <p>
- * To use a Dockerfile template, provide the path to the template file when generating the Dockerfile:
- * <pre>{@code
- * String templatePath = "path/to/template/Dockerfile.template";
- * String dockerfileContent = dockerfileGenerator.generateDockerfileFromTemplate(templatePath);
- * }</pre>
- */
 
 @Slf4j
 public class DockerfileGenerator {
 
-    private final Map<DockerfileInstruction, List<String>> instructions = new LinkedHashMap<>();
-    private final List<String> directives = new ArrayList<>();
+    private final LinkedList<DockerfileInstruction> instructions;
+    private final LinkedList<DockerfileDirective> directives;
 
-    @Getter
-    @Setter
-    private String user;
-
-    @Getter
-    @Setter
-    private String workdir;
-
-    @Getter
-    @Setter
-    private String healthCheck;
+    protected DockerfileGenerator() {
+        instructions = new LinkedList<>();
+        directives = new LinkedList<>();
+    }
 
     /**
      * Appends an instruction of the given type.
@@ -69,8 +21,12 @@ public class DockerfileGenerator {
      * @param type        The type of instruction.
      * @param instruction The instruction to append.
      */
-    public void addInstruction(DockerfileInstruction type, String instruction) {
-        instructions.computeIfAbsent(type, k -> new ArrayList<>()).add(instruction);
+    public void addInstruction(DockerfileInstruction instruction) {
+        instructions.add(instruction);
+    }
+
+    public void addInstruction(DockerfileInstruction.Kind instruction, String... args) {
+        instructions.add(DockerfileInstruction.builder().instruction(instruction).args(args).build());
     }
 
     /**
@@ -78,8 +34,12 @@ public class DockerfileGenerator {
      *
      * @param directive The Dockerfile directive to append.
      */
-    public void addDirective(String directive) {
+    public void addDirective(DockerfileDirective directive) {
         directives.add(directive);
+    }
+
+    public void addDirective(String directive, String value) {
+        directives.add(DockerfileDirective.builder().directive(directive).value(value).build());
     }
 
     /**
@@ -87,43 +47,55 @@ public class DockerfileGenerator {
      *
      * @return The generated Dockerfile content as a string.
      */
-    public String generateDockerfile() {
-        StringBuilder dockerfileContent = new StringBuilder();
+    public String generate() {
+        StringBuilder content = new StringBuilder();
 
-        directives.forEach(dockerfileContent::append);
+        //validate directives
+        if (
+            directives != null &&
+            !directives.isEmpty() &&
+            directives.stream().map(d -> d.getDirective()).collect(Collectors.toSet()).size() < directives.size()
+        ) {
+            //duplicated directives are illegal
+            throw new IllegalArgumentException("duplicated directives found.");
+        }
 
-        instructions.forEach((type, instructionList) -> {
-            instructionList.forEach(instruction -> {
-                dockerfileContent.append(instruction).append("\n");
-            });
+        //not empty instructions
+        if (instructions == null || instructions.isEmpty()) {
+            throw new IllegalArgumentException("empty or missing instructions.");
+        }
+
+        //must start with FROM or ARG
+        if (
+            DockerfileInstruction.Kind.FROM != instructions.getFirst().getInstruction() &&
+            DockerfileInstruction.Kind.ARG != instructions.getFirst().getInstruction()
+        ) {
+            throw new IllegalArgumentException("instructions must start with FROM (or ARG)");
+        }
+
+        directives.forEach(dir -> {
+            content.append(dir.write()).append("\n");
         });
 
-        if (user != null) {
-            dockerfileContent.append("USER ").append(user).append("\n");
+        if (!directives.isEmpty()) {
+            directives.forEach(dir -> {
+                content.append(dir.write()).append("\n");
+            });
+
+            content.append("\n");
         }
 
-        if (workdir != null) {
-            dockerfileContent.append("WORKDIR ").append(workdir).append("\n");
-        }
+        instructions.forEach(i -> {
+            //TODO validate instruction
+            content.append(i.write()).append("\n");
+        });
 
-        if (healthCheck != null) {
-            dockerfileContent.append("HEALTHCHECK ").append(healthCheck).append("\n");
-        }
+        content.append("\n");
 
-        return dockerfileContent.toString();
+        return content.toString();
     }
 
-    /**
-     * Writes the generated Dockerfile content to a file.
-     *
-     * @param filePath The path to the file where the Dockerfile will be written.
-     */
-    public void writeToFile(String filePath) {
-        try (FileWriter writer = new FileWriter(filePath)) {
-            writer.write(generateDockerfile());
-            writer.flush();
-        } catch (IOException e) {
-            log.error("Error writing dockerfile", e);
-        }
+    public static DockerfileGeneratorFactory factory() {
+        return DockerfileGeneratorFactory.newInstance();
     }
 }

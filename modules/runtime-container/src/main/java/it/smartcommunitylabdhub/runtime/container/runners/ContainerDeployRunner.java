@@ -64,7 +64,6 @@ public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
             .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
-            .labels(taskSpec.getLabels())
             //specific
             .replicas(taskSpec.getReplicas())
             .build();

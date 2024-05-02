@@ -127,6 +127,13 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             runnable.getId()
         );
 
+        //build destination image name and set to runnable
+        String prefix =
+            (StringUtils.hasText(imageRegistry) ? imageRegistry + "/" : "") +
+            (StringUtils.hasText(imagePrefix) ? imagePrefix + "-" : "");
+        String imageName = k8sBuilderHelper.getImageName(prefix + runnable.getImage(), runnable.getId());
+        runnable.setImage(imageName);
+
         //build labels
         Map<String, String> labels = buildLabels(runnable);
 
@@ -155,10 +162,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             "init-config-map",
             Map.of("name", "init-config-map-" + runnable.getId())
         );
-
-        if (runnableVolumesOpt.stream().noneMatch(v -> "init-config-map".equals(v.getName()))) {
-            coreVolumes.add(configMapVolume);
-        }
+        coreVolumes.add(configMapVolume);
 
         // Add secret for kaniko
         if (StringUtils.hasText(kanikoSecret)) {
@@ -178,19 +182,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             .ifPresentOrElse(coreVolumes::addAll, () -> runnable.setVolumes(coreVolumes));
 
         List<String> kanikoArgsAll = new ArrayList<>(
-            List.of(
-                "--dockerfile=/init-config-map/Dockerfile",
-                "--context=/shared",
-                "--destination=" + imageRegistry + "/" + imagePrefix + "-" + runnable.getImage() + ":" + runnable.getId()
-            )
+            List.of("--dockerfile=/init-config-map/Dockerfile", "--context=/shared", "--destination=" + imageName)
         );
         // Add Kaniko args
         kanikoArgsAll.addAll(kanikoArgs);
-
-        // Update Runnable with kaniko image args and state
-        runnable.setImage(kanikoImage);
-        runnable.setArgs(kanikoArgsAll.toArray(String[]::new));
-        runnable.setState(State.READY.name());
 
         // Prepare environment variables for the Kubernetes job
         List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
@@ -203,18 +198,13 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // resources
         V1ResourceRequirements resources = buildResources(runnable);
 
-        // command and args
-        List<String> command = buildCommand(runnable);
-        List<String> args = buildArgs(runnable);
-
         // Build Container
         V1Container container = new V1Container()
             .name(containerName)
-            .image(runnable.getImage())
+            .image(kanikoImage)
             .imagePullPolicy("Always")
             .imagePullPolicy("IfNotPresent")
-            .command(command)
-            .args(args)
+            .args(kanikoArgsAll)
             .resources(resources)
             .volumeMounts(volumeMounts)
             .envFrom(envFrom)
@@ -247,12 +237,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Set initContainer as first container in the PodSpec
         podSpec.setInitContainers(Collections.singletonList(initContainer));
 
-        int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(3);
+        int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(0);
 
         // Create the JobSpec with the PodTemplateSpec
         V1JobSpec jobSpec = new V1JobSpec()
             .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
-            //TODO support work-queue style/parallel jobs
             .parallelism(1)
             .completions(1)
             .backoffLimit(backoffLimit)

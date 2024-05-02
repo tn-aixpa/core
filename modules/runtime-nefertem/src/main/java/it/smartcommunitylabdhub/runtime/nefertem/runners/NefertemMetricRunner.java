@@ -68,7 +68,6 @@ public class NefertemMetricRunner implements Runner<K8sJobRunnable> {
             .volumes(k8s.getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
-            .labels(k8s.getLabels())
             .affinity(k8s.getAffinity())
             .tolerations(k8s.getTolerations())
             .state(State.READY.name())

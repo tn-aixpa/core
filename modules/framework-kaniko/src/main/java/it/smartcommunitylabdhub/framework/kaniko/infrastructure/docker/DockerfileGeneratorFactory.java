@@ -44,63 +44,63 @@ public class DockerfileGeneratorFactory {
     }
 
     public DockerfileGeneratorFactory from(String baseImage) {
-        generator.addInstruction(DockerfileInstruction.FROM, "FROM " + baseImage);
+        generator.addInstruction(DockerfileInstruction.Kind.FROM, baseImage);
         return this;
     }
 
     public DockerfileGeneratorFactory run(String run) {
-        generator.addInstruction(DockerfileInstruction.RUN, "RUN " + run);
+        generator.addInstruction(DockerfileInstruction.Kind.RUN, run);
         return this;
     }
 
     public DockerfileGeneratorFactory entrypoint(List<String> entrypoint) {
         generator.addInstruction(
-            DockerfileInstruction.ENTRYPOINT,
-            "ENTRYPOINT [" + entrypoint.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]"
+            DockerfileInstruction.Kind.ENTRYPOINT,
+            "[" + entrypoint.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]"
         );
         return this;
     }
 
     public DockerfileGeneratorFactory cmd(List<String> command) {
         generator.addInstruction(
-            DockerfileInstruction.CMD,
-            "CMD [" + command.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]"
+            DockerfileInstruction.Kind.CMD,
+            "[" + command.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ")) + "]"
         );
         return this;
     }
 
     public DockerfileGeneratorFactory label(String label) {
-        generator.addInstruction(DockerfileInstruction.LABEL, "LABEL " + label);
+        generator.addInstruction(DockerfileInstruction.Kind.LABEL, label);
         return this;
     }
 
     public DockerfileGeneratorFactory copy(String source, String destination) {
-        generator.addInstruction(DockerfileInstruction.COPY, "COPY " + source + " " + destination);
+        generator.addInstruction(DockerfileInstruction.Kind.COPY, source, " ", destination);
         return this;
     }
 
     public DockerfileGeneratorFactory expose(String port) {
-        generator.addInstruction(DockerfileInstruction.EXPOSE, "EXPOSE " + port);
+        generator.addInstruction(DockerfileInstruction.Kind.EXPOSE, port);
         return this;
     }
 
-    public DockerfileGeneratorFactory addDirective(String directive) {
-        generator.addDirective(directive);
+    public DockerfileGeneratorFactory addDirective(String directive, String value) {
+        generator.addDirective(directive, value);
         return this;
     }
 
     public DockerfileGeneratorFactory user(String user) {
-        generator.setUser(user);
+        generator.addInstruction(DockerfileInstruction.Kind.USER, user);
         return this;
     }
 
     public DockerfileGeneratorFactory workdir(String workdir) {
-        generator.setWorkdir(workdir);
+        generator.addInstruction(DockerfileInstruction.Kind.WORKDIR, workdir);
         return this;
     }
 
     public DockerfileGeneratorFactory healthcheck(String healthCheck) {
-        generator.setHealthCheck(healthCheck);
+        generator.addInstruction(DockerfileInstruction.Kind.HEALTHCHECK, healthCheck);
         return this;
     }
 
