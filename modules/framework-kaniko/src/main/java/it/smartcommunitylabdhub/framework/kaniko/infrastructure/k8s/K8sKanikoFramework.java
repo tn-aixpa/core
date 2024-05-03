@@ -131,8 +131,12 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         String prefix =
             (StringUtils.hasText(imageRegistry) ? imageRegistry + "/" : "") +
             (StringUtils.hasText(imagePrefix) ? imagePrefix + "-" : "");
-        String imageName = k8sBuilderHelper.getImageName(prefix + runnable.getImage(), runnable.getId());
-        runnable.setImage(imageName);
+        // workaround: update image name only first time
+        String imageName =  runnable.getImage();
+        if (StringUtils.hasText(prefix) && !runnable.getImage().startsWith(prefix)) {
+            imageName = k8sBuilderHelper.getImageName(prefix + runnable.getImage(), runnable.getId());
+            runnable.setImage(imageName);                
+        }
 
         //build labels
         Map<String, String> labels = buildLabels(runnable);

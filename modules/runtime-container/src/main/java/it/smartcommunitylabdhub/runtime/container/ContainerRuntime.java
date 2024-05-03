@@ -313,7 +313,8 @@ public class ContainerRuntime
             FunctionContainerSpec funSpec = new FunctionContainerSpec(function.getSpec());
             if (!image.equals(funSpec.getImage())) {
                 funSpec.setImage(image);
-                functionService.updateFunction(functionId, function);
+                function.setSpec(funSpec.toMap());
+                functionService.updateFunction(functionId, function, true);
             }
         }
 
