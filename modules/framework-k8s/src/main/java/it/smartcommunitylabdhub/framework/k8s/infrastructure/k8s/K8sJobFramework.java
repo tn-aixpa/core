@@ -12,6 +12,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
@@ -26,6 +27,8 @@ import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @Slf4j
 @FrameworkComponent(framework = K8sJobFramework.FRAMEWORK)
@@ -54,6 +57,12 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     @Override
     public K8sJobRunnable run(K8sJobRunnable runnable) throws K8sFrameworkException {
         V1Job job = build(runnable);
+
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        if (secret != null) {
+            storeRunSecret(secret);
+        }
         job = create(job);
 
         // Update runnable state..
@@ -82,6 +91,8 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             runnable.setState(State.DELETED.name());
             return runnable;
         }
+        //secrets
+        cleanRunSecret(runnable);        
 
         delete(job);
         runnable.setState(State.DELETED.name());

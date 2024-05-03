@@ -8,6 +8,7 @@ import io.kubernetes.client.openapi.models.V1CronJobSpec;
 import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1JobTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Secret;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
@@ -44,6 +45,12 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         V1CronJob job = build(runnable);
         job = create(job);
 
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        if (secret != null) {
+            storeRunSecret(secret);
+        }
+
         // Update runnable state..
         runnable.setState(State.RUNNING.name());
 
@@ -70,6 +77,8 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             runnable.setState(State.DELETED.name());
             return runnable;
         }
+        //secrets
+        cleanRunSecret(runnable);        
 
         delete(job);
         runnable.setState(State.DELETED.name());

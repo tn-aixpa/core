@@ -21,6 +21,7 @@ public class TaskPipelineSpec extends K8sTaskBaseSpec {
     public static final String KIND = "kfp+pipeline";
 
     private String schedule;
+    private String workflow;
 
     public TaskPipelineSpec(Map<String, Serializable> data) {
         configure(data);
@@ -32,5 +33,6 @@ public class TaskPipelineSpec extends K8sTaskBaseSpec {
 
         TaskPipelineSpec spec = mapper.convertValue(data, TaskPipelineSpec.class);
         this.schedule = spec.getSchedule();
+        this.workflow = spec.getWorkflow();
     }
 }

@@ -10,6 +10,7 @@ import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Secret;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -18,7 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 @ConditionalOnKubernetes
@@ -127,6 +132,37 @@ public class K8sSecretHelper {
                 .stringData(data);
             api.createNamespacedSecret(namespace, body, null, null, null, null);
         }
+    }
+
+    public @Nullable V1Secret convertAuthentication(String name, AbstractAuthenticationToken auth) {
+        if (auth instanceof JwtAuthenticationToken) {
+            Jwt token = ((JwtAuthenticationToken) auth).getToken();
+            if (token == null) {
+                throw new IllegalArgumentException("missing token");
+            }
+
+            String jwt = token.getTokenValue();
+            String sub = token.getSubject();
+            String username = token.getClaimAsString("preferred_username");
+
+            Map<String, String> data = new HashMap<>();
+            data.put("DIGITALHUB_CORE_TOKEN", jwt);
+            data.put("DIGITALHUB_CORE_AUTH_SUB", sub);
+            data.put("DIGITALHUB_CORE_USER", StringUtils.hasText(username) ? username : sub);
+
+            return new V1Secret()
+                .metadata(new V1ObjectMeta().name(name).namespace(namespace))
+                .apiVersion("v1")
+                .kind("Secret")
+                .stringData(data);
+        }
+
+        return null;
+    }
+
+    // Generate and return job name
+    public String getSecretName(String runtime, String task, String id) {
+        return "sec" + "-" + runtime + "-" + task + "-" + id;
     }
 
     public record PatchBody(Object value, String path) {

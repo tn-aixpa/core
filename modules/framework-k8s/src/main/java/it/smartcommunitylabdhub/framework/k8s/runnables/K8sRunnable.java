@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
+import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
@@ -9,6 +10,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreToleration;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,13 +19,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.CredentialsContainer;
 
 @SuperBuilder
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class K8sRunnable implements RunRunnable {
+public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsContainer {
 
     private String id;
 
@@ -59,8 +63,22 @@ public class K8sRunnable implements RunRunnable {
 
     private String state;
 
+    private AbstractAuthenticationToken credentials;
+
     @Override
     public String getFramework() {
         return "k8s";
+    }
+
+    @Override
+    public void eraseCredentials() {
+        this.credentials = null;
+    }
+
+    @Override
+    public void setCredentials(Serializable credentials) {
+        if (credentials instanceof AbstractAuthenticationToken) {
+            this.credentials = (AbstractAuthenticationToken) credentials;
+        }
     }
 }

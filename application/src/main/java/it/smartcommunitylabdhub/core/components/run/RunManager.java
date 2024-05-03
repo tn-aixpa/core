@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
+import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -19,6 +20,7 @@ import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
+import it.smartcommunitylabdhub.core.components.security.SecureCredentialsHelper;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
@@ -40,6 +42,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -175,7 +179,17 @@ public class RunManager {
 
         try {
             Optional<RunRunnable> runnable = fsm.goToState(State.READY, null);
+
             runnable.ifPresent(r -> {
+                //extract auth from security context to inflate secured credentials
+                //TODO refactor properly
+                if (r instanceof SecuredRunnable) {
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    if (auth != null) {
+                        ((SecuredRunnable) r).setCredentials(auth);
+                    }
+                }
+
                 // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
                 eventPublisher.publishEvent(r);
 

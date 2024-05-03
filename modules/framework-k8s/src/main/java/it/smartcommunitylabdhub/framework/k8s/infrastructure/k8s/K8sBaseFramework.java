@@ -6,6 +6,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
@@ -13,6 +14,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
@@ -24,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -42,6 +45,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected String version;
     protected K8sBuilderHelper k8sBuilderHelper;
+    protected K8sSecretHelper k8sSecretHelper;
 
     protected K8sBaseFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
@@ -61,6 +65,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Autowired
     public void setK8sBuilderHelper(K8sBuilderHelper k8sBuilderHelper) {
         this.k8sBuilderHelper = k8sBuilderHelper;
+    }
+
+    @Autowired
+    public void setK8sSecretHelper(K8sSecretHelper k8sSecretHelper) {
+        this.k8sSecretHelper = k8sSecretHelper;
     }
 
     @Override
@@ -125,6 +134,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         return labels;
     }
 
+    @SuppressWarnings("null")
     protected List<V1EnvVar> buildEnv(T runnable) {
         //shared envs
         List<V1EnvVar> sharedEnvs = k8sBuilderHelper.getV1EnvVar();
@@ -132,6 +142,15 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         //secretd based envs
         List<V1EnvVar> secretEnvs = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
 
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        List<V1EnvVar> runSecretEnvs = new LinkedList<>();
+        if (secret != null && secret.getStringData() != null && !secret.getStringData().isEmpty()) {
+            Map<String, Set<String>> runSecretKeys = Collections.singletonMap(secret.getMetadata().getName(), secret.getStringData().keySet());
+            runSecretEnvs.addAll(k8sBuilderHelper.geEnvVarsFromSecrets(runSecretKeys));
+            runSecretEnvs.add(new V1EnvVar().name("DH_RUN_SECRET_NAME").value(secret.getMetadata().getName()));
+        }
+        
         // function specific envs
         List<V1EnvVar> functionEnvs = runnable
             .getEnvs()
@@ -144,6 +163,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         sharedEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
         secretEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
         functionEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
+        runSecretEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
 
         return envs.values().stream().toList();
     }
@@ -258,4 +278,33 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected List<String> buildArgs(T runnable) {
         return Optional.ofNullable(runnable.getArgs()).map(Arrays::asList).orElse(null);
     }
+
+    protected V1Secret buildRunSecret(T runnable) {
+        if (runnable.getCredentials() != null) {
+            return k8sSecretHelper.convertAuthentication(
+                k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId()),
+                runnable.getCredentials()
+            );
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings("null")
+    protected void storeRunSecret(V1Secret secret) throws K8sFrameworkException {
+        try {
+            k8sSecretHelper.storeSecretData(secret.getMetadata().getName(), secret.getStringData());
+        } catch (Exception e) {
+            throw new K8sFrameworkException(e.getMessage());
+        }
+    }
+    protected void cleanRunSecret(T runnable) {
+        String secretName = k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
+        try {
+            k8sSecretHelper.deleteSecret(secretName);
+        } catch (Exception e) {
+            log.warn("Failed to delete secret {}", secretName, e);
+        }
+    }
+
 }
