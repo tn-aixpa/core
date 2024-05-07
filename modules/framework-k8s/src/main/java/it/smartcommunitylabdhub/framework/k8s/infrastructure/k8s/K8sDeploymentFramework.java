@@ -149,7 +149,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .affinity(runnable.getAffinity())
             .tolerations(buildTolerations(runnable))
             .volumes(volumes)
-            .restartPolicy("Always");
+            .restartPolicy("Always")
+            .imagePullSecrets(buildImagePullSecrets(runnable));
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);

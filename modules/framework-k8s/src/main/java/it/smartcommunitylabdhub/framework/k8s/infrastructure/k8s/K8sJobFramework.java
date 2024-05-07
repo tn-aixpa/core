@@ -28,8 +28,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 @Slf4j
 @FrameworkComponent(framework = K8sJobFramework.FRAMEWORK)
 public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
@@ -92,7 +90,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             return runnable;
         }
         //secrets
-        cleanRunSecret(runnable);        
+        cleanRunSecret(runnable);
 
         delete(job);
         runnable.setState(State.DELETED.name());
@@ -153,7 +151,8 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             .affinity(runnable.getAffinity())
             .tolerations(buildTolerations(runnable))
             .volumes(volumes)
-            .restartPolicy("Never");
+            .restartPolicy("Never")
+            .imagePullSecrets(buildImagePullSecrets(runnable));
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);

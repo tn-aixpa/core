@@ -5,6 +5,7 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1LocalObjectReference;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Toleration;
@@ -42,6 +43,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected final CoreV1Api coreV1Api;
 
     protected String namespace;
+    protected String registrySecret;
 
     protected String version;
     protected K8sBuilderHelper k8sBuilderHelper;
@@ -60,6 +62,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Autowired
     public void setVersion(@Value("${application.version}") String version) {
         this.version = version;
+    }
+
+    public void setRegistrySecret(@Value("${registry.secret}") String secret) {
+        this.registrySecret = registrySecret;
     }
 
     @Autowired
@@ -278,6 +284,15 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected List<String> buildArgs(T runnable) {
         return Optional.ofNullable(runnable.getArgs()).map(Arrays::asList).orElse(null);
+    }
+
+    @Nullable
+    protected List<V1LocalObjectReference> buildImagePullSecrets(T runnable) {
+        //always include registry secret if defined
+        return Optional
+            .ofNullable(registrySecret)
+            .map(s -> Collections.singletonList(new V1LocalObjectReference().name(registrySecret)))
+            .orElse(null);
     }
 
     protected V1Secret buildRunSecret(T runnable) {
