@@ -131,7 +131,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         //build service spec
         V1ServiceSpec serviceSpec = new V1ServiceSpec().type(type).ports(ports).selector(labels);
-        V1ObjectMeta serviceMetadata = new V1ObjectMeta().name(serviceName);
+        V1ObjectMeta serviceMetadata = new V1ObjectMeta().name(serviceName).labels(labels);
 
         return new V1Service().metadata(serviceMetadata).spec(serviceSpec);
     }

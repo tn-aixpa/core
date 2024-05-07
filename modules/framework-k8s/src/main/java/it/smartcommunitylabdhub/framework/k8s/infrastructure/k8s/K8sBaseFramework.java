@@ -118,11 +118,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             "app.kubernetes.io/instance",
             "dhcore-" + runnable.getId(),
             "app.kubernetes.io/version",
-            version,
-            "app.kubernetes.io/component",
-            "dhcore-k8s",
+            runnable.getId(),
             "app.kubernetes.io/part-of",
-            "dhcore",
+            "dhcore-" + runnable.getFramework() + "-" + runnable.getId(),
             "app.kubernetes.io/managed-by",
             "dhcore"
         );
@@ -146,11 +144,14 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         V1Secret secret = buildRunSecret(runnable);
         List<V1EnvVar> runSecretEnvs = new LinkedList<>();
         if (secret != null && secret.getStringData() != null && !secret.getStringData().isEmpty()) {
-            Map<String, Set<String>> runSecretKeys = Collections.singletonMap(secret.getMetadata().getName(), secret.getStringData().keySet());
+            Map<String, Set<String>> runSecretKeys = Collections.singletonMap(
+                secret.getMetadata().getName(),
+                secret.getStringData().keySet()
+            );
             runSecretEnvs.addAll(k8sBuilderHelper.geEnvVarsFromSecrets(runSecretKeys));
             runSecretEnvs.add(new V1EnvVar().name("DH_RUN_SECRET_NAME").value(secret.getMetadata().getName()));
         }
-        
+
         // function specific envs
         List<V1EnvVar> functionEnvs = runnable
             .getEnvs()
@@ -281,10 +282,20 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected V1Secret buildRunSecret(T runnable) {
         if (runnable.getCredentials() != null) {
-            return k8sSecretHelper.convertAuthentication(
+            V1Secret secret = k8sSecretHelper.convertAuthentication(
                 k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId()),
                 runnable.getCredentials()
             );
+
+            //attach labels
+            Map<String, String> labels = buildLabels(runnable);
+            labels
+                .entrySet()
+                .forEach(e -> {
+                    secret.getMetadata().putLabelsItem(e.getKey(), e.getValue());
+                });
+
+            return secret;
         }
 
         return null;
@@ -298,6 +309,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             throw new K8sFrameworkException(e.getMessage());
         }
     }
+
     protected void cleanRunSecret(T runnable) {
         String secretName = k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
         try {
@@ -306,5 +318,4 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             log.warn("Failed to delete secret {}", secretName, e);
         }
     }
-
 }

@@ -263,7 +263,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
             Optional<List<ContextSource>> contextSourcesOpt = Optional.ofNullable(runnable.getContextSources());
             V1ConfigMap configMap = new V1ConfigMap()
-                .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()))
+                .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()).labels(labels))
                 .data(
                     MapUtils.mergeMultipleMaps(
                         Map.of("Dockerfile", runnable.getDockerFile()),
@@ -298,6 +298,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 );
 
             // Check if config map already exist. if not, create it
+            //TODO move creation to run NOT build!
             try {
                 coreV1Api.readNamespacedConfigMap(
                     Objects.requireNonNull(configMap.getMetadata()).getName(),

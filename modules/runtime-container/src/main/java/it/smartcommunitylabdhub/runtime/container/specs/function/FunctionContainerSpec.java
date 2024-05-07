@@ -20,7 +20,6 @@ import lombok.Setter;
 @SpecType(runtime = ContainerRuntime.RUNTIME, kind = ContainerRuntime.RUNTIME, entity = EntityName.FUNCTION)
 public class FunctionContainerSpec extends FunctionBaseSpec {
 
-    @NotBlank
     @Schema(description = "Container image name")
     private String image;
 
