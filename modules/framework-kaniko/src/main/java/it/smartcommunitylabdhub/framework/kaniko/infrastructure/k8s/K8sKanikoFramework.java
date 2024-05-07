@@ -13,6 +13,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
@@ -79,6 +80,12 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     @Override
     public K8sKanikoRunnable run(K8sKanikoRunnable runnable) throws K8sFrameworkException {
         V1Job job = build(runnable);
+
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        if (secret != null) {
+            storeRunSecret(secret);
+        }        
         job = create(job);
 
         // Update runnable state..
