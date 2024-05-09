@@ -24,9 +24,9 @@ public class RunKFPSpec extends RunBaseSpec {
 
     public static final String KIND = KFPRuntime.RUNTIME + "+run";
 
-    private List<Map.Entry<String, Serializable>> inputs = new LinkedList<>();
+    private Map<String, Serializable> inputs = new HashMap<>();
 
-    private List<Map.Entry<String, Serializable>> outputs = new LinkedList<>();
+    private Map<String, Serializable> outputs = new HashMap<>();
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
