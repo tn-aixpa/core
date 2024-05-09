@@ -1,7 +1,9 @@
 package it.smartcommunitylabdhub.core.models.entities;
 
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -26,5 +28,6 @@ public class DataItemEntity extends AbstractEntity {
 
     private Boolean embedded;
 
+    @Convert(converter = StateStringAttributeConverter.class)
     private State state;
 }

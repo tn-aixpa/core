@@ -3,7 +3,9 @@ package it.smartcommunitylabdhub.core.models.entities;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
@@ -79,6 +81,7 @@ public class ProjectEntity implements BaseEntity {
     @Column(name = "updated_by")
     protected String updatedBy;
 
+    @Convert(converter = StateStringAttributeConverter.class)
     private State state;
 
     @PrePersist
