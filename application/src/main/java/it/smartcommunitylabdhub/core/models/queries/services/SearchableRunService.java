@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.services;
 
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
@@ -19,7 +20,7 @@ public interface SearchableRunService extends RunService {
      * @param filter
      * @return
      */
-    Page<Run> searchRuns(Pageable pageable, @Nullable SearchFilter<RunEntity> filter);
+    Page<Run> searchRuns(Pageable pageable, @Nullable SearchFilter<RunEntity> filter) throws SystemException;
 
     /**
      * List the runs for a given project, with optional filters
@@ -28,5 +29,6 @@ public interface SearchableRunService extends RunService {
      * @param filter
      * @return
      */
-    Page<Run> searchRunsByProject(@NotNull String project, Pageable pageable, @Nullable SearchFilter<RunEntity> filter);
+    Page<Run> searchRunsByProject(@NotNull String project, Pageable pageable, @Nullable SearchFilter<RunEntity> filter)
+        throws SystemException;
 }

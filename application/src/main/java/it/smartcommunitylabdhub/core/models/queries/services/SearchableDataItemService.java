@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.services;
 
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.DataItemService;
@@ -19,7 +20,8 @@ public interface SearchableDataItemService extends DataItemService {
      * @param filter
      * @return
      */
-    Page<DataItem> searchDataItems(Pageable pageable, @Nullable SearchFilter<DataItemEntity> filter);
+    Page<DataItem> searchDataItems(Pageable pageable, @Nullable SearchFilter<DataItemEntity> filter)
+        throws SystemException;
 
     /**
      * List all versions of every dataItem, with optional filters
@@ -32,7 +34,7 @@ public interface SearchableDataItemService extends DataItemService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<DataItemEntity> filter
-    );
+    ) throws SystemException;
 
     /**
      * List the latest version of every dataItem, with optional filters
@@ -45,5 +47,5 @@ public interface SearchableDataItemService extends DataItemService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<DataItemEntity> filter
-    );
+    ) throws SystemException;
 }

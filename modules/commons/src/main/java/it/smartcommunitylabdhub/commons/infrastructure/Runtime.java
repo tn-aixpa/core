@@ -21,6 +21,7 @@ public interface Runtime<
 
     R stop(@NotNull Run run); // X -> STOPPED
 
+    @Nullable
     R delete(@NotNull Run run); // X -> STOPPED
 
     @Nullable

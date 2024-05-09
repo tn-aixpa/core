@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -54,25 +56,40 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     public Page<Artifact> listArtifacts(Pageable pageable) {
         log.debug("list artifacts page {}", pageable);
 
-        return entityService.list(pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Artifact> listArtifactsByUser(@NotNull String user) {
         log.debug("list all artifacts for user {}  ", user);
 
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Artifact> searchArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter) {
         log.debug("search artifacts page {}, filter {}", pageable, String.valueOf(filter));
 
-        Specification<ArtifactEntity> specification = filter != null ? filter.toSpecification() : null;
-        if (specification != null) {
-            return entityService.search(specification, pageable);
-        } else {
-            return entityService.list(pageable);
+        try {
+            Specification<ArtifactEntity> specification = filter != null ? filter.toSpecification() : null;
+            if (specification != null) {
+                return entityService.search(specification, pageable);
+            } else {
+                return entityService.list(pageable);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -81,15 +98,24 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         log.debug("list all artifacts for project {}  ", project);
         Specification<ArtifactEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
 
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Artifact> listArtifactsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list all artifacts for project {}  page {}", project, pageable);
         Specification<ArtifactEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -99,8 +125,12 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -110,8 +140,12 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -126,8 +160,12 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             CommonSpecification.projectEquals(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -143,8 +181,12 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             CommonSpecification.latestByProject(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -160,8 +202,12 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -177,15 +223,23 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Artifact findArtifact(@NotNull String id) {
         log.debug("find artifact with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -196,6 +250,9 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -205,7 +262,12 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
 
         //fetch latest version ordered by date DESC
         Specification<ArtifactEntity> specification = CommonSpecification.latestByProject(project, name);
-        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        try {
+            return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -214,32 +276,36 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
         }
-
-        //validate project
-        String projectId = dto.getProject();
-        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
-            throw new IllegalArgumentException("invalid or missing project");
-        }
-
-        // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-        if (spec == null) {
-            throw new IllegalArgumentException("invalid kind");
-        }
-
-        //TODO validate
-
-        //update spec as exported
-        dto.setSpec(spec.toMap());
-
         try {
-            if (log.isTraceEnabled()) {
-                log.trace("storable dto: {}", dto);
+            //validate project
+            String projectId = dto.getProject();
+            if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+                throw new IllegalArgumentException("invalid or missing project");
             }
 
-            return entityService.create(dto);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), dto.getId());
+            // Parse and export Spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //TODO validate
+
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
+            try {
+                if (log.isTraceEnabled()) {
+                    log.trace("storable dto: {}", dto);
+                }
+
+                return entityService.create(dto);
+            } catch (DuplicatedEntityException e) {
+                throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), dto.getId());
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -257,14 +323,21 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             return entityService.update(id, artifactDTO);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteArtifact(@NotNull String id) {
         log.debug("delete artifact with id {}", String.valueOf(id));
-
-        entityService.delete(id);
+        try {
+            entityService.delete(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -275,24 +348,36 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.nameEquals(name)
         );
-
-        long count = entityService.deleteAll(spec);
-        log.debug("deleted count {}", count);
+        try {
+            long count = entityService.deleteAll(spec);
+            log.debug("deleted count {}", count);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public void deleteArtifactsByProject(@NotNull String project) {
         log.debug("delete artifacts for project {}", project);
-
-        entityService.deleteAll(CommonSpecification.projectEquals(project));
+        try {
+            entityService.deleteAll(CommonSpecification.projectEquals(project));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public void indexArtifact(@NotNull String id) {
         log.debug("index artifact with id {}", String.valueOf(id));
-
-        Artifact artifact = entityService.get(id);
-        indexer.index(entityBuilder.convert(artifact));
+        try {
+            Artifact artifact = entityService.get(id);
+            indexer.index(entityBuilder.convert(artifact));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override

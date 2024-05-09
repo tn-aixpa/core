@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -57,26 +59,38 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     @Override
     public Page<Function> listFunctions(Pageable pageable) {
         log.debug("list functions page {}", pageable);
-
-        return entityService.list(pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Function> listFunctionsByUser(@NotNull String user) {
         log.debug("list all functions for user {}  ", user);
-
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Function> searchFunctions(Pageable pageable, @Nullable SearchFilter<FunctionEntity> filter) {
         log.debug("list functions page {}, filter {}", pageable, String.valueOf(filter));
-
-        Specification<FunctionEntity> specification = filter != null ? filter.toSpecification() : null;
-        if (specification != null) {
-            return entityService.search(specification, pageable);
-        } else {
-            return entityService.list(pageable);
+        try {
+            Specification<FunctionEntity> specification = filter != null ? filter.toSpecification() : null;
+            if (specification != null) {
+                return entityService.search(specification, pageable);
+            } else {
+                return entityService.list(pageable);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -84,16 +98,24 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     public List<Function> listFunctionsByProject(@NotNull String project) {
         log.debug("list functions for project {}", project);
         Specification<FunctionEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Function> listFunctionsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list functions for project {} page {}", project, pageable);
         Specification<FunctionEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -103,8 +125,12 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -114,8 +140,12 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -131,8 +161,12 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             CommonSpecification.latestByProject(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -147,8 +181,12 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             CommonSpecification.projectEquals(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -164,8 +202,12 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -181,15 +223,23 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Function findFunction(@NotNull String id) {
         log.debug("find function with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -200,16 +250,23 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.FUNCTION.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public Function getLatestFunction(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
         log.debug("get latest function for project {} with name {}", project, name);
-
-        //fetch latest version ordered by date DESC
-        Specification<FunctionEntity> specification = CommonSpecification.latestByProject(project, name);
-        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        try {
+            //fetch latest version ordered by date DESC
+            Specification<FunctionEntity> specification = CommonSpecification.latestByProject(project, name);
+            return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -218,32 +275,36 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
         }
-
-        //validate project
-        String projectId = dto.getProject();
-        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
-            throw new IllegalArgumentException("invalid or missing project");
-        }
-
-        // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-        if (spec == null) {
-            throw new IllegalArgumentException("invalid kind");
-        }
-
-        //TODO validate
-
-        //update spec as exported
-        dto.setSpec(spec.toMap());
-
         try {
-            if (log.isTraceEnabled()) {
-                log.trace("storable dto: {}", dto);
+            //validate project
+            String projectId = dto.getProject();
+            if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+                throw new IllegalArgumentException("invalid or missing project");
             }
 
-            return entityService.create(dto);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.FUNCTION.toString(), dto.getId());
+            // Parse and export Spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //TODO validate
+
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
+            try {
+                if (log.isTraceEnabled()) {
+                    log.trace("storable dto: {}", dto);
+                }
+
+                return entityService.create(dto);
+            } catch (DuplicatedEntityException e) {
+                throw new DuplicatedEntityException(EntityName.FUNCTION.toString(), dto.getId());
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -261,6 +322,9 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             return entityService.update(id, functionDTO);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.FUNCTION.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -273,6 +337,9 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             return entityService.update(id, functionDTO);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.FUNCTION.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -287,9 +354,13 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
                 log.debug("cascade delete tasks for function with id {}", String.valueOf(id));
                 taskService.deleteTasksByFunctionId(id, EntityName.FUNCTION);
             }
-
-            //delete the function
-            entityService.delete(id);
+            try {
+                //delete the function
+                entityService.delete(id);
+            } catch (StoreException e) {
+                log.error("store error: {}", e.getMessage());
+                throw new SystemException(e.getMessage());
+            }
         }
     }
 
@@ -304,18 +375,26 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     @Override
     public void deleteFunctionsByProject(@NotNull String project) {
         log.debug("delete functions for project {}", project);
-
-        entityService
-            .searchAll(CommonSpecification.projectEquals(project))
-            .forEach(f -> deleteFunction(f.getId(), Boolean.TRUE));
+        try {
+            entityService
+                .searchAll(CommonSpecification.projectEquals(project))
+                .forEach(f -> deleteFunction(f.getId(), Boolean.TRUE));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public void indexFunction(@NotNull String id) {
         log.debug("index function with id {}", String.valueOf(id));
-
-        Function function = entityService.get(id);
-        indexer.index(entityBuilder.convert(function));
+        try {
+            Function function = entityService.get(id);
+            indexer.index(entityBuilder.convert(function));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override

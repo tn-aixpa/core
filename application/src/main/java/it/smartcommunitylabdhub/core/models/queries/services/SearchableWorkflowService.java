@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.services;
 
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
@@ -19,7 +20,8 @@ public interface SearchableWorkflowService extends WorkflowService {
      * @param filter
      * @return
      */
-    Page<Workflow> searchWorkflows(Pageable pageable, @Nullable SearchFilter<WorkflowEntity> filter);
+    Page<Workflow> searchWorkflows(Pageable pageable, @Nullable SearchFilter<WorkflowEntity> filter)
+        throws SystemException;
     /**
      * List all versions of every workflow, with optional filters
      * @param project
@@ -31,7 +33,7 @@ public interface SearchableWorkflowService extends WorkflowService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<WorkflowEntity> filter
-    );
+    ) throws SystemException;
     /**
      * List the latest version of every workflow, with optional filters
      * @param project
@@ -43,5 +45,5 @@ public interface SearchableWorkflowService extends WorkflowService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<WorkflowEntity> filter
-    );
+    ) throws SystemException;
 }

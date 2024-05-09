@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.listeners;
 
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
@@ -46,10 +47,14 @@ public class DataItemEntityListener extends AbstractEntityListener<DataItemEntit
             String projectId = event.getEntity().getProject();
             log.debug("touch update project {}", projectId);
 
-            Project project = projectService.find(projectId);
-            if (project != null) {
-                //touch to set updated
-                projectService.update(project.getId(), project);
+            try {
+                Project project = projectService.find(projectId);
+                if (project != null) {
+                    //touch to set updated
+                    projectService.update(project.getId(), project);
+                }
+            } catch (StoreException e) {
+                log.error("store error", e.getMessage());
             }
         }
     }

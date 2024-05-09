@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.kubernetes.client.openapi.ApiException;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretBaseSpec;
@@ -63,38 +65,58 @@ public class SecretServiceImpl implements SecretService {
     @Override
     public Page<Secret> listSecrets(Pageable pageable) {
         log.debug("list secrets page {}", pageable);
-
-        return entityService.list(pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Secret> listSecretsByUser(@NotNull String user) {
         log.debug("list all secrets for user {}  ", user);
-
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Secret> listSecretsByProject(@NotNull String project) {
         log.debug("list secrets for project {}", project);
         Specification<SecretEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Secret> listSecretsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list secrets for project {}", project);
         Specification<SecretEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Secret findSecret(@NotNull String id) {
         log.debug("find secret with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -105,51 +127,58 @@ public class SecretServiceImpl implements SecretService {
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.SECRET.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public Secret createSecret(@NotNull Secret dto) throws DuplicatedEntityException {
         log.debug("create secret");
-
-        //validate project
-        String projectId = dto.getProject();
-        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
-            throw new IllegalArgumentException("invalid or missing project");
-        }
-
         try {
-            //parse base
-            SecretBaseSpec secretSpec = new SecretBaseSpec();
-            secretSpec.configure(dto.getSpec());
-
-            String path = secretSpec.getPath();
-            if (!StringUtils.hasText(path)) {
-                throw new IllegalArgumentException("invalid or missing path in spec");
+            //validate project
+            String projectId = dto.getProject();
+            if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+                throw new IllegalArgumentException("invalid or missing project");
             }
 
-            // Parse and export Spec
-            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-            if (spec == null) {
-                throw new IllegalArgumentException("invalid kind");
+            try {
+                //parse base
+                SecretBaseSpec secretSpec = new SecretBaseSpec();
+                secretSpec.configure(dto.getSpec());
+
+                String path = secretSpec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new IllegalArgumentException("invalid or missing path in spec");
+                }
+
+                // Parse and export Spec
+                Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+                if (spec == null) {
+                    throw new IllegalArgumentException("invalid kind");
+                }
+
+                //TODO validate
+                dto.setSpec(spec.toMap());
+
+                //check if a secret with this name already exists for the project
+                Optional<Secret> existingSecret = listSecretsByProject(projectId)
+                    .stream()
+                    .filter(s -> s.getName().equals(dto.getName()))
+                    .findFirst();
+                if (existingSecret.isPresent()) {
+                    throw new DuplicatedEntityException(EntityName.SECRET.toString(), dto.getName());
+                }
+
+                // store in DB, do not create physically the secret
+                return entityService.create(dto);
+            } catch (DuplicatedEntityException e) {
+                throw new DuplicatedEntityException(EntityName.SECRET.toString(), dto.getId());
             }
-
-            //TODO validate
-            dto.setSpec(spec.toMap());
-
-            //check if a secret with this name already exists for the project
-            Optional<Secret> existingSecret = listSecretsByProject(projectId)
-                .stream()
-                .filter(s -> s.getName().equals(dto.getName()))
-                .findFirst();
-            if (existingSecret.isPresent()) {
-                throw new DuplicatedEntityException(EntityName.SECRET.toString(), dto.getName());
-            }
-
-            // store in DB, do not create physically the secret
-            return entityService.create(dto);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.SECRET.toString(), dto.getId());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -167,52 +196,63 @@ public class SecretServiceImpl implements SecretService {
             return entityService.update(id, dto);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.SECRET.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteSecret(@NotNull String id) {
         log.debug("delete secret with id {}", String.valueOf(id));
+        try {
+            Secret secret = findSecret(id);
+            if (secret != null) {
+                if (secretHelper != null) {
+                    log.debug("cascade delete secret data for secret with id {}", String.valueOf(id));
 
-        Secret secret = findSecret(id);
-        if (secret != null) {
-            if (secretHelper != null) {
-                log.debug("cascade delete secret data for secret with id {}", String.valueOf(id));
-
-                try {
-                    secretHelper.deleteSecretKeys(
-                        getProjectSecretName(secret.getProject()),
-                        //TODO use accessor for path
-                        Collections.singleton((String) secret.getSpec().get("path"))
-                    );
-                } catch (JsonProcessingException | ApiException e) {
-                    log.error("error deleting secret data: {}", e.getMessage());
-                    //TODO throw a dedicated error
-                    throw new RuntimeException("error writing secrets");
+                    try {
+                        secretHelper.deleteSecretKeys(
+                            getProjectSecretName(secret.getProject()),
+                            //TODO use accessor for path
+                            Collections.singleton((String) secret.getSpec().get("path"))
+                        );
+                    } catch (JsonProcessingException | ApiException e) {
+                        log.error("error deleting secret data: {}", e.getMessage());
+                        //TODO throw a dedicated error
+                        throw new RuntimeException("error writing secrets");
+                    }
                 }
-            }
 
-            //delete the secret
-            entityService.delete(id);
+                //delete the secret
+                entityService.delete(id);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteSecretsByProject(@NotNull String project) {
         log.debug("delete secrets for project {}", project);
-
-        //clear data first
-        if (secretHelper != null) {
-            try {
-                secretHelper.deleteSecret(getProjectSecretName(project));
-            } catch (ApiException e) {
-                log.error("error deleting secret data for project {}:{}", project, e.getMessage());
-                throw new RuntimeException("error reading secrets");
+        try {
+            //clear data first
+            if (secretHelper != null) {
+                try {
+                    secretHelper.deleteSecret(getProjectSecretName(project));
+                } catch (ApiException e) {
+                    log.error("error deleting secret data for project {}:{}", project, e.getMessage());
+                    throw new RuntimeException("error reading secrets");
+                }
             }
-        }
 
-        //delete entities
-        entityService.deleteAll(CommonSpecification.projectEquals(project));
+            //delete entities
+            entityService.deleteAll(CommonSpecification.projectEquals(project));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     /*
@@ -260,30 +300,34 @@ public class SecretServiceImpl implements SecretService {
                 CommonSpecification.projectEquals(project),
                 CommonSpecification.nameEquals(name)
             );
+            try {
+                Secret secret = entityService.searchAll(where).stream().findFirst().orElse(null);
+                if (secret == null) {
+                    //store as new
+                    secret = new Secret();
+                    secret.setKind("secret");
+                    secret.setName(name);
+                    secret.setProject(project);
 
-            Secret secret = entityService.searchAll(where).stream().findFirst().orElse(null);
-            if (secret == null) {
-                //store as new
-                secret = new Secret();
-                secret.setKind("secret");
-                secret.setName(name);
-                secret.setProject(project);
+                    //secrets are embedded by default
+                    EmbeddableMetadata embeddableMetadata = new EmbeddableMetadata();
+                    embeddableMetadata.setEmbedded(true);
+                    secret.setMetadata(embeddableMetadata.toMap());
 
-                //secrets are embedded by default
-                EmbeddableMetadata embeddableMetadata = new EmbeddableMetadata();
-                embeddableMetadata.setEmbedded(true);
-                secret.setMetadata(embeddableMetadata.toMap());
+                    SecretBaseSpec spec = new SecretSecretSpec();
+                    spec.setProvider(K8S_PROVIDER);
+                    spec.setPath(getSecretPath(K8S_PROVIDER, secretName, entry.getKey()));
+                    secret.setSpec(spec.toMap());
 
-                SecretBaseSpec spec = new SecretSecretSpec();
-                spec.setProvider(K8S_PROVIDER);
-                spec.setPath(getSecretPath(K8S_PROVIDER, secretName, entry.getKey()));
-                secret.setSpec(spec.toMap());
-
-                try {
-                    entityService.create(secret);
-                } catch (DuplicatedEntityException e) {
-                    //should not happen
+                    try {
+                        entityService.create(secret);
+                    } catch (DuplicatedEntityException e) {
+                        //should not happen
+                    }
                 }
+            } catch (StoreException e) {
+                log.error("store error: {}", e.getMessage());
+                throw new SystemException(e.getMessage());
             }
         }
 

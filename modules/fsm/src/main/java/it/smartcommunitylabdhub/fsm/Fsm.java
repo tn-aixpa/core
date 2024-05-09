@@ -128,7 +128,7 @@ public class Fsm<S, E, C> {
 
                         //if path is single and state does not match we have an error
                         if (path.size() == 1 && !path.get(0).equals(targetState)) {
-                            log.error("error with path to {}", targetState);
+                            log.error("error with path from {} to {}", currentState, targetState);
                             throw new InvalidTransactionException(currentState.toString(), targetState.toString());
                         }
 
@@ -183,15 +183,40 @@ public class Fsm<S, E, C> {
     private <R> List<S> findPath(S sourceState, S targetState) {
         Set<S> visited = new HashSet<>();
         LinkedList<S> path = new LinkedList<>();
+        path.addFirst(sourceState);
 
-        // Call the recursive DFS function to find the path
-        if (this.<R>dfs(sourceState, targetState, visited, path)) {
-            // If a valid path exists, return it
+        // If the current state is the target state, a valid path is found
+        if (sourceState.equals(targetState)) {
             return path;
-        } else {
-            // If no valid path exists, return an empty list
-            return Collections.emptyList();
         }
+        //DEPRECATED: DFS will pick *any* path, we need at minimum the shortest!
+        // // Call the recursive DFS function to find the path
+        // if (this.<R>dfs(sourceState, targetState, visited, path)) {
+        //     // If a valid path exists, return it
+        //     return path;
+        // } else {
+        //     // If no valid path exists, return an empty list
+        //     return Collections.emptyList();
+        // }
+
+        //fetch only direct children
+        // Get the current state's definition
+        FsmState<S, E, C> stateDefinition = states.get(sourceState);
+        if (stateDefinition == null) {
+            return path;
+        }
+
+        Optional<Transaction<S, E, C, ?>> transaction = stateDefinition
+            .getTransactions()
+            .stream()
+            .filter(t -> targetState == t.getNextState())
+            .findFirst();
+
+        if (transaction.isPresent()) {
+            path.addLast(transaction.get().getNextState());
+        }
+
+        return path;
     }
 
     private <R> Optional<R> execute(S stateInPath, S nextStateInPath, C input) {
@@ -259,6 +284,7 @@ public class Fsm<S, E, C> {
      * @return True if a valid path is found from the current state to the target state, otherwise
      * false.
      */
+    @Deprecated(forRemoval = true)
     private <R> boolean dfs(S currentState, S targetState, Set<S> visited, LinkedList<S> path) {
         // Mark the current state as visited and add it to the path
         visited.add(currentState);

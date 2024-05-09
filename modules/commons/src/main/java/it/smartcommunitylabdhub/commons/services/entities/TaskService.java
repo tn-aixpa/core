@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons.services.entities;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotNull;
@@ -19,28 +20,28 @@ public interface TaskService {
      * @param function
      * @return
      */
-    List<Task> getTasksByFunctionId(@NotNull String functionId, @NotNull EntityName entity);
+    List<Task> getTasksByFunctionId(@NotNull String functionId, @NotNull EntityName entity) throws SystemException;
 
     /**
      * List all tasks
      * @param pageable
      * @return
      */
-    Page<Task> listTasks(Pageable pageable);
+    Page<Task> listTasks(Pageable pageable) throws SystemException;
 
     /**
      * List all tasks for a given user
      * @param user
      * @return
      */
-    List<Task> listTasksByUser(@NotNull String user);
+    List<Task> listTasksByUser(@NotNull String user) throws SystemException;
 
     /**
      * List all tasks for a given project
      * @param project
      * @return
      */
-    List<Task> listTasksByProject(@NotNull String project);
+    List<Task> listTasksByProject(@NotNull String project) throws SystemException;
 
     /**
      * List all tasks for a given project
@@ -48,7 +49,7 @@ public interface TaskService {
      * @param pageable
      * @return
      */
-    Page<Task> listTasksByProject(@NotNull String project, Pageable pageable);
+    Page<Task> listTasksByProject(@NotNull String project, Pageable pageable) throws SystemException;
 
     /**
      * Find a specific task  via unique ID. Returns null if not found
@@ -56,7 +57,7 @@ public interface TaskService {
      * @return
      */
     @Nullable
-    Task findTask(@NotNull String id);
+    Task findTask(@NotNull String id) throws SystemException;
 
     /**
      * Get a specific task via unique ID. Throws exception if not found
@@ -64,7 +65,7 @@ public interface TaskService {
      * @return
      * @throws NoSuchEntityException
      */
-    Task getTask(@NotNull String id) throws NoSuchEntityException;
+    Task getTask(@NotNull String id) throws NoSuchEntityException, SystemException;
 
     /**
      * Create a new task and store it
@@ -72,7 +73,7 @@ public interface TaskService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Task createTask(@NotNull Task taskDTO) throws DuplicatedEntityException;
+    Task createTask(@NotNull Task taskDTO) throws DuplicatedEntityException, SystemException;
 
     /**
      * Update a specific task
@@ -81,19 +82,19 @@ public interface TaskService {
      * @return
      * @throws NoSuchEntityException
      */
-    Task updateTask(@NotNull String id, @NotNull Task taskDTO) throws NoSuchEntityException;
+    Task updateTask(@NotNull String id, @NotNull Task taskDTO) throws NoSuchEntityException, SystemException;
 
     /**
      * Delete a specific task via unique ID, with optional cascade
      * @param id
      * @param cascade
      */
-    void deleteTask(@NotNull String id, @Nullable Boolean cascade);
+    void deleteTask(@NotNull String id, @Nullable Boolean cascade) throws SystemException;
 
     /**
      * Delete all tasks for a given function, with cascade.
      * @param function
      * @param entity
      */
-    void deleteTasksByFunctionId(@NotNull String functionId, @NotNull EntityName entity);
+    void deleteTasksByFunctionId(@NotNull String functionId, @NotNull EntityName entity) throws SystemException;
 }

@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
@@ -59,26 +61,38 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     @Override
     public Page<Workflow> listWorkflows(Pageable pageable) {
         log.debug("list workflows page {}", pageable);
-
-        return entityService.list(pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Workflow> listWorkflowsByUser(@NotNull String user) {
         log.debug("list all workflows for user {}  ", user);
-
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Workflow> searchWorkflows(Pageable pageable, @Nullable SearchFilter<WorkflowEntity> filter) {
         log.debug("search workflows page {}, filter {}", pageable, String.valueOf(filter));
-
-        Specification<WorkflowEntity> specification = filter != null ? filter.toSpecification() : null;
-        if (specification != null) {
-            return entityService.search(specification, pageable);
-        } else {
-            return entityService.list(pageable);
+        try {
+            Specification<WorkflowEntity> specification = filter != null ? filter.toSpecification() : null;
+            if (specification != null) {
+                return entityService.search(specification, pageable);
+            } else {
+                return entityService.list(pageable);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -86,16 +100,24 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     public List<Workflow> listWorkflowsByProject(@NotNull String project) {
         log.debug("list all workflows for project {}", project);
         Specification<WorkflowEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Workflow> listWorkflowsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list all workflows for project {}  page {}", project, pageable);
         Specification<WorkflowEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -105,8 +127,12 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -116,8 +142,12 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -132,8 +162,12 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             CommonSpecification.projectEquals(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -149,8 +183,12 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             CommonSpecification.latestByProject(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -166,8 +204,12 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -183,15 +225,23 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Workflow findWorkflow(@NotNull String id) {
         log.debug("find workflow with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -202,16 +252,23 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public Workflow getLatestWorkflow(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
         log.debug("get latest workflow for project {} with name {}", project, name);
-
-        //fetch latest version ordered by date DESC
-        Specification<WorkflowEntity> specification = CommonSpecification.latestByProject(project, name);
-        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        try {
+            //fetch latest version ordered by date DESC
+            Specification<WorkflowEntity> specification = CommonSpecification.latestByProject(project, name);
+            return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -220,32 +277,36 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
         }
-
-        //validate project
-        String projectId = dto.getProject();
-        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
-            throw new IllegalArgumentException("invalid or missing project");
-        }
-
-        // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-        if (spec == null) {
-            throw new IllegalArgumentException("invalid kind");
-        }
-
-        //TODO validate
-
-        //update spec as exported
-        dto.setSpec(spec.toMap());
-
         try {
-            if (log.isTraceEnabled()) {
-                log.trace("storable dto: {}", dto);
+            //validate project
+            String projectId = dto.getProject();
+            if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+                throw new IllegalArgumentException("invalid or missing project");
             }
 
-            return entityService.create(dto);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.WORKFLOW.toString(), dto.getId());
+            // Parse and export Spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //TODO validate
+
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
+            try {
+                if (log.isTraceEnabled()) {
+                    log.trace("storable dto: {}", dto);
+                }
+
+                return entityService.create(dto);
+            } catch (DuplicatedEntityException e) {
+                throw new DuplicatedEntityException(EntityName.WORKFLOW.toString(), dto.getId());
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -263,26 +324,33 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             return entityService.update(id, workflowDTO);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.WORKFLOW.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteWorkflow(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete workflow with id {}", String.valueOf(id));
+        try {
+            Workflow workflow = findWorkflow(id);
+            if (workflow != null) {
+                if (Boolean.TRUE.equals(cascade)) {
+                    //tasks
+                    log.debug("cascade delete tasks for function with id {}", String.valueOf(id));
+                    taskService.deleteTasksByFunctionId(id, EntityName.WORKFLOW);
+                }
 
-        Workflow workflow = findWorkflow(id);
-        if (workflow != null) {
-            if (Boolean.TRUE.equals(cascade)) {
-                //tasks
-                log.debug("cascade delete tasks for function with id {}", String.valueOf(id));
-                taskService.deleteTasksByFunctionId(id, EntityName.WORKFLOW);
+                //delete the function
+                entityService.delete(id);
             }
-
-            //delete the function
+            // delete the workflow
             entityService.delete(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
-        // delete the workflow
-        entityService.delete(id);
     }
 
     @Override
@@ -296,18 +364,26 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     @Override
     public void deleteWorkflowsByProject(@NotNull String project) {
         log.debug("delete workflows for project {}", project);
-
-        entityService
-            .searchAll(CommonSpecification.projectEquals(project))
-            .forEach(w -> deleteWorkflow(w.getId(), Boolean.TRUE));
+        try {
+            entityService
+                .searchAll(CommonSpecification.projectEquals(project))
+                .forEach(w -> deleteWorkflow(w.getId(), Boolean.TRUE));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public void indexWorkflow(@NotNull String id) {
         log.debug("index workflow with id {}", String.valueOf(id));
-
-        Workflow workflow = entityService.get(id);
-        indexer.index(entityBuilder.convert(workflow));
+        try {
+            Workflow workflow = entityService.get(id);
+            indexer.index(entityBuilder.convert(workflow));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override

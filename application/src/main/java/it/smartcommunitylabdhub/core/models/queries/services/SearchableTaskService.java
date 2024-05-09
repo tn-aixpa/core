@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.services;
 
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
@@ -19,7 +20,7 @@ public interface SearchableTaskService extends TaskService {
      * @param filter
      * @return
      */
-    Page<Task> searchTasks(Pageable pageable, @Nullable SearchFilter<TaskEntity> filter);
+    Page<Task> searchTasks(Pageable pageable, @Nullable SearchFilter<TaskEntity> filter) throws SystemException;
 
     /**
      * List the latest version of every task, with optional filters
@@ -32,5 +33,5 @@ public interface SearchableTaskService extends TaskService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<TaskEntity> filter
-    );
+    ) throws SystemException;
 }

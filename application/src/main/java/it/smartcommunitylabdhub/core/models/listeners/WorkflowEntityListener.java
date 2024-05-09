@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.listeners;
 
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
@@ -45,11 +46,14 @@ public class WorkflowEntityListener extends AbstractEntityListener<WorkflowEntit
         if (projectService != null) {
             String projectId = event.getEntity().getProject();
             log.debug("touch update project {}", projectId);
-
-            Project project = projectService.find(projectId);
-            if (project != null) {
-                //touch to set updated
-                projectService.update(project.getId(), project);
+            try {
+                Project project = projectService.find(projectId);
+                if (project != null) {
+                    //touch to set updated
+                    projectService.update(project.getId(), project);
+                }
+            } catch (StoreException e) {
+                log.error("store error", e.getMessage());
             }
         }
     }

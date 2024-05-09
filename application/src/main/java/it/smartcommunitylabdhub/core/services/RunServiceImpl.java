@@ -3,6 +3,8 @@ package it.smartcommunitylabdhub.core.services;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -57,33 +59,49 @@ public class RunServiceImpl implements SearchableRunService {
     @Override
     public Page<Run> listRuns(Pageable pageable) {
         log.debug("list runs page {}", pageable);
-
-        return entityService.list(pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Run> listRunsByUser(@NotNull String user) {
         log.debug("list all runs for user {}  ", user);
-
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Run> listRunsByProject(@NotNull String project) {
         log.debug("list all runs for project {}  ", project);
-
-        return entityService.searchAll(CommonSpecification.projectEquals(project));
+        try {
+            return entityService.searchAll(CommonSpecification.projectEquals(project));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Run> searchRuns(Pageable pageable, @Nullable SearchFilter<RunEntity> filter) {
         log.debug("list runs page {}, filter {}", pageable, String.valueOf(filter));
-
-        Specification<RunEntity> specification = filter != null ? filter.toSpecification() : null;
-        if (specification != null) {
-            return entityService.search(specification, pageable);
-        } else {
-            return entityService.list(pageable);
+        try {
+            Specification<RunEntity> specification = filter != null ? filter.toSpecification() : null;
+            if (specification != null) {
+                return entityService.search(specification, pageable);
+            } else {
+                return entityService.list(pageable);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -91,8 +109,12 @@ public class RunServiceImpl implements SearchableRunService {
     public Page<Run> listRunsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list runs for project {} page {}", project, pageable);
         Specification<RunEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -107,39 +129,51 @@ public class RunServiceImpl implements SearchableRunService {
             CommonSpecification.projectEquals(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Run> getRunsByTaskId(@NotNull String taskId) {
         log.debug("list runs for task {}", taskId);
+        try {
+            Task task = taskEntityService.find(taskId);
+            if (task == null) {
+                return Collections.emptyList();
+            }
 
-        Task task = taskEntityService.find(taskId);
-        if (task == null) {
-            return Collections.emptyList();
+            //define a spec for runs building task path
+            Specification<RunEntity> where = Specification.allOf(
+                CommonSpecification.projectEquals(task.getProject()),
+                createTaskSpecification(RunUtils.buildTaskString(task))
+            );
+
+            //fetch all runs ordered by created DESC
+            Specification<RunEntity> specification = (root, query, builder) -> {
+                query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
+                return where.toPredicate(root, query, builder);
+            };
+
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
-
-        //define a spec for runs building task path
-        Specification<RunEntity> where = Specification.allOf(
-            CommonSpecification.projectEquals(task.getProject()),
-            createTaskSpecification(RunUtils.buildTaskString(task))
-        );
-
-        //fetch all runs ordered by created DESC
-        Specification<RunEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
-            return where.toPredicate(root, query, builder);
-        };
-
-        return entityService.searchAll(specification);
     }
 
     @Override
     public Run findRun(@NotNull String id) {
         log.debug("find run with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -150,6 +184,9 @@ public class RunServiceImpl implements SearchableRunService {
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.RUN.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -159,85 +196,89 @@ public class RunServiceImpl implements SearchableRunService {
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
         }
-
-        //validate project
-        String projectId = dto.getProject();
-        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
-            throw new IllegalArgumentException("invalid or missing project");
-        }
-        //TODO check if project exists?
-
-        //check base run spec
-        RunBaseSpec runSpec = new RunBaseSpec();
-        runSpec.configure(dto.getSpec());
-
-        // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-        if (spec == null) {
-            throw new IllegalArgumentException("invalid kind");
-        }
-
-        //TODO validate spec via validator
-        //update spec as exported
-        dto.setSpec(spec.toMap());
-
-        String taskPath = runSpec.getTask();
-        if (!StringUtils.hasText(taskPath)) {
-            throw new IllegalArgumentException("missing task");
-        }
-
-        RunSpecAccessor runSpecAccessor = RunUtils.parseTask(taskPath);
-        if (!StringUtils.hasText(runSpecAccessor.getProject())) {
-            throw new IllegalArgumentException("spec: missing project");
-        }
-
-        //check project match
-        if (!projectId.equals(runSpecAccessor.getProject())) {
-            throw new IllegalArgumentException("project mismatch");
-        }
-        if (!StringUtils.hasText(runSpecAccessor.getTask())) {
-            throw new IllegalArgumentException("spec: missing task");
-        }
-        if (!StringUtils.hasText(runSpecAccessor.getFunction())) {
-            throw new IllegalArgumentException("spec: missing function");
-        }
-        if (!StringUtils.hasText(runSpecAccessor.getVersion())) {
-            throw new IllegalArgumentException("spec: missing version");
-        }
-        String functionId = runSpecAccessor.getVersion();
-
-        //check if function exists and matches
-        Executable executable = executableEntityServiceProvider
-            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
-            .find(functionId);
-        if (executable == null) {
-            throw new IllegalArgumentException("invalid function");
-        }
-        if (!projectId.equals(executable.getProject())) {
-            throw new IllegalArgumentException("project mismatch");
-        }
-        if (!executable.getName().equals(runSpecAccessor.getFunction())) {
-            throw new IllegalArgumentException("function name mismatch");
-        }
-
-        // retrieve task by looking up value
-        // define a spec for matching task
-        Specification<TaskEntity> where = Specification.allOf(
-            CommonSpecification.projectEquals(executable.getProject()),
-            createFunctionSpecification(TaskUtils.buildString(executable)),
-            createTaskKindSpecification(runSpecAccessor.getTask())
-        );
-
-        Task task = taskEntityService.searchAll(where).stream().findFirst().orElse(null);
-        if (task == null) {
-            throw new IllegalArgumentException("invalid task");
-        }
-
         try {
-            // store the run in db
-            return entityService.create(dto);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.RUN.toString(), dto.getId());
+            //validate project
+            String projectId = dto.getProject();
+            if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+                throw new IllegalArgumentException("invalid or missing project");
+            }
+            //TODO check if project exists?
+
+            //check base run spec
+            RunBaseSpec runSpec = new RunBaseSpec();
+            runSpec.configure(dto.getSpec());
+
+            // Parse and export Spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //TODO validate spec via validator
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
+            String taskPath = runSpec.getTask();
+            if (!StringUtils.hasText(taskPath)) {
+                throw new IllegalArgumentException("missing task");
+            }
+
+            RunSpecAccessor runSpecAccessor = RunUtils.parseTask(taskPath);
+            if (!StringUtils.hasText(runSpecAccessor.getProject())) {
+                throw new IllegalArgumentException("spec: missing project");
+            }
+
+            //check project match
+            if (!projectId.equals(runSpecAccessor.getProject())) {
+                throw new IllegalArgumentException("project mismatch");
+            }
+            if (!StringUtils.hasText(runSpecAccessor.getTask())) {
+                throw new IllegalArgumentException("spec: missing task");
+            }
+            if (!StringUtils.hasText(runSpecAccessor.getFunction())) {
+                throw new IllegalArgumentException("spec: missing function");
+            }
+            if (!StringUtils.hasText(runSpecAccessor.getVersion())) {
+                throw new IllegalArgumentException("spec: missing version");
+            }
+            String functionId = runSpecAccessor.getVersion();
+
+            //check if function exists and matches
+            Executable executable = executableEntityServiceProvider
+                .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+                .find(functionId);
+            if (executable == null) {
+                throw new IllegalArgumentException("invalid function");
+            }
+            if (!projectId.equals(executable.getProject())) {
+                throw new IllegalArgumentException("project mismatch");
+            }
+            if (!executable.getName().equals(runSpecAccessor.getFunction())) {
+                throw new IllegalArgumentException("function name mismatch");
+            }
+
+            // retrieve task by looking up value
+            // define a spec for matching task
+            Specification<TaskEntity> where = Specification.allOf(
+                CommonSpecification.projectEquals(executable.getProject()),
+                createFunctionSpecification(TaskUtils.buildString(executable)),
+                createTaskKindSpecification(runSpecAccessor.getTask())
+            );
+
+            Task task = taskEntityService.searchAll(where).stream().findFirst().orElse(null);
+            if (task == null) {
+                throw new IllegalArgumentException("invalid task");
+            }
+
+            try {
+                // store the run in db
+                return entityService.create(dto);
+            } catch (DuplicatedEntityException e) {
+                throw new DuplicatedEntityException(EntityName.RUN.toString(), dto.getId());
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -258,22 +299,29 @@ public class RunServiceImpl implements SearchableRunService {
             return entityService.update(id, runDTO);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.RUN.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteRun(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete run with id {}", String.valueOf(id));
+        try {
+            Run run = findRun(id);
+            if (run != null) {
+                if (Boolean.TRUE.equals(cascade)) {
+                    log.debug("cascade delete logs for run with id {}", String.valueOf(id));
+                    //TODO
+                }
 
-        Run run = findRun(id);
-        if (run != null) {
-            if (Boolean.TRUE.equals(cascade)) {
-                log.debug("cascade delete logs for run with id {}", String.valueOf(id));
-                //TODO
+                //delete the run
+                entityService.delete(id);
             }
-
-            //delete the run
-            entityService.delete(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -282,18 +330,6 @@ public class RunServiceImpl implements SearchableRunService {
         log.debug("delete runs for task {}", taskId);
 
         getRunsByTaskId(taskId).forEach(run -> deleteRun(run.getId(), Boolean.TRUE));
-    }
-
-    @Override
-    public Run buildRun(@NotNull @Valid Run dto) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'buildRun'");
-    }
-
-    @Override
-    public Run execRun(@NotNull @Valid Run dto) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'execRun'");
     }
 
     private Specification<RunEntity> createTaskSpecification(String task) {

@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons.services.entities;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -18,21 +19,21 @@ public interface WorkflowService {
      * @param pageable
      * @return
      */
-    Page<Workflow> listWorkflows(Pageable pageable);
+    Page<Workflow> listWorkflows(Pageable pageable) throws SystemException;
 
     /**
      * List all versions of every workflow for a user
      * @param user
      * @return
      */
-    List<Workflow> listWorkflowsByUser(@NotNull String user);
+    List<Workflow> listWorkflowsByUser(@NotNull String user) throws SystemException;
 
     /**
      * List all versions of every workflow for a project
      * @param project
      * @return
      */
-    List<Workflow> listWorkflowsByProject(@NotNull String project);
+    List<Workflow> listWorkflowsByProject(@NotNull String project) throws SystemException;
 
     /**
      * List all versions of every workflow for a project
@@ -40,14 +41,14 @@ public interface WorkflowService {
      * @param pageable
      * @return
      */
-    Page<Workflow> listWorkflowsByProject(@NotNull String project, Pageable pageable);
+    Page<Workflow> listWorkflowsByProject(@NotNull String project, Pageable pageable) throws SystemException;
 
     /**
      * List the latest version of every workflow for a project
      * @param project
      * @return
      */
-    List<Workflow> listLatestWorkflowsByProject(@NotNull String project);
+    List<Workflow> listLatestWorkflowsByProject(@NotNull String project) throws SystemException;
 
     /**
      * List the latest version of every workflow for a project
@@ -55,7 +56,7 @@ public interface WorkflowService {
      * @param pageable
      * @return
      */
-    Page<Workflow> listLatestWorkflowsByProject(@NotNull String project, Pageable pageable);
+    Page<Workflow> listLatestWorkflowsByProject(@NotNull String project, Pageable pageable) throws SystemException;
 
     /**
      * Find all versions of a given workflow
@@ -63,7 +64,7 @@ public interface WorkflowService {
      * @param name
      * @return
      */
-    List<Workflow> findWorkflows(@NotNull String project, @NotNull String name);
+    List<Workflow> findWorkflows(@NotNull String project, @NotNull String name) throws SystemException;
 
     /**
      * Find all versions of a given workflow
@@ -72,7 +73,8 @@ public interface WorkflowService {
      * @param pageable
      * @return
      */
-    Page<Workflow> findWorkflows(@NotNull String project, @NotNull String name, Pageable pageable);
+    Page<Workflow> findWorkflows(@NotNull String project, @NotNull String name, Pageable pageable)
+        throws SystemException;
 
     /**
      * Find a specific workflow (version) via unique ID. Returns null if not found
@@ -80,7 +82,7 @@ public interface WorkflowService {
      * @return
      */
     @Nullable
-    Workflow findWorkflow(@NotNull String id);
+    Workflow findWorkflow(@NotNull String id) throws SystemException;
 
     /**
      * Get a specific workflow (version) via unique ID. Throws exception if not found
@@ -88,7 +90,7 @@ public interface WorkflowService {
      * @return
      * @throws NoSuchEntityException
      */
-    Workflow getWorkflow(@NotNull String id) throws NoSuchEntityException;
+    Workflow getWorkflow(@NotNull String id) throws NoSuchEntityException, SystemException;
 
     /**
      * Get the latest version of a given workflow
@@ -97,7 +99,8 @@ public interface WorkflowService {
      * @return
      * @throws NoSuchEntityException
      */
-    Workflow getLatestWorkflow(@NotNull String project, @NotNull String name) throws NoSuchEntityException;
+    Workflow getLatestWorkflow(@NotNull String project, @NotNull String name)
+        throws NoSuchEntityException, SystemException;
 
     /**
      * Create a new workflow and store it
@@ -105,7 +108,7 @@ public interface WorkflowService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Workflow createWorkflow(@NotNull Workflow workflowDTO) throws DuplicatedEntityException;
+    Workflow createWorkflow(@NotNull Workflow workflowDTO) throws DuplicatedEntityException, SystemException;
 
     /**
      * Update a specific workflow version
@@ -114,25 +117,26 @@ public interface WorkflowService {
      * @return
      * @throws NoSuchEntityException
      */
-    Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO) throws NoSuchEntityException;
+    Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO)
+        throws NoSuchEntityException, SystemException;
 
     /**
      * Delete a specific workflow (version) via unique ID
      * @param id
      * @param cascade
      */
-    void deleteWorkflow(@NotNull String id, @Nullable Boolean cascade);
+    void deleteWorkflow(@NotNull String id, @Nullable Boolean cascade) throws SystemException;
 
     /**
      * Delete all versions of a given workflow
      * @param project
      * @param name
      */
-    void deleteWorkflows(@NotNull String project, @NotNull String name);
+    void deleteWorkflows(@NotNull String project, @NotNull String name) throws SystemException;
 
     /**
      * Delete all workflows for a given project, with cascade.
      * @param project
      */
-    void deleteWorkflowsByProject(@NotNull String project);
+    void deleteWorkflowsByProject(@NotNull String project) throws SystemException;
 }

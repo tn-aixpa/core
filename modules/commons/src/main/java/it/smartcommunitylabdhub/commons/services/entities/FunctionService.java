@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons.services.entities;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -18,21 +19,21 @@ public interface FunctionService {
      * @param pageable
      * @return
      */
-    Page<Function> listFunctions(Pageable pageable);
+    Page<Function> listFunctions(Pageable pageable) throws SystemException;
 
     /**
      * List all versions of every function for a user
      * @param user
      * @return
      */
-    List<Function> listFunctionsByUser(@NotNull String user);
+    List<Function> listFunctionsByUser(@NotNull String user) throws SystemException;
 
     /**
      * List all versions of every function for a project
      * @param project
      * @return
      */
-    List<Function> listFunctionsByProject(@NotNull String project);
+    List<Function> listFunctionsByProject(@NotNull String project) throws SystemException;
 
     /**
      * List all versions of every function for a project
@@ -40,14 +41,14 @@ public interface FunctionService {
      * @param pageable
      * @return
      */
-    Page<Function> listFunctionsByProject(@NotNull String project, Pageable pageable);
+    Page<Function> listFunctionsByProject(@NotNull String project, Pageable pageable) throws SystemException;
 
     /**
      * List the latest version of every function for a project
      * @param project
      * @return
      */
-    List<Function> listLatestFunctionsByProject(@NotNull String project);
+    List<Function> listLatestFunctionsByProject(@NotNull String project) throws SystemException;
 
     /**
      * List the latest version of every function for a project
@@ -55,7 +56,7 @@ public interface FunctionService {
      * @param pageable
      * @return
      */
-    Page<Function> listLatestFunctionsByProject(@NotNull String project, Pageable pageable);
+    Page<Function> listLatestFunctionsByProject(@NotNull String project, Pageable pageable) throws SystemException;
 
     /**
      * Find all versions of a given function
@@ -63,7 +64,7 @@ public interface FunctionService {
      * @param name
      * @return
      */
-    List<Function> findFunctions(@NotNull String project, @NotNull String name);
+    List<Function> findFunctions(@NotNull String project, @NotNull String name) throws SystemException;
 
     /**
      * Find all versions of a given function
@@ -72,7 +73,8 @@ public interface FunctionService {
      * @param pageable
      * @return
      */
-    Page<Function> findFunctions(@NotNull String project, @NotNull String name, Pageable pageable);
+    Page<Function> findFunctions(@NotNull String project, @NotNull String name, Pageable pageable)
+        throws SystemException;
 
     /**
      * Find a specific function (version) via unique ID. Returns null if not found
@@ -80,7 +82,7 @@ public interface FunctionService {
      * @return
      */
     @Nullable
-    Function findFunction(@NotNull String id);
+    Function findFunction(@NotNull String id) throws SystemException;
 
     /**
      * Get a specific function (version) via unique ID. Throws exception if not found
@@ -88,7 +90,7 @@ public interface FunctionService {
      * @return
      * @throws NoSuchEntityException
      */
-    Function getFunction(@NotNull String id) throws NoSuchEntityException;
+    Function getFunction(@NotNull String id) throws NoSuchEntityException, SystemException;
 
     /**
      * Get the latest version of a given function
@@ -97,7 +99,8 @@ public interface FunctionService {
      * @return
      * @throws NoSuchEntityException
      */
-    Function getLatestFunction(@NotNull String project, @NotNull String name) throws NoSuchEntityException;
+    Function getLatestFunction(@NotNull String project, @NotNull String name)
+        throws NoSuchEntityException, SystemException;
 
     /**
      * Create a new function and store it
@@ -105,7 +108,7 @@ public interface FunctionService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Function createFunction(@NotNull Function functionDTO) throws DuplicatedEntityException;
+    Function createFunction(@NotNull Function functionDTO) throws DuplicatedEntityException, SystemException;
 
     /**
      * Update a specific function version
@@ -114,7 +117,8 @@ public interface FunctionService {
      * @return
      * @throws NoSuchEntityException
      */
-    Function updateFunction(@NotNull String id, @NotNull Function functionDTO) throws NoSuchEntityException;
+    Function updateFunction(@NotNull String id, @NotNull Function functionDTO)
+        throws NoSuchEntityException, SystemException;
 
     /**
      * Update a specific function version
@@ -125,24 +129,24 @@ public interface FunctionService {
      * @throws NoSuchEntityException
      */
     Function updateFunction(@NotNull String id, @NotNull Function functionDTO, boolean force)
-        throws NoSuchEntityException;
+        throws NoSuchEntityException, SystemException;
 
     /**
      * Delete a specific function (version) via unique ID, with optional cascade
      * @param id
      */
-    void deleteFunction(@NotNull String id, @Nullable Boolean cascade);
+    void deleteFunction(@NotNull String id, @Nullable Boolean cascade) throws SystemException;
 
     /**
      * Delete all versions of a given function, with cascade
      * @param project
      * @param name
      */
-    void deleteFunctions(@NotNull String project, @NotNull String name);
+    void deleteFunctions(@NotNull String project, @NotNull String name) throws SystemException;
 
     /**
      * Delete all functions for a given project, with cascade.
      * @param project
      */
-    void deleteFunctionsByProject(@NotNull String project);
+    void deleteFunctionsByProject(@NotNull String project) throws SystemException;
 }

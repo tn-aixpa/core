@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -52,26 +54,38 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
     @Override
     public Page<DataItem> listDataItems(Pageable pageable) {
         log.debug("list dataItems page {}", pageable);
-
-        return entityService.list(pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<DataItem> listDataItemsByUser(@NotNull String user) {
         log.debug("list all dataItems for user {}", user);
-
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<DataItem> searchDataItems(Pageable pageable, SearchFilter<DataItemEntity> filter) {
         log.debug("list dataItems page {}, filter {}", pageable, String.valueOf(filter));
-
-        Specification<DataItemEntity> specification = filter != null ? filter.toSpecification() : null;
-        if (specification != null) {
-            return entityService.search(specification, pageable);
-        } else {
-            return entityService.list(pageable);
+        try {
+            Specification<DataItemEntity> specification = filter != null ? filter.toSpecification() : null;
+            if (specification != null) {
+                return entityService.search(specification, pageable);
+            } else {
+                return entityService.list(pageable);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -79,16 +93,24 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
     public List<DataItem> listDataItemsByProject(@NotNull String project) {
         log.debug("list all dataItems for project {}", project);
         Specification<DataItemEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<DataItem> listDataItemsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list all dataItems for project {} page {}", project, pageable);
         Specification<DataItemEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -98,8 +120,12 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -109,8 +135,12 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -125,8 +155,12 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             CommonSpecification.projectEquals(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -142,8 +176,12 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             CommonSpecification.latestByProject(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -160,8 +198,12 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -177,15 +219,23 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public DataItem findDataItem(@NotNull String id) {
         log.debug("find dataItem with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -196,16 +246,23 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public DataItem getLatestDataItem(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
         log.debug("get latest dataItem for project {} with name {}", project, name);
-
-        //fetch latest version ordered by date DESC
-        Specification<DataItemEntity> specification = CommonSpecification.latestByProject(project, name);
-        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        try {
+            //fetch latest version ordered by date DESC
+            Specification<DataItemEntity> specification = CommonSpecification.latestByProject(project, name);
+            return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -214,32 +271,36 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
         }
-
-        //validate project
-        String projectId = dto.getProject();
-        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
-            throw new IllegalArgumentException("invalid or missing project");
-        }
-
-        // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-        if (spec == null) {
-            throw new IllegalArgumentException("invalid kind");
-        }
-
-        //TODO validate
-
-        //update spec as exported
-        dto.setSpec(spec.toMap());
-
         try {
-            if (log.isTraceEnabled()) {
-                log.trace("storable dto: {}", dto);
+            //validate project
+            String projectId = dto.getProject();
+            if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+                throw new IllegalArgumentException("invalid or missing project");
             }
 
-            return entityService.create(dto);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.DATAITEM.toString(), dto.getId());
+            // Parse and export Spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //TODO validate
+
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
+            try {
+                if (log.isTraceEnabled()) {
+                    log.trace("storable dto: {}", dto);
+                }
+
+                return entityService.create(dto);
+            } catch (DuplicatedEntityException e) {
+                throw new DuplicatedEntityException(EntityName.DATAITEM.toString(), dto.getId());
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -257,14 +318,21 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             return entityService.update(id, dataItemDTO);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteDataItem(@NotNull String id) {
         log.debug("delete dataItem with id {}", String.valueOf(id));
-
-        entityService.delete(id);
+        try {
+            entityService.delete(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -275,24 +343,36 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             CommonSpecification.projectEquals(project),
             CommonSpecification.nameEquals(name)
         );
-
-        long count = entityService.deleteAll(spec);
-        log.debug("deleted count {}", count);
+        try {
+            long count = entityService.deleteAll(spec);
+            log.debug("deleted count {}", count);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public void deleteDataItemsByProject(@NotNull String project) {
         log.debug("delete dataItems for project {}", project);
-
-        entityService.deleteAll(CommonSpecification.projectEquals(project));
+        try {
+            entityService.deleteAll(CommonSpecification.projectEquals(project));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public void indexDataItem(@NotNull String id) {
         log.debug("index dataItem with id {}", String.valueOf(id));
-
-        DataItem dataItem = entityService.get(id);
-        indexer.index(entityBuilder.convert(dataItem));
+        try {
+            DataItem dataItem = entityService.get(id);
+            indexer.index(entityBuilder.convert(dataItem));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override

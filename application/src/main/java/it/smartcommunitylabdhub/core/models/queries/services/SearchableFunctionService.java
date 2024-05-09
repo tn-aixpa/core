@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.services;
 
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
@@ -19,7 +20,8 @@ public interface SearchableFunctionService extends FunctionService {
      * @param filter
      * @return
      */
-    Page<Function> searchFunctions(Pageable pageable, @Nullable SearchFilter<FunctionEntity> filter);
+    Page<Function> searchFunctions(Pageable pageable, @Nullable SearchFilter<FunctionEntity> filter)
+        throws SystemException;
 
     /**
      * List all version of every function, with optional filters
@@ -32,7 +34,7 @@ public interface SearchableFunctionService extends FunctionService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<FunctionEntity> filter
-    );
+    ) throws SystemException;
 
     /**
      * List the latest version of every function, with optional filters
@@ -45,5 +47,5 @@ public interface SearchableFunctionService extends FunctionService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<FunctionEntity> filter
-    );
+    ) throws SystemException;
 }

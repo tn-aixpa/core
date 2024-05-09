@@ -3,6 +3,8 @@ package it.smartcommunitylabdhub.core.services;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -66,33 +68,49 @@ public class TaskServiceImpl implements SearchableTaskService {
     @Override
     public Page<Task> listTasks(Pageable pageable) {
         log.debug("list tasks page {}", pageable);
-
-        return entityService.list(pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Task> listTasksByUser(@NotNull String user) {
         log.debug("list all tasks for user {}  ", user);
-
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Task> listTasksByProject(@NotNull String project) {
         log.debug("list all tasks for project {}  ", project);
-
-        return entityService.searchAll(CommonSpecification.projectEquals(project));
+        try {
+            return entityService.searchAll(CommonSpecification.projectEquals(project));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Task> searchTasks(Pageable pageable, @Nullable SearchFilter<TaskEntity> filter) {
         log.debug("list tasks page {}, filter {}", pageable, String.valueOf(filter));
-
-        Specification<TaskEntity> specification = filter != null ? filter.toSpecification() : null;
-        if (specification != null) {
-            return entityService.search(specification, pageable);
-        } else {
-            return entityService.list(pageable);
+        try {
+            Specification<TaskEntity> specification = filter != null ? filter.toSpecification() : null;
+            if (specification != null) {
+                return entityService.search(specification, pageable);
+            } else {
+                return entityService.list(pageable);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -100,8 +118,12 @@ public class TaskServiceImpl implements SearchableTaskService {
     public Page<Task> listTasksByProject(@NotNull String project, Pageable pageable) {
         log.debug("list tasks for project {} page {}", project, pageable);
         Specification<TaskEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -116,39 +138,51 @@ public class TaskServiceImpl implements SearchableTaskService {
             CommonSpecification.projectEquals(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Task> getTasksByFunctionId(@NotNull String functionId, @NotNull EntityName entity) {
         log.debug("list tasks for function {}", functionId);
+        try {
+            Executable executable = executableEntityServiceProvider.getEntityServiceByEntity(entity).find(functionId);
+            if (executable == null) {
+                return Collections.emptyList();
+            }
 
-        Executable executable = executableEntityServiceProvider.getEntityServiceByEntity(entity).find(functionId);
-        if (executable == null) {
-            return Collections.emptyList();
+            //define a spec for tasks building function path
+            Specification<TaskEntity> where = Specification.allOf(
+                CommonSpecification.projectEquals(executable.getProject()),
+                createFunctionSpecification(TaskUtils.buildString(executable))
+            );
+
+            //fetch all tasks ordered by kind ASC
+            Specification<TaskEntity> specification = (root, query, builder) -> {
+                query.orderBy(builder.asc(root.get(AbstractEntity_.KIND)));
+                return where.toPredicate(root, query, builder);
+            };
+
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
-
-        //define a spec for tasks building function path
-        Specification<TaskEntity> where = Specification.allOf(
-            CommonSpecification.projectEquals(executable.getProject()),
-            createFunctionSpecification(TaskUtils.buildString(executable))
-        );
-
-        //fetch all tasks ordered by kind ASC
-        Specification<TaskEntity> specification = (root, query, builder) -> {
-            query.orderBy(builder.asc(root.get(AbstractEntity_.KIND)));
-            return where.toPredicate(root, query, builder);
-        };
-
-        return entityService.searchAll(specification);
     }
 
     @Override
     public Task findTask(@NotNull String id) {
         log.debug("find task with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -159,80 +193,87 @@ public class TaskServiceImpl implements SearchableTaskService {
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.TASK.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public Task createTask(@NotNull Task dto) throws DuplicatedEntityException {
         log.debug("create task");
-
-        //validate project
-        String projectId = dto.getProject();
-        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
-            throw new IllegalArgumentException("invalid or missing project");
-        }
-
         try {
-            //check if the same task already exists for the function
-            TaskBaseSpec taskSpec = new TaskBaseSpec();
-            taskSpec.configure(dto.getSpec());
-
-            // Parse and export Spec
-            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-            if (spec == null) {
-                throw new IllegalArgumentException("invalid kind");
+            //validate project
+            String projectId = dto.getProject();
+            if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+                throw new IllegalArgumentException("invalid or missing project");
             }
 
-            //TODO validate spec via validator
-            //update spec as exported
-            dto.setSpec(spec.toMap());
+            try {
+                //check if the same task already exists for the function
+                TaskBaseSpec taskSpec = new TaskBaseSpec();
+                taskSpec.configure(dto.getSpec());
 
-            String function = taskSpec.getFunction();
-            if (!StringUtils.hasText(function)) {
-                throw new IllegalArgumentException("missing function");
+                // Parse and export Spec
+                Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+                if (spec == null) {
+                    throw new IllegalArgumentException("invalid kind");
+                }
+
+                //TODO validate spec via validator
+                //update spec as exported
+                dto.setSpec(spec.toMap());
+
+                String function = taskSpec.getFunction();
+                if (!StringUtils.hasText(function)) {
+                    throw new IllegalArgumentException("missing function");
+                }
+
+                TaskSpecAccessor taskSpecAccessor = TaskUtils.parseFunction(function);
+                if (!StringUtils.hasText(taskSpecAccessor.getProject())) {
+                    throw new IllegalArgumentException("spec: missing project");
+                }
+
+                //check project match
+                if (dto.getProject() != null && !dto.getProject().equals(taskSpecAccessor.getProject())) {
+                    throw new IllegalArgumentException("project mismatch");
+                }
+                dto.setProject(taskSpecAccessor.getProject());
+
+                if (!StringUtils.hasText(taskSpecAccessor.getVersion())) {
+                    throw new IllegalArgumentException("spec: missing version");
+                }
+
+                String functionId = taskSpecAccessor.getVersion();
+
+                // task may belong to function or to workflow
+                String runtime = taskSpecAccessor.getRuntime();
+                EntityService<? extends Executable, ? extends BaseEntity> executableEntityService =
+                    executableEntityServiceProvider.getEntityServiceByRuntime(runtime);
+                EntityName entityName = executableEntityServiceProvider.getEntityNameByRuntime(runtime);
+
+                Executable executable = executableEntityService.find(functionId);
+                if (executable == null) {
+                    throw new IllegalArgumentException("invalid executable entity");
+                }
+
+                //check if a task for this kind already exists
+                Optional<Task> existingTask = getTasksByFunctionId(functionId, entityName)
+                    .stream()
+                    .filter(t -> t.getKind().equals(dto.getKind()))
+                    .findFirst();
+                if (existingTask.isPresent()) {
+                    throw new DuplicatedEntityException(EntityName.TASK.toString(), dto.getKind());
+                }
+
+                //create as new
+                return entityService.create(dto);
+            } catch (DuplicatedEntityException e) {
+                throw new DuplicatedEntityException(EntityName.TASK.toString(), dto.getId());
             }
-
-            TaskSpecAccessor taskSpecAccessor = TaskUtils.parseFunction(function);
-            if (!StringUtils.hasText(taskSpecAccessor.getProject())) {
-                throw new IllegalArgumentException("spec: missing project");
-            }
-
-            //check project match
-            if (dto.getProject() != null && !dto.getProject().equals(taskSpecAccessor.getProject())) {
-                throw new IllegalArgumentException("project mismatch");
-            }
-            dto.setProject(taskSpecAccessor.getProject());
-
-            if (!StringUtils.hasText(taskSpecAccessor.getVersion())) {
-                throw new IllegalArgumentException("spec: missing version");
-            }
-
-            String functionId = taskSpecAccessor.getVersion();
-
-            // task may belong to function or to workflow
-            String runtime = taskSpecAccessor.getRuntime();
-            EntityService<? extends Executable, ? extends BaseEntity> executableEntityService =
-                executableEntityServiceProvider.getEntityServiceByRuntime(runtime);
-            EntityName entityName = executableEntityServiceProvider.getEntityNameByRuntime(runtime);
-
-            Executable executable = executableEntityService.find(functionId);
-            if (executable == null) {
-                throw new IllegalArgumentException("invalid executable entity");
-            }
-
-            //check if a task for this kind already exists
-            Optional<Task> existingTask = getTasksByFunctionId(functionId, entityName)
-                .stream()
-                .filter(t -> t.getKind().equals(dto.getKind()))
-                .findFirst();
-            if (existingTask.isPresent()) {
-                throw new DuplicatedEntityException(EntityName.TASK.toString(), dto.getKind());
-            }
-
-            //create as new
-            return entityService.create(dto);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.TASK.toString(), dto.getId());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -268,34 +309,41 @@ public class TaskServiceImpl implements SearchableTaskService {
             return entityService.update(id, dto);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.TASK.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteTask(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete task with id {}", String.valueOf(id));
+        try {
+            Task task = findTask(id);
+            if (task != null) {
+                if (Boolean.TRUE.equals(cascade)) {
+                    log.debug("cascade delete runs for task with id {}", String.valueOf(id));
 
-        Task task = findTask(id);
-        if (task != null) {
-            if (Boolean.TRUE.equals(cascade)) {
-                log.debug("cascade delete runs for task with id {}", String.valueOf(id));
+                    //delete via async event to let manager do cleanups
+                    runService
+                        .getRunsByTaskId(id)
+                        .forEach(run -> {
+                            log.debug("publish op: delete for {}", run.getId());
+                            EntityOperation<Run> event = new EntityOperation<>(run, EntityAction.DELETE);
+                            if (log.isTraceEnabled()) {
+                                log.trace("event: {}", String.valueOf(event));
+                            }
 
-                //delete via async event to let manager do cleanups
-                runService
-                    .getRunsByTaskId(id)
-                    .forEach(run -> {
-                        log.debug("publish op: delete for {}", run.getId());
-                        EntityOperation<Run> event = new EntityOperation<>(run, EntityAction.DELETE);
-                        if (log.isTraceEnabled()) {
-                            log.trace("event: {}", String.valueOf(event));
-                        }
+                            eventPublisher.publishEvent(event);
+                        });
+                }
 
-                        eventPublisher.publishEvent(event);
-                    });
+                //delete the task
+                entityService.delete(id);
             }
-
-            //delete the task
-            entityService.delete(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 

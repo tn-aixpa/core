@@ -5,6 +5,8 @@ import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.events.RunnableChangedEvent;
 import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
@@ -20,7 +22,6 @@ import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
-import it.smartcommunitylabdhub.core.components.security.SecureCredentialsHelper;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
@@ -77,67 +78,71 @@ public class RunManager {
         runBaseSpec.configure(run.getSpec());
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
 
-        // Retrieve Executable
-        String executableId = runSpecAccessor.getVersion();
-        Executable executable = executableEntityServiceProvider
-            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
-            .get(executableId);
-
-        // Retrieve Task
-        Specification<TaskEntity> where = Specification.allOf(
-            CommonSpecification.projectEquals(executable.getProject()),
-            createExecutableSpecification(TaskUtils.buildString(executable)),
-            createTaskKindSpecification(runSpecAccessor.getTask())
-        );
-        Task task = taskEntityService.searchAll(where).stream().findFirst().orElse(null);
-
-        // Retrieve state machine
-        Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
-
-        // Add Internal logic to be executed when state change from CREATED to READY
-        fsm
-            .getState(State.CREATED)
-            .getTransaction(RunEvent.BUILD)
-            .setInternalLogic((context, input, fsmInstance) -> {
-                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                    // Retrieve Runtime and build run
-                    Runtime<
-                        ? extends ExecutableBaseSpec,
-                        ? extends RunBaseSpec,
-                        ? extends RunBaseStatus,
-                        ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(executable.getKind());
-
-                    // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
-                    // an exception occur! for.
-                    RunBaseSpec runSpecBuilt = runtime.build(executable, task, run);
-
-                    return Optional.of(runSpecBuilt);
-                }
-                return Optional.empty();
-            });
-
         try {
-            // Update run state to BUILT
-            Optional<RunBaseSpec> runSpecBuilt = fsm.goToState(State.BUILT, null);
-            runSpecBuilt.ifPresent(spec -> {
-                // Update run spec
-                run.setSpec(spec.toMap());
+            // Retrieve Executable
+            String executableId = runSpecAccessor.getVersion();
+            Executable executable = executableEntityServiceProvider
+                .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+                .get(executableId);
 
+            // Retrieve Task
+            Specification<TaskEntity> where = Specification.allOf(
+                CommonSpecification.projectEquals(executable.getProject()),
+                createExecutableSpecification(TaskUtils.buildString(executable)),
+                createTaskKindSpecification(runSpecAccessor.getTask())
+            );
+            Task task = taskEntityService.searchAll(where).stream().findFirst().orElse(null);
+
+            // Retrieve state machine
+            Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
+
+            // Add Internal logic to be executed when state change from CREATED to READY
+            fsm
+                .getState(State.CREATED)
+                .getTransaction(RunEvent.BUILD)
+                .setInternalLogic((context, input, fsmInstance) -> {
+                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                        // Retrieve Runtime and build run
+                        Runtime<
+                            ? extends ExecutableBaseSpec,
+                            ? extends RunBaseSpec,
+                            ? extends RunBaseStatus,
+                            ? extends RunRunnable
+                        > runtime = runtimeFactory.getRuntime(executable.getKind());
+
+                        // Build RunSpec using Runtime now if wrong type is passed to a specific runtime
+                        // an exception occur! for.
+                        RunBaseSpec runSpecBuilt = runtime.build(executable, task, run);
+
+                        return Optional.of(runSpecBuilt);
+                    }
+                    return Optional.empty();
+                });
+
+            try {
                 // Update run state to BUILT
-                run.getStatus().put("state", State.BUILT.toString());
+                Optional<RunBaseSpec> runSpecBuilt = fsm.goToState(State.BUILT, null);
+                runSpecBuilt.ifPresent(spec -> {
+                    // Update run spec
+                    run.setSpec(spec.toMap());
 
-                if (log.isTraceEnabled()) {
-                    log.trace("Built run: {}", run);
-                }
-            });
+                    // Update run state to BUILT
+                    run.getStatus().put("state", State.BUILT.toString());
 
-            entityService.update(run.getId(), run);
-            return run;
-        } catch (InvalidTransactionException e) {
-            // log error
-            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw e;
+                    if (log.isTraceEnabled()) {
+                        log.trace("Built run: {}", run);
+                    }
+                });
+
+                return entityService.update(run.getId(), run);
+            } catch (InvalidTransactionException e) {
+                // log error
+                log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+                throw e;
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -147,202 +152,213 @@ public class RunManager {
         runBaseSpec.configure(run.getSpec());
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
 
-        // Retrieve Executable
-        String executableId = runSpecAccessor.getVersion();
-        Executable executable = executableEntityServiceProvider
-            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
-            .get(executableId);
-
-        // Retrieve state machine
-        Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
-
-        fsm
-            .getState(State.BUILT)
-            .getTransaction(RunEvent.RUN)
-            .setInternalLogic((context, input, stateMachine) -> {
-                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                    // Retrieve Runtime and build run
-                    Runtime<
-                        ? extends ExecutableBaseSpec,
-                        ? extends RunBaseSpec,
-                        ? extends RunBaseStatus,
-                        ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(executable.getKind());
-                    // Create Runnable
-                    RunRunnable runnable = runtime.run(run);
-
-                    return Optional.of(runnable);
-                } else {
-                    return Optional.empty();
-                }
-            });
-
         try {
-            Optional<RunRunnable> runnable = fsm.goToState(State.READY, null);
+            // Retrieve Executable
+            String executableId = runSpecAccessor.getVersion();
+            Executable executable = executableEntityServiceProvider
+                .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+                .get(executableId);
 
-            runnable.ifPresent(r -> {
-                //extract auth from security context to inflate secured credentials
-                //TODO refactor properly
-                if (r instanceof SecuredRunnable) {
-                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                    if (auth != null) {
-                        ((SecuredRunnable) r).setCredentials(auth);
+            // Retrieve state machine
+            Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
+
+            fsm
+                .getState(State.BUILT)
+                .getTransaction(RunEvent.RUN)
+                .setInternalLogic((context, input, stateMachine) -> {
+                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                        // Retrieve Runtime and build run
+                        Runtime<
+                            ? extends ExecutableBaseSpec,
+                            ? extends RunBaseSpec,
+                            ? extends RunBaseStatus,
+                            ? extends RunRunnable
+                        > runtime = runtimeFactory.getRuntime(executable.getKind());
+                        // Create Runnable
+                        RunRunnable runnable = runtime.run(run);
+
+                        return Optional.of(runnable);
+                    } else {
+                        return Optional.empty();
                     }
-                }
+                });
 
-                // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
-                eventPublisher.publishEvent(r);
+            try {
+                Optional<RunRunnable> runnable = fsm.goToState(State.READY, null);
 
-                // Update run state to READY
-                run.getStatus().put("state", State.READY.toString());
-            });
-            entityService.update(run.getId(), run);
+                runnable.ifPresent(r -> {
+                    //extract auth from security context to inflate secured credentials
+                    //TODO refactor properly
+                    if (r instanceof SecuredRunnable) {
+                        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                        if (auth != null) {
+                            ((SecuredRunnable) r).setCredentials(auth);
+                        }
+                    }
 
-            return run;
-        } catch (InvalidTransactionException e) {
-            // log error
-            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw e;
-        }
-    }
+                    // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
+                    eventPublisher.publishEvent(r);
 
-    public Run stop(@NotNull Run run) {
-        // GET state machine, init state machine with status
-        RunBaseSpec runBaseSpec = new RunBaseSpec();
-        runBaseSpec.configure(run.getSpec());
-        RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
+                    // Update run state to READY
+                    run.getStatus().put("state", State.READY.toString());
+                });
 
-        // Retrieve Executable
-        String executableId = runSpecAccessor.getVersion();
-        Executable executable = executableEntityServiceProvider
-            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
-            .get(executableId);
-
-        // Retrieve state machine
-        Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
-
-        fsm
-            .getState(State.RUNNING)
-            .getTransaction(RunEvent.STOP)
-            .setInternalLogic((context, input, stateMachine) -> {
-                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                    // Retrieve Runtime and build run
-                    Runtime<
-                        ? extends ExecutableBaseSpec,
-                        ? extends RunBaseSpec,
-                        ? extends RunBaseStatus,
-                        ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(executable.getKind());
-                    // Create Runnable
-                    RunRunnable runnable = runtime.stop(run);
-
-                    return Optional.of(runnable);
-                } else {
-                    return Optional.empty();
-                }
-            });
-
-        try {
-            Optional<RunRunnable> runnable = fsm.goToState(State.STOP, null);
-            runnable.ifPresent(r -> {
-                // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
-                eventPublisher.publishEvent(r);
-
-                // Update run state to READY
-                run.getStatus().put("state", State.STOP.toString());
-            });
-            entityService.update(run.getId(), run);
-
-            return run;
-        } catch (InvalidTransactionException e) {
-            // log error
-            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw e;
-        }
-    }
-
-    public Run delete(@NotNull Run run) {
-        // GET state machine, init state machine with status
-        RunBaseSpec runBaseSpec = new RunBaseSpec();
-        runBaseSpec.configure(run.getSpec());
-        RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
-
-        // Retrieve Executable
-        String executableId = runSpecAccessor.getVersion();
-        Executable executable = executableEntityServiceProvider
-            .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
-            .get(executableId);
-
-        // Retrieve state machine
-        Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
-
-        fsm
-            .getState(State.RUNNING)
-            .getTransaction(RunEvent.DELETING)
-            .setInternalLogic((context, input, stateMachine) -> {
-                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                    // Retrieve Runtime and build run
-                    Runtime<
-                        ? extends ExecutableBaseSpec,
-                        ? extends RunBaseSpec,
-                        ? extends RunBaseStatus,
-                        ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(executable.getKind());
-                    // Create Runnable
-                    RunRunnable runnable = runtime.delete(run);
-
-                    return Optional.of(runnable);
-                } else {
-                    return Optional.empty();
-                }
-            });
-        fsm
-            .getState(State.STOPPED)
-            .getTransaction(RunEvent.DELETING)
-            .setInternalLogic((context, input, stateMachine) -> {
-                if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
-                    // Retrieve Runtime and build run
-                    Runtime<
-                        ? extends ExecutableBaseSpec,
-                        ? extends RunBaseSpec,
-                        ? extends RunBaseStatus,
-                        ? extends RunRunnable
-                    > runtime = runtimeFactory.getRuntime(executable.getKind());
-                    // Create Runnable
-                    RunRunnable runnable = runtime.delete(run);
-
-                    return Optional.of(runnable);
-                } else {
-                    return Optional.empty();
-                }
-            });
-
-        try {
-            Optional<RunRunnable> runnable = fsm.goToState(State.DELETING, null);
-            // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
-            runnable.ifPresent(eventPublisher::publishEvent);
-
-            //update
-            run.getStatus().put("state", State.DELETING.toString());
-            entityService.update(run.getId(), run);
-
-            //if runnable we are deleting in async, otherwise move to delete
-            if (runnable.isEmpty()) {
-                //dispatch event
-                onDeleted(run, null);
+                return entityService.update(run.getId(), run);
+            } catch (InvalidTransactionException e) {
+                // log error
+                log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+                throw e;
             }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
 
-            return run;
-        } catch (InvalidTransactionException e) {
-            // log error
-            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
-            throw e;
+    public Run stop(@NotNull Run run) throws NoSuchEntityException {
+        // GET state machine, init state machine with status
+        RunBaseSpec runBaseSpec = new RunBaseSpec();
+        runBaseSpec.configure(run.getSpec());
+        RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
+        try {
+            // Retrieve Executable
+            String executableId = runSpecAccessor.getVersion();
+            Executable executable = executableEntityServiceProvider
+                .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+                .get(executableId);
+
+            // Retrieve state machine
+            Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
+
+            fsm
+                .getState(State.RUNNING)
+                .getTransaction(RunEvent.STOP)
+                .setInternalLogic((context, input, stateMachine) -> {
+                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                        // Retrieve Runtime and build run
+                        Runtime<
+                            ? extends ExecutableBaseSpec,
+                            ? extends RunBaseSpec,
+                            ? extends RunBaseStatus,
+                            ? extends RunRunnable
+                        > runtime = runtimeFactory.getRuntime(executable.getKind());
+                        // Create Runnable
+                        RunRunnable runnable = runtime.stop(run);
+
+                        return Optional.of(runnable);
+                    } else {
+                        return Optional.empty();
+                    }
+                });
+
+            try {
+                Optional<RunRunnable> runnable = fsm.goToState(State.STOP, null);
+                runnable.ifPresent(r -> {
+                    // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
+                    eventPublisher.publishEvent(r);
+
+                    // Update run state to READY
+                    run.getStatus().put("state", State.STOP.toString());
+                });
+
+                return entityService.update(run.getId(), run);
+            } catch (InvalidTransactionException e) {
+                // log error
+                log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+                throw e;
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    public Run delete(@NotNull Run run) throws NoSuchEntityException {
+        // GET state machine, init state machine with status
+        RunBaseSpec runBaseSpec = new RunBaseSpec();
+        runBaseSpec.configure(run.getSpec());
+        RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
+        try {
+            // Retrieve Executable
+            String executableId = runSpecAccessor.getVersion();
+            Executable executable = executableEntityServiceProvider
+                .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+                .get(executableId);
+
+            // Retrieve state machine
+            Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
+
+            fsm
+                .getState(State.RUNNING)
+                .getTransaction(RunEvent.DELETING)
+                .setInternalLogic((context, input, stateMachine) -> {
+                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                        // Retrieve Runtime and build run
+                        Runtime<
+                            ? extends ExecutableBaseSpec,
+                            ? extends RunBaseSpec,
+                            ? extends RunBaseStatus,
+                            ? extends RunRunnable
+                        > runtime = runtimeFactory.getRuntime(executable.getKind());
+                        // Create Runnable
+                        RunRunnable runnable = runtime.delete(run);
+
+                        return Optional.ofNullable(runnable);
+                    } else {
+                        return Optional.empty();
+                    }
+                });
+            fsm
+                .getState(State.STOPPED)
+                .getTransaction(RunEvent.DELETING)
+                .setInternalLogic((context, input, stateMachine) -> {
+                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                        // Retrieve Runtime and build run
+                        Runtime<
+                            ? extends ExecutableBaseSpec,
+                            ? extends RunBaseSpec,
+                            ? extends RunBaseStatus,
+                            ? extends RunRunnable
+                        > runtime = runtimeFactory.getRuntime(executable.getKind());
+                        // Create Runnable
+                        RunRunnable runnable = runtime.delete(run);
+
+                        return Optional.ofNullable(runnable);
+                    } else {
+                        return Optional.empty();
+                    }
+                });
+
+            try {
+                Optional<RunRunnable> runnable = fsm.goToState(State.DELETING, null);
+                // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
+                runnable.ifPresent(eventPublisher::publishEvent);
+
+                //update
+                run.getStatus().put("state", State.DELETING.toString());
+                Run updated = entityService.update(run.getId(), run);
+
+                //if runnable we are deleting in async, otherwise move to delete
+                if (runnable.isEmpty()) {
+                    //dispatch event
+                    onDeleted(updated, null);
+                }
+
+                return updated;
+            } catch (InvalidTransactionException e) {
+                // log error
+                log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+                throw e;
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Async
     @EventListener
-    public void onChangedEvent(RunnableChangedEvent<RunRunnable> event) {
+    public void onChangedEvent(RunnableChangedEvent<RunRunnable> event) throws StoreException {
         if (event.getRunMonitorObject() == null) {
             return;
         }
@@ -355,42 +371,46 @@ public class RunManager {
             .of(entityService.find(runnableMonitorObject.getRunId()))
             .ifPresentOrElse(
                 run -> {
-                    if (
-                        !Objects.equals(
-                            StatusFieldAccessor.with(run.getStatus()).getState(),
-                            runnableMonitorObject.getStateId()
-                        )
-                    ) {
-                        switch (State.valueOf(runnableMonitorObject.getStateId())) {
-                            case COMPLETED:
-                                onCompleted(run, event);
-                                break;
-                            case ERROR:
-                                onError(run, event);
-                                break;
-                            case RUNNING:
-                                onRunning(run, event);
-                                break;
-                            case STOPPED:
-                                onStopped(run, event);
-                                break;
-                            case DELETED:
-                                onDeleted(run, event);
-                                break;
-                            default:
-                                log.info(
-                                    "State {} for run id {} not managed",
-                                    runnableMonitorObject.getStateId(),
-                                    runnableMonitorObject.getRunId()
-                                );
-                                break;
+                    try {
+                        if (
+                            !Objects.equals(
+                                StatusFieldAccessor.with(run.getStatus()).getState(),
+                                runnableMonitorObject.getStateId()
+                            )
+                        ) {
+                            switch (State.valueOf(runnableMonitorObject.getStateId())) {
+                                case COMPLETED:
+                                    onCompleted(run, event);
+                                    break;
+                                case ERROR:
+                                    onError(run, event);
+                                    break;
+                                case RUNNING:
+                                    onRunning(run, event);
+                                    break;
+                                case STOPPED:
+                                    onStopped(run, event);
+                                    break;
+                                case DELETED:
+                                    onDeleted(run, event);
+                                    break;
+                                default:
+                                    log.info(
+                                        "State {} for run id {} not managed",
+                                        runnableMonitorObject.getStateId(),
+                                        runnableMonitorObject.getRunId()
+                                    );
+                                    break;
+                            }
+                        } else {
+                            log.info(
+                                "State {} for run id {} not changed",
+                                runnableMonitorObject.getStateId(),
+                                runnableMonitorObject.getRunId()
+                            );
                         }
-                    } else {
-                        log.info(
-                            "State {} for run id {} not changed",
-                            runnableMonitorObject.getStateId(),
-                            runnableMonitorObject.getRunId()
-                        );
+                    } catch (StoreException e) {
+                        log.error("store error for {}:{}", runnableMonitorObject.getRunId(), e.getMessage());
                     }
                 },
                 () -> {
@@ -400,7 +420,8 @@ public class RunManager {
     }
 
     // Callback Methods
-    private void onRunning(Run run, RunnableChangedEvent<RunRunnable> event) {
+    private void onRunning(Run run, RunnableChangedEvent<RunRunnable> event)
+        throws NoSuchEntityException, StoreException {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
@@ -452,12 +473,14 @@ public class RunManager {
     }
 
     /**
-     * A callback method to handle complete in the run, update run status and execute internal logic for the COMPLETE state.
+     * A callback method to handle complete, update run status and execute internal logic for the COMPLETE state.
      *
      * @param event the RunChangedEvent triggering the error
+     * @throws StoreException
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onCompleted(Run run, RunnableChangedEvent<RunRunnable> event) {
+    private void onCompleted(Run run, RunnableChangedEvent<RunRunnable> event)
+        throws NoSuchEntityException, StoreException {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
@@ -514,9 +537,11 @@ public class RunManager {
      * A callback method to handle stop in the run, update run status and execute internal logic for the STOP state.
      *
      * @param event the RunChangedEvent triggering the stop
+     * @throws StoreException
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onStopped(Run run, RunnableChangedEvent<RunRunnable> event) {
+    private void onStopped(Run run, RunnableChangedEvent<RunRunnable> event)
+        throws NoSuchEntityException, StoreException {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
@@ -573,9 +598,11 @@ public class RunManager {
      * A callback method to handle errors in the run, update run status and execute internal logic for the ERROR state.
      *
      * @param event the RunChangedEvent triggering the error
+     * @throws StoreException
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onError(Run run, RunnableChangedEvent<RunRunnable> event) {
+    private void onError(Run run, RunnableChangedEvent<RunRunnable> event)
+        throws NoSuchEntityException, StoreException {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
         // Retrieve Runtime
@@ -643,9 +670,11 @@ public class RunManager {
      * A method to handle delete in the run, update run status and execute internal logic for the STOP state.
      *
      * @param event the RunChangedEvent triggering the delete
+     * @throws StoreException
      * @throws NoSuchEntityException if the entity being accessed does not exist
      */
-    private void onDeleted(Run run, RunnableChangedEvent<RunRunnable> event) {
+    private void onDeleted(Run run, RunnableChangedEvent<RunRunnable> event)
+        throws NoSuchEntityException, StoreException {
         // Try to move forward state machine based on current state
         Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
 
@@ -701,7 +730,7 @@ public class RunManager {
     }
 
     /**
-     * Creates and returns a finite state machine (FSM) with the specified initial state and context, based on the given run.
+     * Creates and returns a finite state machine (FSM) with the specified initial state and context and run.
      *
      * @param run the run object used to retrieve the entity and initialize the state machine context
      * @return the FSM created and initialized for the given run
@@ -731,8 +760,9 @@ public class RunManager {
      *
      * @param run the run to retrieve the executable for
      * @return the retrieved executable
+     * @throws StoreException
      */
-    private Executable retrieveExecutable(Run run) throws NoSuchEntityException {
+    private Executable retrieveExecutable(Run run) throws NoSuchEntityException, StoreException {
         // GET state machine, init state machine with status
         RunBaseSpec runBaseSpec = new RunBaseSpec();
         runBaseSpec.configure(run.getSpec());

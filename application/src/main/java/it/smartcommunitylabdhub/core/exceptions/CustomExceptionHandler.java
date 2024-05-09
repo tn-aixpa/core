@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.FrameworkException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -90,7 +91,9 @@ public class CustomExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
-    @ExceptionHandler({ FrameworkException.class, CoreRuntimeException.class, StoreException.class })
+    @ExceptionHandler(
+        { FrameworkException.class, CoreRuntimeException.class, StoreException.class, SystemException.class }
+    )
     public ResponseEntity<ErrorResponse> handleInternalErrorExceptions(Exception ex) {
         // Create and return the error response
         ErrorResponse errorResponse = new ErrorResponse();

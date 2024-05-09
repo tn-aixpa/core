@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.services;
 
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
@@ -19,7 +20,8 @@ public interface SearchableArtifactService extends ArtifactService {
      * @param filter
      * @return
      */
-    Page<Artifact> searchArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter);
+    Page<Artifact> searchArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter)
+        throws SystemException;
 
     /**
      * List all versions of every artifact, with optional filters
@@ -32,7 +34,7 @@ public interface SearchableArtifactService extends ArtifactService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<ArtifactEntity> filter
-    );
+    ) throws SystemException;
 
     /**
      * List the latest version of every artifact, with optional filters
@@ -45,5 +47,5 @@ public interface SearchableArtifactService extends ArtifactService {
         @NotNull String project,
         Pageable pageable,
         @Nullable SearchFilter<ArtifactEntity> filter
-    );
+    ) throws SystemException;
 }

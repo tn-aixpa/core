@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
@@ -63,41 +65,61 @@ public class ProjectServiceImpl implements SearchableProjectService {
     @Override
     public Page<Project> listProjects(Pageable pageable) {
         log.debug("list projects page {}", pageable);
-
-        return entityService.list(pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Project> listProjectsByUser(@NotNull String user) {
         log.debug("list all projects for user {}", user);
-
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Project> searchProjects(Pageable pageable, @Nullable SearchFilter<ProjectEntity> filter) {
         log.debug("list projects page {}, filter {}", pageable, String.valueOf(filter));
-
-        Specification<ProjectEntity> specification = filter != null ? filter.toSpecification() : null;
-        if (specification != null) {
-            return entityService.search(specification, pageable);
-        } else {
-            return entityService.list(pageable);
+        try {
+            Specification<ProjectEntity> specification = filter != null ? filter.toSpecification() : null;
+            if (specification != null) {
+                return entityService.search(specification, pageable);
+            } else {
+                return entityService.list(pageable);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public Project findProjectByName(@NotNull String name) {
         log.debug("find project by name {}", name);
-
-        return entityService.searchAll(CommonSpecification.nameEquals(name)).stream().findFirst().orElse(null);
+        try {
+            return entityService.searchAll(CommonSpecification.nameEquals(name)).stream().findFirst().orElse(null);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Project findProject(@NotNull String id) {
         log.debug("find project with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -130,20 +152,27 @@ public class ProjectServiceImpl implements SearchableProjectService {
             return project;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.PROJECT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public Project getProjectByName(@NotNull String name) throws NoSuchEntityException {
         log.debug("get project by name {}", name);
+        try {
+            Project project = entityService
+                .searchAll(CommonSpecification.nameEquals(name))
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new NoSuchEntityException(EntityName.PROJECT.toString()));
 
-        Project project = entityService
-            .searchAll(CommonSpecification.nameEquals(name))
-            .stream()
-            .findFirst()
-            .orElseThrow(() -> new NoSuchEntityException(EntityName.PROJECT.toString()));
-
-        return getProject(project.getId());
+            return getProject(project.getId());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -174,6 +203,9 @@ public class ProjectServiceImpl implements SearchableProjectService {
             return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
             throw new DuplicatedEntityException(EntityName.PROJECT.toString(), dto.getId());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -193,41 +225,48 @@ public class ProjectServiceImpl implements SearchableProjectService {
             return entityService.update(id, dto);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.PROJECT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteProject(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete project with id {}", String.valueOf(id));
+        try {
+            Project prj = findProject(id);
+            if (prj != null) {
+                if (Boolean.TRUE.equals(cascade)) {
+                    String project = prj.getName();
 
-        Project prj = findProject(id);
-        if (prj != null) {
-            if (Boolean.TRUE.equals(cascade)) {
-                String project = prj.getName();
+                    log.debug("cascade delete artifacts for project with id {}", String.valueOf(id));
+                    artifactService.deleteArtifactsByProject(project);
 
-                log.debug("cascade delete artifacts for project with id {}", String.valueOf(id));
-                artifactService.deleteArtifactsByProject(project);
+                    log.debug("cascade delete dataItems for project with id {}", String.valueOf(id));
+                    dataItemService.deleteDataItemsByProject(project);
 
-                log.debug("cascade delete dataItems for project with id {}", String.valueOf(id));
-                dataItemService.deleteDataItemsByProject(project);
+                    log.debug("cascade delete functions for project with id {}", String.valueOf(id));
+                    functionService.deleteFunctionsByProject(project);
 
-                log.debug("cascade delete functions for project with id {}", String.valueOf(id));
-                functionService.deleteFunctionsByProject(project);
+                    log.debug("cascade delete workflows for project with id {}", String.valueOf(id));
+                    workflowService.deleteWorkflowsByProject(project);
 
-                log.debug("cascade delete workflows for project with id {}", String.valueOf(id));
-                workflowService.deleteWorkflowsByProject(project);
+                    log.debug("cascade delete secrets for project with id {}", String.valueOf(id));
+                    secretService.deleteSecretsByProject(project);
 
-                log.debug("cascade delete secrets for project with id {}", String.valueOf(id));
-                secretService.deleteSecretsByProject(project);
+                    log.debug("cascade delete labels for project with id {}", String.valueOf(id));
+                    labelService.deleteLabelsByProject(project);
+                }
 
-                log.debug("cascade delete labels for project with id {}", String.valueOf(id));
-                labelService.deleteLabelsByProject(project);
+                //delete the project
+                entityService.delete(id);
             }
 
-            //delete the project
             entityService.delete(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
-
-        entityService.delete(id);
     }
 }

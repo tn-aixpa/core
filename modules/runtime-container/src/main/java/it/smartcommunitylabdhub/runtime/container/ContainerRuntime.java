@@ -239,7 +239,8 @@ public class ContainerRuntime
                     if (deployRunnableStore != null) {
                         K8sDeploymentRunnable k8sDeploymentRunnable = deployRunnableStore.find(run.getId());
                         if (k8sDeploymentRunnable == null) {
-                            throw new NoSuchEntityException("Deployment not found");
+                            //not in store, either not existent or already removed, nothing to do
+                            yield null;
                         }
                         k8sDeploymentRunnable.setState(State.DELETING.name());
                         yield k8sDeploymentRunnable;
@@ -250,7 +251,8 @@ public class ContainerRuntime
                     if (jobRunnableStore != null) {
                         K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
                         if (k8sJobRunnable == null) {
-                            throw new NoSuchEntityException("JobDeployment not found");
+                            //not in store, either not existent or already removed, nothing to do
+                            yield null;
                         }
                         k8sJobRunnable.setState(State.DELETING.name());
                         yield k8sJobRunnable;
@@ -261,7 +263,8 @@ public class ContainerRuntime
                     if (serveRunnableStore != null) {
                         K8sServeRunnable k8sServeRunnable = serveRunnableStore.find(run.getId());
                         if (k8sServeRunnable == null) {
-                            throw new NoSuchEntityException("ServeDeployment not found");
+                            //not in store, either not existent or already removed, nothing to do
+                            yield null;
                         }
                         k8sServeRunnable.setState(State.DELETING.name());
                         yield k8sServeRunnable;
@@ -272,7 +275,8 @@ public class ContainerRuntime
                     if (buildRunnableStore != null) {
                         K8sKanikoRunnable k8sKanikoRunnable = buildRunnableStore.find(run.getId());
                         if (k8sKanikoRunnable == null) {
-                            throw new NoSuchEntityException("Build runnable not found");
+                            //not in store, either not existent or already removed, nothing to do
+                            yield null;
                         }
                         k8sKanikoRunnable.setState(State.DELETING.name());
                         yield k8sKanikoRunnable;

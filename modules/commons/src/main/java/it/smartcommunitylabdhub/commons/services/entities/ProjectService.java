@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons.services.entities;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -18,14 +19,14 @@ public interface ProjectService {
      * @param pageable
      * @return
      */
-    Page<Project> listProjects(Pageable pageable);
+    Page<Project> listProjects(Pageable pageable) throws SystemException;
 
     /**
      * List all projects by user
      * @param user
      * @return
      */
-    List<Project> listProjectsByUser(@NotNull String user);
+    List<Project> listProjectsByUser(@NotNull String user) throws SystemException;
 
     /**
      * Find a specific project  via unique ID. Returns null if not found
@@ -33,7 +34,7 @@ public interface ProjectService {
      * @return
      */
     @Nullable
-    Project findProject(@NotNull String id);
+    Project findProject(@NotNull String id) throws SystemException;
 
     /**
      * Find a specific project  via unique ID. Returns null if not found
@@ -41,7 +42,7 @@ public interface ProjectService {
      * @return
      */
     @Nullable
-    Project findProjectByName(@NotNull String name);
+    Project findProjectByName(@NotNull String name) throws SystemException;
 
     /**
      * Get a specific project via unique ID. Throws exception if not found
@@ -49,7 +50,7 @@ public interface ProjectService {
      * @return
      * @throws NoSuchEntityException
      */
-    Project getProject(@NotNull String id) throws NoSuchEntityException;
+    Project getProject(@NotNull String id) throws NoSuchEntityException, SystemException;
 
     /**
      * Get a specific project via unique ID. Throws exception if not found
@@ -57,7 +58,7 @@ public interface ProjectService {
      * @return
      * @throws NoSuchEntityException
      */
-    Project getProjectByName(@NotNull String name) throws NoSuchEntityException;
+    Project getProjectByName(@NotNull String name) throws NoSuchEntityException, SystemException;
 
     /**
      * Create a new project and store it
@@ -65,7 +66,7 @@ public interface ProjectService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Project createProject(@NotNull Project projectDTO) throws DuplicatedEntityException;
+    Project createProject(@NotNull Project projectDTO) throws DuplicatedEntityException, SystemException;
 
     /**
      * Update a specific project
@@ -74,12 +75,13 @@ public interface ProjectService {
      * @return
      * @throws NoSuchEntityException
      */
-    Project updateProject(@NotNull String id, @NotNull Project projectDTO) throws NoSuchEntityException;
+    Project updateProject(@NotNull String id, @NotNull Project projectDTO)
+        throws NoSuchEntityException, SystemException;
 
     /**
      * Delete a specific project via unique ID, with optional cascade
      * @param id
      * @param cascade
      */
-    void deleteProject(@NotNull String id, @Nullable Boolean cascade);
+    void deleteProject(@NotNull String id, @Nullable Boolean cascade) throws SystemException;
 }

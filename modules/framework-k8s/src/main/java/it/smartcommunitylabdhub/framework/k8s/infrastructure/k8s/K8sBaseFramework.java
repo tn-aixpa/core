@@ -64,8 +64,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         this.version = version;
     }
 
+    @Autowired
     public void setRegistrySecret(@Value("${registry.secret}") String secret) {
-        this.registrySecret = registrySecret;
+        this.registrySecret = secret;
     }
 
     @Autowired
@@ -302,13 +303,15 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 runnable.getCredentials()
             );
 
-            //attach labels
-            Map<String, String> labels = buildLabels(runnable);
-            labels
-                .entrySet()
-                .forEach(e -> {
-                    secret.getMetadata().putLabelsItem(e.getKey(), e.getValue());
-                });
+            if (secret != null && secret.getMetadata() != null) {
+                //attach labels
+                Map<String, String> labels = buildLabels(runnable);
+                labels
+                    .entrySet()
+                    .forEach(e -> {
+                        secret.getMetadata().putLabelsItem(e.getKey(), e.getValue());
+                    });
+            }
 
             return secret;
         }
