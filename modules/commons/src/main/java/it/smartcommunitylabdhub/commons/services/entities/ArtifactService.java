@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.BindException;
 
 /*
  * Service for managing artifacts
@@ -20,6 +21,19 @@ public interface ArtifactService {
      * @return
      */
     Page<Artifact> listArtifacts(Pageable pageable) throws SystemException;
+
+    /**
+     * List the latest version of every artifact
+     * @return
+     */
+    List<Artifact> listLatestArtifacts() throws SystemException;
+
+    /**
+     * List the latest version of every artifact
+     * @param pageable
+     * @return
+     */
+    Page<Artifact> listLatestArtifacts(Pageable pageable) throws SystemException;
 
     /**
      * List all versions of every artifact for a user
@@ -107,8 +121,11 @@ public interface ArtifactService {
      * @param artifactDTO
      * @return
      * @throws DuplicatedEntityException
+     * @throws IllegalArgumentException
+     * @throws BindException
      */
-    Artifact createArtifact(@NotNull Artifact artifactDTO) throws DuplicatedEntityException, SystemException;
+    Artifact createArtifact(@NotNull Artifact artifactDTO)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Update a specific artifact version
@@ -118,7 +135,7 @@ public interface ArtifactService {
      * @throws NoSuchEntityException
      */
     Artifact updateArtifact(@NotNull String id, @NotNull Artifact artifactDTO)
-        throws NoSuchEntityException, SystemException;
+        throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Delete a specific artifact (version) via unique ID

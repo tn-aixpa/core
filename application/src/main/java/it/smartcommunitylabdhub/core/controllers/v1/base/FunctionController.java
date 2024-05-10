@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -27,8 +28,17 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindException;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @ApiVersion("v1")
@@ -52,7 +62,8 @@ public class FunctionController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Function createFunction(@RequestBody @Valid @NotNull Function dto) throws DuplicatedEntityException {
+    public Function createFunction(@RequestBody @Valid @NotNull Function dto)
+        throws DuplicatedEntityException, SystemException, BindException {
         return functionService.createFunction(dto);
     }
 
@@ -60,6 +71,7 @@ public class FunctionController {
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Function> getFunctions(
         @ParameterObject @Valid @Nullable FunctionEntityFilter filter,
+        @ParameterObject @RequestParam(required = false, defaultValue = "all") String versions,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "id", direction = Direction.ASC) }
         ) Pageable pageable
@@ -68,8 +80,11 @@ public class FunctionController {
         if (filter != null) {
             sf = filter.toSearchFilter();
         }
-
-        return functionService.searchFunctions(pageable, sf);
+        if ("latest".equals(versions)) {
+            return functionService.searchLatestFunctions(pageable, sf);
+        } else {
+            return functionService.searchFunctions(pageable, sf);
+        }
     }
 
     @Operation(summary = "Get a function by id", description = "Return a function")
@@ -88,7 +103,7 @@ public class FunctionController {
     public Function updateFunction(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Function dto
-    ) throws NoSuchEntityException {
+    ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
         return functionService.updateFunction(id, dto);
     }
 

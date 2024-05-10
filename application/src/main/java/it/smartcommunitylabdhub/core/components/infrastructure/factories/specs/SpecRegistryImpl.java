@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
+import io.kubernetes.client.proto.V1.ConfigMap;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -18,14 +19,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.DataBinder;
+import org.springframework.validation.SmartValidator;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @Component
 @Slf4j
 @Validated
-public class SpecRegistryImpl implements SpecRegistry {
+public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
 
     private final Map<String, SpecType> specTypes = new HashMap<>();
 
@@ -36,8 +42,15 @@ public class SpecRegistryImpl implements SpecRegistry {
 
     private final Map<String, Schema> schemas = new HashMap<>();
 
+    private SmartValidator validator;
+
     public SpecRegistryImpl(List<SpecFactory<? extends Spec>> specFactories) {
         this.factories = specFactories;
+    }
+
+    @Autowired
+    public void setValidator(SmartValidator validator) {
+        this.validator = validator;
     }
 
     @Override
@@ -134,5 +147,33 @@ public class SpecRegistryImpl implements SpecRegistry {
 
     private Schema retrieveSchema(@NotNull String kind) {
         return schemas.get(kind);
+    }
+
+    @Override
+    public void validateSpec(Spec spec) throws MethodArgumentNotValidException, IllegalArgumentException {
+        // check with validator
+        if (validator != null) {
+            DataBinder binder = new DataBinder(spec);
+            validator.validate(spec, binder.getBindingResult());
+            if (binder.getBindingResult().hasErrors()) {
+                try {
+                    MethodParameter methodParameter = new MethodParameter(
+                        this.getClass().getMethod("validateSpec", Spec.class),
+                        0
+                    );
+                    throw new MethodArgumentNotValidException(methodParameter, binder.getBindingResult());
+                } catch (NoSuchMethodException | SecurityException ex) {
+                    StringBuilder sb = new StringBuilder();
+                    binder
+                        .getBindingResult()
+                        .getFieldErrors()
+                        .forEach(e -> {
+                            sb.append(e.getField()).append(" ").append(e.getDefaultMessage()).append(", ");
+                        });
+                    String errorMsg = sb.toString();
+                    throw new IllegalArgumentException(errorMsg);
+                }
+            }
+        }
     }
 }

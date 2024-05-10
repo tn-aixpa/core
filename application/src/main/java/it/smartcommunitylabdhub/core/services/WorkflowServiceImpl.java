@@ -4,15 +4,14 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
-import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
@@ -34,6 +33,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -56,13 +56,41 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     private WorkflowEntityBuilder entityBuilder;
 
     @Autowired
-    SpecRegistry specRegistry;
+    private SpecRegistry specRegistry;
+
+    @Autowired
+    private SpecValidator validator;
 
     @Override
     public Page<Workflow> listWorkflows(Pageable pageable) {
         log.debug("list workflows page {}", pageable);
         try {
             return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Workflow> listLatestWorkflows() {
+        log.debug("list latest workflows");
+        Specification<WorkflowEntity> specification = CommonSpecification.latest();
+
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Workflow> listLatestWorkflows(Pageable pageable) {
+        log.debug("list latest workflows page {}", pageable);
+        Specification<WorkflowEntity> specification = CommonSpecification.latest();
+        try {
+            return entityService.search(specification, pageable);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -90,6 +118,22 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             } else {
                 return entityService.list(pageable);
             }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Workflow> searchLatestWorkflows(Pageable pageable, @Nullable SearchFilter<WorkflowEntity> filter) {
+        log.debug("search latest workflows with {} page {}", String.valueOf(filter), pageable);
+        Specification<WorkflowEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<WorkflowEntity> specification = Specification.allOf(
+            CommonSpecification.latest(),
+            filterSpecification
+        );
+        try {
+            return entityService.search(specification, pageable);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -272,7 +316,8 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     }
 
     @Override
-    public Workflow createWorkflow(@NotNull Workflow dto) throws DuplicatedEntityException {
+    public Workflow createWorkflow(@NotNull Workflow dto)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create workflow");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
@@ -290,7 +335,8 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
                 throw new IllegalArgumentException("invalid kind");
             }
 
-            //TODO validate
+            //validate
+            validator.validateSpec(spec);
 
             //update spec as exported
             dto.setSpec(spec.toMap());
@@ -311,7 +357,8 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     }
 
     @Override
-    public Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO) throws NoSuchEntityException {
+    public Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO)
+        throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("update workflow with id {}", String.valueOf(id));
         try {
             //fetch current and merge
@@ -400,12 +447,14 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             hasMore = false;
 
             try {
-                Page<Workflow> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                Page<Workflow> page = entityService.list(
+                    PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE)
+                );
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
                 hasMore = page.hasNext();
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | StoreException | SystemException e) {
                 hasMore = false;
 
                 log.error("error with indexing: {}", e.getMessage());

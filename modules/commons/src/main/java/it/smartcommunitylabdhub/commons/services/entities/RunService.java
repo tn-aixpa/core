@@ -9,19 +9,12 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.BindException;
 
 /*
  * Service for managing runs
  */
 public interface RunService {
-    /*
-     * Execution
-     * TODO move to manager
-     */
-    // Run buildRun(@NotNull @Valid Run dto) throws SystemException;
-
-    // Run execRun(@NotNull @Valid Run dto) throws SystemException;
-
     /*
      * Tasks
      */
@@ -87,7 +80,8 @@ public interface RunService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Run createRun(@NotNull Run runDTO) throws DuplicatedEntityException, NoSuchEntityException, SystemException;
+    Run createRun(@NotNull Run runDTO)
+        throws DuplicatedEntityException, NoSuchEntityException, BindException, SystemException;
 
     /**
      * Update a specific run
@@ -97,7 +91,8 @@ public interface RunService {
      * @return
      * @throws NoSuchEntityException
      */
-    Run updateRun(@NotNull String id, @NotNull Run runDTO) throws NoSuchEntityException, SystemException;
+    Run updateRun(@NotNull String id, @NotNull Run runDTO)
+        throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Delete a specific run via unique ID, with optional cascade

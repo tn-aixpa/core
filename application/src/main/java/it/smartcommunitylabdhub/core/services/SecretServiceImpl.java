@@ -14,6 +14,7 @@ import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
@@ -40,6 +41,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -57,7 +59,10 @@ public class SecretServiceImpl implements SecretService {
     private EntityService<Project, ProjectEntity> projectService;
 
     @Autowired
-    SpecRegistry specRegistry;
+    private SpecRegistry specRegistry;
+
+    @Autowired
+    private SpecValidator validator;
 
     @Autowired(required = false)
     private K8sSecretHelper secretHelper;
@@ -134,7 +139,8 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public Secret createSecret(@NotNull Secret dto) throws DuplicatedEntityException {
+    public Secret createSecret(@NotNull Secret dto)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create secret");
         try {
             //validate project
@@ -159,7 +165,10 @@ public class SecretServiceImpl implements SecretService {
                     throw new IllegalArgumentException("invalid kind");
                 }
 
-                //TODO validate
+                //validate
+                validator.validateSpec(spec);
+
+                //update spec as exported
                 dto.setSpec(spec.toMap());
 
                 //check if a secret with this name already exists for the project
@@ -183,7 +192,8 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public Secret updateSecret(@NotNull String id, @NotNull Secret dto) throws NoSuchEntityException {
+    public Secret updateSecret(@NotNull String id, @NotNull Secret dto)
+        throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("update secret with id {}", String.valueOf(id));
         try {
             //fetch current and merge

@@ -16,6 +16,7 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
@@ -23,7 +24,6 @@ import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
@@ -35,14 +35,12 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
 @Slf4j
 public class RunServiceImpl implements SearchableRunService {
-
-    @Autowired
-    SpecRegistry specRegistry;
 
     @Autowired
     private EntityService<Run, RunEntity> entityService;
@@ -55,6 +53,12 @@ public class RunServiceImpl implements SearchableRunService {
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
+
+    @Autowired
+    private SpecRegistry specRegistry;
+
+    @Autowired
+    private SpecValidator validator;
 
     @Override
     public Page<Run> listRuns(Pageable pageable) {
@@ -191,7 +195,7 @@ public class RunServiceImpl implements SearchableRunService {
     }
 
     @Override
-    public Run createRun(@NotNull Run dto) throws DuplicatedEntityException {
+    public Run createRun(@NotNull Run dto) throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create run");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
@@ -214,7 +218,9 @@ public class RunServiceImpl implements SearchableRunService {
                 throw new IllegalArgumentException("invalid kind");
             }
 
-            //TODO validate spec via validator
+            //validate
+            validator.validateSpec(spec);
+
             //update spec as exported
             dto.setSpec(spec.toMap());
 
@@ -283,7 +289,8 @@ public class RunServiceImpl implements SearchableRunService {
     }
 
     @Override
-    public Run updateRun(@NotNull String id, @NotNull Run runDTO) throws NoSuchEntityException {
+    public Run updateRun(@NotNull String id, @NotNull Run dto)
+        throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("update run with id {}", String.valueOf(id));
         try {
             //fetch current and merge
@@ -295,8 +302,20 @@ public class RunServiceImpl implements SearchableRunService {
 
             //TODO: implement logic to update status only in some states
 
+            // Parse and export Spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //validate
+            validator.validateSpec(spec);
+
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
             //full update, run is modifiable
-            return entityService.update(id, runDTO);
+            return entityService.update(id, dto);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.RUN.toString());
         } catch (StoreException e) {

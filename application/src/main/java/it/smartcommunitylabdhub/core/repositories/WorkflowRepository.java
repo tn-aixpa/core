@@ -17,6 +17,13 @@ public interface WorkflowRepository
 
     Page<WorkflowEntity> findAll(Pageable pageable);
 
+    @Query(
+        "SELECT a FROM WorkflowEntity a WHERE (a.name, a.project, a.created) IN " +
+        "(SELECT a2.name, a2.project, MAX(a2.created) FROM WorkflowEntity a2 GROUP BY a2.name, a2.project) " +
+        "ORDER BY a.created DESC"
+    )
+    List<WorkflowEntity> findAllLatestWorkflows();
+
     ////////////////////////////
     // CONTEXT SPECIFIC QUERY //
     ////////////////////////////

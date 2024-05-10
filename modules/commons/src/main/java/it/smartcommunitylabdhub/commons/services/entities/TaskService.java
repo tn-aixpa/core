@@ -10,6 +10,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.BindException;
 
 /*
  * Service for managing tasks
@@ -73,7 +74,8 @@ public interface TaskService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Task createTask(@NotNull Task taskDTO) throws DuplicatedEntityException, SystemException;
+    Task createTask(@NotNull Task taskDTO)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Update a specific task
@@ -82,7 +84,8 @@ public interface TaskService {
      * @return
      * @throws NoSuchEntityException
      */
-    Task updateTask(@NotNull String id, @NotNull Task taskDTO) throws NoSuchEntityException, SystemException;
+    Task updateTask(@NotNull String id, @NotNull Task taskDTO)
+        throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Delete a specific task via unique ID, with optional cascade

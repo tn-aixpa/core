@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.validation.BindException;
 
 /**
  * Project secret service
@@ -65,7 +66,8 @@ public interface SecretService {
      * @param secret
      * @return
      */
-    Secret createSecret(@NotNull Secret secret) throws DuplicatedEntityException, SystemException;
+    Secret createSecret(@NotNull Secret secret)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Update the secret with the specified id. Throw error if not found or if the operation cannot be performed.
@@ -73,7 +75,8 @@ public interface SecretService {
      * @param id
      * @return
      */
-    Secret updateSecret(@NotNull String id, @NotNull Secret secret) throws NoSuchEntityException, SystemException;
+    Secret updateSecret(@NotNull String id, @NotNull Secret secret)
+        throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Delete the secret with the specified id. Throw error if not found or if the operation cannot be performed.

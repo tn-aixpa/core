@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
@@ -32,6 +33,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -54,13 +56,41 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     private FunctionEntityBuilder entityBuilder;
 
     @Autowired
-    SpecRegistry specRegistry;
+    private SpecRegistry specRegistry;
+
+    @Autowired
+    private SpecValidator validator;
 
     @Override
     public Page<Function> listFunctions(Pageable pageable) {
         log.debug("list functions page {}", pageable);
         try {
             return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Function> listLatestFunctions() {
+        log.debug("list latest functions");
+        Specification<FunctionEntity> specification = CommonSpecification.latest();
+
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Function> listLatestFunctions(Pageable pageable) {
+        log.debug("list latest functions page {}", pageable);
+        Specification<FunctionEntity> specification = CommonSpecification.latest();
+        try {
+            return entityService.search(specification, pageable);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -88,6 +118,22 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             } else {
                 return entityService.list(pageable);
             }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Function> searchLatestFunctions(Pageable pageable, @Nullable SearchFilter<FunctionEntity> filter) {
+        log.debug("search latest functions with {} page {}", String.valueOf(filter), pageable);
+        Specification<FunctionEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<FunctionEntity> specification = Specification.allOf(
+            CommonSpecification.latest(),
+            filterSpecification
+        );
+        try {
+            return entityService.search(specification, pageable);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -270,7 +316,8 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     }
 
     @Override
-    public Function createFunction(@NotNull Function dto) throws DuplicatedEntityException {
+    public Function createFunction(@NotNull Function dto)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create function");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
@@ -288,7 +335,8 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
                 throw new IllegalArgumentException("invalid kind");
             }
 
-            //TODO validate
+            //validate
+            validator.validateSpec(spec);
 
             //update spec as exported
             dto.setSpec(spec.toMap());
@@ -309,7 +357,8 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     }
 
     @Override
-    public Function updateFunction(@NotNull String id, @NotNull Function functionDTO) throws NoSuchEntityException {
+    public Function updateFunction(@NotNull String id, @NotNull Function functionDTO)
+        throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("update function with id {}", String.valueOf(id));
         try {
             //fetch current and merge
@@ -334,6 +383,7 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
         log.debug("force update function with id {}", String.valueOf(id));
         try {
             //force update
+            //no validation
             return entityService.update(id, functionDTO);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.FUNCTION.toString());
@@ -411,12 +461,14 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             hasMore = false;
 
             try {
-                Page<Function> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                Page<Function> page = entityService.list(
+                    PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE)
+                );
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
                 hasMore = page.hasNext();
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | StoreException | SystemException e) {
                 hasMore = false;
 
                 log.error("error with indexing: {}", e.getMessage());

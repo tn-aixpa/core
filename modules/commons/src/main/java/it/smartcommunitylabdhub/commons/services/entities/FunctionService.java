@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.BindException;
 
 /*
  * Service for managing function
@@ -20,6 +21,19 @@ public interface FunctionService {
      * @return
      */
     Page<Function> listFunctions(Pageable pageable) throws SystemException;
+
+    /**
+     * List the latest version of every function
+     * @return
+     */
+    List<Function> listLatestFunctions() throws SystemException;
+
+    /**
+     * List the latest version of every function
+     * @param pageable
+     * @return
+     */
+    Page<Function> listLatestFunctions(Pageable pageable) throws SystemException;
 
     /**
      * List all versions of every function for a user
@@ -108,7 +122,8 @@ public interface FunctionService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Function createFunction(@NotNull Function functionDTO) throws DuplicatedEntityException, SystemException;
+    Function createFunction(@NotNull Function functionDTO)
+        throws DuplicatedEntityException, BindException, SystemException;
 
     /**
      * Update a specific function version
@@ -118,7 +133,7 @@ public interface FunctionService {
      * @throws NoSuchEntityException
      */
     Function updateFunction(@NotNull String id, @NotNull Function functionDTO)
-        throws NoSuchEntityException, SystemException;
+        throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Update a specific function version

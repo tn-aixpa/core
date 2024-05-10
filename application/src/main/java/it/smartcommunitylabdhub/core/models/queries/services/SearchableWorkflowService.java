@@ -22,6 +22,16 @@ public interface SearchableWorkflowService extends WorkflowService {
      */
     Page<Workflow> searchWorkflows(Pageable pageable, @Nullable SearchFilter<WorkflowEntity> filter)
         throws SystemException;
+
+    /**
+     * List the latest version of every workflow, with optional filters
+     * @param pageable
+     * @param filter
+     * @return
+     */
+    Page<Workflow> searchLatestWorkflows(Pageable pageable, @Nullable SearchFilter<WorkflowEntity> filter)
+        throws SystemException;
+
     /**
      * List all versions of every workflow, with optional filters
      * @param project

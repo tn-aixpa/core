@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -27,6 +28,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -60,7 +62,8 @@ public class DataItemController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public DataItem createDataItem(@RequestBody @Valid @NotNull DataItem dto) throws DuplicatedEntityException {
+    public DataItem createDataItem(@RequestBody @Valid @NotNull DataItem dto)
+        throws DuplicatedEntityException, IllegalArgumentException, SystemException, BindException {
         return dataItemService.createDataItem(dto);
     }
 
@@ -68,6 +71,7 @@ public class DataItemController {
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<DataItem> getDataItems(
         @ParameterObject @Valid @Nullable DataItemEntityFilter filter,
+        @ParameterObject @RequestParam(required = false, defaultValue = "all") String versions,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
@@ -76,8 +80,11 @@ public class DataItemController {
         if (filter != null) {
             sf = filter.toSearchFilter();
         }
-
-        return dataItemService.searchDataItems(pageable, sf);
+        if ("latest".equals(versions)) {
+            return dataItemService.searchLatestDataItems(pageable, sf);
+        } else {
+            return dataItemService.searchDataItems(pageable, sf);
+        }
     }
 
     @Operation(summary = "Get a dataItem by id", description = "Return a dataItem")
@@ -96,7 +103,7 @@ public class DataItemController {
     public DataItem updateDataItem(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull DataItem dto
-    ) throws NoSuchEntityException {
+    ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
         return dataItemService.updateDataItem(id, dto);
     }
 

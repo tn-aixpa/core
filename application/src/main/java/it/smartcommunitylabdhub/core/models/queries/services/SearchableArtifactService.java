@@ -24,6 +24,15 @@ public interface SearchableArtifactService extends ArtifactService {
         throws SystemException;
 
     /**
+     * List the latest version of every artifact, with optional filters
+     * @param pageable
+     * @param filter
+     * @return
+     */
+    Page<Artifact> searchLatestArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter)
+        throws SystemException;
+
+    /**
      * List all versions of every artifact, with optional filters
      * @param project
      * @param pageable

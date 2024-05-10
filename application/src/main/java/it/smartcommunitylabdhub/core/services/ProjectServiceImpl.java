@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
 import it.smartcommunitylabdhub.commons.services.entities.DataItemService;
 import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
@@ -18,6 +19,7 @@ import it.smartcommunitylabdhub.commons.services.entities.LabelService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
@@ -34,6 +36,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -61,6 +64,12 @@ public class ProjectServiceImpl implements SearchableProjectService {
 
     @Autowired
     private LabelService labelService;
+
+    @Autowired
+    private SpecRegistry specRegistry;
+
+    @Autowired
+    private SpecValidator validator;
 
     @Override
     public Page<Project> listProjects(Pageable pageable) {
@@ -176,7 +185,8 @@ public class ProjectServiceImpl implements SearchableProjectService {
     }
 
     @Override
-    public Project createProject(@NotNull Project dto) throws DuplicatedEntityException {
+    public Project createProject(@NotNull Project dto)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create project");
 
         try {
@@ -184,7 +194,9 @@ public class ProjectServiceImpl implements SearchableProjectService {
             ProjectSpec spec = new ProjectSpec();
             spec.configure(dto.getSpec());
 
-            //TODO validate spec via validator
+            //validate
+            validator.validateSpec(spec);
+
             //update spec as exported
             dto.setSpec(spec.toMap());
 
@@ -218,14 +230,17 @@ public class ProjectServiceImpl implements SearchableProjectService {
     }
 
     @Override
-    public Project updateProject(@NotNull String id, @NotNull Project dto) throws NoSuchEntityException {
+    public Project updateProject(@NotNull String id, @NotNull Project dto)
+        throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("update project with id {}", String.valueOf(id));
         try {
             // Parse and export Spec
             ProjectSpec spec = new ProjectSpec();
             spec.configure(dto.getSpec());
 
-            //TODO validate spec via validator
+            //validate
+            validator.validateSpec(spec);
+
             //update spec as exported
             dto.setSpec(spec.toMap());
 

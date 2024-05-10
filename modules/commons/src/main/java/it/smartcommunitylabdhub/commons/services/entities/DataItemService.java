@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.BindException;
 
 /*
  * Service for managing data items
@@ -20,6 +21,19 @@ public interface DataItemService {
      * @return
      */
     Page<DataItem> listDataItems(Pageable pageable) throws SystemException;
+
+    /**
+     * List the latest version of every dataItem
+     * @return
+     */
+    List<DataItem> listLatestDataItems() throws SystemException;
+
+    /**
+     * List the latest version of every dataItem
+     * @param pageable
+     * @return
+     */
+    Page<DataItem> listLatestDataItems(Pageable pageable) throws SystemException;
 
     /**
      * List all versions of every dataItem for a user
@@ -108,7 +122,8 @@ public interface DataItemService {
      * @return
      * @throws DuplicatedEntityException
      */
-    DataItem createDataItem(@NotNull DataItem dataItemDTO) throws DuplicatedEntityException, SystemException;
+    DataItem createDataItem(@NotNull DataItem dataItemDTO)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Update a specific dataItem version
@@ -118,7 +133,7 @@ public interface DataItemService {
      * @throws NoSuchEntityException
      */
     DataItem updateDataItem(@NotNull String id, @NotNull DataItem dataItemDTO)
-        throws NoSuchEntityException, SystemException;
+        throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Delete a specific dataItem (version) via unique ID

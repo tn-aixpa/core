@@ -16,6 +16,7 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
@@ -41,6 +42,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -60,7 +62,10 @@ public class TaskServiceImpl implements SearchableTaskService {
     private RunService runService;
 
     @Autowired
-    SpecRegistry specRegistry;
+    private SpecRegistry specRegistry;
+
+    @Autowired
+    private SpecValidator validator;
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
@@ -200,7 +205,8 @@ public class TaskServiceImpl implements SearchableTaskService {
     }
 
     @Override
-    public Task createTask(@NotNull Task dto) throws DuplicatedEntityException {
+    public Task createTask(@NotNull Task dto)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create task");
         try {
             //validate project
@@ -220,7 +226,9 @@ public class TaskServiceImpl implements SearchableTaskService {
                     throw new IllegalArgumentException("invalid kind");
                 }
 
-                //TODO validate spec via validator
+                //validate
+                validator.validateSpec(spec);
+
                 //update spec as exported
                 dto.setSpec(spec.toMap());
 
@@ -278,7 +286,8 @@ public class TaskServiceImpl implements SearchableTaskService {
     }
 
     @Override
-    public Task updateTask(@NotNull String id, @NotNull Task dto) throws NoSuchEntityException {
+    public Task updateTask(@NotNull String id, @NotNull Task dto)
+        throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("update task with id {}", String.valueOf(id));
         try {
             //fetch current and merge
@@ -301,7 +310,9 @@ public class TaskServiceImpl implements SearchableTaskService {
                 throw new IllegalArgumentException("invalid kind");
             }
 
-            //TODO validate spec via validator
+            //validate
+            validator.validateSpec(spec);
+
             //update spec as exported
             dto.setSpec(spec.toMap());
 

@@ -24,6 +24,15 @@ public interface SearchableDataItemService extends DataItemService {
         throws SystemException;
 
     /**
+     * List the latest version of every dataItem, with optional filters
+     * @param pageable
+     * @param filter
+     * @return
+     */
+    Page<DataItem> searchLatestDataItems(Pageable pageable, @Nullable SearchFilter<DataItemEntity> filter)
+        throws SystemException;
+
+    /**
      * List all versions of every dataItem, with optional filters
      * @param project
      * @param pageable

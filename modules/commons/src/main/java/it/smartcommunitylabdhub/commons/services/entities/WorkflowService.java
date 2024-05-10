@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.BindException;
 
 /*
  * Service for managing workflows
@@ -20,6 +21,19 @@ public interface WorkflowService {
      * @return
      */
     Page<Workflow> listWorkflows(Pageable pageable) throws SystemException;
+
+    /**
+     * List the latest version of every workflow
+     * @return
+     */
+    List<Workflow> listLatestWorkflows() throws SystemException;
+
+    /**
+     * List the latest version of every workflow
+     * @param pageable
+     * @return
+     */
+    Page<Workflow> listLatestWorkflows(Pageable pageable) throws SystemException;
 
     /**
      * List all versions of every workflow for a user
@@ -108,7 +122,8 @@ public interface WorkflowService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Workflow createWorkflow(@NotNull Workflow workflowDTO) throws DuplicatedEntityException, SystemException;
+    Workflow createWorkflow(@NotNull Workflow workflowDTO)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Update a specific workflow version
@@ -118,7 +133,7 @@ public interface WorkflowService {
      * @throws NoSuchEntityException
      */
     Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO)
-        throws NoSuchEntityException, SystemException;
+        throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Delete a specific workflow (version) via unique ID

@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
@@ -28,8 +29,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -49,13 +52,41 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
     private DataItemEntityBuilder entityBuilder;
 
     @Autowired
-    SpecRegistry specRegistry;
+    private SpecRegistry specRegistry;
+
+    @Autowired
+    private SpecValidator validator;
 
     @Override
     public Page<DataItem> listDataItems(Pageable pageable) {
         log.debug("list dataItems page {}", pageable);
         try {
             return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<DataItem> listLatestDataItems() {
+        log.debug("list latest dataItems");
+        Specification<DataItemEntity> specification = CommonSpecification.latest();
+
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<DataItem> listLatestDataItems(Pageable pageable) {
+        log.debug("list latest dataItems page {}", pageable);
+        Specification<DataItemEntity> specification = CommonSpecification.latest();
+        try {
+            return entityService.search(specification, pageable);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -83,6 +114,22 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             } else {
                 return entityService.list(pageable);
             }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<DataItem> searchLatestDataItems(Pageable pageable, @Nullable SearchFilter<DataItemEntity> filter) {
+        log.debug("search latest dataItems with {} page {}", String.valueOf(filter), pageable);
+        Specification<DataItemEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<DataItemEntity> specification = Specification.allOf(
+            CommonSpecification.latest(),
+            filterSpecification
+        );
+        try {
+            return entityService.search(specification, pageable);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -266,7 +313,8 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
     }
 
     @Override
-    public DataItem createDataItem(@NotNull DataItem dto) throws DuplicatedEntityException {
+    public DataItem createDataItem(@NotNull DataItem dto)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create dataItem");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
@@ -284,7 +332,8 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
                 throw new IllegalArgumentException("invalid kind");
             }
 
-            //TODO validate
+            //validate
+            validator.validateSpec(spec);
 
             //update spec as exported
             dto.setSpec(spec.toMap());
@@ -305,7 +354,8 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
     }
 
     @Override
-    public DataItem updateDataItem(@NotNull String id, @NotNull DataItem dataItemDTO) throws NoSuchEntityException {
+    public DataItem updateDataItem(@NotNull String id, @NotNull DataItem dataItemDTO)
+        throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("dataItem dataItem with id {}", String.valueOf(id));
         try {
             //fetch current and merge
@@ -389,12 +439,14 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             hasMore = false;
 
             try {
-                Page<DataItem> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                Page<DataItem> page = entityService.list(
+                    PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE)
+                );
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
                 hasMore = page.hasNext();
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | StoreException | SystemException e) {
                 hasMore = false;
 
                 log.error("error with indexing: {}", e.getMessage());

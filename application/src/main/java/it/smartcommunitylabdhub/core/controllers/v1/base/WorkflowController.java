@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -27,6 +28,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -60,7 +62,8 @@ public class WorkflowController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Workflow createWorkflow(@RequestBody @Valid @NotNull Workflow dto) throws DuplicatedEntityException {
+    public Workflow createWorkflow(@RequestBody @Valid @NotNull Workflow dto)
+        throws DuplicatedEntityException, IllegalArgumentException, SystemException, BindException {
         return workflowService.createWorkflow(dto);
     }
 
@@ -68,6 +71,7 @@ public class WorkflowController {
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Workflow> getWorkflows(
         @ParameterObject @Valid @Nullable WorkflowEntityFilter filter,
+        @ParameterObject @RequestParam(required = false, defaultValue = "all") String versions,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
@@ -76,8 +80,11 @@ public class WorkflowController {
         if (filter != null) {
             sf = filter.toSearchFilter();
         }
-
-        return workflowService.searchWorkflows(pageable, sf);
+        if ("latest".equals(versions)) {
+            return workflowService.searchLatestWorkflows(pageable, sf);
+        } else {
+            return workflowService.searchWorkflows(pageable, sf);
+        }
     }
 
     @Operation(summary = "Get an workflow by id", description = "Return an workflow")
@@ -96,7 +103,7 @@ public class WorkflowController {
     public Workflow updateWorkflow(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Workflow dto
-    ) throws NoSuchEntityException {
+    ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
         return workflowService.updateWorkflow(id, dto);
     }
 

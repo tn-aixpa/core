@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
@@ -31,6 +32,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -50,7 +52,10 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     private ArtifactEntityBuilder entityBuilder;
 
     @Autowired
-    SpecRegistry specRegistry;
+    private SpecRegistry specRegistry;
+
+    @Autowired
+    private SpecValidator validator;
 
     @Override
     public Page<Artifact> listArtifacts(Pageable pageable) {
@@ -58,6 +63,31 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
 
         try {
             return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Artifact> listLatestArtifacts() {
+        log.debug("list latest artifacts");
+        Specification<ArtifactEntity> specification = CommonSpecification.latest();
+
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Artifact> listLatestArtifacts(Pageable pageable) {
+        log.debug("list latest artifacts page {}", pageable);
+        Specification<ArtifactEntity> specification = CommonSpecification.latest();
+        try {
+            return entityService.search(specification, pageable);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -87,6 +117,22 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             } else {
                 return entityService.list(pageable);
             }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Artifact> searchLatestArtifacts(Pageable pageable, @Nullable SearchFilter<ArtifactEntity> filter) {
+        log.debug("search latest artifacts with {} page {}", String.valueOf(filter), pageable);
+        Specification<ArtifactEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<ArtifactEntity> specification = Specification.allOf(
+            CommonSpecification.latest(),
+            filterSpecification
+        );
+        try {
+            return entityService.search(specification, pageable);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -271,7 +317,8 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public Artifact createArtifact(@NotNull Artifact dto) throws DuplicatedEntityException {
+    public Artifact createArtifact(@NotNull Artifact dto)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create artifact");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
@@ -289,7 +336,8 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
                 throw new IllegalArgumentException("invalid kind");
             }
 
-            //TODO validate
+            //validate
+            validator.validateSpec(spec);
 
             //update spec as exported
             dto.setSpec(spec.toMap());
@@ -394,12 +442,14 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             hasMore = false;
 
             try {
-                Page<Artifact> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                Page<Artifact> page = entityService.list(
+                    PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE)
+                );
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
                 hasMore = page.hasNext();
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | StoreException | SystemException e) {
                 hasMore = false;
 
                 log.error("error with indexing: {}", e.getMessage());

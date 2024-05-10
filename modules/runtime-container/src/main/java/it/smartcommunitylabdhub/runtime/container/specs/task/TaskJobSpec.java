@@ -5,6 +5,8 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -22,6 +24,7 @@ public class TaskJobSpec extends K8sTaskBaseSpec {
     public static final String KIND = "container+job";
 
     @JsonProperty("backoff_limit")
+    @Min(0)
     private Integer backoffLimit;
 
     private String schedule;

@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.BindException;
 
 /*
  * Service for managing projects
@@ -66,7 +67,8 @@ public interface ProjectService {
      * @return
      * @throws DuplicatedEntityException
      */
-    Project createProject(@NotNull Project projectDTO) throws DuplicatedEntityException, SystemException;
+    Project createProject(@NotNull Project projectDTO)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Update a specific project
@@ -76,7 +78,7 @@ public interface ProjectService {
      * @throws NoSuchEntityException
      */
     Project updateProject(@NotNull String id, @NotNull Project projectDTO)
-        throws NoSuchEntityException, SystemException;
+        throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
     /**
      * Delete a specific project via unique ID, with optional cascade

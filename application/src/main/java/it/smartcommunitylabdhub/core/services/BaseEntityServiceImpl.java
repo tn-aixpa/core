@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
 @Transactional
 public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> implements EntityService<D, E> {
 
+    public static final int PAGE_MAX_SIZE = 1000;
     public static final int DEFAULT_TIMEOUT = 30;
     protected final JpaRepository<E, String> repository;
 
@@ -290,6 +291,10 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
     public Page<D> list(Pageable pageable) {
         log.debug("list with page {}", pageable);
 
+        if (pageable.getPageSize() > PAGE_MAX_SIZE) {
+            throw new IllegalArgumentException("max page size exceeded");
+        }
+
         Page<E> page = repository.findAll(pageable);
         List<D> content = page.stream().map(e -> dtoBuilder.convert(e)).collect(Collectors.toList());
 
@@ -307,6 +312,10 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
     @Transactional(readOnly = true)
     public Page<D> search(Specification<E> specification, Pageable pageable) {
         log.debug("search with spec {} page {}", specification, pageable);
+
+        if (pageable.getPageSize() > PAGE_MAX_SIZE) {
+            throw new IllegalArgumentException("max page size exceeded");
+        }
 
         if (repository instanceof JpaSpecificationExecutor) {
             @SuppressWarnings("unchecked")

@@ -17,6 +17,13 @@ public interface ArtifactRepository
 
     Page<ArtifactEntity> findAll(Pageable pageable);
 
+    @Query(
+        "SELECT a FROM ArtifactEntity a WHERE (a.name, a.project, a.created) IN " +
+        "(SELECT a2.name, a2.project, MAX(a2.created) FROM ArtifactEntity a2 GROUP BY a2.name, a2.project) " +
+        "ORDER BY a.created DESC"
+    )
+    List<ArtifactEntity> findAllLatestArtifacts();
+
     ////////////////////////////
     // CONTEXT SPECIFIC QUERY //
     ////////////////////////////
