@@ -1,17 +1,18 @@
 FROM maven:3-eclipse-temurin-21-alpine AS build
+ARG VER=0.4.0
 COPY application /tmp/application
 COPY frontend /tmp/frontend
 COPY modules /tmp/modules
 COPY pom.xml /tmp/pom.xml
 WORKDIR /tmp
 RUN --mount=type=cache,target=/root/.m2,source=/cache/.m2,from=ghcr.io/scc-digitalhub/digitalhub-core:cache \ 
-    mvn install -pl modules/commons
+    mvn -Drevision=${VER} install -pl modules/commons
 RUN --mount=type=cache,target=/root/.m2,source=/cache/.m2,from=ghcr.io/scc-digitalhub/digitalhub-core:cache \
     --mount=type=cache,target=/tmp/frontend/target,source=/cache/frontend/target,from=ghcr.io/scc-digitalhub/digitalhub-core:cache \ 
     --mount=type=cache,target=/tmp/frontend/console/node_modules,source=/cache/frontend/console/node_modules,from=ghcr.io/scc-digitalhub/digitalhub-core:cache \ 
-    mvn install -pl frontend
+    mvn -Drevision=${VER} install -pl frontend
 RUN --mount=type=cache,target=/root/.m2,source=/cache/.m2,from=ghcr.io/scc-digitalhub/digitalhub-core:cache \ 
-    mvn package -pl '!frontend'
+    mvn -Drevision=${VER} package -pl '!frontend'
 
 FROM maven:3-eclipse-temurin-21-alpine as builder
 WORKDIR /tmp
