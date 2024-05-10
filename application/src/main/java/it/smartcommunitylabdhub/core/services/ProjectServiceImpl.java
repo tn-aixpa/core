@@ -199,6 +199,14 @@ public class ProjectServiceImpl implements SearchableProjectService {
                 throw new DuplicatedEntityException(EntityName.PROJECT.toString(), name);
             }
 
+            //make sure project id matches name (for slugs)
+            if (StringUtils.hasText(dto.getId()) && !dto.getName().equals(dto.getId())) {
+                throw new IllegalArgumentException("project id must match name");
+            }
+
+            //enforce
+            dto.setId(name);
+
             //create as new
             return entityService.create(dto);
         } catch (DuplicatedEntityException e) {
