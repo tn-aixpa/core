@@ -11,6 +11,7 @@ import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
+import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
@@ -42,6 +43,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected final CoreV1Api coreV1Api;
 
+    protected ApplicationProperties applicationProperties;
+
     protected String namespace;
     protected String registrySecret;
 
@@ -52,6 +55,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected K8sBaseFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
         coreV1Api = new CoreV1Api(apiClient);
+    }
+
+    @Autowired
+    public void setApplicationProperties(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
     }
 
     @Autowired
@@ -123,13 +131,13 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         // Create labels for job
         Map<String, String> labels = Map.of(
             "app.kubernetes.io/instance",
-            "dhcore-" + runnable.getId(),
+            applicationProperties.getName() + "-" + runnable.getId(),
             "app.kubernetes.io/version",
             runnable.getId(),
             "app.kubernetes.io/part-of",
-            "dhcore-" + runnable.getFramework() + "-" + runnable.getId(),
+            "dhcore-" + runnable.getProject() + "-" + runnable.getId(),
             "app.kubernetes.io/managed-by",
-            "dhcore"
+            applicationProperties.getName() + "-" + applicationProperties.getVersion()
         );
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
