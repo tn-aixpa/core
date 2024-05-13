@@ -119,12 +119,18 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
 
         //build ports
-        List<V1ServicePort> ports = runnable
-            .getServicePorts()
-            .stream()
-            .filter(p -> p.port() != null && p.targetPort() != null)
-            .map(p -> new V1ServicePort().port(p.port()).targetPort(new IntOrString(p.targetPort())).protocol("TCP"))
-            .collect(Collectors.toList());
+        List<V1ServicePort> ports = Optional
+            .ofNullable(runnable.getServicePorts())
+            .map(list ->
+                list
+                    .stream()
+                    .filter(p -> p.port() != null && p.targetPort() != null)
+                    .map(p ->
+                        new V1ServicePort().port(p.port()).targetPort(new IntOrString(p.targetPort())).protocol("TCP")
+                    )
+                    .collect(Collectors.toList())
+            )
+            .orElse(null);
 
         // service type (ClusterIP or NodePort)
         String type = Optional.of(runnable.getServiceType().name()).orElse("NodePort");
