@@ -1,16 +1,11 @@
 package it.smartcommunitylabdhub.core.config;
 
-import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.builders.BuilderFactory;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runners.RunnerFactory;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
 import it.smartcommunitylabdhub.core.services.RunnableStoreImpl;
@@ -28,18 +23,6 @@ public class InfrastructureConfig {
         > runtimes
     ) {
         return new RuntimeFactory(runtimes);
-    }
-
-    @Bean
-    protected BuilderFactory builderFactory(
-        List<Builder<? extends ExecutableBaseSpec, ? extends TaskBaseSpec, ? extends RunBaseSpec>> builders
-    ) {
-        return new BuilderFactory(builders);
-    }
-
-    @Bean
-    protected RunnerFactory runnerFactory(List<Runner<? extends RunRunnable>> runners) {
-        return new RunnerFactory(runners);
     }
 
     @Bean

@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.container;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
@@ -7,6 +8,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -21,6 +23,7 @@ import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.k8s.K8sKanikoFramework;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
@@ -40,6 +43,8 @@ import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
 import it.smartcommunitylabdhub.runtime.container.status.RunContainerStatus;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -48,6 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class ContainerRuntime
     implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, RunRunnable> {
 
+    private static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
     public static final String RUNTIME = "container";
 
     private final ContainerJobBuilder jobBuilder = new ContainerJobBuilder();
@@ -293,6 +299,17 @@ public class ContainerRuntime
 
     @Override
     public RunContainerStatus onRunning(Run run, RunRunnable runnable) {
+        //extract info for status
+        if (runnable != null) {
+            if (runnable instanceof K8sRunnable) {
+                Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
+                //extract k8s details
+                //TODO
+                //dump as-is
+                return RunContainerStatus.builder().k8s(res).build();
+            }
+        }
+
         return null;
     }
 

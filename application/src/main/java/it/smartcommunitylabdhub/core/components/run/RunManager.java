@@ -328,6 +328,47 @@ public class RunManager {
                         return Optional.empty();
                     }
                 });
+            fsm
+                .getState(State.ERROR)
+                .getTransaction(RunEvent.DELETING)
+                .setInternalLogic((context, input, stateMachine) -> {
+                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                        // Retrieve Runtime and build run
+                        Runtime<
+                            ? extends ExecutableBaseSpec,
+                            ? extends RunBaseSpec,
+                            ? extends RunBaseStatus,
+                            ? extends RunRunnable
+                        > runtime = runtimeFactory.getRuntime(executable.getKind());
+                        // Create Runnable
+                        RunRunnable runnable = runtime.delete(run);
+
+                        return Optional.ofNullable(runnable);
+                    } else {
+                        return Optional.empty();
+                    }
+                });
+
+            fsm
+                .getState(State.COMPLETED)
+                .getTransaction(RunEvent.DELETING)
+                .setInternalLogic((context, input, stateMachine) -> {
+                    if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                        // Retrieve Runtime and build run
+                        Runtime<
+                            ? extends ExecutableBaseSpec,
+                            ? extends RunBaseSpec,
+                            ? extends RunBaseStatus,
+                            ? extends RunRunnable
+                        > runtime = runtimeFactory.getRuntime(executable.getKind());
+                        // Create Runnable
+                        RunRunnable runnable = runtime.delete(run);
+
+                        return Optional.ofNullable(runnable);
+                    } else {
+                        return Optional.empty();
+                    }
+                });
 
             try {
                 Optional<RunRunnable> runnable = fsm.goToState(State.DELETING, null);
@@ -373,10 +414,12 @@ public class RunManager {
                 run -> {
                     try {
                         if (
+                            //either signal an update or track progress (running state)
                             !Objects.equals(
                                 StatusFieldAccessor.with(run.getStatus()).getState(),
                                 runnableMonitorObject.getStateId()
-                            )
+                            ) ||
+                            State.RUNNING == State.valueOf(runnableMonitorObject.getStateId())
                         ) {
                             switch (State.valueOf(runnableMonitorObject.getStateId())) {
                                 case COMPLETED:
@@ -452,7 +495,21 @@ public class RunManager {
                 RunBaseStatus runStatus = runtime.onRunning(run, runnable);
                 return Optional.ofNullable(runStatus);
             });
+        fsm
+            .getState(State.RUNNING)
+            .getTransaction(RunEvent.LOOP)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                log.info(
+                    "Executing internal logic for state RUNNING, " + "event :{}, context: {}, input: {}",
+                    RunEvent.LOOP,
+                    context,
+                    input
+                );
 
+                RunRunnable runnable = event != null ? event.getRunnable() : null;
+                RunBaseStatus runStatus = runtime.onRunning(run, runnable);
+                return Optional.ofNullable(runStatus);
+            });
         try {
             Optional<RunBaseStatus> runStatus = fsm.goToState(State.RUNNING, null);
             runStatus.ifPresentOrElse(
@@ -468,7 +525,7 @@ public class RunManager {
             );
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
-            log.debug("Invalid transaction from state {}  to state {}", State.READY, State.RUNNING);
+            log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
         }
     }
 

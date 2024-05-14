@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
@@ -15,6 +16,8 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,9 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
 
     public static final String FRAMEWORK = "k8scronjob";
 
+    private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
+        HashMap<String, Serializable>
+    >() {};
     private final BatchV1Api batchV1Api;
 
     @Autowired
@@ -54,6 +60,13 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         // Update runnable state..
         runnable.setState(State.RUNNING.name());
 
+        //update results
+        try {
+            runnable.setResults(Map.of("cronJob", mapper.convertValue(job, typeRef)));
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
+
         return runnable;
     }
 
@@ -78,7 +91,7 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             return runnable;
         }
         //secrets
-        cleanRunSecret(runnable);        
+        cleanRunSecret(runnable);
 
         delete(job);
         runnable.setState(State.DELETED.name());

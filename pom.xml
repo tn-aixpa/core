@@ -17,7 +17,7 @@
         <springdoc.version>2.2.0</springdoc.version>
         <jackson.version>2.15.3</jackson.version>
         <slf4j.version>2.0.9</slf4j.version>
-        <kubernetes.version>19.0.0</kubernetes.version>
+        <kubernetes.version>20.0.0-legacy</kubernetes.version>
         <maven.compiler.release>21</maven.compiler.release>
         <lombok.version>1.18.30</lombok.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

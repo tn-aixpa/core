@@ -27,7 +27,7 @@
         <spring-cloud.version>2023.0.0</spring-cloud.version>
         <springdoc.version>2.2.0</springdoc.version>
         <jackson.version>2.15.3</jackson.version>
-        <kubernetes.version>19.0.0</kubernetes.version>
+        <kubernetes.version>20.0.0-legacy</kubernetes.version>
         <postgresql.version>42.7.2</postgresql.version>
         <mysql.version>8.0.33</mysql.version>
         <checkstyle.config.location>../checkstyle/checkstyle.xml</checkstyle.config.location>

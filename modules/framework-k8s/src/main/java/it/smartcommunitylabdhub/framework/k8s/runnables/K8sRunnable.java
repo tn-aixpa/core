@@ -63,6 +63,8 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private String state;
 
+    private Map<String, Serializable> results;
+
     private AbstractAuthenticationToken credentials;
 
     @Override

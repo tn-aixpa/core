@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
@@ -20,7 +21,9 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,6 +39,9 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
     public static final int DEADLINE_SECONDS = 3600 * 24 * 3; //3 days
 
+    private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
+        HashMap<String, Serializable>
+    >() {};
     private final BatchV1Api batchV1Api;
 
     private int activeDeadlineSeconds = DEADLINE_SECONDS;
@@ -65,6 +71,13 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         // Update runnable state..
         runnable.setState(State.RUNNING.name());
+
+        //update results
+        try {
+            runnable.setResults(Map.of("job", mapper.convertValue(job, typeRef)));
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
 
         return runnable;
     }

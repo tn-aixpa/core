@@ -121,23 +121,26 @@ public class Fsm<S, E, C> {
                         }
 
                         //if path is single and state matches we are in the same state
+                        //no transaction available
                         if (path.size() == 1 && path.get(0).equals(targetState)) {
                             log.debug("found path from {} to the same state", targetState);
                             throw new InvalidTransactionException(currentState.toString(), targetState.toString());
                         }
 
                         //if path is single and state does not match we have an error
+                        //we should have a path from current to next
                         if (path.size() == 1 && !path.get(0).equals(targetState)) {
                             log.error("error with path from {} to {}", currentState, targetState);
                             throw new InvalidTransactionException(currentState.toString(), targetState.toString());
                         }
 
                         //sanity check: avoid loops
-                        Set<S> route = new HashSet<>(path);
-                        if (path.size() > route.size()) {
-                            log.error("loops detected in path to {}", targetState);
-                            throw new InvalidTransactionException(currentState.toString(), targetState.toString());
-                        }
+                        //DISABLED, without DFS if we find a loop it is legitimate
+                        // Set<S> route = new HashSet<>(path);
+                        // if (path.size() > route.size()) {
+                        //     log.error("loops detected in path to {}", targetState);
+                        //     throw new InvalidTransactionException(currentState.toString(), targetState.toString());
+                        // }
 
                         // only a single step is allowed for a single transaction
                         if (path.size() > 2) {
@@ -181,14 +184,16 @@ public class Fsm<S, E, C> {
      * or an empty list if no valid path is found.
      */
     private <R> List<S> findPath(S sourceState, S targetState) {
-        Set<S> visited = new HashSet<>();
+        // Set<S> visited = new HashSet<>();
         LinkedList<S> path = new LinkedList<>();
         path.addFirst(sourceState);
 
         // If the current state is the target state, a valid path is found
-        if (sourceState.equals(targetState)) {
-            return path;
-        }
+        //DISABLED, this is wrong, we are looking for a transaction TO dest!
+        // if (sourceState.equals(targetState)) {
+        //     return path;
+        // }
+
         //DEPRECATED: DFS will pick *any* path, we need at minimum the shortest!
         // // Call the recursive DFS function to find the path
         // if (this.<R>dfs(sourceState, targetState, visited, path)) {

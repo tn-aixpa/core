@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
@@ -21,7 +22,9 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -38,6 +41,9 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
     public static final String FRAMEWORK = "k8sdeployment";
 
+    private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
+        HashMap<String, Serializable>
+    >() {};
     private final AppsV1Api appsV1Api;
 
     public K8sDeploymentFramework(ApiClient apiClient) {
@@ -55,7 +61,16 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
 
         deployment = create(deployment);
+
+        //update state
         runnable.setState(State.RUNNING.name());
+
+        //update results
+        try {
+            runnable.setResults(Map.of("deployment", mapper.convertValue(deployment, typeRef)));
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
 
         return runnable;
     }
@@ -70,7 +85,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             return runnable;
         }
         //secrets
-        cleanRunSecret(runnable);        
+        cleanRunSecret(runnable);
 
         delete(deployment);
         runnable.setState(State.DELETED.name());

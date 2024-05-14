@@ -1,18 +1,26 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1Service;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.events.RunnableChangedEvent;
 import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
+import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +31,15 @@ import org.springframework.util.Assert;
 @ConditionalOnKubernetes
 @MonitorComponent(framework = K8sServeFramework.FRAMEWORK)
 public class K8sServeMonitor implements K8sBaseMonitor<Void> {
+
+    //custom object mapper with mixIn for IntOrString
+    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER.addMixIn(
+        IntOrString.class,
+        IntOrStringMixin.class
+    );
+    private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
+        HashMap<String, Serializable>
+    >() {};
 
     private final K8sServeFramework k8sServeFramework;
     private final RunnableStore<K8sServeRunnable> runnableStore;
@@ -49,19 +66,35 @@ public class K8sServeMonitor implements K8sBaseMonitor<Void> {
             .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
             .flatMap(runnable -> {
                 try {
-                    V1Deployment v1Deployment = deploymentFramework.get(k8sServeFramework.buildDeployment(runnable));
-                    V1Service v1Service = k8sServeFramework.get(k8sServeFramework.build(runnable));
+                    V1Deployment deployment = deploymentFramework.get(k8sServeFramework.buildDeployment(runnable));
+                    V1Service service = k8sServeFramework.get(k8sServeFramework.build(runnable));
 
                     // check status
                     Assert.notNull(
-                        Objects.requireNonNull(v1Deployment.getStatus()).getReadyReplicas(),
+                        Objects.requireNonNull(deployment.getStatus()).getReadyReplicas(),
                         "Deployment not ready"
                     );
-                    Assert.isTrue(v1Deployment.getStatus().getReadyReplicas() > 0, "Deployment not ready");
-                    Assert.notNull(v1Service.getStatus(), "Service not ready");
+                    Assert.isTrue(deployment.getStatus().getReadyReplicas() > 0, "Deployment not ready");
+                    Assert.notNull(service.getStatus(), "Service not ready");
 
-                    System.out.println("deployment status: " + v1Deployment.getStatus().getReadyReplicas());
-                    System.out.println("service status: " + v1Service.getStatus());
+                    System.out.println("deployment status: " + deployment.getStatus().getReadyReplicas());
+                    System.out.println("service status: " + service.getStatus());
+
+                    //update
+                    //update results
+                    try {
+                        runnable.setResults(
+                            Map.of(
+                                "deployment",
+                                mapper.convertValue(deployment, typeRef),
+                                "service",
+                                mapper.convertValue(service, typeRef)
+                            )
+                        );
+                    } catch (IllegalArgumentException e) {
+                        log.error("error reading k8s results: {}", e.getMessage());
+                    }
+
                     return Stream.of(runnable);
                 } catch (K8sFrameworkException e) {
                     // Set Runnable to ERROR state

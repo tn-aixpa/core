@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.common.KubernetesObject;
+import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
@@ -13,8 +15,12 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.jackson.mixins.ConcreteSpecMixin;
+import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
@@ -40,6 +46,12 @@ import org.springframework.util.Assert;
 @Slf4j
 public abstract class K8sBaseFramework<T extends K8sRunnable, K extends KubernetesObject>
     implements Framework<T>, InitializingBean {
+
+    //custom object mapper with mixIn for IntOrString
+    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER.addMixIn(
+        IntOrString.class,
+        IntOrStringMixin.class
+    );
 
     protected final CoreV1Api coreV1Api;
 

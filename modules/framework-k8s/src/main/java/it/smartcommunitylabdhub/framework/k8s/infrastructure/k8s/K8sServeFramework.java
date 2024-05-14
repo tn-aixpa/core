@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -14,6 +15,8 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +34,9 @@ import org.springframework.util.Assert;
 public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Service> {
 
     public static final String FRAMEWORK = "k8sserve";
+    private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
+        HashMap<String, Serializable>
+    >() {};
 
     @Autowired
     private K8sDeploymentFramework deploymentFramework;
@@ -49,6 +55,20 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         V1Service service = build(runnable);
         service = create(service);
         runnable.setState(State.RUNNING.name());
+
+        //update results
+        try {
+            runnable.setResults(
+                Map.of(
+                    "deployment",
+                    mapper.convertValue(deployment, typeRef),
+                    "service",
+                    mapper.convertValue(service, typeRef)
+                )
+            );
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
 
         return runnable;
     }
