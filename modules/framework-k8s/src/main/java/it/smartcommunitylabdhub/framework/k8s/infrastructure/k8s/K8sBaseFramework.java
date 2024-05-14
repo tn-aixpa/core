@@ -147,9 +147,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             "app.kubernetes.io/version",
             runnable.getId(),
             "app.kubernetes.io/part-of",
-            "dhcore-" + runnable.getProject() + "-" + runnable.getId(),
+            //TODO add function name in place of runId
+            applicationProperties.getName() + "-" + runnable.getProject() + "-" + runnable.getId(),
             "app.kubernetes.io/managed-by",
-            applicationProperties.getName() + "-" + applicationProperties.getVersion()
+            applicationProperties.getName()
         );
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
