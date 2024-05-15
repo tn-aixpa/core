@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
+import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
@@ -13,6 +14,7 @@ import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.LogEntity;
+import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
@@ -22,6 +24,7 @@ import it.smartcommunitylabdhub.core.repositories.ArtifactRepository;
 import it.smartcommunitylabdhub.core.repositories.DataItemRepository;
 import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.LogRepository;
+import it.smartcommunitylabdhub.core.repositories.ModelRepository;
 import it.smartcommunitylabdhub.core.repositories.ProjectRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.SecretRepository;
@@ -59,6 +62,15 @@ public class PersistenceConfig {
         DataItemRepository repository,
         Converter<DataItem, DataItemEntity> entityBuilder,
         Converter<DataItemEntity, DataItem> dtoBuilder
+    ) {
+        return new BaseEntityServiceImpl<>(repository, entityBuilder, dtoBuilder);
+    }
+
+    @Bean
+    public EntityService<Model, ModelEntity> modelEntityService(
+        ModelRepository repository,
+        Converter<Model, ModelEntity> entityBuilder,
+        Converter<ModelEntity, Model> dtoBuilder
     ) {
         return new BaseEntityServiceImpl<>(repository, entityBuilder, dtoBuilder);
     }

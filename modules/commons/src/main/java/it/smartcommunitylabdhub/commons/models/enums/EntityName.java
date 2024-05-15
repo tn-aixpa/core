@@ -15,6 +15,7 @@ public enum EntityName {
     SECRET("secret"),
     ARTIFACT("artifact"),
     DATAITEM("dataitem"),
+    MODEL("model"),
     TASK("task"),
     RUN("run"),
     LOG("log");
