@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -27,6 +28,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +37,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -59,7 +62,8 @@ public class ModelController {
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Model createModel(@RequestBody @Valid @NotNull Model dto) throws DuplicatedEntityException {
+    public Model createModel(@RequestBody @Valid @NotNull Model dto)
+        throws DuplicatedEntityException, SystemException, IllegalArgumentException, BindException {
         return modelService.createModel(dto);
     }
 
@@ -67,6 +71,7 @@ public class ModelController {
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Model> getModels(
         @ParameterObject @Valid @Nullable ModelEntityFilter filter,
+        @ParameterObject @RequestParam(required = false, defaultValue = "all") String versions,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
@@ -75,8 +80,11 @@ public class ModelController {
         if (filter != null) {
             sf = filter.toSearchFilter();
         }
-
-        return modelService.searchModels(pageable, sf);
+        if ("latest".equals(versions)) {
+            return modelService.searchLatestModels(pageable, sf);
+        } else {
+            return modelService.searchModels(pageable, sf);
+        }
     }
 
     @Operation(summary = "Get a model by id", description = "Return a model")
@@ -95,7 +103,7 @@ public class ModelController {
     public Model updateModel(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Model dto
-    ) throws NoSuchEntityException {
+    ) throws NoSuchEntityException, SystemException, IllegalArgumentException, BindException {
         return modelService.updateModel(id, dto);
     }
 

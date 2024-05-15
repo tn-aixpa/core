@@ -2,12 +2,15 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.model.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
@@ -26,8 +29,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -49,29 +54,86 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
     @Autowired
     SpecRegistry specRegistry;
 
+    @Autowired
+    private SpecValidator validator;
+
     @Override
     public Page<Model> listModels(Pageable pageable) {
         log.debug("list models page {}", pageable);
+        try {
+            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
 
-        return entityService.list(pageable);
+    @Override
+    public List<Model> listLatestModels() {
+        log.debug("list latest models");
+        Specification<ModelEntity> specification = CommonSpecification.latest();
+
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Model> listLatestModels(Pageable pageable) {
+        log.debug("list latest models page {}", pageable);
+        Specification<ModelEntity> specification = CommonSpecification.latest();
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public List<Model> listModelsByUser(@NotNull String user) {
         log.debug("list all models for user {}", user);
-
-        return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        try {
+            return entityService.searchAll(CommonSpecification.createdByEquals(user));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Model> searchModels(Pageable pageable, SearchFilter<ModelEntity> filter) {
         log.debug("list models page {}, filter {}", pageable, String.valueOf(filter));
 
-        Specification<ModelEntity> specification = filter != null ? filter.toSpecification() : null;
-        if (specification != null) {
+        try {
+            Specification<ModelEntity> specification = filter != null ? filter.toSpecification() : null;
+            if (specification != null) {
+                return entityService.search(specification, pageable);
+            } else {
+                return entityService.list(pageable);
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<Model> searchLatestModels(Pageable pageable, @Nullable SearchFilter<ModelEntity> filter) {
+        log.debug("search latest models with {} page {}", String.valueOf(filter), pageable);
+        Specification<ModelEntity> filterSpecification = filter != null ? filter.toSpecification() : null;
+        Specification<ModelEntity> specification = Specification.allOf(
+            CommonSpecification.latest(),
+            filterSpecification
+        );
+        try {
             return entityService.search(specification, pageable);
-        } else {
-            return entityService.list(pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
@@ -79,16 +141,24 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
     public List<Model> listModelsByProject(@NotNull String project) {
         log.debug("list all models for project {}", project);
         Specification<ModelEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Page<Model> listModelsByProject(@NotNull String project, Pageable pageable) {
         log.debug("list all models for project {} page {}", project, pageable);
         Specification<ModelEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -98,8 +168,12 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -109,8 +183,12 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             CommonSpecification.projectEquals(project),
             CommonSpecification.latestByProject(project)
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -125,8 +203,12 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             CommonSpecification.projectEquals(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -142,8 +224,12 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             CommonSpecification.latestByProject(project),
             filterSpecification
         );
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -160,8 +246,12 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.searchAll(specification);
+        try {
+            return entityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -177,15 +267,23 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             query.orderBy(builder.desc(root.get(AbstractEntity_.CREATED)));
             return where.toPredicate(root, query, builder);
         };
-
-        return entityService.search(specification, pageable);
+        try {
+            return entityService.search(specification, pageable);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public Model findModel(@NotNull String id) {
         log.debug("find model with id {}", String.valueOf(id));
-
-        return entityService.find(id);
+        try {
+            return entityService.find(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -196,55 +294,69 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.MODEL.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public Model getLatestModel(@NotNull String project, @NotNull String name) throws NoSuchEntityException {
         log.debug("get latest model for project {} with name {}", project, name);
-
-        //fetch latest version ordered by date DESC
-        Specification<ModelEntity> specification = CommonSpecification.latestByProject(project, name);
-        return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        try {
+            //fetch latest version ordered by date DESC
+            Specification<ModelEntity> specification = CommonSpecification.latestByProject(project, name);
+            return entityService.searchAll(specification).stream().findFirst().orElseThrow(NoSuchEntityException::new);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
-    public Model createModel(@NotNull Model dto) throws DuplicatedEntityException {
+    public Model createModel(@NotNull Model dto)
+        throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create model");
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
         }
-
-        //validate project
-        String projectId = dto.getProject();
-        if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
-            throw new IllegalArgumentException("invalid or missing project");
-        }
-
-        // Parse and export Spec
-        Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-        if (spec == null) {
-            throw new IllegalArgumentException("invalid kind");
-        }
-
-        //TODO validate
-
-        //update spec as exported
-        dto.setSpec(spec.toMap());
-
         try {
-            if (log.isTraceEnabled()) {
-                log.trace("storable dto: {}", dto);
+            //validate project
+            String projectId = dto.getProject();
+            if (!StringUtils.hasText(projectId) || projectService.find(projectId) == null) {
+                throw new IllegalArgumentException("invalid or missing project");
             }
 
-            return entityService.create(dto);
-        } catch (DuplicatedEntityException e) {
-            throw new DuplicatedEntityException(EntityName.MODEL.toString(), dto.getId());
+            // Parse and export Spec
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+            if (spec == null) {
+                throw new IllegalArgumentException("invalid kind");
+            }
+
+            //validate
+            validator.validateSpec(spec);
+
+            //update spec as exported
+            dto.setSpec(spec.toMap());
+
+            try {
+                if (log.isTraceEnabled()) {
+                    log.trace("storable dto: {}", dto);
+                }
+
+                return entityService.create(dto);
+            } catch (DuplicatedEntityException e) {
+                throw new DuplicatedEntityException(EntityName.MODEL.toString(), dto.getId());
+            }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
-    public Model updateModel(@NotNull String id, @NotNull Model modelDTO) throws NoSuchEntityException {
+    public Model updateModel(@NotNull String id, @NotNull Model modelDTO)
+        throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("model model with id {}", String.valueOf(id));
         try {
             //fetch current and merge
@@ -257,14 +369,21 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             return entityService.update(id, modelDTO);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.MODEL.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 
     @Override
     public void deleteModel(@NotNull String id) {
         log.debug("delete model with id {}", String.valueOf(id));
-
-        entityService.delete(id);
+        try {
+            entityService.delete(id);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -275,24 +394,36 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             CommonSpecification.projectEquals(project),
             CommonSpecification.nameEquals(name)
         );
-
-        long count = entityService.deleteAll(spec);
-        log.debug("deleted count {}", count);
+        try {
+            long count = entityService.deleteAll(spec);
+            log.debug("deleted count {}", count);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public void deleteModelsByProject(@NotNull String project) {
         log.debug("delete models for project {}", project);
-
-        entityService.deleteAll(CommonSpecification.projectEquals(project));
+        try {
+            entityService.deleteAll(CommonSpecification.projectEquals(project));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
     public void indexModel(@NotNull String id) {
         log.debug("index model with id {}", String.valueOf(id));
-
-        Model model = entityService.get(id);
-        indexer.index(entityBuilder.convert(model));
+        try {
+            Model model = entityService.get(id);
+            indexer.index(entityBuilder.convert(model));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 
     @Override
@@ -309,12 +440,12 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             hasMore = false;
 
             try {
-                Page<Model> page = entityService.list(PageRequest.of(pageNumber, 1000));
+                Page<Model> page = entityService.list(PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
                 hasMore = page.hasNext();
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | StoreException | SystemException e) {
                 hasMore = false;
 
                 log.error("error with indexing: {}", e.getMessage());
