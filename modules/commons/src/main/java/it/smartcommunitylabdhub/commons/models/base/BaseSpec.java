@@ -9,8 +9,10 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.NoArgsConstructor;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@NoArgsConstructor
 public abstract class BaseSpec implements Spec {
 
     @JsonIgnore

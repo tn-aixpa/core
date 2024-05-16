@@ -4,23 +4,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.entities.log.Log;
+import it.smartcommunitylabdhub.commons.models.entities.log.LogSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sLogStatus;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
@@ -44,9 +50,12 @@ import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
 import it.smartcommunitylabdhub.runtime.container.status.RunContainerStatus;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindException;
 
 @Slf4j
 @RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
@@ -78,6 +87,9 @@ public class ContainerRuntime
 
     @Autowired
     private FunctionService functionService;
+
+    @Autowired
+    private LogService logService;
 
     @Override
     public RunContainerSpec build(@NotNull Executable function, @NotNull Task task, @NotNull Run run) {
@@ -305,12 +317,83 @@ public class ContainerRuntime
                 Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
                 //extract k8s details
                 //TODO
+
+                //extract logs
+                Map<String, String> logs = ((K8sRunnable) runnable).getLogs();
+
+                if (logs != null) {
+                    writeLogs(run, logs);
+                }
+
                 //dump as-is
                 return RunContainerStatus.builder().k8s(res).build();
             }
         }
 
         return null;
+    }
+
+    private void writeLogs(Run run, Map<String, String> logs) {
+        String runId = run.getId();
+        Instant now = Instant.now();
+
+        //logs are grouped by pod, search by run and create/append
+        Map<String, Log> entries = logService
+            .getLogsByRunId(runId)
+            .stream()
+            .map(e -> {
+                K8sLogStatus status = new K8sLogStatus();
+                status.configure(e.getStatus());
+
+                if (status.getPod() != null) {
+                    return Map.entry(status.getPod(), e);
+                } else {
+                    return null;
+                }
+            })
+            .filter(e -> e != null)
+            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+
+        logs
+            .entrySet()
+            .forEach(l -> {
+                try {
+                    if (entries.get(l.getKey()) != null) {
+                        //update
+                        Log log = entries.get(l.getKey());
+                        log.setContent(l.getValue());
+
+                        logService.updateLog(log.getId(), log);
+                    } else {
+                        //add as new
+                        LogSpec logSpec = new LogSpec();
+                        logSpec.setRun(runId);
+                        logSpec.setTimestamp(now.toEpochMilli());
+
+                        K8sLogStatus logStatus = new K8sLogStatus();
+                        logStatus.setPod(l.getKey());
+
+                        Log log = Log
+                            .builder()
+                            .project(run.getProject())
+                            .spec(logSpec.toMap())
+                            .status(logStatus.toMap())
+                            .content(l.getValue())
+                            .build();
+
+                        logService.createLog(log);
+                    }
+                } catch (
+                    NoSuchEntityException
+                    | IllegalArgumentException
+                    | SystemException
+                    | BindException
+                    | DuplicatedEntityException e
+                ) {
+                    //invalid, skip
+                    //TODO handle
+                }
+            });
     }
 
     @Override

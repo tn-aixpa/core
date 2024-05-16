@@ -1,15 +1,19 @@
 package it.smartcommunitylabdhub.commons.models.entities.log;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.base.MetadataDTO;
+import it.smartcommunitylabdhub.commons.models.base.SpecDTO;
+import it.smartcommunitylabdhub.commons.models.base.StatusDTO;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -18,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,7 +30,7 @@ import org.springframework.lang.Nullable;
 @Setter
 @Builder
 @JsonPropertyOrder(alphabetic = true)
-public class Log implements BaseDTO {
+public class Log implements BaseDTO, MetadataDTO, SpecDTO, StatusDTO {
 
     @Nullable
     @Pattern(regexp = Keys.SLUG_PATTERN)
@@ -35,30 +40,23 @@ public class Log implements BaseDTO {
     private String user;
 
     @Builder.Default
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Map<String, Serializable> body = new HashMap<>();
+    @JsonIgnore
+    private String kind = "log";
 
     @Builder.Default
     @JsonIgnore
-    private Map<String, Serializable> extra = new HashMap<>();
-
-    @Builder.Default
-    private Map<String, Serializable> status = new HashMap<>();
+    private String content = "";
 
     @Builder.Default
     private Map<String, Serializable> metadata = new HashMap<>();
 
-    @JsonAnyGetter
-    public Map<String, Serializable> getExtra() {
-        return this.extra;
-    }
+    @Builder.Default
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Map<String, Serializable> spec = new HashMap<>();
 
-    @JsonAnySetter
-    public void setExtra(String key, Serializable value) {
-        if (value != null) {
-            extra.put(key, value);
-        }
-    }
+    @Builder.Default
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Map<String, Serializable> status = new HashMap<>();
 
     @Override
     public String getName() {
@@ -70,14 +68,11 @@ public class Log implements BaseDTO {
         return "log";
     }
 
-    @Override
-    public Map<String, Serializable> getSpec() {
-        return body;
-    }
-
-    @Override
-    public void setSpec(Map<String, Serializable> spec) {
-        // nothing to do
+    @JsonProperty("content")
+    public String getContentAsBase64() {
+        return StringUtils.hasText(content)
+            ? Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8))
+            : "";
     }
 
     @Override

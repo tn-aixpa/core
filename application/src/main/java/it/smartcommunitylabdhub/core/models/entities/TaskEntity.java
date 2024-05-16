@@ -1,10 +1,9 @@
 package it.smartcommunitylabdhub.core.models.entities;
 
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
+import it.smartcommunitylabdhub.core.models.base.SpecEntity;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
@@ -23,14 +22,15 @@ import lombok.experimental.SuperBuilder;
 @ToString
 @Entity
 @Table(name = "tasks", uniqueConstraints = { @UniqueConstraint(columnNames = { "function", "kind" }) })
-public class TaskEntity extends AbstractEntity {
+public class TaskEntity extends AbstractEntity implements SpecEntity {
 
     @Column(nullable = false)
     // COMMENT: {function_kind}://{project}/{function}:{version}
     private String function;
 
-    @Convert(converter = StateStringAttributeConverter.class)
-    private State state;
+    @Lob
+    @ToString.Exclude
+    protected byte[] spec;
 
     @Override
     public @NotNull String getName() {

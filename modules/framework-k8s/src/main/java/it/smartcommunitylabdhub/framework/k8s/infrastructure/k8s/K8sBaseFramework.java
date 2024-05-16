@@ -1,13 +1,17 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1LocalObjectReference;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Toleration;
@@ -16,8 +20,6 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.jackson.mixins.ConcreteSpecMixin;
-import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
@@ -134,6 +136,76 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     public abstract K get(K object) throws K8sFrameworkException;
 
     public abstract void delete(K object) throws K8sFrameworkException;
+
+    //TODO support sinceTime when implemented by api
+    //https://github.com/kubernetes-client/java/issues/2648
+    // public Map<String, String> logs(K object, @Nullable Long sinceTime) throws K8sFrameworkException {
+
+    public Map<String, String> logs(K object) throws K8sFrameworkException {
+        if (object == null || object.getMetadata() == null) {
+            return null;
+        }
+
+        //fetch labels to select pods
+        //assume pods have the same labels as their parent
+        //can be overridden downstream
+        String label = "app.kubernetes.io/instance";
+        String labelValue = Optional.ofNullable(object.getMetadata().getLabels()).map(m -> m.get(label)).orElse(null);
+        if (labelValue == null) {
+            //no selectors available
+            return null;
+        }
+
+        String labelSelector = "app.kubernetes.io/instance=" + labelValue;
+        try {
+            V1PodList pods = coreV1Api.listNamespacedPod(
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                labelSelector,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
+
+            Map<String, String> logs = new HashMap<>();
+
+            for (V1Pod p : pods.getItems()) {
+                if (p.getMetadata() != null) {
+                    String n = p.getMetadata().getName();
+                    String l = coreV1Api.readNamespacedPodLog(
+                        n,
+                        namespace,
+                        null,
+                        Boolean.FALSE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        Boolean.TRUE
+                    );
+
+                    logs.put(n, l);
+                }
+            }
+
+            return logs;
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
+    }
 
     /*
      * Builder helpers
@@ -344,7 +416,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected void storeRunSecret(V1Secret secret) throws K8sFrameworkException {
         try {
             k8sSecretHelper.storeSecretData(secret.getMetadata().getName(), secret.getStringData());
-        } catch (Exception e) {
+        } catch (JsonProcessingException | ApiException e) {
             throw new K8sFrameworkException(e.getMessage());
         }
     }
@@ -353,7 +425,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         String secretName = k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
         try {
             k8sSecretHelper.deleteSecret(secretName);
-        } catch (Exception e) {
+        } catch (ApiException e) {
             log.warn("Failed to delete secret {}", secretName, e);
         }
     }

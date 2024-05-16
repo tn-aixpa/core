@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.runnables;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
@@ -64,6 +65,9 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     private String state;
 
     private Map<String, Serializable> results;
+
+    @JsonIgnore
+    private Map<String, String> logs;
 
     private AbstractAuthenticationToken credentials;
 

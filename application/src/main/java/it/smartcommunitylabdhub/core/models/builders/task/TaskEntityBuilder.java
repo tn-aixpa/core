@@ -1,9 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.task;
 
-import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import jakarta.persistence.AttributeConverter;
@@ -35,7 +33,6 @@ public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
      */
     public TaskEntity build(Task dto) {
         // Extract data
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
         BaseMetadata metadata = BaseMetadata.from(dto.getMetadata());
 
         TaskBaseSpec taskSpec = TaskBaseSpec.from(dto.getSpec());
@@ -47,13 +44,8 @@ public class TaskEntityBuilder implements Converter<Task, TaskEntity> {
             .project(dto.getProject())
             .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
             .spec(converter.convertToDatabaseColumn(dto.getSpec()))
-            .status(converter.convertToDatabaseColumn(dto.getStatus()))
             //extract function
             .function(taskSpec.getFunction())
-            .state(
-                // Store status if not present
-                statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
-            )
             // Metadata Extraction
             .created(
                 metadata.getCreated() != null

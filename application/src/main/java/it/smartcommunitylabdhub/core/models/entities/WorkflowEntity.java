@@ -33,6 +33,14 @@ public class WorkflowEntity extends AbstractEntity {
 
     private Boolean embedded;
 
+    @Lob
+    @ToString.Exclude
+    protected byte[] spec;
+
+    @Lob
+    @ToString.Exclude
+    protected byte[] status;
+
     @Convert(converter = StateStringAttributeConverter.class)
     private State state;
 }

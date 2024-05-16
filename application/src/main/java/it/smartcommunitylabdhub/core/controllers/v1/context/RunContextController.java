@@ -20,7 +20,6 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunServic
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
@@ -251,8 +250,6 @@ public class RunContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        //TODO update logService and enable
-        // return logService.getLogsByRunId(id);
-        return Collections.emptyList();
+        return logService.getLogsByRunId(id);
     }
 }

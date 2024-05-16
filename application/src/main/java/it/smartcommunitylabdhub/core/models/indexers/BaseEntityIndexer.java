@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.core.models.indexers;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.base.MetadataDTO;
+import it.smartcommunitylabdhub.commons.models.base.StatusDTO;
 import it.smartcommunitylabdhub.commons.models.metadata.AuditMetadata;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.core.components.solr.IndexField;
@@ -52,23 +54,27 @@ public abstract class BaseEntityIndexer<T extends BaseEntity, D extends BaseDTO>
         doc.addField("user", item.getUser());
 
         //status
-        StatusFieldAccessor status = StatusFieldAccessor.with(item.getStatus());
-        doc.addField("status", status.getState());
+        if (item instanceof StatusDTO) {
+            StatusFieldAccessor status = StatusFieldAccessor.with(((StatusDTO) item).getStatus());
+            doc.addField("status", status.getState());
+        }
 
         //extract meta to index
-        BaseMetadata metadata = BaseMetadata.from(item.getMetadata());
+        if (item instanceof MetadataDTO) {
+            BaseMetadata metadata = BaseMetadata.from(((MetadataDTO) item).getMetadata());
 
-        //metadata
-        doc.addField("metadata.name", metadata.getName());
-        doc.addField("metadata.description", metadata.getDescription());
-        doc.addField("metadata.project", metadata.getProject());
-        doc.addField("metadata.labels", metadata.getLabels());
-        doc.addField("metadata.created", Date.from(metadata.getCreated().toInstant()));
-        doc.addField("metadata.updated", Date.from(metadata.getUpdated().toInstant()));
+            //metadata
+            doc.addField("metadata.name", metadata.getName());
+            doc.addField("metadata.description", metadata.getDescription());
+            doc.addField("metadata.project", metadata.getProject());
+            doc.addField("metadata.labels", metadata.getLabels());
+            doc.addField("metadata.created", Date.from(metadata.getCreated().toInstant()));
+            doc.addField("metadata.updated", Date.from(metadata.getUpdated().toInstant()));
 
-        AuditMetadata auditing = AuditMetadata.from(item.getMetadata());
-        doc.addField("metadata.createdBy", auditing.getCreatedBy());
-        doc.addField("metadata.updatedBy", auditing.getUpdatedBy());
+            AuditMetadata auditing = AuditMetadata.from(((MetadataDTO) item).getMetadata());
+            doc.addField("metadata.createdBy", auditing.getCreatedBy());
+            doc.addField("metadata.updatedBy", auditing.getUpdatedBy());
+        }
 
         return doc;
     }

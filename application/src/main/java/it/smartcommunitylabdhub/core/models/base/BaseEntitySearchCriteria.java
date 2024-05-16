@@ -78,6 +78,8 @@ public class BaseEntitySearchCriteria<T> implements SearchCriteria<T> {
                 if (root.get(field).getJavaType() == Long.class && value instanceof Long) {
                     return builder.lessThanOrEqualTo(root.get(field), (Long) value);
                 }
+            default:
+                return null;
         }
 
         return null;
