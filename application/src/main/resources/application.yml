@@ -97,6 +97,8 @@ registry:
 # Kubernetes
 kubernetes:
   namespace: ${K8S_NAMESPACE:default}
+  logs: ${K8S_ENABLE_LOGS:true}
+  metrics: ${K8S_ENABLE_METRICS:true}
   config:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}

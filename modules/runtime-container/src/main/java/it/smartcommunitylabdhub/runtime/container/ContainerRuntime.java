@@ -28,6 +28,7 @@ import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sLogStatus;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
@@ -52,6 +53,9 @@ import it.smartcommunitylabdhub.runtime.container.status.RunContainerStatus;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -67,6 +71,9 @@ public class ContainerRuntime
 
     private static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
     public static final String RUNTIME = "container";
+
+    //TODO make configurable
+    public static final int MAX_METRICS = 300;
 
     private final ContainerJobBuilder jobBuilder = new ContainerJobBuilder();
     private final ContainerDeployBuilder deployBuilder = new ContainerDeployBuilder();
@@ -322,9 +329,10 @@ public class ContainerRuntime
 
             //extract logs
             List<CoreLog> logs = ((K8sRunnable) runnable).getLogs();
+            List<CoreMetric> metrics = ((K8sRunnable) runnable).getMetrics();
 
             if (logs != null) {
-                writeLogs(run, logs);
+                writeLogs(run, logs, metrics);
             }
 
             //dump as-is
@@ -368,9 +376,10 @@ public class ContainerRuntime
 
             //extract logs
             List<CoreLog> logs = ((K8sRunnable) runnable).getLogs();
+            List<CoreMetric> metrics = ((K8sRunnable) runnable).getMetrics();
 
             if (logs != null) {
-                writeLogs(run, logs);
+                writeLogs(run, logs, metrics);
             }
 
             //dump as-is
@@ -394,9 +403,10 @@ public class ContainerRuntime
 
             //extract logs
             List<CoreLog> logs = ((K8sRunnable) runnable).getLogs();
+            List<CoreMetric> metrics = ((K8sRunnable) runnable).getMetrics();
 
             if (logs != null) {
-                writeLogs(run, logs);
+                writeLogs(run, logs, metrics);
             }
 
             //dump as-is
@@ -420,9 +430,10 @@ public class ContainerRuntime
 
             //extract logs
             List<CoreLog> logs = ((K8sRunnable) runnable).getLogs();
+            List<CoreMetric> metrics = ((K8sRunnable) runnable).getMetrics();
 
             if (logs != null) {
-                writeLogs(run, logs);
+                writeLogs(run, logs, metrics);
             }
 
             //dump as-is
@@ -441,7 +452,7 @@ public class ContainerRuntime
         return null;
     }
 
-    private void writeLogs(Run run, List<CoreLog> logs) {
+    private void writeLogs(Run run, List<CoreLog> logs, List<CoreMetric> metrics) {
         String runId = run.getId();
         Instant now = Instant.now();
 
@@ -467,6 +478,41 @@ public class ContainerRuntime
             .filter(e -> e != null)
             .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 
+        //reformat metrics grouped per container
+        //TODO refactor
+        Map<String, HashMap<String, Serializable>> mmetrics = new HashMap<>();
+        if (metrics != null) {
+            metrics.forEach(m -> {
+                if (m.metrics() != null) {
+                    m
+                        .metrics()
+                        .forEach(cm -> {
+                            String key = m.namespace() + m.pod() + cm.getName();
+                            if (cm.getUsage() != null) {
+                                HashMap<String, String> usage = cm
+                                    .getUsage()
+                                    .entrySet()
+                                    .stream()
+                                    .collect(
+                                        Collectors.toMap(
+                                            e -> e.getKey(),
+                                            e -> e.getValue().toSuffixedString(),
+                                            (prev, next) -> next,
+                                            HashMap::new
+                                        )
+                                    );
+
+                                HashMap<String, Serializable> mm = new HashMap<>();
+                                mm.put("timestamp", m.timestamp());
+                                mm.put("window", m.window());
+                                mm.put("usage", usage);
+                                mmetrics.put(key, mm);
+                            }
+                        });
+                }
+            });
+        }
+
         logs.forEach(l -> {
             try {
                 String key = l.namespace() + l.pod() + l.container();
@@ -475,6 +521,33 @@ public class ContainerRuntime
                     //update
                     Log log = entries.get(key);
                     log.setContent(l.value());
+
+                    //check if metric is available
+                    if (mmetrics.containsKey(key)) {
+                        HashMap<String, Serializable> metric = mmetrics.get(key);
+
+                        //append to status
+                        K8sLogStatus logStatus = new K8sLogStatus();
+                        logStatus.configure(log.getStatus());
+
+                        List<Serializable> list = logStatus.getMetrics() != null
+                            ? new ArrayList<>(logStatus.getMetrics())
+                            : new ArrayList<>();
+
+                        list.addLast(metric);
+                        logStatus.setMetrics(list);
+
+                        //check if we need to slice
+                        //TODO cleanup
+                        if (list.size() > MAX_METRICS) {
+                            Collections.reverse(list);
+                            List<Serializable> slice = new ArrayList<>(list.subList(0, MAX_METRICS));
+                            Collections.reverse(slice);
+                            logStatus.setMetrics(slice);
+                        }
+
+                        log.setStatus(logStatus.toMap());
+                    }
 
                     logService.updateLog(log.getId(), log);
                 } else {
@@ -487,6 +560,27 @@ public class ContainerRuntime
                     logStatus.setPod(l.pod());
                     logStatus.setContainer(l.container());
                     logStatus.setNamespace(l.namespace());
+
+                    //check if metric is available
+                    if (mmetrics.containsKey(key)) {
+                        HashMap<String, Serializable> metric = mmetrics.get(key);
+
+                        //append to status
+                        List<Serializable> list = logStatus.getMetrics() != null
+                            ? new ArrayList<>(logStatus.getMetrics())
+                            : new ArrayList<>();
+                        list.addLast(metric);
+                        logStatus.setMetrics(list);
+
+                        //check if we need to slice
+                        //TODO cleanup
+                        if (list.size() > MAX_METRICS) {
+                            Collections.reverse(list);
+                            List<Serializable> slice = new ArrayList<>(list.subList(0, MAX_METRICS));
+                            Collections.reverse(slice);
+                            logStatus.setMetrics(slice);
+                        }
+                    }
 
                     Log log = Log
                         .builder()

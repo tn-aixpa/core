@@ -76,6 +76,13 @@ public class K8sDeploymentMonitor extends K8sBaseMonitor<K8sDeploymentRunnable> 
             } catch (K8sFrameworkException e1) {
                 log.error("error collecting logs for {}: {}", runnable.getId(), e1.getMessage());
             }
+            
+            //collect metrics, optional
+            try {
+                runnable.setMetrics(framework.metrics(deployment));
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
+            }
         } catch (K8sFrameworkException e) {
             // Set Runnable to ERROR state
             runnable.setState(State.ERROR.name());

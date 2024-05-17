@@ -77,10 +77,16 @@ public class K8sKanikoMonitor extends K8sBaseMonitor<K8sKanikoRunnable> {
             //collect logs, optional
             try {
                 //TODO add sinceTime when available
-                //TODO override base logs to collect from kaniko because we inject a sidecar/init
                 runnable.setLogs(framework.logs(job));
             } catch (K8sFrameworkException e1) {
                 log.error("error collecting logs for job {}: {}", runnable.getId(), e1.getMessage());
+            }
+
+            //collect metrics, optional
+            try {
+                runnable.setMetrics(framework.metrics(job));
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
             }
         } catch (K8sFrameworkException e) {
             // Set Runnable to ERROR state

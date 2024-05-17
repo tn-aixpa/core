@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.kubernetes.client.Metrics;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.custom.IntOrString;
+import io.kubernetes.client.custom.PodMetrics;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -27,6 +29,7 @@ import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
@@ -58,11 +61,15 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     );
 
     protected final CoreV1Api coreV1Api;
+    protected final Metrics metricsApi;
 
     protected ApplicationProperties applicationProperties;
 
     protected String namespace;
     protected String registrySecret;
+
+    protected Boolean collectLogs;
+    protected Boolean collectMetrics;
 
     protected String version;
     protected K8sBuilderHelper k8sBuilderHelper;
@@ -71,6 +78,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected K8sBaseFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
         coreV1Api = new CoreV1Api(apiClient);
+        metricsApi = new Metrics(apiClient);
     }
 
     @Autowired
@@ -91,6 +99,16 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Autowired
     public void setRegistrySecret(@Value("${registry.secret}") String secret) {
         this.registrySecret = secret;
+    }
+
+    @Autowired
+    public void setCollectLogs(@Value("${kubernetes.logs}") Boolean collectLogs) {
+        this.collectLogs = collectLogs;
+    }
+
+    @Autowired
+    public void setCollectMetrics(@Value("${kubernetes.metrics}") Boolean collectMetrics) {
+        this.collectMetrics = collectMetrics;
     }
 
     @Autowired
@@ -191,6 +209,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             return null;
         }
 
+        if (Boolean.TRUE != collectLogs) {
+            return Collections.emptyList();
+        }
+
         try {
             List<CoreLog> logs = new ArrayList<>();
             List<V1Pod> pods = pods(object);
@@ -256,6 +278,56 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             }
 
             return logs;
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
+    }
+
+    public List<CoreMetric> metrics(K object) throws K8sFrameworkException {
+        if (object == null || object.getMetadata() == null) {
+            return null;
+        }
+
+        if (Boolean.TRUE != collectMetrics) {
+            return Collections.emptyList();
+        }
+
+        try {
+            List<CoreMetric> metrics = new ArrayList<>();
+            List<V1Pod> pods = pods(object);
+
+            List<PodMetrics> podMetrics = metricsApi.getPodMetrics(namespace).getItems();
+
+            for (V1Pod p : pods) {
+                if (p.getMetadata() != null && p.getStatus() != null) {
+                    String pod = p.getMetadata().getName();
+
+                    PodMetrics metric = podMetrics
+                        .stream()
+                        .filter(m -> pod.equals(m.getMetadata().getName()))
+                        .findFirst()
+                        .orElse(null);
+
+                    if (metric != null && metric.getContainers() != null) {
+                        metrics.add(
+                            new CoreMetric(
+                                pod,
+                                metric.getContainers(),
+                                metric.getTimestamp(),
+                                metric.getWindow(),
+                                namespace
+                            )
+                        );
+                    }
+                }
+            }
+
+            return metrics;
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {
