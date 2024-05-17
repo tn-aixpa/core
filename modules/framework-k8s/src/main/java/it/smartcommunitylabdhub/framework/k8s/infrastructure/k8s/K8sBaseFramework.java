@@ -219,7 +219,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                                 null,
                                 null,
                                 null,
-                                Boolean.TRUE
+                                null
                             );
 
                             logs.add(new CoreLog(pod, log, c, namespace));
@@ -246,7 +246,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                                 null,
                                 null,
                                 null,
-                                Boolean.TRUE
+                                null
                             );
 
                             logs.add(new CoreLog(pod, log, c, namespace));

@@ -27,6 +27,7 @@ public class LogEntity extends AbstractEntity implements SpecEntity, StatusEntit
     private String run;
 
     @Lob
+    @ToString.Exclude
     private byte[] content;
 
     @Lob
