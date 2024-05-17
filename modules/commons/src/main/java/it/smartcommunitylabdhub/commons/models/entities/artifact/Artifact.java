@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.base.MetadataDTO;
+import it.smartcommunitylabdhub.commons.models.base.SpecDTO;
+import it.smartcommunitylabdhub.commons.models.base.StatusDTO;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -27,7 +30,7 @@ import org.springframework.lang.Nullable;
 @Builder
 @ToString
 @JsonPropertyOrder(alphabetic = true)
-public class Artifact implements BaseDTO {
+public class Artifact implements BaseDTO, MetadataDTO, SpecDTO, StatusDTO {
 
     @Nullable
     @Pattern(regexp = Keys.SLUG_PATTERN)

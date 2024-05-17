@@ -409,7 +409,7 @@ public class RunManager {
 
         // Use service to retrieve the run and check if state is changed
         Optional
-            .of(entityService.find(runnableMonitorObject.getRunId()))
+            .ofNullable(entityService.find(runnableMonitorObject.getRunId()))
             .ifPresentOrElse(
                 run -> {
                     try {

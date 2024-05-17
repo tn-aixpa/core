@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.controllers.v1.base;
+package it.smartcommunitylabdhub.core.controllers.v1.context;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.services.LogService;
+import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
@@ -36,61 +37,99 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @ApiVersion("v1")
-@RequestMapping("/logs")
-//TODO evaluate permissions for project via lookup in dto
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@RequestMapping("/-/{project}/logs")
+@PreAuthorize(
+    "hasAuthority('ROLE_ADMIN') or (hasAuthority(#project+':ROLE_USER') or hasAuthority(#project+':ROLE_ADMIN'))"
+)
 @Validated
 @Slf4j
-@Tag(name = "Log base API", description = "Endpoints related to logs management")
-public class LogController {
+@Tag(name = "Log context API", description = "Endpoints related to logs management in Context")
+public class LogContextController {
 
     @Autowired
     LogService logService;
 
-    @Operation(summary = "Create log", description = "Create a log and return")
+    @Autowired
+    RunService runService;
+
+    @Operation(summary = "Create a log in a project context")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Log createLog(@RequestBody @Valid @NotNull Log dto)
-        throws DuplicatedEntityException, IllegalArgumentException, SystemException, BindException {
+    public Log createLog(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @RequestBody @Valid @NotNull Log dto
+    ) throws DuplicatedEntityException, IllegalArgumentException, SystemException, BindException {
+        //enforce project match
+        dto.setProject(project);
+
+        //create as new, will check for duplicated
         return logService.createLog(dto);
     }
 
-    @Operation(summary = "List logs", description = "Return a list of all logs")
+    @Operation(summary = "Search logs, with optional filter")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public Page<Log> getLogs(
+    public Page<Log> searchLogs(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
-            { @SortDefault(sort = "kind", direction = Direction.ASC) }
+            { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
     ) {
-        return logService.listLogs(pageable);
+        return logService.listLogsByProject(project, pageable);
     }
 
-    @Operation(summary = "Get a log by id", description = "Return a log")
+    @Operation(summary = "Retrieve a specific log given the log id")
     @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
-    public Log getLog(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
-        throws NoSuchEntityException {
-        return logService.getLog(id);
+    public Log getLogById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Log log = logService.getLog(id);
+
+        //check for project match
+        if (!log.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return log;
     }
 
-    @Operation(summary = "Update specific log", description = "Update and return the log")
+    @Operation(summary = "Update if exist a log in a project context")
     @PutMapping(
-        path = "/{id}",
+        value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Log updateLog(
+    public Log updateLogById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestBody @Valid @NotNull Log dto
+        @RequestBody @Valid @NotNull Log logDTO
     ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
-        return logService.updateLog(id, dto);
+        Log log = logService.getLog(id);
+
+        //check for project match
+        if (!log.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return logService.updateLog(id, logDTO);
     }
 
-    @Operation(summary = "Delete a log", description = "Delete a specific log")
+    @Operation(summary = "Delete a specific log")
     @DeleteMapping(path = "/{id}")
-    public void deleteLog(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
+    public void deleteLogById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Log log = logService.getLog(id);
+
+        //check for project  match
+        if (!log.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
         logService.deleteLog(id);
     }
 }

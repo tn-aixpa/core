@@ -3,6 +3,8 @@ package it.smartcommunitylabdhub.core.models.entities;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.models.base.SpecEntity;
+import it.smartcommunitylabdhub.core.models.base.StatusEntity;
 import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -36,7 +38,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Table(name = "projects")
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @EntityListeners({ AuditingEntityListener.class })
-public class ProjectEntity implements BaseEntity {
+public class ProjectEntity implements BaseEntity, SpecEntity, StatusEntity {
 
     @Id
     @Column(unique = true, updatable = false)

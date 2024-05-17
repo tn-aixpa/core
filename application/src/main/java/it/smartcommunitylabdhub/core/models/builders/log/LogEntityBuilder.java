@@ -1,9 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.log;
 
-import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
-import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.entities.log.LogBaseSpec;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import jakarta.persistence.AttributeConverter;
@@ -19,11 +17,14 @@ import org.springframework.stereotype.Component;
 public class LogEntityBuilder implements Converter<Log, LogEntity> {
 
     private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
+    private final AttributeConverter<String, byte[]> stringConverter;
 
     public LogEntityBuilder(
-        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter,
+        @Qualifier("cborStringConverter") AttributeConverter<String, byte[]> stringConverter
     ) {
         this.converter = cborConverter;
+        this.stringConverter = stringConverter;
     }
 
     /**
@@ -33,24 +34,21 @@ public class LogEntityBuilder implements Converter<Log, LogEntity> {
      */
     public LogEntity build(Log dto) {
         // Extract data
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(dto.getStatus());
         BaseMetadata metadata = BaseMetadata.from(dto.getMetadata());
-        LogMetadata logMetadata = LogMetadata.from(dto.getMetadata());
+        LogBaseSpec spec = new LogBaseSpec();
+        spec.configure(dto.getSpec());
 
         return LogEntity
             .builder()
             .id(dto.getId())
+            .kind(dto.getKind())
             .project(dto.getProject())
             .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
-            .body(converter.convertToDatabaseColumn(dto.getBody()))
+            .spec(converter.convertToDatabaseColumn(dto.getSpec()))
             .status(converter.convertToDatabaseColumn(dto.getStatus()))
-            .extra(converter.convertToDatabaseColumn(dto.getExtra()))
-            //extract data
-            .run(logMetadata.getRun())
-            .state(
-                // Store status if not present
-                statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())
-            )
+            .content(stringConverter.convertToDatabaseColumn(dto.getContent()))
+            //extract ref
+            .run(spec.getRun())
             // Metadata Extraction
             .created(
                 metadata.getCreated() != null

@@ -15,6 +15,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
@@ -47,6 +48,9 @@ public class RunServiceImpl implements SearchableRunService {
 
     @Autowired
     private EntityService<Task, TaskEntity> taskEntityService;
+
+    @Autowired
+    private LogService logService;
 
     @Autowired
     private ExecutableEntityService executableEntityServiceProvider;
@@ -332,7 +336,7 @@ public class RunServiceImpl implements SearchableRunService {
             if (run != null) {
                 if (Boolean.TRUE.equals(cascade)) {
                     log.debug("cascade delete logs for run with id {}", String.valueOf(id));
-                    //TODO
+                    logService.deleteLogsByRunId(id);
                 }
 
                 //delete the run

@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.task;
 
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.metadata.BaseMetadataBuilder;
@@ -57,12 +56,6 @@ public class TaskDTOBuilder implements Converter<TaskEntity, Task> {
             .user(entity.getCreatedBy())
             .metadata(metadata)
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
-            .status(
-                MapUtils.mergeMultipleMaps(
-                    converter.convertToEntityAttribute(entity.getStatus()),
-                    Map.of("state", entity.getState().toString())
-                )
-            )
             .build();
     }
 

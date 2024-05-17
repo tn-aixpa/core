@@ -7,9 +7,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
 import java.util.Date;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -61,19 +59,10 @@ public abstract class AbstractEntity implements BaseEntity {
     @Lob
     @ToString.Exclude
     protected byte[] metadata;
-
-    @Lob
-    @ToString.Exclude
-    protected byte[] spec;
-
-    @Lob
-    @ToString.Exclude
-    protected byte[] status;
-
-    @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            this.id = UUID.randomUUID().toString();
-        }
-    }
+    // @PrePersist
+    // public void prePersist() {
+    //     if (id == null) {
+    //         this.id = UUID.randomUUID().toString();
+    //     }
+    // }
 }

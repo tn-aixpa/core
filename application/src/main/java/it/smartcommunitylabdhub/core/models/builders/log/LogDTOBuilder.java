@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.log;
 
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.models.entities.log.LogMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
@@ -20,13 +19,17 @@ import org.springframework.stereotype.Component;
 public class LogDTOBuilder implements Converter<LogEntity, Log> {
 
     private final AttributeConverter<Map<String, Serializable>, byte[]> converter;
+    private final AttributeConverter<String, byte[]> stringConverter;
+
     private BaseMetadataBuilder baseMetadataBuilder;
     private AuditMetadataBuilder auditingMetadataBuilder;
 
     public LogDTOBuilder(
-        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter
+        @Qualifier("cborMapConverter") AttributeConverter<Map<String, Serializable>, byte[]> cborConverter,
+        @Qualifier("cborStringConverter") AttributeConverter<String, byte[]> stringConverter
     ) {
         this.converter = cborConverter;
+        this.stringConverter = stringConverter;
     }
 
     @Autowired
@@ -47,10 +50,6 @@ public class LogDTOBuilder implements Converter<LogEntity, Log> {
         Map<String, Serializable> metadata = new HashMap<>();
         metadata.putAll(meta);
 
-        LogMetadata logMetadata = LogMetadata.from(meta);
-        logMetadata.setRun(entity.getRun());
-        metadata.putAll(logMetadata.toMap());
-
         Optional.of(baseMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
         Optional.of(auditingMetadataBuilder.convert(entity)).ifPresent(m -> metadata.putAll(m.toMap()));
 
@@ -60,14 +59,14 @@ public class LogDTOBuilder implements Converter<LogEntity, Log> {
             .project(entity.getProject())
             .user(entity.getCreatedBy())
             .metadata(metadata)
-            .body(converter.convertToEntityAttribute(entity.getBody()))
-            .extra(converter.convertToEntityAttribute(entity.getExtra()))
-            .status(
+            .spec(
                 MapUtils.mergeMultipleMaps(
-                    converter.convertToEntityAttribute(entity.getStatus()),
-                    Map.of("state", entity.getState().toString())
+                    converter.convertToEntityAttribute(entity.getSpec()),
+                    Map.of("run", entity.getRun())
                 )
             )
+            .status(converter.convertToEntityAttribute(entity.getStatus()))
+            .content(stringConverter.convertToEntityAttribute(entity.getContent()))
             .build();
     }
 

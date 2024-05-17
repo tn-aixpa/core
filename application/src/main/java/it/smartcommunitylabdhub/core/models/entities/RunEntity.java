@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.core.models.entities;
 
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.core.models.base.SpecEntity;
+import it.smartcommunitylabdhub.core.models.base.StatusEntity;
 import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -23,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @ToString
 @Entity
 @Table(name = "runs")
-public class RunEntity extends AbstractEntity {
+public class RunEntity extends AbstractEntity implements SpecEntity, StatusEntity {
 
     @Column(nullable = false)
     // COMMENT: {kind}+{action}://{project_name}/{function_name}:{version(uuid)} action can be
@@ -33,6 +35,14 @@ public class RunEntity extends AbstractEntity {
     @Lob
     @ToString.Exclude
     private byte[] extra;
+
+    @Lob
+    @ToString.Exclude
+    protected byte[] spec;
+
+    @Lob
+    @ToString.Exclude
+    protected byte[] status;
 
     @Convert(converter = StateStringAttributeConverter.class)
     private State state;

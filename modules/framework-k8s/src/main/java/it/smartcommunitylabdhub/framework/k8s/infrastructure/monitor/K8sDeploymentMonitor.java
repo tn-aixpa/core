@@ -2,91 +2,68 @@ package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
 import io.kubernetes.client.openapi.models.V1Deployment;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
-import it.smartcommunitylabdhub.commons.events.RunnableChangedEvent;
-import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
-import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
-import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 @Slf4j
 @ConditionalOnKubernetes
+@Component
 @MonitorComponent(framework = K8sDeploymentFramework.FRAMEWORK)
-public class K8sDeploymentMonitor implements K8sBaseMonitor<Void> {
+public class K8sDeploymentMonitor extends K8sBaseMonitor<K8sDeploymentRunnable> {
 
-    private final K8sDeploymentFramework k8sDeploymentFramework;
-    private final RunnableStore<K8sDeploymentRunnable> runnableStore;
-    private final ApplicationEventPublisher eventPublisher;
+    private final K8sDeploymentFramework framework;
 
     public K8sDeploymentMonitor(
-        K8sDeploymentFramework k8sDeploymentFramework,
         RunnableStore<K8sDeploymentRunnable> runnableStore,
-        ApplicationEventPublisher eventPublisher
+        K8sDeploymentFramework deploymentFramework
     ) {
-        this.k8sDeploymentFramework = k8sDeploymentFramework;
-        this.runnableStore = runnableStore;
-        this.eventPublisher = eventPublisher;
+        super(runnableStore);
+        Assert.notNull(deploymentFramework, "deployment framework is required");
+
+        this.framework = deploymentFramework;
     }
 
     @Override
-    public Void monitor() {
-        runnableStore
-            .findAll()
-            .stream()
-            .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
-            .flatMap(runnable -> {
-                try {
-                    V1Deployment v1Deployment = k8sDeploymentFramework.get(k8sDeploymentFramework.build(runnable));
+    public K8sDeploymentRunnable refresh(K8sDeploymentRunnable runnable) {
+        try {
+            V1Deployment deployment = framework.get(framework.build(runnable));
 
-                    // check status
-                    Assert.notNull(
-                        Objects.requireNonNull(v1Deployment.getStatus()).getReadyReplicas(),
-                        "Deployment not ready"
-                    );
-                    Assert.isTrue(v1Deployment.getStatus().getReadyReplicas() > 0, "Deployment not ready");
+            // check status
+            // if ERROR signal, otherwise let RUNNING
+            if (deployment == null || deployment.getStatus() == null) {
+                // something is missing, no recovery
+                runnable.setState(State.ERROR.name());
+            }
 
-                    System.out.println("deployment status: " + v1Deployment.getStatus().getReadyReplicas());
-                    return Stream.of(runnable);
-                } catch (K8sFrameworkException e) {
-                    // Set Runnable to ERROR state
-                    runnable.setState(State.ERROR.name());
-                    return Stream.of(runnable);
-                }
-            })
-            .forEach(runnable -> {
-                // Update the runnable
-                try {
-                    runnableStore.store(runnable.getId(), runnable);
+            log.debug("deployment status: replicas {}", deployment.getStatus().getReadyReplicas());
 
-                    // Send message to Serve manager
-                    eventPublisher.publishEvent(
-                        RunnableChangedEvent
-                            .builder()
-                            .runnable(runnable)
-                            .runMonitorObject(
-                                RunnableMonitorObject
-                                    .builder()
-                                    .runId(runnable.getId())
-                                    .stateId(runnable.getState())
-                                    .project(runnable.getProject())
-                                    .framework(runnable.getFramework())
-                                    .task(runnable.getTask())
-                                    .build()
-                            )
-                            .build()
-                    );
-                } catch (StoreException e) {
-                    log.error("Error with runnable store: {}", e.getMessage());
-                }
-            });
-        return null;
+            //update results
+            try {
+                runnable.setResults(Map.of("deployment", mapper.convertValue(deployment, typeRef)));
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
+
+            //collect logs, optional
+            try {
+                //TODO add sinceTime when available
+                runnable.setLogs(framework.logs(deployment));
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting logs for {}: {}", runnable.getId(), e1.getMessage());
+            }
+        } catch (K8sFrameworkException e) {
+            // Set Runnable to ERROR state
+            runnable.setState(State.ERROR.name());
+        }
+
+        return runnable;
     }
 }
