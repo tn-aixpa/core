@@ -7,9 +7,13 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.services.LogService;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.LogEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.LogEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableLogService;
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -45,7 +49,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LogController {
 
     @Autowired
-    LogService logService;
+    SearchableLogService logService;
 
     @Operation(summary = "Create log", description = "Create a log and return")
     @PostMapping(
@@ -61,11 +65,17 @@ public class LogController {
     @Operation(summary = "List logs", description = "Return a list of all logs")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Log> getLogs(
+        @ParameterObject @Valid @Nullable LogEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "kind", direction = Direction.ASC) }
         ) Pageable pageable
     ) {
-        return logService.listLogs(pageable);
+        SearchFilter<LogEntity> sf = null;
+        if (filter != null) {
+            sf = filter.toSearchFilter();
+        }
+
+        return logService.searchLogs(pageable, sf);
     }
 
     @Operation(summary = "Get a log by id", description = "Return a log")

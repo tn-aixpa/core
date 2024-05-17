@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
 import io.kubernetes.client.openapi.models.V1CronJob;
+import io.kubernetes.client.openapi.models.V1Pod;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
@@ -8,6 +9,7 @@ import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernete
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -40,10 +42,25 @@ public class K8sCronJobMonitor extends K8sBaseMonitor<K8sCronJobRunnable> {
 
             log.info("Job status: {}", job.getStatus().toString());
 
+            //try to fetch pods
+            List<V1Pod> pods = null;
+            try {
+                pods = framework.pods(job);
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting pods for job {}: {}", runnable.getId(), e1.getMessage());
+            }
+
             //TODO evaluate how to monitor
             //update results
             try {
-                runnable.setResults(Map.of("cronJob", mapper.convertValue(job, typeRef)));
+                runnable.setResults(
+                    Map.of(
+                        "cronJob",
+                        mapper.convertValue(job, typeRef),
+                        "pods",
+                        pods != null ? mapper.convertValue(pods, arrayRef) : null
+                    )
+                );
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());
             }

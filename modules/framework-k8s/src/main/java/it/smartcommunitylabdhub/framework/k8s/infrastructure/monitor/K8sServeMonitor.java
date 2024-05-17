@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
 import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
@@ -10,6 +11,7 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -56,6 +58,14 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
             log.debug("deployment status: replicas {}", deployment.getStatus().getReadyReplicas());
             log.debug("service status: {}", service.getStatus());
 
+            //try to fetch pods
+            List<V1Pod> pods = null;
+            try {
+                pods = deploymentFramework.pods(deployment);
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting pods for deployment {}: {}", runnable.getId(), e1.getMessage());
+            }
+
             //update results
             try {
                 runnable.setResults(
@@ -63,7 +73,9 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                         "deployment",
                         mapper.convertValue(deployment, typeRef),
                         "service",
-                        mapper.convertValue(service, typeRef)
+                        mapper.convertValue(service, typeRef),
+                        "pods",
+                        pods != null ? mapper.convertValue(pods, arrayRef) : null
                     )
                 );
             } catch (IllegalArgumentException e) {

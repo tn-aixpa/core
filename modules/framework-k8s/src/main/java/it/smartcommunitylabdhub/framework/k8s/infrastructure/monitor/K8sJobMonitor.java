@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
 import io.kubernetes.client.openapi.models.V1Job;
+import io.kubernetes.client.openapi.models.V1Pod;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
@@ -8,6 +9,7 @@ import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernete
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -44,14 +46,29 @@ public class K8sJobMonitor extends K8sBaseMonitor<K8sJobRunnable> {
             if (job.getStatus().getSucceeded() != null && job.getStatus().getSucceeded().intValue() > 0) {
                 // Job has succeeded
                 runnable.setState(State.COMPLETED.name());
-            } else if (job.getStatus().getFailed() != null && job.getStatus().getSucceeded().intValue() > 0) {
+            } else if (job.getStatus().getFailed() != null && job.getStatus().getFailed().intValue() > 0) {
                 // Job has failed delete job and pod
                 runnable.setState(State.ERROR.name());
             }
 
+            //try to fetch pods
+            List<V1Pod> pods = null;
+            try {
+                pods = framework.pods(job);
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting pods for job {}: {}", runnable.getId(), e1.getMessage());
+            }
+
             //update results
             try {
-                runnable.setResults(Map.of("job", mapper.convertValue(job, typeRef)));
+                runnable.setResults(
+                    Map.of(
+                        "job",
+                        mapper.convertValue(job, typeRef),
+                        "pods",
+                        pods != null ? mapper.convertValue(pods, arrayRef) : null
+                    )
+                );
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());
             }

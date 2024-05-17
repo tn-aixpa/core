@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,9 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
     );
     protected static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
         HashMap<String, Serializable>
+    >() {};
+    protected static final TypeReference<ArrayList<HashMap<String, Serializable>>> arrayRef = new TypeReference<
+        ArrayList<HashMap<String, Serializable>>
     >() {};
 
     protected final RunnableStore<T> store;

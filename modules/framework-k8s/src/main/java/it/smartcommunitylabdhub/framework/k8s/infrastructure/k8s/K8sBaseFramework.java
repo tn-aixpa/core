@@ -26,9 +26,11 @@ import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -137,11 +139,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     public abstract void delete(K object) throws K8sFrameworkException;
 
-    //TODO support sinceTime when implemented by api
-    //https://github.com/kubernetes-client/java/issues/2648
-    // public Map<String, String> logs(K object, @Nullable Long sinceTime) throws K8sFrameworkException {
-
-    public Map<String, String> logs(K object) throws K8sFrameworkException {
+    public List<V1Pod> pods(K object) throws K8sFrameworkException {
         if (object == null || object.getMetadata() == null) {
             return null;
         }
@@ -173,26 +171,87 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 null
             );
 
-            Map<String, String> logs = new HashMap<>();
+            return pods.getItems();
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
 
-            for (V1Pod p : pods.getItems()) {
-                if (p.getMetadata() != null) {
-                    String n = p.getMetadata().getName();
-                    String l = coreV1Api.readNamespacedPodLog(
-                        n,
-                        namespace,
-                        null,
-                        Boolean.FALSE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        Boolean.TRUE
-                    );
+            throw new K8sFrameworkException(e.getMessage());
+        }
+    }
 
-                    logs.put(n, l);
+    //TODO support sinceTime when implemented by api
+    //https://github.com/kubernetes-client/java/issues/2648
+    // public Map<String, String> logs(K object, @Nullable Long sinceTime) throws K8sFrameworkException {
+
+    public List<CoreLog> logs(K object) throws K8sFrameworkException {
+        if (object == null || object.getMetadata() == null) {
+            return null;
+        }
+
+        try {
+            List<CoreLog> logs = new ArrayList<>();
+            List<V1Pod> pods = pods(object);
+
+            for (V1Pod p : pods) {
+                if (p.getMetadata() != null && p.getStatus() != null) {
+                    String pod = p.getMetadata().getName();
+
+                    //read container
+                    if (p.getStatus().getContainerStatuses() != null) {
+                        List<String> containers = p
+                            .getStatus()
+                            .getContainerStatuses()
+                            .stream()
+                            .map(s -> s.getName())
+                            .collect(Collectors.toList());
+                        for (String c : containers) {
+                            String log = coreV1Api.readNamespacedPodLog(
+                                pod,
+                                namespace,
+                                c,
+                                Boolean.FALSE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                Boolean.TRUE
+                            );
+
+                            logs.add(new CoreLog(pod, log, c, namespace));
+                        }
+                    }
+
+                    //read init-containers
+                    if (p.getStatus().getInitContainerStatuses() != null) {
+                        List<String> containers = p
+                            .getStatus()
+                            .getInitContainerStatuses()
+                            .stream()
+                            .map(s -> s.getName())
+                            .collect(Collectors.toList());
+                        for (String c : containers) {
+                            String log = coreV1Api.readNamespacedPodLog(
+                                pod,
+                                namespace,
+                                c,
+                                Boolean.FALSE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                Boolean.TRUE
+                            );
+
+                            logs.add(new CoreLog(pod, log, c, namespace));
+                        }
+                    }
                 }
             }
 

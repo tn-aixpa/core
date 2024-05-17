@@ -27,6 +27,7 @@ import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFr
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sLogStatus;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
@@ -51,10 +52,12 @@ import it.smartcommunitylabdhub.runtime.container.status.RunContainerStatus;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 
 @Slf4j
@@ -312,88 +315,23 @@ public class ContainerRuntime
     @Override
     public RunContainerStatus onRunning(Run run, RunRunnable runnable) {
         //extract info for status
-        if (runnable != null) {
-            if (runnable instanceof K8sRunnable) {
-                Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
-                //extract k8s details
-                //TODO
+        if (runnable instanceof K8sRunnable) {
+            Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
+            //extract k8s details
+            //TODO
 
-                //extract logs
-                Map<String, String> logs = ((K8sRunnable) runnable).getLogs();
+            //extract logs
+            List<CoreLog> logs = ((K8sRunnable) runnable).getLogs();
 
-                if (logs != null) {
-                    writeLogs(run, logs);
-                }
-
-                //dump as-is
-                return RunContainerStatus.builder().k8s(res).build();
+            if (logs != null) {
+                writeLogs(run, logs);
             }
+
+            //dump as-is
+            return RunContainerStatus.builder().k8s(res).build();
         }
 
         return null;
-    }
-
-    private void writeLogs(Run run, Map<String, String> logs) {
-        String runId = run.getId();
-        Instant now = Instant.now();
-
-        //logs are grouped by pod, search by run and create/append
-        Map<String, Log> entries = logService
-            .getLogsByRunId(runId)
-            .stream()
-            .map(e -> {
-                K8sLogStatus status = new K8sLogStatus();
-                status.configure(e.getStatus());
-
-                if (status.getPod() != null) {
-                    return Map.entry(status.getPod(), e);
-                } else {
-                    return null;
-                }
-            })
-            .filter(e -> e != null)
-            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-
-        logs
-            .entrySet()
-            .forEach(l -> {
-                try {
-                    if (entries.get(l.getKey()) != null) {
-                        //update
-                        Log log = entries.get(l.getKey());
-                        log.setContent(l.getValue());
-
-                        logService.updateLog(log.getId(), log);
-                    } else {
-                        //add as new
-                        LogSpec logSpec = new LogSpec();
-                        logSpec.setRun(runId);
-                        logSpec.setTimestamp(now.toEpochMilli());
-
-                        K8sLogStatus logStatus = new K8sLogStatus();
-                        logStatus.setPod(l.getKey());
-
-                        Log log = Log
-                            .builder()
-                            .project(run.getProject())
-                            .spec(logSpec.toMap())
-                            .status(logStatus.toMap())
-                            .content(l.getValue())
-                            .build();
-
-                        logService.createLog(log);
-                    }
-                } catch (
-                    NoSuchEntityException
-                    | IllegalArgumentException
-                    | SystemException
-                    | BindException
-                    | DuplicatedEntityException e
-                ) {
-                    //invalid, skip
-                    //TODO handle
-                }
-            });
     }
 
     @Override
@@ -422,6 +360,23 @@ public class ContainerRuntime
             }
         }
 
+        //extract info for status
+        if (runnable instanceof K8sRunnable) {
+            Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
+            //extract k8s details
+            //TODO
+
+            //extract logs
+            List<CoreLog> logs = ((K8sRunnable) runnable).getLogs();
+
+            if (logs != null) {
+                writeLogs(run, logs);
+            }
+
+            //dump as-is
+            return RunContainerStatus.builder().k8s(res).build();
+        }
+
         return null;
     }
 
@@ -431,6 +386,23 @@ public class ContainerRuntime
             cleanup(runnable);
         }
 
+        //extract info for status
+        if (runnable instanceof K8sRunnable) {
+            Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
+            //extract k8s details
+            //TODO
+
+            //extract logs
+            List<CoreLog> logs = ((K8sRunnable) runnable).getLogs();
+
+            if (logs != null) {
+                writeLogs(run, logs);
+            }
+
+            //dump as-is
+            return RunContainerStatus.builder().k8s(res).build();
+        }
+
         return null;
     }
 
@@ -438,6 +410,23 @@ public class ContainerRuntime
     public RunContainerStatus onStopped(Run run, RunRunnable runnable) {
         if (runnable != null) {
             cleanup(runnable);
+        }
+
+        //extract info for status
+        if (runnable instanceof K8sRunnable) {
+            Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
+            //extract k8s details
+            //TODO
+
+            //extract logs
+            List<CoreLog> logs = ((K8sRunnable) runnable).getLogs();
+
+            if (logs != null) {
+                writeLogs(run, logs);
+            }
+
+            //dump as-is
+            return RunContainerStatus.builder().k8s(res).build();
         }
 
         return null;
@@ -450,6 +439,76 @@ public class ContainerRuntime
         }
 
         return null;
+    }
+
+    private void writeLogs(Run run, List<CoreLog> logs) {
+        String runId = run.getId();
+        Instant now = Instant.now();
+
+        //logs are grouped by pod+container, search by run and create/append
+        Map<String, Log> entries = logService
+            .getLogsByRunId(runId)
+            .stream()
+            .map(e -> {
+                K8sLogStatus status = new K8sLogStatus();
+                status.configure(e.getStatus());
+
+                String pod = status.getPod() != null ? status.getPod() : "";
+                String container = status.getContainer() != null ? status.getContainer() : "";
+                String namespace = status.getNamespace() != null ? status.getNamespace() : "";
+                String key = namespace + pod + container;
+
+                if (StringUtils.hasText(runId)) {
+                    return Map.entry(key, e);
+                } else {
+                    return null;
+                }
+            })
+            .filter(e -> e != null)
+            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+
+        logs.forEach(l -> {
+            try {
+                String key = l.namespace() + l.pod() + l.container();
+
+                if (entries.get(key) != null) {
+                    //update
+                    Log log = entries.get(key);
+                    log.setContent(l.value());
+
+                    logService.updateLog(log.getId(), log);
+                } else {
+                    //add as new
+                    LogSpec logSpec = new LogSpec();
+                    logSpec.setRun(runId);
+                    logSpec.setTimestamp(now.toEpochMilli());
+
+                    K8sLogStatus logStatus = new K8sLogStatus();
+                    logStatus.setPod(l.pod());
+                    logStatus.setContainer(l.container());
+                    logStatus.setNamespace(l.namespace());
+
+                    Log log = Log
+                        .builder()
+                        .project(run.getProject())
+                        .spec(logSpec.toMap())
+                        .status(logStatus.toMap())
+                        .content(l.value())
+                        .build();
+
+                    logService.createLog(log);
+                }
+            } catch (
+                NoSuchEntityException
+                | IllegalArgumentException
+                | SystemException
+                | BindException
+                | DuplicatedEntityException e
+            ) {
+                //invalid, skip
+                //TODO handle
+            }
+        });
     }
 
     private void cleanup(RunRunnable runnable) {

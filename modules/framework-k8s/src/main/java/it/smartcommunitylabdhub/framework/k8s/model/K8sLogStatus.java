@@ -20,6 +20,7 @@ public class K8sLogStatus extends BaseSpec {
 
     private String namespace;
     private String pod;
+    private String container;
 
     @Override
     public void configure(Map<String, Serializable> data) {
@@ -27,5 +28,6 @@ public class K8sLogStatus extends BaseSpec {
 
         this.namespace = spec.getNamespace();
         this.pod = spec.getPod();
+        this.container = spec.getContainer();
     }
 }
