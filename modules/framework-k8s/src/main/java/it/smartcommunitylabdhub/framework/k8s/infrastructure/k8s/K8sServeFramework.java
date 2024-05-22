@@ -19,16 +19,12 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
-//TODO: le operazioni di clean del deployment vanno fatte nel framework
-// TODO: instead of void define a Result object that have to be merged with the run from the
-// caller.
 @Slf4j
 @FrameworkComponent(framework = K8sServeFramework.FRAMEWORK)
 public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Service> {
@@ -47,13 +43,24 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
     @Override
     public K8sServeRunnable run(K8sServeRunnable runnable) throws K8sFrameworkException {
+        log.info("run for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
         // Create a deployment from a Deployment+Service
         V1Deployment deployment = buildDeployment(runnable);
+
+        log.info("create deployment for {}", String.valueOf(deployment.getMetadata().getName()));
         deployment = deploymentFramework.create(deployment);
 
         //create the service
         V1Service service = build(runnable);
+        log.info("create service for {}", String.valueOf(service.getMetadata().getName()));
+
         service = create(service);
+
+        //update state
         runnable.setState(State.RUNNING.name());
 
         //update results
@@ -70,11 +77,20 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             log.error("error reading k8s results: {}", e.getMessage());
         }
 
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
+
         return runnable;
     }
 
     @Override
     public K8sServeRunnable delete(K8sServeRunnable runnable) throws K8sFrameworkException {
+        log.info("delete for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
         V1Deployment deployment;
         try {
             // Retrieve the deployment
@@ -85,6 +101,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         if (deployment != null) {
             // Delete the deployment
+            log.info("delete deployment for {}", String.valueOf(deployment.getMetadata().getName()));
+
             deploymentFramework.delete(deployment);
         }
 
@@ -98,31 +116,83 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
 
         //Delete the service
+        log.info("delete service for {}", String.valueOf(service.getMetadata().getName()));
         delete(service);
+
+        //update results
+        try {
+            runnable.setResults(
+                Map.of(
+                    "deployment",
+                    deployment != null ? mapper.convertValue(deployment, typeRef) : null,
+                    "service",
+                    mapper.convertValue(service, typeRef)
+                )
+            );
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
 
         //update state
         runnable.setState(State.DELETED.name());
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
 
         return runnable;
     }
 
     @Override
     public K8sServeRunnable stop(K8sServeRunnable runnable) throws K8sFrameworkException {
+        log.info("stop for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
         //stop deployment and delete service
-        deploymentFramework.stop(getDeployment(runnable));
+        V1Deployment deployment = deploymentFramework.get(buildDeployment(runnable));
+        if (deployment != null) {
+            log.info("stop deployment for {}", String.valueOf(deployment.getMetadata().getName()));
+            //stop by setting replicas to 0
+            deployment.getSpec().setReplicas(0);
+            deploymentFramework.apply(deployment);
+        }
 
         V1Service service = get(build(runnable));
+        log.info("delete service for {}", String.valueOf(service.getMetadata().getName()));
         delete(service);
 
+        //update results
+        try {
+            runnable.setResults(
+                Map.of(
+                    "deployment",
+                    deployment != null ? mapper.convertValue(deployment, typeRef) : null,
+                    "service",
+                    service != null ? mapper.convertValue(service, typeRef) : null
+                )
+            );
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
+
+        //update state
         runnable.setState(State.STOPPED.name());
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
 
         return runnable;
     }
 
     @Override
     public V1Service build(K8sServeRunnable runnable) throws K8sFrameworkException {
-        // Log service execution initiation
-        log.info("----------------- PREPARE KUBERNETES Serve ----------------");
+        log.debug("build for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
 
         // Generate deploymentName and ContainerName
         String serviceName = k8sBuilderHelper.getServiceName(
@@ -130,6 +200,9 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             runnable.getTask(),
             runnable.getId()
         );
+
+        log.debug("build k8s service for {}", serviceName);
+
         Map<String, String> labels = buildLabels(runnable);
         // Create the V1 service
         // TODO: the service definition contains a list of ports. service: { ports:[xxx,xxx,,xxx],.....}
@@ -153,7 +226,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             .orElse(null);
 
         // service type (ClusterIP or NodePort)
-        String type = Optional.of(runnable.getServiceType().name()).orElse("NodePort");
+        String type = Optional.ofNullable(runnable.getServiceType().name()).orElse("NodePort");
 
         //build service spec
         V1ServiceSpec serviceSpec = new V1ServiceSpec().type(type).ports(ports).selector(labels);
@@ -162,10 +235,26 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         return new V1Service().metadata(serviceMetadata).spec(serviceSpec);
     }
 
+    /*
+     * K8s
+     */
     @Override
     public V1Service apply(@NotNull V1Service service) throws K8sFrameworkException {
-        //nothing to do
-        return service;
+        Assert.notNull(service.getMetadata(), "metadata can not be null");
+
+        try {
+            String serviceName = service.getMetadata().getName();
+            log.debug("update k8s service for {}", serviceName);
+
+            return coreV1Api.replaceNamespacedService(serviceName, namespace, service, null, null, null, null);
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isDebugEnabled()) {
+                log.debug("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
     }
 
     @Override
@@ -173,10 +262,10 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         Assert.notNull(service.getMetadata(), "metadata can not be null");
 
         try {
-            // Log service execution initiation
-            log.info("----------------- GET KUBERNETES Serve ----------------");
+            String serviceName = service.getMetadata().getName();
+            log.debug("get k8s service for {}", serviceName);
 
-            return coreV1Api.readNamespacedService(service.getMetadata().getName(), namespace, null);
+            return coreV1Api.readNamespacedService(serviceName, namespace, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {
@@ -192,13 +281,10 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         Assert.notNull(service.getMetadata(), "metadata can not be null");
 
         try {
-            // Log service execution initiation
-            log.info("----------------- APPLY KUBERNETES Serve ----------------");
+            String serviceName = service.getMetadata().getName();
+            log.debug("create k8s service for {}", serviceName);
 
-            V1Service createdService = coreV1Api.createNamespacedService(namespace, service, null, null, null, null);
-            log.info("Serve created: " + Objects.requireNonNull(createdService.getMetadata()).getName());
-
-            return createdService;
+            return coreV1Api.createNamespacedService(namespace, service, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {
@@ -215,19 +301,10 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         try {
             Assert.notNull(service.getMetadata(), "metadata can not be null");
 
-            // Log service execution initiation
-            log.info("----------------- DELETE KUBERNETES Serve ----------------");
+            String serviceName = service.getMetadata().getName();
+            log.debug("delete k8s service for {}", serviceName);
 
-            coreV1Api.deleteNamespacedService(
-                service.getMetadata().getName(),
-                namespace,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-            );
+            coreV1Api.deleteNamespacedService(serviceName, namespace, null, null, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {

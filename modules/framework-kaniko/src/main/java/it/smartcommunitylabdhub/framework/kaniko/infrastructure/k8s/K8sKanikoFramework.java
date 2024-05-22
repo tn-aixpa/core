@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.kaniko.infrastructure.k8s;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
@@ -27,10 +28,12 @@ import it.smartcommunitylabdhub.framework.kaniko.runnables.ContextRef;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.ContextSource;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +50,9 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
     public static final String FRAMEWORK = "k8sbuild";
     public static final int DEADLINE_SECONDS = 3600 * 24 * 3; //3 days
+    private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
+        HashMap<String, Serializable>
+    >() {};
 
     private final BatchV1Api batchV1Api;
 
@@ -75,38 +81,72 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         this.batchV1Api = new BatchV1Api(apiClient);
     }
 
-    // TODO: instead of void define a Result object that have to be merged with the run from the
-    // caller.
     @Override
     public K8sKanikoRunnable run(K8sKanikoRunnable runnable) throws K8sFrameworkException {
+        log.info("run for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
+        //create job
         V1Job job = build(runnable);
 
         //secrets
         V1Secret secret = buildRunSecret(runnable);
         if (secret != null) {
             storeRunSecret(secret);
-        }        
+        }
+
+        log.info("create job for {}", String.valueOf(job.getMetadata().getName()));
         job = create(job);
 
-        // Update runnable state..
+        //update state
         runnable.setState(State.RUNNING.name());
+
+        //update results
+        try {
+            runnable.setResults(Map.of("job", mapper.convertValue(job, typeRef)));
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
 
         return runnable;
     }
 
     @Override
     public K8sKanikoRunnable stop(K8sKanikoRunnable runnable) throws K8sFrameworkException {
+        log.info("stop for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
         V1Job job = get(build(runnable));
 
         //stop by deleting
+        log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
         delete(job);
+
+        //update state
         runnable.setState(State.STOPPED.name());
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
 
         return runnable;
     }
 
     @Override
     public K8sKanikoRunnable delete(K8sKanikoRunnable runnable) throws K8sFrameworkException {
+        log.info("delete for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
         V1Job job;
         try {
             job = get(build(runnable));
@@ -115,16 +155,28 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             return runnable;
         }
 
+        //secrets
+        cleanRunSecret(runnable);
+
+        log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
         delete(job);
+
+        //update state
         runnable.setState(State.DELETED.name());
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
 
         return runnable;
     }
 
     @Override
     public V1Job build(K8sKanikoRunnable runnable) throws K8sFrameworkException {
-        // Log service execution initiation
-        log.info("----------------- BUILD KUBERNETES KANIKO JOB ----------------");
+        log.debug("build for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
 
         // Generate jobName and ContainerName
         String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
@@ -134,15 +186,17 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             runnable.getId()
         );
 
+        log.debug("build k8s job for {}", jobName);
+
         //build destination image name and set to runnable
         String prefix =
             (StringUtils.hasText(imageRegistry) ? imageRegistry + "/" : "") +
             (StringUtils.hasText(imagePrefix) ? imagePrefix + "-" : "");
         // workaround: update image name only first time
-        String imageName =  runnable.getImage();
+        String imageName = runnable.getImage();
         if (StringUtils.hasText(prefix) && !runnable.getImage().startsWith(prefix)) {
             imageName = k8sBuilderHelper.getImageName(prefix + runnable.getImage(), runnable.getId());
-            runnable.setImage(imageName);                
+            runnable.setImage(imageName);
         }
 
         //build labels
@@ -316,6 +370,9 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         }
     }
 
+    /*
+     * K8s
+     */
     @Override
     public V1Job apply(@NotNull V1Job job) throws K8sFrameworkException {
         return job;
@@ -326,10 +383,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
         try {
-            // Log service execution initiation
-            log.info("----------------- GET KUBERNETES CRON JOB ----------------");
+            String jobName = job.getMetadata().getName();
+            log.debug("get k8s job for {}", jobName);
 
-            return batchV1Api.readNamespacedJob(job.getMetadata().getName(), namespace, null);
+            return batchV1Api.readNamespacedJob(jobName, namespace, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {
@@ -345,13 +402,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
         try {
-            // Log service execution initiation
-            log.info("----------------- RUN KUBERNETES CRON JOB ----------------");
+            String jobName = job.getMetadata().getName();
+            log.debug("create k8s job for {}", jobName);
 
             //dispatch job via api
-            V1Job createdJob = batchV1Api.createNamespacedJob(namespace, job, null, null, null, null);
-            log.info("Job created: {}", Objects.requireNonNull(createdJob.getMetadata()).getName());
-            return createdJob;
+            return batchV1Api.createNamespacedJob(namespace, job, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {
@@ -367,10 +422,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
         try {
-            // Log service execution initiation
-            log.info("----------------- RUN KUBERNETES CRON JOB ----------------");
+            String jobName = job.getMetadata().getName();
+            log.debug("delete k8s job for {}", jobName);
 
-            batchV1Api.deleteNamespacedJob(job.getMetadata().getName(), namespace, null, null, null, null, null, null);
+            batchV1Api.deleteNamespacedJob(jobName, namespace, null, null, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {

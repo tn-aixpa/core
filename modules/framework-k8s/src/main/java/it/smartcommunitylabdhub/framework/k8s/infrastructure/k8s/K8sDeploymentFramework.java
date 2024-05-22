@@ -27,14 +27,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 
-//TODO: le operazioni di clean del deployment vanno fatte nel framework
-//TODO: instead of void define a Result object that have to be merged with the run from the
-// caller.
 @Slf4j
 @FrameworkComponent(framework = K8sDeploymentFramework.FRAMEWORK)
 public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnable, V1Deployment> {
@@ -53,6 +49,11 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
     @Override
     public K8sDeploymentRunnable run(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+        log.info("run for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
         V1Deployment deployment = build(runnable);
         //secrets
         V1Secret secret = buildRunSecret(runnable);
@@ -60,6 +61,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             storeRunSecret(secret);
         }
 
+        log.info("create deployment for {}", String.valueOf(deployment.getMetadata().getName()));
         deployment = create(deployment);
 
         //update state
@@ -72,11 +74,20 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             log.error("error reading k8s results: {}", e.getMessage());
         }
 
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
+
         return runnable;
     }
 
     @Override
     public K8sDeploymentRunnable delete(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+        log.info("delete for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
         V1Deployment deployment;
         try {
             deployment = get(build(runnable));
@@ -87,29 +98,62 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         //secrets
         cleanRunSecret(runnable);
 
+        log.info("delete deployment for {}", String.valueOf(deployment.getMetadata().getName()));
         delete(deployment);
+
+        //update results
+        try {
+            runnable.setResults(Map.of("deployment", mapper.convertValue(deployment, typeRef)));
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
+
+        //update state
         runnable.setState(State.DELETED.name());
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
 
         return runnable;
     }
 
     @Override
     public K8sDeploymentRunnable stop(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
+        log.info("stop for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
         V1Deployment deployment = get(build(runnable));
 
         //stop by setting replicas to 0
         deployment.getSpec().setReplicas(0);
         apply(deployment);
 
+        //update results
+        try {
+            runnable.setResults(Map.of("deployment", mapper.convertValue(deployment, typeRef)));
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
+
+        //update state
         runnable.setState(State.STOPPED.name());
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
 
         return runnable;
     }
 
     @Override
     public V1Deployment build(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
-        // Log service execution initiation
-        log.info("----------------- PREPARE KUBERNETES Deployment ----------------");
+        log.debug("build for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
 
         // Generate deploymentName and ContainerName
         String deploymentName = k8sBuilderHelper.getDeploymentName(
@@ -122,6 +166,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             runnable.getTask(),
             runnable.getId()
         );
+
+        log.debug("build k8s deployment for {}", deploymentName);
 
         // Create labels for job
         Map<String, String> labels = buildLabels(runnable);
@@ -182,28 +228,19 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         return new V1Deployment().metadata(metadata).spec(deploymentSpec);
     }
 
+    /*
+     * K8s
+     */
     @Override
     public V1Deployment apply(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         Assert.notNull(deployment.getSpec(), "spec can not be null");
 
         try {
-            // Log service execution initiation
-            log.info("----------------- APPLY KUBERNETES Deployment ----------------");
+            String deploymentName = deployment.getMetadata().getName();
+            log.debug("update k8s deployment for {}", deploymentName);
 
-            V1Deployment updatedDeployment = appsV1Api.replaceNamespacedDeployment(
-                deployment.getMetadata().getName(),
-                namespace,
-                deployment,
-                null,
-                null,
-                null,
-                null
-            );
-            //dispatch deployment via api
-
-            log.info("Deployment created: {}", Objects.requireNonNull(updatedDeployment.getMetadata()).getName());
-            return updatedDeployment;
+            return appsV1Api.replaceNamespacedDeployment(deploymentName, namespace, deployment, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {
@@ -219,10 +256,10 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
 
         try {
-            // Log service execution initiation
-            log.info("----------------- GET KUBERNETES Deployment ----------------");
+            String deploymentName = deployment.getMetadata().getName();
+            log.debug("get k8s deployment for {}", deploymentName);
 
-            return appsV1Api.readNamespacedDeployment(deployment.getMetadata().getName(), namespace, null);
+            return appsV1Api.readNamespacedDeployment(deploymentName, namespace, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {
@@ -237,8 +274,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     public V1Deployment create(V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         try {
-            // Log service execution initiation
-            log.info("----------------- CREATE KUBERNETES Deployment ----------------");
+            String deploymentName = deployment.getMetadata().getName();
+            log.debug("create k8s deployment for {}", deploymentName);
 
             return appsV1Api.createNamespacedDeployment(namespace, deployment, null, null, null, null);
         } catch (ApiException e) {
@@ -255,19 +292,10 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     public void delete(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         try {
-            // Log service execution initiation
-            log.info("----------------- DELETE KUBERNETES Deployment ----------------");
+            String deploymentName = deployment.getMetadata().getName();
+            log.debug("delete k8s deployment for {}", deploymentName);
 
-            appsV1Api.deleteNamespacedDeployment(
-                deployment.getMetadata().getName(),
-                namespace,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-            );
+            appsV1Api.deleteNamespacedDeployment(deploymentName, namespace, null, null, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {
@@ -277,141 +305,4 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             throw new K8sFrameworkException(e.getResponseBody());
         }
     }
-    // TODO NEED TO CHECK IF IMPLEMENT THE CODE BELOW
-
-    //    private void writeLog(K8sDeploymentRunnable runnable, String log) {
-    //        if (logService != null) {
-    //            LogMetadata logMetadata = new LogMetadata();
-    //            logMetadata.setProject(runnable.getProject());
-    //            logMetadata.setRun(runnable.getId());
-    //            Log logDTO = Log.builder().body(Map.of("content", log)).metadata(logMetadata.toMap()).build();
-    //            logService.createLog(logDTO);
-    //        }
-    //    }
-
-    //    /**
-    //     * Delete job
-    //     *
-    //     * @param jobName  the name of the Deployment
-    //     * @param runnable the runnable Type in this case K8SJobRunnable
-    //     */
-    // /**
-    //  * Logging pod
-    //  *
-    //  * @param jobName  the name of the Deployment
-    //  * @param runnable the runnable Type in this case K8SJobRunnable
-    //  */
-    // private void logPod(String jobName, String cName, String namespace, K8sDeploymentRunnable runnable) {
-    //     try {
-    //         // Retrieve and print the logs of the associated Pod
-    //         V1PodList v1PodList = coreV1Api.listNamespacedPod(
-    //             namespace,
-    //             null,
-    //             null,
-    //             null,
-    //             null,
-    //             null,
-    //             null,
-    //             null,
-    //             null,
-    //             null,
-    //             null,
-    //             null
-    //         );
-
-    //         for (V1Pod pod : v1PodList.getItems()) {
-    //             if (pod.getMetadata() != null && pod.getMetadata().getName() != null) {
-    //                 if (pod.getMetadata().getName().startsWith(jobName)) {
-    //                     String podName = pod.getMetadata().getName();
-    //                     String logs = coreV1Api.readNamespacedPodLog(
-    //                         podName,
-    //                         namespace,
-    //                         cName,
-    //                         false,
-    //                         null,
-    //                         null,
-    //                         null,
-    //                         null,
-    //                         null,
-    //                         null,
-    //                         null
-    //                     );
-
-    //                     log.info("Logs for Pod: " + podName);
-    //                     log.info("Log is: " + logs);
-    //                     if (logs != null) writeLog(runnable, logs);
-    //                 }
-    //             }
-    //         }
-    //     } catch (ApiException e) {
-    //         log.error(e.getResponseBody());
-    //         //throw new RuntimeException(e);
-    //     }
-    // }
-    //    private void deleteAssociatedPodAndJob(String jobName, String namespace, K8sDeploymentRunnable runnable) {
-    //        // Delete the Pod associated with the Deployment
-    //        try {
-    //
-    //            V1PodList v1PodList = coreV1Api.listNamespacedPod(
-    //                    namespace,
-    //                    null,
-    //                    null,
-    //                    null,
-    //                    null,
-    //                    null,
-    //                    null,
-    //                    null,
-    //                    null,
-    //                    null,
-    //                    null,
-    //                    null
-    //            );
-    //
-    //            for (V1Pod pod : v1PodList.getItems()) {
-    //                if (pod.getMetadata() != null && pod.getMetadata().getName() != null) {
-    //                    if (pod.getMetadata().getName().startsWith(jobName)) {
-    //                        String podName = pod.getMetadata().getName();
-    //
-    //                        // Delete the Pod
-    //                        V1Pod v1Pod = coreV1Api.deleteNamespacedPod(
-    //                                podName,
-    //                                namespace,
-    //                                null,
-    //                                null,
-    //                                null,
-    //                                null,
-    //                                null,
-    //                                null
-    //                        );
-    //                        log.info("Pod deleted: " + podName);
-    //
-    //                        try {
-    //                            writeLog(
-    //                                    runnable,
-    //                                    JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(v1Pod.getStatus())
-    //                            );
-    //                        } catch (JsonProcessingException e) {
-    //                            log.error(e.toString());
-    //                        }
-    //
-    //                        // // Delete the Deployment
-    //                        // V1Status deleteStatus = batchV1Api.deleteNamespacedJob(
-    //                        //         jobName, "default", null,
-    //                        //         null, null, null,
-    //                        //         null, null);
-    //
-    //                        // try {
-    //                        //     writeLog(runnable, JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(deleteStatus));
-    //                        // } catch (JsonProcessingException e) {
-    //                        //     log.error(e.toString());
-    //                        // }
-    //                        log.info("Deployment deleted: " + jobName);
-    //                    }
-    //                }
-    //            }
-    //            throw new StopPoller("POLLER STOP SUCCESSFULLY");
-    //        } catch (ApiException e) {
-    //            throw new RuntimeException(e);
-    //        }
-    //    }
 }

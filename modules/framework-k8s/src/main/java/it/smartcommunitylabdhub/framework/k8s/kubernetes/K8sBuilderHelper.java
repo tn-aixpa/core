@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.framework.k8s.kubernetes;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
 import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
@@ -74,7 +75,7 @@ public class K8sBuilderHelper implements InitializingBean {
                     try {
                         coreV1Api.readNamespacedSecret(secret, namespace, null);
                         return Stream.of(secret);
-                    } catch (Exception e) {
+                    } catch (ApiException e) {
                         log.error("Error reading secret: " + secret, e);
                         return Stream.empty();
                     }
@@ -89,7 +90,7 @@ public class K8sBuilderHelper implements InitializingBean {
                     try {
                         coreV1Api.readNamespacedConfigMap(configMap, namespace, null);
                         return Stream.of(configMap);
-                    } catch (Exception e) {
+                    } catch (ApiException e) {
                         log.error("Error reading configmap: " + configMap, e);
                         return Stream.empty();
                     }
