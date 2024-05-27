@@ -22,7 +22,7 @@ import java.util.*;
  * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
  * you have to register it using the following annotation:
  *
- * @RunnerComponent(runtime = "container", task = "job")
+ * @RunnerComponent(runtime = "python", task = "job")
  */
 public class PythonJobRunner implements Runner<K8sRunnable> {
 
@@ -43,54 +43,53 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-            List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
+                List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         K8sRunnable k8sJobRunnable = K8sJobRunnable
-            .builder()
-            .runtime(PythonRuntime.RUNTIME)
-            .task(TASK)
-            .state(State.READY.name())
-            //base
-            .image(functionSpec.getImage())
-            .command(functionSpec.getCommand())
-            .args(functionSpec.getRequirements() != null ? functionSpec.getRequirements().toArray(new String[0]) : null)
-            .envs(coreEnvList)
-            .secrets(groupedSecrets)
-            .resources(taskSpec.getResources())
-            .volumes(taskSpec.getVolumes())
-            .nodeSelector(taskSpec.getNodeSelector())
-            .affinity(taskSpec.getAffinity())
-            .tolerations(taskSpec.getTolerations())
-            //specific
-            .backoffLimit(taskSpec.getBackoffLimit())
-            .build();
+                .builder()
+                .runtime(PythonRuntime.RUNTIME)
+                .task(TASK)
+                .state(State.READY.name())
+                //base
+                .image(functionSpec.getImage()) // todo get image if set otherwise get our
+                .command("/.....") //todo
+                .args(new String[]{run.getId()})
+                .envs(coreEnvList)
+                .secrets(groupedSecrets)
+                .resources(taskSpec.getResources())
+                .volumes(taskSpec.getVolumes())
+                .nodeSelector(taskSpec.getNodeSelector())
+                .affinity(taskSpec.getAffinity())
+                .tolerations(taskSpec.getTolerations())
+                //specific
+                .backoffLimit(taskSpec.getBackoffLimit())
+                .build();
 
         if (StringUtils.hasText(taskSpec.getSchedule())) {
             //build a cronJob
             k8sJobRunnable =
-                K8sCronJobRunnable
-                    .builder()
-                    .runtime(PythonRuntime.RUNTIME)
-                    .task(TASK)
-                    .state(State.READY.name())
-                    //base
-                    .image(functionSpec.getImage())
-                    .command(functionSpec.getCommand())
-                    .args(functionSpec.getRequirements() != null ? functionSpec.getRequirements().toArray(new String[0]) : null)
-                    .envs(coreEnvList)
-                    .secrets(groupedSecrets)
-                    .resources(taskSpec.getResources())
-                    .volumes(taskSpec.getVolumes())
-                    .nodeSelector(taskSpec.getNodeSelector())
-                    .affinity(taskSpec.getAffinity())
-                    .tolerations(taskSpec.getTolerations())
-                    //specific
-                    .backoffLimit(taskSpec.getBackoffLimit())
-                    .schedule(taskSpec.getSchedule())
-                    .build();
+                    K8sCronJobRunnable
+                            .builder()
+                            .runtime(PythonRuntime.RUNTIME)
+                            .task(TASK)
+                            .state(State.READY.name())
+                            //base
+                            .image(functionSpec.getImage()) // todo get image if set otherwise get our
+                            .command("/.....") //todo
+                            .args(new String[]{run.getId()}).envs(coreEnvList)
+                            .secrets(groupedSecrets)
+                            .resources(taskSpec.getResources())
+                            .volumes(taskSpec.getVolumes())
+                            .nodeSelector(taskSpec.getNodeSelector())
+                            .affinity(taskSpec.getAffinity())
+                            .tolerations(taskSpec.getTolerations())
+                            //specific
+                            .backoffLimit(taskSpec.getBackoffLimit())
+                            .schedule(taskSpec.getSchedule())
+                            .build();
         }
 
         k8sJobRunnable.setId(run.getId());

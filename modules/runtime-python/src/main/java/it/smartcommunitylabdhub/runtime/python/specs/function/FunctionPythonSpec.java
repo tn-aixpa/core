@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,6 +21,10 @@ import java.util.Map;
 @NoArgsConstructor
 @SpecType(runtime = PythonRuntime.RUNTIME, kind = PythonRuntime.RUNTIME, entity = EntityName.FUNCTION)
 public class FunctionPythonSpec extends FunctionBaseSpec {
+
+    @NotNull
+    @Schema(description = "Source code for the dbt function")
+    private SourceCode<PythonSourceCodeLanguages> source;
 
     @Schema(description = "Container image name")
     private String image;
@@ -43,5 +49,8 @@ public class FunctionPythonSpec extends FunctionBaseSpec {
         this.image = spec.getImage();
         this.baseImage = spec.getBaseImage();
         this.requirements = spec.getRequirements();
+    }
+    public enum PythonSourceCodeLanguages {
+        python,
     }
 }

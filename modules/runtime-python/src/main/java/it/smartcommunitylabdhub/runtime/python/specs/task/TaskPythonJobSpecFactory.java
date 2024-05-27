@@ -7,15 +7,15 @@ import java.io.Serializable;
 import java.util.Map;
 
 @Component
-public class TaskBuildSpecFactory implements SpecFactory<TaskBuildSpec> {
+public class TaskPythonJobSpecFactory implements SpecFactory<TaskJobSpec> {
 
     @Override
-    public TaskBuildSpec create() {
-        return new TaskBuildSpec();
+    public TaskJobSpec create() {
+        return new TaskJobSpec();
     }
 
     @Override
-    public TaskBuildSpec create(Map<String, Serializable> data) {
-        return new TaskBuildSpec(data);
+    public TaskJobSpec create(Map<String, Serializable> data) {
+        return new TaskJobSpec(data);
     }
 }
