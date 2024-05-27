@@ -27,11 +27,8 @@ public class FunctionPythonSpec extends FunctionBaseSpec {
     @JsonProperty("base_image")
     private String baseImage;
 
-    @Schema(description = "Override the command run in the container")
-    private String command;
-
     @Schema(description = "Override the arguments passed to command")
-    private List<String> args;
+    private List<String> requirements;
 
     public FunctionPythonSpec(Map<String, Serializable> data) {
         configure(data);
@@ -43,9 +40,8 @@ public class FunctionPythonSpec extends FunctionBaseSpec {
 
         FunctionPythonSpec spec = mapper.convertValue(data, FunctionPythonSpec.class);
 
-        this.command = spec.getCommand();
         this.image = spec.getImage();
         this.baseImage = spec.getBaseImage();
-        this.args = spec.getArgs();
+        this.requirements = spec.getRequirements();
     }
 }

@@ -56,7 +56,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
             //base
             .image(functionSpec.getImage())
             .command(functionSpec.getCommand())
-            .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
+            .args(functionSpec.getRequirements() != null ? functionSpec.getRequirements().toArray(new String[0]) : null)
             .envs(coreEnvList)
             .secrets(groupedSecrets)
             .resources(taskSpec.getResources())
@@ -79,7 +79,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                     //base
                     .image(functionSpec.getImage())
                     .command(functionSpec.getCommand())
-                    .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
+                    .args(functionSpec.getRequirements() != null ? functionSpec.getRequirements().toArray(new String[0]) : null)
                     .envs(coreEnvList)
                     .secrets(groupedSecrets)
                     .resources(taskSpec.getResources())

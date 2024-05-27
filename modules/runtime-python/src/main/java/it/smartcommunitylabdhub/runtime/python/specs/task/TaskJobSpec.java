@@ -21,7 +21,7 @@ import java.util.Map;
 @SpecType(runtime = PythonRuntime.RUNTIME, kind = TaskJobSpec.KIND, entity = EntityName.TASK)
 public class TaskJobSpec extends K8sTaskBaseSpec {
 
-    public static final String KIND = "container+job";
+    public static final String KIND = "python+job";
 
     @JsonProperty("backoff_limit")
     @Min(0)

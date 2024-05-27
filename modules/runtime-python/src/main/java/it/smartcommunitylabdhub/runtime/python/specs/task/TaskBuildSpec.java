@@ -21,7 +21,7 @@ import java.util.Map;
 @SpecType(runtime = PythonRuntime.RUNTIME, kind = TaskBuildSpec.KIND, entity = EntityName.TASK)
 public class TaskBuildSpec extends K8sTaskBaseSpec {
 
-    public static final String KIND = "container+build";
+    public static final String KIND = "python+build";
 
     @JsonProperty("context_refs")
     private List<ContextRef> contextRefs;
@@ -43,7 +43,7 @@ public class TaskBuildSpec extends K8sTaskBaseSpec {
 
         TaskBuildSpec spec = mapper.convertValue(data, TaskBuildSpec.class);
         this.replicas = spec.getReplicas();
-        this.instructions = spec.getInstructions(); //Dockerfile instructions
+        this.instructions = spec.getInstructions(); //  instructions
         this.contextRefs = spec.getContextRefs(); // List of context refs that need to be materialized
         this.contextSources = spec.getContextSources(); // List of context sources that need to be materialized
     }
