@@ -35,6 +35,7 @@
         <module>modules/runtime-nefertem</module>
         <module>modules/runtime-mlrun</module>
         <module>modules/runtime-kfp</module>
+        <module>modules/runtime-python</module>
         <module>modules/openmetadata-integration</module>
         <module>frontend</module>
         <module>application</module>
