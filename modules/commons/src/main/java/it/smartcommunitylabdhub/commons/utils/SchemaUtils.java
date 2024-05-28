@@ -26,8 +26,8 @@ public final class SchemaUtils {
 
         JacksonModule jacksonModule = new JacksonModule(
             JacksonOption.IGNORE_TYPE_INFO_TRANSFORM,
-            JacksonOption.RESPECT_JSONPROPERTY_ORDER,
-            JacksonOption.INCLUDE_ONLY_JSONPROPERTY_ANNOTATED_METHODS
+            JacksonOption.RESPECT_JSONPROPERTY_ORDER
+            // JacksonOption.INCLUDE_ONLY_JSONPROPERTY_ANNOTATED_METHODS
         );
         JakartaValidationModule jakartaModule = new JakartaValidationModule(
             JakartaValidationOption.NOT_NULLABLE_FIELD_IS_REQUIRED,
@@ -49,8 +49,10 @@ public final class SchemaUtils {
             .with(Option.PLAIN_DEFINITION_KEYS)
             .with(Option.ENUM_KEYWORD_FOR_SINGLE_VALUES)
             .with(Option.FLATTENED_ENUMS_FROM_TOSTRING)
-            //avoid fields without getters (ex. unwrapped fields)
-            .without(Option.NONPUBLIC_NONSTATIC_FIELDS_WITHOUT_GETTERS);
+            .with(Option.PUBLIC_NONSTATIC_FIELDS);
+        //avoid fields without getters (ex. unwrapped fields)
+        //DISABLED: breaks records
+        // .without(Option.NONPUBLIC_NONSTATIC_FIELDS_WITHOUT_GETTERS);
 
         GENERATOR = new SchemaGenerator(configBuilder.build());
     }
