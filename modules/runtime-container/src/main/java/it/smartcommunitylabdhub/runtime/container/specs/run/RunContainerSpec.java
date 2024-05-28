@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.runtime.container.specs.run;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -14,29 +14,33 @@ import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
+// @Setter
 @NoArgsConstructor
 @SpecType(runtime = ContainerRuntime.RUNTIME, kind = RunContainerSpec.KIND, entity = EntityName.RUN)
 public class RunContainerSpec extends RunBaseSpec {
 
     public static final String KIND = ContainerRuntime.RUNTIME + "+run";
 
-    @JsonProperty("job_spec")
+    // @JsonProperty("job_spec")
+    @JsonUnwrapped
     private TaskJobSpec taskJobSpec;
 
-    @JsonProperty("deploy_spec")
+    // @JsonProperty("deploy_spec")
+    @JsonUnwrapped
     private TaskDeploySpec taskDeploySpec;
 
-    @JsonProperty("serve_spec")
+    // @JsonProperty("serve_spec")
+    @JsonUnwrapped
     private TaskServeSpec taskServeSpec;
 
-    @JsonProperty("build_spec")
+    // @JsonProperty("build_spec")
+    @JsonUnwrapped
     private TaskBuildSpec taskBuildSpec;
 
-    @JsonProperty("function_spec")
+    // @JsonProperty("function_spec")
+    @JsonUnwrapped
     private FunctionContainerSpec functionSpec;
 
     public RunContainerSpec(Map<String, Serializable> data) {
@@ -54,5 +58,25 @@ public class RunContainerSpec extends RunBaseSpec {
         this.taskServeSpec = spec.getTaskServeSpec();
         this.functionSpec = spec.getFunctionSpec();
         this.taskBuildSpec = spec.getTaskBuildSpec();
+    }
+
+    public void setFunctionSpec(FunctionContainerSpec functionSpec) {
+        this.functionSpec = functionSpec;
+    }
+
+    public void setTaskJobSpec(TaskJobSpec taskJobSpec) {
+        this.taskJobSpec = taskJobSpec;
+    }
+
+    public void setTaskDeploySpec(TaskDeploySpec taskDeploySpec) {
+        this.taskDeploySpec = taskDeploySpec;
+    }
+
+    public void setTaskServeSpec(TaskServeSpec taskServeSpec) {
+        this.taskServeSpec = taskServeSpec;
+    }
+
+    public void setTaskBuildSpec(TaskBuildSpec taskBuildSpec) {
+        this.taskBuildSpec = taskBuildSpec;
     }
 }

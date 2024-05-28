@@ -18,8 +18,7 @@ import java.util.HashMap;
 public class JacksonMapper {
 
     public static final ObjectMapper CUSTOM_OBJECT_MAPPER = new ObjectMapper();
-    public static final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<>() {
-    };
+    public static final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<>() {};
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final ObjectMapper CBOR_OBJECT_MAPPER = new ObjectMapper(new CBORFactory());
 
@@ -35,7 +34,7 @@ public class JacksonMapper {
         CUSTOM_OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         CUSTOM_OBJECT_MAPPER.setSerializationInclusion(Include.NON_EMPTY);
         CUSTOM_OBJECT_MAPPER.registerModule(new JavaTimeModule());
-        CUSTOM_OBJECT_MAPPER.addMixIn(BaseSpec.class, ConcreteSpecMixin.class); // Replace TaskTransformSpec with your concrete class
+        CUSTOM_OBJECT_MAPPER.addMixIn(BaseSpec.class, ConcreteSpecMixin.class);
     }
 
     // Register mixin for cbor to map deserialization.
