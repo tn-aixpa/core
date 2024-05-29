@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.commons.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.victools.jsonschema.generator.ConfigFunction;
+import com.github.victools.jsonschema.generator.FieldScope;
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
@@ -17,6 +19,8 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 
 //TODO refactor into a factory
 public final class SchemaUtils {
+
+    public static final String FIELDS_PREFIX = "fields.";
 
     public static final SchemaGenerator GENERATOR;
 
@@ -53,6 +57,25 @@ public final class SchemaUtils {
         //avoid fields without getters (ex. unwrapped fields)
         //DISABLED: breaks records
         // .without(Option.NONPUBLIC_NONSTATIC_FIELDS_WITHOUT_GETTERS);
+
+        //auto-generate titles and descriptions via a fixed naming schema
+        ConfigFunction<FieldScope, String> titleFromNameResolver = scope -> {
+            if (scope.isFakeContainerItemScope()) {
+                return FIELDS_PREFIX + scope.getDeclaredName() + ".item.title";
+            }
+            return FIELDS_PREFIX + scope.getDeclaredName() + ".title";
+        };
+        ConfigFunction<FieldScope, String> descriptionFromNameResolver = scope -> {
+            if (scope.isFakeContainerItemScope()) {
+                return FIELDS_PREFIX + scope.getDeclaredName() + ".item.description";
+            }
+            return FIELDS_PREFIX + scope.getDeclaredName() + ".description";
+        };
+
+        configBuilder
+            .forFields()
+            .withTitleResolver(titleFromNameResolver)
+            .withDescriptionResolver(descriptionFromNameResolver);
 
         GENERATOR = new SchemaGenerator(configBuilder.build());
     }

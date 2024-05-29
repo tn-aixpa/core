@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.runtime.nefertem.specs.run;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -12,8 +12,6 @@ import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskProfileSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,19 +31,24 @@ public class RunNefertemSpec extends RunBaseSpec {
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
-    @JsonProperty("infer_spec")
+    // @JsonProperty("infer_spec")
+    @JsonUnwrapped
     private TaskInferSpec taskInferSpec;
 
-    @JsonProperty("metric_spec")
+    // @JsonProperty("metric_spec")
+    @JsonUnwrapped
     private TaskMetricSpec taskMetricSpec;
 
-    @JsonProperty("profile_spec")
+    // @JsonProperty("profile_spec")
+    @JsonUnwrapped
     private TaskProfileSpec taskProfileSpec;
 
-    @JsonProperty("validate_spec")
+    // @JsonProperty("validate_spec")
+    @JsonUnwrapped
     private TaskValidateSpec taskValidateSpec;
 
-    @JsonProperty("function_spec")
+    // @JsonProperty("function_spec")
+    @JsonUnwrapped
     private FunctionNefertemSpec funcSpec;
 
     public RunNefertemSpec(Map<String, Serializable> data) {
@@ -66,5 +69,25 @@ public class RunNefertemSpec extends RunBaseSpec {
         this.taskProfileSpec = spec.getTaskProfileSpec();
         this.taskValidateSpec = spec.getTaskValidateSpec();
         this.funcSpec = spec.getFuncSpec();
+    }
+
+    public void setTaskInferSpec(TaskInferSpec taskInferSpec) {
+        this.taskInferSpec = taskInferSpec;
+    }
+
+    public void setTaskMetricSpec(TaskMetricSpec taskMetricSpec) {
+        this.taskMetricSpec = taskMetricSpec;
+    }
+
+    public void setTaskProfileSpec(TaskProfileSpec taskProfileSpec) {
+        this.taskProfileSpec = taskProfileSpec;
+    }
+
+    public void setTaskValidateSpec(TaskValidateSpec taskValidateSpec) {
+        this.taskValidateSpec = taskValidateSpec;
+    }
+
+    public void setFuncSpec(FunctionNefertemSpec funcSpec) {
+        this.funcSpec = funcSpec;
     }
 }

@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.runtime.kfp.specs.run;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -9,8 +9,6 @@ import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.workflow.WorkflowKFPSpec;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,10 +28,12 @@ public class RunKFPSpec extends RunBaseSpec {
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
-    @JsonProperty("workflow_spec")
+    // @JsonProperty("workflow_spec")
+    @JsonUnwrapped
     private WorkflowKFPSpec workflowSpec;
 
-    @JsonProperty("pipeline_spec")
+    // @JsonProperty("pipeline_spec")
+    @JsonUnwrapped
     private TaskPipelineSpec taskSpec;
 
     public RunKFPSpec(Map<String, Serializable> data) {
@@ -51,5 +51,13 @@ public class RunKFPSpec extends RunBaseSpec {
 
         this.taskSpec = spec.getTaskSpec();
         this.workflowSpec = spec.getWorkflowSpec();
+    }
+
+    public void setWorkflowSpec(WorkflowKFPSpec workflowSpec) {
+        this.workflowSpec = workflowSpec;
+    }
+
+    public void setTaskSpec(TaskPipelineSpec taskSpec) {
+        this.taskSpec = taskSpec;
     }
 }

@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.runtime.dbt.specs.run;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -9,8 +9,6 @@ import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,10 +28,12 @@ public class RunDbtSpec extends RunBaseSpec {
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
-    @JsonProperty("transform_spec")
+    // @JsonProperty("transform_spec")
+    @JsonUnwrapped
     private TaskTransformSpec taskSpec;
 
-    @JsonProperty("function_spec")
+    // @JsonProperty("function_spec")
+    @JsonUnwrapped
     private FunctionDbtSpec funcSpec;
 
     public RunDbtSpec(Map<String, Serializable> data) {
@@ -51,5 +51,13 @@ public class RunDbtSpec extends RunBaseSpec {
 
         this.taskSpec = spec.getTaskSpec();
         this.funcSpec = spec.getFuncSpec();
+    }
+
+    public void setTaskSpec(TaskTransformSpec taskSpec) {
+        this.taskSpec = taskSpec;
+    }
+
+    public void setFuncSpec(FunctionDbtSpec funcSpec) {
+        this.funcSpec = funcSpec;
     }
 }
