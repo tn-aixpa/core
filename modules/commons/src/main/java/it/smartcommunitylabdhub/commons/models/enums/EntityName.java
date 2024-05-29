@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.ToString;
 import org.springframework.util.Assert;
 
-//
 @Getter
 @ToString
 public enum EntityName {
@@ -18,7 +17,8 @@ public enum EntityName {
     MODEL("model"),
     TASK("task"),
     RUN("run"),
-    LOG("log");
+    LOG("log"),
+    METADATA("metadata");
 
     private final String value;
 

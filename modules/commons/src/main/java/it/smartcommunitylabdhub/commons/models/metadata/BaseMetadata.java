@@ -2,7 +2,9 @@ package it.smartcommunitylabdhub.commons.models.metadata;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -19,6 +21,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@SpecType(kind = "metadata.base", entity = EntityName.METADATA)
 public final class BaseMetadata extends BaseSpec implements Metadata {
 
     protected String project;

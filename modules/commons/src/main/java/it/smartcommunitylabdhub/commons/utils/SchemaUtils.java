@@ -9,18 +9,22 @@ import com.github.victools.jsonschema.generator.OptionPreset;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import com.github.victools.jsonschema.generator.SchemaVersion;
+import com.github.victools.jsonschema.generator.TypeScope;
 import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
 import com.github.victools.jsonschema.module.swagger2.Swagger2Module;
+import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.introspect.JsonSchemaAnnotationIntrospector;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import java.util.Optional;
 
 //TODO refactor into a factory
 public final class SchemaUtils {
 
     public static final String FIELDS_PREFIX = "fields.";
+    public static final String SPECS_PREFIX = "specs.";
 
     public static final SchemaGenerator GENERATOR;
 
@@ -77,11 +81,27 @@ public final class SchemaUtils {
             .withTitleResolver(titleFromNameResolver)
             .withDescriptionResolver(descriptionFromNameResolver);
 
+        configBuilder
+            .forTypesInGeneral()
+            .withTitleResolver(specTypeResolver("title"))
+            .withDescriptionResolver(specTypeResolver("description"));
+
         GENERATOR = new SchemaGenerator(configBuilder.build());
     }
 
     public static JsonNode schema(Class<? extends Spec> clazz) {
         return GENERATOR.generateSchema(clazz);
+    }
+
+    private static ConfigFunction<TypeScope, String> specTypeResolver(String value) {
+        return typeScope -> {
+            return Optional
+                .ofNullable(typeScope.getType().getErasedType().getAnnotation(SpecType.class))
+                .map(spec -> spec.kind())
+                .filter(s -> s != null)
+                .map(s -> SPECS_PREFIX + s + "." + value)
+                .orElse(null);
+        };
     }
 
     private SchemaUtils() {}
