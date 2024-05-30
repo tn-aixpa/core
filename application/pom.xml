@@ -257,6 +257,11 @@
             <artifactId>dh-console</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-openmetadata</artifactId>
+            <version>${revision}</version>
+        </dependency>
     </dependencies>
 
     <build>
