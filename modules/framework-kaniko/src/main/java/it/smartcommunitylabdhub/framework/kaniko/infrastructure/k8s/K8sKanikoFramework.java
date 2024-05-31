@@ -29,14 +29,13 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -95,6 +94,56 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         V1Secret secret = buildRunSecret(runnable);
         if (secret != null) {
             storeRunSecret(secret);
+        }
+
+        //build and create configMap
+        try {
+            // Generate Config map
+            Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
+            Optional<List<ContextSource>> contextSourcesOpt = Optional.ofNullable(runnable.getContextSources());
+            V1ConfigMap configMap = new V1ConfigMap()
+                .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()).labels(buildLabels(runnable)))
+                .data(
+                    MapUtils.mergeMultipleMaps(
+                        //dockerfile
+                        Map.of("Dockerfile", runnable.getDockerFile()),
+                        // Generate context-refs.txt if exist
+                        contextRefsOpt
+                            .map(contextRefsList ->
+                                Map.of(
+                                    "context-refs.txt",
+                                    contextRefsList
+                                        .stream()
+                                        .map(v ->
+                                            v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n"
+                                        )
+                                        .collect(Collectors.joining(""))
+                                )
+                            )
+                            .orElseGet(Map::of),
+                        // Generate context-sources.txt if exist
+                        contextSourcesOpt
+                            .map(contextSources ->
+                                contextSources
+                                    .stream()
+                                    .collect(
+                                        Collectors.toMap(
+                                            ContextSource::getName,
+                                            c ->
+                                                new String(
+                                                    Base64.getUrlDecoder().decode(c.getBase64()),
+                                                    StandardCharsets.UTF_8
+                                                )
+                                        )
+                                    )
+                            )
+                            .orElseGet(Map::of)
+                    )
+                );
+
+            coreV1Api.createNamespacedConfigMap(namespace, configMap, null, null, null, null);
+        } catch (ApiException | NullPointerException e) {
+            throw new K8sFrameworkException(e.getMessage());
         }
 
         log.info("create job for {}", String.valueOf(job.getMetadata().getName()));
@@ -312,62 +361,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             .backoffLimit(backoffLimit)
             .template(podTemplateSpec);
 
-        try {
-            // Generate Config map
-            Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
-            Optional<List<ContextSource>> contextSourcesOpt = Optional.ofNullable(runnable.getContextSources());
-            V1ConfigMap configMap = new V1ConfigMap()
-                .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()).labels(labels))
-                .data(
-                    MapUtils.mergeMultipleMaps(
-                        Map.of("Dockerfile", runnable.getDockerFile()),
-                        // Generate context-refs.txt if exist
-                        contextRefsOpt
-                            .map(contextRefsList ->
-                                Map.of(
-                                    "context-refs.txt",
-                                    contextRefsList
-                                        .stream()
-                                        .map(v ->
-                                            v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n"
-                                        )
-                                        .collect(Collectors.joining(""))
-                                )
-                            )
-                            .orElseGet(Map::of),
-                        // Generate context-sources.txt if exist
-                        contextSourcesOpt
-                            .map(contextSources ->
-                                contextSources
-                                    .stream()
-                                    .collect(
-                                        Collectors.toMap(
-                                            ContextSource::getName,
-                                            c -> Arrays.toString(Base64.getUrlDecoder().decode(c.getBase64()))
-                                        )
-                                    )
-                            )
-                            .orElseGet(Map::of)
-                    )
-                );
-
-            // Check if config map already exist. if not, create it
-            //TODO move creation to run NOT build!
-            try {
-                coreV1Api.readNamespacedConfigMap(
-                    Objects.requireNonNull(configMap.getMetadata()).getName(),
-                    namespace,
-                    null
-                ); // ConfigMap already exist  -> do nothing
-            } catch (ApiException e) { // ConfigMap does not exist -> create it
-                coreV1Api.createNamespacedConfigMap(namespace, configMap, null, null, null, null);
-            }
-
-            // Return a new job with metadata and jobSpec
-            return new V1Job().metadata(metadata).spec(jobSpec);
-        } catch (ApiException | NullPointerException e) {
-            throw new K8sFrameworkException(e.getMessage());
-        }
+        // Return a new job with metadata and jobSpec
+        return new V1Job().metadata(metadata).spec(jobSpec);
     }
 
     /*
