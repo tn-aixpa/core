@@ -23,17 +23,18 @@ public class PythonFunctionSpec extends FunctionBaseSpec {
 
     @JsonProperty("source")
     @NotNull
+    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
     private SourceCode<PythonSourceCodeLanguages> source;
 
     @JsonProperty("image")
-    @Schema(title = "fields.containerImage.title", description = "fields.containerImage.description")
+    @Schema(title = "fields.container.image.title", description = "fields.container.image.description")
     private String image;
 
     @JsonProperty("base_image")
-    @Schema(title = "fields.containerBaseImage.title", description = "fields.containerBaseImage.description")
+    @Schema(title = "fields.container.baseImage.title", description = "fields.container.baseImage.description")
     private String baseImage;
 
-    @Schema(title = "fields.pythonRequirements.title", description = "fields.pythonRequirements.description")
+    @Schema(title = "fields.python.requirements.title", description = "fields.python.requirements.description")
     private List<String> requirements;
 
     public PythonFunctionSpec(Map<String, Serializable> data) {

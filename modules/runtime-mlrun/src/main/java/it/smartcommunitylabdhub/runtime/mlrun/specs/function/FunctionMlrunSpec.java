@@ -21,22 +21,22 @@ import lombok.Setter;
 public class FunctionMlrunSpec extends FunctionBaseSpec {
 
     @NotNull
-    @Schema(description = "Source code")
+    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
     private SourceCode<MlrunSourceCodeLanguages> source;
 
-    @Schema(description = "Container image name")
+    @Schema(title = "fields.container.image.title", description = "fields.container.image.description")
     private String image;
 
-    @Schema(description = "Container image tag")
+    @Schema(title = "fields.container.tag.title", description = "fields.container.tag.description")
     private String tag;
 
-    @Schema(description = "Handler method inside the function")
+    @Schema(title = "fields.sourceCode.handler.title", description = "fields.sourceCode.handler.description")
     private String handler;
 
-    @Schema(description = "Override the command run in the container")
+    @Schema(title = "fields.container.command.title", description = "fields.container.command.description")
     private String command;
 
-    @Schema(description = "Requirements list, as used by the runtime")
+    @Schema(title = "fields.python.requirements.title", description = "fields.python.requirements.description")
     private List<Serializable> requirements;
 
     public FunctionMlrunSpec(Map<String, Serializable> data) {

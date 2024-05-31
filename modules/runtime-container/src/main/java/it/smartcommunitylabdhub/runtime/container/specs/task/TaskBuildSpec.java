@@ -1,9 +1,7 @@
 package it.smartcommunitylabdhub.runtime.container.specs.task;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
-import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
@@ -22,14 +20,7 @@ public class TaskBuildSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "container+build";
 
-    @JsonProperty("context_refs")
-    private List<ContextRef> contextRefs;
-
-    @JsonProperty("context_sources")
-    private List<ContextSource> contextSources;
-
-    private Integer replicas;
-
+    @Schema(title = "fields.container.instructions.title", description = "fields.container.instructions.description")
     private List<String> instructions;
 
     public TaskBuildSpec(Map<String, Serializable> data) {
@@ -41,9 +32,6 @@ public class TaskBuildSpec extends K8sTaskBaseSpec {
         super.configure(data);
 
         TaskBuildSpec spec = mapper.convertValue(data, TaskBuildSpec.class);
-        this.replicas = spec.getReplicas();
-        this.instructions = spec.getInstructions(); //Dockerfile instructions
-        this.contextRefs = spec.getContextRefs(); // List of context refs that need to be materialized
-        this.contextSources = spec.getContextSources(); // List of context sources that need to be materialized
+        this.instructions = spec.getInstructions();
     }
 }

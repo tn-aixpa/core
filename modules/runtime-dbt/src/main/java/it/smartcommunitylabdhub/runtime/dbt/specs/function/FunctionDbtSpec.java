@@ -20,7 +20,7 @@ import lombok.Setter;
 public class FunctionDbtSpec extends FunctionBaseSpec {
 
     @NotNull
-    @Schema(description = "Source code for the dbt function")
+    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
     private SourceCode<DbtSourceCodeLanguages> source;
 
     public FunctionDbtSpec(Map<String, Serializable> data) {

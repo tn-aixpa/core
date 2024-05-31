@@ -17,19 +17,16 @@ import org.springframework.lang.Nullable;
 public class SourceCode<T extends Enum<?>> implements Serializable {
 
     @Nullable
-    @Schema(description = "Source reference")
+    @Schema(title = "fields.sourceCode.source.title", description = "fields.sourceCode.source.description")
     private String source;
 
     @Nullable
-    @Schema(description = "Handler (in source)")
+    @Schema(title = "fields.sourceCode.handler.title", description = "fields.sourceCode.handler.description")
     private String handler;
 
-    @Schema(description = "Source code (plain)")
-    private String code;
-
-    @Schema(description = "Source code (base64 encoded)")
+    @Schema(title = "fields.sourceCode.base64.title", description = "fields.sourceCode.base64.description")
     private String base64;
 
-    @Schema(description = "Source code language (hint)")
+    @Schema(title = "fields.sourceCode.lang.title", description = "fields.sourceCode.lang.description")
     private T lang;
 }

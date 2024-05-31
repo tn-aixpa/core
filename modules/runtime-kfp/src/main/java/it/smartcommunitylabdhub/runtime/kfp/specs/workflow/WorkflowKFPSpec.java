@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,16 +20,16 @@ import lombok.Setter;
 public class WorkflowKFPSpec extends WorkflowBaseSpec {
 
     @NotNull
-    @Schema(description = "Source code")
+    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
     private SourceCode<KFPSourceCodeLanguages> source;
 
-    @Schema(description = "Container image name")
+    @Schema(title = "fields.container.image.title", description = "fields.container.image.description")
     private String image;
 
-    @Schema(description = "Container image tag")
+    @Schema(title = "fields.container.tag.title", description = "fields.container.tag.description")
     private String tag;
 
-    @Schema(description = "Handler method inside the function")
+    @Schema(title = "fields.sourceCode.handler.title", description = "fields.sourceCode.handler.description")
     private String handler;
 
     public WorkflowKFPSpec(Map<String, Serializable> data) {

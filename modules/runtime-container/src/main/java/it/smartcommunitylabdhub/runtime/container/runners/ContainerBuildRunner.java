@@ -7,10 +7,8 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGenerator;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGeneratorFactory;
-import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileInstruction;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
@@ -34,6 +32,9 @@ import org.springframework.util.StringUtils;
  */
 @Slf4j
 public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
+
+    private static final String RUN_DEBUG =
+        "PWD=`pwd`;echo \"DEBUG: dir ${PWD}\";LS=`ls -R`;echo \"DEBUG: dir content:\" && echo \"${LS}\";";
 
     private static final String TASK = "job";
 
@@ -73,9 +74,7 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
 
         if (log.isDebugEnabled()) {
             //add debug instructions to docker file
-            dockerfileGenerator.run(
-                "PWD=`pwd`;echo \"DEBUG: Current dir ${PWD}\";LS=`ls -R`;echo \"DEBUG: Current dir content:\" && echo \"${LS}\";"
-            );
+            dockerfileGenerator.run(RUN_DEBUG);
         }
 
         // Add Instructions to docker file
@@ -107,8 +106,7 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
             // Task specific
-            .contextRefs(taskSpec.getContextRefs())
-            .contextSources(taskSpec.getContextSources())
+
             .dockerFile(dockerfile)
             // specific
             .backoffLimit(1)
