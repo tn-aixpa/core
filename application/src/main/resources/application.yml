@@ -66,6 +66,9 @@ runtime:
     image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
   kfp:
     image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
+  python:
+    image: ${RUNTIME_PYTHON_IMAGE:ghcr.io/scc-digitalhub/digitalhub-serverless-python-3.9:latest}
+    command: /usr/local/bin/processor
 
 
 # Spring Docs

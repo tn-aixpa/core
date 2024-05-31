@@ -1,26 +1,16 @@
 package it.smartcommunitylabdhub.runtime.python.builders;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Builder;
-import it.smartcommunitylabdhub.runtime.python.specs.function.FunctionPythonSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.run.RunPythonSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.task.TaskJobSpec;
-
+import it.smartcommunitylabdhub.runtime.python.specs.function.PythonFunctionSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.run.PythonRunSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.task.PythonJobTaskSpec;
 import java.util.Optional;
 
-/**
- * JobJobBuilder
- * <p>
- * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from BuilderFactory
- * you have to register it using the following annotation:
- *
- * @BuilderComponent(runtime = "python", task = "job")
- */
-
-public class PythonJobBuilder implements Builder<FunctionPythonSpec, TaskJobSpec, RunPythonSpec> {
+public class PythonJobBuilder implements Builder<PythonFunctionSpec, PythonJobTaskSpec, PythonRunSpec> {
 
     @Override
-    public RunPythonSpec build(FunctionPythonSpec funSpec, TaskJobSpec taskSpec, RunPythonSpec runSpec) {
-        RunPythonSpec pythonSpec = new RunPythonSpec(runSpec.toMap());
+    public PythonRunSpec build(PythonFunctionSpec funSpec, PythonJobTaskSpec taskSpec, PythonRunSpec runSpec) {
+        PythonRunSpec pythonSpec = new PythonRunSpec(runSpec.toMap());
         pythonSpec.setTaskJobSpec(taskSpec);
         pythonSpec.setFunctionSpec(funSpec);
 

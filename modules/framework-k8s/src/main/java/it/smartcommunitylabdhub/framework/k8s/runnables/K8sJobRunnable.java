@@ -2,16 +2,15 @@ package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableComponent;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 @RunnableComponent(framework = K8sJobFramework.FRAMEWORK)
 @SuperBuilder

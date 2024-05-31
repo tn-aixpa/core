@@ -1,62 +1,122 @@
 package it.smartcommunitylabdhub.runtime.python.runners;
 
-import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
-import it.smartcommunitylabdhub.runtime.python.specs.function.FunctionPythonSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.run.RunPythonSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.task.TaskJobSpec;
+import it.smartcommunitylabdhub.runtime.python.model.NuclioFunctionBuilder;
+import it.smartcommunitylabdhub.runtime.python.model.NuclioFunctionSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.function.PythonFunctionSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.function.PythonFunctionSpec.PythonSourceCodeLanguages;
+import it.smartcommunitylabdhub.runtime.python.specs.run.PythonRunSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.task.PythonJobTaskSpec;
+import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
-
-/**
- * ContainerJobRunner
- * <p>
- * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
- * you have to register it using the following annotation:
- *
- * @RunnerComponent(runtime = "python", task = "job")
- */
 public class PythonJobRunner implements Runner<K8sRunnable> {
 
-    private static final String TASK = "job";
+    private static ObjectMapper jsonMapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
 
-    private final FunctionPythonSpec functionSpec;
+    private final String image;
+    private final String command;
+    private final PythonFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public PythonJobRunner(FunctionPythonSpec functionPythonSpec, Map<String, Set<String>> groupedSecrets) {
+    public PythonJobRunner(
+        String image,
+        String command,
+        PythonFunctionSpec functionPythonSpec,
+        Map<String, Set<String>> groupedSecrets
+    ) {
+        this.image = image;
+        this.command = command;
         this.functionSpec = functionPythonSpec;
         this.groupedSecrets = groupedSecrets;
     }
 
     @Override
     public K8sRunnable produce(Run run) {
-        RunPythonSpec runSpec = new RunPythonSpec(run.getSpec());
-        TaskJobSpec taskSpec = runSpec.getTaskJobSpec();
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
+        PythonRunSpec runSpec = new PythonRunSpec(run.getSpec());
+        PythonJobTaskSpec taskSpec = runSpec.getTaskJobSpec();
 
-        List<CoreEnv> coreEnvList = new ArrayList<>(
+        try {
+            List<CoreEnv> coreEnvList = new ArrayList<>(
                 List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
-        );
+            );
 
-        Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
+            Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
-        K8sRunnable k8sJobRunnable = K8sJobRunnable
+            //build nuclio definition
+            HashMap<String, Serializable> event = new HashMap<>();
+
+            event.put("body", jsonMapper.writeValueAsString(run));
+
+            NuclioFunctionSpec nuclio = NuclioFunctionSpec
+                .builder()
+                .runtime("python")
+                //invoke user code wrapped via default handler
+                .handler("run_handler:handler")
+                //directly invoke user code
+                // .handler("main:" + runSpec.getFunctionSpec().getSource().getHandler())
+                .event(event)
+                .build();
+
+            String nuclioFunction = NuclioFunctionBuilder.write(nuclio);
+
+            //read source and build context
+            List<ContextRef> contextRefs = null;
+            List<ContextSource> contextSources = new ArrayList<>();
+            ContextSource fn = ContextSource
+                .builder()
+                .name("function.yaml")
+                .base64(Base64.getUrlEncoder().encodeToString(nuclioFunction.getBytes(StandardCharsets.UTF_8)))
+                .build();
+            contextSources.add(fn);
+
+            if (functionSpec.getSource() != null) {
+                SourceCode<PythonSourceCodeLanguages> source = functionSpec.getSource();
+                if (StringUtils.hasText(source.getBase64())) {
+                    contextSources.add(ContextSource.builder().name("main.py").base64(source.getBase64()).build());
+                }
+
+                if (StringUtils.hasText(source.getSource())) {
+                    contextRefs = Collections.singletonList(ContextRef.from(source.getSource()));
+                }
+            }
+
+            //merge env with PYTHON path override
+            coreEnvList.add(new CoreEnv("PYTHONPATH", "${PYTHONPATH}:/shared/"));
+
+            K8sRunnable k8sJobRunnable = K8sJobRunnable
                 .builder()
                 .runtime(PythonRuntime.RUNTIME)
-                .task(TASK)
+                .task(PythonJobTaskSpec.KIND)
                 .state(State.READY.name())
                 //base
-                .image(functionSpec.getImage()) // todo get image if set otherwise get our
-                .command("/.....") //todo
-                .args(new String[]{run.getId()})
+                .image(StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image)
+                .command(command)
+                // .args(new String[] { run.getProject(), run.getId() })
+                .args(new String[] { "--config", "/shared/function.yaml" })
+                .contextRefs(contextRefs)
+                .contextSources(contextSources)
                 .envs(coreEnvList)
                 .secrets(groupedSecrets)
                 .resources(taskSpec.getResources())
@@ -65,36 +125,15 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 .affinity(taskSpec.getAffinity())
                 .tolerations(taskSpec.getTolerations())
                 //specific
-                .backoffLimit(taskSpec.getBackoffLimit())
+                .backoffLimit(0)
                 .build();
 
-        if (StringUtils.hasText(taskSpec.getSchedule())) {
-            //build a cronJob
-            k8sJobRunnable =
-                    K8sCronJobRunnable
-                            .builder()
-                            .runtime(PythonRuntime.RUNTIME)
-                            .task(TASK)
-                            .state(State.READY.name())
-                            //base
-                            .image(functionSpec.getImage()) // todo get image if set otherwise get our
-                            .command("/.....") //todo
-                            .args(new String[]{run.getId()}).envs(coreEnvList)
-                            .secrets(groupedSecrets)
-                            .resources(taskSpec.getResources())
-                            .volumes(taskSpec.getVolumes())
-                            .nodeSelector(taskSpec.getNodeSelector())
-                            .affinity(taskSpec.getAffinity())
-                            .tolerations(taskSpec.getTolerations())
-                            //specific
-                            .backoffLimit(taskSpec.getBackoffLimit())
-                            .schedule(taskSpec.getSchedule())
-                            .build();
+            k8sJobRunnable.setId(run.getId());
+            k8sJobRunnable.setProject(run.getProject());
+
+            return k8sJobRunnable;
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(e.getMessage());
         }
-
-        k8sJobRunnable.setId(run.getId());
-        k8sJobRunnable.setProject(run.getProject());
-
-        return k8sJobRunnable;
     }
 }

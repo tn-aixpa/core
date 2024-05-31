@@ -6,20 +6,19 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import jakarta.validation.constraints.Min;
+import java.io.Serializable;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
-import java.util.Map;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SpecType(runtime = PythonRuntime.RUNTIME, kind = TaskJobSpec.KIND, entity = EntityName.TASK)
-public class TaskJobSpec extends K8sTaskBaseSpec {
+@SpecType(runtime = PythonRuntime.RUNTIME, kind = PythonJobTaskSpec.KIND, entity = EntityName.TASK)
+public class PythonJobTaskSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "python+job";
 
@@ -27,9 +26,7 @@ public class TaskJobSpec extends K8sTaskBaseSpec {
     @Min(0)
     private Integer backoffLimit;
 
-    private String schedule;
-
-    public TaskJobSpec(Map<String, Serializable> data) {
+    public PythonJobTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -37,8 +34,7 @@ public class TaskJobSpec extends K8sTaskBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        TaskJobSpec spec = mapper.convertValue(data, TaskJobSpec.class);
+        PythonJobTaskSpec spec = mapper.convertValue(data, PythonJobTaskSpec.class);
         this.backoffLimit = spec.getBackoffLimit();
-        this.schedule = spec.getSchedule();
     }
 }

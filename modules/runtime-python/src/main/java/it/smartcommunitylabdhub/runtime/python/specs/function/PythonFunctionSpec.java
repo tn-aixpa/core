@@ -8,35 +8,35 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @SpecType(runtime = PythonRuntime.RUNTIME, kind = PythonRuntime.RUNTIME, entity = EntityName.FUNCTION)
-public class FunctionPythonSpec extends FunctionBaseSpec {
+public class PythonFunctionSpec extends FunctionBaseSpec {
 
+    @JsonProperty("source")
     @NotNull
-    @Schema(description = "Source code for the dbt function")
     private SourceCode<PythonSourceCodeLanguages> source;
 
-    @Schema(description = "Container image name")
+    @JsonProperty("image")
+    @Schema(title = "fields.containerImage.title", description = "fields.containerImage.description")
     private String image;
 
-    @Schema(description = "Container image name to be used for building the final image")
     @JsonProperty("base_image")
+    @Schema(title = "fields.containerBaseImage.title", description = "fields.containerBaseImage.description")
     private String baseImage;
 
-    @Schema(description = "Override the arguments passed to command")
+    @Schema(title = "fields.pythonRequirements.title", description = "fields.pythonRequirements.description")
     private List<String> requirements;
 
-    public FunctionPythonSpec(Map<String, Serializable> data) {
+    public PythonFunctionSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -44,12 +44,14 @@ public class FunctionPythonSpec extends FunctionBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        FunctionPythonSpec spec = mapper.convertValue(data, FunctionPythonSpec.class);
+        PythonFunctionSpec spec = mapper.convertValue(data, PythonFunctionSpec.class);
 
+        this.source = spec.getSource();
         this.image = spec.getImage();
         this.baseImage = spec.getBaseImage();
         this.requirements = spec.getRequirements();
     }
+
     public enum PythonSourceCodeLanguages {
         python,
     }
