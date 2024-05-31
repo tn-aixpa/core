@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.framework.kaniko.runnables;
+package it.smartcommunitylabdhub.framework.k8s.model;
 
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
@@ -12,9 +12,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ContextRef implements Serializable {
+public class ContextSource implements Serializable {
 
-    private String destination;
-    private String protocol;
-    private String source;
+    private String name;
+
+    private String base64;
 }

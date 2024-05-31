@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -21,6 +22,7 @@ public class JacksonMapper {
     public static final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<>() {};
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final ObjectMapper CBOR_OBJECT_MAPPER = new ObjectMapper(new CBORFactory());
+    public static final ObjectMapper YAML_OBJECT_MAPPER = new ObjectMapper(YamlMapperFactory.yamlFactory());
 
     static {
         OBJECT_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
@@ -43,6 +45,13 @@ public class JacksonMapper {
         CBOR_OBJECT_MAPPER.registerModule(new JavaTimeModule());
     }
 
+    static {
+        YAML_OBJECT_MAPPER.registerModule(new JavaTimeModule());
+        YAML_OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        YAML_OBJECT_MAPPER.setSerializationInclusion(Include.NON_EMPTY);
+        YAML_OBJECT_MAPPER.configure(MapperFeature.USE_GETTERS_AS_SETTERS, false);
+    }
+
     public static JavaType extractJavaType(Class<?> clazz) {
         // resolve generics type via subclass trick
         return CUSTOM_OBJECT_MAPPER.getTypeFactory().constructSimpleType(clazz, null);
@@ -55,4 +64,6 @@ public class JacksonMapper {
     public static ObjectReader getCustomObjectMapperReader() {
         return CUSTOM_OBJECT_MAPPER.reader();
     }
+
+    private JacksonMapper() {}
 }

@@ -120,10 +120,13 @@ public class K8sBuilderHelper implements InitializingBean {
      * @return V1EnvVar
      */
     public List<V1EnvVar> getV1EnvVar() {
-        //                v1EnvVars.add(
-        //                new V1EnvVar().name("DHUB_CORE_ENDPOINT")
-        //                        .value(DH_ENDPOINT));
-        return new ArrayList<>();
+        List<V1EnvVar> vars = new ArrayList<>();
+        //if no configMap build a minimal config
+        if (sharedConfigMaps == null || sharedConfigMaps.isEmpty()) {
+            vars.add(new V1EnvVar().name("DIGITALHUB_CORE_ENDPOINT").value(coreEndpoint));
+        }
+
+        return vars;
     }
 
     /**
@@ -233,25 +236,35 @@ public class K8sBuilderHelper implements InitializingBean {
     //TODO align names!
     // Generate and return container name
     public String getContainerName(String runtime, String task, String id) {
-        return "c" + "-" + runtime + "-" + task + "-" + id;
+        return sanitizeNames("c" + "-" + runtime + "-" + task + "-" + id);
     }
 
     // Generate and return job name
     public String getJobName(String runtime, String task, String id) {
-        return "j" + "-" + runtime + "-" + task + "-" + id;
+        return sanitizeNames("j" + "-" + runtime + "-" + task + "-" + id);
     }
 
     // Generate and return deployment name
     public String getDeploymentName(String runtime, String task, String id) {
-        return "d" + "-" + runtime + "-" + task + "-" + id;
+        return sanitizeNames("d" + "-" + runtime + "-" + task + "-" + id);
     }
 
     // Generate and return service name
     public String getServiceName(String runtime, String task, String id) {
-        return "s" + "-" + runtime + "-" + task + "-" + id;
+        return sanitizeNames("s" + "-" + runtime + "-" + task + "-" + id);
     }
 
     public String getImageName(String image, String id) {
         return image + ":" + id;
+    }
+
+    public static String sanitizeNames(String name) {
+        //sanitize value
+        if (name == null) {
+            return null;
+        } else {
+            //use only allowed chars in k8s resource names!
+            return name.replaceAll("[^a-zA-Z0-9._-]+", "-");
+        }
     }
 }
