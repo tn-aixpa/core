@@ -225,10 +225,10 @@ solr:
   reindex: ${SOLR_REINDEX:never}
 ```
 
-### core
-You can run DH Core 
+### how to run Core?
+TODO
 
-### run db
+### how to run db?
 
 To start the database that will be used by Core using Docker, you can execute the following command:
 ```bash
@@ -241,10 +241,10 @@ It's important to configure the database parameters either via ENV variables or 
 **IMPORTANT:** If no database is created locally or through Docker, an H2 database will be automatically created when the application starts.
 
 ### web interface
-
+TODO
 
 ### kubernetes
-
+TODO
 
 ## Build Docker Image
 
