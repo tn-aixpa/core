@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class PythonJobRunner implements Runner<K8sRunnable> {
 
@@ -93,12 +95,33 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
 
             if (functionSpec.getSource() != null) {
                 SourceCode<PythonSourceCodeLanguages> source = functionSpec.getSource();
-                if (StringUtils.hasText(source.getBase64())) {
-                    contextSources.add(ContextSource.builder().name("main.py").base64(source.getBase64()).build());
-                }
+                String path = "main.py";
 
                 if (StringUtils.hasText(source.getSource())) {
-                    contextRefs = Collections.singletonList(ContextRef.from(source.getSource()));
+                    try {
+                        //evaluate if local path (no scheme)
+                        UriComponents uri = UriComponentsBuilder.fromUriString(source.getSource()).build();
+                        String scheme = uri.getScheme();
+
+                        if (scheme != null) {
+                            //write as ref
+                            contextRefs = Collections.singletonList(ContextRef.from(source.getSource()));
+                        } else {
+                            if (StringUtils.hasText(path)) {
+                                //override path for local src
+                                path = uri.getPath();
+                                if (path.startsWith(".")) {
+                                    path = path.substring(1);
+                                }
+                            }
+                        }
+                    } catch (IllegalArgumentException e) {
+                        //skip invalid source
+                    }
+                }
+
+                if (StringUtils.hasText(source.getBase64())) {
+                    contextSources.add(ContextSource.builder().name(path).base64(source.getBase64()).build());
                 }
             }
 
