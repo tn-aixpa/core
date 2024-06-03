@@ -15,9 +15,7 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
-import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunBuildBuilder;
 import it.smartcommunitylabdhub.runtime.mlrun.builders.MlrunJobBuilder;
@@ -116,9 +114,8 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
                 if (taskSpec == null) {
                     throw new CoreRuntimeException("null or empty task definition");
                 }
-                K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
 
-                yield new MlrunJobRunner(image, secretService.groupSecrets(run.getProject(), k8s.getSecrets()))
+                yield new MlrunJobRunner(image, secretService.groupSecrets(run.getProject(), taskSpec.getSecrets()))
                     .produce(run);
             }
             case TaskMlrunBuildSpec.KIND -> {
@@ -129,9 +126,8 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
                 if (taskSpec == null) {
                     throw new CoreRuntimeException("null or empty task definition");
                 }
-                K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
 
-                yield new MlrunBuildRunner(image, secretService.groupSecrets(run.getProject(), k8s.getSecrets()))
+                yield new MlrunBuildRunner(image, secretService.groupSecrets(run.getProject(), taskSpec.getSecrets()))
                     .produce(run);
             }
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

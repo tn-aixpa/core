@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.runtime.mlrun.specs.task;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import java.io.Serializable;
@@ -19,11 +20,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @SpecType(runtime = MlrunRuntime.RUNTIME, kind = TaskMlrunBuildSpec.KIND, entity = EntityName.TASK)
-public class TaskMlrunBuildSpec extends TaskBaseSpec {
+public class TaskMlrunBuildSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "mlrun+build";
-
-    private K8sTaskSpec k8s = new K8sTaskSpec();
 
     private List<String> commands;
     @JsonProperty("force_build")
@@ -40,7 +39,7 @@ public class TaskMlrunBuildSpec extends TaskBaseSpec {
         super.configure(data);
 
         TaskMlrunBuildSpec spec = mapper.convertValue(data, TaskMlrunBuildSpec.class);
-        this.k8s = spec.getK8s();
+
         this.commands = spec.getCommands();
         this.forceBuild = spec.getForceBuild();
         this.targetImage = spec.getTargetImage();

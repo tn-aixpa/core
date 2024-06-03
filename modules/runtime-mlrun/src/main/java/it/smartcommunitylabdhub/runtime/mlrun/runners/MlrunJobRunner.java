@@ -45,14 +45,11 @@ public class MlrunJobRunner implements Runner<K8sJobRunnable> {
             throw new CoreRuntimeException("null or empty task definition");
         }
 
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
-        K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
-
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
-        Optional.ofNullable(k8s.getEnvs()).ifPresent(coreEnvList::addAll);
+        Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         //TODO: Create runnable using information from Run completed spec.
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
@@ -62,13 +59,13 @@ public class MlrunJobRunner implements Runner<K8sJobRunnable> {
             .image(image)
             .command("python")
             .args(List.of("wrapper.py").toArray(String[]::new))
-            .resources(k8s.getResources())
-            .nodeSelector(k8s.getNodeSelector())
-            .volumes(k8s.getVolumes())
+            .resources(taskSpec.getResources())
+            .nodeSelector(taskSpec.getNodeSelector())
+            .volumes(taskSpec.getVolumes())
             .secrets(groupedSecrets)
             .envs(coreEnvList)
-            .affinity(k8s.getAffinity())
-            .tolerations(k8s.getTolerations())
+            .affinity(taskSpec.getAffinity())
+            .tolerations(taskSpec.getTolerations())
             .state(State.READY.name())
             .build();
 

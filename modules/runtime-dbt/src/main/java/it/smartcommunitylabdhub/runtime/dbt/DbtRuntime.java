@@ -92,9 +92,8 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtSt
                 if (taskSpec == null) {
                     throw new CoreRuntimeException("null or empty task definition");
                 }
-                K8sTaskSpec k8s = taskSpec.getK8s() != null ? taskSpec.getK8s() : new K8sTaskSpec();
 
-                yield new DbtTransformRunner(image, secretService.groupSecrets(run.getProject(), k8s.getSecrets()))
+                yield new DbtTransformRunner(image, secretService.groupSecrets(run.getProject(), taskSpec.getSecrets()))
                     .produce(run);
             }
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
