@@ -225,8 +225,20 @@ solr:
   reindex: ${SOLR_REINDEX:never}
 ```
 
-### db
+### core
+You can run DH Core 
 
+### run db
+
+To start the database that will be used by Core using Docker, you can execute the following command:
+```bash
+docker run -d --name <dbname> -p 5434:5432 -e POSTGRES_PASSWORD=<password> postgres
+```
+Once the database container is started, you can launch your application. 
+
+It's important to configure the database parameters either via ENV variables or directly in the application.yml file. You can find those settings in the SpringBoot configuration section  
+
+**IMPORTANT:** If no database is created locally or through Docker, an H2 database will be automatically created when the application starts.
 
 ### web interface
 
