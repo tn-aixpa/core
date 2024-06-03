@@ -8,11 +8,14 @@ import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import it.smartcommunitylabdhub.runtime.python.specs.function.PythonFunctionSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.task.PythonJobTaskSpec;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @SpecType(runtime = PythonRuntime.RUNTIME, kind = PythonRunSpec.KIND, entity = EntityName.RUN)
 public class PythonRunSpec extends RunBaseSpec {
@@ -24,6 +27,12 @@ public class PythonRunSpec extends RunBaseSpec {
 
     @JsonUnwrapped
     private PythonFunctionSpec functionSpec;
+
+    private Map<String, Serializable> inputs = new HashMap<>();
+
+    private Map<String, Serializable> outputs = new HashMap<>();
+
+    private Map<String, Serializable> parameters = new HashMap<>();
 
     public PythonRunSpec(Map<String, Serializable> data) {
         configure(data);
@@ -37,6 +46,10 @@ public class PythonRunSpec extends RunBaseSpec {
 
         this.taskJobSpec = spec.getTaskJobSpec();
         this.functionSpec = spec.getFunctionSpec();
+
+        this.inputs = spec.getInputs();
+        this.outputs = spec.getOutputs();
+        this.parameters = spec.getParameters();
     }
 
     public void setTaskJobSpec(PythonJobTaskSpec taskJobSpec) {
