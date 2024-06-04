@@ -67,7 +67,7 @@ runtime:
   kfp:
     image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
   python:
-    image: ${RUNTIME_PYTHON_IMAGE:ghcr.io/scc-digitalhub/digitalhub-serverless-python-3.9:latest}
+    image: ${RUNTIME_PYTHON_IMAGE:ghcr.io/scc-digitalhub/digitalhub-serverless/python-runtime-3.9:latest}
     command: /usr/local/bin/processor
 
 
