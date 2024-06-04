@@ -225,12 +225,9 @@ solr:
   reindex: ${SOLR_REINDEX:never}
 ```
 
-### how to run Core?
-TODO
+### How to run db?
 
-### how to run db?
-
-To start the database that will be used by Core using Docker, you can execute the following command:
+To start the database for Core using Docker, execute the following command:
 ```bash
 docker run -d --name <dbname> -p 5434:5432 -e POSTGRES_PASSWORD=<password> postgres
 ```
@@ -240,13 +237,44 @@ It's important to configure the database parameters either via ENV variables or 
 
 **IMPORTANT:** If no database is created locally or through Docker, an H2 database will be automatically created when the application starts.
 
+### How to run core?
+To run core there are different possibilities:
+
+1. You can download directly the image from GitHub and run it
+```bash
+docker pull ghcr.io/scc-digitalhub/digitalhub-core:<version>
+docker run digitalhub-core:<version>
+
+```
+2. You can build your own image and run it
+```bash
+docker build -t ghcr.io/scc-digitalhub/digitalhub-core:<version> .
+docker run digitalhub-core:<version>
+```
+
+2. You can run core locally using Maven
+```bash
+# Download DH Core from GitHub
+git clone https://github.com/scc-digitalhub/digitalhub-core.git
+
+# Update all submodules
+git submodule init
+git sumodule update
+
+# Run the project
+mvn spring-boot:run -pl application
+```
+In case of problem once you have updated all submodules you can clean and install all dependencies 
+running the following command 
+```bash
+mvn clean install -DskipTests 
+```
+
 ### web interface
 TODO
 
 ### kubernetes
 TODO
-
-## Build Docker Image
 
 ```bash
 docker build .
