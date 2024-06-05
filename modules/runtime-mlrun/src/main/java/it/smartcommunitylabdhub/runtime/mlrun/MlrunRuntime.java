@@ -198,48 +198,32 @@ public class MlrunRuntime implements Runtime<FunctionMlrunSpec, RunMlrunSpec, Ru
 
     @Override
     public RunMlrunStatus onComplete(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         return null;
     }
 
     @Override
     public RunMlrunStatus onError(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         return null;
     }
 
     @Override
     public RunMlrunStatus onStopped(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         return null;
     }
 
     @Override
     public RunMlrunStatus onDeleted(Run run, RunRunnable runnable) {
         if (runnable != null) {
-            cleanup(runnable);
+            try {
+                if (jobRunnableStore != null && jobRunnableStore.find(runnable.getId()) != null) {
+                    jobRunnableStore.remove(runnable.getId());
+                }
+            } catch (StoreException e) {
+                log.error("Error deleting runnable", e);
+                throw new NoSuchEntityException("Error deleting runnable", e);
+            }
         }
 
         return null;
-    }
-
-    private void cleanup(RunRunnable runnable) {
-        try {
-            if (jobRunnableStore != null && jobRunnableStore.find(runnable.getId()) != null) {
-                jobRunnableStore.remove(runnable.getId());
-            }
-        } catch (StoreException e) {
-            log.error("Error deleting runnable", e);
-            throw new NoSuchEntityException("Error deleting runnable", e);
-        }
     }
 }

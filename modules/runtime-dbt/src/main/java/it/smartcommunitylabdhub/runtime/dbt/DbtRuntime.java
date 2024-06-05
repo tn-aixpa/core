@@ -14,7 +14,6 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.builders.DbtTransformBuilder;
 import it.smartcommunitylabdhub.runtime.dbt.runners.DbtTransformRunner;
@@ -163,48 +162,32 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtSt
 
     @Override
     public RunDbtStatus onComplete(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         return null;
     }
 
     @Override
     public RunDbtStatus onError(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         return null;
     }
 
     @Override
     public RunDbtStatus onStopped(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         return null;
     }
 
     @Override
     public RunDbtStatus onDeleted(Run run, RunRunnable runnable) {
         if (runnable != null) {
-            cleanup(runnable);
+            try {
+                if (jobRunnableStore != null && jobRunnableStore.find(runnable.getId()) != null) {
+                    jobRunnableStore.remove(runnable.getId());
+                }
+            } catch (StoreException e) {
+                log.error("Error deleting runnable", e);
+                throw new NoSuchEntityException("Error deleting runnable", e);
+            }
         }
 
         return null;
-    }
-
-    private void cleanup(RunRunnable runnable) {
-        try {
-            if (jobRunnableStore != null && jobRunnableStore.find(runnable.getId()) != null) {
-                jobRunnableStore.remove(runnable.getId());
-            }
-        } catch (StoreException e) {
-            log.error("Error deleting runnable", e);
-            throw new NoSuchEntityException("Error deleting runnable", e);
-        }
     }
 }

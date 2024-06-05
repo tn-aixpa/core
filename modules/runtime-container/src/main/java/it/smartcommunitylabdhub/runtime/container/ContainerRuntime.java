@@ -344,10 +344,6 @@ public class ContainerRuntime
 
     @Override
     public RunContainerStatus onComplete(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         RunContainerSpec runContainerSpec = new RunContainerSpec(run.getSpec());
         RunSpecAccessor runAccessor = RunUtils.parseTask(runContainerSpec.getTask());
 
@@ -391,10 +387,6 @@ public class ContainerRuntime
 
     @Override
     public RunContainerStatus onError(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         //extract info for status
         if (runnable instanceof K8sRunnable) {
             Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
@@ -418,10 +410,6 @@ public class ContainerRuntime
 
     @Override
     public RunContainerStatus onStopped(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         //extract info for status
         if (runnable instanceof K8sRunnable) {
             Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
@@ -446,9 +434,32 @@ public class ContainerRuntime
     @Override
     public RunContainerStatus onDeleted(Run run, RunRunnable runnable) {
         if (runnable != null) {
-            cleanup(runnable);
-        }
+            try {
+                RunnableStore<?> store =
+                    switch (runnable.getFramework()) {
+                        case K8sDeploymentFramework.FRAMEWORK -> {
+                            yield deployRunnableStore;
+                        }
+                        case K8sJobFramework.FRAMEWORK -> {
+                            yield jobRunnableStore;
+                        }
+                        case K8sServeFramework.FRAMEWORK -> {
+                            yield serveRunnableStore;
+                        }
+                        case K8sKanikoFramework.FRAMEWORK -> {
+                            yield buildRunnableStore;
+                        }
+                        default -> null;
+                    };
 
+                if (store != null && store.find(runnable.getId()) != null) {
+                    store.remove(runnable.getId());
+                }
+            } catch (StoreException e) {
+                log.error("Error deleting runnable", e);
+                throw new NoSuchEntityException("Error deleting runnable", e);
+            }
+        }
         return null;
     }
 
@@ -603,35 +614,5 @@ public class ContainerRuntime
                 //TODO handle
             }
         });
-    }
-
-    private void cleanup(RunRunnable runnable) {
-        try {
-            RunnableStore<?> store = getStore(runnable);
-            if (store != null && store.find(runnable.getId()) != null) {
-                store.remove(runnable.getId());
-            }
-        } catch (StoreException e) {
-            log.error("Error deleting runnable", e);
-            throw new NoSuchEntityException("Error deleting runnable", e);
-        }
-    }
-
-    private RunnableStore<?> getStore(RunRunnable runnable) {
-        return switch (runnable.getFramework()) {
-            case K8sDeploymentFramework.FRAMEWORK -> {
-                yield deployRunnableStore;
-            }
-            case K8sJobFramework.FRAMEWORK -> {
-                yield jobRunnableStore;
-            }
-            case K8sServeFramework.FRAMEWORK -> {
-                yield serveRunnableStore;
-            }
-            case K8sKanikoFramework.FRAMEWORK -> {
-                yield buildRunnableStore;
-            }
-            default -> null;
-        };
     }
 }

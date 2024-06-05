@@ -267,12 +267,6 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
     @Override
     public PythonRunStatus onComplete(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
-        PythonRunSpec runPythonSpec = new PythonRunSpec(run.getSpec());
-
         //extract info for status
         if (runnable instanceof K8sRunnable) {
             Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
@@ -296,10 +290,6 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
     @Override
     public PythonRunStatus onError(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         //extract info for status
         if (runnable instanceof K8sRunnable) {
             Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
@@ -323,10 +313,6 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
     @Override
     public PythonRunStatus onStopped(Run run, RunRunnable runnable) {
-        if (runnable != null) {
-            cleanup(runnable);
-        }
-
         //extract info for status
         if (runnable instanceof K8sRunnable) {
             Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
@@ -351,7 +337,27 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
     @Override
     public PythonRunStatus onDeleted(Run run, RunRunnable runnable) {
         if (runnable != null) {
-            cleanup(runnable);
+            try {
+                RunnableStore<?> store =
+                    switch (runnable.getFramework()) {
+                        case K8sJobFramework.FRAMEWORK -> {
+                            yield jobRunnableStore;
+                        }
+                        case K8sServeFramework.FRAMEWORK -> {
+                            yield serveRunnableStore;
+                        }
+                        default -> {
+                            yield null;
+                        }
+                    };
+
+                if (store != null && store.find(runnable.getId()) != null) {
+                    store.remove(runnable.getId());
+                }
+            } catch (StoreException e) {
+                log.error("Error deleting runnable", e);
+                throw new NoSuchEntityException("Error deleting runnable", e);
+            }
         }
 
         return null;
@@ -508,29 +514,5 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
                 //TODO handle
             }
         });
-    }
-
-    private void cleanup(RunRunnable runnable) {
-        try {
-            RunnableStore<?> store = getStore(runnable);
-            if (store != null && store.find(runnable.getId()) != null) {
-                store.remove(runnable.getId());
-            }
-        } catch (StoreException e) {
-            log.error("Error deleting runnable", e);
-            throw new NoSuchEntityException("Error deleting runnable", e);
-        }
-    }
-
-    private RunnableStore<?> getStore(RunRunnable runnable) {
-        return switch (runnable.getFramework()) {
-            case K8sJobFramework.FRAMEWORK -> {
-                yield jobRunnableStore;
-            }
-            case K8sServeFramework.FRAMEWORK -> {
-                yield serveRunnableStore;
-            }
-            default -> null;
-        };
     }
 }
