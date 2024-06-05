@@ -29,16 +29,18 @@ public class NuclioFunctionBuilder {
             spec.put("minReplicas", fn.getMinReplicas() != null ? fn.getMinReplicas() : 1);
             spec.put("maxReplicas", fn.getMaxReplicas() != null ? fn.getMaxReplicas() : 1);
 
-            //build trigger
-            HashMap<String, Serializable> trigger = (HashMap<String, Serializable>) spec.getOrDefault(
-                "trigger",
-                new HashMap<>()
-            );
+            HashMap<String, Serializable> triggers = fn.getTriggers() != null
+                ? new HashMap<String, Serializable>(fn.getTriggers())
+                : new HashMap<>();
 
-            HashMap<String, Serializable> attributes = new HashMap<>(Map.of("event", fn.getEvent()));
-            HashMap<String, Serializable> job = new HashMap<>(Map.of("kind", "job", "attributes", attributes));
-            trigger.put("job", job);
-            spec.put("triggers", trigger);
+            //build default trigger if empty
+            if (triggers.isEmpty()) {
+                HashMap<String, Serializable> attributes = new HashMap<>(Map.of("event", fn.getEvent()));
+                HashMap<String, Serializable> job = new HashMap<>(Map.of("kind", "job", "attributes", attributes));
+                triggers.put("job", job);
+            }
+
+            spec.put("triggers", triggers);
 
             HashMap<String, Serializable> map = new HashMap<>();
             map.put("apiVersion", "nuclio.io/v1beta1");

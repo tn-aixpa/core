@@ -75,7 +75,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 .builder()
                 .runtime("python")
                 //invoke user code wrapped via default handler
-                .handler("run_handler:handler")
+                .handler("run_handler:handler_job")
                 //directly invoke user code
                 // .handler("main:" + runSpec.getFunctionSpec().getSource().getHandler())
                 .event(event)

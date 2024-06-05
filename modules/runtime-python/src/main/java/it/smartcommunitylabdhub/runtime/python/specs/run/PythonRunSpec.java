@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import it.smartcommunitylabdhub.runtime.python.specs.function.PythonFunctionSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.task.PythonJobTaskSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.task.PythonServeTaskSpec;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,9 @@ public class PythonRunSpec extends RunBaseSpec {
 
     @JsonUnwrapped
     private PythonJobTaskSpec taskJobSpec;
+
+    @JsonUnwrapped
+    private PythonServeTaskSpec taskServeSpec;
 
     @JsonUnwrapped
     private PythonFunctionSpec functionSpec;
@@ -45,6 +49,7 @@ public class PythonRunSpec extends RunBaseSpec {
         PythonRunSpec spec = mapper.convertValue(data, PythonRunSpec.class);
 
         this.taskJobSpec = spec.getTaskJobSpec();
+        this.taskServeSpec = spec.getTaskServeSpec();
         this.functionSpec = spec.getFunctionSpec();
 
         this.inputs = spec.getInputs();
@@ -54,6 +59,10 @@ public class PythonRunSpec extends RunBaseSpec {
 
     public void setTaskJobSpec(PythonJobTaskSpec taskJobSpec) {
         this.taskJobSpec = taskJobSpec;
+    }
+
+    public void setTaskServeSpec(PythonServeTaskSpec taskServeSpec) {
+        this.taskServeSpec = taskServeSpec;
     }
 
     public void setFunctionSpec(PythonFunctionSpec functionSpec) {

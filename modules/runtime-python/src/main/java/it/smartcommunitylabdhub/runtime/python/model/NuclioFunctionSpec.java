@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.runtime.python.model;
 
 import java.io.Serializable;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public class NuclioFunctionSpec {
     private String runtime;
     private String handler;
     private Serializable event;
+    private Map<String, Serializable> triggers;
 
     private Integer minReplicas;
     private Integer maxReplicas;

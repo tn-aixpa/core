@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentSpec;
@@ -19,16 +20,25 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 
 @Slf4j
@@ -41,6 +51,9 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         HashMap<String, Serializable>
     >() {};
     private final AppsV1Api appsV1Api;
+
+    @Value("${kaniko.init-image}")
+    private String initImage;
 
     public K8sDeploymentFramework(ApiClient apiClient) {
         super(apiClient);
@@ -55,10 +68,65 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
 
         V1Deployment deployment = build(runnable);
+
         //secrets
         V1Secret secret = buildRunSecret(runnable);
         if (secret != null) {
             storeRunSecret(secret);
+        }
+
+        //check context refs and build config
+        if (runnable.getContextRefs() != null || runnable.getContextSources() != null) {
+            //build and create configMap
+            //TODO move to shared method
+            try {
+                // Generate Config map
+                Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
+                Optional<List<ContextSource>> contextSourcesOpt = Optional.ofNullable(runnable.getContextSources());
+                V1ConfigMap configMap = new V1ConfigMap()
+                    .metadata(
+                        new V1ObjectMeta().name("init-config-map-" + runnable.getId()).labels(buildLabels(runnable))
+                    )
+                    .data(
+                        MapUtils.mergeMultipleMaps(
+                            // Generate context-refs.txt if exist
+                            contextRefsOpt
+                                .map(contextRefsList ->
+                                    Map.of(
+                                        "context-refs.txt",
+                                        contextRefsList
+                                            .stream()
+                                            .map(v ->
+                                                v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n"
+                                            )
+                                            .collect(Collectors.joining(""))
+                                    )
+                                )
+                                .orElseGet(Map::of),
+                            // Generate context-sources.txt if exist
+                            contextSourcesOpt
+                                .map(contextSources ->
+                                    contextSources
+                                        .stream()
+                                        .collect(
+                                            Collectors.toMap(
+                                                ContextSource::getName,
+                                                c ->
+                                                    new String(
+                                                        Base64.getUrlDecoder().decode(c.getBase64()),
+                                                        StandardCharsets.UTF_8
+                                                    )
+                                            )
+                                        )
+                                )
+                                .orElseGet(Map::of)
+                        )
+                    );
+
+                coreV1Api.createNamespacedConfigMap(namespace, configMap, null, null, null, null);
+            } catch (ApiException | NullPointerException e) {
+                throw new K8sFrameworkException(e.getMessage());
+            }
         }
 
         log.info("create deployment for {}", String.valueOf(deployment.getMetadata().getName()));
@@ -95,11 +163,23 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             runnable.setState(State.DELETED.name());
             return runnable;
         }
-        //secrets
-        cleanRunSecret(runnable);
 
         log.info("delete deployment for {}", String.valueOf(deployment.getMetadata().getName()));
         delete(deployment);
+
+        //secrets
+        cleanRunSecret(runnable);
+
+        //init config map
+        try {
+            String configMapName = "init-config-map-" + runnable.getId();
+            V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
+            if (initConfigMap != null) {
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+            }
+        } catch (ApiException | NullPointerException e) {
+            //ignore, not existing or error
+        }
 
         //update results
         try {
@@ -190,6 +270,41 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         List<String> command = buildCommand(runnable);
         List<String> args = buildArgs(runnable);
 
+        //check if context build is required
+        if (runnable.getContextRefs() != null || runnable.getContextSources() != null) {
+            // Create sharedVolume
+            CoreVolume sharedVolume = new CoreVolume(
+                CoreVolume.VolumeType.empty_dir,
+                "/shared",
+                "shared-dir",
+                Map.of("sizeLimit", "100Mi")
+            );
+
+            // Create config map volume
+            CoreVolume configMapVolume = new CoreVolume(
+                CoreVolume.VolumeType.config_map,
+                "/init-config-map",
+                "init-config-map",
+                Map.of("name", "init-config-map-" + runnable.getId())
+            );
+
+            List<V1Volume> initVolumes = List.of(
+                k8sBuilderHelper.getVolume(sharedVolume),
+                k8sBuilderHelper.getVolume(configMapVolume)
+            );
+            List<V1VolumeMount> initVolumesMounts = List.of(
+                k8sBuilderHelper.getVolumeMount(sharedVolume),
+                k8sBuilderHelper.getVolumeMount(configMapVolume)
+            );
+
+            //add volume
+            volumes = Stream.concat(buildVolumes(runnable).stream(), initVolumes.stream()).collect(Collectors.toList());
+            volumeMounts =
+                Stream
+                    .concat(buildVolumeMounts(runnable).stream(), initVolumesMounts.stream())
+                    .collect(Collectors.toList());
+        }
+
         // Build Container
         V1Container container = new V1Container()
             .name(containerName)
@@ -212,6 +327,23 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .volumes(volumes)
             .restartPolicy("Always")
             .imagePullSecrets(buildImagePullSecrets(runnable));
+
+        //check if context build is required
+        if (runnable.getContextRefs() != null || runnable.getContextSources() != null) {
+            // Add Init container to the PodTemplateSpec
+            // Build the Init Container
+            V1Container initContainer = new V1Container()
+                .name("init-container-" + runnable.getId())
+                .image(initImage)
+                .volumeMounts(volumeMounts)
+                .resources(resources)
+                .env(env)
+                .envFrom(envFrom)
+                //TODO below execute a command that is a Go script
+                .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
+
+            podSpec.setInitContainers(Collections.singletonList(initContainer));
+        }
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
