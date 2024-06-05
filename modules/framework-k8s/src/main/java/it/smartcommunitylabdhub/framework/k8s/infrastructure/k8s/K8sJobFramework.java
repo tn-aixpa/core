@@ -174,6 +174,19 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         //stop by deleting
         log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
         delete(job);
+        //secrets
+        cleanRunSecret(runnable);
+
+        //init config map
+        try {
+            String configMapName = "init-config-map-" + runnable.getId();
+            V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
+            if (initConfigMap != null) {
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+            }
+        } catch (ApiException | NullPointerException e) {
+            //ignore, not existing or error
+        }
 
         //update state
         runnable.setState(State.STOPPED.name());
@@ -200,11 +213,22 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             return runnable;
         }
 
+        log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
+        delete(job);
+
         //secrets
         cleanRunSecret(runnable);
 
-        log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
-        delete(job);
+        //init config map
+        try {
+            String configMapName = "init-config-map-" + runnable.getId();
+            V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
+            if (initConfigMap != null) {
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+            }
+        } catch (ApiException | NullPointerException e) {
+            //ignore, not existing or error
+        }
 
         //update state
         runnable.setState(State.DELETED.name());
