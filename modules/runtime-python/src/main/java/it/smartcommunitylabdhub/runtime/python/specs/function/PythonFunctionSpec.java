@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpe
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
+import it.smartcommunitylabdhub.runtime.python.model.PythonVersion;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
@@ -34,6 +35,10 @@ public class PythonFunctionSpec extends FunctionBaseSpec {
     @Schema(title = "fields.container.baseImage.title", description = "fields.container.baseImage.description")
     private String baseImage;
 
+    @JsonProperty("python_version")
+    @Schema(title = "fields.python.version.title", description = "fields.python.version.description")
+    private PythonVersion pythonVersion;
+
     @Schema(title = "fields.python.requirements.title", description = "fields.python.requirements.description")
     private List<String> requirements;
 
@@ -50,6 +55,7 @@ public class PythonFunctionSpec extends FunctionBaseSpec {
         this.source = spec.getSource();
         this.image = spec.getImage();
         this.baseImage = spec.getBaseImage();
+        this.pythonVersion = spec.getPythonVersion();
         this.requirements = spec.getRequirements();
     }
 

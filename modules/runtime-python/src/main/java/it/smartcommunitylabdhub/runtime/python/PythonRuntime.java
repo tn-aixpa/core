@@ -28,12 +28,17 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
+import it.smartcommunitylabdhub.runtime.python.builders.PythonBuildBuilder;
 import it.smartcommunitylabdhub.runtime.python.builders.PythonJobBuilder;
 import it.smartcommunitylabdhub.runtime.python.builders.PythonServeBuilder;
+import it.smartcommunitylabdhub.runtime.python.configs.PythonImage;
+import it.smartcommunitylabdhub.runtime.python.runners.PythonBuildRunner;
 import it.smartcommunitylabdhub.runtime.python.runners.PythonJobRunner;
 import it.smartcommunitylabdhub.runtime.python.runners.PythonServeRunner;
 import it.smartcommunitylabdhub.runtime.python.specs.function.PythonFunctionSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.run.PythonRunSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.task.PythonBuildTaskSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.task.PythonJobTaskSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.task.PythonServeTaskSpec;
 import it.smartcommunitylabdhub.runtime.python.status.PythonRunStatus;
@@ -63,6 +68,7 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
     private final PythonJobBuilder jobBuilder = new PythonJobBuilder();
     private final PythonServeBuilder serveBuilder = new PythonServeBuilder();
+    private final PythonBuildBuilder buildBuilder = new PythonBuildBuilder();
 
     @Autowired
     private SecretService secretService;
@@ -73,14 +79,17 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
     @Autowired(required = false)
     private RunnableStore<K8sServeRunnable> serveRunnableStore;
 
+    @Autowired(required = false)
+    private RunnableStore<K8sKanikoRunnable> buildRunnableStore;
+
     @Autowired
     private FunctionService functionService;
 
     @Autowired
     private LogService logService;
 
-    @Value("${runtime.python.image}")
-    private String image;
+    @Autowired
+    PythonImage images;
 
     @Value("${runtime.python.command}")
     private String command;
@@ -109,6 +118,10 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
                 PythonServeTaskSpec taskServeSpec = new PythonServeTaskSpec(task.getSpec());
                 return serveBuilder.build(funSpec, taskServeSpec, runSpec);
             }
+            case PythonBuildTaskSpec.KIND -> {
+                PythonBuildTaskSpec taskBuildSpec = new PythonBuildTaskSpec(task.getSpec());
+                return buildBuilder.build(funSpec, taskBuildSpec, runSpec);
+            }
             default -> throw new IllegalArgumentException(
                 "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
             );
@@ -131,17 +144,24 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
         return switch (runAccessor.getTask()) {
             case PythonJobTaskSpec.KIND -> new PythonJobRunner(
-                image,
+                images.getImage("python-" + runPythonSpec.getFunctionSpec().getPythonVersion().getVersion()),
                 command,
                 runPythonSpec.getFunctionSpec(),
                 secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets())
             )
                 .produce(run);
             case PythonServeTaskSpec.KIND -> new PythonServeRunner(
-                image,
+                images.getImage("python-" + runPythonSpec.getFunctionSpec().getPythonVersion().getVersion()),
                 command,
                 runPythonSpec.getFunctionSpec(),
                 secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets())
+            )
+                .produce(run);
+            case PythonBuildTaskSpec.KIND -> new PythonBuildRunner(
+                images.getImage("python-" + runPythonSpec.getFunctionSpec().getPythonVersion().getVersion()),
+                command,
+                runPythonSpec.getFunctionSpec(),
+                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskBuildSpec().getSecrets())
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
@@ -186,6 +206,17 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
                     }
                     throw new CoreRuntimeException("Store is not available");
                 }
+                case PythonBuildTaskSpec.KIND -> {
+                    if (jobRunnableStore != null) {
+                        K8sKanikoRunnable k8sKanikoRunnable = buildRunnableStore.find(run.getId());
+                        if (k8sKanikoRunnable == null) {
+                            throw new NoSuchEntityException("JobDeployment not found");
+                        }
+                        k8sKanikoRunnable.setState(State.STOP.name());
+                        yield k8sKanikoRunnable;
+                    }
+                    throw new CoreRuntimeException("Build Store is not available");
+                }
                 default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
             };
         } catch (StoreException e) {
@@ -221,6 +252,18 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
                         yield k8sJobRunnable;
                     }
                     throw new CoreRuntimeException("Job Store is not available");
+                }
+                case PythonBuildTaskSpec.KIND -> {
+                    if (jobRunnableStore != null) {
+                        K8sKanikoRunnable k8sKanikoRunnable = buildRunnableStore.find(run.getId());
+                        if (k8sKanikoRunnable == null) {
+                            //not in store, either not existent or already removed, nothing to do
+                            yield null;
+                        }
+                        k8sKanikoRunnable.setState(State.DELETING.name());
+                        yield k8sKanikoRunnable;
+                    }
+                    throw new CoreRuntimeException("Build Store is not available");
                 }
                 case PythonServeTaskSpec.KIND -> {
                     if (jobRunnableStore != null) {

@@ -16,16 +16,16 @@ DH Core offers an API interface that give us the possibility to formalize the en
 3. **Tasks (TASK)** are the logical representations of an action which is performed via a given function, by a runtime, within a framework. As such, they define both the actual scope of the execution and its context, in terms of environment, dependencies, resources etc.
 4. **Runs (RUN)** are the representation of the execution of a given task with the given function, on (a set of) inputs to deliver (a set of) outputs. At a high level, they can be seen both as a summary of the union between a function and a task in a single instance, and as the representation of the actual execution phase, with parameters, status, results etc.
 
-5. Dataitems
-6. Artifacts
-7. Models
-8. Workflows
+5. **Dataitems**
+6. **Artifacts**
+7. **Models**
+8. **Workflows**
 
 The project is essentially divided into the following parts:
 
-1. Core
-2. Modules
-3. Frontend
+1. **Core**
+2. **Modules**
+3. **Frontend**
 
 Core manages all the basic elements that are the foundation of the project.
 Modules include:
@@ -46,7 +46,7 @@ Modules include:
 
 ## Configuration
 
-You can locate the project configuration file in the **application [core]** module, named **_resources/application.yml_**. This file specifies configurations for various sections. 
+You can locate the project configuration file in the **application [core]** module, named **_resources/application.yml_**. This file specifies configurations for various sections.
 
 Each section allows configurations to be written directly in the YAML file or through environment variables (ENV).
 
@@ -231,9 +231,9 @@ To start the database for Core using Docker, execute the following command:
 ```bash
 docker run -d --name <dbname> -p 5434:5432 -e POSTGRES_PASSWORD=<password> postgres
 ```
-Once the database container is started, you can launch your application. 
+Once the database container is started, you can launch your application.
 
-It's important to configure the database parameters either via ENV variables or directly in the application.yml file. You can find those settings in the SpringBoot configuration section  
+It's important to configure the database parameters either via ENV variables or directly in the application.yml file. You can find those settings in the SpringBoot configuration section
 
 **IMPORTANT:** If no database is created locally or through Docker, an H2 database will be automatically created when the application starts.
 
@@ -243,12 +243,12 @@ To run core there are different possibilities:
 1. You can download directly the image from GitHub and run it
 ```bash
 docker pull ghcr.io/scc-digitalhub/digitalhub-core:<version>
-docker run digitalhub-core:<version>
+docker run ghcr.io/scc-digitalhub/digitalhub-core/digitalhub-core:<version>
 
 ```
 2. You can build your own image and run it
 ```bash
-docker build -t ghcr.io/scc-digitalhub/digitalhub-core:<version> .
+docker build -t digitalhub-core:<version> .
 docker run digitalhub-core:<version>
 ```
 
@@ -264,8 +264,8 @@ git sumodule update
 # Run the project
 mvn spring-boot:run -pl application
 ```
-In case of problem once you have updated all submodules you can clean and install all dependencies 
-running the following command 
+In case of problem once you have updated all submodules you can clean and install all dependencies
+running the following command
 ```bash
 mvn clean install -DskipTests 
 ```

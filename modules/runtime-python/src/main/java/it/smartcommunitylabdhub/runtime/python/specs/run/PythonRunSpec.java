@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import it.smartcommunitylabdhub.runtime.python.specs.function.PythonFunctionSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.task.PythonBuildTaskSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.task.PythonJobTaskSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.task.PythonServeTaskSpec;
 import java.io.Serializable;
@@ -30,6 +31,9 @@ public class PythonRunSpec extends RunBaseSpec {
     private PythonServeTaskSpec taskServeSpec;
 
     @JsonUnwrapped
+    private PythonBuildTaskSpec taskBuildSpec;
+
+    @JsonUnwrapped
     private PythonFunctionSpec functionSpec;
 
     private Map<String, String> inputs = new HashMap<>();
@@ -51,6 +55,7 @@ public class PythonRunSpec extends RunBaseSpec {
         this.taskJobSpec = spec.getTaskJobSpec();
         this.taskServeSpec = spec.getTaskServeSpec();
         this.functionSpec = spec.getFunctionSpec();
+        this.taskBuildSpec = spec.getTaskBuildSpec();
 
         this.inputs = spec.getInputs();
         this.outputs = spec.getOutputs();
@@ -63,6 +68,10 @@ public class PythonRunSpec extends RunBaseSpec {
 
     public void setTaskServeSpec(PythonServeTaskSpec taskServeSpec) {
         this.taskServeSpec = taskServeSpec;
+    }
+
+    public void setTaskBuildSpec(PythonBuildTaskSpec buildTaskSpec) {
+        this.taskBuildSpec = buildTaskSpec;
     }
 
     public void setFunctionSpec(PythonFunctionSpec functionSpec) {

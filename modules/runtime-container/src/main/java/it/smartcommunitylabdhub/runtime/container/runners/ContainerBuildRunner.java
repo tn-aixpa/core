@@ -50,7 +50,6 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
     public K8sKanikoRunnable produce(Run run) {
         RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
         TaskBuildSpec taskSpec = runSpec.getTaskBuildSpec();
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
@@ -110,7 +109,7 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             // Task specific
             .dockerFile(dockerfile)
             // specific
-            .backoffLimit(1)
+            .backoffLimit(0)
             .build();
     }
 }
