@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractEntityFilter;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Pattern;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +32,16 @@ public class RunEntityFilter extends AbstractEntityFilter<RunEntity> {
 
         //base criteria
         criteria.addAll(super.toSearchFilter().getCriteria());
+
+        //if name replace with id like + task like
+        criteria
+            .stream()
+            .filter(c -> c.getField().equals("name"))
+            .findFirst()
+            .ifPresent(c -> {
+                criteria.remove(c);
+                criteria.add(new BaseEntitySearchCriteria<>("id", c.getValue(), SearchCriteria.Operation.like));
+            });
 
         //task exact match
         Optional
