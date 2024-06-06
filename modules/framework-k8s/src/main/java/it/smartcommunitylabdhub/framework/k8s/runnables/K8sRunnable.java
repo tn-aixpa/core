@@ -62,6 +62,10 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private List<CoreToleration> tolerations;
 
+    private String runtimeClass;
+
+    private String priorityClass;
+
     private List<CoreLabel> labels;
 
     private String state;

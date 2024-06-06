@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.runtime.python.runners;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
@@ -158,6 +157,8 @@ public class PythonServeRunner implements Runner<K8sRunnable> {
             .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
+            .runtimeClass(taskSpec.getRuntimeClass())
+            .priorityClass(taskSpec.getPriorityClass())
             //specific
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort))

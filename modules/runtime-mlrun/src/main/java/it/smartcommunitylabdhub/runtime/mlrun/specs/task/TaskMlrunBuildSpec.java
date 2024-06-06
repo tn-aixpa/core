@@ -1,17 +1,13 @@
 package it.smartcommunitylabdhub.runtime.mlrun.specs.task;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,8 +21,10 @@ public class TaskMlrunBuildSpec extends K8sTaskBaseSpec {
     public static final String KIND = "mlrun+build";
 
     private List<String> commands;
+
     @JsonProperty("force_build")
     private Boolean forceBuild;
+
     @JsonProperty("target_image")
     private String targetImage;
 

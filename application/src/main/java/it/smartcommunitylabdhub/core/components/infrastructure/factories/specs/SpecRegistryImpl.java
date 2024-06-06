@@ -176,4 +176,29 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
             }
         }
     }
+
+    public void refresh() {
+        //refresh schemas for collected specs
+        specs
+            .entrySet()
+            .forEach(e -> {
+                String kind = e.getKey();
+                Class<? extends Spec> spec = e.getValue();
+                SpecType type = specTypes.get(kind);
+                if (type != null) {
+                    EntityName entity = type.entity();
+                    log.debug("generate schema for spec {}:{} ", entity, kind);
+                    SchemaImplBuilder builder = SchemaImpl
+                        .builder()
+                        .entity(entity)
+                        .kind(kind)
+                        .schema(SchemaUtils.schema(spec));
+                    if (StringUtils.hasText(type.runtime())) {
+                        builder.runtime(type.runtime());
+                    }
+                    SchemaImpl schema = builder.build();
+                    schemas.put(kind, schema);
+                }
+            });
+    }
 }

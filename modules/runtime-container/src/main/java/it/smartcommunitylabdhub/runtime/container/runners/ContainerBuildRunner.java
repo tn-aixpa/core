@@ -105,8 +105,9 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
+            .runtimeClass(taskSpec.getRuntimeClass())
+            .priorityClass(taskSpec.getPriorityClass())
             // Task specific
-
             .dockerFile(dockerfile)
             // specific
             .backoffLimit(1)

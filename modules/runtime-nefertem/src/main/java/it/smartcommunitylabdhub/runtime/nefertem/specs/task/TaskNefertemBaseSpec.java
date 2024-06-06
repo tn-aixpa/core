@@ -1,9 +1,7 @@
 package it.smartcommunitylabdhub.runtime.nefertem.specs.task;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -25,7 +23,6 @@ public class TaskNefertemBaseSpec extends K8sTaskBaseSpec {
     @JsonProperty("num_worker")
     protected Integer numWorker;
 
-
     public TaskNefertemBaseSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -40,6 +37,5 @@ public class TaskNefertemBaseSpec extends K8sTaskBaseSpec {
         this.execArgs = spec.getExecArgs();
         this.parallel = spec.getParallel();
         this.numWorker = spec.getNumWorker();
-
     }
 }

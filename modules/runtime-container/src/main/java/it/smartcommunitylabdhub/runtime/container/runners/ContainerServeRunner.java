@@ -64,6 +64,8 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
             .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
+            .runtimeClass(taskSpec.getRuntimeClass())
+            .priorityClass(taskSpec.getPriorityClass())
             //specific
             .servicePorts(taskSpec.getServicePorts())
             .serviceType(taskSpec.getServiceType())

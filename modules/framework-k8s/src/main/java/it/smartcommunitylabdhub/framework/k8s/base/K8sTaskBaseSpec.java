@@ -34,6 +34,10 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
 
     private List<CoreToleration> tolerations;
 
+    private String runtimeClass;
+
+    private String priorityClass;
+
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
@@ -47,5 +51,7 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
         this.secrets = spec.getSecrets();
         this.affinity = spec.getAffinity();
         this.tolerations = spec.getTolerations();
+        this.runtimeClass = spec.getRuntimeClass();
+        this.priorityClass = spec.getPriorityClass();
     }
 }

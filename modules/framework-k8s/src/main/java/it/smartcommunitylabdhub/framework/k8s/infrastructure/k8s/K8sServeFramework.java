@@ -429,6 +429,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             .task(runnable.getTask())
             .state(runnable.getState())
             .tolerations(runnable.getTolerations())
+            .runtimeClass(runnable.getRuntimeClass())
+            .priorityClass(runnable.getPriorityClass())
             .volumes(runnable.getVolumes())
             .contextRefs(runnable.getContextRefs())
             .contextSources(runnable.getContextSources())

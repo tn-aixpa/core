@@ -1,10 +1,8 @@
 package it.smartcommunitylabdhub.runtime.mlrun.specs.task;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
 import java.io.Serializable;
 import java.util.Map;
@@ -19,7 +17,6 @@ import lombok.Setter;
 public class TaskMlrunJobSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "mlrun+job";
-
 
     public TaskMlrunJobSpec(Map<String, Serializable> data) {
         configure(data);

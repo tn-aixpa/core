@@ -324,6 +324,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .nodeSelector(buildNodeSelector(runnable))
             .affinity(runnable.getAffinity())
             .tolerations(buildTolerations(runnable))
+            .runtimeClassName(runnable.getRuntimeClass())
+            .priorityClassName(runnable.getPriorityClass())
             .volumes(volumes)
             .restartPolicy("Always")
             .imagePullSecrets(buildImagePullSecrets(runnable));

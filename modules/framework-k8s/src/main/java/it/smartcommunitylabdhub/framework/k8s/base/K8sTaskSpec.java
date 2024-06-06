@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreToleration;

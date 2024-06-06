@@ -331,6 +331,8 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             .nodeSelector(buildNodeSelector(runnable))
             .affinity(runnable.getAffinity())
             .tolerations(buildTolerations(runnable))
+            .runtimeClassName(runnable.getRuntimeClass())
+            .priorityClassName(runnable.getPriorityClass())
             .volumes(volumes)
             .restartPolicy("Never")
             .imagePullSecrets(buildImagePullSecrets(runnable));

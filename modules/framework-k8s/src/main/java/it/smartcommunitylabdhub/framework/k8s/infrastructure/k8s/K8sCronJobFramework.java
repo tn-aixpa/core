@@ -169,6 +169,8 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             .secrets(runnable.getSecrets())
             .task(runnable.getTask())
             .tolerations(runnable.getTolerations())
+            .runtimeClass(runnable.getRuntimeClass())
+            .priorityClass(runnable.getPriorityClass())
             .volumes(runnable.getVolumes())
             .state(State.READY.name())
             .build();
