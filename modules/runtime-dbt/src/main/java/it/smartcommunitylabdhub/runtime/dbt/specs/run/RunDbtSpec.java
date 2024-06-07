@@ -22,9 +22,9 @@ public class RunDbtSpec extends RunBaseSpec {
 
     public static final String KIND = DbtRuntime.RUNTIME + "+run";
 
-    private Map<String, Serializable> inputs = new HashMap<>();
+    private Map<String, String> inputs = new HashMap<>();
 
-    private Map<String, Serializable> outputs = new HashMap<>();
+    private Map<String, String> outputs = new HashMap<>();
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
