@@ -79,26 +79,47 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
                 throw new IllegalArgumentException("invalid or missing baseImage");
             }
 
+            // Add default Image
+            dockerfileGenerator.from(this.image + " as builder");
+
+            // Add base Image
             dockerfileGenerator.from(functionSpec.getBaseImage());
-            dockerfileGenerator.copy(".", "./build");
-            dockerfileGenerator.workdir("/build");
-            if (log.isDebugEnabled()) {
-                //add debug instructions to docker file
-                dockerfileGenerator.run(RUN_DEBUG);
-            }
 
-            //build nuclio definition
-            HashMap<String, Serializable> event = new HashMap<>();
+            // Copy required objects from the suppliers
+//            COPY --from=processor /home/nuclio/bin/processor /usr/local/bin/processor
+//            COPY --from=processor /home/nuclio/bin/py /opt/nuclio/
+//            COPY --from=processor /opt/nuclio/ /opt/nuclio/
+//            COPY --from=processor /home/nuclio/bin/py*-whl/* /opt/nuclio/whl/
+//            COPY --from=uhttpc /home/nuclio/bin/uhttpc /usr/local/bin/uhttpc
 
-            // Add Instructions to docker file
+            dockerfileGenerator.copy(
+                    "--from=builder /usr/local/bin/processor",
+                    "/usr/local/bin/processor");
+
+            dockerfileGenerator.copy(
+                    "--from=builder /opt/nuclio/",
+                    "/opt/nuclio/");
+
+            dockerfileGenerator.copy(
+                    "--from=builder /opt/nuclio/whl/",
+                    "/opt/nuclio/whl/");
+
+            dockerfileGenerator.copy(
+                    "--from=builder /usr/local/bin/uhttpc",
+                    "/usr/local/bin/uhttpc");
+
+
+            // Copy /shared folder
+            dockerfileGenerator.copy("/shared/", "/shared/");
+
+            // Add user instructions
             Optional
                     .ofNullable(taskSpec.getInstructions())
                     .ifPresent(instructions -> instructions.forEach(i -> dockerfileGenerator.run(i)));
 
-            dockerfileGenerator.entrypoint(List.of(command));
-            // Generate string docker file
-            String dockerfile = dockerfileGenerator.build().generate();
 
+            // Build Nuclio function
+            HashMap<String, Serializable> event = new HashMap<>();
 
             event.put("body", jsonMapper.writeValueAsString(run));
 
@@ -156,10 +177,32 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
                 }
             }
 
+
+            // If requirements.txt file exists, install all requirements
+            contextSources.stream().filter(s -> s.getName().contains("requirements.txt"))
+                    .findFirst().ifPresent(s -> {
+                        // install all requirements
+                        dockerfileGenerator.run(
+                                "python /opt/nuclio/whl/$(basename /opt/nuclio/whl/pip-*.whl)/pip install pip --no-index --find-links /opt/nuclio/whl " +
+                                        "&& python -m pip install -r /shared/requirements.txt"
+                        );
+                    });
+
+            if (log.isDebugEnabled()) {
+                //add debug instructions to docker file
+                dockerfileGenerator.run(RUN_DEBUG);
+            }
+
+            // Set entry point
+            dockerfileGenerator.entrypoint(List.of(command));
+
+            // Generate string docker file
+            String dockerfile = dockerfileGenerator.build().generate();
+
             //merge env with PYTHON path override
             coreEnvList.add(new CoreEnv("PYTHONPATH", "${PYTHONPATH}:/shared/"));
 
-            return  K8sKanikoRunnable
+            return K8sKanikoRunnable
                     .builder()
                     .id(run.getId())
                     .project(run.getProject())
