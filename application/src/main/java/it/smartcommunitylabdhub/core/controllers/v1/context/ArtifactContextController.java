@@ -17,6 +17,10 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactS
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+
+import java.io.Serializable;
+import java.util.Map;
+
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
@@ -179,4 +183,21 @@ public class ArtifactContextController {
 
         return filesService.downloadArtifactAsUrl(id);
     }
+    
+    @Operation(summary = "Get object storage metadata for a given artifact, if available")
+    @GetMapping(path = "/{id}/storage/metadata", produces = "application/json; charset=UTF-8")
+    public Map<String, Serializable> getArtifactMetadataById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.getObjectMetadata(id);
+    }
+    
 }

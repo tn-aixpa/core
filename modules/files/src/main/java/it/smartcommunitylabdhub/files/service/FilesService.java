@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.files.service;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -71,5 +72,27 @@ public class FilesService {
 
     public @Nullable InputStream getDownloadAsStream(@NotNull String path) {
         throw new UnsupportedOperationException();
+    }
+    
+    public Map<String, Serializable> getObjectMetadata(@NotNull String path) {
+        Assert.hasText(path, "path can not be null or empty");
+
+        log.debug("resolve store for {}", path);
+        //try resolving path via stores
+        FilesStore store = getStore(path);
+        if (store == null) {
+            log.debug("no store found.");
+            return null;
+        }
+
+        log.debug("found store {}", store.getClass().getName());
+
+        Map<String,Serializable> metadata = store.readMetadata(path);
+
+        if (log.isTraceEnabled()) {
+            log.trace("path resolved to metadata {}", metadata);
+        }
+
+        return metadata;    	
     }
 }

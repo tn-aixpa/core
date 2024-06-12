@@ -1,18 +1,25 @@
 package it.smartcommunitylabdhub.files.s3;
 
-import it.smartcommunitylabdhub.files.service.FilesStore;
-import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.net.URI;
 import java.time.Duration;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import it.smartcommunitylabdhub.files.service.FilesStore;
+import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
@@ -69,7 +76,7 @@ public class S3FilesStore implements FilesStore {
             this.client = S3Client.builder().credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
             this.presigner =
                 S3Presigner.builder().credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
-        }
+        }        
     }
 
     @Override
@@ -116,4 +123,27 @@ public class S3FilesStore implements FilesStore {
 
         return presignedRequest.url().toExternalForm();
     }
+
+	@Override
+	public Map<String, Serializable> readMetadata(@NotNull String path) {
+		try {
+			String[] split = path.replace("s3://", "").split("/");
+			String bucketName = split[0];
+			String keyName = path.substring(5 + bucketName.length());
+			Map<String, Serializable> response = new HashMap<>();			
+			HeadObjectResponse headObject = client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(keyName).build());
+			response.put("ContentType", headObject.contentType());
+			response.put("ContentLength", headObject.contentLength());
+			response.put("ContentEncoding", headObject.contentEncoding());
+			response.put("ETag", headObject.eTag());
+			response.put("LastModified", headObject.lastModified());
+			headObject.metadata().entrySet().forEach(entry -> {
+				response.put("Metadata." + entry.getKey(), entry.getValue());
+			});
+			return response;
+		} catch (Exception e) {
+			log.error("generate metadata for {}:  {}", path, e.getMessage());
+		}
+		return null;
+	}
 }

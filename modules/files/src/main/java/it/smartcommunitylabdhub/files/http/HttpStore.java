@@ -2,10 +2,15 @@ package it.smartcommunitylabdhub.files.http;
 
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
+
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,4 +41,10 @@ public class HttpStore implements FilesStore {
             return null;
         }
     }
+
+	@Override
+	public Map<String, Serializable> readMetadata(@NotNull String path) {
+		// TODO Auto-generated method stub
+		return Collections.emptyMap();
+	}
 }

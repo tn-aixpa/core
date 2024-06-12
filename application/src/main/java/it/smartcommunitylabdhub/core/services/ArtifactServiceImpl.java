@@ -23,7 +23,10 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactS
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.validation.constraints.NotNull;
+
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -492,4 +495,34 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             throw new SystemException(e.getMessage());
         }
     }
+
+	@Override
+	public Map<String, Serializable> getObjectMetadata(@NotNull String id)
+			throws NoSuchEntityException, SystemException {
+		log.debug("get storage metadata for artifact with id {}", String.valueOf(id));
+        try {
+            Artifact artifact = entityService.get(id);
+
+            //extract path from spec
+            ArtifactBaseSpec spec = new ArtifactBaseSpec();
+            spec.configure(artifact.getSpec());
+
+            String path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+
+            Map<String,Serializable> metadata = filesService.getObjectMetadata(path);
+            if (log.isTraceEnabled()) {
+                log.trace("metadata for artifact with id {}: {} -> {}", id, path, metadata);
+            }
+
+            return metadata;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }		
+	}
 }

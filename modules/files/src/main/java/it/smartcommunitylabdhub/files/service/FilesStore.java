@@ -1,5 +1,8 @@
 package it.smartcommunitylabdhub.files.service;
 
+import java.io.Serializable;
+import java.util.Map;
+
 import jakarta.validation.constraints.NotNull;
 
 public interface FilesStore {
@@ -8,6 +11,5 @@ public interface FilesStore {
     //TODO
     // InputStream downloadAsStream(@NotNull String path);
 
-    //TODO
-    // Map<String, Serializable> readMetadata(@NotNull String path);
+    Map<String, Serializable> readMetadata(@NotNull String path);
 }
