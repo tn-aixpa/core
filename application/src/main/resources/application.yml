@@ -123,7 +123,7 @@ logging:
 security:
   api:
     cors:
-      origins: ${DH_CORS_ORIGINS:http://localhost:5173}
+      origins: ${DH_CORS_ORIGINS:}
   basic:
     username: ${DH_AUTH_BASIC_USER:admin}
     password: ${DH_AUTH_BASIC_PASSWORD:}
