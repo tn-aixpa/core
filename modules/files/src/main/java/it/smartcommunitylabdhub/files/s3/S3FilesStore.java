@@ -129,9 +129,10 @@ public class S3FilesStore implements FilesStore {
 		try {
 			String[] split = path.replace("s3://", "").split("/");
 			String bucketName = split[0];
-			String keyName = path.substring(5 + bucketName.length());
+			String keyName = path.substring(5 + bucketName.length() + 1);
 			Map<String, Serializable> response = new HashMap<>();			
 			HeadObjectResponse headObject = client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(keyName).build());
+			response.put("Name", split[split.length - 1]);
 			response.put("ContentType", headObject.contentType());
 			response.put("ContentLength", headObject.contentLength());
 			response.put("ContentEncoding", headObject.contentEncoding());
