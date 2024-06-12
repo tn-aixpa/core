@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -15,10 +16,12 @@ import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.files.ArtifactFilesService;
 import it.smartcommunitylabdhub.core.models.indexers.ArtifactEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +40,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class ArtifactServiceImpl implements SearchableArtifactService, IndexableArtifactService {
+public class ArtifactServiceImpl implements SearchableArtifactService, IndexableArtifactService, ArtifactFilesService {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
@@ -56,6 +59,9 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
 
     @Autowired
     private SpecValidator validator;
+
+    @Autowired
+    private FilesService filesService;
 
     @Override
     public Page<Artifact> listArtifacts(Pageable pageable) {
@@ -454,6 +460,36 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
 
                 log.error("error with indexing: {}", e.getMessage());
             }
+        }
+    }
+
+    @Override
+    public String downloadArtifactAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
+        log.debug("download url for artifact with id {}", String.valueOf(id));
+
+        try {
+            Artifact artifact = entityService.get(id);
+
+            //extract path from spec
+            ArtifactBaseSpec spec = new ArtifactBaseSpec();
+            spec.configure(artifact.getSpec());
+
+            String path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+
+            String url = filesService.getDownloadAsUrl(path);
+            if (log.isTraceEnabled()) {
+                log.trace("download url for artifact with id {}: {} -> {}", id, path, url);
+            }
+
+            return url;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 }

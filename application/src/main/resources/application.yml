@@ -166,3 +166,12 @@ solr:
   url: ${SOLR_URL:http://localhost:8983/solr}
   collection: ${SOLR_COLLECTION:dhcore}
   reindex: ${SOLR_REINDEX:never}
+
+# files support
+files:
+  store:
+    s3:
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+      endpoint: ${S3_ENDPOINT:}
+      

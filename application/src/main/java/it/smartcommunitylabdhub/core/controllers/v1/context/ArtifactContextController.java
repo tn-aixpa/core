@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.files.ArtifactFilesService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import jakarta.validation.Valid;
@@ -52,6 +53,9 @@ public class ArtifactContextController {
 
     @Autowired
     SearchableArtifactService artifactService;
+
+    @Autowired
+    ArtifactFilesService filesService;
 
     @Operation(summary = "Create an artifact in a project context")
     @PostMapping(
@@ -155,5 +159,24 @@ public class ArtifactContextController {
         }
 
         artifactService.deleteArtifact(id);
+    }
+
+    /*
+     * Files
+     */
+    @Operation(summary = "Get download url for a given artifact, if available")
+    @GetMapping(path = "/{id}/download", produces = "application/json; charset=UTF-8")
+    public String downloadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.downloadArtifactAsUrl(id);
     }
 }
