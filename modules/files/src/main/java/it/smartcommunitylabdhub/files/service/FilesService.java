@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.files.service;
 
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -77,7 +76,7 @@ public class FilesService {
         throw new UnsupportedOperationException();
     }
     
-    public List<FileInfo> getObjectMetadata(@NotNull String path) {
+    public Map<String, FileInfo> getObjectMetadata(@NotNull String path) {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -90,7 +89,7 @@ public class FilesService {
 
         log.debug("found store {}", store.getClass().getName());
 
-        List<FileInfo> metadata = store.readMetadata(path);
+        Map<String, FileInfo> metadata = store.readMetadata(path);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to metadata {}", metadata);

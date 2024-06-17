@@ -4,9 +4,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
@@ -47,8 +47,8 @@ public class HttpStore implements FilesStore {
     }
 
 	@Override
-	public List<FileInfo> readMetadata(@NotNull String path) {
-		List<FileInfo> result = new ArrayList<>();
+	public Map<String, FileInfo> readMetadata(@NotNull String path) {
+		Map<String, FileInfo> result = new HashMap<>();
 		try {
 			String[] split = path.split("/");
 			HttpHeaders headers = restTemplate.headForHeaders(new URI(path));
@@ -58,7 +58,7 @@ public class HttpStore implements FilesStore {
 			response.setContentType(headers.getContentType().toString());
 			response.setLength(headers.getContentLength());
 			response.setLastModified(Instant.ofEpochMilli(headers.getLastModified()));
-			result.add(response);
+			result.put(path, response);
 		} catch (Exception e) {
 			log.error("generate metadata for {}:  {}", path, e.getMessage());
 		}

@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
-import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -187,7 +187,7 @@ public class ArtifactContextController {
     
     @Operation(summary = "Get object storage metadata for a given artifact, if available")
     @GetMapping(path = "/{id}/storage/metadata", produces = "application/json; charset=UTF-8")
-    public List<FileInfo> getArtifactMetadataById(
+    public Map<String, FileInfo> getArtifactMetadataById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {

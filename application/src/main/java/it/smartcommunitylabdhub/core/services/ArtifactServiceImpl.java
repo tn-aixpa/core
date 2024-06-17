@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.services;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -497,7 +498,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
 	@Override
-	public List<FileInfo> getObjectMetadata(@NotNull String id)
+	public Map<String, FileInfo> getObjectMetadata(@NotNull String id)
 			throws NoSuchEntityException, SystemException {
 		log.debug("get storage metadata for artifact with id {}", String.valueOf(id));
         try {
@@ -512,7 +513,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
                 throw new NoSuchEntityException("file");
             }
 
-            List<FileInfo> metadata = filesService.getObjectMetadata(path);
+            Map<String, FileInfo> metadata = filesService.getObjectMetadata(path);
             if (log.isTraceEnabled()) {
                 log.trace("metadata for artifact with id {}: {} -> {}", id, path, metadata);
             }
