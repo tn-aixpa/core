@@ -4,7 +4,10 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.function.FunctionNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskInferSpec;
-import java.util.Optional;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * NefetermInferBuilder
@@ -19,14 +22,16 @@ public class NefertemInferBuilder implements Builder<FunctionNefertemSpec, TaskI
 
     @Override
     public RunNefertemSpec build(FunctionNefertemSpec funSpec, TaskInferSpec taskSpec, RunNefertemSpec runSpec) {
-        RunNefertemSpec runNefertemSpec = new RunNefertemSpec(runSpec.toMap());
-        runNefertemSpec.setFuncSpec(funSpec);
-        runNefertemSpec.setTaskInferSpec(taskSpec);
 
-        //let run override k8s specs
-        Optional
-            .ofNullable(runSpec.getTaskInferSpec())
-            .ifPresent(k8sSpec -> runNefertemSpec.getTaskInferSpec().configure(k8sSpec.toMap()));
+
+        Map<String, Serializable> map = new HashMap<>();
+        map.putAll(runSpec.toMap());
+        map.putAll(funSpec.toMap());
+        taskSpec.toMap().forEach(map::putIfAbsent);
+
+        RunNefertemSpec runNefertemSpec = new RunNefertemSpec(map);
+        runNefertemSpec.setFuncSpec(funSpec);
+
 
         // Return a run spec
         return runNefertemSpec;

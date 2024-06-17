@@ -4,6 +4,10 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.kfp.specs.run.RunKFPSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.workflow.WorkflowKFPSpec;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -19,13 +23,15 @@ public class KFPPipelineBuilder implements Builder<WorkflowKFPSpec, TaskPipeline
 
     @Override
     public RunKFPSpec build(WorkflowKFPSpec wfSpec, TaskPipelineSpec taskSpec, RunKFPSpec runSpec) {
-        RunKFPSpec spec = new RunKFPSpec(runSpec.toMap());
-        spec.setTaskSpec(taskSpec);
-        spec.setWorkflowSpec(wfSpec);
 
-        //let run override k8s specs
-        Optional.ofNullable(runSpec.getTaskSpec()).ifPresent(k8sSpec -> spec.getTaskSpec().configure(k8sSpec.toMap()));
+        Map<String, Serializable> map = new HashMap<>();
+        map.putAll(runSpec.toMap());
+        map.putAll(wfSpec.toMap());
+        taskSpec.toMap().forEach(map::putIfAbsent);
 
-        return spec;
+        RunKFPSpec runKFPSpec = new RunKFPSpec(map);
+        runKFPSpec.setWorkflowSpec(wfSpec);
+
+        return runKFPSpec;
     }
 }

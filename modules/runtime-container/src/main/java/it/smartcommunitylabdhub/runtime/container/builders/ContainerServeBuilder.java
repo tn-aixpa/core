@@ -4,7 +4,10 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
-import java.util.Optional;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ContainerJobBuilder
@@ -19,15 +22,14 @@ public class ContainerServeBuilder implements Builder<FunctionContainerSpec, Tas
 
     @Override
     public RunContainerSpec build(FunctionContainerSpec funSpec, TaskServeSpec taskSpec, RunContainerSpec runSpec) {
-        RunContainerSpec containerSpec = new RunContainerSpec(runSpec.toMap());
-        containerSpec.setTaskServeSpec(taskSpec);
-        containerSpec.setFunctionSpec(funSpec);
+        Map<String, Serializable> map = new HashMap<>();
+        map.putAll(runSpec.toMap());
+        map.putAll(funSpec.toMap());
+        taskSpec.toMap().forEach(map::putIfAbsent);
 
-        //let run override k8s specs
-        Optional
-            .ofNullable(runSpec.getTaskServeSpec())
-            .ifPresent(k8sSpec -> containerSpec.getTaskServeSpec().configure(k8sSpec.toMap()));
+        RunContainerSpec runContainerSpec = new RunContainerSpec(map);
+        runContainerSpec.setFuncSpec(funSpec);
 
-        return containerSpec;
+        return runContainerSpec;
     }
 }

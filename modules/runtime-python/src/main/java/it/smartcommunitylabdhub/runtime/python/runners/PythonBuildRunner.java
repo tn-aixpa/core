@@ -2,11 +2,13 @@ package it.smartcommunitylabdhub.runtime.python.runners;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
+import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -74,13 +76,10 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
             // Generate docker file
             DockerfileGeneratorFactory dockerfileGenerator = DockerfileGenerator.factory();
 
-
-            if (!StringUtils.hasText(functionSpec.getBaseImage())) {
-                throw new IllegalArgumentException("invalid or missing baseImage");
-            }
+            String baseImage = StringUtils.hasText(functionSpec.getBaseImage()) ? functionSpec.getBaseImage() : image;
 
             // Add default Image
-            dockerfileGenerator.from(this.image + " as builder");
+            dockerfileGenerator.from(baseImage + " as builder");
 
             // Add base Image
             dockerfileGenerator.from(functionSpec.getBaseImage());
@@ -202,6 +201,10 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
             //merge env with PYTHON path override
             coreEnvList.add(new CoreEnv("PYTHONPATH", "${PYTHONPATH}:/shared/"));
 
+
+            // Parse run spec
+            RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runSpec.getTask());
+
             return K8sKanikoRunnable
                     .builder()
                     .id(run.getId())
@@ -210,7 +213,7 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
                     .task(PythonBuildTaskSpec.KIND)
                     .state(State.READY.name())
                     //base
-                    .image(StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image)
+                    .image(StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction())
 
                     .contextRefs(contextRefs)
                     .contextSources(contextSources)

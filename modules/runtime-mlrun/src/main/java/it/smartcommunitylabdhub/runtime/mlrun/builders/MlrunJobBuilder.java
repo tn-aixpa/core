@@ -4,7 +4,10 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
 import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunJobSpec;
-import java.util.Optional;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * MlrunMlrunBuilder
@@ -19,12 +22,13 @@ public class MlrunJobBuilder implements Builder<FunctionMlrunSpec, TaskMlrunJobS
 
     @Override
     public RunMlrunSpec build(FunctionMlrunSpec funSpec, TaskMlrunJobSpec taskSpec, RunMlrunSpec runSpec) {
-        RunMlrunSpec runMlrunSpec = new RunMlrunSpec(runSpec.toMap());
-        runMlrunSpec.setJobSpec(taskSpec);
-        runMlrunSpec.setFuncSpec(funSpec);
+        Map<String, Serializable> map = new HashMap<>();
+        map.putAll(runSpec.toMap());
+        map.putAll(funSpec.toMap());
+        taskSpec.toMap().forEach(map::putIfAbsent);
 
-        //let run override k8s specs
-        Optional.ofNullable(runSpec.getJobSpec()).ifPresent(k8sSpec -> runSpec.getJobSpec().configure(k8sSpec.toMap()));
+        RunMlrunSpec runMlrunSpec = new RunMlrunSpec(map);
+        runMlrunSpec.setFuncSpec(funSpec);
 
         // Return a run spec
         return runMlrunSpec;
