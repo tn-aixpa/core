@@ -127,7 +127,7 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
                     .builder()
                     .runtime("python")
                     //invoke user code wrapped via default handler
-                    .handler("run_handler:handler")
+                    .handler("run_handler:handler_serve")
                     //directly invoke user code
                     // .handler("main:" + runSpec.getFunctionSpec().getSource().getHandler())
                     .event(event)

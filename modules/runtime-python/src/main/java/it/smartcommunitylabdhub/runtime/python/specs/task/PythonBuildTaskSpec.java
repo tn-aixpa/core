@@ -21,8 +21,8 @@ public class PythonBuildTaskSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "python+build";
 
-    @Schema(title = "fields.container.instructions.title", description = "fields.container.instructions.description")
     private List<String> instructions;
+
 
     public PythonBuildTaskSpec(Map<String, Serializable> data) {
         configure(data);
