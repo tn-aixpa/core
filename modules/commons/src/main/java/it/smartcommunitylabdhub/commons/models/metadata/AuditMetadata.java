@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons.models.metadata;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -23,7 +24,10 @@ import lombok.Setter;
 @SpecType(kind = "metadata.audit", entity = EntityName.METADATA)
 public final class AuditMetadata extends BaseSpec implements Metadata {
 
+    @JsonProperty("created_by")
     protected String createdBy;
+
+    @JsonProperty("updated_by")
     protected String updatedBy;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING)
