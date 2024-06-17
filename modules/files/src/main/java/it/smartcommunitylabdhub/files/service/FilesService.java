@@ -1,14 +1,17 @@
 package it.smartcommunitylabdhub.files.service;
 
-import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
@@ -74,7 +77,7 @@ public class FilesService {
         throw new UnsupportedOperationException();
     }
     
-    public Map<String, Serializable> getObjectMetadata(@NotNull String path) {
+    public List<FileInfo> getObjectMetadata(@NotNull String path) {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -87,7 +90,7 @@ public class FilesService {
 
         log.debug("found store {}", store.getClass().getName());
 
-        Map<String,Serializable> metadata = store.readMetadata(path);
+        List<FileInfo> metadata = store.readMetadata(path);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to metadata {}", metadata);
