@@ -16,6 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class FileInfo {
+	private String path;
 	private String name;
 	private String contentType;
 	private long length;

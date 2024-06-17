@@ -1,14 +1,14 @@
 package it.smartcommunitylabdhub.files.config;
 
-import it.smartcommunitylabdhub.files.http.HttpStore;
-import it.smartcommunitylabdhub.files.s3.S3FilesStore;
-import it.smartcommunitylabdhub.files.service.FilesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import it.smartcommunitylabdhub.files.http.HttpStore;
+import it.smartcommunitylabdhub.files.s3.S3FilesStore;
+import it.smartcommunitylabdhub.files.service.FilesService;
 
 @Configuration
 public class FilesConfig {
