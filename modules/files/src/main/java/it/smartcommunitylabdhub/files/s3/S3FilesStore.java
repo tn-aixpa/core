@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
@@ -82,7 +83,7 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public String downloadAsUrl(@NotNull String path) {
+    public DownloadInfo downloadAsUrl(@NotNull String path) {
         log.debug("generate download url for {}", path);
 
         //parse as URI where host == bucket, or host == endpoint
@@ -123,7 +124,11 @@ public class S3FilesStore implements FilesStore {
             .build();
         PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(preq);
 
-        return presignedRequest.url().toExternalForm();
+        DownloadInfo info = new DownloadInfo();
+        info.setPath(path);
+        info.setUrl(presignedRequest.url().toExternalForm());
+        info.setExpiration(presignedRequest.expiration());
+        return info;
     }
 
 	@Override

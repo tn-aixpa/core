@@ -13,6 +13,7 @@ import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
@@ -25,9 +26,9 @@ public class HttpStore implements FilesStore {
     private RestTemplate restTemplate = new RestTemplate();
     
     @Override
-    public String downloadAsUrl(@NotNull String path) {
+    public DownloadInfo downloadAsUrl(@NotNull String path) {
         log.debug("generate download url for {}", path);
-
+        
         //path must be a valid url
         try {
             URL url = URI.create(path).toURL();
@@ -41,7 +42,10 @@ public class HttpStore implements FilesStore {
             }
 
             //use as-is
-            return url.toExternalForm();
+            DownloadInfo info = new DownloadInfo();
+            info.setPath(path);
+            info.setUrl(url.toExternalForm());
+            return info;
         } catch (MalformedURLException e) {
             //not a valid url...
             return null;
