@@ -1,20 +1,28 @@
 package it.smartcommunitylabdhub.files.http;
 
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 public class HttpStore implements FilesStore {
 
     public static final String[] PROTOCOLS = { "http", "https", "ftp" };
+    private RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public String downloadAsUrl(@NotNull String path) {
+    public DownloadInfo downloadAsUrl(@NotNull String path) {
         log.debug("generate download url for {}", path);
 
         //path must be a valid url
@@ -30,10 +38,32 @@ public class HttpStore implements FilesStore {
             }
 
             //use as-is
-            return url.toExternalForm();
+            DownloadInfo info = new DownloadInfo();
+            info.setPath(path);
+            info.setUrl(url.toExternalForm());
+            return info;
         } catch (MalformedURLException e) {
             //not a valid url...
             return null;
         }
+    }
+
+    @Override
+    public List<FileInfo> readMetadata(@NotNull String path) {
+        List<FileInfo> result = new ArrayList<>();
+        try {
+            String[] split = path.split("/");
+            HttpHeaders headers = restTemplate.headForHeaders(new URI(path));
+            FileInfo response = new FileInfo();
+            response.setPath(path);
+            response.setName(split[split.length - 1]);
+            response.setContentType(headers.getContentType().toString());
+            response.setLength(headers.getContentLength());
+            response.setLastModified(Instant.ofEpochMilli(headers.getLastModified()));
+            result.add(response);
+        } catch (Exception e) {
+            log.error("generate metadata for {}:  {}", path, e.getMessage());
+        }
+        return result;
     }
 }

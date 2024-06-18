@@ -1,9 +1,13 @@
 package it.smartcommunitylabdhub.files.s3;
 
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -13,6 +17,8 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
@@ -73,7 +79,7 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public String downloadAsUrl(@NotNull String path) {
+    public DownloadInfo downloadAsUrl(@NotNull String path) {
         log.debug("generate download url for {}", path);
 
         //parse as URI where host == bucket, or host == endpoint
@@ -114,6 +120,45 @@ public class S3FilesStore implements FilesStore {
             .build();
         PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(preq);
 
-        return presignedRequest.url().toExternalForm();
+        DownloadInfo info = new DownloadInfo();
+        info.setPath(path);
+        info.setUrl(presignedRequest.url().toExternalForm());
+        info.setExpiration(presignedRequest.expiration());
+        return info;
+    }
+
+    @Override
+    public List<FileInfo> readMetadata(@NotNull String path) {
+        List<FileInfo> result = new ArrayList<>();
+        try {
+            String[] split = path.replace("s3://", "").split("/");
+            String bucketName = split[0];
+            String keyName = path.substring(5 + bucketName.length() + 1);
+            HeadObjectResponse headObject = client.headObject(
+                HeadObjectRequest.builder().bucket(bucketName).key(keyName).build()
+            );
+            FileInfo response = new FileInfo();
+            response.setPath(path);
+            response.setName(split[split.length - 1]);
+            response.setContentType(headObject.contentType());
+            response.setLength(headObject.contentLength());
+            response.setLastModified(headObject.lastModified());
+
+            if (StringUtils.hasText(headObject.checksumSHA256())) {
+                response.setHash("sha256:" + headObject.checksumSHA256());
+            }
+
+            headObject
+                .metadata()
+                .entrySet()
+                .forEach(entry -> {
+                    response.getMetadata().put("Metadata." + entry.getKey(), entry.getValue());
+                });
+            result.add(response);
+            return result;
+        } catch (Exception e) {
+            log.error("generate metadata for {}:  {}", path, e.getMessage());
+        }
+        return result;
     }
 }

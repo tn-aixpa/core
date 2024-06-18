@@ -4,6 +4,8 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
@@ -464,7 +466,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public String downloadArtifactAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
+    public DownloadInfo downloadArtifactAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("download url for artifact with id {}", String.valueOf(id));
 
         try {
@@ -479,12 +481,41 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
                 throw new NoSuchEntityException("file");
             }
 
-            String url = filesService.getDownloadAsUrl(path);
+            DownloadInfo info = filesService.getDownloadAsUrl(path);
             if (log.isTraceEnabled()) {
-                log.trace("download url for artifact with id {}: {} -> {}", id, path, url);
+                log.trace("download url for artifact with id {}: {} -> {}", id, path, info);
             }
 
-            return url;
+            return info;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<FileInfo> getObjectMetadata(@NotNull String id) throws NoSuchEntityException, SystemException {
+        log.debug("get storage metadata for artifact with id {}", String.valueOf(id));
+        try {
+            Artifact artifact = entityService.get(id);
+
+            //extract path from spec
+            ArtifactBaseSpec spec = new ArtifactBaseSpec();
+            spec.configure(artifact.getSpec());
+
+            String path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+
+            List<FileInfo> metadata = filesService.getObjectMetadata(path);
+            if (log.isTraceEnabled()) {
+                log.trace("metadata for artifact with id {}: {} -> {}", id, path, metadata);
+            }
+
+            return metadata;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
         } catch (StoreException e) {

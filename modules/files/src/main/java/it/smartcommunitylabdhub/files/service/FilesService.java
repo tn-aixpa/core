@@ -1,9 +1,12 @@
 package it.smartcommunitylabdhub.files.service;
 
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,7 +50,7 @@ public class FilesService {
         return match;
     }
 
-    public @Nullable String getDownloadAsUrl(@NotNull String path) {
+    public @Nullable DownloadInfo getDownloadAsUrl(@NotNull String path) {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -60,16 +63,38 @@ public class FilesService {
 
         log.debug("found store {}", store.getClass().getName());
 
-        String url = store.downloadAsUrl(path);
+        DownloadInfo info = store.downloadAsUrl(path);
 
         if (log.isTraceEnabled()) {
-            log.trace("path resolved to download url {}", url);
+            log.trace("path resolved to download url {}", info);
         }
 
-        return url;
+        return info;
     }
 
     public @Nullable InputStream getDownloadAsStream(@NotNull String path) {
         throw new UnsupportedOperationException();
+    }
+
+    public List<FileInfo> getObjectMetadata(@NotNull String path) {
+        Assert.hasText(path, "path can not be null or empty");
+
+        log.debug("resolve store for {}", path);
+        //try resolving path via stores
+        FilesStore store = getStore(path);
+        if (store == null) {
+            log.debug("no store found.");
+            return null;
+        }
+
+        log.debug("found store {}", store.getClass().getName());
+
+        List<FileInfo> metadata = store.readMetadata(path);
+
+        if (log.isTraceEnabled()) {
+            log.trace("path resolved to metadata {}", metadata);
+        }
+
+        return metadata;
     }
 }
