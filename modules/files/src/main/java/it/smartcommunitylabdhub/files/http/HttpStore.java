@@ -6,9 +6,7 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
@@ -53,8 +51,8 @@ public class HttpStore implements FilesStore {
     }
 
 	@Override
-	public Map<String, List<FileInfo>> readMetadata(@NotNull String path) {
-		Map<String, List<FileInfo>> result = new HashMap<>();
+	public List<FileInfo> readMetadata(@NotNull String path) {
+		List<FileInfo> result = new ArrayList<>();
 		try {
 			String[] split = path.split("/");
 			HttpHeaders headers = restTemplate.headForHeaders(new URI(path));
@@ -64,9 +62,7 @@ public class HttpStore implements FilesStore {
 			response.setContentType(headers.getContentType().toString());
 			response.setLength(headers.getContentLength());
 			response.setLastModified(Instant.ofEpochMilli(headers.getLastModified()));
-			List<FileInfo> list = new ArrayList<>();
-			list.add(response);
-			result.put(path, list);
+			result.add(response);
 		} catch (Exception e) {
 			log.error("generate metadata for {}:  {}", path, e.getMessage());
 		}

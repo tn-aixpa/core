@@ -78,7 +78,7 @@ public class FilesService {
         throw new UnsupportedOperationException();
     }
     
-    public Map<String, List<FileInfo>> getObjectMetadata(@NotNull String path) {
+    public List<FileInfo> getObjectMetadata(@NotNull String path) {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -91,7 +91,7 @@ public class FilesService {
 
         log.debug("found store {}", store.getClass().getName());
 
-        Map<String, List<FileInfo>> metadata = store.readMetadata(path);
+        List<FileInfo> metadata = store.readMetadata(path);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to metadata {}", metadata);

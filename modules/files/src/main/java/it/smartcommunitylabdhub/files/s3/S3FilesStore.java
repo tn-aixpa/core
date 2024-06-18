@@ -3,9 +3,7 @@ package it.smartcommunitylabdhub.files.s3;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -132,8 +130,8 @@ public class S3FilesStore implements FilesStore {
     }
 
 	@Override
-	public Map<String, List<FileInfo>> readMetadata(@NotNull String path) {
-		Map<String, List<FileInfo>> result = new HashMap<>();
+	public List<FileInfo> readMetadata(@NotNull String path) {
+		List<FileInfo> result = new ArrayList<>();
 		try {
 			String[] split = path.replace("s3://", "").split("/");
 			String bucketName = split[0];
@@ -149,9 +147,7 @@ public class S3FilesStore implements FilesStore {
 			headObject.metadata().entrySet().forEach(entry -> {
 				response.getMetadata().put("Metadata." + entry.getKey(), entry.getValue());
 			});
-			List<FileInfo> list = new ArrayList<>();
-			list.add(response);
-			result.put(path, list);
+			result.add(response);
 			return result;
 		} catch (Exception e) {
 			log.error("generate metadata for {}:  {}", path, e.getMessage());
