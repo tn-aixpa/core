@@ -498,7 +498,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
 	@Override
-	public Map<String, FileInfo> getObjectMetadata(@NotNull String id)
+	public Map<String, List<FileInfo>> getObjectMetadata(@NotNull String id)
 			throws NoSuchEntityException, SystemException {
 		log.debug("get storage metadata for artifact with id {}", String.valueOf(id));
         try {
@@ -513,7 +513,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
                 throw new NoSuchEntityException("file");
             }
 
-            Map<String, FileInfo> metadata = filesService.getObjectMetadata(path);
+            Map<String, List<FileInfo>> metadata = filesService.getObjectMetadata(path);
             if (log.isTraceEnabled()) {
                 log.trace("metadata for artifact with id {}: {} -> {}", id, path, metadata);
             }
