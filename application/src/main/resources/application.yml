@@ -112,6 +112,7 @@ application:
   name: @project.name@
   description: @project.description@
   version: @project.version@
+  level: ${DH_API_LEVEL:}
   profiles: ${spring.profiles.active:default}
 
 

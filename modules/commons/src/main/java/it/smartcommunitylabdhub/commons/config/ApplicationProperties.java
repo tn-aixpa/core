@@ -2,19 +2,59 @@ package it.smartcommunitylabdhub.commons.config;
 
 import java.util.List;
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
-@Configuration
+// @Configuration
 @ConfigurationProperties(prefix = "application", ignoreUnknownFields = true)
 @Getter
-@Setter
 public class ApplicationProperties {
 
     private String endpoint;
     private String name;
     private String description;
     private String version;
+    private String level;
     private List<String> profiles;
+
+    // @ConstructorBinding
+    public ApplicationProperties(
+        String endpoint,
+        String name,
+        String description,
+        String version,
+        String level,
+        List<String> profiles
+    ) {
+        this.endpoint = endpoint;
+        this.name = name;
+        this.description = description;
+        this.version = version;
+        this.profiles = profiles;
+
+        //level can be automagically extracted from version
+        this.level = StringUtils.hasText(level) ? level : inferApiLevel(version);
+    }
+
+    public static String inferApiLevel(String version) {
+        if (version == null) {
+            return null;
+        }
+
+        String[] values = version.replaceAll("[^\\d.]", "").split("\\.");
+        if (values.length < 2) {
+            return null;
+        }
+
+        try {
+            int major = Integer.parseInt(values[0]);
+            int minor = Integer.parseInt(values[1]);
+
+            int level = (major * 13) + minor;
+
+            return Integer.toString(level);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }
