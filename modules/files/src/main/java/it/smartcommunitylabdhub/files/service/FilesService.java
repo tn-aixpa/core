@@ -1,18 +1,16 @@
 package it.smartcommunitylabdhub.files.service;
 
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
-
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 /**
  *
@@ -77,7 +75,7 @@ public class FilesService {
     public @Nullable InputStream getDownloadAsStream(@NotNull String path) {
         throw new UnsupportedOperationException();
     }
-    
+
     public List<FileInfo> getObjectMetadata(@NotNull String path) {
         Assert.hasText(path, "path can not be null or empty");
 
@@ -97,6 +95,6 @@ public class FilesService {
             log.trace("path resolved to metadata {}", metadata);
         }
 
-        return metadata;    	
+        return metadata;
     }
 }

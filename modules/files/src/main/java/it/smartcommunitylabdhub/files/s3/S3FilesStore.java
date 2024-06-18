@@ -1,20 +1,18 @@
 package it.smartcommunitylabdhub.files.s3;
 
-import java.net.URI;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
+import java.net.URI;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -77,7 +75,7 @@ public class S3FilesStore implements FilesStore {
             this.client = S3Client.builder().credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
             this.presigner =
                 S3Presigner.builder().credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
-        }        
+        }
     }
 
     @Override
@@ -129,29 +127,38 @@ public class S3FilesStore implements FilesStore {
         return info;
     }
 
-	@Override
-	public List<FileInfo> readMetadata(@NotNull String path) {
-		List<FileInfo> result = new ArrayList<>();
-		try {
-			String[] split = path.replace("s3://", "").split("/");
-			String bucketName = split[0];
-			String keyName = path.substring(5 + bucketName.length() + 1);
-			HeadObjectResponse headObject = client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(keyName).build());
-			FileInfo response = new FileInfo();
-			response.setPath(path);
-			response.setName(split[split.length - 1]);
-			response.setContentType(headObject.contentType());
-			response.setLength(headObject.contentLength());
-			response.setLastModified(headObject.lastModified());
-			response.setChecksumSHA256(headObject.checksumSHA256());
-			headObject.metadata().entrySet().forEach(entry -> {
-				response.getMetadata().put("Metadata." + entry.getKey(), entry.getValue());
-			});
-			result.add(response);
-			return result;
-		} catch (Exception e) {
-			log.error("generate metadata for {}:  {}", path, e.getMessage());
-		}
-		return result;
-	}
+    @Override
+    public List<FileInfo> readMetadata(@NotNull String path) {
+        List<FileInfo> result = new ArrayList<>();
+        try {
+            String[] split = path.replace("s3://", "").split("/");
+            String bucketName = split[0];
+            String keyName = path.substring(5 + bucketName.length() + 1);
+            HeadObjectResponse headObject = client.headObject(
+                HeadObjectRequest.builder().bucket(bucketName).key(keyName).build()
+            );
+            FileInfo response = new FileInfo();
+            response.setPath(path);
+            response.setName(split[split.length - 1]);
+            response.setContentType(headObject.contentType());
+            response.setLength(headObject.contentLength());
+            response.setLastModified(headObject.lastModified());
+
+            if (StringUtils.hasText(headObject.checksumSHA256())) {
+                response.setHash("sha256:" + headObject.checksumSHA256());
+            }
+
+            headObject
+                .metadata()
+                .entrySet()
+                .forEach(entry -> {
+                    response.getMetadata().put("Metadata." + entry.getKey(), entry.getValue());
+                });
+            result.add(response);
+            return result;
+        } catch (Exception e) {
+            log.error("generate metadata for {}:  {}", path, e.getMessage());
+        }
+        return result;
+    }
 }

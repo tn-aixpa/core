@@ -1,9 +1,7 @@
 package it.smartcommunitylabdhub.commons.models.base;
 
-import java.time.Instant;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
+import java.time.Instant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,12 +11,13 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DownloadInfo {
-	private String path;
-	private String url;
-	private Instant expiration;
-	
-	@Override
-	public String toString() {
-		return path + "_" + url + "_" + (expiration != null ? expiration.toEpochMilli() : "0");
-	}
+
+    private String path;
+    private String url;
+    private Instant expiration;
+
+    @Override
+    public String toString() {
+        return path + "_" + url + "_" + (expiration != null ? expiration.toEpochMilli() : "0");
+    }
 }

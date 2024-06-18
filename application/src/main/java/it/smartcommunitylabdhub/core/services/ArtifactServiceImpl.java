@@ -1,19 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
-
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -39,7 +25,19 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactS
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -497,10 +495,9 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         }
     }
 
-	@Override
-	public List<FileInfo> getObjectMetadata(@NotNull String id)
-			throws NoSuchEntityException, SystemException {
-		log.debug("get storage metadata for artifact with id {}", String.valueOf(id));
+    @Override
+    public List<FileInfo> getObjectMetadata(@NotNull String id) throws NoSuchEntityException, SystemException {
+        log.debug("get storage metadata for artifact with id {}", String.valueOf(id));
         try {
             Artifact artifact = entityService.get(id);
 
@@ -524,6 +521,6 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
-        }		
-	}
+        }
+    }
 }

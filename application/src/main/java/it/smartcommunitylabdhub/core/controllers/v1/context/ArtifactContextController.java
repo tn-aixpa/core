@@ -1,9 +1,27 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
+import it.smartcommunitylabdhub.core.models.files.ArtifactFilesService;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
-
 import javax.annotation.Nullable;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,27 +42,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.Keys;
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
-import it.smartcommunitylabdhub.commons.models.base.FileInfo;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.core.ApplicationKeys;
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.files.ArtifactFilesService;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
-import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @ApiVersion("v1")
@@ -185,7 +182,7 @@ public class ArtifactContextController {
 
         return filesService.downloadArtifactAsUrl(id);
     }
-    
+
     @Operation(summary = "Get object storage metadata for a given artifact, if available")
     @GetMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
     public List<FileInfo> getArtifactFilesInfoById(
@@ -201,5 +198,4 @@ public class ArtifactContextController {
 
         return filesService.getObjectMetadata(id);
     }
-    
 }
