@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
+import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -310,6 +311,26 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
     @Override
     public PythonRunStatus onComplete(Run run, RunRunnable runnable) {
+        PythonRunSpec pythonRunSpec = new PythonRunSpec(run.getSpec());
+        RunSpecAccessor runAccessor = RunUtils.parseTask(pythonRunSpec.getTask());
+
+        //update image name after build
+        if (runnable instanceof K8sKanikoRunnable) {
+            String image = ((K8sKanikoRunnable) runnable).getImage();
+
+            String functionId = runAccessor.getVersion();
+            Function function = functionService.getFunction(functionId);
+
+            log.debug("update function {} spec to use built image: {}", functionId, image);
+
+            PythonFunctionSpec funSpec = new PythonFunctionSpec(function.getSpec());
+            if (!image.equals(funSpec.getImage())) {
+                funSpec.setImage(image);
+                function.setSpec(funSpec.toMap());
+                functionService.updateFunction(functionId, function, true);
+            }
+        }
+
         //extract info for status
         if (runnable instanceof K8sRunnable) {
             Map<String, Serializable> res = ((K8sRunnable) runnable).getResults();
