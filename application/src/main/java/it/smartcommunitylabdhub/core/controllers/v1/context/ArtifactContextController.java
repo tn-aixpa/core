@@ -171,7 +171,7 @@ public class ArtifactContextController {
      * Files
      */
     @Operation(summary = "Get download url for a given artifact, if available")
-    @GetMapping(path = "/{id}/download", produces = "application/json; charset=UTF-8")
+    @GetMapping(path = "/{id}/files/download", produces = "application/json; charset=UTF-8")
     public String downloadAsUrlArtifactById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
@@ -187,8 +187,8 @@ public class ArtifactContextController {
     }
     
     @Operation(summary = "Get object storage metadata for a given artifact, if available")
-    @GetMapping(path = "/{id}/storage/metadata", produces = "application/json; charset=UTF-8")
-    public Map<String, List<FileInfo>> getArtifactMetadataById(
+    @GetMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
+    public Map<String, List<FileInfo>> getArtifactFilesInfoById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
