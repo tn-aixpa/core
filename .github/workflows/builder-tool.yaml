@@ -34,6 +34,8 @@ jobs:
         uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          labels: |
+            version=${{ github.sha }}
           flavor: |
             latest=true          
       - name: Build and push Docker image
