@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.files.service;
 
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
@@ -96,5 +97,29 @@ public class FilesService {
         }
 
         return metadata;
+    }
+    
+    public @Nullable UploadInfo getUploadAsUrl(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, @NotNull String filename) {
+    	Assert.hasText(entityType, "entity can not be null or empty");
+    	Assert.hasText(projectId, "projectId can not be null or empty");
+        Assert.hasText(entityId, "entityId can not be null or empty");
+        Assert.hasText(filename, "filename can not be null or empty");
+
+        //try resolving path via stores
+        FilesStore store = stores.get("s3://");
+        if (store == null) {
+            log.debug("no store found.");
+            return null;
+        }
+
+        log.debug("found store {}", store.getClass().getName());
+
+        UploadInfo info = store.uploadAsUrl(entityType, projectId, entityId, filename);
+
+        if (log.isTraceEnabled()) {
+            log.trace("path resolved to upload url {}", info);
+        }
+
+        return info;    	
     }
 }

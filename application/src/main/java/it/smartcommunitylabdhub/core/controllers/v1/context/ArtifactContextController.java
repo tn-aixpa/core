@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -183,6 +184,16 @@ public class ArtifactContextController {
         return filesService.downloadArtifactAsUrl(id);
     }
 
+    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @GetMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
+    public UploadInfo uploadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String filename
+    ) throws NoSuchEntityException {
+        return filesService.uploadArtifactAsUrl(project, id, filename);
+    }
+    
     @Operation(summary = "Get object storage metadata for a given artifact, if available")
     @GetMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
     public List<FileInfo> getArtifactFilesInfoById(

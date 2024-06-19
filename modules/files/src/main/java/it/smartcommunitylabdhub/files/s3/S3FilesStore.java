@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.files.s3;
 
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -19,9 +20,12 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 @Slf4j
 public class S3FilesStore implements FilesStore {
@@ -31,18 +35,20 @@ public class S3FilesStore implements FilesStore {
     private final String accessKey;
     private final String secretKey;
     private final String endpoint;
+    private final String bucket;
 
     private int urlDuration = URL_DURATION;
 
     private S3Client client;
     private S3Presigner presigner;
 
-    public S3FilesStore(String accessKey, String secretKey, String endpoint) {
+    public S3FilesStore(String accessKey, String secretKey, String endpoint, String bucket) {
         Assert.hasText(accessKey, "accessKey is required");
 
         this.accessKey = accessKey;
         this.secretKey = secretKey;
         this.endpoint = endpoint;
+        this.bucket = bucket;
 
         buildClient();
     }
@@ -88,18 +94,18 @@ public class S3FilesStore implements FilesStore {
             return null;
         }
 
-        String bucket = uri.getHost();
+        String bucketName = uri.getHost();
         String key = uri.getPath();
 
-        if (endpoint != null && endpoint.equals(bucket)) {
+        if (endpoint != null && endpoint.equals(bucketName)) {
             //use first path el as bucket
-            bucket = uri.getPathSegments().stream().findFirst().orElse(null);
-            if (bucket != null) {
-                key = uri.getPath().substring(bucket.length() + 1);
+        	bucketName = uri.getPathSegments().stream().findFirst().orElse(null);
+            if (bucketName != null) {
+                key = uri.getPath().substring(bucketName.length() + 1);
             }
         }
 
-        if (bucket == null || key == null) {
+        if (bucketName == null || key == null) {
             return null;
         }
 
@@ -109,10 +115,10 @@ public class S3FilesStore implements FilesStore {
 
         //generate temporary signed url for download
         if (log.isTraceEnabled()) {
-            log.trace("generating presigned url for {}: {}", bucket, key);
+            log.trace("generating presigned url for {}: {}", bucketName, key);
         }
 
-        GetObjectRequest req = GetObjectRequest.builder().bucket(bucket).key(key).build();
+        GetObjectRequest req = GetObjectRequest.builder().bucket(bucketName).key(key).build();
         GetObjectPresignRequest preq = GetObjectPresignRequest
             .builder()
             .signatureDuration(Duration.ofSeconds(urlDuration))
@@ -161,4 +167,33 @@ public class S3FilesStore implements FilesStore {
         }
         return result;
     }
+
+	@Override
+	public UploadInfo uploadAsUrl(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, @NotNull String filename) {
+        log.debug("generate upload url for {} -> {}", entityId, filename);
+        
+        String key = projectId + "/" + entityType + "/" + entityId;
+        key += filename.startsWith("/") ? filename : "/" + filename;
+        
+        String path = "s3://" + bucket + "/" + key;
+        
+        //generate temporary signed url for upload
+        if (log.isTraceEnabled()) {
+            log.trace("generating presigned url for {}: {}", bucket, key);
+        }
+
+        PutObjectRequest req = PutObjectRequest.builder().bucket(bucket).key(key).build();
+        PutObjectPresignRequest preq = PutObjectPresignRequest
+            .builder()
+            .signatureDuration(Duration.ofSeconds(urlDuration))
+            .putObjectRequest(req)
+            .build();
+        PresignedPutObjectRequest presignedRequest = presigner.presignPutObject(preq);
+
+        UploadInfo info = new UploadInfo();
+        info.setPath(path);
+        info.setUrl(presignedRequest.url().toExternalForm());
+        info.setExpiration(presignedRequest.expiration());
+        return info;
+	}
 }

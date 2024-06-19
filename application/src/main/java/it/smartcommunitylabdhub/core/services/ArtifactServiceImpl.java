@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
@@ -523,4 +524,17 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             throw new SystemException(e.getMessage());
         }
     }
+
+	@Override
+	public UploadInfo uploadArtifactAsUrl(@NotNull String projectId, @NotNull String artifactId, @NotNull String filename) 
+			throws NoSuchEntityException, SystemException {
+        log.debug("upload url for artifact with id {}", String.valueOf(artifactId));
+
+        UploadInfo info = filesService.getUploadAsUrl(EntityName.ARTIFACT.getValue(), projectId, artifactId, filename);
+        if (log.isTraceEnabled()) {
+            log.trace("upload url for artifact with id {}: {}", artifactId, info);
+        }
+
+        return info;
+	}
 }

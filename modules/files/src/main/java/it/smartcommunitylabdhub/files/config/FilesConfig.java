@@ -21,9 +21,10 @@ public class FilesConfig {
     public S3FilesStore s3FilesStore(
         @Value("${files.store.s3.access-key}") String accessKey,
         @Value("${files.store.s3.secret-key}") String secretKey,
-        @Value("${files.store.s3.endpoint}") String endpoint
+        @Value("${files.store.s3.endpoint}") String endpoint,
+        @Value("${files.store.s3.bucket}") String bucket
     ) {
-        S3FilesStore store = new S3FilesStore(accessKey, secretKey, endpoint);
+        S3FilesStore store = new S3FilesStore(accessKey, secretKey, endpoint, bucket);
 
         //register as default
         service.registerStore("s3://", store);

@@ -177,4 +177,5 @@ files:
       access-key: ${AWS_ACCESS_KEY:}
       secret-key: ${AWS_SECRET_KEY:}
       endpoint: ${S3_ENDPOINT:}
+      bucket: ${S3_BUCKET:}
       

@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.files.http;
 
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
 import java.net.MalformedURLException;
@@ -66,4 +67,11 @@ public class HttpStore implements FilesStore {
         }
         return result;
     }
+
+	@Override
+	public UploadInfo uploadAsUrl(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId,
+			@NotNull String filename) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
