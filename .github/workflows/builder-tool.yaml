@@ -29,17 +29,18 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract the first 5 characters of the SHA
+        id: extract_sha
+        run: echo "SHA_SHORT=${GITHUB_SHA:0:8}" >> $GITHUB_ENV
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha
-            type=ref,event=branch
-            type=raw,value=${{ github.sha }}
+            type=raw,value=${{ env.SHA_SHORT }}
           labels: |
-            version=${{ github.sha }}
+            commit.sha=${{ github.sha }}
           flavor: |
             latest=true          
       - name: Build and push Docker image
