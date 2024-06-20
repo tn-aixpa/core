@@ -99,7 +99,7 @@ handle_error() {
 trap 'handle_error $LINENO "$BASH_COMMAND"' ERR
 
 # Copy everything from source directory to destination directory, excluding context-refs.txt
-rsync -av --exclude='context-refs.txt' --exclude='Dockerfile' --include='.*' "$source_dir/" "$destination_dir/"
+rsync -avL --exclude='context-refs.txt' --exclude='Dockerfile' --include='.*' "$source_dir/" "$destination_dir/"
 
 # Process context-refs.txt
 if [ -f "$source_dir/context-refs.txt" ]; then
