@@ -134,7 +134,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 .task(PythonJobTaskSpec.KIND)
                 .state(State.READY.name())
                 //base
-                .image(StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image) // TODO check that functionSpec.getImage() has our prefix otherwise  ERROR
+                .image(StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image)
                 .command(command)
                 // .args(new String[] { run.getProject(), run.getId() })
                 .args(new String[] { "--config", "/shared/function.yaml" })

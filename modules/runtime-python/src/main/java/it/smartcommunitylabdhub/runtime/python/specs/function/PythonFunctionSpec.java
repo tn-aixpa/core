@@ -24,7 +24,7 @@ public class PythonFunctionSpec extends FunctionBaseSpec {
 
     @JsonProperty("source")
     @NotNull
-    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
+    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description", defaultValue = "python")
     private SourceCode<PythonSourceCodeLanguages> source;
 
     @JsonProperty("image")

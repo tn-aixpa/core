@@ -33,7 +33,6 @@ import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.python.builders.PythonBuildBuilder;
 import it.smartcommunitylabdhub.runtime.python.builders.PythonJobBuilder;
 import it.smartcommunitylabdhub.runtime.python.builders.PythonServeBuilder;
-import it.smartcommunitylabdhub.runtime.python.configs.PythonImage;
 import it.smartcommunitylabdhub.runtime.python.runners.PythonBuildRunner;
 import it.smartcommunitylabdhub.runtime.python.runners.PythonJobRunner;
 import it.smartcommunitylabdhub.runtime.python.runners.PythonServeRunner;
@@ -54,6 +53,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
@@ -90,7 +90,8 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
     private LogService logService;
 
     @Autowired
-    PythonImage images;
+    @Qualifier("pythonImages")
+    private Map<String, String> images;
 
     @Value("${runtime.python.command}")
     private String command;
@@ -145,21 +146,21 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
         return switch (runAccessor.getTask()) {
             case PythonJobTaskSpec.KIND -> new PythonJobRunner(
-                images.getImage("python-" + runPythonSpec.getFunctionSpec().getPythonVersion().getVersion()),
+                images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
                 secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets())
             )
                 .produce(run);
             case PythonServeTaskSpec.KIND -> new PythonServeRunner(
-                images.getImage("python-" + runPythonSpec.getFunctionSpec().getPythonVersion().getVersion()),
+                images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
                 secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets())
             )
                 .produce(run);
             case PythonBuildTaskSpec.KIND -> new PythonBuildRunner(
-                images.getImage("python-" + runPythonSpec.getFunctionSpec().getPythonVersion().getVersion()),
+                images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
                 secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskBuildSpec().getSecrets())
