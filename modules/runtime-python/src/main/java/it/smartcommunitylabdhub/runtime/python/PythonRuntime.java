@@ -15,6 +15,7 @@ import it.smartcommunitylabdhub.commons.models.entities.log.Log;
 import it.smartcommunitylabdhub.commons.models.entities.log.LogSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
+import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.LogService;
@@ -30,9 +31,6 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
-import it.smartcommunitylabdhub.runtime.python.builders.PythonBuildBuilder;
-import it.smartcommunitylabdhub.runtime.python.builders.PythonJobBuilder;
-import it.smartcommunitylabdhub.runtime.python.builders.PythonServeBuilder;
 import it.smartcommunitylabdhub.runtime.python.runners.PythonBuildRunner;
 import it.smartcommunitylabdhub.runtime.python.runners.PythonJobRunner;
 import it.smartcommunitylabdhub.runtime.python.runners.PythonServeRunner;
@@ -66,10 +64,6 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
     //TODO make configurable
     public static final int MAX_METRICS = 300;
-
-    private final PythonJobBuilder jobBuilder = new PythonJobBuilder();
-    private final PythonServeBuilder serveBuilder = new PythonServeBuilder();
-    private final PythonBuildBuilder buildBuilder = new PythonBuildBuilder();
 
     @Autowired
     private SecretService secretService;
@@ -110,24 +104,33 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
         String kind = task.getKind();
 
-        // Retrieve builder using task kind
-        switch (kind) {
-            case PythonJobTaskSpec.KIND -> {
-                PythonJobTaskSpec taskJobSpec = new PythonJobTaskSpec(task.getSpec());
-                return jobBuilder.build(funSpec, taskJobSpec, runSpec);
-            }
-            case PythonServeTaskSpec.KIND -> {
-                PythonServeTaskSpec taskServeSpec = new PythonServeTaskSpec(task.getSpec());
-                return serveBuilder.build(funSpec, taskServeSpec, runSpec);
-            }
-            case PythonBuildTaskSpec.KIND -> {
-                PythonBuildTaskSpec taskBuildSpec = new PythonBuildTaskSpec(task.getSpec());
-                return buildBuilder.build(funSpec, taskBuildSpec, runSpec);
-            }
-            default -> throw new IllegalArgumentException(
-                "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
-            );
-        }
+        //build task spec as defined
+        TaskBaseSpec taskSpec =
+            switch (kind) {
+                case PythonJobTaskSpec.KIND -> {
+                    yield new PythonJobTaskSpec(task.getSpec());
+                }
+                case PythonServeTaskSpec.KIND -> {
+                    yield new PythonServeTaskSpec(task.getSpec());
+                }
+                case PythonBuildTaskSpec.KIND -> {
+                    yield new PythonBuildTaskSpec(task.getSpec());
+                }
+                default -> throw new IllegalArgumentException(
+                    "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
+                );
+            };
+
+        //build run merging task spec overrides
+        Map<String, Serializable> map = new HashMap<>();
+        map.putAll(runSpec.toMap());
+        taskSpec.toMap().forEach(map::putIfAbsent);
+
+        PythonRunSpec pythonSpec = new PythonRunSpec(map);
+        //ensure function is not modified
+        pythonSpec.setFunctionSpec(funSpec);
+
+        return pythonSpec;
     }
 
     @Override
