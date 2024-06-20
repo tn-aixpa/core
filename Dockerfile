@@ -1,5 +1,5 @@
 FROM maven:3-eclipse-temurin-21-alpine AS build
-ARG VER=0.4.0
+ARG VER=SNAPSHOT
 COPY application /tmp/application
 COPY frontend /tmp/frontend
 COPY modules /tmp/modules
