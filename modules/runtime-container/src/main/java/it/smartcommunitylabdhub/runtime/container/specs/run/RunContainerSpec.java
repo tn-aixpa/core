@@ -60,7 +60,7 @@ public class RunContainerSpec extends RunBaseSpec {
         this.taskBuildSpec = spec.getTaskBuildSpec();
     }
 
-    public void setFuncSpec(FunctionContainerSpec functionSpec) {
+    public void setFunctionSpec(FunctionContainerSpec functionSpec) {
         this.functionSpec = functionSpec;
     }
 
