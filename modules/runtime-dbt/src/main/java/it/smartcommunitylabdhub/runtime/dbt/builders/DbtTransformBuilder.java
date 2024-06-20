@@ -4,10 +4,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.Builder;
 import it.smartcommunitylabdhub.runtime.dbt.specs.function.FunctionDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.run.RunDbtSpec;
 import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
-
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 /**
  * DbtTransformBuilder
@@ -22,13 +19,14 @@ public class DbtTransformBuilder implements Builder<FunctionDbtSpec, TaskTransfo
 
     @Override
     public RunDbtSpec build(FunctionDbtSpec funSpec, TaskTransformSpec taskSpec, RunDbtSpec runSpec) {
-        Map<String, Serializable> map = new HashMap<>();
-        map.putAll(runSpec.toMap());
-        map.putAll(funSpec.toMap());
-        taskSpec.toMap().forEach(map::putIfAbsent);
-
-        RunDbtSpec runDbtSpec = new RunDbtSpec(map);
+        RunDbtSpec runDbtSpec = new RunDbtSpec(runSpec.toMap());
+        runDbtSpec.setTaskSpec(taskSpec);
         runDbtSpec.setFuncSpec(funSpec);
+
+        //let run override k8s specs
+        Optional
+            .ofNullable(runSpec.getTaskSpec())
+            .ifPresent(k8sSpec -> runDbtSpec.getTaskSpec().configure(k8sSpec.toMap()));
 
         return runDbtSpec;
     }
