@@ -145,6 +145,20 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
             }
         }
 
+        // install all requirements
+        dockerfileGenerator.run(
+            "python /opt/nuclio/whl/$(basename /opt/nuclio/whl/pip-*.whl)/pip install pip --no-index --find-links /opt/nuclio/whl " +
+            "&& python -m pip install -r /opt/nuclio/requirements/common.txt" +
+            "&& python -m pip install -r /opt/nuclio/requirements/" +
+            functionSpec.getPythonVersion().name().toLowerCase() +
+            ".txt"
+        );
+
+        // Add user instructions
+        Optional
+            .ofNullable(taskSpec.getInstructions())
+            .ifPresent(instructions -> instructions.forEach(i -> dockerfileGenerator.run(i)));
+
         // If requirements.txt are defined add to build
         if (functionSpec.getRequirements() != null && !functionSpec.getRequirements().isEmpty()) {
             //write file
@@ -158,16 +172,8 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
                     .build()
             );
             // install all requirements
-            dockerfileGenerator.run(
-                "python /opt/nuclio/whl/$(basename /opt/nuclio/whl/pip-*.whl)/pip install pip --no-index --find-links /opt/nuclio/whl " +
-                "&& python -m pip install -r /shared/requirements.txt"
-            );
+            dockerfileGenerator.run("python -m pip install -r /shared/requirements.txt");
         }
-
-        // Add user instructions
-        Optional
-            .ofNullable(taskSpec.getInstructions())
-            .ifPresent(instructions -> instructions.forEach(i -> dockerfileGenerator.run(i)));
 
         // Set entry point
         dockerfileGenerator.entrypoint(List.of(command));
