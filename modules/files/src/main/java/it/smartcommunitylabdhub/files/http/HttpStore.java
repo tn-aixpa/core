@@ -74,4 +74,24 @@ public class HttpStore implements FilesStore {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public UploadInfo startUpload(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId,
+			@NotNull String filename) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public UploadInfo completeUpload(@NotNull String path, @NotNull String uploadId,
+			@NotNull List<String> eTagPartList) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

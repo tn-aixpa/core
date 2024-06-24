@@ -194,6 +194,39 @@ public class ArtifactContextController {
         return filesService.uploadArtifactAsUrl(project, id, filename);
     }
     
+    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @GetMapping(path = "/{id}/files/multipart/start", produces = "application/json; charset=UTF-8")
+    public UploadInfo multipartStartUploadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String filename
+    ) throws NoSuchEntityException {
+        return filesService.startUpload(project, id, filename);
+    }
+    
+    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @GetMapping(path = "/{id}/files/multipart/part", produces = "application/json; charset=UTF-8")
+    public UploadInfo multipartPartUploadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String path,
+        @RequestParam @NotNull String uploadId,
+        @RequestParam @NotNull Integer partNumber
+    ) throws NoSuchEntityException {
+        return filesService.uploadPart(path, uploadId, partNumber);
+    }
+    
+    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @GetMapping(path = "/{id}/files/multipart/complete", produces = "application/json; charset=UTF-8")
+    public UploadInfo multipartCompleteUploadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String uploadId,
+        @RequestParam @NotNull List<String> eTagPartList
+    ) throws NoSuchEntityException {
+        return filesService.completeUpload(id, uploadId, eTagPartList);
+    }
+    
     @Operation(summary = "Get object storage metadata for a given artifact, if available")
     @GetMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
     public List<FileInfo> getArtifactFilesInfoById(

@@ -15,6 +15,7 @@ public class UploadInfo {
     private String path;
     private String url;
     private Instant expiration;
+    private String uploadId;
 
     @Override
     public String toString() {

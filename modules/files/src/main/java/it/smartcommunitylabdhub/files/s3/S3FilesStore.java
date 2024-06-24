@@ -17,15 +17,25 @@ import org.springframework.web.util.UriComponentsBuilder;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.CompleteMultipartUploadPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedCompleteMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedUploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.UploadPartPresignRequest;
 
 @Slf4j
 public class S3FilesStore implements FilesStore {
@@ -196,4 +206,87 @@ public class S3FilesStore implements FilesStore {
         info.setExpiration(presignedRequest.expiration());
         return info;
 	}
+	
+	@Override
+	public UploadInfo startUpload(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, 
+			@NotNull String filename) {
+		log.debug("generate start upload url for {} -> {}", entityId, filename);
+        String key = projectId + "/" + entityType + "/" + entityId;
+        key += filename.startsWith("/") ? filename : "/" + filename;
+        
+        String path = "s3://" + bucket + "/" + key;
+        
+        CreateMultipartUploadRequest req = CreateMultipartUploadRequest.builder().bucket(bucket).key(key).build();
+        CreateMultipartUploadResponse response = client.createMultipartUpload(req);
+        
+        UploadInfo info = new UploadInfo();
+        info.setPath(path);
+        info.setUploadId(response.uploadId());
+        return info;
+	}
+	
+	@Override
+	public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) {
+		log.debug("generate part upload url for {} -> {} - {}", path, uploadId, partNumber);
+        
+		String key = path.replace("s3://" + bucket + "/", "");
+		
+        UploadPartRequest req = UploadPartRequest.builder().bucket(bucket).key(key)
+        		.uploadId(uploadId)
+        		.partNumber(partNumber)
+        		.build();
+        UploadPartPresignRequest preq = UploadPartPresignRequest
+        		.builder()
+        		.signatureDuration(Duration.ofSeconds(urlDuration))
+        		.uploadPartRequest(req)
+        		.build();
+        PresignedUploadPartRequest presignedRequest = presigner.presignUploadPart(preq);
+        
+        UploadInfo info = new UploadInfo();
+        info.setPath(path);
+        info.setUrl(presignedRequest.url().toExternalForm());
+        info.setExpiration(presignedRequest.expiration());
+        return info;
+	}
+	
+	@Override
+	public UploadInfo completeUpload(@NotNull String path, @NotNull String uploadId, @NotNull List<String> eTagPartList) {
+		log.debug("generate complete upload url for {} -> {}", path, uploadId);
+		
+		String key = path.replace("s3://" + bucket + "/", "");
+		
+		List<CompletedPart> parts = new ArrayList<>();
+		for (int i = 0; i < eTagPartList.size(); i++) {
+			CompletedPart cp = CompletedPart
+					.builder()
+					.eTag(eTagPartList.get(i))
+					.partNumber(i + 1)
+					.build();
+			parts.add(cp);
+		}		
+		CompletedMultipartUpload mp = CompletedMultipartUpload
+				.builder()
+				.parts(parts)
+				.build();
+		CompleteMultipartUploadRequest req = CompleteMultipartUploadRequest
+				.builder()
+				.bucket(bucket)
+				.key(key)
+				.uploadId(uploadId)
+				.multipartUpload(mp)
+				.build();
+		CompleteMultipartUploadPresignRequest preq = CompleteMultipartUploadPresignRequest
+				.builder()
+				.signatureDuration(Duration.ofSeconds(urlDuration))
+				.completeMultipartUploadRequest(req)
+				.build();
+		PresignedCompleteMultipartUploadRequest presignedRequest = presigner.presignCompleteMultipartUpload(preq);
+		
+        UploadInfo info = new UploadInfo();
+        info.setPath(path);
+        info.setUrl(presignedRequest.url().toExternalForm());
+        info.setExpiration(presignedRequest.expiration());
+        return info;		
+	}
+	
 }
