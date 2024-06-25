@@ -565,33 +565,15 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
 	}
 	
 	@Override
-	public UploadInfo completeUpload(@NotNull String artifactId, @NotNull String uploadId, @NotNull List<String> eTagPartList) 
+	public UploadInfo completeUpload(@NotNull String path, @NotNull String uploadId, @NotNull List<String> eTagPartList) 
 			throws NoSuchEntityException, SystemException {
-        log.debug("complete upload url for artifact with id {}", String.valueOf(artifactId));
+        log.debug("complete upload url for artifact with path {}", path);
+        
+        UploadInfo info = filesService.completeUpload(path, uploadId, eTagPartList);
+        if (log.isTraceEnabled()) {
+            log.trace("complete upload url for artifact with path {}: {}", path, info);
+        }
 
-        try {
-            Artifact artifact = entityService.get(artifactId);
-
-            //extract path from spec
-            ArtifactBaseSpec spec = new ArtifactBaseSpec();
-            spec.configure(artifact.getSpec());
-
-            String path = spec.getPath();
-            if (!StringUtils.hasText(path)) {
-                throw new NoSuchEntityException("file");
-            }
-
-            UploadInfo info = filesService.completeUpload(path, uploadId, eTagPartList);
-            if (log.isTraceEnabled()) {
-                log.trace("complete upload url for artifact with id {}: {}", artifactId, info);
-            }
-
-            return info;
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }		
+        return info;
 	}
 }

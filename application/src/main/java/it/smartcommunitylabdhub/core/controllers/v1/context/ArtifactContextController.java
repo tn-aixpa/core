@@ -221,10 +221,11 @@ public class ArtifactContextController {
     public UploadInfo multipartCompleteUploadAsUrlArtifactById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String path,
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull List<String> eTagPartList
     ) throws NoSuchEntityException {
-        return filesService.completeUpload(id, uploadId, eTagPartList);
+        return filesService.completeUpload(path, uploadId, eTagPartList);
     }
     
     @Operation(summary = "Get object storage metadata for a given artifact, if available")
