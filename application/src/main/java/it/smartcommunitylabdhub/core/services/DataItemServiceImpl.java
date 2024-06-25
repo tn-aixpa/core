@@ -488,7 +488,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
 
             return info;
         } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
