@@ -194,7 +194,7 @@ public class ArtifactContextController {
         return filesService.uploadArtifactAsUrl(project, id, filename);
     }
     
-    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @Operation(summary = "Create a starting multipart upload url for a given artifact, if available")
     @GetMapping(path = "/{id}/files/multipart/start", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartStartUploadAsUrlArtifactById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
@@ -204,7 +204,7 @@ public class ArtifactContextController {
         return filesService.startUpload(project, id, filename);
     }
     
-    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @Operation(summary = "Create a multipart upload url for a given artifact, if available")
     @GetMapping(path = "/{id}/files/multipart/part", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartPartUploadAsUrlArtifactById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
@@ -216,7 +216,7 @@ public class ArtifactContextController {
         return filesService.uploadPart(path, uploadId, partNumber);
     }
     
-    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @Operation(summary = "Create a completing multipart upload url for a given artifact, if available")
     @GetMapping(path = "/{id}/files/multipart/complete", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartCompleteUploadAsUrlArtifactById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
