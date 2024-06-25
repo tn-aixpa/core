@@ -11,10 +11,10 @@ import java.util.List;
 public interface ArtifactFilesService {
     public DownloadInfo downloadAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException;
     
-    public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String artifactId, @NotNull String filename) 
+    public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String id, @NotNull String filename) 
     		throws NoSuchEntityException, SystemException;
     
-    public UploadInfo startUpload(@NotNull String projectId, @NotNull String artifactId, @NotNull String filename) 
+    public UploadInfo startUpload(@NotNull String projectId, @NotNull String id, @NotNull String filename) 
 			throws NoSuchEntityException, SystemException;
     
     public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) 

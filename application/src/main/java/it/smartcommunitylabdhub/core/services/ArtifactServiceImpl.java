@@ -526,26 +526,26 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
 	@Override
-	public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String artifactId, @NotNull String filename) 
+	public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String id, @NotNull String filename) 
 			throws NoSuchEntityException, SystemException {
-        log.debug("upload url for artifact with id {}", String.valueOf(artifactId));
+        log.debug("upload url for artifact with id {}", String.valueOf(id));
 
-        UploadInfo info = filesService.getUploadAsUrl(EntityName.ARTIFACT.getValue(), projectId, artifactId, filename);
+        UploadInfo info = filesService.getUploadAsUrl(EntityName.ARTIFACT.getValue(), projectId, id, filename);
         if (log.isTraceEnabled()) {
-            log.trace("upload url for artifact with id {}: {}", artifactId, info);
+            log.trace("upload url for artifact with id {}: {}", id, info);
         }
 
         return info;
 	}
 	
 	@Override
-	public UploadInfo startUpload(@NotNull String projectId, @NotNull String artifactId, @NotNull String filename) 
+	public UploadInfo startUpload(@NotNull String projectId, @NotNull String id, @NotNull String filename) 
 			throws NoSuchEntityException, SystemException {
-        log.debug("start upload url for artifact with id {}", String.valueOf(artifactId));
+        log.debug("start upload url for artifact with id {}", String.valueOf(id));
 
-        UploadInfo info = filesService.startUpload(EntityName.ARTIFACT.getValue(), projectId, artifactId, filename);
+        UploadInfo info = filesService.startUpload(EntityName.ARTIFACT.getValue(), projectId, id, filename);
         if (log.isTraceEnabled()) {
-            log.trace("start upload url for artifact with id {}: {}", artifactId, info);
+            log.trace("start upload url for artifact with id {}: {}", id, info);
         }
 
         return info;		
