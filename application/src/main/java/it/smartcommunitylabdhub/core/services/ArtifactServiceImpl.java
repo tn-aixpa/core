@@ -467,7 +467,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public DownloadInfo downloadArtifactAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
+    public DownloadInfo downloadAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("download url for artifact with id {}", String.valueOf(id));
 
         try {
@@ -526,7 +526,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
 	@Override
-	public UploadInfo uploadArtifactAsUrl(@NotNull String projectId, @NotNull String artifactId, @NotNull String filename) 
+	public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String artifactId, @NotNull String filename) 
 			throws NoSuchEntityException, SystemException {
         log.debug("upload url for artifact with id {}", String.valueOf(artifactId));
 

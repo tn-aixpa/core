@@ -181,7 +181,7 @@ public class ArtifactContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.downloadArtifactAsUrl(id);
+        return filesService.downloadAsUrl(id);
     }
 
     @Operation(summary = "Create an upload url for a given artifact, if available")
@@ -191,7 +191,7 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        return filesService.uploadArtifactAsUrl(project, id, filename);
+        return filesService.uploadAsUrl(project, id, filename);
     }
     
     @Operation(summary = "Create a starting multipart upload url for a given artifact, if available")
