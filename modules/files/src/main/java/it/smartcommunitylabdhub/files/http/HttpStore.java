@@ -59,7 +59,7 @@ public class HttpStore implements FilesStore {
             response.setPath(path);
             response.setName(split[split.length - 1]);
             response.setContentType(headers.getContentType().toString());
-            response.setLength(headers.getContentLength());
+            response.setSize(headers.getContentLength());
             response.setLastModified(Instant.ofEpochMilli(headers.getLastModified()));
             result.add(response);
         } catch (Exception e) {

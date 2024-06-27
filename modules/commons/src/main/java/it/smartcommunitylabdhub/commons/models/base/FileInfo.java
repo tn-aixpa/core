@@ -8,6 +8,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,8 +22,10 @@ public class FileInfo {
 
     private String path;
     private String name;
+    @JsonProperty("content_type")
     private String contentType;
-    private long length;
+    private long size;
+    @JsonProperty("last_modified")
     private Instant lastModified;
     private String hash;
     private Map<String, Serializable> metadata = new HashMap<>();

@@ -157,7 +157,7 @@ public class S3FilesStore implements FilesStore {
             response.setPath(path);
             response.setName(split[split.length - 1]);
             response.setContentType(headObject.contentType());
-            response.setLength(headObject.contentLength());
+            response.setSize(headObject.contentLength());
             response.setLastModified(headObject.lastModified());
 
             if (StringUtils.hasText(headObject.checksumSHA256())) {
