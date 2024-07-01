@@ -467,7 +467,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public DownloadInfo downloadAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
+    public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("download url for artifact with id {}", String.valueOf(id));
 
         try {
@@ -497,7 +497,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public List<FileInfo> getObjectMetadata(@NotNull String id) throws NoSuchEntityException, SystemException {
+    public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("get storage metadata for artifact with id {}", String.valueOf(id));
         try {
             Artifact artifact = entityService.get(id);
@@ -511,7 +511,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
                 throw new NoSuchEntityException("file");
             }
 
-            List<FileInfo> metadata = filesService.getObjectMetadata(path);
+            List<FileInfo> metadata = filesService.getFileInfo(path);
             if (log.isTraceEnabled()) {
                 log.trace("metadata for artifact with id {}: {} -> {}", id, path, metadata);
             }
@@ -526,57 +526,172 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String id, @NotNull String filename)
+    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
-        log.debug("upload url for artifact with id {}", String.valueOf(id));
+        log.debug("upload url for artifact with id {}: {}", String.valueOf(id), filename);
 
-        UploadInfo info = filesService.getUploadAsUrl(EntityName.ARTIFACT.getValue(), projectId, id, filename);
-        if (log.isTraceEnabled()) {
-            log.trace("upload url for artifact with id {}: {}", id, info);
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.ARTIFACT.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //artifact may not exists (yet)
+            Artifact artifact = entityService.find(id);
+
+            if (artifact != null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(artifact.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.getUploadAsUrl(path);
+            if (log.isTraceEnabled()) {
+                log.trace("upload url for artifact with id {}: {}", id, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
-
-        return info;
     }
 
     @Override
-    public UploadInfo startUpload(@NotNull String projectId, @NotNull String id, @NotNull String filename)
+    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
-        log.debug("start upload url for artifact with id {}", String.valueOf(id));
+        log.debug("start upload url for artifact with id {}: {}", String.valueOf(id), filename);
 
-        UploadInfo info = filesService.startUpload(EntityName.ARTIFACT.getValue(), projectId, id, filename);
-        if (log.isTraceEnabled()) {
-            log.trace("start upload url for artifact with id {}: {}", id, info);
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.ARTIFACT.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //artifact may not exists (yet)
+            Artifact artifact = entityService.find(id);
+
+            if (artifact != null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(artifact.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.startMultiPartUpload(path);
+            if (log.isTraceEnabled()) {
+                log.trace("start upload url for artifact with id {}: {}", id, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
-
-        return info;
     }
 
     @Override
-    public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber)
-        throws NoSuchEntityException, SystemException {
-        log.debug("start upload url for artifact with path {}", path);
+    public UploadInfo uploadMultiPart(
+        @Nullable String id,
+        @NotNull String filename,
+        @NotNull String uploadId,
+        @NotNull Integer partNumber
+    ) throws NoSuchEntityException, SystemException {
+        log.debug("upload part url for artifact {}: {}", String.valueOf(id), filename);
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.ARTIFACT.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
 
-        UploadInfo info = filesService.uploadPart(path, uploadId, partNumber);
-        if (log.isTraceEnabled()) {
-            log.trace("part upload url for artifact with path {}: {}", path, info);
+            //artifact may not exists (yet)
+            Artifact artifact = entityService.find(id);
+
+            if (artifact != null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(artifact.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber);
+            if (log.isTraceEnabled()) {
+                log.trace("part upload url for artifact with path {}: {}", path, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
-
-        return info;
     }
 
     @Override
-    public UploadInfo completeUpload(
-        @NotNull String path,
+    public UploadInfo completeMultiPartUpload(
+        @Nullable String id,
+        @NotNull String filename,
         @NotNull String uploadId,
         @NotNull List<String> eTagPartList
     ) throws NoSuchEntityException, SystemException {
-        log.debug("complete upload url for artifact with path {}", path);
+        log.debug("complete upload url for artifact {}: {}", String.valueOf(id), filename);
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.ARTIFACT.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
 
-        UploadInfo info = filesService.completeUpload(path, uploadId, eTagPartList);
-        if (log.isTraceEnabled()) {
-            log.trace("complete upload url for artifact with path {}: {}", path, info);
+            //artifact may not exists (yet)
+            Artifact artifact = entityService.find(id);
+
+            if (artifact != null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(artifact.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList);
+            if (log.isTraceEnabled()) {
+                log.trace("complete upload url for artifact with path {}: {}", path, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
-
-        return info;
     }
 }

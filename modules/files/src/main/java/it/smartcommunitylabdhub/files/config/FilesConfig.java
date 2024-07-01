@@ -21,13 +21,30 @@ public class FilesConfig {
     public S3FilesStore s3FilesStore(
         @Value("${files.store.s3.access-key}") String accessKey,
         @Value("${files.store.s3.secret-key}") String secretKey,
+        @Value("${files.store.s3.endpoint}") String endpoint
+    ) {
+        S3FilesStore store = new S3FilesStore(accessKey, secretKey, endpoint, null);
+
+        //register as default
+        service.registerStore("s3://", store);
+
+        return store;
+    }
+
+    @ConditionalOnExpression(
+        "!T(org.springframework.util.StringUtils).isEmpty('${files.store.s3.access-key:}') && !T(org.springframework.util.StringUtils).isEmpty('${files.store.s3.bucket:}')"
+    )
+    @Bean
+    public S3FilesStore s3DefaultFilesStore(
+        @Value("${files.store.s3.access-key}") String accessKey,
+        @Value("${files.store.s3.secret-key}") String secretKey,
         @Value("${files.store.s3.endpoint}") String endpoint,
         @Value("${files.store.s3.bucket}") String bucket
     ) {
         S3FilesStore store = new S3FilesStore(accessKey, secretKey, endpoint, bucket);
 
         //register as default
-        service.registerStore("s3://", store);
+        service.registerStore("s3://" + bucket, store);
 
         return store;
     }

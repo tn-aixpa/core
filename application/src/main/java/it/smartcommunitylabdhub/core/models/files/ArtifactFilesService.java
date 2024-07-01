@@ -7,24 +7,30 @@ import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import org.springframework.lang.Nullable;
 
 public interface ArtifactFilesService {
-    public DownloadInfo downloadAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException;
+    public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException;
 
-    public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String id, @NotNull String filename)
+    public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException;
+
+    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException;
 
-    public UploadInfo startUpload(@NotNull String projectId, @NotNull String id, @NotNull String filename)
+    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException;
 
-    public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber)
-        throws NoSuchEntityException, SystemException;
+    public UploadInfo uploadMultiPart(
+        @Nullable String id,
+        @NotNull String filename,
+        @NotNull String uploadId,
+        @NotNull Integer partNumber
+    ) throws NoSuchEntityException, SystemException;
 
-    public UploadInfo completeUpload(
-        @NotNull String path,
+    public UploadInfo completeMultiPartUpload(
+        @Nullable String id,
+        @NotNull String filename,
         @NotNull String uploadId,
         @NotNull List<String> eTagPartList
     ) throws NoSuchEntityException, SystemException;
-
-    public List<FileInfo> getObjectMetadata(@NotNull String id) throws NoSuchEntityException, SystemException;
 }

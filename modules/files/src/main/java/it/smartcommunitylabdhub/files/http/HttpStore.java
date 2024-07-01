@@ -50,7 +50,7 @@ public class HttpStore implements FilesStore {
     }
 
     @Override
-    public List<FileInfo> readMetadata(@NotNull String path) {
+    public List<FileInfo> fileInfo(@NotNull String path) {
         List<FileInfo> result = new ArrayList<>();
         try {
             String[] split = path.split("/");
@@ -69,40 +69,26 @@ public class HttpStore implements FilesStore {
     }
 
     @Override
-    public UploadInfo uploadAsUrl(
-        @NotNull String entityType,
-        @NotNull String projectId,
-        @NotNull String entityId,
-        @NotNull String filename
-    ) {
-        // TODO Auto-generated method stub
-        return null;
+    public UploadInfo uploadAsUrl(@NotNull String path) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public UploadInfo startUpload(
-        @NotNull String entityType,
-        @NotNull String projectId,
-        @NotNull String entityId,
-        @NotNull String filename
-    ) {
-        // TODO Auto-generated method stub
-        return null;
+    public UploadInfo startMultiPartUpload(@NotNull String path) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) {
-        // TODO Auto-generated method stub
-        return null;
+    public UploadInfo uploadMultiPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public UploadInfo completeUpload(
+    public UploadInfo completeMultiPartUpload(
         @NotNull String path,
         @NotNull String uploadId,
-        @NotNull List<String> eTagPartList
+        @NotNull List<String> partList
     ) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException();
     }
 }

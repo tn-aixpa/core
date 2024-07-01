@@ -511,7 +511,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         throws NoSuchEntityException, SystemException {
         log.debug("start upload url for entity with id {}", String.valueOf(id));
 
-        UploadInfo info = filesService.startUpload(EntityName.DATAITEM.getValue(), projectId, id, filename);
+        UploadInfo info = filesService.startMultiPartUpload(EntityName.DATAITEM.getValue(), projectId, id, filename);
         if (log.isTraceEnabled()) {
             log.trace("start upload url for entity with id {}: {}", id, info);
         }
@@ -524,7 +524,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         throws NoSuchEntityException, SystemException {
         log.debug("start upload url for entity with path {}", path);
 
-        UploadInfo info = filesService.uploadPart(path, uploadId, partNumber);
+        UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber);
         if (log.isTraceEnabled()) {
             log.trace("part upload url for entity with path {}: {}", path, info);
         }
@@ -540,7 +540,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
     ) throws NoSuchEntityException, SystemException {
         log.debug("complete upload url for entity with path {}", path);
 
-        UploadInfo info = filesService.completeUpload(path, uploadId, eTagPartList);
+        UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList);
         if (log.isTraceEnabled()) {
             log.trace("complete upload url for entity with path {}: {}", path, info);
         }
@@ -563,7 +563,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
                 throw new NoSuchEntityException("file");
             }
 
-            List<FileInfo> metadata = filesService.getObjectMetadata(path);
+            List<FileInfo> metadata = filesService.getFileInfo(path);
             if (log.isTraceEnabled()) {
                 log.trace("metadata for entity with id {}: {} -> {}", id, path, metadata);
             }
