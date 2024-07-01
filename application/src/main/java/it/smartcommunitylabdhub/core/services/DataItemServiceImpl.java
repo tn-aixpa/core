@@ -1,18 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
-
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -40,7 +27,18 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -64,10 +62,10 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
 
     @Autowired
     private SpecValidator validator;
-    
+
     @Autowired
     private FilesService filesService;
-    
+
     @Override
     public Page<DataItem> listDataItems(Pageable pageable) {
         log.debug("list dataItems page {}", pageable);
@@ -465,8 +463,8 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         }
     }
 
-	@Override
-	public DownloadInfo downloadAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
+    @Override
+    public DownloadInfo downloadAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("download url for entity with id {}", String.valueOf(id));
 
         try {
@@ -493,11 +491,11 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
         }
-	}
+    }
 
-	@Override
-	public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String id,
-			@NotNull String filename) throws NoSuchEntityException, SystemException {
+    @Override
+    public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String id, @NotNull String filename)
+        throws NoSuchEntityException, SystemException {
         log.debug("upload url for entity with id {}", String.valueOf(id));
 
         UploadInfo info = filesService.getUploadAsUrl(EntityName.DATAITEM.getValue(), projectId, id, filename);
@@ -506,11 +504,11 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         }
 
         return info;
-	}
+    }
 
-	@Override
-	public UploadInfo startUpload(@NotNull String projectId, @NotNull String id, @NotNull String filename)
-			throws NoSuchEntityException, SystemException {
+    @Override
+    public UploadInfo startUpload(@NotNull String projectId, @NotNull String id, @NotNull String filename)
+        throws NoSuchEntityException, SystemException {
         log.debug("start upload url for entity with id {}", String.valueOf(id));
 
         UploadInfo info = filesService.startUpload(EntityName.DATAITEM.getValue(), projectId, id, filename);
@@ -518,12 +516,12 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             log.trace("start upload url for entity with id {}: {}", id, info);
         }
 
-        return info;		
-	}
+        return info;
+    }
 
-	@Override
-	public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber)
-			throws NoSuchEntityException, SystemException {
+    @Override
+    public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber)
+        throws NoSuchEntityException, SystemException {
         log.debug("start upload url for entity with path {}", path);
 
         UploadInfo info = filesService.uploadPart(path, uploadId, partNumber);
@@ -532,11 +530,14 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         }
 
         return info;
-	}
+    }
 
-	@Override
-	public UploadInfo completeUpload(@NotNull String path, @NotNull String uploadId, @NotNull List<String> eTagPartList) 
-			throws NoSuchEntityException, SystemException {
+    @Override
+    public UploadInfo completeUpload(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull List<String> eTagPartList
+    ) throws NoSuchEntityException, SystemException {
         log.debug("complete upload url for entity with path {}", path);
 
         UploadInfo info = filesService.completeUpload(path, uploadId, eTagPartList);
@@ -545,10 +546,10 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         }
 
         return info;
-	}
+    }
 
-	@Override
-	public List<FileInfo> getObjectMetadata(@NotNull String id) throws NoSuchEntityException, SystemException {
+    @Override
+    public List<FileInfo> getObjectMetadata(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("get storage metadata for entity with id {}", String.valueOf(id));
         try {
             DataItem entity = entityService.get(id);
@@ -574,5 +575,5 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
         }
-	}
+    }
 }

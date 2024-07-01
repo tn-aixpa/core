@@ -525,9 +525,9 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         }
     }
 
-	@Override
-	public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String id, @NotNull String filename) 
-			throws NoSuchEntityException, SystemException {
+    @Override
+    public UploadInfo uploadAsUrl(@NotNull String projectId, @NotNull String id, @NotNull String filename)
+        throws NoSuchEntityException, SystemException {
         log.debug("upload url for artifact with id {}", String.valueOf(id));
 
         UploadInfo info = filesService.getUploadAsUrl(EntityName.ARTIFACT.getValue(), projectId, id, filename);
@@ -536,11 +536,11 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         }
 
         return info;
-	}
-	
-	@Override
-	public UploadInfo startUpload(@NotNull String projectId, @NotNull String id, @NotNull String filename) 
-			throws NoSuchEntityException, SystemException {
+    }
+
+    @Override
+    public UploadInfo startUpload(@NotNull String projectId, @NotNull String id, @NotNull String filename)
+        throws NoSuchEntityException, SystemException {
         log.debug("start upload url for artifact with id {}", String.valueOf(id));
 
         UploadInfo info = filesService.startUpload(EntityName.ARTIFACT.getValue(), projectId, id, filename);
@@ -548,12 +548,12 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             log.trace("start upload url for artifact with id {}: {}", id, info);
         }
 
-        return info;		
-	}
-	
-	@Override
-	public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) 
-			throws NoSuchEntityException, SystemException {
+        return info;
+    }
+
+    @Override
+    public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber)
+        throws NoSuchEntityException, SystemException {
         log.debug("start upload url for artifact with path {}", path);
 
         UploadInfo info = filesService.uploadPart(path, uploadId, partNumber);
@@ -562,18 +562,21 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         }
 
         return info;
-	}
-	
-	@Override
-	public UploadInfo completeUpload(@NotNull String path, @NotNull String uploadId, @NotNull List<String> eTagPartList) 
-			throws NoSuchEntityException, SystemException {
+    }
+
+    @Override
+    public UploadInfo completeUpload(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull List<String> eTagPartList
+    ) throws NoSuchEntityException, SystemException {
         log.debug("complete upload url for artifact with path {}", path);
-        
+
         UploadInfo info = filesService.completeUpload(path, uploadId, eTagPartList);
         if (log.isTraceEnabled()) {
             log.trace("complete upload url for artifact with path {}: {}", path, info);
         }
 
         return info;
-	}
+    }
 }

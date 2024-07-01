@@ -109,7 +109,7 @@ public class S3FilesStore implements FilesStore {
 
         if (endpoint != null && endpoint.equals(bucketName)) {
             //use first path el as bucket
-        	bucketName = uri.getPathSegments().stream().findFirst().orElse(null);
+            bucketName = uri.getPathSegments().stream().findFirst().orElse(null);
             if (bucketName != null) {
                 key = uri.getPath().substring(bucketName.length() + 1);
             }
@@ -178,15 +178,20 @@ public class S3FilesStore implements FilesStore {
         return result;
     }
 
-	@Override
-	public UploadInfo uploadAsUrl(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, @NotNull String filename) {
+    @Override
+    public UploadInfo uploadAsUrl(
+        @NotNull String entityType,
+        @NotNull String projectId,
+        @NotNull String entityId,
+        @NotNull String filename
+    ) {
         log.debug("generate upload url for {} -> {}", entityId, filename);
-        
+
         String key = projectId + "/" + entityType + "/" + entityId;
         key += filename.startsWith("/") ? filename : "/" + filename;
-        
+
         String path = "s3://" + bucket + "/" + key;
-        
+
         //generate temporary signed url for upload
         if (log.isTraceEnabled()) {
             log.trace("generating presigned url for {}: {}", bucket, key);
@@ -205,88 +210,91 @@ public class S3FilesStore implements FilesStore {
         info.setUrl(presignedRequest.url().toExternalForm());
         info.setExpiration(presignedRequest.expiration());
         return info;
-	}
-	
-	@Override
-	public UploadInfo startUpload(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, 
-			@NotNull String filename) {
-		log.debug("generate start upload url for {} -> {}", entityId, filename);
+    }
+
+    @Override
+    public UploadInfo startUpload(
+        @NotNull String entityType,
+        @NotNull String projectId,
+        @NotNull String entityId,
+        @NotNull String filename
+    ) {
+        log.debug("generate start upload url for {} -> {}", entityId, filename);
         String key = projectId + "/" + entityType + "/" + entityId;
         key += filename.startsWith("/") ? filename : "/" + filename;
-        
+
         String path = "s3://" + bucket + "/" + key;
-        
+
         CreateMultipartUploadRequest req = CreateMultipartUploadRequest.builder().bucket(bucket).key(key).build();
         CreateMultipartUploadResponse response = client.createMultipartUpload(req);
-        
+
         UploadInfo info = new UploadInfo();
         info.setPath(path);
         info.setUploadId(response.uploadId());
         return info;
-	}
-	
-	@Override
-	public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) {
-		log.debug("generate part upload url for {} -> {} - {}", path, uploadId, partNumber);
-        
-		String key = path.replace("s3://" + bucket + "/", "");
-		
-        UploadPartRequest req = UploadPartRequest.builder().bucket(bucket).key(key)
-        		.uploadId(uploadId)
-        		.partNumber(partNumber)
-        		.build();
+    }
+
+    @Override
+    public UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) {
+        log.debug("generate part upload url for {} -> {} - {}", path, uploadId, partNumber);
+
+        String key = path.replace("s3://" + bucket + "/", "");
+
+        UploadPartRequest req = UploadPartRequest
+            .builder()
+            .bucket(bucket)
+            .key(key)
+            .uploadId(uploadId)
+            .partNumber(partNumber)
+            .build();
         UploadPartPresignRequest preq = UploadPartPresignRequest
-        		.builder()
-        		.signatureDuration(Duration.ofSeconds(urlDuration))
-        		.uploadPartRequest(req)
-        		.build();
+            .builder()
+            .signatureDuration(Duration.ofSeconds(urlDuration))
+            .uploadPartRequest(req)
+            .build();
         PresignedUploadPartRequest presignedRequest = presigner.presignUploadPart(preq);
-        
+
         UploadInfo info = new UploadInfo();
         info.setPath(path);
         info.setUrl(presignedRequest.url().toExternalForm());
         info.setExpiration(presignedRequest.expiration());
         return info;
-	}
-	
-	@Override
-	public UploadInfo completeUpload(@NotNull String path, @NotNull String uploadId, @NotNull List<String> eTagPartList) {
-		log.debug("generate complete upload url for {} -> {}", path, uploadId);
-		
-		String key = path.replace("s3://" + bucket + "/", "");
-		
-		List<CompletedPart> parts = new ArrayList<>();
-		for (int i = 0; i < eTagPartList.size(); i++) {
-			CompletedPart cp = CompletedPart
-					.builder()
-					.eTag(eTagPartList.get(i))
-					.partNumber(i + 1)
-					.build();
-			parts.add(cp);
-		}		
-		CompletedMultipartUpload mp = CompletedMultipartUpload
-				.builder()
-				.parts(parts)
-				.build();
-		CompleteMultipartUploadRequest req = CompleteMultipartUploadRequest
-				.builder()
-				.bucket(bucket)
-				.key(key)
-				.uploadId(uploadId)
-				.multipartUpload(mp)
-				.build();
-		CompleteMultipartUploadPresignRequest preq = CompleteMultipartUploadPresignRequest
-				.builder()
-				.signatureDuration(Duration.ofSeconds(urlDuration))
-				.completeMultipartUploadRequest(req)
-				.build();
-		PresignedCompleteMultipartUploadRequest presignedRequest = presigner.presignCompleteMultipartUpload(preq);
-		
+    }
+
+    @Override
+    public UploadInfo completeUpload(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull List<String> eTagPartList
+    ) {
+        log.debug("generate complete upload url for {} -> {}", path, uploadId);
+
+        String key = path.replace("s3://" + bucket + "/", "");
+
+        List<CompletedPart> parts = new ArrayList<>();
+        for (int i = 0; i < eTagPartList.size(); i++) {
+            CompletedPart cp = CompletedPart.builder().eTag(eTagPartList.get(i)).partNumber(i + 1).build();
+            parts.add(cp);
+        }
+        CompletedMultipartUpload mp = CompletedMultipartUpload.builder().parts(parts).build();
+        CompleteMultipartUploadRequest req = CompleteMultipartUploadRequest
+            .builder()
+            .bucket(bucket)
+            .key(key)
+            .uploadId(uploadId)
+            .multipartUpload(mp)
+            .build();
+        CompleteMultipartUploadPresignRequest preq = CompleteMultipartUploadPresignRequest
+            .builder()
+            .signatureDuration(Duration.ofSeconds(urlDuration))
+            .completeMultipartUploadRequest(req)
+            .build();
+        PresignedCompleteMultipartUploadRequest presignedRequest = presigner.presignCompleteMultipartUpload(preq);
+
         UploadInfo info = new UploadInfo();
         info.setPath(path);
         info.setUrl(presignedRequest.url().toExternalForm());
         info.setExpiration(presignedRequest.expiration());
-        return info;		
-	}
-	
+        return info;
+    }
 }

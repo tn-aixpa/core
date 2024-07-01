@@ -98,10 +98,15 @@ public class FilesService {
 
         return metadata;
     }
-    
-    public @Nullable UploadInfo getUploadAsUrl(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, @NotNull String filename) {
-    	Assert.hasText(entityType, "entity can not be null or empty");
-    	Assert.hasText(projectId, "projectId can not be null or empty");
+
+    public @Nullable UploadInfo getUploadAsUrl(
+        @NotNull String entityType,
+        @NotNull String projectId,
+        @NotNull String entityId,
+        @NotNull String filename
+    ) {
+        Assert.hasText(entityType, "entity can not be null or empty");
+        Assert.hasText(projectId, "projectId can not be null or empty");
         Assert.hasText(entityId, "entityId can not be null or empty");
         Assert.hasText(filename, "filename can not be null or empty");
 
@@ -120,73 +125,86 @@ public class FilesService {
             log.trace("path resolved to upload url {}", info);
         }
 
-        return info;    	
+        return info;
     }
-    
-    public @Nullable UploadInfo startUpload(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, @NotNull String filename) {
-    	Assert.hasText(entityType, "entity can not be null or empty");
-    	Assert.hasText(projectId, "projectId can not be null or empty");
+
+    public @Nullable UploadInfo startUpload(
+        @NotNull String entityType,
+        @NotNull String projectId,
+        @NotNull String entityId,
+        @NotNull String filename
+    ) {
+        Assert.hasText(entityType, "entity can not be null or empty");
+        Assert.hasText(projectId, "projectId can not be null or empty");
         Assert.hasText(entityId, "entityId can not be null or empty");
         Assert.hasText(filename, "filename can not be null or empty");
-    	
+
         FilesStore store = stores.get("s3://");
         if (store == null) {
             log.debug("no store found.");
             return null;
         }
-        
+
         log.debug("found store {}", store.getClass().getName());
-        
+
         UploadInfo info = store.startUpload(entityType, projectId, entityId, filename);
-        
+
         if (log.isTraceEnabled()) {
             log.trace("path resolved to start upload url {}", info);
         }
-        
+
         return info;
     }
-    
-    public @Nullable UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) {
-    	Assert.hasText(path, "path can not be null or empty");
-    	Assert.hasText(uploadId, "uploadId can not be null or empty");
+
+    public @Nullable UploadInfo uploadPart(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull Integer partNumber
+    ) {
+        Assert.hasText(path, "path can not be null or empty");
+        Assert.hasText(uploadId, "uploadId can not be null or empty");
         Assert.notNull(partNumber, "partNumber can not be null or empty");
-    	
+
         FilesStore store = stores.get("s3://");
         if (store == null) {
             log.debug("no store found.");
             return null;
         }
-        
+
         log.debug("found store {}", store.getClass().getName());
-        
+
         UploadInfo info = store.uploadPart(path, uploadId, partNumber);
-        
+
         if (log.isTraceEnabled()) {
             log.trace("path resolved to part upload url {}", info);
         }
-        
-        return info;    	
+
+        return info;
     }
-    
-    public @Nullable UploadInfo completeUpload(@NotNull String path, @NotNull String uploadId, @NotNull List<String> eTagPartList) {
-    	Assert.hasText(path, "path can not be null or empty");
-    	Assert.hasText(uploadId, "uploadId can not be null or empty");
+
+    public @Nullable UploadInfo completeUpload(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull List<String> eTagPartList
+    ) {
+        Assert.hasText(path, "path can not be null or empty");
+        Assert.hasText(uploadId, "uploadId can not be null or empty");
         Assert.notNull(eTagPartList, "eTagPartList can not be null or empty");
-    	
+
         FilesStore store = stores.get("s3://");
         if (store == null) {
             log.debug("no store found.");
             return null;
         }
-        
+
         log.debug("found store {}", store.getClass().getName());
-        
+
         UploadInfo info = store.completeUpload(path, uploadId, eTagPartList);
-        
+
         if (log.isTraceEnabled()) {
             log.trace("path resolved to complete upload url {}", info);
         }
-        
-        return info;    	
+
+        return info;
     }
 }

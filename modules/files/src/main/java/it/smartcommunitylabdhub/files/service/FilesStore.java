@@ -8,15 +8,25 @@ import java.util.List;
 
 public interface FilesStore {
     DownloadInfo downloadAsUrl(@NotNull String path);
-    
-    UploadInfo uploadAsUrl(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, @NotNull String filename);
-    
-    UploadInfo startUpload(@NotNull String entityType, @NotNull String projectId, @NotNull String entityId, @NotNull String filename);
-    
+
+    UploadInfo uploadAsUrl(
+        @NotNull String entityType,
+        @NotNull String projectId,
+        @NotNull String entityId,
+        @NotNull String filename
+    );
+
+    UploadInfo startUpload(
+        @NotNull String entityType,
+        @NotNull String projectId,
+        @NotNull String entityId,
+        @NotNull String filename
+    );
+
     UploadInfo uploadPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber);
-    
+
     UploadInfo completeUpload(@NotNull String path, @NotNull String uploadId, @NotNull List<String> eTagPartList);
-    
+
     //TODO
     // InputStream downloadAsStream(@NotNull String path);
 
