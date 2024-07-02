@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
@@ -180,10 +181,84 @@ public class ArtifactContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.downloadArtifactAsUrl(id);
+        return filesService.downloadFileAsUrl(id);
     }
 
-    @Operation(summary = "Get object storage metadata for a given artifact, if available")
+    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @PostMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
+    public UploadInfo uploadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String filename
+    ) throws NoSuchEntityException {
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.uploadFileAsUrl(id, filename);
+    }
+
+    @Operation(summary = "Start a multipart upload for a given artifact, if available")
+    @PostMapping(path = "/{id}/files/multipart/start", produces = "application/json; charset=UTF-8")
+    public UploadInfo multipartStartUploadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String filename
+    ) throws NoSuchEntityException {
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.startMultiPartUpload(id, filename);
+    }
+
+    @Operation(
+        summary = "Generate an upload url for a part of a given multipart upload for a given artifact, if available"
+    )
+    @PutMapping(path = "/{id}/files/multipart/part", produces = "application/json; charset=UTF-8")
+    public UploadInfo multipartPartUploadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String filename,
+        @RequestParam @NotNull String uploadId,
+        @RequestParam @NotNull Integer partNumber
+    ) throws NoSuchEntityException {
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.uploadMultiPart(id, filename, uploadId, partNumber);
+    }
+
+    @Operation(summary = "Complete a multipart upload for a given artifact, if available")
+    @PostMapping(path = "/{id}/files/multipart/complete", produces = "application/json; charset=UTF-8")
+    public UploadInfo multipartCompleteUploadAsUrlArtifactById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @NotNull String filename,
+        @RequestParam @NotNull String uploadId,
+        @RequestParam @NotNull List<String> partList
+    ) throws NoSuchEntityException {
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.completeMultiPartUpload(id, filename, uploadId, partList);
+    }
+
+    @Operation(summary = "Get file info for a given artifact, if available")
     @GetMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
     public List<FileInfo> getArtifactFilesInfoById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
@@ -196,6 +271,6 @@ public class ArtifactContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.getObjectMetadata(id);
+        return filesService.getFileInfo(id);
     }
 }

@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.files.http;
 
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
 import java.net.MalformedURLException;
@@ -49,7 +50,7 @@ public class HttpStore implements FilesStore {
     }
 
     @Override
-    public List<FileInfo> readMetadata(@NotNull String path) {
+    public List<FileInfo> fileInfo(@NotNull String path) {
         List<FileInfo> result = new ArrayList<>();
         try {
             String[] split = path.split("/");
@@ -58,12 +59,36 @@ public class HttpStore implements FilesStore {
             response.setPath(path);
             response.setName(split[split.length - 1]);
             response.setContentType(headers.getContentType().toString());
-            response.setLength(headers.getContentLength());
+            response.setSize(headers.getContentLength());
             response.setLastModified(Instant.ofEpochMilli(headers.getLastModified()));
             result.add(response);
         } catch (Exception e) {
             log.error("generate metadata for {}:  {}", path, e.getMessage());
         }
         return result;
+    }
+
+    @Override
+    public UploadInfo uploadAsUrl(@NotNull String path) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UploadInfo startMultiPartUpload(@NotNull String path) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UploadInfo uploadMultiPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UploadInfo completeMultiPartUpload(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull List<String> partList
+    ) {
+        throw new UnsupportedOperationException();
     }
 }

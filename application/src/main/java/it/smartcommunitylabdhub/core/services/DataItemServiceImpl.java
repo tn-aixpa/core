@@ -4,7 +4,11 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -15,10 +19,12 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.files.DataItemFilesService;
 import it.smartcommunitylabdhub.core.models.indexers.DataItemEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -37,7 +43,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class DataItemServiceImpl implements SearchableDataItemService, IndexableDataItemService {
+public class DataItemServiceImpl implements SearchableDataItemService, IndexableDataItemService, DataItemFilesService {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
@@ -56,6 +62,9 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
 
     @Autowired
     private SpecValidator validator;
+
+    @Autowired
+    private FilesService filesService;
 
     @Override
     public Page<DataItem> listDataItems(Pageable pageable) {
@@ -451,6 +460,235 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
 
                 log.error("error with indexing: {}", e.getMessage());
             }
+        }
+    }
+
+    @Override
+    public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
+        log.debug("download url for dataitem with id {}", String.valueOf(id));
+
+        try {
+            DataItem entity = entityService.get(id);
+
+            //extract path from spec
+            DataItemBaseSpec spec = new DataItemBaseSpec();
+            spec.configure(entity.getSpec());
+
+            String path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+
+            DownloadInfo info = filesService.getDownloadAsUrl(path);
+            if (log.isTraceEnabled()) {
+                log.trace("download url for entity with id {}: {} -> {}", id, path, info);
+            }
+
+            return info;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
+        log.debug("get storage metadata for entity with id {}", String.valueOf(id));
+        try {
+            DataItem entity = entityService.get(id);
+
+            //extract path from spec
+            DataItemBaseSpec spec = new DataItemBaseSpec();
+            spec.configure(entity.getSpec());
+
+            String path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+
+            List<FileInfo> metadata = filesService.getFileInfo(path);
+            if (log.isTraceEnabled()) {
+                log.trace("metadata for entity with id {}: {} -> {}", id, path, metadata);
+            }
+
+            return metadata;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
+        throws NoSuchEntityException, SystemException {
+        log.debug("upload url for dataItem with id {}: {}", String.valueOf(id), filename);
+
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.DATAITEM.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //dataItem may not exists (yet)
+            DataItem dataItem = entityService.find(id);
+
+            if (dataItem != null) {
+                //extract path from spec
+                DataItemBaseSpec spec = new DataItemBaseSpec();
+                spec.configure(dataItem.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.getUploadAsUrl(path);
+            if (log.isTraceEnabled()) {
+                log.trace("upload url for dataItem with id {}: {}", id, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
+        throws NoSuchEntityException, SystemException {
+        log.debug("start upload url for dataItem with id {}: {}", String.valueOf(id), filename);
+
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.DATAITEM.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //dataItem may not exists (yet)
+            DataItem dataItem = entityService.find(id);
+
+            if (dataItem != null) {
+                //extract path from spec
+                DataItemBaseSpec spec = new DataItemBaseSpec();
+                spec.configure(dataItem.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.startMultiPartUpload(path);
+            if (log.isTraceEnabled()) {
+                log.trace("start upload url for dataItem with id {}: {}", id, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo uploadMultiPart(
+        @Nullable String id,
+        @NotNull String filename,
+        @NotNull String uploadId,
+        @NotNull Integer partNumber
+    ) throws NoSuchEntityException, SystemException {
+        log.debug("upload part url for dataItem {}: {}", String.valueOf(id), filename);
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.DATAITEM.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //dataItem may not exists (yet)
+            DataItem dataItem = entityService.find(id);
+
+            if (dataItem != null) {
+                //extract path from spec
+                DataItemBaseSpec spec = new DataItemBaseSpec();
+                spec.configure(dataItem.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber);
+            if (log.isTraceEnabled()) {
+                log.trace("part upload url for dataItem with path {}: {}", path, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo completeMultiPartUpload(
+        @Nullable String id,
+        @NotNull String filename,
+        @NotNull String uploadId,
+        @NotNull List<String> eTagPartList
+    ) throws NoSuchEntityException, SystemException {
+        log.debug("complete upload url for dataItem {}: {}", String.valueOf(id), filename);
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.DATAITEM.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //dataItem may not exists (yet)
+            DataItem dataItem = entityService.find(id);
+
+            if (dataItem != null) {
+                //extract path from spec
+                DataItemBaseSpec spec = new DataItemBaseSpec();
+                spec.configure(dataItem.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList);
+            if (log.isTraceEnabled()) {
+                log.trace("complete upload url for dataItem with path {}: {}", path, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 }

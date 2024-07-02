@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.lang.Nullable;
 
-public interface ArtifactFilesService {
+public interface ModelFilesService {
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException;
 
     public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException;

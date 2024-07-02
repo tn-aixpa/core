@@ -1,13 +1,17 @@
 package it.smartcommunitylabdhub.files.service;
 
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -36,6 +40,18 @@ public class FilesService {
         stores.put(prefix, store);
     }
 
+    //TODO refactor
+    public String getDefaultStore() {
+        //select configured s3:// by default
+
+        List<String> keys = stores.keySet().stream().filter(k -> k.startsWith("s3://")).collect(Collectors.toList());
+
+        Optional<String> dk = keys.stream().filter(k -> !k.equals("s3://")).findFirst();
+        Optional<String> df = keys.stream().filter(k -> k.equals("s3://")).findFirst();
+
+        return dk.isPresent() ? dk.get() : (df.isPresent() ? df.get() : null);
+    }
+
     public @Nullable FilesStore getStore(@NotNull String path) {
         //match longest prefix in keys
         int count = 0;
@@ -50,7 +66,7 @@ public class FilesService {
         return match;
     }
 
-    public @Nullable DownloadInfo getDownloadAsUrl(@NotNull String path) {
+    public @Nullable DownloadInfo getDownloadAsUrl(@NotNull String path) throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -66,17 +82,17 @@ public class FilesService {
         DownloadInfo info = store.downloadAsUrl(path);
 
         if (log.isTraceEnabled()) {
-            log.trace("path resolved to download url {}", info);
+            log.trace("path resolved to download {}", info);
         }
 
         return info;
     }
 
-    public @Nullable InputStream getDownloadAsStream(@NotNull String path) {
+    public @Nullable InputStream getDownloadAsStream(@NotNull String path) throws StoreException {
         throw new UnsupportedOperationException();
     }
 
-    public List<FileInfo> getObjectMetadata(@NotNull String path) {
+    public List<FileInfo> getFileInfo(@NotNull String path) throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -89,12 +105,112 @@ public class FilesService {
 
         log.debug("found store {}", store.getClass().getName());
 
-        List<FileInfo> metadata = store.readMetadata(path);
+        List<FileInfo> metadata = store.fileInfo(path);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to metadata {}", metadata);
         }
 
         return metadata;
+    }
+
+    public @Nullable UploadInfo getUploadAsUrl(@NotNull String path) throws StoreException {
+        Assert.hasText(path, "path can not be null or empty");
+
+        log.debug("resolve store for {}", path);
+        //try resolving path via stores
+        FilesStore store = getStore(path);
+        if (store == null) {
+            log.debug("no store found.");
+            return null;
+        }
+
+        log.debug("found store {}", store.getClass().getName());
+
+        UploadInfo info = store.uploadAsUrl(path);
+
+        if (log.isTraceEnabled()) {
+            log.trace("path resolved to upload {}", info);
+        }
+
+        return info;
+    }
+
+    public @Nullable UploadInfo startMultiPartUpload(@NotNull String path) throws StoreException {
+        Assert.hasText(path, "path can not be null or empty");
+
+        log.debug("resolve store for {}", path);
+        //try resolving path via stores
+        FilesStore store = getStore(path);
+        if (store == null) {
+            log.debug("no store found.");
+            return null;
+        }
+
+        log.debug("found store {}", store.getClass().getName());
+
+        UploadInfo info = store.startMultiPartUpload(path);
+
+        if (log.isTraceEnabled()) {
+            log.trace("path resolved to multi-part upload {}", info);
+        }
+
+        return info;
+    }
+
+    public @Nullable UploadInfo uploadMultiPart(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull Integer partNumber
+    ) throws StoreException {
+        Assert.hasText(path, "path can not be null or empty");
+        Assert.hasText(uploadId, "uploadId can not be null or empty");
+        Assert.notNull(partNumber, "partNumber can not be null or empty");
+
+        log.debug("resolve store for {}", path);
+        //try resolving path via stores
+        FilesStore store = getStore(path);
+        if (store == null) {
+            log.debug("no store found.");
+            return null;
+        }
+
+        log.debug("found store {}", store.getClass().getName());
+
+        UploadInfo info = store.uploadMultiPart(path, uploadId, partNumber);
+
+        if (log.isTraceEnabled()) {
+            log.trace("path resolved to part upload {}", info);
+        }
+
+        return info;
+    }
+
+    public @Nullable UploadInfo completeMultiPartUpload(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull List<String> partList
+    ) throws StoreException {
+        Assert.hasText(path, "path can not be null or empty");
+        Assert.hasText(uploadId, "uploadId can not be null or empty");
+        Assert.notNull(partList, "partList can not be null or empty");
+
+        log.debug("resolve store for {}", path);
+        //try resolving path via stores
+        FilesStore store = getStore(path);
+        if (store == null) {
+            log.debug("no store found.");
+            return null;
+        }
+
+        log.debug("found store {}", store.getClass().getName());
+
+        UploadInfo info = store.completeMultiPartUpload(path, uploadId, partList);
+
+        if (log.isTraceEnabled()) {
+            log.trace("path resolved to complete upload {}", info);
+        }
+
+        return info;
     }
 }

@@ -1,12 +1,15 @@
 package it.smartcommunitylabdhub.files.s3;
 
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
@@ -15,13 +18,27 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.CompleteMultipartUploadPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedCompleteMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedUploadPartRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.UploadPartPresignRequest;
 
 @Slf4j
 public class S3FilesStore implements FilesStore {
@@ -31,18 +48,20 @@ public class S3FilesStore implements FilesStore {
     private final String accessKey;
     private final String secretKey;
     private final String endpoint;
+    private final String bucket;
 
     private int urlDuration = URL_DURATION;
 
     private S3Client client;
     private S3Presigner presigner;
 
-    public S3FilesStore(String accessKey, String secretKey, String endpoint) {
+    public S3FilesStore(String accessKey, String secretKey, String endpoint, String bucket) {
         Assert.hasText(accessKey, "accessKey is required");
 
         this.accessKey = accessKey;
         this.secretKey = secretKey;
         this.endpoint = endpoint;
+        this.bucket = bucket;
 
         buildClient();
     }
@@ -79,69 +98,83 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public DownloadInfo downloadAsUrl(@NotNull String path) {
+    public DownloadInfo downloadAsUrl(@NotNull String path) throws StoreException {
         log.debug("generate download url for {}", path);
 
-        //parse as URI where host == bucket, or host == endpoint
-        UriComponents uri = UriComponentsBuilder.fromUriString(path).build();
-        if (uri.getPath() == null || uri.getHost() == null) {
-            return null;
-        }
+        Keys keys = parseKey(path);
+        log.debug("resolved path to {}", keys);
 
-        String bucket = uri.getHost();
-        String key = uri.getPath();
+        String key = keys.key;
+        String bucketName = keys.bucket;
 
-        if (endpoint != null && endpoint.equals(bucket)) {
-            //use first path el as bucket
-            bucket = uri.getPathSegments().stream().findFirst().orElse(null);
-            if (bucket != null) {
-                key = uri.getPath().substring(bucket.length() + 1);
-            }
-        }
-
-        if (bucket == null || key == null) {
-            return null;
-        }
-
-        if (key.startsWith("/")) {
-            key = key.substring(1);
+        if (StringUtils.hasText(bucket) && !bucket.equals(bucketName)) {
+            throw new StoreException("bucket mismatch");
         }
 
         //generate temporary signed url for download
         if (log.isTraceEnabled()) {
-            log.trace("generating presigned url for {}: {}", bucket, key);
+            log.trace("generating presigned download url for {}: {}", bucketName, key);
         }
 
-        GetObjectRequest req = GetObjectRequest.builder().bucket(bucket).key(key).build();
-        GetObjectPresignRequest preq = GetObjectPresignRequest
-            .builder()
-            .signatureDuration(Duration.ofSeconds(urlDuration))
-            .getObjectRequest(req)
-            .build();
-        PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(preq);
+        try {
+            //support single file in path for now
+            if (key.endsWith("/")) {
+                log.warn("downloading folders is not supported: {}", path);
+                return null;
+            }
 
-        DownloadInfo info = new DownloadInfo();
-        info.setPath(path);
-        info.setUrl(presignedRequest.url().toExternalForm());
-        info.setExpiration(presignedRequest.expiration());
-        return info;
+            GetObjectPresignRequest preq = GetObjectPresignRequest
+                .builder()
+                .signatureDuration(Duration.ofSeconds(urlDuration))
+                .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key(key).build())
+                .build();
+            PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(preq);
+
+            DownloadInfo info = new DownloadInfo();
+            info.setPath(path);
+            info.setUrl(presignedRequest.url().toExternalForm());
+            info.setExpiration(presignedRequest.expiration());
+            return info;
+        } catch (SdkException e) {
+            log.error("error with s3 for {}: {}", path, e.getMessage());
+            throw new StoreException("error with s3: " + e.getMessage());
+        }
     }
 
     @Override
-    public List<FileInfo> readMetadata(@NotNull String path) {
-        List<FileInfo> result = new ArrayList<>();
+    public List<FileInfo> fileInfo(@NotNull String path) throws StoreException {
+        log.debug("file info for {}", path);
+
+        Keys keys = parseKey(path);
+        log.debug("resolved path to {}", keys);
+
+        String key = keys.key;
+        String bucketName = keys.bucket;
+
+        if (StringUtils.hasText(bucket) && !bucket.equals(bucketName)) {
+            throw new StoreException("bucket mismatch");
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("read object metadata for {}: {}", bucketName, key);
+        }
+
         try {
-            String[] split = path.replace("s3://", "").split("/");
-            String bucketName = split[0];
-            String keyName = path.substring(5 + bucketName.length() + 1);
+            //support single file in path for now
+            if (key.endsWith("/")) {
+                log.warn("reading metadata for folders is not supported: {}", path);
+                return Collections.emptyList();
+            }
+
             HeadObjectResponse headObject = client.headObject(
-                HeadObjectRequest.builder().bucket(bucketName).key(keyName).build()
+                HeadObjectRequest.builder().bucket(bucketName).key(key).build()
             );
+
             FileInfo response = new FileInfo();
             response.setPath(path);
-            response.setName(split[split.length - 1]);
+            response.setName(keys.fileName);
             response.setContentType(headObject.contentType());
-            response.setLength(headObject.contentLength());
+            response.setSize(headObject.contentLength());
             response.setLastModified(headObject.lastModified());
 
             if (StringUtils.hasText(headObject.checksumSHA256())) {
@@ -154,11 +187,240 @@ public class S3FilesStore implements FilesStore {
                 .forEach(entry -> {
                     response.getMetadata().put("Metadata." + entry.getKey(), entry.getValue());
                 });
-            result.add(response);
-            return result;
-        } catch (Exception e) {
-            log.error("generate metadata for {}:  {}", path, e.getMessage());
+
+            return Collections.singletonList(response);
+        } catch (SdkException e) {
+            log.error("error with s3 for {}: {}", path, e.getMessage());
+            throw new StoreException("error with s3: " + e.getMessage());
         }
-        return result;
     }
+
+    @Override
+    public UploadInfo uploadAsUrl(@NotNull String path) throws StoreException {
+        log.debug("generate upload url for {}", path);
+
+        Keys keys = parseKey(path);
+        log.debug("resolved path to {}", keys);
+
+        String key = keys.key;
+        String bucketName = keys.bucket;
+
+        if (StringUtils.hasText(bucket) && !bucket.equals(bucketName)) {
+            throw new StoreException("bucket mismatch");
+        }
+
+        //generate temporary signed url for upload
+        if (log.isTraceEnabled()) {
+            log.trace("generating presigned url for {}: {}", bucketName, key);
+        }
+
+        try {
+            //support single file in path for now
+            if (key.endsWith("/")) {
+                log.warn("upload for folders is not supported: {}", path);
+                return null;
+            }
+
+            PutObjectPresignRequest preq = PutObjectPresignRequest
+                .builder()
+                .signatureDuration(Duration.ofSeconds(urlDuration))
+                .putObjectRequest(PutObjectRequest.builder().bucket(bucketName).key(key).build())
+                .build();
+            PresignedPutObjectRequest presignedRequest = presigner.presignPutObject(preq);
+
+            UploadInfo info = new UploadInfo();
+            info.setPath(path);
+            info.setUrl(presignedRequest.url().toExternalForm());
+            info.setExpiration(presignedRequest.expiration());
+            return info;
+        } catch (SdkException e) {
+            log.error("error with s3 for {}: {}", path, e.getMessage());
+            throw new StoreException("error with s3: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo startMultiPartUpload(@NotNull String path) throws StoreException {
+        log.debug("generate multipart upload for {}", path);
+
+        Keys keys = parseKey(path);
+        log.debug("resolved path to {}", keys);
+
+        String key = keys.key;
+        String bucketName = keys.bucket;
+
+        if (StringUtils.hasText(bucket) && !bucket.equals(bucketName)) {
+            throw new StoreException("bucket mismatch");
+        }
+
+        //generate temporary signed url for upload
+        if (log.isTraceEnabled()) {
+            log.trace("generating presigned multipart upload url for {}: {}", bucketName, key);
+        }
+
+        try {
+            //support single file in path for now
+            if (key.endsWith("/")) {
+                log.warn("upload for folders is not supported: {}", path);
+                return null;
+            }
+
+            CreateMultipartUploadResponse response = client.createMultipartUpload(
+                CreateMultipartUploadRequest.builder().bucket(bucketName).key(key).build()
+            );
+
+            UploadInfo info = new UploadInfo();
+            info.setPath(path);
+            info.setUploadId(response.uploadId());
+            return info;
+        } catch (SdkException e) {
+            log.error("error with s3 for {}: {}", path, e.getMessage());
+            throw new StoreException("error with s3: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo uploadMultiPart(@NotNull String path, @NotNull String uploadId, @NotNull Integer partNumber)
+        throws StoreException {
+        log.debug("generate part upload url for {} -> {} - {}", path, uploadId, partNumber);
+
+        Keys keys = parseKey(path);
+        log.debug("resolved path to {}", keys);
+
+        String key = keys.key;
+        String bucketName = keys.bucket;
+
+        if (StringUtils.hasText(bucket) && !bucket.equals(bucketName)) {
+            throw new StoreException("bucket mismatch");
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("generating presigned multipart upload part url for {}: {}", bucketName, key);
+        }
+
+        try {
+            //support single file in path for now
+            if (key.endsWith("/")) {
+                log.warn("upload for folders is not supported: {}", path);
+                return null;
+            }
+
+            UploadPartPresignRequest preq = UploadPartPresignRequest
+                .builder()
+                .signatureDuration(Duration.ofSeconds(urlDuration))
+                .uploadPartRequest(
+                    UploadPartRequest
+                        .builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .uploadId(uploadId)
+                        .partNumber(partNumber)
+                        .build()
+                )
+                .build();
+            PresignedUploadPartRequest presignedRequest = presigner.presignUploadPart(preq);
+
+            UploadInfo info = new UploadInfo();
+            info.setPath(path);
+            info.setUrl(presignedRequest.url().toExternalForm());
+            info.setExpiration(presignedRequest.expiration());
+            return info;
+        } catch (SdkException e) {
+            log.error("error with s3 for {}: {}", path, e.getMessage());
+            throw new StoreException("error with s3: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo completeMultiPartUpload(
+        @NotNull String path,
+        @NotNull String uploadId,
+        @NotNull List<String> eTagPartList
+    ) throws StoreException {
+        log.debug("generate complete upload url for {} -> {}", path, uploadId);
+
+        Keys keys = parseKey(path);
+        log.debug("resolved path to {}", keys);
+
+        String key = keys.key;
+        String bucketName = keys.bucket;
+
+        if (StringUtils.hasText(bucket) && !bucket.equals(bucketName)) {
+            throw new StoreException("bucket mismatch");
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("generating presigned multipart complete upload url for {}: {}", bucketName, key);
+        }
+
+        try {
+            //support single file in path for now
+            if (key.endsWith("/")) {
+                log.warn("upload for folders is not supported: {}", path);
+                return null;
+            }
+            List<CompletedPart> parts = new ArrayList<>();
+            for (int i = 0; i < eTagPartList.size(); i++) {
+                CompletedPart cp = CompletedPart.builder().eTag(eTagPartList.get(i)).partNumber(i + 1).build();
+                parts.add(cp);
+            }
+            CompletedMultipartUpload mp = CompletedMultipartUpload.builder().parts(parts).build();
+            CompleteMultipartUploadRequest req = CompleteMultipartUploadRequest
+                .builder()
+                .bucket(bucketName)
+                .key(key)
+                .uploadId(uploadId)
+                .multipartUpload(mp)
+                .build();
+            CompleteMultipartUploadPresignRequest preq = CompleteMultipartUploadPresignRequest
+                .builder()
+                .signatureDuration(Duration.ofSeconds(urlDuration))
+                .completeMultipartUploadRequest(req)
+                .build();
+            PresignedCompleteMultipartUploadRequest presignedRequest = presigner.presignCompleteMultipartUpload(preq);
+
+            UploadInfo info = new UploadInfo();
+            info.setPath(path);
+            info.setUrl(presignedRequest.url().toExternalForm());
+            info.setExpiration(presignedRequest.expiration());
+            return info;
+        } catch (SdkException e) {
+            log.error("error with s3 for {}: {}", path, e.getMessage());
+            throw new StoreException("error with s3: " + e.getMessage());
+        }
+    }
+
+    private Keys parseKey(String path) {
+        //parse as URI where host == bucket, or host == endpoint
+        //TODO support other path styles
+        UriComponents uri = UriComponentsBuilder.fromUriString(path).build();
+        if (uri.getPath() == null || uri.getHost() == null) {
+            return null;
+        }
+
+        String bucketName = uri.getHost();
+        String key = uri.getPath();
+
+        if (endpoint != null && endpoint.equals(bucketName)) {
+            //use first path el as bucket
+            bucketName = uri.getPathSegments().stream().findFirst().orElse(null);
+            if (bucketName != null) {
+                key = uri.getPath().substring(bucketName.length() + 1);
+            }
+        }
+
+        if (bucketName == null || key == null) {
+            return null;
+        }
+
+        if (key.startsWith("/")) {
+            key = key.substring(1);
+        }
+
+        String fileName = key.endsWith("/") ? null : key.substring(key.lastIndexOf('/') + 1, key.length());
+
+        return new Keys(endpoint, bucketName, key, fileName);
+    }
+
+    private record Keys(String endpoint, String bucket, String key, String fileName) {}
 }

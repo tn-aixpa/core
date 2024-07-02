@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
@@ -466,7 +467,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public DownloadInfo downloadArtifactAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
+    public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("download url for artifact with id {}", String.valueOf(id));
 
         try {
@@ -496,7 +497,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public List<FileInfo> getObjectMetadata(@NotNull String id) throws NoSuchEntityException, SystemException {
+    public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("get storage metadata for artifact with id {}", String.valueOf(id));
         try {
             Artifact artifact = entityService.get(id);
@@ -510,7 +511,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
                 throw new NoSuchEntityException("file");
             }
 
-            List<FileInfo> metadata = filesService.getObjectMetadata(path);
+            List<FileInfo> metadata = filesService.getFileInfo(path);
             if (log.isTraceEnabled()) {
                 log.trace("metadata for artifact with id {}: {} -> {}", id, path, metadata);
             }
@@ -518,6 +519,176 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             return metadata;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
+        throws NoSuchEntityException, SystemException {
+        log.debug("upload url for artifact with id {}: {}", String.valueOf(id), filename);
+
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.ARTIFACT.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //artifact may not exists (yet)
+            Artifact artifact = entityService.find(id);
+
+            if (artifact != null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(artifact.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.getUploadAsUrl(path);
+            if (log.isTraceEnabled()) {
+                log.trace("upload url for artifact with id {}: {}", id, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
+        throws NoSuchEntityException, SystemException {
+        log.debug("start upload url for artifact with id {}: {}", String.valueOf(id), filename);
+
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.ARTIFACT.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //artifact may not exists (yet)
+            Artifact artifact = entityService.find(id);
+
+            if (artifact != null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(artifact.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.startMultiPartUpload(path);
+            if (log.isTraceEnabled()) {
+                log.trace("start upload url for artifact with id {}: {}", id, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo uploadMultiPart(
+        @Nullable String id,
+        @NotNull String filename,
+        @NotNull String uploadId,
+        @NotNull Integer partNumber
+    ) throws NoSuchEntityException, SystemException {
+        log.debug("upload part url for artifact {}: {}", String.valueOf(id), filename);
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.ARTIFACT.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //artifact may not exists (yet)
+            Artifact artifact = entityService.find(id);
+
+            if (artifact != null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(artifact.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber);
+            if (log.isTraceEnabled()) {
+                log.trace("part upload url for artifact with path {}: {}", path, info);
+            }
+
+            return info;
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public UploadInfo completeMultiPartUpload(
+        @Nullable String id,
+        @NotNull String filename,
+        @NotNull String uploadId,
+        @NotNull List<String> eTagPartList
+    ) throws NoSuchEntityException, SystemException {
+        log.debug("complete upload url for artifact {}: {}", String.valueOf(id), filename);
+        try {
+            String path =
+                filesService.getDefaultStore() +
+                "/" +
+                EntityName.ARTIFACT.getValue() +
+                "/" +
+                id +
+                "/" +
+                (filename.startsWith("/") ? filename : "/" + filename);
+
+            //artifact may not exists (yet)
+            Artifact artifact = entityService.find(id);
+
+            if (artifact != null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(artifact.getSpec());
+
+                path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+            }
+
+            UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList);
+            if (log.isTraceEnabled()) {
+                log.trace("complete upload url for artifact with path {}: {}", path, info);
+            }
+
+            return info;
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
