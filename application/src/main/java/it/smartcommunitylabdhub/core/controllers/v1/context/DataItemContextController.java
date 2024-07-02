@@ -185,7 +185,7 @@ public class DataItemContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.downloadAsUrl(id);
+        return filesService.downloadFileAsUrl(id);
     }
 
     @Operation(summary = "Create an upload url for a given entity, if available")
@@ -195,7 +195,14 @@ public class DataItemContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        return filesService.uploadAsUrl(project, id, filename);
+        DataItem entity = dataItemService.getDataItem(id);
+
+        //check for project and name match
+        if (!entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.uploadFileAsUrl(id, filename);
     }
 
     @Operation(summary = "Create a starting multipart upload url for a given entity, if available")
@@ -205,7 +212,14 @@ public class DataItemContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        return filesService.startUpload(project, id, filename);
+        DataItem entity = dataItemService.getDataItem(id);
+
+        //check for project and name match
+        if (!entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.startMultiPartUpload(id, filename);
     }
 
     @Operation(summary = "Create a multipart upload url for a given entity, if available")
@@ -213,11 +227,18 @@ public class DataItemContextController {
     public UploadInfo multipartPartUploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestParam @NotNull String path,
+        @RequestParam @NotNull String filename,
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull Integer partNumber
     ) throws NoSuchEntityException {
-        return filesService.uploadPart(path, uploadId, partNumber);
+        DataItem entity = dataItemService.getDataItem(id);
+
+        //check for project and name match
+        if (!entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.uploadMultiPart(id, filename, uploadId, partNumber);
     }
 
     @Operation(summary = "Create a completing multipart upload url for a given entity, if available")
@@ -225,14 +246,21 @@ public class DataItemContextController {
     public UploadInfo multipartCompleteUploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestParam @NotNull String path,
+        @RequestParam @NotNull String filename,
         @RequestParam @NotNull String uploadId,
-        @RequestParam @NotNull List<String> eTagPartList
+        @RequestParam @NotNull List<String> partList
     ) throws NoSuchEntityException {
-        return filesService.completeUpload(path, uploadId, eTagPartList);
+        DataItem entity = dataItemService.getDataItem(id);
+
+        //check for project and name match
+        if (!entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.completeMultiPartUpload(id, filename, uploadId, partList);
     }
 
-    @Operation(summary = "Get object storage metadata for a given entity, if available")
+    @Operation(summary = "Get file info for a given entity, if available")
     @GetMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
     public List<FileInfo> getFilesInfoById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
@@ -245,6 +273,6 @@ public class DataItemContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.getObjectMetadata(id);
+        return filesService.getFileInfo(id);
     }
 }

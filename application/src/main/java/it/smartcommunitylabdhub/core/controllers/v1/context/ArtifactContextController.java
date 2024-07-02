@@ -246,7 +246,7 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename,
         @RequestParam @NotNull String uploadId,
-        @RequestParam @NotNull List<String> eTagPartList
+        @RequestParam @NotNull List<String> partList
     ) throws NoSuchEntityException {
         Artifact artifact = artifactService.getArtifact(id);
 
@@ -255,7 +255,7 @@ public class ArtifactContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.completeMultiPartUpload(id, filename, uploadId, eTagPartList);
+        return filesService.completeMultiPartUpload(id, filename, uploadId, partList);
     }
 
     @Operation(summary = "Get file info for a given artifact, if available")
