@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.python.specs.task;
+package it.smartcommunitylabdhub.runtime.python.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;

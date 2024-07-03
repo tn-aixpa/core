@@ -1,14 +1,10 @@
-package it.smartcommunitylabdhub.runtime.python.specs.run;
+package it.smartcommunitylabdhub.runtime.python.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
-import it.smartcommunitylabdhub.runtime.python.specs.function.PythonFunctionSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.task.PythonBuildTaskSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.task.PythonJobTaskSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.task.PythonServeTaskSpec;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;

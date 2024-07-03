@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.python.specs.function;
+package it.smartcommunitylabdhub.runtime.python.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,17 +1,15 @@
-package it.smartcommunitylabdhub.runtime.python.specs.task;
+package it.smartcommunitylabdhub.runtime.python.specs;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -22,7 +20,6 @@ public class PythonBuildTaskSpec extends K8sTaskBaseSpec {
     public static final String KIND = "python+build";
 
     private List<String> instructions;
-
 
     public PythonBuildTaskSpec(Map<String, Serializable> data) {
         configure(data);
