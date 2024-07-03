@@ -21,6 +21,7 @@ import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
+import it.smartcommunitylabdhub.core.components.infrastructure.factories.processors.ProcessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
@@ -34,9 +35,11 @@ import it.smartcommunitylabdhub.fsm.types.RunStateMachineFactory;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -71,6 +74,9 @@ public class RunManager {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    ProcessorRegistry processorRegistry;
 
     public Run build(@NotNull Run run) throws NoSuchEntityException {
         // GET state machine, init state machine with status
@@ -514,18 +520,34 @@ public class RunManager {
                 return Optional.ofNullable(runStatus);
             });
         try {
+            //TODO call registry processor to retrieve all processor for onRunning and call process()
             Optional<RunBaseStatus> runStatus = fsm.goToState(State.RUNNING, null);
-            runStatus.ifPresentOrElse(
-                runBaseStatus -> {
-                    run.setStatus(
-                        MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.RUNNING.toString()))
-                    );
-                },
-                () -> {
-                    // Update run state to RUNNING
-                    run.getStatus().put("state", State.RUNNING.toString());
-                }
-            );
+
+            // Update run status
+            RunBaseStatus runBaseStatus = runStatus
+                .map(r -> {
+                    r.setState(State.RUNNING.toString());
+                    return r;
+                })
+                .orElseGet(() -> new RunBaseStatus(State.RUNNING.toString()));
+
+            RunRunnable runRunnable = event != null ? event.getRunnable() : null;
+
+            // Iterate over all processor and store all RunBaseStatus as optional
+            List<RunBaseStatus> processorsStatus = processorRegistry
+                .getProcessors("onRunning")
+                .stream()
+                .map(processor -> processor.process(run, runRunnable, runBaseStatus))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+            Map<String, Serializable> runStatusMap = processorsStatus
+                .stream()
+                .map(RunBaseStatus::toMap)
+                .reduce(new HashMap<>(), MapUtils::mergeMultipleMaps);
+
+            run.setStatus(MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), runStatusMap));
+
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
             log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
@@ -591,17 +613,30 @@ public class RunManager {
 
         try {
             Optional<RunBaseStatus> runStatus = fsm.goToState(State.COMPLETED, null);
-            runStatus.ifPresentOrElse(
-                runBaseStatus -> {
-                    run.setStatus(
-                        MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.COMPLETED.toString()))
-                    );
-                },
-                () -> {
-                    // Update run state to RUNNING
-                    run.getStatus().put("state", State.COMPLETED.toString());
-                }
-            );
+
+            RunBaseStatus runBaseStatus = runStatus
+                .map(r -> {
+                    r.setState(State.COMPLETED.toString());
+                    return r;
+                })
+                .orElseGet(() -> new RunBaseStatus(State.COMPLETED.toString()));
+
+            RunRunnable runRunnable = event != null ? event.getRunnable() : null;
+
+            // Iterate over all processor and store all RunBaseStatus as optional
+            List<RunBaseStatus> processorsStatus = processorRegistry
+                .getProcessors("onCompleted")
+                .stream()
+                .map(processor -> processor.process(run, runRunnable, runBaseStatus))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+            Map<String, Serializable> runStatusMap = processorsStatus
+                .stream()
+                .map(RunBaseStatus::toMap)
+                .reduce(new HashMap<>(), MapUtils::mergeMultipleMaps);
+
+            run.setStatus(MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), runStatusMap));
 
             //update
             Run updated = entityService.update(run.getId(), run);
@@ -660,19 +695,32 @@ public class RunManager {
 
         try {
             Optional<RunBaseStatus> runStatus = fsm.goToState(State.STOPPED, null);
-            runStatus.ifPresentOrElse(
-                runBaseStatus -> {
-                    run.setStatus(
-                        MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.STOPPED.toString()))
-                    );
-                },
-                () -> {
-                    // Update run state to STOPPED
-                    run.getStatus().put("state", State.STOPPED.toString());
-                }
-            );
 
-            //update
+            // Update run status
+            RunBaseStatus runBaseStatus = runStatus
+                .map(r -> {
+                    r.setState(State.STOPPED.toString());
+                    return r;
+                })
+                .orElseGet(() -> new RunBaseStatus(State.STOPPED.toString()));
+
+            RunRunnable runRunnable = event != null ? event.getRunnable() : null;
+
+            // Iterate over all processor and store all RunBaseStatus as optional
+            List<RunBaseStatus> processorsStatus = processorRegistry
+                .getProcessors("onStopped")
+                .stream()
+                .map(processor -> processor.process(run, runRunnable, runBaseStatus))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+            Map<String, Serializable> runStatusMap = processorsStatus
+                .stream()
+                .map(RunBaseStatus::toMap)
+                .reduce(new HashMap<>(), MapUtils::mergeMultipleMaps);
+
+            run.setStatus(MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), runStatusMap));
+
             entityService.update(run.getId(), run);
         } catch (InvalidTransactionException e) {
             log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
@@ -753,17 +801,31 @@ public class RunManager {
 
             try {
                 Optional<RunBaseStatus> runStatus = fsm.goToState(State.ERROR, null);
-                runStatus.ifPresentOrElse(
-                    runBaseStatus -> {
-                        run.setStatus(
-                            MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.ERROR.toString()))
-                        );
-                    },
-                    () -> {
-                        // Update run state to RUNNING
-                        run.getStatus().put("state", State.ERROR.toString());
-                    }
-                );
+
+                // Update run status
+                RunBaseStatus runBaseStatus = runStatus
+                    .map(r -> {
+                        r.setState(State.ERROR.toString());
+                        return r;
+                    })
+                    .orElseGet(() -> new RunBaseStatus(State.ERROR.toString()));
+
+                RunRunnable runRunnable = event != null ? event.getRunnable() : null;
+
+                // Iterate over all processor and store all RunBaseStatus as optional
+                List<RunBaseStatus> processorsStatus = processorRegistry
+                    .getProcessors("onError")
+                    .stream()
+                    .map(processor -> processor.process(run, runRunnable, runBaseStatus))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+                Map<String, Serializable> runStatusMap = processorsStatus
+                    .stream()
+                    .map(RunBaseStatus::toMap)
+                    .reduce(new HashMap<>(), MapUtils::mergeMultipleMaps);
+
+                run.setStatus(MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), runStatusMap));
 
                 //update
                 Run updated = entityService.update(run.getId(), run);
@@ -868,26 +930,35 @@ public class RunManager {
 
         try {
             Optional<RunBaseStatus> runStatus = fsm.goToState(State.DELETED, null);
-            runStatus.ifPresentOrElse(
-                runBaseStatus -> {
-                    if (toDelete) {
-                        run.setStatus(
-                            MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), Map.of("state", State.DELETED.toString()))
-                        );
-                    } else {
-                        run.setStatus(runBaseStatus.toMap());
-                    }
-                },
-                () -> {
-                    if (toDelete) {
-                        // Update run state to DELETED
-                        run.getStatus().put("state", State.DELETED.toString());
-                    }
-                }
-            );
 
-            //update run
-            //explicit before delete to let external event handlers receive the msg
+            // Update run status
+            RunBaseStatus runBaseStatus = runStatus
+                .map(r -> {
+                    if (toDelete) {
+                        r.setState(State.DELETING.toString());
+                        return r;
+                    }
+                    return r;
+                })
+                .orElseGet(() -> new RunBaseStatus(State.DELETED.toString()));
+
+            RunRunnable runRunnable = event != null ? event.getRunnable() : null;
+
+            // Iterate over all processor and store all RunBaseStatus as optional
+            List<RunBaseStatus> processorsStatus = processorRegistry
+                .getProcessors("onDeleted")
+                .stream()
+                .map(processor -> processor.process(run, runRunnable, runBaseStatus))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+            Map<String, Serializable> runStatusMap = processorsStatus
+                .stream()
+                .map(RunBaseStatus::toMap)
+                .reduce(new HashMap<>(), MapUtils::mergeMultipleMaps);
+
+            run.setStatus(MapUtils.mergeMultipleMaps(runBaseStatus.toMap(), runStatusMap));
+
             entityService.update(run.getId(), run);
 
             if (toDelete) {
