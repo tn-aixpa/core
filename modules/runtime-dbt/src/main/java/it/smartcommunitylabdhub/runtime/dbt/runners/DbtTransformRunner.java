@@ -8,8 +8,8 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
-import it.smartcommunitylabdhub.runtime.dbt.specs.run.RunDbtSpec;
-import it.smartcommunitylabdhub.runtime.dbt.specs.task.TaskTransformSpec;
+import it.smartcommunitylabdhub.runtime.dbt.specs.run.DbtRunSpec;
+import it.smartcommunitylabdhub.runtime.dbt.specs.task.DbtTransformSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,12 +39,11 @@ public class DbtTransformRunner implements Runner<K8sJobRunnable> {
     @Override
     public K8sJobRunnable produce(Run run) {
         // Retrieve information about RunDbtSpec
-        RunDbtSpec runSpec = new RunDbtSpec(run.getSpec());
-        TaskTransformSpec taskSpec = runSpec.getTaskSpec();
+        DbtRunSpec runSpec = new DbtRunSpec(run.getSpec());
+        DbtTransformSpec taskSpec = runSpec.getTaskSpec();
         if (taskSpec == null) {
             throw new CoreRuntimeException("null or empty task definition");
         }
-
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))

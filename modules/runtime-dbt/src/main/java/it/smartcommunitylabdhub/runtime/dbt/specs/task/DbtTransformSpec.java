@@ -13,17 +13,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = DbtRuntime.RUNTIME, kind = TaskTransformSpec.KIND, entity = EntityName.TASK)
-public class TaskTransformSpec extends K8sTaskBaseSpec {
+@SpecType(runtime = DbtRuntime.RUNTIME, kind = DbtTransformSpec.KIND, entity = EntityName.TASK)
+public class DbtTransformSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "dbt+transform";
 
-    public TaskTransformSpec(Map<String, Serializable> data) {
+    public DbtTransformSpec(Map<String, Serializable> data) {
         configure(data);
-    }
-
-    @Override
-    public void configure(Map<String, Serializable> data) {
-        super.configure(data);
     }
 }

@@ -17,13 +17,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @SpecType(runtime = DbtRuntime.RUNTIME, kind = DbtRuntime.RUNTIME, entity = EntityName.FUNCTION)
-public class FunctionDbtSpec extends FunctionBaseSpec {
+public class DbtFunctionSpec extends FunctionBaseSpec {
 
     @NotNull
     @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
     private SourceCode<DbtSourceCodeLanguages> source;
 
-    public FunctionDbtSpec(Map<String, Serializable> data) {
+    public DbtFunctionSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -31,7 +31,7 @@ public class FunctionDbtSpec extends FunctionBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        FunctionDbtSpec spec = mapper.convertValue(data, FunctionDbtSpec.class);
+        DbtFunctionSpec spec = mapper.convertValue(data, DbtFunctionSpec.class);
         this.source = spec.getSource();
     }
 
