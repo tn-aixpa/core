@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.container.specs.task;
+package it.smartcommunitylabdhub.runtime.container.specs;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
@@ -15,15 +15,15 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = ContainerRuntime.RUNTIME, kind = TaskBuildSpec.KIND, entity = EntityName.TASK)
-public class TaskBuildSpec extends K8sTaskBaseSpec {
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = ContainerBuildTaskSpec.KIND, entity = EntityName.TASK)
+public class ContainerBuildTaskSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "container+build";
 
     @Schema(title = "fields.container.instructions.title", description = "fields.container.instructions.description")
     private List<String> instructions;
 
-    public TaskBuildSpec(Map<String, Serializable> data) {
+    public ContainerBuildTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -31,7 +31,7 @@ public class TaskBuildSpec extends K8sTaskBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        TaskBuildSpec spec = mapper.convertValue(data, TaskBuildSpec.class);
+        ContainerBuildTaskSpec spec = mapper.convertValue(data, ContainerBuildTaskSpec.class);
         this.instructions = spec.getInstructions();
     }
 }

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.container.specs.task;
+package it.smartcommunitylabdhub.runtime.container.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
@@ -16,8 +16,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = ContainerRuntime.RUNTIME, kind = TaskServeSpec.KIND, entity = EntityName.TASK)
-public class TaskServeSpec extends TaskDeploySpec {
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = ContainerServeTaskSpec.KIND, entity = EntityName.TASK)
+public class ContainerServeTaskSpec extends ContainerDeployTaskSpec {
 
     public static final String KIND = "container+serve";
 
@@ -29,7 +29,7 @@ public class TaskServeSpec extends TaskDeploySpec {
     @JsonProperty("service_type")
     private CoreServiceType serviceType;
 
-    public TaskServeSpec(Map<String, Serializable> data) {
+    public ContainerServeTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -37,7 +37,7 @@ public class TaskServeSpec extends TaskDeploySpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        TaskServeSpec spec = mapper.convertValue(data, TaskServeSpec.class);
+        ContainerServeTaskSpec spec = mapper.convertValue(data, ContainerServeTaskSpec.class);
 
         this.setServicePorts(spec.getServicePorts());
         this.setServiceType(spec.getServiceType());

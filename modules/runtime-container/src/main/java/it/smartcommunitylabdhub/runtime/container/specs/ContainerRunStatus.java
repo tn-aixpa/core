@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.container.status;
+package it.smartcommunitylabdhub.runtime.container.specs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
@@ -16,7 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RunContainerStatus extends RunBaseStatus {
+public class ContainerRunStatus extends RunBaseStatus {
 
     private Map<String, Serializable> k8s;
 
@@ -24,7 +24,7 @@ public class RunContainerStatus extends RunBaseStatus {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        RunContainerStatus spec = mapper.convertValue(data, RunContainerStatus.class);
+        ContainerRunStatus spec = mapper.convertValue(data, ContainerRunStatus.class);
         this.k8s = spec.getK8s();
     }
 }

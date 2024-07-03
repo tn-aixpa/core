@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.container.specs.task;
+package it.smartcommunitylabdhub.runtime.container.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -13,14 +13,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = ContainerRuntime.RUNTIME, kind = TaskDeploySpec.KIND, entity = EntityName.TASK)
-public class TaskDeploySpec extends K8sTaskBaseSpec {
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = ContainerDeployTaskSpec.KIND, entity = EntityName.TASK)
+public class ContainerDeployTaskSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "container+deploy";
 
     private Integer replicas;
 
-    public TaskDeploySpec(Map<String, Serializable> data) {
+    public ContainerDeployTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -28,7 +28,7 @@ public class TaskDeploySpec extends K8sTaskBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        TaskDeploySpec spec = mapper.convertValue(data, TaskDeploySpec.class);
+        ContainerDeployTaskSpec spec = mapper.convertValue(data, ContainerDeployTaskSpec.class);
         this.replicas = spec.getReplicas();
     }
 }

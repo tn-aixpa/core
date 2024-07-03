@@ -1,15 +1,10 @@
-package it.smartcommunitylabdhub.runtime.container.specs.run;
+package it.smartcommunitylabdhub.runtime.container.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.task.TaskBuildSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
-import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -18,32 +13,32 @@ import lombok.NoArgsConstructor;
 @Getter
 // @Setter
 @NoArgsConstructor
-@SpecType(runtime = ContainerRuntime.RUNTIME, kind = RunContainerSpec.KIND, entity = EntityName.RUN)
-public class RunContainerSpec extends RunBaseSpec {
+@SpecType(runtime = ContainerRuntime.RUNTIME, kind = ContainerRunSpec.KIND, entity = EntityName.RUN)
+public class ContainerRunSpec extends RunBaseSpec {
 
     public static final String KIND = ContainerRuntime.RUNTIME + "+run";
 
     // @JsonProperty("job_spec")
     @JsonUnwrapped
-    private TaskJobSpec taskJobSpec;
+    private ContainerJobTaskSpec taskJobSpec;
 
     // @JsonProperty("deploy_spec")
     @JsonUnwrapped
-    private TaskDeploySpec taskDeploySpec;
+    private ContainerDeployTaskSpec taskDeploySpec;
 
     // @JsonProperty("serve_spec")
     @JsonUnwrapped
-    private TaskServeSpec taskServeSpec;
+    private ContainerServeTaskSpec taskServeSpec;
 
     // @JsonProperty("build_spec")
     @JsonUnwrapped
-    private TaskBuildSpec taskBuildSpec;
+    private ContainerBuildTaskSpec taskBuildSpec;
 
     // @JsonProperty("function_spec")
     @JsonUnwrapped
-    private FunctionContainerSpec functionSpec;
+    private ContainerFunctionSpec functionSpec;
 
-    public RunContainerSpec(Map<String, Serializable> data) {
+    public ContainerRunSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -51,7 +46,7 @@ public class RunContainerSpec extends RunBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        RunContainerSpec spec = mapper.convertValue(data, RunContainerSpec.class);
+        ContainerRunSpec spec = mapper.convertValue(data, ContainerRunSpec.class);
 
         this.taskJobSpec = spec.getTaskJobSpec();
         this.taskDeploySpec = spec.getTaskDeploySpec();
@@ -60,23 +55,23 @@ public class RunContainerSpec extends RunBaseSpec {
         this.taskBuildSpec = spec.getTaskBuildSpec();
     }
 
-    public void setFunctionSpec(FunctionContainerSpec functionSpec) {
+    public void setFunctionSpec(ContainerFunctionSpec functionSpec) {
         this.functionSpec = functionSpec;
     }
 
-    public void setTaskJobSpec(TaskJobSpec taskJobSpec) {
+    public void setTaskJobSpec(ContainerJobTaskSpec taskJobSpec) {
         this.taskJobSpec = taskJobSpec;
     }
 
-    public void setTaskDeploySpec(TaskDeploySpec taskDeploySpec) {
+    public void setTaskDeploySpec(ContainerDeployTaskSpec taskDeploySpec) {
         this.taskDeploySpec = taskDeploySpec;
     }
 
-    public void setTaskServeSpec(TaskServeSpec taskServeSpec) {
+    public void setTaskServeSpec(ContainerServeTaskSpec taskServeSpec) {
         this.taskServeSpec = taskServeSpec;
     }
 
-    public void setTaskBuildSpec(TaskBuildSpec taskBuildSpec) {
+    public void setTaskBuildSpec(ContainerBuildTaskSpec taskBuildSpec) {
         this.taskBuildSpec = taskBuildSpec;
     }
 }

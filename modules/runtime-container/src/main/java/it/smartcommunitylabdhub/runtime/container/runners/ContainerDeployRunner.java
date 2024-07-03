@@ -7,9 +7,9 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.task.TaskDeploySpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerDeployTaskSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerRunSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,18 +28,18 @@ public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
 
     private static final String TASK = "deploy";
 
-    private final FunctionContainerSpec functionSpec;
+    private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public ContainerDeployRunner(FunctionContainerSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
+    public ContainerDeployRunner(ContainerFunctionSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
         this.functionSpec = functionContainerSpec;
         this.groupedSecrets = groupedSecrets;
     }
 
     @Override
     public K8sDeploymentRunnable produce(Run run) {
-        RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
-        TaskDeploySpec taskSpec = runSpec.getTaskDeploySpec();
+        ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
+        ContainerDeployTaskSpec taskSpec = runSpec.getTaskDeploySpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(

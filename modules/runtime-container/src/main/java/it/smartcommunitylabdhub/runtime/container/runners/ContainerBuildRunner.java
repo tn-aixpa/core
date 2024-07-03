@@ -11,9 +11,9 @@ import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.Dockerfil
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGeneratorFactory;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.task.TaskBuildSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerBuildTaskSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerRunSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,18 +38,18 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
 
     private static final String TASK = "job";
 
-    private final FunctionContainerSpec functionSpec;
+    private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public ContainerBuildRunner(FunctionContainerSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
+    public ContainerBuildRunner(ContainerFunctionSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
         this.functionSpec = functionContainerSpec;
         this.groupedSecrets = groupedSecrets;
     }
 
     @Override
     public K8sKanikoRunnable produce(Run run) {
-        RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
-        TaskBuildSpec taskSpec = runSpec.getTaskBuildSpec();
+        ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
+        ContainerBuildTaskSpec taskSpec = runSpec.getTaskBuildSpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(

@@ -7,9 +7,9 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerRunSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerServeTaskSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,18 +28,18 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
 
     private static final String TASK = "serve";
 
-    private final FunctionContainerSpec functionSpec;
+    private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public ContainerServeRunner(FunctionContainerSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
+    public ContainerServeRunner(ContainerFunctionSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
         this.functionSpec = functionContainerSpec;
         this.groupedSecrets = groupedSecrets;
     }
 
     @Override
     public K8sServeRunnable produce(Run run) {
-        RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
-        TaskServeSpec taskSpec = runSpec.getTaskServeSpec();
+        ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
+        ContainerServeTaskSpec taskSpec = runSpec.getTaskServeSpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
