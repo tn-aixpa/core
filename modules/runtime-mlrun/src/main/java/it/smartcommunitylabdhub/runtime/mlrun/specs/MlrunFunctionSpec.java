@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.mlrun.specs.function;
+package it.smartcommunitylabdhub.runtime.mlrun.specs;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
@@ -18,7 +18,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @SpecType(runtime = MlrunRuntime.RUNTIME, kind = MlrunRuntime.RUNTIME, entity = EntityName.FUNCTION)
-public class FunctionMlrunSpec extends FunctionBaseSpec {
+public class MlrunFunctionSpec extends FunctionBaseSpec {
 
     @NotNull
     @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
@@ -39,7 +39,7 @@ public class FunctionMlrunSpec extends FunctionBaseSpec {
     @Schema(title = "fields.python.requirements.title", description = "fields.python.requirements.description")
     private List<Serializable> requirements;
 
-    public FunctionMlrunSpec(Map<String, Serializable> data) {
+    public MlrunFunctionSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -47,7 +47,7 @@ public class FunctionMlrunSpec extends FunctionBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        FunctionMlrunSpec spec = mapper.convertValue(data, FunctionMlrunSpec.class);
+        MlrunFunctionSpec spec = mapper.convertValue(data, MlrunFunctionSpec.class);
 
         this.source = spec.getSource();
         this.image = spec.getImage();

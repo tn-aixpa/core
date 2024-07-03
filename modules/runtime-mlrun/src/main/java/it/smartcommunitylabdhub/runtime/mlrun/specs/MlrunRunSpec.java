@@ -1,13 +1,10 @@
-package it.smartcommunitylabdhub.runtime.mlrun.specs.run;
+package it.smartcommunitylabdhub.runtime.mlrun.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.function.FunctionMlrunSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunBuildSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunJobSpec;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,8 +15,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = MlrunRuntime.RUNTIME, kind = RunMlrunSpec.KIND, entity = EntityName.RUN)
-public class RunMlrunSpec extends RunBaseSpec {
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = MlrunRunSpec.KIND, entity = EntityName.RUN)
+public class MlrunRunSpec extends RunBaseSpec {
 
     public static final String KIND = MlrunRuntime.RUNTIME + "+run";
 
@@ -31,17 +28,17 @@ public class RunMlrunSpec extends RunBaseSpec {
 
     // @JsonProperty("job_spec")
     @JsonUnwrapped
-    private TaskMlrunJobSpec jobSpec;
+    private MlrunJobTaskSpec jobSpec;
 
     // @JsonProperty("build_spec")
     @JsonUnwrapped
-    private TaskMlrunBuildSpec buildSpec;
+    private MlrunBuildTaskSpec buildSpec;
 
     // @JsonProperty("function_spec")
     @JsonUnwrapped
-    private FunctionMlrunSpec funcSpec;
+    private MlrunFunctionSpec functionSpec;
 
-    public RunMlrunSpec(Map<String, Serializable> data) {
+    public MlrunRunSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -49,25 +46,25 @@ public class RunMlrunSpec extends RunBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        RunMlrunSpec spec = mapper.convertValue(data, RunMlrunSpec.class);
+        MlrunRunSpec spec = mapper.convertValue(data, MlrunRunSpec.class);
         this.inputs = spec.getInputs();
         this.outputs = spec.getOutputs();
         this.parameters = spec.getParameters();
 
         this.jobSpec = spec.getJobSpec();
         this.buildSpec = spec.getBuildSpec();
-        this.funcSpec = spec.getFuncSpec();
+        this.functionSpec = spec.getFunctionSpec();
     }
 
-    public void setJobSpec(TaskMlrunJobSpec jobSpec) {
+    public void setJobSpec(MlrunJobTaskSpec jobSpec) {
         this.jobSpec = jobSpec;
     }
 
-    public void setBuildSpec(TaskMlrunBuildSpec buildSpec) {
+    public void setBuildSpec(MlrunBuildTaskSpec buildSpec) {
         this.buildSpec = buildSpec;
     }
 
-    public void setFuncSpec(FunctionMlrunSpec funcSpec) {
-        this.funcSpec = funcSpec;
+    public void setFunctionSpec(MlrunFunctionSpec funcSpec) {
+        this.functionSpec = funcSpec;
     }
 }

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.mlrun.specs.task;
+package it.smartcommunitylabdhub.runtime.mlrun.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
@@ -15,8 +15,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = MlrunRuntime.RUNTIME, kind = TaskMlrunBuildSpec.KIND, entity = EntityName.TASK)
-public class TaskMlrunBuildSpec extends K8sTaskBaseSpec {
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = MlrunBuildTaskSpec.KIND, entity = EntityName.TASK)
+public class MlrunBuildTaskSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "mlrun+build";
 
@@ -28,7 +28,7 @@ public class TaskMlrunBuildSpec extends K8sTaskBaseSpec {
     @JsonProperty("target_image")
     private String targetImage;
 
-    public TaskMlrunBuildSpec(Map<String, Serializable> data) {
+    public MlrunBuildTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -36,7 +36,7 @@ public class TaskMlrunBuildSpec extends K8sTaskBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        TaskMlrunBuildSpec spec = mapper.convertValue(data, TaskMlrunBuildSpec.class);
+        MlrunBuildTaskSpec spec = mapper.convertValue(data, MlrunBuildTaskSpec.class);
 
         this.commands = spec.getCommands();
         this.forceBuild = spec.getForceBuild();

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.mlrun.specs.task;
+package it.smartcommunitylabdhub.runtime.mlrun.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -13,12 +13,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = MlrunRuntime.RUNTIME, kind = TaskMlrunJobSpec.KIND, entity = EntityName.TASK)
-public class TaskMlrunJobSpec extends K8sTaskBaseSpec {
+@SpecType(runtime = MlrunRuntime.RUNTIME, kind = MlrunJobTaskSpec.KIND, entity = EntityName.TASK)
+public class MlrunJobTaskSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "mlrun+job";
 
-    public TaskMlrunJobSpec(Map<String, Serializable> data) {
+    public MlrunJobTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -26,6 +26,6 @@ public class TaskMlrunJobSpec extends K8sTaskBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        TaskMlrunJobSpec spec = mapper.convertValue(data, TaskMlrunJobSpec.class);
+        MlrunJobTaskSpec spec = mapper.convertValue(data, MlrunJobTaskSpec.class);
     }
 }
