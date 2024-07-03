@@ -1,12 +1,10 @@
-package it.smartcommunitylabdhub.runtime.dbt.specs.run;
+package it.smartcommunitylabdhub.runtime.dbt.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
-import it.smartcommunitylabdhub.runtime.dbt.specs.function.DbtFunctionSpec;
-import it.smartcommunitylabdhub.runtime.dbt.specs.task.DbtTransformSpec;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.dbt.specs.function;
+package it.smartcommunitylabdhub.runtime.dbt.specs;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;

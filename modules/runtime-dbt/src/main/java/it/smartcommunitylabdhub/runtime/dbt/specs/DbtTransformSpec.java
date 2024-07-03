@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.dbt.specs.task;
+package it.smartcommunitylabdhub.runtime.dbt.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;

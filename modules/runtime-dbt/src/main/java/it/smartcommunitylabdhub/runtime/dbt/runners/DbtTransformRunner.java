@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.runtime.dbt.runners;
 
-import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -8,8 +7,8 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
-import it.smartcommunitylabdhub.runtime.dbt.specs.run.DbtRunSpec;
-import it.smartcommunitylabdhub.runtime.dbt.specs.task.DbtTransformSpec;
+import it.smartcommunitylabdhub.runtime.dbt.specs.DbtRunSpec;
+import it.smartcommunitylabdhub.runtime.dbt.specs.DbtTransformSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
