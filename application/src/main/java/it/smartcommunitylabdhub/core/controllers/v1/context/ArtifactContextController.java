@@ -211,12 +211,12 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-//        Artifact artifact = artifactService.getArtifact(id);
-//
-//        //check for project and name match
-//        if (!artifact.getProject().equals(project)) {
-//            throw new IllegalArgumentException("invalid project");
-//        }
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
 
         return filesService.startMultiPartUpload(id, filename);
     }
@@ -232,12 +232,12 @@ public class ArtifactContextController {
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull Integer partNumber
     ) throws NoSuchEntityException {
-//        Artifact artifact = artifactService.getArtifact(id);
-//
-//        //check for project and name match
-//        if (!artifact.getProject().equals(project)) {
-//            throw new IllegalArgumentException("invalid project");
-//        }
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
 
         return filesService.uploadMultiPart(id, filename, uploadId, partNumber);
     }
@@ -251,12 +251,12 @@ public class ArtifactContextController {
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull List<String> partList
     ) throws NoSuchEntityException {
-//        Artifact artifact = artifactService.getArtifact(id);
-//
-//        //check for project and name match
-//        if (!artifact.getProject().equals(project)) {
-//            throw new IllegalArgumentException("invalid project");
-//        }
+        Artifact artifact = artifactService.getArtifact(id);
+
+        //check for project and name match
+        if (!artifact.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
 
         return filesService.completeMultiPartUpload(id, filename, uploadId, partList);
     }
