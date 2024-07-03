@@ -390,7 +390,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
             return batchV1Api.readNamespacedJob(jobName, namespace, null);
         } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getMessage());
+            log.info("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {
                 log.debug("k8s api response: {}", e.getResponseBody());
             }

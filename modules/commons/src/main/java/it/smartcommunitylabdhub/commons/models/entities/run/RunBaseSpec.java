@@ -27,4 +27,11 @@ public class RunBaseSpec extends BaseSpec {
         this.task = runBaseSpec.getTask();
         this.localExecution = runBaseSpec.getLocalExecution();
     }
+
+    public static RunBaseSpec with(Map<String, Serializable> data) {
+        RunBaseSpec spec = new RunBaseSpec();
+        spec.configure(data);
+
+        return spec;
+    }
 }

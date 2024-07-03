@@ -345,7 +345,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
             return coreV1Api.readNamespacedService(serviceName, namespace, null);
         } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getResponseBody());
+            log.info("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {
                 log.debug("k8s api response: {}", e.getResponseBody());
             }
