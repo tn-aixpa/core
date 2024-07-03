@@ -7,15 +7,16 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sRunStatus;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
-import org.springframework.stereotype.Component;
-
 import java.io.Serializable;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
-
-@RunProcessorType(stages = {"onRunning", "onCompleted", "onError", "onStopped", "onDeleted"}, id = "k8sProcessor")
-@Component("k8sProcessor")
+@RunProcessorType(stages = { "onRunning", "onCompleted", "onError", "onStopped", "onDeleted" }, id = K8sProcessor.ID)
+@Component(K8sProcessor.ID)
 public class K8sProcessor implements RunProcessor<RunBaseStatus> {
+
+    public static final String ID = "k8sProcessor";
+
     @Override
     public RunBaseStatus process(Run run, RunRunnable runRunnable, RunBaseStatus status) {
         if (runRunnable instanceof K8sRunnable) {

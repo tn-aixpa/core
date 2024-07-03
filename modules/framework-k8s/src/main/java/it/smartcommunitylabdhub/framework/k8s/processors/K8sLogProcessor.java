@@ -15,30 +15,38 @@ import it.smartcommunitylabdhub.framework.k8s.model.K8sLogStatus;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
+@RunProcessorType(stages = { "onRunning", "onCompleted", "onError", "onStopped", "onDeleted" }, id = K8sLogProcessor.ID)
+@Component(K8sLogProcessor.ID)
+public class K8sLogProcessor implements RunProcessor<RunBaseStatus> {
 
-@RunProcessorType(stages = {"onRunning", "onCompleted", "onError", "onStopped", "onDeleted"}, id = "logProcessor")
-@Component("logProcessor")
-public class LogProcessor implements RunProcessor<RunBaseStatus> {
+    public static final String ID = "k8sLogProcessor";
 
     //TODO make configurable
     public static final int MAX_METRICS = 300;
 
-    @Autowired
-    LogService logService;
+    private final LogService logService;
+
+    public K8sLogProcessor(LogService logService) {
+        Assert.notNull(logService, "log service is required to persist logs");
+        this.logService = logService;
+    }
 
     @Override
     public RunBaseStatus process(Run run, RunRunnable runRunnable, RunBaseStatus status) {
         if (runRunnable instanceof K8sRunnable) {
-
             //extract logs
             List<CoreLog> logs = ((K8sRunnable) runRunnable).getLogs();
             List<CoreMetric> metrics = ((K8sRunnable) runRunnable).getMetrics();
@@ -46,14 +54,10 @@ public class LogProcessor implements RunProcessor<RunBaseStatus> {
             if (logs != null) {
                 writeLogs(run, logs, metrics);
             }
-
-            //dump as-is
         }
 
-        return  null;
+        return null;
     }
-
-
 
     private void writeLogs(Run run, List<CoreLog> logs, List<CoreMetric> metrics) {
         String runId = run.getId();
@@ -61,25 +65,25 @@ public class LogProcessor implements RunProcessor<RunBaseStatus> {
 
         //logs are grouped by pod+container, search by run and create/append
         Map<String, Log> entries = logService
-                .getLogsByRunId(runId)
-                .stream()
-                .map(e -> {
-                    K8sLogStatus status = new K8sLogStatus();
-                    status.configure(e.getStatus());
+            .getLogsByRunId(runId)
+            .stream()
+            .map(e -> {
+                K8sLogStatus status = new K8sLogStatus();
+                status.configure(e.getStatus());
 
-                    String pod = status.getPod() != null ? status.getPod() : "";
-                    String container = status.getContainer() != null ? status.getContainer() : "";
-                    String namespace = status.getNamespace() != null ? status.getNamespace() : "";
-                    String key = namespace + pod + container;
+                String pod = status.getPod() != null ? status.getPod() : "";
+                String container = status.getContainer() != null ? status.getContainer() : "";
+                String namespace = status.getNamespace() != null ? status.getNamespace() : "";
+                String key = namespace + pod + container;
 
-                    if (StringUtils.hasText(runId)) {
-                        return Map.entry(key, e);
-                    } else {
-                        return null;
-                    }
-                })
-                .filter(e -> e != null)
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+                if (StringUtils.hasText(runId)) {
+                    return Map.entry(key, e);
+                } else {
+                    return null;
+                }
+            })
+            .filter(e -> e != null)
+            .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 
         //reformat metrics grouped per container
         //TODO refactor
@@ -88,30 +92,30 @@ public class LogProcessor implements RunProcessor<RunBaseStatus> {
             metrics.forEach(m -> {
                 if (m.metrics() != null) {
                     m
-                            .metrics()
-                            .forEach(cm -> {
-                                String key = m.namespace() + m.pod() + cm.getName();
-                                if (cm.getUsage() != null) {
-                                    HashMap<String, String> usage = cm
-                                            .getUsage()
-                                            .entrySet()
-                                            .stream()
-                                            .collect(
-                                                    Collectors.toMap(
-                                                            e -> e.getKey(),
-                                                            e -> e.getValue().toSuffixedString(),
-                                                            (prev, next) -> next,
-                                                            HashMap::new
-                                                    )
-                                            );
+                        .metrics()
+                        .forEach(cm -> {
+                            String key = m.namespace() + m.pod() + cm.getName();
+                            if (cm.getUsage() != null) {
+                                HashMap<String, String> usage = cm
+                                    .getUsage()
+                                    .entrySet()
+                                    .stream()
+                                    .collect(
+                                        Collectors.toMap(
+                                            e -> e.getKey(),
+                                            e -> e.getValue().toSuffixedString(),
+                                            (prev, next) -> next,
+                                            HashMap::new
+                                        )
+                                    );
 
-                                    HashMap<String, Serializable> mm = new HashMap<>();
-                                    mm.put("timestamp", m.timestamp());
-                                    mm.put("window", m.window());
-                                    mm.put("usage", usage);
-                                    mmetrics.put(key, mm);
-                                }
-                            });
+                                HashMap<String, Serializable> mm = new HashMap<>();
+                                mm.put("timestamp", m.timestamp());
+                                mm.put("window", m.window());
+                                mm.put("usage", usage);
+                                mmetrics.put(key, mm);
+                            }
+                        });
                 }
             });
         }
@@ -134,8 +138,8 @@ public class LogProcessor implements RunProcessor<RunBaseStatus> {
                         logStatus.configure(log.getStatus());
 
                         List<Serializable> list = logStatus.getMetrics() != null
-                                ? new ArrayList<>(logStatus.getMetrics())
-                                : new ArrayList<>();
+                            ? new ArrayList<>(logStatus.getMetrics())
+                            : new ArrayList<>();
 
                         list.addLast(metric);
                         logStatus.setMetrics(list);
@@ -170,8 +174,8 @@ public class LogProcessor implements RunProcessor<RunBaseStatus> {
 
                         //append to status
                         List<Serializable> list = logStatus.getMetrics() != null
-                                ? new ArrayList<>(logStatus.getMetrics())
-                                : new ArrayList<>();
+                            ? new ArrayList<>(logStatus.getMetrics())
+                            : new ArrayList<>();
                         list.addLast(metric);
                         logStatus.setMetrics(list);
 
@@ -186,21 +190,21 @@ public class LogProcessor implements RunProcessor<RunBaseStatus> {
                     }
 
                     Log log = Log
-                            .builder()
-                            .project(run.getProject())
-                            .spec(logSpec.toMap())
-                            .status(logStatus.toMap())
-                            .content(l.value())
-                            .build();
+                        .builder()
+                        .project(run.getProject())
+                        .spec(logSpec.toMap())
+                        .status(logStatus.toMap())
+                        .content(l.value())
+                        .build();
 
                     logService.createLog(log);
                 }
             } catch (
-                    NoSuchEntityException
-                    | IllegalArgumentException
-                    | SystemException
-                    | BindException
-                    | DuplicatedEntityException e
+                NoSuchEntityException
+                | IllegalArgumentException
+                | SystemException
+                | BindException
+                | DuplicatedEntityException e
             ) {
                 //invalid, skip
                 //TODO handle

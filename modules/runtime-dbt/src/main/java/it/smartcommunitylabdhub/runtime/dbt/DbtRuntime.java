@@ -155,7 +155,6 @@ public class DbtRuntime implements Runtime<FunctionDbtSpec, RunDbtSpec, RunDbtSt
         }
     }
 
-
     @Override
     public RunDbtStatus onDeleted(Run run, RunRunnable runnable) {
         if (runnable != null) {

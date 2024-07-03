@@ -25,27 +25,27 @@ public interface Runtime<
     R delete(@NotNull Run run); // X -> STOPPED
 
     @Nullable
-    default Z onRunning(@NotNull Run run, RunRunnable runnable){
+    default Z onRunning(@NotNull Run run, RunRunnable runnable) {
         return null;
     }
 
     @Nullable
-    default Z onComplete(@NotNull Run run, RunRunnable runnable){
+    default Z onComplete(@NotNull Run run, RunRunnable runnable) {
         return null;
     }
 
     @Nullable
-    default Z onError(@NotNull Run run, RunRunnable runnable){
+    default Z onError(@NotNull Run run, RunRunnable runnable) {
         return null;
     }
 
     @Nullable
-    default Z onStopped(@NotNull Run run, RunRunnable runnable){
+    default Z onStopped(@NotNull Run run, RunRunnable runnable) {
         return null;
     }
 
     @Nullable
-    default Z onDeleted(@NotNull Run run, @Nullable RunRunnable runnable){
+    default Z onDeleted(@NotNull Run run, @Nullable RunRunnable runnable) {
         return null;
     }
 }

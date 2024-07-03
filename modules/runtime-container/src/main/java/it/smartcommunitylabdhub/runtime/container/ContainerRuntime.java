@@ -1,20 +1,14 @@
 package it.smartcommunitylabdhub.runtime.container;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.models.entities.log.LogSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.State;
@@ -26,12 +20,8 @@ import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
-import it.smartcommunitylabdhub.framework.k8s.model.K8sLogStatus;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.k8s.K8sKanikoFramework;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
@@ -51,25 +41,14 @@ import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.task.TaskServeSpec;
 import it.smartcommunitylabdhub.runtime.container.status.RunContainerStatus;
 import jakarta.validation.constraints.NotNull;
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 
 @Slf4j
 @RuntimeComponent(runtime = ContainerRuntime.RUNTIME)
 public class ContainerRuntime
     implements Runtime<FunctionContainerSpec, RunContainerSpec, RunContainerStatus, RunRunnable> {
 
-    private static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
     public static final String RUNTIME = "container";
 
     //TODO make configurable
@@ -319,7 +298,6 @@ public class ContainerRuntime
         }
     }
 
-
     @Override
     public RunContainerStatus onComplete(Run run, RunRunnable runnable) {
         RunContainerSpec runContainerSpec = new RunContainerSpec(run.getSpec());
@@ -343,7 +321,6 @@ public class ContainerRuntime
         }
         return null;
     }
-
 
     @Override
     public RunContainerStatus onDeleted(Run run, RunRunnable runnable) {

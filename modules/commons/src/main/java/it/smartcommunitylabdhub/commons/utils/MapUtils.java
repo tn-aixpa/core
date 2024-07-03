@@ -1,6 +1,12 @@
 package it.smartcommunitylabdhub.commons.utils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 public class MapUtils {
@@ -84,9 +90,7 @@ public class MapUtils {
      */
     @SafeVarargs
     public static <K, V> Map<K, V> mergeMultipleMapsRecursively(Map<K, V>... maps) {
-        return Arrays.stream(maps)
-                .filter(Objects::nonNull)
-                .reduce(new HashMap<>(), MapUtils::mergeMapRecursively);
+        return Arrays.stream(maps).filter(Objects::nonNull).reduce(new HashMap<>(), MapUtils::mergeMapRecursively);
     }
 
     /**

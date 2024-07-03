@@ -2,18 +2,17 @@ package it.smartcommunitylabdhub.core.components.infrastructure.factories.proces
 
 import it.smartcommunitylabdhub.commons.annotations.common.RunProcessorType;
 import it.smartcommunitylabdhub.commons.infrastructure.RunProcessor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class ProcessorRegistry implements ApplicationListener<ContextRefreshedEvent> {
@@ -36,9 +35,7 @@ public class ProcessorRegistry implements ApplicationListener<ContextRefreshedEv
                 RunProcessorType annotation = bean.getClass().getAnnotation(RunProcessorType.class);
                 if (annotation != null) {
                     for (String stage : annotation.stages()) {
-                        processorRegistry
-                                .computeIfAbsent(stage, k -> new ArrayList<>())
-                                .add((RunProcessor<?>) bean);
+                        processorRegistry.computeIfAbsent(stage, k -> new ArrayList<>()).add((RunProcessor<?>) bean);
                     }
                 }
             }

@@ -150,7 +150,6 @@ public class KFPRuntime implements Runtime<WorkflowKFPSpec, RunKFPSpec, RunKfpSt
         }
     }
 
-
     @Override
     public RunKfpStatus onDeleted(Run run, RunRunnable runnable) {
         if (runnable != null) {

@@ -47,7 +47,6 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
 
     public static final String RUNTIME = "python";
 
-
     @Autowired
     private SecretService secretService;
 
@@ -272,7 +271,6 @@ public class PythonRuntime implements Runtime<PythonFunctionSpec, PythonRunSpec,
             throw new NoSuchEntityException("Error deleting run", e);
         }
     }
-
 
     @Override
     public PythonRunStatus onComplete(Run run, RunRunnable runnable) {
