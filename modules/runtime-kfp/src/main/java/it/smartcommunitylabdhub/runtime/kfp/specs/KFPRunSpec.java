@@ -1,12 +1,10 @@
-package it.smartcommunitylabdhub.runtime.kfp.specs.run;
+package it.smartcommunitylabdhub.runtime.kfp.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
-import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
-import it.smartcommunitylabdhub.runtime.kfp.specs.workflow.WorkflowKFPSpec;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,8 +15,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = KFPRuntime.RUNTIME, kind = RunKFPSpec.KIND, entity = EntityName.RUN)
-public class RunKFPSpec extends RunBaseSpec {
+@SpecType(runtime = KFPRuntime.RUNTIME, kind = KFPRunSpec.KIND, entity = EntityName.RUN)
+public class KFPRunSpec extends RunBaseSpec {
 
     public static final String KIND = KFPRuntime.RUNTIME + "+run";
 
@@ -30,13 +28,13 @@ public class RunKFPSpec extends RunBaseSpec {
 
     // @JsonProperty("workflow_spec")
     @JsonUnwrapped
-    private WorkflowKFPSpec workflowSpec;
+    private KFPWorkflowSpec workflowSpec;
 
     // @JsonProperty("pipeline_spec")
     @JsonUnwrapped
-    private TaskPipelineSpec taskSpec;
+    private KFPPipelineTaskSpec taskSpec;
 
-    public RunKFPSpec(Map<String, Serializable> data) {
+    public KFPRunSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -44,7 +42,7 @@ public class RunKFPSpec extends RunBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        RunKFPSpec spec = mapper.convertValue(data, RunKFPSpec.class);
+        KFPRunSpec spec = mapper.convertValue(data, KFPRunSpec.class);
         this.inputs = spec.getInputs();
         this.outputs = spec.getOutputs();
         this.parameters = spec.getParameters();
@@ -53,11 +51,11 @@ public class RunKFPSpec extends RunBaseSpec {
         this.workflowSpec = spec.getWorkflowSpec();
     }
 
-    public void setWorkflowSpec(WorkflowKFPSpec workflowSpec) {
+    public void setWorkflowSpec(KFPWorkflowSpec workflowSpec) {
         this.workflowSpec = workflowSpec;
     }
 
-    public void setTaskSpec(TaskPipelineSpec taskSpec) {
+    public void setTaskSpec(KFPPipelineTaskSpec taskSpec) {
         this.taskSpec = taskSpec;
     }
 }

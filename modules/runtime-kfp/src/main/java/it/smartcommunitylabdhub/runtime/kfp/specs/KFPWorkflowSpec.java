@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.kfp.specs.workflow;
+package it.smartcommunitylabdhub.runtime.kfp.specs;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
@@ -17,7 +17,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @SpecType(runtime = KFPRuntime.RUNTIME, kind = KFPRuntime.RUNTIME, entity = EntityName.WORKFLOW)
-public class WorkflowKFPSpec extends WorkflowBaseSpec {
+public class KFPWorkflowSpec extends WorkflowBaseSpec {
 
     @NotNull
     @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
@@ -32,7 +32,7 @@ public class WorkflowKFPSpec extends WorkflowBaseSpec {
     @Schema(title = "fields.sourceCode.handler.title", description = "fields.sourceCode.handler.description")
     private String handler;
 
-    public WorkflowKFPSpec(Map<String, Serializable> data) {
+    public KFPWorkflowSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -40,7 +40,7 @@ public class WorkflowKFPSpec extends WorkflowBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        WorkflowKFPSpec spec = mapper.convertValue(data, WorkflowKFPSpec.class);
+        KFPWorkflowSpec spec = mapper.convertValue(data, KFPWorkflowSpec.class);
 
         this.source = spec.getSource();
         this.image = spec.getImage();
