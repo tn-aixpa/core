@@ -9,6 +9,8 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.util.PatchUtils;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
@@ -17,7 +19,10 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -26,8 +31,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component
+@Slf4j
 @ConditionalOnKubernetes
 public class K8sSecretHelper {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final CoreV1Api api;
 
@@ -97,6 +105,8 @@ public class K8sSecretHelper {
 
     public void storeSecretData(@NotNull String secretName, Map<String, String> data)
         throws JsonProcessingException, ApiException {
+        log.debug("store secret data for {}", secretName);
+
         V1Secret secret;
         try {
             secret = api.readNamespacedSecret(secretName, namespace, "");
@@ -104,33 +114,53 @@ public class K8sSecretHelper {
             // secret does not exist, create
             secret = null;
         }
-        if (secret != null) {
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, byte[]> secretData = secret.getData();
-            Map<String, String> writeData = new HashMap<>();
-            for (String key : data.keySet()) {
-                writeData.put(key, Base64.getEncoder().encodeToString(data.get(key).getBytes(StandardCharsets.UTF_8)));
-            }
+        if (secret == null) {
+            log.debug("create new secret {}", secretName);
 
-            if (secretData != null) {
-                for (String key : secretData.keySet()) {
-                    if (!writeData.containsKey(key)) writeData.put(
-                        key,
-                        Base64.getEncoder().encodeToString(secretData.get(key))
-                    );
-                }
-            }
-
-            PatchBody patchData = new PatchBody(writeData, "/data");
-            V1Patch patch = new V1Patch(mapper.writeValueAsString(Collections.singleton(patchData)));
-            api.patchNamespacedSecret(secretName, namespace, patch, null, null, null, null, null);
-        } else {
             V1Secret body = new V1Secret()
                 .metadata(new V1ObjectMeta().name(secretName).namespace(namespace))
                 .apiVersion("v1")
                 .kind("Secret")
                 .stringData(data);
             api.createNamespacedSecret(namespace, body, null, null, null, null);
+            
+            if (log.isTraceEnabled()) {
+                log.trace("created secret {}", secretName);
+            }
+        } else {
+            log.debug("patch existing secret {}", secretName);
+
+            //merge existing with new values
+            Map<String, byte[]> secretData = MapUtils.mergeMultipleMaps(
+                secret.getData(),
+                data
+                    .entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(Entry::getKey, d -> d.getValue().getBytes(StandardCharsets.UTF_8)))
+            );
+
+            //write as base64 for patch
+            Map<String, String> writeData = secretData
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Entry::getKey, d -> Base64.getEncoder().encodeToString(d.getValue())));
+
+            PatchBody patchData = new PatchBody(writeData, "/data");
+            V1Patch patch = new V1Patch(mapper.writeValueAsString(Collections.singleton(patchData)));
+            //direct api call is broken as per 21.0.0 due to missing patch format
+            // api.patchNamespacedSecret(secretName, namespace, patch, null, null, null, null, null);
+
+            // json-patch via patch to avoid library bug
+            PatchUtils.patch(
+                V1Secret.class,
+                () -> api.patchNamespacedSecretCall(secretName, namespace, patch, null, null, null, null, null, null),
+                V1Patch.PATCH_FORMAT_JSON_PATCH,
+                api.getApiClient()
+            );
+
+            if (log.isTraceEnabled()) {
+                log.trace("patched secret {}", secretName);
+            }
         }
     }
 
