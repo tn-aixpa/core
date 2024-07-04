@@ -9,9 +9,9 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
-import it.smartcommunitylabdhub.runtime.container.specs.function.FunctionContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.run.RunContainerSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.task.TaskJobSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerJobTaskSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerRunSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,18 +31,18 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
 
     private static final String TASK = "job";
 
-    private final FunctionContainerSpec functionSpec;
+    private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public ContainerJobRunner(FunctionContainerSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
+    public ContainerJobRunner(ContainerFunctionSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
         this.functionSpec = functionContainerSpec;
         this.groupedSecrets = groupedSecrets;
     }
 
     @Override
     public K8sRunnable produce(Run run) {
-        RunContainerSpec runSpec = new RunContainerSpec(run.getSpec());
-        TaskJobSpec taskSpec = runSpec.getTaskJobSpec();
+        ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
+        ContainerJobTaskSpec taskSpec = runSpec.getTaskJobSpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(

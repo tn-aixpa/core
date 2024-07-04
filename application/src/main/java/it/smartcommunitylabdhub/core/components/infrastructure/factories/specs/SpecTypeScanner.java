@@ -1,11 +1,14 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.CoreApplication;
 import jakarta.annotation.PostConstruct;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -74,13 +77,40 @@ public class SpecTypeScanner {
                         }
                     }
 
-                    // String specKey = specTypeAnnotation.kind() + "_" + specTypeAnnotation.entity().name().toLowerCase();
-                    // if (!specTypeAnnotation.runtime().isEmpty()) {
-                    //     specKey = specTypeAnnotation.runtime() + "_" + specKey;
-                    // }
+                    SpecFactory<? extends Spec> factory = null;
+
+                    //specs MUST have an empty default constructor, let's check
+                    try {
+                        Constructor<? extends Spec> c = specClass.getDeclaredConstructor();
+                        c.newInstance();
+
+                        //build a default factory
+                        factory =
+                            () -> {
+                                try {
+                                    return c.newInstance();
+                                } catch (
+                                    InstantiationException
+                                    | IllegalAccessException
+                                    | IllegalArgumentException
+                                    | InvocationTargetException e
+                                ) {
+                                    throw new IllegalArgumentException("error building spec");
+                                }
+                            };
+                    } catch (
+                        NoSuchMethodException
+                        | InstantiationException
+                        | IllegalAccessException
+                        | InvocationTargetException e
+                    ) {
+                        //invalid spec
+                        //TODO check for factory annotation as fallback
+                        throw new IllegalArgumentException("missing or invalida default constructor ");
+                    }
 
                     log.debug("discovered spec for {}:{} with class {}", entity, kind, specClass.getName());
-                    specRegistry.registerSpec(type, specClass);
+                    specRegistry.registerSpec(type, specClass, factory);
                 } catch (IllegalArgumentException | ClassNotFoundException e) {
                     log.error("error registering spec {}: {}", className, e.getMessage());
                 }

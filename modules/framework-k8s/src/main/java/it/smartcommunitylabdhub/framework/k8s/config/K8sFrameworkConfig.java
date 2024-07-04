@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFrame
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
+import it.smartcommunitylabdhub.framework.k8s.listeners.K8sRunnableListener;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
@@ -65,5 +66,41 @@ public class K8sFrameworkConfig {
     @ConditionalOnKubernetes
     public K8sServeFramework k8sServeFramework(ApiClient apiClient) {
         return new K8sServeFramework(apiClient);
+    }
+
+    @Bean
+    @ConditionalOnKubernetes
+    public K8sRunnableListener<K8sJobRunnable> k8sJobRunnableListener(
+        K8sJobFramework jobFramework,
+        RunnableStore<K8sJobRunnable> store
+    ) {
+        return new K8sRunnableListener<>(jobFramework, store);
+    }
+
+    @Bean
+    @ConditionalOnKubernetes
+    public K8sRunnableListener<K8sCronJobRunnable> k8sCronJobRunnableListener(
+        K8sCronJobFramework cronJobFramework,
+        RunnableStore<K8sCronJobRunnable> store
+    ) {
+        return new K8sRunnableListener<>(cronJobFramework, store);
+    }
+
+    @Bean
+    @ConditionalOnKubernetes
+    public K8sRunnableListener<K8sDeploymentRunnable> k8sDeploymentRunnableListener(
+        K8sDeploymentFramework deploymentFramework,
+        RunnableStore<K8sDeploymentRunnable> store
+    ) {
+        return new K8sRunnableListener<>(deploymentFramework, store);
+    }
+
+    @Bean
+    @ConditionalOnKubernetes
+    public K8sRunnableListener<K8sServeRunnable> k8sServeRunnableListener(
+        K8sServeFramework serveFramework,
+        RunnableStore<K8sServeRunnable> store
+    ) {
+        return new K8sRunnableListener<>(serveFramework, store);
     }
 }

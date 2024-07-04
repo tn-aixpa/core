@@ -8,8 +8,8 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
-import it.smartcommunitylabdhub.runtime.kfp.specs.run.RunKFPSpec;
-import it.smartcommunitylabdhub.runtime.kfp.specs.task.TaskPipelineSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +39,8 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
 
     @Override
     public K8sRunnable produce(Run run) {
-        RunKFPSpec runSpec = new RunKFPSpec(run.getSpec());
-        TaskPipelineSpec taskSpec = runSpec.getTaskSpec();
+        KFPRunSpec runSpec = new KFPRunSpec(run.getSpec());
+        KFPPipelineTaskSpec taskSpec = runSpec.getTaskSpec();
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(

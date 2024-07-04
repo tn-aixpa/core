@@ -5,6 +5,8 @@ import java.io.Serializable;
 public interface RunRunnable extends Serializable {
     String getFramework();
 
+    String getTask();
+
     String getProject();
 
     String getId();

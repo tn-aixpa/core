@@ -202,7 +202,7 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
 
             return batchV1Api.readNamespacedCronJob(jobName, namespace, null);
         } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getMessage());
+            log.info("Error with k8s: {}", e.getMessage());
             if (log.isDebugEnabled()) {
                 log.debug("k8s api response: {}", e.getResponseBody());
             }

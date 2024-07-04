@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ResolvableType;
 import org.springframework.util.Assert;
 
 @Slf4j
@@ -98,5 +99,10 @@ public class RunnableStoreImpl<T extends RunRunnable> implements RunnableStore<T
         log.debug("remove runnable {} with id {}", clazz.getName(), id);
 
         runnableRepository.delete(clazz.getName(), id);
+    }
+
+    @Override
+    public ResolvableType getResolvableType() {
+        return ResolvableType.forClass(this.clazz);
     }
 }

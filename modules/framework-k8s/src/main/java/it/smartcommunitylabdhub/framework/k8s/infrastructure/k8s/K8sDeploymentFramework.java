@@ -395,7 +395,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
             return appsV1Api.readNamespacedDeployment(deploymentName, namespace, null);
         } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getResponseBody());
+            log.info("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {
                 log.debug("k8s api response: {}", e.getResponseBody());
             }

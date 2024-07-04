@@ -7,8 +7,8 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.mlrun.MlrunRuntime;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.run.RunMlrunSpec;
-import it.smartcommunitylabdhub.runtime.mlrun.specs.task.TaskMlrunJobSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.MlrunJobTaskSpec;
+import it.smartcommunitylabdhub.runtime.mlrun.specs.MlrunRunSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,8 +37,8 @@ public class MlrunJobRunner implements Runner<K8sJobRunnable> {
     @Override
     public K8sJobRunnable produce(Run run) {
         // Retrieve information about RunMlrunSpec
-        RunMlrunSpec runSpec = new RunMlrunSpec(run.getSpec());
-        TaskMlrunJobSpec taskSpec = runSpec.getJobSpec();
+        MlrunRunSpec runSpec = new MlrunRunSpec(run.getSpec());
+        MlrunJobTaskSpec taskSpec = runSpec.getJobSpec();
         if (taskSpec == null) {
             throw new CoreRuntimeException("null or empty task definition");
         }

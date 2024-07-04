@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
-import io.kubernetes.client.proto.V1.ConfigMap;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -8,20 +7,18 @@ import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.SchemaUtils;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.FactoryUtils;
 import it.smartcommunitylabdhub.core.models.schemas.SchemaImpl;
 import it.smartcommunitylabdhub.core.models.schemas.SchemaImpl.SchemaImplBuilder;
-import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.DataBinder;
 import org.springframework.validation.SmartValidator;
@@ -33,20 +30,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 @Validated
 public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
 
-    private final Map<String, SpecType> specTypes = new HashMap<>();
-
-    // A map to store spec types and their corresponding classes.
-    private final Map<String, Class<? extends Spec>> specs = new HashMap<>();
-
-    private final List<SpecFactory<? extends Spec>> factories;
-
-    private final Map<String, Schema> schemas = new HashMap<>();
-
     private SmartValidator validator;
 
-    public SpecRegistryImpl(List<SpecFactory<? extends Spec>> specFactories) {
-        this.factories = specFactories;
-    }
+    // A map to store spec types and their corresponding classes.
+    private final Map<String, SpecRegistration> registrations = new HashMap<>();
 
     @Autowired
     public void setValidator(SmartValidator validator) {
@@ -54,17 +41,17 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
     }
 
     @Override
-    public void registerSpec(SpecType type, Class<? extends Spec> spec) {
+    public void registerSpec(SpecType type, Class<? extends Spec> spec, SpecFactory<? extends Spec> factory) {
+        Assert.notNull(type, "type is required");
+        Assert.notNull(spec, "spec can not be null");
+        Assert.notNull(factory, "spec factory can not be null");
+
         String kind = type.kind();
         EntityName entity = type.entity();
 
-        if (specs.containsKey(kind)) {
+        if (registrations.containsKey(kind)) {
             throw new IllegalArgumentException("duplicated registration for " + entity + ":" + kind);
         }
-
-        log.debug("register spec for {}:{} with class {}", entity, kind, spec.getName());
-        specTypes.put(kind, type);
-        specs.put(kind, spec);
 
         log.debug("generate schema for spec {}:{} ", entity, kind);
         SchemaImplBuilder builder = SchemaImpl.builder().entity(entity).kind(kind).schema(SchemaUtils.schema(spec));
@@ -72,7 +59,9 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
             builder.runtime(type.runtime());
         }
         SchemaImpl schema = builder.build();
-        schemas.put(kind, schema);
+
+        log.debug("register spec for {}:{} with class {}", entity, kind, spec.getName());
+        registrations.put(kind, new SpecRegistration(type, spec, factory, schema));
     }
 
     /**
@@ -85,68 +74,49 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
      */
     @Override
     public <S extends Spec> S createSpec(String kind, Map<String, Serializable> data) {
-        // Retrieve the class associated with the specified spec type.
-        Class<? extends Spec> specClass = retrieveSpec(kind);
-
-        if (specClass == null) {
+        // Retrieve the registration associated with the specified spec type.
+        SpecRegistration reg = registrations.get(kind);
+        if (reg == null) {
             throw new IllegalArgumentException("missing spec");
         }
 
-        //pick a matching factory
-        //TODO refactor with specType annotation when fixed
-        SpecFactory<? extends Spec> specFactory = factories
-            .stream()
-            .filter(s -> FactoryUtils.isParamTypeMatch(s.getClass(), specClass, 0))
-            .findFirst()
-            .orElse(null);
-        if (specFactory == null) {
-            throw new IllegalArgumentException();
-        }
-
+        //create via factory
         @SuppressWarnings("unchecked")
-        S spec = (S) specFactory.create();
+        S spec = (S) reg.factory().create();
         if (data != null) {
             spec.configure(data);
         }
         return spec;
     }
 
-    private Class<? extends Spec> retrieveSpec(String kind) {
-        return specs.get(kind);
-    }
-
     @Override
     public Schema getSchema(String kind) {
-        Schema schema = retrieveSchema(kind);
-        if (schema == null) {
-            throw new IllegalArgumentException("missing schema");
+        SpecRegistration reg = registrations.get(kind);
+        if (reg == null) {
+            throw new IllegalArgumentException("missing spec");
         }
 
-        return schema;
+        return reg.schema();
     }
 
     @Override
     public Collection<Schema> listSchemas(EntityName name) {
-        return specTypes
-            .entrySet()
+        return registrations
+            .values()
             .stream()
-            .filter(e -> name == e.getValue().entity())
-            .map(e -> schemas.get(e.getKey()))
+            .filter(e -> name == e.type().entity())
+            .map(e -> e.schema())
             .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Schema> getSchemas(EntityName entity, String runtime) {
-        return specTypes
-            .entrySet()
+        return registrations
+            .values()
             .stream()
-            .filter(e -> entity == e.getValue().entity() && runtime.equals(e.getValue().runtime()))
-            .map(e -> schemas.get(e.getKey()))
+            .filter(e -> entity == e.type().entity() && runtime.equals(e.type().runtime()))
+            .map(e -> e.schema())
             .collect(Collectors.toList());
-    }
-
-    private Schema retrieveSchema(@NotNull String kind) {
-        return schemas.get(kind);
     }
 
     @Override
@@ -179,26 +149,32 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
 
     public void refresh() {
         //refresh schemas for collected specs
-        specs
-            .entrySet()
-            .forEach(e -> {
-                String kind = e.getKey();
-                Class<? extends Spec> spec = e.getValue();
-                SpecType type = specTypes.get(kind);
-                if (type != null) {
-                    EntityName entity = type.entity();
-                    log.debug("generate schema for spec {}:{} ", entity, kind);
-                    SchemaImplBuilder builder = SchemaImpl
-                        .builder()
-                        .entity(entity)
-                        .kind(kind)
-                        .schema(SchemaUtils.schema(spec));
-                    if (StringUtils.hasText(type.runtime())) {
-                        builder.runtime(type.runtime());
-                    }
-                    SchemaImpl schema = builder.build();
-                    schemas.put(kind, schema);
+        registrations.replaceAll((k, e) -> {
+            if (e.type() != null) {
+                EntityName entity = e.type().entity();
+                log.debug("generate schema for spec {}:{} ", entity, k);
+                SchemaImplBuilder builder = SchemaImpl
+                    .builder()
+                    .entity(entity)
+                    .kind(k)
+                    .schema(SchemaUtils.schema(e.spec()));
+                if (StringUtils.hasText(e.type().runtime())) {
+                    builder.runtime(e.type().runtime());
                 }
-            });
+                SchemaImpl schema = builder.build();
+
+                //rebuild reg
+                return new SpecRegistration(e.type(), e.spec(), e.factory(), schema);
+            }
+
+            return e;
+        });
     }
+
+    private record SpecRegistration(
+        SpecType type,
+        Class<? extends Spec> spec,
+        SpecFactory<? extends Spec> factory,
+        Schema schema
+    ) {}
 }
