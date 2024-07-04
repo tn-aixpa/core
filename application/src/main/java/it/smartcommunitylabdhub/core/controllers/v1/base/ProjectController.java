@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
@@ -57,6 +58,9 @@ public class ProjectController {
     @Autowired
     private AuditorAware<String> auditor;
 
+    @Autowired
+    SecurityProperties securityProperties;
+
     @Operation(summary = "List project", description = "Return a list of all projects")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
     public Page<Project> getProjects(
@@ -102,23 +106,25 @@ public class ProjectController {
         @RequestBody @Valid @NotNull Project dto,
         Authentication auth
     ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
-        //custom authorization check: only owner or with (scoped) admin role can update
-        //TODO move to bean
-        if (auth == null || auditor == null) {
-            throw new InsufficientAuthenticationException("missing valid authentication");
-        }
+        if (securityProperties.isRequired()) {
+            //custom authorization check: only owner or with (scoped) admin role can update
+            //TODO move to bean
+            if (auth == null || auditor == null) {
+                throw new InsufficientAuthenticationException("missing valid authentication");
+            }
 
-        String user = auditor
-            .getCurrentAuditor()
-            .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
+            String user = auditor
+                .getCurrentAuditor()
+                .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
 
-        Project project = projectService.getProject(id);
-        if (
-            auth.getAuthorities().stream().noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())) &&
-            auth.getAuthorities().stream().noneMatch(a -> (id + ":ROLE_ADMIN").equals(a.getAuthority())) &&
-            !user.equals(project.getUser())
-        ) {
-            throw new InsufficientAuthenticationException("current user is not authorized");
+            Project project = projectService.getProject(id);
+            if (
+                auth.getAuthorities().stream().noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())) &&
+                auth.getAuthorities().stream().noneMatch(a -> (id + ":ROLE_ADMIN").equals(a.getAuthority())) &&
+                !user.equals(project.getUser())
+            ) {
+                throw new InsufficientAuthenticationException("current user is not authorized");
+            }
         }
 
         return projectService.updateProject(id, dto);
@@ -131,28 +137,30 @@ public class ProjectController {
         @RequestParam(required = false) Boolean cascade,
         Authentication auth
     ) {
-        //custom authorization check: only owner or with (scoped) admin role can delete
-        //TODO move to bean
-        if (auth == null || auditor == null) {
-            throw new InsufficientAuthenticationException("missing valid authentication");
-        }
-
-        String user = auditor
-            .getCurrentAuditor()
-            .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
-
-        Project project = projectService.findProject(id);
-
-        if (project != null) {
-            if (
-                auth.getAuthorities().stream().noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())) &&
-                auth.getAuthorities().stream().noneMatch(a -> (id + ":ROLE_ADMIN").equals(a.getAuthority())) &&
-                !user.equals(project.getUser())
-            ) {
-                throw new InsufficientAuthenticationException("current user is not authorized");
+        if (securityProperties.isRequired()) {
+            //custom authorization check: only owner or with (scoped) admin role can delete
+            //TODO move to bean
+            if (auth == null || auditor == null) {
+                throw new InsufficientAuthenticationException("missing valid authentication");
             }
 
-            projectService.deleteProject(id, cascade);
+            String user = auditor
+                .getCurrentAuditor()
+                .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
+
+            Project project = projectService.findProject(id);
+
+            if (project != null) {
+                if (
+                    auth.getAuthorities().stream().noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())) &&
+                    auth.getAuthorities().stream().noneMatch(a -> (id + ":ROLE_ADMIN").equals(a.getAuthority())) &&
+                    !user.equals(project.getUser())
+                ) {
+                    throw new InsufficientAuthenticationException("current user is not authorized");
+                }
+            }
         }
+
+        projectService.deleteProject(id, cascade);
     }
 }

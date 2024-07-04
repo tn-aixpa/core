@@ -1,7 +1,5 @@
 package it.smartcommunitylabdhub.core.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;

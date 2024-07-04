@@ -258,7 +258,7 @@ public class ProjectServiceImpl implements SearchableProjectService {
     public void deleteProject(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete project with id {}", String.valueOf(id));
         try {
-            Project prj = findProject(id);
+            Project prj = entityService.find(id);
             if (prj != null) {
                 if (Boolean.TRUE.equals(cascade)) {
                     String project = prj.getName();
@@ -285,8 +285,6 @@ public class ProjectServiceImpl implements SearchableProjectService {
                 //delete the project
                 entityService.delete(id);
             }
-
-            entityService.delete(id);
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
