@@ -195,7 +195,7 @@ public class ModelContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Model entity = modelService.getModel(id);
+        Model entity = modelService.findModel(id);
 
         //check for project and name match
         if ((entity != null) && !entity.getProject().equals(project)) {
@@ -253,7 +253,7 @@ public class ModelContextController {
         Model entity = modelService.findModel(id);
 
         //check for project and name match
-        if (!entity.getProject().equals(project)) {
+        if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 

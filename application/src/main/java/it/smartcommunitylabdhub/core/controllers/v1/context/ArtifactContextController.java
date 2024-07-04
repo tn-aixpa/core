@@ -194,10 +194,10 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Artifact artifact = artifactService.findArtifact(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if ((artifact != null) && !artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -211,10 +211,10 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Artifact artifact = artifactService.findArtifact(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if ((artifact != null) && !artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -267,10 +267,10 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.findArtifact(id);
+        Artifact artifact = artifactService.getArtifact(id);
 
         //check for project and name match
-        if ((artifact != null) && !artifact.getProject().equals(project)) {
+        if (!artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
