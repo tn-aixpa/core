@@ -1,28 +1,9 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.Keys;
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
-import it.smartcommunitylabdhub.commons.models.base.FileInfo;
-import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.core.ApplicationKeys;
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.files.DataItemFilesService;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
-import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import java.util.List;
+
 import javax.annotation.Nullable;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,6 +24,28 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
+import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.files.DataItemFilesService;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @ApiVersion("v1")
@@ -206,7 +209,7 @@ public class DataItemContextController {
     }
 
     @Operation(summary = "Create a starting multipart upload url for a given entity, if available")
-    @GetMapping(path = "/{id}/files/multipart/start", produces = "application/json; charset=UTF-8")
+    @PostMapping(path = "/{id}/files/multipart/start", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartStartUploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
@@ -223,7 +226,7 @@ public class DataItemContextController {
     }
 
     @Operation(summary = "Create a multipart upload url for a given entity, if available")
-    @GetMapping(path = "/{id}/files/multipart/part", produces = "application/json; charset=UTF-8")
+    @PutMapping(path = "/{id}/files/multipart/part", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartPartUploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
@@ -242,7 +245,7 @@ public class DataItemContextController {
     }
 
     @Operation(summary = "Create a completing multipart upload url for a given entity, if available")
-    @GetMapping(path = "/{id}/files/multipart/complete", produces = "application/json; charset=UTF-8")
+    @PostMapping(path = "/{id}/files/multipart/complete", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartCompleteUploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
