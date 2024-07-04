@@ -935,12 +935,27 @@ public class RunManager {
             RunBaseStatus runBaseStatus = runStatus
                 .map(r -> {
                     if (toDelete) {
-                        r.setState(State.DELETING.toString());
-                        return r;
+                        //explicit delete request leads to deleted status
+                        r.setState(State.DELETED.toString());
+                    } else {
+                        //keep state as-is
+                        r.setState(curState);
                     }
+
                     return r;
                 })
-                .orElseGet(() -> new RunBaseStatus(State.DELETED.toString()));
+                .orElseGet(() -> {
+                    RunBaseStatus r = new RunBaseStatus();
+                    if (toDelete) {
+                        //explicit delete request leads to deleted status
+                        r.setState(State.DELETED.toString());
+                    } else {
+                        //keep state as-is
+                        r.setState(curState);
+                    }
+
+                    return r;
+                });
 
             RunRunnable runRunnable = event != null ? event.getRunnable() : null;
 
