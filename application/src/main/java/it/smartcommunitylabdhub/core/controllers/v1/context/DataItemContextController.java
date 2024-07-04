@@ -215,10 +215,10 @@ public class DataItemContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        DataItem entity = dataItemService.getDataItem(id);
+        DataItem entity = dataItemService.findDataItem(id);
 
         //check for project and name match
-        if (!entity.getProject().equals(project)) {
+        if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -234,10 +234,10 @@ public class DataItemContextController {
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull Integer partNumber
     ) throws NoSuchEntityException {
-        DataItem entity = dataItemService.getDataItem(id);
+        DataItem entity = dataItemService.findDataItem(id);
 
         //check for project and name match
-        if (!entity.getProject().equals(project)) {
+        if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -253,10 +253,10 @@ public class DataItemContextController {
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull List<String> partList
     ) throws NoSuchEntityException {
-        DataItem entity = dataItemService.getDataItem(id);
+        DataItem entity = dataItemService.findDataItem(id);
 
         //check for project and name match
-        if (!entity.getProject().equals(project)) {
+        if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
