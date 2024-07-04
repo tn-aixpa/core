@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.kfp.specs;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
@@ -21,6 +22,8 @@ public class KFPPipelineTaskSpec extends K8sTaskBaseSpec {
     public static final String KIND = "kfp+pipeline";
 
     private String schedule;
+
+    @Schema(format = "yaml")
     private String workflow;
 
     public KFPPipelineTaskSpec(Map<String, Serializable> data) {
