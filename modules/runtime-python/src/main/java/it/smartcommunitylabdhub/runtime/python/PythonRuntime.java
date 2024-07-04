@@ -41,15 +41,6 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
     @Autowired
     private SecretService secretService;
 
-    // @Autowired(required = false)
-    // private RunnableStore<K8sJobRunnable> jobRunnableStore;
-
-    // @Autowired(required = false)
-    // private RunnableStore<K8sServeRunnable> serveRunnableStore;
-
-    // @Autowired(required = false)
-    // private RunnableStore<K8sKanikoRunnable> buildRunnableStore;
-
     @Autowired
     private FunctionService functionService;
 
@@ -147,123 +138,6 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
         };
     }
 
-    // @Override
-    // public RunRunnable stop(Run run) throws NoSuchEntityException {
-    //     //check run kind
-    //     if (!PythonRunSpec.KIND.equals(run.getKind())) {
-    //         throw new IllegalArgumentException(
-    //             "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), PythonRunSpec.KIND)
-    //         );
-    //     }
-
-    //     PythonRunSpec runPythonSpec = new PythonRunSpec(run.getSpec());
-
-    //     // Create string run accessor from task
-    //     RunSpecAccessor runAccessor = RunUtils.parseTask(runPythonSpec.getTask());
-
-    //     try {
-    //         return switch (runAccessor.getTask()) {
-    //             case PythonJobTaskSpec.KIND -> {
-    //                 if (jobRunnableStore != null) {
-    //                     K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
-    //                     if (k8sJobRunnable == null) {
-    //                         throw new NoSuchEntityException("Run not found");
-    //                     }
-    //                     k8sJobRunnable.setState(State.STOP.name());
-    //                     yield k8sJobRunnable;
-    //                 }
-    //                 throw new CoreRuntimeException("Store is not available");
-    //             }
-    //             case PythonServeTaskSpec.KIND -> {
-    //                 if (serveRunnableStore != null) {
-    //                     K8sServeRunnable k8sServeRunnable = serveRunnableStore.find(run.getId());
-    //                     if (k8sServeRunnable == null) {
-    //                         throw new NoSuchEntityException("Run not found");
-    //                     }
-    //                     k8sServeRunnable.setState(State.STOP.name());
-    //                     yield k8sServeRunnable;
-    //                 }
-    //                 throw new CoreRuntimeException("Store is not available");
-    //             }
-    //             case PythonBuildTaskSpec.KIND -> {
-    //                 if (jobRunnableStore != null) {
-    //                     K8sKanikoRunnable k8sKanikoRunnable = buildRunnableStore.find(run.getId());
-    //                     if (k8sKanikoRunnable == null) {
-    //                         throw new NoSuchEntityException("JobDeployment not found");
-    //                     }
-    //                     k8sKanikoRunnable.setState(State.STOP.name());
-    //                     yield k8sKanikoRunnable;
-    //                 }
-    //                 throw new CoreRuntimeException("Build Store is not available");
-    //             }
-    //             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
-    //         };
-    //     } catch (StoreException e) {
-    //         log.error("Error stopping run", e);
-    //         throw new NoSuchEntityException("Error stopping run", e);
-    //     }
-    // }
-
-    // @Override
-    // public RunRunnable delete(Run run) throws NoSuchEntityException {
-    //     //check run kind
-    //     if (!PythonRunSpec.KIND.equals(run.getKind())) {
-    //         throw new IllegalArgumentException(
-    //             "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), PythonRunSpec.KIND)
-    //         );
-    //     }
-
-    //     PythonRunSpec runPythonSpec = new PythonRunSpec(run.getSpec());
-
-    //     // Create string run accessor from task
-    //     RunSpecAccessor runAccessor = RunUtils.parseTask(runPythonSpec.getTask());
-
-    //     try {
-    //         return switch (runAccessor.getTask()) {
-    //             case PythonJobTaskSpec.KIND -> {
-    //                 if (jobRunnableStore != null) {
-    //                     K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
-    //                     if (k8sJobRunnable == null) {
-    //                         //not in store, either not existent or already removed, nothing to do
-    //                         yield null;
-    //                     }
-    //                     k8sJobRunnable.setState(State.DELETING.name());
-    //                     yield k8sJobRunnable;
-    //                 }
-    //                 throw new CoreRuntimeException("Job Store is not available");
-    //             }
-    //             case PythonBuildTaskSpec.KIND -> {
-    //                 if (jobRunnableStore != null) {
-    //                     K8sKanikoRunnable k8sKanikoRunnable = buildRunnableStore.find(run.getId());
-    //                     if (k8sKanikoRunnable == null) {
-    //                         //not in store, either not existent or already removed, nothing to do
-    //                         yield null;
-    //                     }
-    //                     k8sKanikoRunnable.setState(State.DELETING.name());
-    //                     yield k8sKanikoRunnable;
-    //                 }
-    //                 throw new CoreRuntimeException("Build Store is not available");
-    //             }
-    //             case PythonServeTaskSpec.KIND -> {
-    //                 if (jobRunnableStore != null) {
-    //                     K8sServeRunnable k8sServeRunnable = serveRunnableStore.find(run.getId());
-    //                     if (k8sServeRunnable == null) {
-    //                         //not in store, either not existent or already removed, nothing to do
-    //                         yield null;
-    //                     }
-    //                     k8sServeRunnable.setState(State.DELETING.name());
-    //                     yield k8sServeRunnable;
-    //                 }
-    //                 throw new CoreRuntimeException("Job Store is not available");
-    //             }
-    //             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
-    //         };
-    //     } catch (StoreException e) {
-    //         log.error("Error deleting run", e);
-    //         throw new NoSuchEntityException("Error deleting run", e);
-    //     }
-    // }
-
     @Override
     public PythonRunStatus onComplete(Run run, RunRunnable runnable) {
         PythonRunSpec pythonRunSpec = new PythonRunSpec(run.getSpec());
@@ -288,31 +162,4 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
 
         return null;
     }
-    // @Override
-    // public PythonRunStatus onDeleted(Run run, RunRunnable runnable) {
-    //     if (runnable != null) {
-    //         try {
-    //             RunnableStore<?> store =
-    //                 switch (runnable.getFramework()) {
-    //                     case K8sJobFramework.FRAMEWORK -> {
-    //                         yield jobRunnableStore;
-    //                     }
-    //                     case K8sServeFramework.FRAMEWORK -> {
-    //                         yield serveRunnableStore;
-    //                     }
-    //                     default -> {
-    //                         yield null;
-    //                     }
-    //                 };
-
-    //             if (store != null && store.find(runnable.getId()) != null) {
-    //                 store.remove(runnable.getId());
-    //             }
-    //         } catch (StoreException e) {
-    //             log.error("Error deleting runnable", e);
-    //             throw new NoSuchEntityException("Error deleting runnable", e);
-    //         }
-    //     }
-    //     return null;
-    // }
 }

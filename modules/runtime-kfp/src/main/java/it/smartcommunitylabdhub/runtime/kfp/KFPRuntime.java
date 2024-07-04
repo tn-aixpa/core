@@ -35,9 +35,6 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
     @Value("${runtime.kfp.image}")
     private String image;
 
-    // @Autowired(required = false)
-    // private RunnableStore<K8sJobRunnable> jobRunnableStore;
-
     public KFPRuntime() {
         super(KFPRunSpec.KIND);
     }
@@ -102,76 +99,4 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }
-    // @Override
-    // public K8sJobRunnable stop(Run run) {
-    //     //check run kind
-    //     if (!KFPRunSpec.KIND.equals(run.getKind())) {
-    //         throw new IllegalArgumentException(
-    //             "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), KFPRunSpec.KIND)
-    //         );
-    //     }
-
-    //     if (jobRunnableStore == null) {
-    //         throw new CoreRuntimeException("Job Store is not available");
-    //     }
-
-    //     try {
-    //         K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
-    //         if (k8sJobRunnable == null) {
-    //             throw new NoSuchEntityException("JobRunnable not found");
-    //         }
-
-    //         //set state to STOP to signal framework to stop the runnable
-    //         k8sJobRunnable.setState(State.STOP.name());
-
-    //         return k8sJobRunnable;
-    //     } catch (StoreException e) {
-    //         log.error("Error stopping run", e);
-    //         throw new NoSuchEntityException("Error stopping run", e);
-    //     }
-    // }
-
-    // @Override
-    // public K8sJobRunnable delete(Run run) {
-    //     //check run kind
-    //     if (!KFPRunSpec.KIND.equals(run.getKind())) {
-    //         throw new IllegalArgumentException(
-    //             "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), KFPRunSpec.KIND)
-    //         );
-    //     }
-
-    //     if (jobRunnableStore == null) {
-    //         throw new CoreRuntimeException("Job Store is not available");
-    //     }
-    //     try {
-    //         K8sJobRunnable k8sJobRunnable = jobRunnableStore.find(run.getId());
-    //         if (k8sJobRunnable == null) {
-    //             throw new NoSuchEntityException("JobRunnable not found");
-    //         }
-
-    //         //set state to DELETING to signal framework to delete the runnable
-    //         k8sJobRunnable.setState(State.DELETING.name());
-
-    //         return k8sJobRunnable;
-    //     } catch (StoreException e) {
-    //         log.error("Error stopping run", e);
-    //         throw new NoSuchEntityException("Error stopping run", e);
-    //     }
-    // }
-
-    // @Override
-    // public KfpRunStatus onDeleted(Run run, RunRunnable runnable) {
-    //     if (runnable != null) {
-    //         try {
-    //             if (jobRunnableStore != null && jobRunnableStore.find(runnable.getId()) != null) {
-    //                 jobRunnableStore.remove(runnable.getId());
-    //             }
-    //         } catch (StoreException e) {
-    //             log.error("Error deleting runnable", e);
-    //             throw new NoSuchEntityException("Error deleting runnable", e);
-    //         }
-    //     }
-
-    //     return null;
-    // }
 }
