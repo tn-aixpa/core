@@ -192,7 +192,7 @@ public class DataItemContextController {
     }
 
     @Operation(summary = "Create an upload url for a given entity, if available")
-    @GetMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
+    @PostMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
     public UploadInfo uploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
