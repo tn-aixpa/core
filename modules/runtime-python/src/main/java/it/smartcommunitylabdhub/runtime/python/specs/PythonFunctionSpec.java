@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
+import it.smartcommunitylabdhub.runtime.python.model.PythonSourceCode;
 import it.smartcommunitylabdhub.runtime.python.model.PythonVersion;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -25,7 +25,7 @@ public class PythonFunctionSpec extends FunctionBaseSpec {
     @JsonProperty("source")
     @NotNull
     @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description", defaultValue = "python")
-    private SourceCode<PythonSourceCodeLanguages> source;
+    private PythonSourceCode source;
 
     @JsonProperty("image")
     @Schema(title = "fields.container.image.title", description = "fields.container.image.description")
@@ -57,9 +57,5 @@ public class PythonFunctionSpec extends FunctionBaseSpec {
         this.baseImage = spec.getBaseImage();
         this.pythonVersion = spec.getPythonVersion();
         this.requirements = spec.getRequirements();
-    }
-
-    public enum PythonSourceCodeLanguages {
-        python,
     }
 }

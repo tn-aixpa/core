@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -15,8 +14,8 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import it.smartcommunitylabdhub.runtime.python.model.NuclioFunctionBuilder;
 import it.smartcommunitylabdhub.runtime.python.model.NuclioFunctionSpec;
+import it.smartcommunitylabdhub.runtime.python.model.PythonSourceCode;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonFunctionSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.PythonFunctionSpec.PythonSourceCodeLanguages;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonJobTaskSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonRunSpec;
 import java.io.Serializable;
@@ -89,12 +88,12 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
             ContextSource fn = ContextSource
                 .builder()
                 .name("function.yaml")
-                .base64(Base64.getUrlEncoder().encodeToString(nuclioFunction.getBytes(StandardCharsets.UTF_8)))
+                .base64(Base64.getEncoder().encodeToString(nuclioFunction.getBytes(StandardCharsets.UTF_8)))
                 .build();
             contextSources.add(fn);
 
             if (functionSpec.getSource() != null) {
-                SourceCode<PythonSourceCodeLanguages> source = functionSpec.getSource();
+                PythonSourceCode source = functionSpec.getSource();
                 String path = "main.py";
 
                 if (StringUtils.hasText(source.getSource())) {
