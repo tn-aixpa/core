@@ -31,9 +31,7 @@ import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.CompleteMultipartUploadPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedCompleteMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedUploadPartRequest;
@@ -372,17 +370,17 @@ public class S3FilesStore implements FilesStore {
                 .uploadId(uploadId)
                 .multipartUpload(mp)
                 .build();
-            CompleteMultipartUploadPresignRequest preq = CompleteMultipartUploadPresignRequest
-                .builder()
-                .signatureDuration(Duration.ofSeconds(urlDuration))
-                .completeMultipartUploadRequest(req)
-                .build();
-            PresignedCompleteMultipartUploadRequest presignedRequest = presigner.presignCompleteMultipartUpload(preq);
+            client.completeMultipartUpload(req);
+            //            CompleteMultipartUploadPresignRequest preq = CompleteMultipartUploadPresignRequest
+            //                .builder()
+            //                .signatureDuration(Duration.ofSeconds(urlDuration))
+            //                .completeMultipartUploadRequest(req)
+            //                .build();
+            //            PresignedCompleteMultipartUploadRequest presignedRequest = presigner.presignCompleteMultipartUpload(preq);
 
             UploadInfo info = new UploadInfo();
             info.setPath(path);
-            info.setUrl(presignedRequest.url().toExternalForm());
-            info.setExpiration(presignedRequest.expiration());
+            info.setUploadId(uploadId);
             return info;
         } catch (SdkException e) {
             log.error("error with s3 for {}: {}", path, e.getMessage());

@@ -189,16 +189,16 @@ public class ModelContextController {
     }
 
     @Operation(summary = "Create an upload url for a given entity, if available")
-    @GetMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
+    @PostMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
     public UploadInfo uploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Model entity = modelService.getModel(id);
+        Model entity = modelService.findModel(id);
 
         //check for project and name match
-        if (!entity.getProject().equals(project)) {
+        if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -206,16 +206,16 @@ public class ModelContextController {
     }
 
     @Operation(summary = "Create a starting multipart upload url for a given entity, if available")
-    @GetMapping(path = "/{id}/files/multipart/start", produces = "application/json; charset=UTF-8")
+    @PostMapping(path = "/{id}/files/multipart/start", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartStartUploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Model entity = modelService.getModel(id);
+        Model entity = modelService.findModel(id);
 
         //check for project and name match
-        if (!entity.getProject().equals(project)) {
+        if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -223,7 +223,7 @@ public class ModelContextController {
     }
 
     @Operation(summary = "Create a multipart upload url for a given entity, if available")
-    @GetMapping(path = "/{id}/files/multipart/part", produces = "application/json; charset=UTF-8")
+    @PutMapping(path = "/{id}/files/multipart/part", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartPartUploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
@@ -231,10 +231,10 @@ public class ModelContextController {
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull Integer partNumber
     ) throws NoSuchEntityException {
-        Model entity = modelService.getModel(id);
+        Model entity = modelService.findModel(id);
 
         //check for project and name match
-        if (!entity.getProject().equals(project)) {
+        if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -242,7 +242,7 @@ public class ModelContextController {
     }
 
     @Operation(summary = "Create a completing multipart upload url for a given entity, if available")
-    @GetMapping(path = "/{id}/files/multipart/complete", produces = "application/json; charset=UTF-8")
+    @PostMapping(path = "/{id}/files/multipart/complete", produces = "application/json; charset=UTF-8")
     public UploadInfo multipartCompleteUploadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
@@ -250,10 +250,10 @@ public class ModelContextController {
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull List<String> partList
     ) throws NoSuchEntityException {
-        Model entity = modelService.getModel(id);
+        Model entity = modelService.findModel(id);
 
         //check for project and name match
-        if (!entity.getProject().equals(project)) {
+        if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 

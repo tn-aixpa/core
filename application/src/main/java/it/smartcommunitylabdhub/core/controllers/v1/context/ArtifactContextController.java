@@ -191,10 +191,10 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Artifact artifact = artifactService.findArtifact(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if ((artifact != null) && !artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -208,10 +208,10 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Artifact artifact = artifactService.findArtifact(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if ((artifact != null) && !artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -229,10 +229,10 @@ public class ArtifactContextController {
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull Integer partNumber
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Artifact artifact = artifactService.findArtifact(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if ((artifact != null) && !artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -248,10 +248,10 @@ public class ArtifactContextController {
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull List<String> partList
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Artifact artifact = artifactService.findArtifact(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if ((artifact != null) && !artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
