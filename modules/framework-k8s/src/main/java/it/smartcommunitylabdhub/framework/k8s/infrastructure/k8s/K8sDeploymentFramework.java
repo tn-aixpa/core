@@ -113,7 +113,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                                                 ContextSource::getName,
                                                 c ->
                                                     new String(
-                                                        Base64.getUrlDecoder().decode(c.getBase64()),
+                                                        Base64.getDecoder().decode(c.getBase64()),
                                                         StandardCharsets.UTF_8
                                                     )
                                             )

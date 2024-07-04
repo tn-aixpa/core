@@ -126,7 +126,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                                                 ContextSource::getName,
                                                 c ->
                                                     new String(
-                                                        Base64.getUrlDecoder().decode(c.getBase64()),
+                                                        Base64.getDecoder().decode(c.getBase64()),
                                                         StandardCharsets.UTF_8
                                                     )
                                             )

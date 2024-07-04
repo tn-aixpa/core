@@ -99,7 +99,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                                                 ContextSource::getName,
                                                 c ->
                                                     new String(
-                                                        Base64.getUrlDecoder().decode(c.getBase64()),
+                                                        Base64.getDecoder().decode(c.getBase64()),
                                                         StandardCharsets.UTF_8
                                                     )
                                             )
