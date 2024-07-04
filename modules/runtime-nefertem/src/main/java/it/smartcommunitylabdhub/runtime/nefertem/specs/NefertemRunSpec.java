@@ -1,15 +1,10 @@
-package it.smartcommunitylabdhub.runtime.nefertem.specs.run;
+package it.smartcommunitylabdhub.runtime.nefertem.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
-import it.smartcommunitylabdhub.runtime.nefertem.specs.function.FunctionNefertemSpec;
-import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskInferSpec;
-import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskMetricSpec;
-import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskProfileSpec;
-import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskValidateSpec;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +15,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = NefertemRuntime.RUNTIME, kind = RunNefertemSpec.KIND, entity = EntityName.RUN)
-public class RunNefertemSpec extends RunBaseSpec {
+@SpecType(runtime = NefertemRuntime.RUNTIME, kind = NefertemRunSpec.KIND, entity = EntityName.RUN)
+public class NefertemRunSpec extends RunBaseSpec {
 
     public static final String KIND = NefertemRuntime.RUNTIME + "+run";
 
@@ -31,27 +26,22 @@ public class RunNefertemSpec extends RunBaseSpec {
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
-    // @JsonProperty("infer_spec")
     @JsonUnwrapped
-    private TaskInferSpec taskInferSpec;
+    private NefertemInferTaskSpec taskInferSpec;
 
-    // @JsonProperty("metric_spec")
     @JsonUnwrapped
-    private TaskMetricSpec taskMetricSpec;
+    private NefertemMetricTaskSpec taskMetricSpec;
 
-    // @JsonProperty("profile_spec")
     @JsonUnwrapped
-    private TaskProfileSpec taskProfileSpec;
+    private NefertemProfileTaskSpec taskProfileSpec;
 
-    // @JsonProperty("validate_spec")
     @JsonUnwrapped
-    private TaskValidateSpec taskValidateSpec;
+    private NefertemValidateTaskSpec taskValidateSpec;
 
-    // @JsonProperty("function_spec")
     @JsonUnwrapped
-    private FunctionNefertemSpec funcSpec;
+    private NefertemFunctionSpec functionSpec;
 
-    public RunNefertemSpec(Map<String, Serializable> data) {
+    public NefertemRunSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -59,7 +49,7 @@ public class RunNefertemSpec extends RunBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        RunNefertemSpec spec = mapper.convertValue(data, RunNefertemSpec.class);
+        NefertemRunSpec spec = mapper.convertValue(data, NefertemRunSpec.class);
         this.inputs = spec.getInputs();
         this.outputs = spec.getOutputs();
         this.parameters = spec.getParameters();
@@ -68,26 +58,26 @@ public class RunNefertemSpec extends RunBaseSpec {
         this.taskMetricSpec = spec.getTaskMetricSpec();
         this.taskProfileSpec = spec.getTaskProfileSpec();
         this.taskValidateSpec = spec.getTaskValidateSpec();
-        this.funcSpec = spec.getFuncSpec();
+        this.functionSpec = spec.getFunctionSpec();
     }
 
-    public void setTaskInferSpec(TaskInferSpec taskInferSpec) {
+    public void setTaskInferSpec(NefertemInferTaskSpec taskInferSpec) {
         this.taskInferSpec = taskInferSpec;
     }
 
-    public void setTaskMetricSpec(TaskMetricSpec taskMetricSpec) {
+    public void setTaskMetricSpec(NefertemMetricTaskSpec taskMetricSpec) {
         this.taskMetricSpec = taskMetricSpec;
     }
 
-    public void setTaskProfileSpec(TaskProfileSpec taskProfileSpec) {
+    public void setTaskProfileSpec(NefertemProfileTaskSpec taskProfileSpec) {
         this.taskProfileSpec = taskProfileSpec;
     }
 
-    public void setTaskValidateSpec(TaskValidateSpec taskValidateSpec) {
+    public void setTaskValidateSpec(NefertemValidateTaskSpec taskValidateSpec) {
         this.taskValidateSpec = taskValidateSpec;
     }
 
-    public void setFuncSpec(FunctionNefertemSpec funcSpec) {
-        this.funcSpec = funcSpec;
+    public void setFunctionSpec(NefertemFunctionSpec funcSpec) {
+        this.functionSpec = funcSpec;
     }
 }

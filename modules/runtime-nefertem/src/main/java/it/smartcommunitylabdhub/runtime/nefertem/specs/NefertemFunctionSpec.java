@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.nefertem.specs.function;
+package it.smartcommunitylabdhub.runtime.nefertem.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
@@ -16,7 +16,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @SpecType(runtime = NefertemRuntime.RUNTIME, kind = NefertemRuntime.RUNTIME, entity = EntityName.FUNCTION)
-public class FunctionNefertemSpec extends FunctionBaseSpec {
+public class NefertemFunctionSpec extends FunctionBaseSpec {
 
     private List<Map<String, Serializable>> constraints;
     private List<Map<String, Serializable>> metrics;
@@ -24,7 +24,7 @@ public class FunctionNefertemSpec extends FunctionBaseSpec {
     @JsonProperty("error_report")
     private String errorReport;
 
-    public FunctionNefertemSpec(Map<String, Serializable> data) {
+    public NefertemFunctionSpec(Map<String, Serializable> data) {
         configure(data);
     }
 
@@ -32,7 +32,7 @@ public class FunctionNefertemSpec extends FunctionBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        FunctionNefertemSpec spec = mapper.convertValue(data, FunctionNefertemSpec.class);
+        NefertemFunctionSpec spec = mapper.convertValue(data, NefertemFunctionSpec.class);
 
         this.constraints = spec.getConstraints();
         this.metrics = spec.getMetrics();

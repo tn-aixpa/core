@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.nefertem.specs.task;
+package it.smartcommunitylabdhub.runtime.nefertem.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -12,12 +12,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = NefertemRuntime.RUNTIME, kind = TaskMetricSpec.KIND, entity = EntityName.TASK)
-public class TaskMetricSpec extends TaskNefertemBaseSpec {
+@SpecType(runtime = NefertemRuntime.RUNTIME, kind = NefertemValidateTaskSpec.KIND, entity = EntityName.TASK)
+public class NefertemValidateTaskSpec extends NefertemBaseTaskSpec {
 
-    public static final String KIND = "nefertem+metric";
+    public static final String KIND = "nefertem+validate";
 
-    public TaskMetricSpec(Map<String, Serializable> data) {
+    public NefertemValidateTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
 

@@ -7,8 +7,8 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
-import it.smartcommunitylabdhub.runtime.nefertem.specs.run.RunNefertemSpec;
-import it.smartcommunitylabdhub.runtime.nefertem.specs.task.TaskMetricSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.specs.NefertemMetricTaskSpec;
+import it.smartcommunitylabdhub.runtime.nefertem.specs.NefertemRunSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +38,8 @@ public class NefertemMetricRunner implements Runner<K8sJobRunnable> {
     @Override
     public K8sJobRunnable produce(Run run) {
         // Retrieve information about Spec
-        RunNefertemSpec runSpec = new RunNefertemSpec(run.getSpec());
-        TaskMetricSpec taskSpec = runSpec.getTaskMetricSpec();
+        NefertemRunSpec runSpec = new NefertemRunSpec(run.getSpec());
+        NefertemMetricTaskSpec taskSpec = runSpec.getTaskMetricSpec();
         if (taskSpec == null) {
             throw new CoreRuntimeException("null or empty task definition");
         }
