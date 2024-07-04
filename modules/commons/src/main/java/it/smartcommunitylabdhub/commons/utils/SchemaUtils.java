@@ -79,7 +79,23 @@ public final class SchemaUtils {
         configBuilder
             .forFields()
             .withTitleResolver(titleFromNameResolver)
-            .withDescriptionResolver(descriptionFromNameResolver);
+            .withDescriptionResolver(descriptionFromNameResolver)
+            .withDefaultResolver(field -> {
+                //set default for enums with single value
+                if (Enum.class.isAssignableFrom(field.getType().getErasedType())) {
+                    try {
+                        @SuppressWarnings({ "rawtypes", "unchecked" })
+                        Enum[] ee = ((Class<Enum>) field.getType().getErasedType()).getEnumConstants();
+                        if (ee.length == 1) {
+                            return ee[0];
+                        }
+                    } catch (ClassCastException e) {
+                        //not really an enum?
+                    }
+                }
+
+                return null;
+            });
 
         configBuilder
             .forTypesInGeneral()
