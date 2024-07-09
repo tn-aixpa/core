@@ -110,7 +110,11 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                                         .stream()
                                         .collect(
                                             Collectors.toMap(
-                                                    c -> Base64.getUrlEncoder().withoutPadding().encodeToString(c.getName().getBytes()),
+                                                c ->
+                                                    Base64
+                                                        .getUrlEncoder()
+                                                        .withoutPadding()
+                                                        .encodeToString(c.getName().getBytes()),
                                                 c ->
                                                     new String(
                                                         Base64.getDecoder().decode(c.getBase64()),
@@ -120,12 +124,25 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                                         )
                                 )
                                 .orElseGet(Map::of),
-                                contextSourcesOpt
-                                        .map(contextSources -> Map.of("context-sources-map.txt",
-                                                contextSources.stream()
-                                                        .map(c -> Base64.getUrlEncoder().withoutPadding().encodeToString(c.getName().getBytes()) + "," + c.getName() + "\n")
-                                                        .collect(Collectors.joining(""))
-                                        )).orElseGet(Map::of)
+                            contextSourcesOpt
+                                .map(contextSources ->
+                                    Map.of(
+                                        "context-sources-map.txt",
+                                        contextSources
+                                            .stream()
+                                            .map(c ->
+                                                Base64
+                                                    .getUrlEncoder()
+                                                    .withoutPadding()
+                                                    .encodeToString(c.getName().getBytes()) +
+                                                "," +
+                                                c.getName() +
+                                                "\n"
+                                            )
+                                            .collect(Collectors.joining(""))
+                                    )
+                                )
+                                .orElseGet(Map::of)
                         )
                     );
 

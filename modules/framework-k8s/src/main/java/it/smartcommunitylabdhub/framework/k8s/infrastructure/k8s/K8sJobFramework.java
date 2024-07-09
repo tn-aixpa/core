@@ -123,7 +123,11 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                                         .stream()
                                         .collect(
                                             Collectors.toMap(
-                                                c -> Base64.getUrlEncoder().withoutPadding().encodeToString(c.getName().getBytes()),
+                                                c ->
+                                                    Base64
+                                                        .getUrlEncoder()
+                                                        .withoutPadding()
+                                                        .encodeToString(c.getName().getBytes()),
                                                 c ->
                                                     new String(
                                                         Base64.getDecoder().decode(c.getBase64()),
@@ -134,11 +138,24 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                                 )
                                 .orElseGet(Map::of),
                             contextSourcesOpt
-                                    .map(contextSources -> Map.of("context-sources-map.txt",
-                                            contextSources.stream()
-                                                .map(c -> Base64.getUrlEncoder().withoutPadding().encodeToString(c.getName().getBytes()) + "," + c.getName() + "\n")
-                                                .collect(Collectors.joining(""))
-                                )).orElseGet(Map::of)
+                                .map(contextSources ->
+                                    Map.of(
+                                        "context-sources-map.txt",
+                                        contextSources
+                                            .stream()
+                                            .map(c ->
+                                                Base64
+                                                    .getUrlEncoder()
+                                                    .withoutPadding()
+                                                    .encodeToString(c.getName().getBytes()) +
+                                                "," +
+                                                c.getName() +
+                                                "\n"
+                                            )
+                                            .collect(Collectors.joining(""))
+                                    )
+                                )
+                                .orElseGet(Map::of)
                         )
                     );
 

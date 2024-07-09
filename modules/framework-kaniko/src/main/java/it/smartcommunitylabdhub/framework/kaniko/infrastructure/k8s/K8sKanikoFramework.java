@@ -28,7 +28,6 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreItems;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import jakarta.validation.constraints.NotNull;
-
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
@@ -52,9 +50,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     public static final String FRAMEWORK = "k8sbuild";
     public static final int DEADLINE_SECONDS = 3600 * 24 * 3; //3 days
     private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
-            HashMap<String, Serializable>
-            >() {
-    };
+        HashMap<String, Serializable>
+    >() {};
 
     private final BatchV1Api batchV1Api;
 
@@ -105,49 +102,67 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
             Optional<List<ContextSource>> contextSourcesOpt = Optional.ofNullable(runnable.getContextSources());
             V1ConfigMap configMap = new V1ConfigMap()
-                    .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()).labels(buildLabels(runnable)))
-                    .data(
-                            MapUtils.mergeMultipleMaps(
-                                    //dockerfile
-                                    Map.of("Dockerfile", runnable.getDockerFile()),
-                                    // Generate context-refs.txt if exist
-                                    contextRefsOpt
-                                            .map(contextRefsList ->
-                                                    Map.of(
-                                                            "context-refs.txt",
-                                                            contextRefsList
-                                                                    .stream()
-                                                                    .map(v ->
-                                                                            v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n"
-                                                                    )
-                                                                    .collect(Collectors.joining(""))
-                                                    )
-                                            )
-                                            .orElseGet(Map::of),
-                                    // Generate context-sources.txt if exist
-                                    contextSourcesOpt
-                                            .map(contextSources ->
-                                                    contextSources
-                                                            .stream()
-                                                            .collect(
-                                                                    Collectors.toMap(
-                                                                            c -> Base64.getUrlEncoder().withoutPadding().encodeToString(c.getName().getBytes()),
-                                                                            c -> new String(
-                                                                                    Base64.getDecoder().decode(c.getBase64()),
-                                                                                    StandardCharsets.UTF_8
-                                                                            )
-                                                                    )
-                                                            )
-                                            )
-                                            .orElseGet(Map::of),
-                                    contextSourcesOpt
-                                            .map(contextSources -> Map.of("context-sources-map.txt",
-                                                    contextSources.stream()
-                                                            .map(c -> Base64.getUrlEncoder().withoutPadding().encodeToString(c.getName().getBytes()) + "," + c.getName() + "\n")
-                                                            .collect(Collectors.joining(""))
-                                            )).orElseGet(Map::of)
+                .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()).labels(buildLabels(runnable)))
+                .data(
+                    MapUtils.mergeMultipleMaps(
+                        //dockerfile
+                        Map.of("Dockerfile", runnable.getDockerFile()),
+                        // Generate context-refs.txt if exist
+                        contextRefsOpt
+                            .map(contextRefsList ->
+                                Map.of(
+                                    "context-refs.txt",
+                                    contextRefsList
+                                        .stream()
+                                        .map(v ->
+                                            v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n"
+                                        )
+                                        .collect(Collectors.joining(""))
+                                )
                             )
-                    );
+                            .orElseGet(Map::of),
+                        // Generate context-sources.txt if exist
+                        contextSourcesOpt
+                            .map(contextSources ->
+                                contextSources
+                                    .stream()
+                                    .collect(
+                                        Collectors.toMap(
+                                            c ->
+                                                Base64
+                                                    .getUrlEncoder()
+                                                    .withoutPadding()
+                                                    .encodeToString(c.getName().getBytes()),
+                                            c ->
+                                                new String(
+                                                    Base64.getDecoder().decode(c.getBase64()),
+                                                    StandardCharsets.UTF_8
+                                                )
+                                        )
+                                    )
+                            )
+                            .orElseGet(Map::of),
+                        contextSourcesOpt
+                            .map(contextSources ->
+                                Map.of(
+                                    "context-sources-map.txt",
+                                    contextSources
+                                        .stream()
+                                        .map(c ->
+                                            Base64
+                                                .getUrlEncoder()
+                                                .withoutPadding()
+                                                .encodeToString(c.getName().getBytes()) +
+                                            "," +
+                                            c.getName() +
+                                            "\n"
+                                        )
+                                        .collect(Collectors.joining(""))
+                                )
+                            )
+                            .orElseGet(Map::of)
+                    )
+                );
 
             coreV1Api.createNamespacedConfigMap(namespace, configMap, null, null, null, null);
         } catch (ApiException | NullPointerException e) {
@@ -238,17 +253,17 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Generate jobName and ContainerName
         String jobName = k8sBuilderHelper.getJobName(runnable.getRuntime(), runnable.getTask(), runnable.getId());
         String containerName = k8sBuilderHelper.getContainerName(
-                runnable.getRuntime(),
-                runnable.getTask(),
-                runnable.getId()
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
         );
 
         log.debug("build k8s job for {}", jobName);
 
         //build destination image name and set to runnable
         String prefix =
-                (StringUtils.hasText(imageRegistry) ? imageRegistry + "/" : "") +
-                        (StringUtils.hasText(imagePrefix) ? imagePrefix + "-" : "");
+            (StringUtils.hasText(imageRegistry) ? imageRegistry + "/" : "") +
+            (StringUtils.hasText(imagePrefix) ? imagePrefix + "-" : "");
         // workaround: update image name only first time
         String imageName = runnable.getImage();
         if (StringUtils.hasText(prefix) && !runnable.getImage().startsWith(prefix)) {
@@ -264,10 +279,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Create sharedVolume
         CoreVolume sharedVolume = new CoreVolume(
-                CoreVolume.VolumeType.empty_dir,
-                "/shared",
-                "shared-dir",
-                Map.of("sizeLimit", "100Mi")
+            CoreVolume.VolumeType.empty_dir,
+            "/shared",
+            "shared-dir",
+            Map.of("sizeLimit", "100Mi")
         );
 
         List<CoreVolume> coreVolumes = new ArrayList<>();
@@ -279,20 +294,20 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Create config map volume
         CoreVolume configMapVolume = new CoreVolume(
-                CoreVolume.VolumeType.config_map,
-                "/init-config-map",
-                "init-config-map",
-                Map.of("name", "init-config-map-" + runnable.getId())
+            CoreVolume.VolumeType.config_map,
+            "/init-config-map",
+            "init-config-map",
+            Map.of("name", "init-config-map-" + runnable.getId())
         );
         coreVolumes.add(configMapVolume);
 
         // Add secret for kaniko
         if (StringUtils.hasText(kanikoSecret)) {
             CoreVolume secretVolume = new CoreVolume(
-                    CoreVolume.VolumeType.secret,
-                    "/kaniko/.docker",
-                    kanikoSecret,
-                    Map.of("items", CoreItems.builder().keyToPath(Map.of(".dockerconfigjson", "config.json")).build())
+                CoreVolume.VolumeType.secret,
+                "/kaniko/.docker",
+                kanikoSecret,
+                Map.of("items", CoreItems.builder().keyToPath(Map.of(".dockerconfigjson", "config.json")).build())
             );
             if (runnableVolumesOpt.stream().noneMatch(v -> kanikoSecret.equals(v.getName()))) {
                 coreVolumes.add(secretVolume);
@@ -300,11 +315,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         }
         //Add all volumes
         Optional
-                .ofNullable(runnable.getVolumes())
-                .ifPresentOrElse(coreVolumes::addAll, () -> runnable.setVolumes(coreVolumes));
+            .ofNullable(runnable.getVolumes())
+            .ifPresentOrElse(coreVolumes::addAll, () -> runnable.setVolumes(coreVolumes));
 
         List<String> kanikoArgsAll = new ArrayList<>(
-                List.of("--dockerfile=/init-config-map/Dockerfile", "--context=/shared", "--destination=" + imageName)
+            List.of("--dockerfile=/init-config-map/Dockerfile", "--context=/shared", "--destination=" + imageName)
         );
         // Add Kaniko args
         kanikoArgsAll.addAll(kanikoArgs);
@@ -322,24 +337,24 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Build Container
         V1Container container = new V1Container()
-                .name(containerName)
-                .image(kanikoImage)
-                .imagePullPolicy("Always")
-                .imagePullPolicy("IfNotPresent")
-                .args(kanikoArgsAll)
-                .resources(resources)
-                .volumeMounts(volumeMounts)
-                .envFrom(envFrom)
-                .env(env);
+            .name(containerName)
+            .image(kanikoImage)
+            .imagePullPolicy("Always")
+            .imagePullPolicy("IfNotPresent")
+            .args(kanikoArgsAll)
+            .resources(resources)
+            .volumeMounts(volumeMounts)
+            .envFrom(envFrom)
+            .env(env);
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()
-                .containers(Collections.singletonList(container))
-                .nodeSelector(buildNodeSelector(runnable))
-                .affinity(runnable.getAffinity())
-                .tolerations(buildTolerations(runnable))
-                .volumes(volumes)
-                .restartPolicy("Never");
+            .containers(Collections.singletonList(container))
+            .nodeSelector(buildNodeSelector(runnable))
+            .affinity(runnable.getAffinity())
+            .tolerations(buildTolerations(runnable))
+            .volumes(volumes)
+            .restartPolicy("Never");
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
@@ -347,14 +362,14 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Add Init container to the PodTemplateSpec
         // Build the Init Container
         V1Container initContainer = new V1Container()
-                .name("init-container-" + runnable.getId())
-                .image(initImage)
-                .volumeMounts(volumeMounts)
-                .resources(resources)
-                .env(env)
-                .envFrom(envFrom)
-                //TODO below execute a command that is a Go script
-                .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
+            .name("init-container-" + runnable.getId())
+            .image(initImage)
+            .volumeMounts(volumeMounts)
+            .resources(resources)
+            .env(env)
+            .envFrom(envFrom)
+            //TODO below execute a command that is a Go script
+            .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
 
         // Set initContainer as first container in the PodSpec
         podSpec.setInitContainers(Collections.singletonList(initContainer));
@@ -363,11 +378,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // Create the JobSpec with the PodTemplateSpec
         V1JobSpec jobSpec = new V1JobSpec()
-                .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
-                .parallelism(1)
-                .completions(1)
-                .backoffLimit(backoffLimit)
-                .template(podTemplateSpec);
+            .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
+            .parallelism(1)
+            .completions(1)
+            .backoffLimit(backoffLimit)
+            .template(podTemplateSpec);
 
         // Return a new job with metadata and jobSpec
         return new V1Job().metadata(metadata).spec(jobSpec);
