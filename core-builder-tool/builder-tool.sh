@@ -155,7 +155,7 @@ trap 'handle_error $LINENO "$BASH_COMMAND"' ERR
 
 # Process context-sources.txt
 if [ -f "$source_dir/context-sources-map.txt" ]; then
-  sync_files_with_rsync "$source_dir/context-sources-map.txt" "./" "$destination_dir"
+  sync_files_with_rsync "$source_dir/context-sources-map.txt" "$source_dir/" "$destination_dir"
 fi
 
 
