@@ -128,7 +128,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                                     .stream()
                                     .collect(
                                         Collectors.toMap(
-                                            ContextSource::getName,
+                                            c ->
+                                                Base64
+                                                    .getUrlEncoder()
+                                                    .withoutPadding()
+                                                    .encodeToString(c.getName().getBytes()),
                                             c ->
                                                 new String(
                                                     Base64.getDecoder().decode(c.getBase64()),
@@ -136,6 +140,25 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                                                 )
                                         )
                                     )
+                            )
+                            .orElseGet(Map::of),
+                        contextSourcesOpt
+                            .map(contextSources ->
+                                Map.of(
+                                    "context-sources-map.txt",
+                                    contextSources
+                                        .stream()
+                                        .map(c ->
+                                            Base64
+                                                .getUrlEncoder()
+                                                .withoutPadding()
+                                                .encodeToString(c.getName().getBytes()) +
+                                            "," +
+                                            c.getName() +
+                                            "\n"
+                                        )
+                                        .collect(Collectors.joining(""))
+                                )
                             )
                             .orElseGet(Map::of)
                     )
