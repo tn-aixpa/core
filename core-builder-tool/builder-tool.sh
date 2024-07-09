@@ -95,11 +95,69 @@ handle_error() {
     exit 1
 }
 
+
+# Function to synchronize files based on context-sources-map using rsync
+sync_files_with_rsync() {
+    local map_file="$1"
+    local base64_dir="$2"
+    local destination_dir="$3"
+
+    # Function to decode base64 filename without padding
+    decode_base64_no_padding() {
+        local base64_filename="$1"
+        # Add padding if necessary for base64 decoding
+        while [ $((${#base64_filename} % 4)) -ne 0 ]; do
+            base64_filename="${base64_filename}="
+        done
+        echo "$base64_filename" | base64 --decode
+    }
+
+    # Check if MAP_FILE exists
+    if [ ! -f "$map_file" ]; then
+        log "Error: Context-sources-map file '$map_file' does not exist."
+        exit 1
+    fi
+
+    # Read the context-sources-map file line by line
+    while IFS=',' read -r base64_filename destination_path; do
+        # Trim whitespace
+        base64_filename=$(echo "$base64_filename" | xargs)
+        destination_path=$(echo "$destination_path" | xargs)
+
+        # Decode the base64 filename
+        decoded_filename=$(decode_base64_no_padding "$base64_filename")
+        source_file="$base64_dir/$base64_filename"
+
+        # Check if the source file exists
+        if [ ! -f "$source_file" ]; then
+            log "Error: Source file '$source_file' does not exist."
+            continue
+        fi
+
+        # Create the destination directory if it does not exist
+        mkdir -p "$(dirname "$destination_dir/$destination_path")"
+
+        # Use rsync to copy the source file to the destination path
+        cp "$source_file" "$destination_dir/$destination_path"
+
+        # Check rsync exit status
+        if [ $? -eq 0 ]; then
+            log "Successfully copied '$source_file' to '$destination_path'"
+        else
+            log "Error: Failed to rsync '$source_file' to '$destination_path'"
+        fi
+    done < "$map_file"
+}
+
+
 # Trap any error or signal and call the error handling function
 trap 'handle_error $LINENO "$BASH_COMMAND"' ERR
 
-# Copy everything from source directory to destination directory, excluding context-refs.txt
-rsync -avL --exclude='context-refs.txt' --exclude='Dockerfile' --exclude='.*/' "$source_dir/" "$destination_dir/"
+# Process context-sources.txt
+if [ -f "$source_dir/context-sources-map.txt" ]; then
+  sync_files_with_rsync "$source_dir/context-sources-map.txt" "./" "$destination_dir"
+fi
+
 
 # Process context-refs.txt
 if [ -f "$source_dir/context-refs.txt" ]; then
