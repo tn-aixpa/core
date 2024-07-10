@@ -12,12 +12,10 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.util.Assert;
 
 @Slf4j
-public class K8sRunnableListener<R extends K8sRunnable> {
+public abstract class K8sRunnableListener<R extends K8sRunnable> {
 
     private final Class<R> clazz;
 
@@ -28,7 +26,7 @@ public class K8sRunnableListener<R extends K8sRunnable> {
     private ApplicationEventPublisher eventPublisher;
 
     @SuppressWarnings("unchecked")
-    public K8sRunnableListener(K8sBaseFramework<R, ?> k8sFramework, RunnableStore<R> runnableStore) {
+    protected K8sRunnableListener(K8sBaseFramework<R, ?> k8sFramework, RunnableStore<R> runnableStore) {
         Assert.notNull(k8sFramework, "k8sFramework can not be null");
         Assert.notNull(runnableStore, "runnableStore can not be null");
 
@@ -36,12 +34,10 @@ public class K8sRunnableListener<R extends K8sRunnable> {
         this.runnableStore = runnableStore;
 
         this.clazz = (Class<R>) runnableStore.getResolvableType().resolve();
-        log.debug("started listener for {}", clazz.getName());
+        log.debug("started listener for {} with framework {}", clazz.getName(), k8sFramework.getClass().getName());
     }
 
-    @Async
-    @EventListener
-    public void listen(R runnable) {
+    public void process(R runnable) {
         Assert.notNull(runnable, "runnable can not be null");
         Assert.hasText(runnable.getId(), "runnable id can not be null or empty");
         log.info(

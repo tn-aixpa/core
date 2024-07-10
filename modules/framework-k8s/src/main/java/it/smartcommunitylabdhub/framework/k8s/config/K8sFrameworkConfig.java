@@ -7,7 +7,11 @@ import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFrame
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
+import it.smartcommunitylabdhub.framework.k8s.listeners.K8sCronJobListener;
+import it.smartcommunitylabdhub.framework.k8s.listeners.K8sDeploymentListener;
+import it.smartcommunitylabdhub.framework.k8s.listeners.K8sJobListener;
 import it.smartcommunitylabdhub.framework.k8s.listeners.K8sRunnableListener;
+import it.smartcommunitylabdhub.framework.k8s.listeners.K8sServeListener;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
@@ -74,7 +78,7 @@ public class K8sFrameworkConfig {
         K8sJobFramework jobFramework,
         RunnableStore<K8sJobRunnable> store
     ) {
-        return new K8sRunnableListener<>(jobFramework, store);
+        return new K8sJobListener(jobFramework, store);
     }
 
     @Bean
@@ -83,7 +87,7 @@ public class K8sFrameworkConfig {
         K8sCronJobFramework cronJobFramework,
         RunnableStore<K8sCronJobRunnable> store
     ) {
-        return new K8sRunnableListener<>(cronJobFramework, store);
+        return new K8sCronJobListener(cronJobFramework, store);
     }
 
     @Bean
@@ -92,7 +96,7 @@ public class K8sFrameworkConfig {
         K8sDeploymentFramework deploymentFramework,
         RunnableStore<K8sDeploymentRunnable> store
     ) {
-        return new K8sRunnableListener<>(deploymentFramework, store);
+        return new K8sDeploymentListener(deploymentFramework, store);
     }
 
     @Bean
@@ -101,6 +105,6 @@ public class K8sFrameworkConfig {
         K8sServeFramework serveFramework,
         RunnableStore<K8sServeRunnable> store
     ) {
-        return new K8sRunnableListener<>(serveFramework, store);
+        return new K8sServeListener(serveFramework, store);
     }
 }
