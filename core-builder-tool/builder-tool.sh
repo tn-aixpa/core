@@ -97,7 +97,7 @@ handle_error() {
 
 
 # Function to synchronize files based on context-sources-map using rsync
-sync_files_with_rsync() {
+sync_files() {
     local map_file="$1"
     local base64_dir="$2"
     local destination_dir="$3"
@@ -114,7 +114,7 @@ sync_files_with_rsync() {
 
     # Check if MAP_FILE exists
     if [ ! -f "$map_file" ]; then
-        log "Error: Context-sources-map file '$map_file' does not exist."
+        echo "Error: Context-sources-map file '$map_file' does not exist."
         exit 1
     fi
 
@@ -130,7 +130,7 @@ sync_files_with_rsync() {
 
         # Check if the source file exists
         if [ ! -f "$source_file" ]; then
-            log "Error: Source file '$source_file' does not exist."
+            echo "Error: Source file '$source_file' does not exist."
             continue
         fi
 
@@ -142,9 +142,9 @@ sync_files_with_rsync() {
 
         # Check rsync exit status
         if [ $? -eq 0 ]; then
-            log "Successfully copied '$source_file' to '$destination_path'"
+            echo "Successfully copied '$source_file' to '$destination_path'"
         else
-            log "Error: Failed to rsync '$source_file' to '$destination_path'"
+            echo "Error: Failed to rsync '$source_file' to '$destination_path'"
         fi
     done < "$map_file"
 }
@@ -155,7 +155,7 @@ trap 'handle_error $LINENO "$BASH_COMMAND"' ERR
 
 # Process context-sources.txt
 if [ -f "$source_dir/context-sources-map.txt" ]; then
-  sync_files_with_rsync "$source_dir/context-sources-map.txt" "$source_dir/" "$destination_dir"
+  sync_files "$source_dir/context-sources-map.txt" "$source_dir/" "$destination_dir"
 fi
 
 
@@ -176,7 +176,6 @@ if [ -f "$source_dir/context-refs.txt" ]; then
                 echo "Protocol: $protocol"
                 echo "Downloading $rebuilt_url"
                 echo "to $destination_dir/$destination"
-
 
                 username=$GIT_USERNAME
                 password=$GIT_PASSWORD
