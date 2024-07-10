@@ -109,7 +109,7 @@ sync_files_with_rsync() {
         while [ $((${#base64_filename} % 4)) -ne 0 ]; do
             base64_filename="${base64_filename}="
         done
-        echo "$base64_filename" | base64 --decode
+        echo "$base64_filename" | base64 -d
     }
 
     # Check if MAP_FILE exists
