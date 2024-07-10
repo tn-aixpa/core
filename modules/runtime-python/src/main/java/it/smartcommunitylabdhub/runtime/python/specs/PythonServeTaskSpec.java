@@ -1,12 +1,14 @@
 package it.smartcommunitylabdhub.runtime.python.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -29,6 +31,8 @@ public class PythonServeTaskSpec extends K8sTaskBaseSpec {
 
     // ClusterIP or NodePort
     @JsonProperty(value = "service_type", defaultValue = "NodePort")
+    @Schema(defaultValue = "NodePort")
+    @NotNull
     private CoreServiceType serviceType;
 
     public PythonServeTaskSpec(Map<String, Serializable> data) {

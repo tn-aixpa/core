@@ -24,7 +24,7 @@ public class PythonFunctionSpec extends FunctionBaseSpec {
 
     @JsonProperty("source")
     @NotNull
-    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description", defaultValue = "python")
+    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
     private PythonSourceCode source;
 
     @JsonProperty("image")
@@ -37,6 +37,7 @@ public class PythonFunctionSpec extends FunctionBaseSpec {
 
     @JsonProperty("python_version")
     @Schema(title = "fields.python.version.title", description = "fields.python.version.description")
+    @NotNull
     private PythonVersion pythonVersion;
 
     @Schema(title = "fields.python.requirements.title", description = "fields.python.requirements.description")
