@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGenerator;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGeneratorFactory;
@@ -97,7 +98,17 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             .task(TASK)
             .state(State.READY.name())
             // Base
-            .image(runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction())
+            .image(
+                StringUtils.hasText(functionSpec.getImage())
+                    ? functionSpec.getImage()
+                    : K8sBuilderHelper.sanitizeNames(
+                        runSpecAccessor.getProject() +
+                        "-" +
+                        runSpecAccessor.getFunction() +
+                        ":" +
+                        run.getId().substring(0, 5)
+                    )
+            )
             .envs(coreEnvList)
             .secrets(groupedSecrets)
             .resources(taskSpec.getResources())

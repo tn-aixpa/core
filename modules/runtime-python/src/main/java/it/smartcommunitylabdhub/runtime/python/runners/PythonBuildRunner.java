@@ -5,6 +5,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -197,7 +198,13 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
             .image(
                 StringUtils.hasText(functionSpec.getImage())
                     ? functionSpec.getImage()
-                    : runSpecAccessor.getProject() + "-" + runSpecAccessor.getFunction()
+                    : K8sBuilderHelper.sanitizeNames(
+                        runSpecAccessor.getProject() +
+                        "-" +
+                        runSpecAccessor.getFunction() +
+                        ":" +
+                        run.getId().substring(0, 5)
+                    )
             )
             .contextRefs(contextRefs)
             .contextSources(contextSources)

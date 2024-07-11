@@ -354,14 +354,13 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         // Create labels for job
         Map<String, String> labels = Map.of(
             "app.kubernetes.io/instance",
-            applicationProperties.getName() + "-" + runnable.getId(),
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName() + "-" + runnable.getId()),
             "app.kubernetes.io/version",
             runnable.getId(),
             "app.kubernetes.io/part-of",
-            //TODO add function name in place of runId
-            applicationProperties.getName() + "-" + runnable.getProject() + "-" + runnable.getId(),
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName() + "-" + runnable.getProject()),
             "app.kubernetes.io/managed-by",
-            applicationProperties.getName()
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName())
         );
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);

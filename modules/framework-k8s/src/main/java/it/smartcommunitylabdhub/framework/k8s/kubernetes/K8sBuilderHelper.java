@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,8 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnKubernetes
 public class K8sBuilderHelper implements InitializingBean {
+
+    public static final int K8S_NAME_MAX_LENGTH = 62;
 
     @Autowired
     ApiClient apiClient;
@@ -264,7 +267,16 @@ public class K8sBuilderHelper implements InitializingBean {
             return null;
         } else {
             //use only allowed chars in k8s resource names!
-            return name.replaceAll("[^a-zA-Z0-9._-]+", "-");
+            String value = name.toLowerCase().replaceAll("[^a-zA-Z0-9._-]+", "-");
+            if (value.length() > K8S_NAME_MAX_LENGTH) {
+                return (
+                    value.substring(0, K8S_NAME_MAX_LENGTH - 7) +
+                    "-" +
+                    RandomStringUtils.randomAlphabetic(5).toLowerCase()
+                );
+            }
+
+            return value;
         }
     }
 }
