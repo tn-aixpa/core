@@ -7,6 +7,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
@@ -55,6 +56,12 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         // Create a deployment from a Deployment+Service
         V1Deployment deployment = buildDeployment(runnable);
+
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        if (secret != null) {
+            storeRunSecret(secret);
+        }
 
         try {
             V1ConfigMap initConfigMap = buildInitConfigMap(runnable);
