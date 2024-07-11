@@ -62,7 +62,12 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                 log.info("create initConfigMap for {}", String.valueOf(initConfigMap.getMetadata().getName()));
                 coreV1Api.createNamespacedConfigMap(namespace, initConfigMap, null, null, null, null);
             }
-        } catch (ApiException | NullPointerException e) {
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
+            }
+
             throw new K8sFrameworkException(e.getMessage());
         }
 
@@ -278,8 +283,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             return coreV1Api.replaceNamespacedService(serviceName, namespace, service, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getMessage());
@@ -296,9 +301,9 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
             return coreV1Api.readNamespacedService(serviceName, namespace, null);
         } catch (ApiException e) {
-            log.info("Error with k8s: {}", e.getResponseBody());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            log.info("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getResponseBody());
@@ -316,8 +321,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             return coreV1Api.createNamespacedService(namespace, service, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getMessage());
@@ -336,8 +341,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             coreV1Api.deleteNamespacedService(serviceName, namespace, null, null, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getMessage());

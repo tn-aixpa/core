@@ -76,7 +76,12 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                 log.info("create initConfigMap for {}", String.valueOf(initConfigMap.getMetadata().getName()));
                 coreV1Api.createNamespacedConfigMap(namespace, initConfigMap, null, null, null, null);
             }
-        } catch (ApiException | NullPointerException e) {
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
+            }
+
             throw new K8sFrameworkException(e.getMessage());
         }
 
@@ -328,8 +333,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             return appsV1Api.replaceNamespacedDeployment(deploymentName, namespace, deployment, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getMessage());
@@ -347,8 +352,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             return appsV1Api.readNamespacedDeployment(deploymentName, namespace, null);
         } catch (ApiException e) {
             log.info("Error with k8s: {}", e.getResponseBody());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getResponseBody());
@@ -365,8 +370,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             return appsV1Api.createNamespacedDeployment(namespace, deployment, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getResponseBody());
@@ -383,8 +388,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             appsV1Api.deleteNamespacedDeployment(deploymentName, namespace, null, null, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getResponseBody());

@@ -200,8 +200,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             return pods.getItems();
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getMessage());
@@ -288,8 +288,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             return logs;
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getMessage());
@@ -338,8 +338,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             return metrics;
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
-            if (log.isDebugEnabled()) {
-                log.debug("k8s api response: {}", e.getResponseBody());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
             }
 
             throw new K8sFrameworkException(e.getMessage());
