@@ -9,9 +9,11 @@ import io.kubernetes.client.custom.PodMetrics;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1LocalObjectReference;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
@@ -23,18 +25,23 @@ import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -49,6 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 public abstract class K8sBaseFramework<T extends K8sRunnable, K extends KubernetesObject>
@@ -558,6 +566,101 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             k8sSecretHelper.deleteSecret(secretName);
         } catch (ApiException e) {
             log.warn("Failed to delete secret {}", secretName, e);
+        }
+    }
+
+    public V1ConfigMap buildInitConfigMap(T runnable) throws K8sFrameworkException {
+        //check context refs and build config
+        if (
+            (runnable.getContextSources() == null || runnable.getContextSources().isEmpty()) &&
+            (runnable.getContextRefs() == null || runnable.getContextRefs().isEmpty())
+        ) {
+            //nothing to do
+            return null;
+        }
+
+        //build and create configMap
+        log.debug("build initConfigMap for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("contextSources {}", runnable.getContextSources());
+            log.trace("contextRefs {}", runnable.getContextRefs());
+        }
+
+        try {
+            // Generate Config map
+            Optional<List<ContextRef>> contextRefsOpt = Optional.ofNullable(runnable.getContextRefs());
+            Optional<List<ContextSource>> contextSourcesOpt = Optional.ofNullable(runnable.getContextSources());
+
+            V1ConfigMap configMap = new V1ConfigMap()
+                .metadata(new V1ObjectMeta().name("init-config-map-" + runnable.getId()).labels(buildLabels(runnable)))
+                .data(
+                    MapUtils.mergeMultipleMaps(
+                        // Generate context-refs.txt if exist
+                        contextRefsOpt
+                            .map(contextRefsList ->
+                                Map.of(
+                                    "context-refs.txt",
+                                    contextRefsList
+                                        .stream()
+                                        .map(v ->
+                                            v.getProtocol() + "," + v.getDestination() + "," + v.getSource() + "\n"
+                                        )
+                                        .collect(Collectors.joining(""))
+                                )
+                            )
+                            .orElseGet(Map::of),
+                        // Generate context-sources.txt if exist
+                        contextSourcesOpt
+                            .map(contextSources ->
+                                contextSources
+                                    .stream()
+                                    .filter(e -> StringUtils.hasText(e.getBase64()))
+                                    .collect(
+                                        Collectors.toMap(
+                                            c ->
+                                                Base64
+                                                    .getUrlEncoder()
+                                                    .withoutPadding()
+                                                    .encodeToString(c.getName().getBytes()),
+                                            c ->
+                                                new String(
+                                                    Base64.getDecoder().decode(c.getBase64()),
+                                                    StandardCharsets.UTF_8
+                                                )
+                                        )
+                                    )
+                            )
+                            .orElseGet(Map::of),
+                        contextSourcesOpt
+                            .map(contextSources ->
+                                Map.of(
+                                    "context-sources-map.txt",
+                                    contextSources
+                                        .stream()
+                                        .filter(e -> StringUtils.hasText(e.getBase64()))
+                                        .map(c ->
+                                            Base64
+                                                .getUrlEncoder()
+                                                .withoutPadding()
+                                                .encodeToString(c.getName().getBytes()) +
+                                            "," +
+                                            c.getName() +
+                                            "\n"
+                                        )
+                                        .collect(Collectors.joining(""))
+                                )
+                            )
+                            .orElseGet(Map::of)
+                    )
+                );
+
+            if (log.isTraceEnabled()) {
+                log.trace("configMap for {}: {}", runnable.getId(), configMap);
+            }
+
+            return configMap;
+        } catch (NullPointerException e) {
+            throw new K8sFrameworkException(e.getMessage());
         }
     }
 }

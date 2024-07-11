@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1CronJob;
 import io.kubernetes.client.openapi.models.V1CronJobSpec;
 import io.kubernetes.client.openapi.models.V1Job;
@@ -57,6 +58,16 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         V1Secret secret = buildRunSecret(runnable);
         if (secret != null) {
             storeRunSecret(secret);
+        }
+
+        try {
+            V1ConfigMap initConfigMap = buildInitConfigMap(runnable);
+            if (initConfigMap != null) {
+                log.info("create initConfigMap for {}", String.valueOf(initConfigMap.getMetadata().getName()));
+                coreV1Api.createNamespacedConfigMap(namespace, initConfigMap, null, null, null, null);
+            }
+        } catch (ApiException | NullPointerException e) {
+            throw new K8sFrameworkException(e.getMessage());
         }
 
         log.info("create job for {}", String.valueOf(job.getMetadata().getName()));

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
@@ -79,6 +81,12 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     private List<CoreMetric> metrics;
 
     private AbstractAuthenticationToken credentials;
+
+    @JsonProperty("context_refs")
+    private List<ContextRef> contextRefs;
+
+    @JsonProperty("context_sources")
+    private List<ContextSource> contextSources;
 
     @Override
     public String getFramework() {
