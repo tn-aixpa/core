@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @ApiVersion("v1")
 @Validated
 @Tag(name = "Schema base API", description = "Endpoints related to spec schemas")
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@PreAuthorize("hasAuthority('ROLE_USER')")
 public class SchemaController {
 
     @Autowired
