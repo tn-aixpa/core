@@ -5,24 +5,36 @@ import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1DeploymentSpec;
+import io.kubernetes.client.openapi.models.V1EnvFromSource;
+import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PodSpec;
+import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
+import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1Volume;
+import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,14 +49,36 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         HashMap<String, Serializable>
     >() {};
 
-    @Value("${kaniko.init-image}")
-    private String initImage;
+    //TODO refactor usage of framework: should split framework from infrastructure!
+    private final K8sDeploymentFramework deploymentFramework;
 
-    @Autowired
-    private K8sDeploymentFramework deploymentFramework;
+    private String initImage;
 
     public K8sServeFramework(ApiClient apiClient) {
         super(apiClient);
+        deploymentFramework = new K8sDeploymentFramework(apiClient);
+    }
+
+    @Autowired
+    public void setInitImage(@Value("${kaniko.init-image}") String initImage) {
+        this.initImage = initImage;
+        this.deploymentFramework.setInitImage(initImage);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+
+        //configure dependant framework
+        this.deploymentFramework.setApplicationProperties(applicationProperties);
+        this.deploymentFramework.setCollectLogs(collectLogs);
+        this.deploymentFramework.setCollectMetrics(collectMetrics);
+        this.deploymentFramework.setInitImage(initImage);
+        this.deploymentFramework.setK8sBuilderHelper(k8sBuilderHelper);
+        this.deploymentFramework.setK8sSecretHelper(k8sSecretHelper);
+        this.deploymentFramework.setNamespace(namespace);
+        this.deploymentFramework.setRegistrySecret(registrySecret);
+        this.deploymentFramework.setVersion(version);
     }
 
     @Override
@@ -356,47 +390,136 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
     }
 
-    /**
-     * A method to build a V1Deployment using the provided K8sServeRunnable.
-     *
-     * @param runnable the K8sServeRunnable to build the deployment from
-     * @return the built V1Deployment
-     */
     public V1Deployment buildDeployment(K8sServeRunnable runnable) throws K8sFrameworkException {
-        K8sDeploymentRunnable k8sDeploymentRunnable = getDeployment(runnable);
-        return deploymentFramework.build(k8sDeploymentRunnable);
-    }
+        log.debug("build deployment for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
 
-    /**
-     * Retrieves a K8sDeploymentRunnable based on the provided K8sServeRunnable.
-     *
-     * @param runnable The K8sServeRunnable to be used for creating the K8sDeploymentRunnable
-     * @return The created K8sDeploymentRunnable
-     */
-    private K8sDeploymentRunnable getDeployment(K8sServeRunnable runnable) {
-        return K8sDeploymentRunnable
-            .builder()
-            .id(runnable.getId())
-            .args(runnable.getArgs())
+        // Generate deploymentName and ContainerName
+        String deploymentName = k8sBuilderHelper.getDeploymentName(
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
+        );
+        String containerName = k8sBuilderHelper.getContainerName(
+            runnable.getRuntime(),
+            runnable.getTask(),
+            runnable.getId()
+        );
+
+        log.debug("build k8s deployment for {}", deploymentName);
+
+        // Create labels for job
+        Map<String, String> labels = buildLabels(runnable);
+
+        // Create the Deployment metadata
+        V1ObjectMeta metadata = new V1ObjectMeta().name(deploymentName).labels(labels);
+
+        // Prepare environment variables for the Kubernetes job
+        List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
+        List<V1EnvVar> env = buildEnv(runnable);
+
+        // Volumes to attach to the pod based on the volume spec with the additional volume_type
+        List<V1Volume> volumes = buildVolumes(runnable);
+        List<V1VolumeMount> volumeMounts = buildVolumeMounts(runnable);
+
+        // resources
+        V1ResourceRequirements resources = buildResources(runnable);
+
+        //command params
+        List<String> command = buildCommand(runnable);
+        List<String> args = buildArgs(runnable);
+
+        //check if context build is required
+        if (runnable.getContextRefs() != null || runnable.getContextSources() != null) {
+            // Create sharedVolume
+            CoreVolume sharedVolume = new CoreVolume(
+                CoreVolume.VolumeType.empty_dir,
+                "/shared",
+                "shared-dir",
+                Map.of("sizeLimit", "100Mi")
+            );
+
+            // Create config map volume
+            CoreVolume configMapVolume = new CoreVolume(
+                CoreVolume.VolumeType.config_map,
+                "/init-config-map",
+                "init-config-map",
+                Map.of("name", "init-config-map-" + runnable.getId())
+            );
+
+            List<V1Volume> initVolumes = List.of(
+                k8sBuilderHelper.getVolume(sharedVolume),
+                k8sBuilderHelper.getVolume(configMapVolume)
+            );
+            List<V1VolumeMount> initVolumesMounts = List.of(
+                k8sBuilderHelper.getVolumeMount(sharedVolume),
+                k8sBuilderHelper.getVolumeMount(configMapVolume)
+            );
+
+            //add volume
+            volumes = Stream.concat(buildVolumes(runnable).stream(), initVolumes.stream()).collect(Collectors.toList());
+            volumeMounts =
+                Stream
+                    .concat(buildVolumeMounts(runnable).stream(), initVolumesMounts.stream())
+                    .collect(Collectors.toList());
+        }
+
+        // Build Container
+        V1Container container = new V1Container()
+            .name(containerName)
             .image(runnable.getImage())
-            .command(runnable.getCommand())
+            .imagePullPolicy("Always")
+            .imagePullPolicy("IfNotPresent")
+            .command(command)
+            .args(args)
+            .resources(resources)
+            .volumeMounts(volumeMounts)
+            .envFrom(envFrom)
+            .env(env);
+
+        // Create a PodSpec for the container
+        V1PodSpec podSpec = new V1PodSpec()
+            .containers(Collections.singletonList(container))
+            .nodeSelector(buildNodeSelector(runnable))
             .affinity(runnable.getAffinity())
-            .labels(runnable.getLabels())
-            .envs(runnable.getEnvs())
-            .nodeSelector(runnable.getNodeSelector())
-            .replicas(runnable.getReplicas())
-            .resources(runnable.getResources())
-            .project(runnable.getProject())
-            .runtime(runnable.getRuntime())
-            .secrets(runnable.getSecrets())
-            .task(runnable.getTask())
-            .state(runnable.getState())
-            .tolerations(runnable.getTolerations())
-            .runtimeClass(runnable.getRuntimeClass())
-            .priorityClass(runnable.getPriorityClass())
-            .volumes(runnable.getVolumes())
-            .contextRefs(runnable.getContextRefs())
-            .contextSources(runnable.getContextSources())
-            .build();
+            .tolerations(buildTolerations(runnable))
+            .runtimeClassName(runnable.getRuntimeClass())
+            .priorityClassName(runnable.getPriorityClass())
+            .volumes(volumes)
+            .restartPolicy("Always")
+            .imagePullSecrets(buildImagePullSecrets(runnable));
+
+        //check if context build is required
+        if (runnable.getContextRefs() != null || runnable.getContextSources() != null) {
+            // Add Init container to the PodTemplateSpec
+            // Build the Init Container
+            V1Container initContainer = new V1Container()
+                .name("init-container-" + runnable.getId())
+                .image(initImage)
+                .volumeMounts(volumeMounts)
+                .resources(resources)
+                .env(env)
+                .envFrom(envFrom)
+                //TODO below execute a command that is a Go script
+                .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
+
+            podSpec.setInitContainers(Collections.singletonList(initContainer));
+        }
+
+        // Create a PodTemplateSpec with the PodSpec
+        V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
+
+        int replicas = Optional.ofNullable(runnable.getReplicas()).orElse(1);
+
+        // Create the JobSpec with the PodTemplateSpec
+        V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
+            .replicas(replicas)
+            .selector(new V1LabelSelector().matchLabels(labels))
+            .template(podTemplateSpec);
+
+        // Create the V1Deployment object with metadata and JobSpec
+        return new V1Deployment().metadata(metadata).spec(deploymentSpec);
     }
 }

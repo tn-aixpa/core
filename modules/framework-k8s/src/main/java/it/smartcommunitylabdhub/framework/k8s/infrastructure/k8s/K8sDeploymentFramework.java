@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 
@@ -47,12 +48,16 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     >() {};
     private final AppsV1Api appsV1Api;
 
-    @Value("${kaniko.init-image}")
     private String initImage;
 
     public K8sDeploymentFramework(ApiClient apiClient) {
         super(apiClient);
         appsV1Api = new AppsV1Api(apiClient);
+    }
+
+    @Autowired
+    public void setInitImage(@Value("${kaniko.init-image}") String initImage) {
+        this.initImage = initImage;
     }
 
     @Override
