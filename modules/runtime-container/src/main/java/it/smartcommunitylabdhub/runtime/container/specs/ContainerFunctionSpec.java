@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import java.io.Serializable;
 import java.util.List;
@@ -32,6 +33,9 @@ public class ContainerFunctionSpec extends FunctionBaseSpec {
     @Schema(title = "fields.container.args.title", description = "fields.container.args.description")
     private List<String> args;
 
+    @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
+    private SourceCode<SourceCodeLanguages> source;
+
     public ContainerFunctionSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -46,5 +50,20 @@ public class ContainerFunctionSpec extends FunctionBaseSpec {
         this.image = spec.getImage();
         this.baseImage = spec.getBaseImage();
         this.args = spec.getArgs();
+        this.source = spec.getSource();
+    }
+
+    public enum SourceCodeLanguages {
+        python,
+        java,
+        javascript,
+        typescript,
+        markdown,
+        html,
+        json,
+        sql,
+        css,
+        yaml,
+        text,
     }
 }

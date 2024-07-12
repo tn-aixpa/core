@@ -5,8 +5,11 @@ import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGenerator;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGeneratorFactory;
@@ -14,14 +17,18 @@ import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerBuildTaskSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec.SourceCodeLanguages;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerRunSpec;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * ContainerJobRunner
@@ -86,6 +93,36 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
         // Generate string docker file
         String dockerfile = dockerfileGenerator.build().generate();
 
+        //read source and build context
+        List<ContextRef> contextRefs = null;
+        List<ContextSource> contextSources = null;
+
+        if (functionSpec.getSource() != null && StringUtils.hasText(functionSpec.getSource().getSource())) {
+            SourceCode<SourceCodeLanguages> source = functionSpec.getSource();
+
+            try {
+                //evaluate if local path (no scheme)
+                UriComponents uri = UriComponentsBuilder.fromUriString(source.getSource()).build();
+                String scheme = uri.getScheme();
+
+                if (scheme != null) {
+                    //write as ref
+                    contextRefs = Collections.singletonList(ContextRef.from(source.getSource()));
+                } else {
+                    //write as source
+                    String path = source.getSource();
+                    if (StringUtils.hasText(source.getBase64())) {
+                        contextSources =
+                            Collections.singletonList(
+                                (ContextSource.builder().name(path).base64(source.getBase64()).build())
+                            );
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                //skip invalid source
+            }
+        }
+
         // Parse run spec
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runSpec.getTask());
 
@@ -120,6 +157,8 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             .priorityClass(taskSpec.getPriorityClass())
             // Task specific
             .dockerFile(dockerfile)
+            .contextRefs(contextRefs)
+            .contextSources(contextSources)
             // specific
             .backoffLimit(1)
             .build();
