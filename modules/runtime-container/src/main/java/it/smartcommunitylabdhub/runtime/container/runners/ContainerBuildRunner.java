@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGenerator;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGeneratorFactory;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
@@ -49,9 +50,16 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
     private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
-    public ContainerBuildRunner(ContainerFunctionSpec functionContainerSpec, Map<String, Set<String>> groupedSecrets) {
+    private final K8sBuilderHelper k8sBuilderHelper;
+
+    public ContainerBuildRunner(
+        ContainerFunctionSpec functionContainerSpec,
+        Map<String, Set<String>> groupedSecrets,
+        K8sBuilderHelper k8sBuilderHelper
+    ) {
         this.functionSpec = functionContainerSpec;
         this.groupedSecrets = groupedSecrets;
+        this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
     @Override
@@ -134,6 +142,11 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             .runtime(ContainerRuntime.RUNTIME)
             .task(TASK)
             .state(State.READY.name())
+            .labels(
+                k8sBuilderHelper != null
+                    ? List.of(new CoreLabel(k8sBuilderHelper.getLabelName("function"), taskSpec.getFunction()))
+                    : null
+            )
             // Base
             .image(
                 StringUtils.hasText(functionSpec.getImage())
