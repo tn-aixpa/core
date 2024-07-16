@@ -170,15 +170,15 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
                 }
 
                 //persist
-                entity = repository.saveAndFlush(e);
+                E updated = repository.saveAndFlush(e);
                 if (log.isTraceEnabled()) {
-                    log.trace("entity: {}", entity);
+                    log.trace("entity: {}", updated);
                 }
 
                 //publish
                 if (eventPublisher != null) {
                     log.debug("publish event: update for {}", id);
-                    EntityEvent<E> event = new EntityEvent<>(entity, EntityAction.UPDATE);
+                    EntityEvent<E> event = new EntityEvent<>(updated, entity, EntityAction.UPDATE);
                     if (log.isTraceEnabled()) {
                         log.trace("event: {}", String.valueOf(event));
                     }
@@ -186,7 +186,7 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
                     eventPublisher.publishEvent(event);
                 }
 
-                D res = dtoBuilder.convert(entity);
+                D res = dtoBuilder.convert(updated);
                 if (log.isTraceEnabled()) {
                     log.trace("res: {}", res);
                 }

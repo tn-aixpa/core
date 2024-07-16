@@ -10,12 +10,22 @@ public class EntityEvent<T extends BaseEntity> extends ApplicationEvent implemen
 
     private final EntityAction action;
     private final T entity;
+    private final T prev;
 
     public EntityEvent(T entity, EntityAction action) {
         super(entity);
         Assert.notNull(action, "action can not be null");
         this.action = action;
         this.entity = entity;
+        this.prev = null;
+    }
+
+    public EntityEvent(T entity, T prev, EntityAction action) {
+        super(entity);
+        Assert.notNull(action, "action can not be null");
+        this.action = action;
+        this.entity = entity;
+        this.prev = prev;
     }
 
     public T getEntity() {
@@ -24,6 +34,10 @@ public class EntityEvent<T extends BaseEntity> extends ApplicationEvent implemen
 
     public EntityAction getAction() {
         return action;
+    }
+
+    public T getPrev() {
+        return prev;
     }
 
     @Override
