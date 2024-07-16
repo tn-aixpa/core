@@ -117,21 +117,24 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
                 images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets()),
+                k8sBuilderHelper
             )
                 .produce(run);
             case PythonServeTaskSpec.KIND -> new PythonServeRunner(
                 images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets()),
+                k8sBuilderHelper
             )
                 .produce(run);
             case PythonBuildTaskSpec.KIND -> new PythonBuildRunner(
                 images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskBuildSpec().getSecrets())
+                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskBuildSpec().getSecrets()),
+                k8sBuilderHelper
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

@@ -352,7 +352,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
      */
     protected Map<String, String> buildLabels(T runnable) {
         // Create labels for job
-        Map<String, String> labels = Map.of(
+        Map<String, String> appLabels = Map.of(
             "app.kubernetes.io/instance",
             K8sBuilderHelper.sanitizeNames(applicationProperties.getName() + "-" + runnable.getId()),
             "app.kubernetes.io/version",
@@ -362,9 +362,24 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             "app.kubernetes.io/managed-by",
             K8sBuilderHelper.sanitizeNames(applicationProperties.getName())
         );
+
+        Map<String, String> coreLabels = Map.of(
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/project",
+            K8sBuilderHelper.sanitizeNames(runnable.getProject()),
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/framework",
+            K8sBuilderHelper.sanitizeNames(runnable.getFramework()),
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/runtime",
+            K8sBuilderHelper.sanitizeNames(runnable.getRuntime())
+        );
+
+        Map<String, String> labels = MapUtils.mergeMultipleMaps(appLabels, coreLabels);
+
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
-            for (CoreLabel l : runnable.getLabels()) labels.putIfAbsent(l.name(), l.value());
+            for (CoreLabel l : runnable.getLabels()) labels.putIfAbsent(
+                K8sBuilderHelper.sanitizeNames(l.name()),
+                K8sBuilderHelper.sanitizeNames(l.value())
+            );
         }
 
         return labels;

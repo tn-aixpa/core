@@ -6,9 +6,11 @@ import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
@@ -41,16 +43,20 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
     private final PythonFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
+    private final K8sBuilderHelper k8sBuilderHelper;
+
     public PythonJobRunner(
         String image,
         String command,
         PythonFunctionSpec functionPythonSpec,
-        Map<String, Set<String>> groupedSecrets
+        Map<String, Set<String>> groupedSecrets,
+        K8sBuilderHelper k8sBuilderHelper
     ) {
         this.image = image;
         this.command = command;
         this.functionSpec = functionPythonSpec;
         this.groupedSecrets = groupedSecrets;
+        this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
     @Override
@@ -132,6 +138,11 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 .runtime(PythonRuntime.RUNTIME)
                 .task(PythonJobTaskSpec.KIND)
                 .state(State.READY.name())
+                .labels(
+                    k8sBuilderHelper != null
+                        ? List.of(new CoreLabel(k8sBuilderHelper.getLabelName("function"), taskSpec.getFunction()))
+                        : null
+                )
                 //base
                 .image(StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image)
                 .command(command)

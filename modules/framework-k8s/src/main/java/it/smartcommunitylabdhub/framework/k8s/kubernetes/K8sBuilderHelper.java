@@ -17,6 +17,7 @@ import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
+import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreItems;
@@ -52,6 +53,9 @@ public class K8sBuilderHelper implements InitializingBean {
 
     @Autowired
     ApiClient apiClient;
+
+    @Autowired
+    ApplicationProperties applicationProperties;
 
     @Value("${application.endpoint}")
     private String coreEndpoint;
@@ -259,6 +263,10 @@ public class K8sBuilderHelper implements InitializingBean {
 
     public String getImageName(String image, String id) {
         return image + ":" + id;
+    }
+
+    public String getLabelName(String name) {
+        return sanitizeNames(applicationProperties.getName()) + "/" + sanitizeNames(name);
     }
 
     public static String sanitizeNames(String name) {
