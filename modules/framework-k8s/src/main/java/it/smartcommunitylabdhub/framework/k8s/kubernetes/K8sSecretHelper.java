@@ -66,7 +66,7 @@ public class K8sSecretHelper {
 
     public void deleteSecret(String secretName) throws ApiException {
         try {
-            V1Secret secret = api.readNamespacedSecret(secretName, namespace, "");
+            api.readNamespacedSecret(secretName, namespace, "");
         } catch (ApiException e) {
             return;
         }
@@ -82,24 +82,43 @@ public class K8sSecretHelper {
         } catch (ApiException e) {
             return;
         }
-        if (secret != null) {
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, byte[]> secretData = secret.getData();
-            if (secretData == null) return;
 
+        if (secret != null) {
+            log.debug("delete {} from secret {}", keys, secretName);
+
+            Map<String, byte[]> secretData = secret.getData();
+            if (keys == null || secretData == null) {
+                return;
+            }
+
+            //remove values from map and keep everything else
             keys.forEach(secretData::remove);
 
-            Map<String, String> writeData = new HashMap<>();
-            for (String key : secretData.keySet()) {
-                if (!writeData.containsKey(key)) writeData.put(
-                    key,
-                    Base64.getEncoder().encodeToString(secretData.get(key))
-                );
-            }
+            log.debug("patch existing secret {}", secretName);
+
+            //write as base64 for patch
+            Map<String, String> writeData = secretData
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Entry::getKey, d -> Base64.getEncoder().encodeToString(d.getValue())));
+
             PatchBody patchData = new PatchBody(writeData, "/data");
             V1Patch patch = new V1Patch(mapper.writeValueAsString(Collections.singleton(patchData)));
 
+            //direct api call is broken as per 21.0.0 due to missing patch format
             api.patchNamespacedSecret(secretName, namespace, patch, null, null, null, null, null);
+
+            // json-patch via patch to avoid library bug
+            PatchUtils.patch(
+                V1Secret.class,
+                () -> api.patchNamespacedSecretCall(secretName, namespace, patch, null, null, null, null, null, null),
+                V1Patch.PATCH_FORMAT_JSON_PATCH,
+                api.getApiClient()
+            );
+
+            if (log.isTraceEnabled()) {
+                log.trace("patched secret {}", secretName);
+            }
         }
     }
 
@@ -123,7 +142,7 @@ public class K8sSecretHelper {
                 .kind("Secret")
                 .stringData(data);
             api.createNamespacedSecret(namespace, body, null, null, null, null);
-            
+
             if (log.isTraceEnabled()) {
                 log.trace("created secret {}", secretName);
             }
