@@ -20,6 +20,7 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
@@ -86,6 +87,8 @@ public class S3FilesStore implements FilesStore {
                 S3Presigner
                     .builder()
                     .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                    //also enable path style for endpoint by default
+                    .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
                     .endpointOverride(URI.create(endpoint))
                     .build();
         } else {
