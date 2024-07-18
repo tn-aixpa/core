@@ -1,9 +1,11 @@
 package it.smartcommunitylabdhub.runtime.container.runners;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
+import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
@@ -53,6 +55,7 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
         ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
         ContainerJobTaskSpec taskSpec = runSpec.getTaskJobSpec();
         StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
+        TaskSpecAccessor taskAccessor = TaskUtils.parseFunction(taskSpec.getFunction());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
@@ -67,7 +70,7 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
             .state(State.READY.name())
             .labels(
                 k8sBuilderHelper != null
-                    ? List.of(new CoreLabel(k8sBuilderHelper.getLabelName("function"), taskSpec.getFunction()))
+                    ? List.of(new CoreLabel(k8sBuilderHelper.getLabelName("function"), taskAccessor.getFunction()))
                     : null
             )
             //base

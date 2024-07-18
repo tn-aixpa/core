@@ -377,7 +377,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
             for (CoreLabel l : runnable.getLabels()) labels.putIfAbsent(
-                K8sBuilderHelper.sanitizeNames(l.name()),
+                l.name(),
                 K8sBuilderHelper.sanitizeNames(l.value())
             );
         }
