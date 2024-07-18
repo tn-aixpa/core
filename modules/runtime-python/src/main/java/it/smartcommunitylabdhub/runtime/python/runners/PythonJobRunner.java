@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.runtime.python.runners;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
+import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -22,6 +23,7 @@ import it.smartcommunitylabdhub.runtime.python.model.PythonSourceCode;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonFunctionSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonJobTaskSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonRunSpec;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -32,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -46,6 +50,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
     private final Map<String, Set<String>> groupedSecrets;
 
     private final K8sBuilderHelper k8sBuilderHelper;
+    private final Resource entrypoint = new ClassPathResource("runtime-python/docker/entrypoint.sh");
 
     public PythonJobRunner(
         String image,
@@ -94,6 +99,20 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
             //read source and build context
             List<ContextRef> contextRefs = null;
             List<ContextSource> contextSources = new ArrayList<>();
+
+            //write entrypoint
+            try {
+                ContextSource entry = ContextSource
+                    .builder()
+                    .name("entrypoint.sh")
+                    .base64(Base64.getEncoder().encodeToString(entrypoint.getContentAsByteArray()))
+                    .build();
+                contextSources.add(entry);
+            } catch (IOException ioe) {
+                throw new CoreRuntimeException("error with reading entrypoint for runtime-python");
+            }
+
+            //function definition
             ContextSource fn = ContextSource
                 .builder()
                 .name("function.yaml")
@@ -101,6 +120,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 .build();
             contextSources.add(fn);
 
+            //source
             if (functionSpec.getSource() != null) {
                 PythonSourceCode source = functionSpec.getSource();
                 String path = "main.py";
@@ -133,6 +153,26 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 }
             }
 
+            List<String> args = new ArrayList<>(
+                List.of("/shared/entrypoint.sh", "--processor", command, "--config", "/shared/function.yaml")
+            );
+
+            // requirements.txt
+            if (functionSpec.getRequirements() != null && !functionSpec.getRequirements().isEmpty()) {
+                //write as file
+                String content = String.join("\n", functionSpec.getRequirements());
+                contextSources.add(
+                    ContextSource
+                        .builder()
+                        .name("requirements.txt")
+                        .base64(Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8)))
+                        .build()
+                );
+
+                //add as arg
+                args.addAll(List.of("--requirements", "/shared/requirements.txt"));
+            }
+
             //merge env with PYTHON path override
             coreEnvList.add(new CoreEnv("PYTHONPATH", "${PYTHONPATH}:/shared/"));
 
@@ -148,9 +188,8 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 )
                 //base
                 .image(StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image)
-                .command(command)
-                // .args(new String[] { run.getProject(), run.getId() })
-                .args(new String[] { "--config", "/shared/function.yaml" })
+                .command("/bin/bash")
+                .args(args.toArray(new String[0]))
                 .contextRefs(contextRefs)
                 .contextSources(contextSources)
                 .envs(coreEnvList)
