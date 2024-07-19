@@ -25,7 +25,6 @@ import java.util.Set;
  */
 public class MlrunBuildRunner implements Runner<K8sJobRunnable> {
 
-    private static final String TASK = "build";
     private final String image;
     private final Map<String, Set<String>> groupedSecrets;
 
@@ -53,7 +52,7 @@ public class MlrunBuildRunner implements Runner<K8sJobRunnable> {
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
             .builder()
             .runtime(MlrunRuntime.RUNTIME)
-            .task(TASK)
+            .task(MlrunBuildTaskSpec.KIND)
             .image(image)
             .command("python")
             .args(List.of("wrapper.py").toArray(String[]::new))

@@ -25,8 +25,6 @@ import java.util.Set;
  */
 public class DbtTransformRunner implements Runner<K8sJobRunnable> {
 
-    private static final String TASK = "transform";
-
     private final String image;
     private final Map<String, Set<String>> groupedSecrets;
 
@@ -54,7 +52,7 @@ public class DbtTransformRunner implements Runner<K8sJobRunnable> {
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
             .builder()
             .runtime(DbtRuntime.RUNTIME)
-            .task(TASK)
+            .task(DbtTransformSpec.KIND)
             .image(image)
             .command("python")
             .args(List.of("wrapper.py").toArray(String[]::new))

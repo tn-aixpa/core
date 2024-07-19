@@ -19,6 +19,7 @@ import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.Dockerfil
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerBuildTaskSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerDeployTaskSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec.SourceCodeLanguages;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerRunSpec;
@@ -46,8 +47,6 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
 
     private static final String RUN_DEBUG =
         "PWD=`pwd`;echo \"DEBUG: dir ${PWD}\";LS=`ls -R`;echo \"DEBUG: dir content:\" && echo \"${LS}\";";
-
-    private static final String TASK = "job";
 
     private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
@@ -143,7 +142,7 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             .id(run.getId())
             .project(run.getProject())
             .runtime(ContainerRuntime.RUNTIME)
-            .task(TASK)
+            .task(ContainerDeployTaskSpec.KIND)
             .state(State.READY.name())
             .labels(
                 k8sBuilderHelper != null

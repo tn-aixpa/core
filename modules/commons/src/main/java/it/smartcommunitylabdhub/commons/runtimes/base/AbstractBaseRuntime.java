@@ -155,7 +155,7 @@ public abstract class AbstractBaseRuntime<
         }
 
         log.warn("Error deleting run {}", run.getId());
-        throw new NoSuchEntityException("Error deleting run");
+        throw new NoSuchEntityException("run");
     }
 
     @Override

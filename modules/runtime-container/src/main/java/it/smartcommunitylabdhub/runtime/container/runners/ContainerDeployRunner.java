@@ -30,8 +30,6 @@ import java.util.Set;
  */
 public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
 
-    private static final String TASK = "deploy";
-
     private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
@@ -63,7 +61,7 @@ public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
         K8sDeploymentRunnable k8sDeploymentRunnable = K8sDeploymentRunnable
             .builder()
             .runtime(ContainerRuntime.RUNTIME)
-            .task(TASK)
+            .task(ContainerDeployTaskSpec.KIND)
             .state(State.READY.name())
             .labels(
                 k8sBuilderHelper != null

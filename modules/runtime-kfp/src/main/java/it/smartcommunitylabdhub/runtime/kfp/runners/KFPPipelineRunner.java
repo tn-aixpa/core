@@ -27,8 +27,6 @@ import org.springframework.util.StringUtils;
  */
 public class KFPPipelineRunner implements Runner<K8sRunnable> {
 
-    private static final String TASK = "pipeline";
-
     private final String image;
     private final Map<String, Set<String>> groupedSecrets;
 
@@ -55,7 +53,7 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
         K8sRunnable k8sJobRunnable = K8sJobRunnable
             .builder()
             .runtime(KFPRuntime.RUNTIME)
-            .task(TASK)
+            .task(KFPPipelineTaskSpec.KIND)
             .image(image)
             .command("python")
             .args(List.of("wrapper.py").toArray(String[]::new))
@@ -75,7 +73,7 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
                 K8sCronJobRunnable
                     .builder()
                     .runtime(KFPRuntime.RUNTIME)
-                    .task(TASK)
+                    .task(KFPPipelineTaskSpec.KIND)
                     //base
                     .image(image)
                     .command("python")

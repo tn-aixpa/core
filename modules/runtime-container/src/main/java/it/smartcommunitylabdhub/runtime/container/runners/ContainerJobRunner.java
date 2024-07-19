@@ -33,8 +33,6 @@ import org.springframework.util.StringUtils;
  */
 public class ContainerJobRunner implements Runner<K8sRunnable> {
 
-    private static final String TASK = "job";
-
     private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
@@ -66,7 +64,7 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
         K8sRunnable k8sJobRunnable = K8sJobRunnable
             .builder()
             .runtime(ContainerRuntime.RUNTIME)
-            .task(TASK)
+            .task(ContainerJobTaskSpec.KIND)
             .state(State.READY.name())
             .labels(
                 k8sBuilderHelper != null
@@ -96,7 +94,7 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
                 K8sCronJobRunnable
                     .builder()
                     .runtime(ContainerRuntime.RUNTIME)
-                    .task(TASK)
+                    .task(ContainerJobTaskSpec.KIND)
                     .state(State.READY.name())
                     //base
                     .image(functionSpec.getImage())

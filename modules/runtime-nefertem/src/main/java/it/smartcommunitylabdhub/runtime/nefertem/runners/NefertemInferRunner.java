@@ -25,7 +25,6 @@ import java.util.Set;
  */
 public class NefertemInferRunner implements Runner<K8sJobRunnable> {
 
-    private static final String TASK = "infer";
     private final String image;
     private final Map<String, Set<String>> groupedSecrets;
 
@@ -53,7 +52,7 @@ public class NefertemInferRunner implements Runner<K8sJobRunnable> {
         K8sJobRunnable k8sJobRunnable = K8sJobRunnable
             .builder()
             .runtime(NefertemRuntime.RUNTIME)
-            .task(TASK)
+            .task(NefertemInferTaskSpec.KIND)
             .image(image)
             .command("python")
             .args(List.of("wrapper.py").toArray(String[]::new))

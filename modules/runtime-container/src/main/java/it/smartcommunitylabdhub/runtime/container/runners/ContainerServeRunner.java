@@ -30,8 +30,6 @@ import java.util.Set;
  */
 public class ContainerServeRunner implements Runner<K8sServeRunnable> {
 
-    private static final String TASK = "serve";
-
     private final ContainerFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
@@ -63,7 +61,7 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
         K8sServeRunnable k8sServeRunnable = K8sServeRunnable
             .builder()
             .runtime(ContainerRuntime.RUNTIME)
-            .task(TASK)
+            .task(ContainerServeTaskSpec.KIND)
             .state(State.READY.name())
             .labels(
                 k8sBuilderHelper != null
