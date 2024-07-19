@@ -6,6 +6,7 @@ import io.kubernetes.client.Metrics;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.PodMetrics;
+import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -18,6 +19,7 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.models.V1SecurityContext;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
@@ -37,6 +39,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreResourceDefinition;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -76,6 +79,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected String namespace;
     protected String registrySecret;
 
+    protected boolean disableRoot = false;
+
+    protected CoreResourceDefinition cpuResourceDefinition = new CoreResourceDefinition();
+    protected CoreResourceDefinition memResourceDefinition = new CoreResourceDefinition();
+
     protected Boolean collectLogs;
     protected Boolean collectMetrics;
 
@@ -95,13 +103,60 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     }
 
     @Autowired
-    public void setNamespace(@Value("${kubernetes.namespace}") String namespace) {
-        this.namespace = namespace;
+    public void setCollectLogs(@Value("${kubernetes.logs}") Boolean collectLogs) {
+        this.collectLogs = collectLogs;
     }
 
     @Autowired
-    public void setVersion(@Value("${application.version}") String version) {
-        this.version = version;
+    public void setCollectMetrics(@Value("${kubernetes.metrics}") Boolean collectMetrics) {
+        this.collectMetrics = collectMetrics;
+    }
+
+    public void setCpuResourceDefinition(CoreResourceDefinition cpuResourceDefinition) {
+        this.cpuResourceDefinition = cpuResourceDefinition;
+    }
+
+    @Autowired
+    public void setCpuRequestsResourceDefinition(
+        @Value("${kubernetes.resources.cpu.requests}") String cpuResourceDefinition
+    ) {
+        this.cpuResourceDefinition.setRequests(cpuResourceDefinition);
+    }
+
+    public void setCpuLimitsResourceDefinition(
+        @Value("${kubernetes.resources.cpu.limits}") String cpuResourceDefinition
+    ) {
+        this.cpuResourceDefinition.setLimits(cpuResourceDefinition);
+    }
+
+    @Autowired
+    public void setDisableRoot(@Value("${kubernetes.security.disable-root}") Boolean disableRoot) {
+        if (disableRoot != null) {
+            this.disableRoot = disableRoot.booleanValue();
+        }
+    }
+
+    public void setMemResourceDefinition(CoreResourceDefinition memResourceDefinition) {
+        this.memResourceDefinition = memResourceDefinition;
+    }
+
+    @Autowired
+    public void setMemRequestsResourceDefinition(
+        @Value("${kubernetes.resources.mem.requests}") String memResourceDefinition
+    ) {
+        this.memResourceDefinition.setRequests(memResourceDefinition);
+    }
+
+    @Autowired
+    public void setMemLimitsResourceDefinition(
+        @Value("${kubernetes.resources.mem.limits}") String memResourceDefinition
+    ) {
+        this.memResourceDefinition.setLimits(memResourceDefinition);
+    }
+
+    @Autowired
+    public void setNamespace(@Value("${kubernetes.namespace}") String namespace) {
+        this.namespace = namespace;
     }
 
     @Autowired
@@ -110,13 +165,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     }
 
     @Autowired
-    public void setCollectLogs(@Value("${kubernetes.logs}") Boolean collectLogs) {
-        this.collectLogs = collectLogs;
-    }
-
-    @Autowired
-    public void setCollectMetrics(@Value("${kubernetes.metrics}") Boolean collectMetrics) {
-        this.collectMetrics = collectMetrics;
+    public void setVersion(@Value("${application.version}") String version) {
+        this.version = version;
     }
 
     @Autowired
@@ -473,11 +523,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             Optional
                 .ofNullable(res.getCpu())
                 .ifPresent(cpu -> {
-                    if (cpu.requests() != null) {
-                        requests.put("cpu", cpu.requests());
+                    if (cpu.getRequests() != null) {
+                        requests.put("cpu", cpu.getRequests());
                     }
-                    if (cpu.limits() != null) {
-                        limits.put("cpu", cpu.limits());
+                    if (cpu.getLimits() != null) {
+                        limits.put("cpu", cpu.getLimits());
                     }
                 });
 
@@ -485,11 +535,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             Optional
                 .ofNullable(res.getMem())
                 .ifPresent(mem -> {
-                    if (mem.requests() != null) {
-                        requests.put("memory", mem.requests());
+                    if (mem.getRequests() != null) {
+                        requests.put("memory", mem.getRequests());
                     }
-                    if (mem.limits() != null) {
-                        limits.put("memory", mem.limits());
+                    if (mem.getLimits() != null) {
+                        limits.put("memory", mem.getLimits());
                     }
                 });
 
@@ -502,6 +552,40 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             resources.setRequests(k8sBuilderHelper.convertResources(requests));
             resources.setLimits(k8sBuilderHelper.convertResources(limits));
         }
+
+        //default resources
+        Map<String, Quantity> requests = resources.getRequests() == null
+            ? new HashMap<>()
+            : new HashMap<>(resources.getRequests());
+
+        if (cpuResourceDefinition.getRequests() != null) {
+            //merge if missing
+            requests.putIfAbsent("cpu", Quantity.fromString(cpuResourceDefinition.getRequests()));
+        }
+
+        if (memResourceDefinition.getRequests() != null) {
+            //merge if missing
+            requests.putIfAbsent("memory", Quantity.fromString(memResourceDefinition.getRequests()));
+        }
+
+        resources.setRequests(requests);
+
+        //default limits
+        Map<String, Quantity> limits = resources.getLimits() == null
+            ? new HashMap<>()
+            : new HashMap<>(resources.getLimits());
+
+        if (cpuResourceDefinition.getLimits() != null) {
+            //merge if missing
+            limits.putIfAbsent("cpu", Quantity.fromString(cpuResourceDefinition.getLimits()));
+        }
+
+        if (memResourceDefinition.getLimits() != null) {
+            //merge if missing
+            limits.putIfAbsent("memory", Quantity.fromString(memResourceDefinition.getLimits()));
+        }
+
+        resources.setLimits(limits);
 
         return resources;
     }
@@ -676,5 +760,19 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         } catch (NullPointerException e) {
             throw new K8sFrameworkException(e.getMessage());
         }
+    }
+
+    public V1SecurityContext buildSecurityContext(T runnable) throws K8sFrameworkException {
+        V1SecurityContext context = new V1SecurityContext();
+        //always disable privileged
+        context.privileged(false);
+
+        //enforce policy for non root when requested by admin
+        if (disableRoot) {
+            context.allowPrivilegeEscalation(false);
+            context.runAsNonRoot(true);
+        }
+
+        return context;
     }
 }

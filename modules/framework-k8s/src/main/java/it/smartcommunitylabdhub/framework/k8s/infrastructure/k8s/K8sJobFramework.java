@@ -185,7 +185,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         } catch (ApiException | NullPointerException e) {
             //ignore, not existing or error
         }
-        
+
         //update results
         try {
             runnable.setResults(Collections.emptyMap());
@@ -285,7 +285,8 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             .resources(resources)
             .volumeMounts(volumeMounts)
             .envFrom(envFrom)
-            .env(env);
+            .env(env)
+            .securityContext(buildSecurityContext(runnable));
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()

@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -36,12 +35,31 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
     >() {};
     private final BatchV1Api batchV1Api;
 
-    @Autowired
-    private K8sJobFramework jobFramework;
+    //TODO refactor usage of framework: should split framework from infrastructure!
+    private final K8sJobFramework jobFramework;
 
     public K8sCronJobFramework(ApiClient apiClient) {
         super(apiClient);
         this.batchV1Api = new BatchV1Api(apiClient);
+        jobFramework = new K8sJobFramework(apiClient);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+
+        //configure dependant framework
+        this.jobFramework.setApplicationProperties(applicationProperties);
+        this.jobFramework.setCollectLogs(collectLogs);
+        this.jobFramework.setCollectMetrics(collectMetrics);
+        this.jobFramework.setCpuResourceDefinition(cpuResourceDefinition);
+        this.jobFramework.setDisableRoot(disableRoot);
+        this.jobFramework.setMemResourceDefinition(memResourceDefinition);
+        this.jobFramework.setNamespace(namespace);
+        this.jobFramework.setRegistrySecret(registrySecret);
+        this.jobFramework.setVersion(version);
+        this.jobFramework.setK8sBuilderHelper(k8sBuilderHelper);
+        this.jobFramework.setK8sSecretHelper(k8sSecretHelper);
     }
 
     @Override

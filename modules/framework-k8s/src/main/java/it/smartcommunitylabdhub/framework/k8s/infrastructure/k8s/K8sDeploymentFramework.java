@@ -276,7 +276,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .resources(resources)
             .volumeMounts(volumeMounts)
             .envFrom(envFrom)
-            .env(env);
+            .env(env)
+            .securityContext(buildSecurityContext(runnable));
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()

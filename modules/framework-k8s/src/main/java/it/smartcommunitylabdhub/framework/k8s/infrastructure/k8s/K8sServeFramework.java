@@ -62,7 +62,6 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     @Autowired
     public void setInitImage(@Value("${kaniko.init-image}") String initImage) {
         this.initImage = initImage;
-        this.deploymentFramework.setInitImage(initImage);
     }
 
     @Override
@@ -73,12 +72,15 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         this.deploymentFramework.setApplicationProperties(applicationProperties);
         this.deploymentFramework.setCollectLogs(collectLogs);
         this.deploymentFramework.setCollectMetrics(collectMetrics);
+        this.deploymentFramework.setCpuResourceDefinition(cpuResourceDefinition);
+        this.deploymentFramework.setDisableRoot(disableRoot);
         this.deploymentFramework.setInitImage(initImage);
-        this.deploymentFramework.setK8sBuilderHelper(k8sBuilderHelper);
-        this.deploymentFramework.setK8sSecretHelper(k8sSecretHelper);
+        this.deploymentFramework.setMemResourceDefinition(memResourceDefinition);
         this.deploymentFramework.setNamespace(namespace);
         this.deploymentFramework.setRegistrySecret(registrySecret);
         this.deploymentFramework.setVersion(version);
+        this.deploymentFramework.setK8sBuilderHelper(k8sBuilderHelper);
+        this.deploymentFramework.setK8sSecretHelper(k8sSecretHelper);
     }
 
     @Override
@@ -469,7 +471,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             .resources(resources)
             .volumeMounts(volumeMounts)
             .envFrom(envFrom)
-            .env(env);
+            .env(env)
+            .securityContext(buildSecurityContext(runnable));
 
         // Create a PodSpec for the container
         V1PodSpec podSpec = new V1PodSpec()

@@ -104,6 +104,15 @@ kubernetes:
   namespace: ${K8S_NAMESPACE:default}
   logs: ${K8S_ENABLE_LOGS:true}
   metrics: ${K8S_ENABLE_METRICS:true}
+  security: 
+    disable-root: ${K8S_SEC_DISABLE_ROOT:false}
+  resources:
+    cpu:
+      requests: ${K8S_RESOURCE_CPU_DEFAULT:100m}
+      limits: ${K8S_RESOURCE_CPU_LIMIT:}
+    mem:
+      requests: ${K8S_RESOURCE_MEM_DEFAULT:64m}
+      limits: ${K8S_RESOURCE_MEM_LIMIT:}      
   config:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}
