@@ -270,7 +270,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         V1Container container = new V1Container()
             .name(containerName)
             .image(runnable.getImage())
-            .imagePullPolicy("Always")
             .imagePullPolicy("IfNotPresent")
             .command(command)
             .args(args)

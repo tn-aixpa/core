@@ -470,7 +470,6 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         V1Container container = new V1Container()
             .name(containerName)
             .image(runnable.getImage())
-            .imagePullPolicy("Always")
             .imagePullPolicy("IfNotPresent")
             .command(command)
             .args(args)
