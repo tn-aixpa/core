@@ -196,14 +196,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         //update results
         try {
-            runnable.setResults(
-                Map.of(
-                    "deployment",
-                    deployment != null ? mapper.convertValue(deployment, typeRef) : null,
-                    "service",
-                    mapper.convertValue(service, typeRef)
-                )
-            );
+            runnable.setResults(Collections.emptyMap());
         } catch (IllegalArgumentException e) {
             log.error("error reading k8s results: {}", e.getMessage());
         }

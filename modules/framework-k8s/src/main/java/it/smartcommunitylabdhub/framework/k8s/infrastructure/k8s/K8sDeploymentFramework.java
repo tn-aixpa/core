@@ -144,7 +144,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
         //update results
         try {
-            runnable.setResults(Map.of("deployment", mapper.convertValue(deployment, typeRef)));
+            runnable.setResults(Collections.emptyMap());
         } catch (IllegalArgumentException e) {
             log.error("error reading k8s results: {}", e.getMessage());
         }

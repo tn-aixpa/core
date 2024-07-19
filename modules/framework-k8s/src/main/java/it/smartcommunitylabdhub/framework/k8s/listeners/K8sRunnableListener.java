@@ -74,14 +74,8 @@ public abstract class K8sRunnableListener<R extends K8sRunnable> {
                 }
 
                 try {
-                    // If runnable is deleted, remove from store
-                    if (runnable.getState().equals(State.DELETED.name())) {
-                        log.debug("remove runnable {} {} from store", clazz.getSimpleName(), runnable.getId());
-                        runnableStore.remove(runnable.getId());
-                    } else {
-                        log.debug("update runnable {} {} in store", clazz.getSimpleName(), runnable.getId());
-                        runnableStore.store(runnable.getId(), runnable);
-                    }
+                    log.debug("update runnable {} {} in store", clazz.getSimpleName(), runnable.getId());
+                    runnableStore.store(runnable.getId(), runnable);
                 } catch (StoreException e) {
                     log.error("Error with store: {}", e.getMessage());
                 }

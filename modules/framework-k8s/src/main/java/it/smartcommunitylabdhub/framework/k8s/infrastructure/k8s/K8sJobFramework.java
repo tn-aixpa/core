@@ -185,6 +185,13 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         } catch (ApiException | NullPointerException e) {
             //ignore, not existing or error
         }
+        
+        //update results
+        try {
+            runnable.setResults(Collections.emptyMap());
+        } catch (IllegalArgumentException e) {
+            log.error("error reading k8s results: {}", e.getMessage());
+        }
 
         //update state
         runnable.setState(State.DELETED.name());
