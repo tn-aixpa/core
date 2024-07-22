@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
@@ -29,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,12 +69,14 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             log.trace("runnable: {}", runnable);
         }
 
+        Map<String, KubernetesObject> results = new HashMap<>();
         V1Deployment deployment = build(runnable);
 
         //secrets
         V1Secret secret = buildRunSecret(runnable);
         if (secret != null) {
             storeRunSecret(secret);
+            results.put("secret", secret);
         }
 
         try {
@@ -80,6 +84,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             if (initConfigMap != null) {
                 log.info("create initConfigMap for {}", String.valueOf(initConfigMap.getMetadata().getName()));
                 coreV1Api.createNamespacedConfigMap(namespace, initConfigMap, null, null, null, null);
+                results.put("configMap", initConfigMap);
             }
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
@@ -92,13 +97,19 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
 
         log.info("create deployment for {}", String.valueOf(deployment.getMetadata().getName()));
         deployment = create(deployment);
+        results.put("deployment", deployment);
 
         //update state
         runnable.setState(State.RUNNING.name());
 
         //update results
         try {
-            runnable.setResults(Map.of("deployment", mapper.convertValue(deployment, typeRef)));
+            runnable.setResults(
+                results
+                    .entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
+            );
         } catch (IllegalArgumentException e) {
             log.error("error reading k8s results: {}", e.getMessage());
         }

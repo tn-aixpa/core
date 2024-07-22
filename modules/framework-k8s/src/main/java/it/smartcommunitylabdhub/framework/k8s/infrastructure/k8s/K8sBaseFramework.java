@@ -309,6 +309,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         String labelSelector = "app.kubernetes.io/instance=" + labelValue;
         try {
+            log.debug("load pods for {}", labelSelector);
             V1PodList pods = coreV1Api.listNamespacedPod(
                 namespace,
                 null,
