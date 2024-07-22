@@ -39,7 +39,7 @@ public abstract class AbstractBaseRuntime<
         this.kind = kind;
     }
 
-    @Autowired
+    @Autowired(required = false)
     public void setStores(Collection<RunnableStore<? extends RunRunnable>> stores) {
         this.stores =
             stores

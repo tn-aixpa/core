@@ -19,7 +19,7 @@ public abstract class K8sBaseRuntime<
         super(kind);
     }
 
-    @Autowired
+    @Autowired(required = false)
     public void setK8sBuilderHelper(K8sBuilderHelper k8sBuilderHelper) {
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
