@@ -96,6 +96,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected Boolean collectLogs;
     protected Boolean collectMetrics;
+    protected String collectResults = "default";
 
     protected String version;
     protected K8sBuilderHelper k8sBuilderHelper;
@@ -125,6 +126,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Autowired
     public void setCollectMetrics(@Value("${kubernetes.metrics}") Boolean collectMetrics) {
         this.collectMetrics = collectMetrics;
+    }
+
+    @Autowired
+    public void setCollectResults(@Value("${kubernetes.results}") String collectResults) {
+        this.collectResults = collectResults;
     }
 
     public void setCpuResourceDefinition(CoreResourceDefinition cpuResourceDefinition) {

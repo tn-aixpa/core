@@ -52,6 +52,7 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         this.jobFramework.setApplicationProperties(applicationProperties);
         this.jobFramework.setCollectLogs(collectLogs);
         this.jobFramework.setCollectMetrics(collectMetrics);
+        this.jobFramework.setCollectResults(collectResults);
         this.jobFramework.setCpuResourceDefinition(cpuResourceDefinition);
         this.jobFramework.setDisableRoot(disableRoot);
         this.jobFramework.setImagePullPolicy(imagePullPolicy);
@@ -98,11 +99,13 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         //update state
         runnable.setState(State.RUNNING.name());
 
-        //update results
-        try {
-            runnable.setResults(Map.of("cronJob", mapper.convertValue(job, typeRef)));
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"disable".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(Map.of("cronJob", mapper.convertValue(job, typeRef)));
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         if (log.isTraceEnabled()) {

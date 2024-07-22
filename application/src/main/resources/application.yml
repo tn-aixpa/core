@@ -104,6 +104,8 @@ kubernetes:
   namespace: ${K8S_NAMESPACE:default}
   logs: ${K8S_ENABLE_LOGS:true}
   metrics: ${K8S_ENABLE_METRICS:true}
+  # supported values for results: default,keep,disable
+  results: ${K8S_ENABLE_RESULTS:default}
   security: 
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
   image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}

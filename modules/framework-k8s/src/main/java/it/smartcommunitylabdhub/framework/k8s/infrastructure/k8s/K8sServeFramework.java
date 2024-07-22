@@ -74,6 +74,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         this.deploymentFramework.setApplicationProperties(applicationProperties);
         this.deploymentFramework.setCollectLogs(collectLogs);
         this.deploymentFramework.setCollectMetrics(collectMetrics);
+        this.deploymentFramework.setCollectResults(collectResults);
         this.deploymentFramework.setCpuResourceDefinition(cpuResourceDefinition);
         this.deploymentFramework.setDisableRoot(disableRoot);
         this.deploymentFramework.setImagePullPolicy(imagePullPolicy);
@@ -136,16 +137,18 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         //update state
         runnable.setState(State.RUNNING.name());
 
-        //update results
-        try {
-            runnable.setResults(
-                results
-                    .entrySet()
-                    .stream()
-                    .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
-            );
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"disable".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(
+                    results
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
+                );
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         if (log.isTraceEnabled()) {
@@ -204,11 +207,13 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         log.info("delete service for {}", String.valueOf(service.getMetadata().getName()));
         delete(service);
 
-        //update results
-        try {
-            runnable.setResults(Collections.emptyMap());
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"keep".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(Collections.emptyMap());
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         //update state
@@ -241,18 +246,20 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         log.info("delete service for {}", String.valueOf(service.getMetadata().getName()));
         delete(service);
 
-        //update results
-        try {
-            runnable.setResults(
-                Map.of(
-                    "deployment",
-                    deployment != null ? mapper.convertValue(deployment, typeRef) : null,
-                    "service",
-                    service != null ? mapper.convertValue(service, typeRef) : null
-                )
-            );
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"disable".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(
+                    Map.of(
+                        "deployment",
+                        deployment != null ? mapper.convertValue(deployment, typeRef) : null,
+                        "service",
+                        service != null ? mapper.convertValue(service, typeRef) : null
+                    )
+                );
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         //update state

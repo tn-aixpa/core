@@ -76,48 +76,54 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                 log.error("error collecting pods for deployment {}: {}", runnable.getId(), e1.getMessage());
             }
 
-            //update results
-            try {
-                runnable.setResults(
-                    MapUtils.mergeMultipleMaps(
-                        runnable.getResults(),
-                        Map.of(
-                            "deployment",
-                            mapper.convertValue(deployment, typeRef),
-                            "service",
-                            mapper.convertValue(service, typeRef),
-                            "pods",
-                            pods != null ? mapper.convertValue(pods, arrayRef) : null
+            if (!"disable".equals(collectResults)) {
+                //update results
+                try {
+                    runnable.setResults(
+                        MapUtils.mergeMultipleMaps(
+                            runnable.getResults(),
+                            Map.of(
+                                "deployment",
+                                mapper.convertValue(deployment, typeRef),
+                                "service",
+                                mapper.convertValue(service, typeRef),
+                                "pods",
+                                pods != null ? mapper.convertValue(pods, arrayRef) : null
+                            )
                         )
-                    )
-                );
-            } catch (IllegalArgumentException e) {
-                log.error("error reading k8s results: {}", e.getMessage());
+                    );
+                } catch (IllegalArgumentException e) {
+                    log.error("error reading k8s results: {}", e.getMessage());
+                }
             }
 
-            //collect logs, optional
-            try {
-                log.debug(
-                    "Collect logs for deployment {} for run {}",
-                    deployment.getMetadata().getName(),
-                    runnable.getId()
-                );
-                //TODO add sinceTime when available
-                runnable.setLogs(deploymentFramework.logs(deployment));
-            } catch (K8sFrameworkException e1) {
-                log.error("error collecting logs for {}: {}", runnable.getId(), e1.getMessage());
+            if (Boolean.TRUE.equals(collectLogs)) {
+                //collect logs, optional
+                try {
+                    log.debug(
+                        "Collect logs for deployment {} for run {}",
+                        deployment.getMetadata().getName(),
+                        runnable.getId()
+                    );
+                    //TODO add sinceTime when available
+                    runnable.setLogs(deploymentFramework.logs(deployment));
+                } catch (K8sFrameworkException e1) {
+                    log.error("error collecting logs for {}: {}", runnable.getId(), e1.getMessage());
+                }
             }
 
-            //collect metrics, optional
-            try {
-                log.debug(
-                    "Collect metrics for deployment {} for run {}",
-                    deployment.getMetadata().getName(),
-                    runnable.getId()
-                );
-                runnable.setMetrics(deploymentFramework.metrics(deployment));
-            } catch (K8sFrameworkException e1) {
-                log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
+            if (Boolean.TRUE.equals(collectMetrics)) {
+                //collect metrics, optional
+                try {
+                    log.debug(
+                        "Collect metrics for deployment {} for run {}",
+                        deployment.getMetadata().getName(),
+                        runnable.getId()
+                    );
+                    runnable.setMetrics(deploymentFramework.metrics(deployment));
+                } catch (K8sFrameworkException e1) {
+                    log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
+                }
             }
         } catch (K8sFrameworkException e) {
             // Set Runnable to ERROR state

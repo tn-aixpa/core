@@ -67,38 +67,44 @@ public class K8sJobMonitor extends K8sBaseMonitor<K8sJobRunnable> {
                 log.error("error collecting pods for job {}: {}", runnable.getId(), e1.getMessage());
             }
 
-            //update results
-            try {
-                runnable.setResults(
-                    MapUtils.mergeMultipleMaps(
-                        runnable.getResults(),
-                        Map.of(
-                            "job",
-                            mapper.convertValue(job, typeRef),
-                            "pods",
-                            pods != null ? mapper.convertValue(pods, arrayRef) : null
+            if (!"disable".equals(collectResults)) {
+                //update results
+                try {
+                    runnable.setResults(
+                        MapUtils.mergeMultipleMaps(
+                            runnable.getResults(),
+                            Map.of(
+                                "job",
+                                mapper.convertValue(job, typeRef),
+                                "pods",
+                                pods != null ? mapper.convertValue(pods, arrayRef) : null
+                            )
                         )
-                    )
-                );
-            } catch (IllegalArgumentException e) {
-                log.error("error reading k8s results: {}", e.getMessage());
+                    );
+                } catch (IllegalArgumentException e) {
+                    log.error("error reading k8s results: {}", e.getMessage());
+                }
             }
 
-            //collect logs, optional
-            try {
-                log.debug("Collect logs for job {} for run {}", job.getMetadata().getName(), runnable.getId());
-                //TODO add sinceTime when available
-                runnable.setLogs(framework.logs(job));
-            } catch (K8sFrameworkException e1) {
-                log.error("error collecting logs for job {}: {}", runnable.getId(), e1.getMessage());
+            if (Boolean.TRUE.equals(collectLogs)) {
+                //collect logs, optional
+                try {
+                    log.debug("Collect logs for job {} for run {}", job.getMetadata().getName(), runnable.getId());
+                    //TODO add sinceTime when available
+                    runnable.setLogs(framework.logs(job));
+                } catch (K8sFrameworkException e1) {
+                    log.error("error collecting logs for job {}: {}", runnable.getId(), e1.getMessage());
+                }
             }
 
-            //collect metrics, optional
-            try {
-                log.debug("Collect metrics for job {} for run {}", job.getMetadata().getName(), runnable.getId());
-                runnable.setMetrics(framework.metrics(job));
-            } catch (K8sFrameworkException e1) {
-                log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
+            if (Boolean.TRUE.equals(collectMetrics)) {
+                //collect metrics, optional
+                try {
+                    log.debug("Collect metrics for job {} for run {}", job.getMetadata().getName(), runnable.getId());
+                    runnable.setMetrics(framework.metrics(job));
+                } catch (K8sFrameworkException e1) {
+                    log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
+                }
             }
         } catch (K8sFrameworkException e) {
             // Set Runnable to ERROR state

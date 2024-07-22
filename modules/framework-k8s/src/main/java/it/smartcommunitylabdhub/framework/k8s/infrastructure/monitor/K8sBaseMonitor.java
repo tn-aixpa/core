@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.util.Assert;
 
@@ -37,6 +38,10 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
     protected final RunnableStore<T> store;
     protected ApplicationEventPublisher eventPublisher;
 
+    protected Boolean collectLogs = Boolean.TRUE;
+    protected Boolean collectMetrics = Boolean.TRUE;
+    protected String collectResults = "default";
+
     protected K8sBaseMonitor(RunnableStore<T> runnableStore) {
         Assert.notNull(runnableStore, "runnable store is required");
 
@@ -46,6 +51,21 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
     @Autowired
     public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
+    }
+
+    @Autowired
+    public void setCollectLogs(@Value("${kubernetes.logs}") Boolean collectLogs) {
+        this.collectLogs = collectLogs;
+    }
+
+    @Autowired
+    public void setCollectMetrics(@Value("${kubernetes.metrics}") Boolean collectMetrics) {
+        this.collectMetrics = collectMetrics;
+    }
+
+    @Autowired
+    public void setCollectResults(@Value("${kubernetes.results}") String collectResults) {
+        this.collectResults = collectResults;
     }
 
     @Override

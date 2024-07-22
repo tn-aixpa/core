@@ -111,16 +111,18 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         //update state
         runnable.setState(State.RUNNING.name());
 
-        //update results
-        try {
-            runnable.setResults(
-                results
-                    .entrySet()
-                    .stream()
-                    .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
-            );
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"disable".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(
+                    results
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
+                );
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         if (log.isTraceEnabled()) {
@@ -198,11 +200,13 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             //ignore, not existing or error
         }
 
-        //update results
-        try {
-            runnable.setResults(Collections.emptyMap());
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"keep".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(Collections.emptyMap());
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         //update state

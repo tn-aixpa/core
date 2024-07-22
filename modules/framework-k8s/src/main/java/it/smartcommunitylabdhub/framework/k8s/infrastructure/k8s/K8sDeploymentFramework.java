@@ -102,18 +102,19 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         //update state
         runnable.setState(State.RUNNING.name());
 
-        //update results
-        try {
-            runnable.setResults(
-                results
-                    .entrySet()
-                    .stream()
-                    .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
-            );
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"disable".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(
+                    results
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
+                );
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
-
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
         }
@@ -153,11 +154,13 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             //ignore, not existing or error
         }
 
-        //update results
-        try {
-            runnable.setResults(Collections.emptyMap());
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"keep".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(Collections.emptyMap());
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         //update state
@@ -184,10 +187,12 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         apply(deployment);
 
         //update results
-        try {
-            runnable.setResults(Map.of("deployment", mapper.convertValue(deployment, typeRef)));
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"disable".equals(collectResults)) {
+            try {
+                runnable.setResults(Map.of("deployment", mapper.convertValue(deployment, typeRef)));
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         //update state

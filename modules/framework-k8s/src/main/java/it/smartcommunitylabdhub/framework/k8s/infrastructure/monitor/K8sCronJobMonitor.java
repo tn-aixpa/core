@@ -51,33 +51,39 @@ public class K8sCronJobMonitor extends K8sBaseMonitor<K8sCronJobRunnable> {
             }
 
             //TODO evaluate how to monitor
-            //update results
-            try {
-                runnable.setResults(
-                    Map.of(
-                        "cronJob",
-                        mapper.convertValue(job, typeRef),
-                        "pods",
-                        pods != null ? mapper.convertValue(pods, arrayRef) : null
-                    )
-                );
-            } catch (IllegalArgumentException e) {
-                log.error("error reading k8s results: {}", e.getMessage());
+            if (!"disable".equals(collectResults)) {
+                //update results
+                try {
+                    runnable.setResults(
+                        Map.of(
+                            "cronJob",
+                            mapper.convertValue(job, typeRef),
+                            "pods",
+                            pods != null ? mapper.convertValue(pods, arrayRef) : null
+                        )
+                    );
+                } catch (IllegalArgumentException e) {
+                    log.error("error reading k8s results: {}", e.getMessage());
+                }
             }
 
-            //collect logs, optional
-            try {
-                //TODO add sinceTime when available
-                runnable.setLogs(framework.logs(job));
-            } catch (K8sFrameworkException e1) {
-                log.error("error collecting logs for job {}: {}", runnable.getId(), e1.getMessage());
+            if (Boolean.TRUE.equals(collectLogs)) {
+                //collect logs, optional
+                try {
+                    //TODO add sinceTime when available
+                    runnable.setLogs(framework.logs(job));
+                } catch (K8sFrameworkException e1) {
+                    log.error("error collecting logs for job {}: {}", runnable.getId(), e1.getMessage());
+                }
             }
 
-            //collect metrics, optional
-            try {
-                runnable.setMetrics(framework.metrics(job));
-            } catch (K8sFrameworkException e1) {
-                log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
+            if (Boolean.TRUE.equals(collectMetrics)) {
+                //collect metrics, optional
+                try {
+                    runnable.setMetrics(framework.metrics(job));
+                } catch (K8sFrameworkException e1) {
+                    log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
+                }
             }
         } catch (K8sFrameworkException e) {
             // Set Runnable to ERROR state
