@@ -83,6 +83,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected String namespace;
     protected String registrySecret;
+    protected String imagePullPolicy = "IfNotPresent";
 
     protected boolean disableRoot = false;
 
@@ -153,6 +154,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         if (disableRoot != null) {
             this.disableRoot = disableRoot.booleanValue();
         }
+    }
+
+    @Autowired
+    public void setImagePullPolicy(@Value("${kubernetes.image-pull-policy}") String imagePullPolicy) {
+        this.imagePullPolicy = imagePullPolicy;
     }
 
     public void setMemResourceDefinition(CoreResourceDefinition memResourceDefinition) {

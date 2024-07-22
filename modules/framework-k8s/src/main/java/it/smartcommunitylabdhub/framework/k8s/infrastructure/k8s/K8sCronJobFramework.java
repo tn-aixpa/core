@@ -54,6 +54,7 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         this.jobFramework.setCollectMetrics(collectMetrics);
         this.jobFramework.setCpuResourceDefinition(cpuResourceDefinition);
         this.jobFramework.setDisableRoot(disableRoot);
+        this.jobFramework.setImagePullPolicy(imagePullPolicy);
         this.jobFramework.setMemResourceDefinition(memResourceDefinition);
         this.jobFramework.setNamespace(namespace);
         this.jobFramework.setRegistrySecret(registrySecret);

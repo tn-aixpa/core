@@ -279,7 +279,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         V1Container container = new V1Container()
             .name(containerName)
             .image(runnable.getImage())
-            .imagePullPolicy("IfNotPresent")
+            .imagePullPolicy(imagePullPolicy)
             .command(command)
             .args(args)
             .resources(resources)

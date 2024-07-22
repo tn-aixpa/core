@@ -106,6 +106,7 @@ kubernetes:
   metrics: ${K8S_ENABLE_METRICS:true}
   security: 
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
+  image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}
   resources:
     cpu:
       requests: ${K8S_RESOURCE_CPU_DEFAULT:100m}

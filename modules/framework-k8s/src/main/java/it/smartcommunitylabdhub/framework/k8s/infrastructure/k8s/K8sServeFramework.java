@@ -74,6 +74,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         this.deploymentFramework.setCollectMetrics(collectMetrics);
         this.deploymentFramework.setCpuResourceDefinition(cpuResourceDefinition);
         this.deploymentFramework.setDisableRoot(disableRoot);
+        this.deploymentFramework.setImagePullPolicy(imagePullPolicy);
         this.deploymentFramework.setInitImage(initImage);
         this.deploymentFramework.setMemResourceDefinition(memResourceDefinition);
         this.deploymentFramework.setNamespace(namespace);
@@ -465,7 +466,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         V1Container container = new V1Container()
             .name(containerName)
             .image(runnable.getImage())
-            .imagePullPolicy("IfNotPresent")
+            .imagePullPolicy(imagePullPolicy)
             .command(command)
             .args(args)
             .resources(resources)
