@@ -499,14 +499,29 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             K8sBuilderHelper.sanitizeNames(runnable.getRuntime())
         );
 
-        Map<String, String> labels = MapUtils.mergeMultipleMaps(appLabels, coreLabels);
+        Map<String, String> templateLabels = new HashMap<>();
+        if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
+            //add template
+            K8sRunnable template = templates.get(runnable.getTemplate());
+            templateLabels.put(
+                K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/template",
+                runnable.getTemplate()
+            );
+
+            if (template.getLabels() != null && !template.getLabels().isEmpty()) {
+                for (CoreLabel l : template.getLabels()) {
+                    templateLabels.putIfAbsent(l.name(), K8sBuilderHelper.sanitizeNames(l.value()));
+                }
+            }
+        }
+
+        Map<String, String> labels = MapUtils.mergeMultipleMaps(templateLabels, appLabels, coreLabels);
 
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
-            for (CoreLabel l : runnable.getLabels()) labels.putIfAbsent(
-                l.name(),
-                K8sBuilderHelper.sanitizeNames(l.value())
-            );
+            for (CoreLabel l : runnable.getLabels()) {
+                labels.putIfAbsent(l.name(), K8sBuilderHelper.sanitizeNames(l.value()));
+            }
         }
 
         return labels;
