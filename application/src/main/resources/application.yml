@@ -113,9 +113,12 @@ kubernetes:
     mem:
       requests: ${K8S_RESOURCE_MEM_DEFAULT:64m}
       limits: ${K8S_RESOURCE_MEM_LIMIT:}      
+    gpu:
+      key: ${K8S_RESOURCE_GPU_KEY:nvidia.com/gpu}
   config:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}
+  templates: ${K8S_TEMPLATES:}
 
 # Application endpoint
 application:

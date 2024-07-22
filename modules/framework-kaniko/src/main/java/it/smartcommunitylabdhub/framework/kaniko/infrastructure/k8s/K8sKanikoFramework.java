@@ -351,7 +351,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         V1PodSpec podSpec = new V1PodSpec()
             .containers(Collections.singletonList(container))
             .nodeSelector(buildNodeSelector(runnable))
-            .affinity(runnable.getAffinity())
+            .affinity(buildAffinity(runnable))
             .tolerations(buildTolerations(runnable))
             .volumes(volumes)
             .restartPolicy("Never");

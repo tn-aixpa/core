@@ -283,10 +283,10 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         V1PodSpec podSpec = new V1PodSpec()
             .containers(Collections.singletonList(container))
             .nodeSelector(buildNodeSelector(runnable))
-            .affinity(runnable.getAffinity())
+            .affinity(buildAffinity(runnable))
             .tolerations(buildTolerations(runnable))
-            .runtimeClassName(runnable.getRuntimeClass())
-            .priorityClassName(runnable.getPriorityClass())
+            .runtimeClassName(buildRuntimeClassName(runnable))
+            .priorityClassName(buildPriorityClassName(runnable))
             .volumes(volumes)
             .restartPolicy("Always")
             .imagePullSecrets(buildImagePullSecrets(runnable));

@@ -40,6 +40,8 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
 
     private String priorityClass;
 
+    private String profile;
+
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
@@ -55,5 +57,6 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
         this.tolerations = spec.getTolerations();
         this.runtimeClass = spec.getRuntimeClass();
         this.priorityClass = spec.getPriorityClass();
+        this.profile = spec.getProfile();
     }
 }

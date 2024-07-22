@@ -212,6 +212,7 @@ public class PythonServeRunner implements Runner<K8sRunnable> {
             .tolerations(taskSpec.getTolerations())
             .runtimeClass(taskSpec.getRuntimeClass())
             .priorityClass(taskSpec.getPriorityClass())
+            .template(taskSpec.getProfile())
             //specific
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort))

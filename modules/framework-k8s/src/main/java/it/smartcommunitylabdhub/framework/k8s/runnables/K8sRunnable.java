@@ -70,6 +70,8 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private List<CoreLabel> labels;
 
+    private String template;
+
     private String state;
 
     private Map<String, Serializable> results;

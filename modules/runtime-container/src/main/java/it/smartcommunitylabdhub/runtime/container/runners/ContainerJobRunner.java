@@ -84,6 +84,7 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
             .tolerations(taskSpec.getTolerations())
             .runtimeClass(taskSpec.getRuntimeClass())
             .priorityClass(taskSpec.getPriorityClass())
+            .template(taskSpec.getProfile())
             //specific
             .backoffLimit(taskSpec.getBackoffLimit())
             .build();
@@ -109,6 +110,7 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
                     .tolerations(taskSpec.getTolerations())
                     .runtimeClass(taskSpec.getRuntimeClass())
                     .priorityClass(taskSpec.getPriorityClass())
+                    .template(taskSpec.getProfile())
                     //specific
                     .backoffLimit(taskSpec.getBackoffLimit())
                     .schedule(taskSpec.getSchedule())

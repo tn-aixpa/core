@@ -81,6 +81,7 @@ public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
             .tolerations(taskSpec.getTolerations())
             .runtimeClass(taskSpec.getRuntimeClass())
             .priorityClass(taskSpec.getPriorityClass())
+            .template(taskSpec.getProfile())
             //specific
             .replicas(taskSpec.getReplicas())
             .build();
