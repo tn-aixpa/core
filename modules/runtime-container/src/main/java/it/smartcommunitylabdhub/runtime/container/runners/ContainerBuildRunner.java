@@ -153,13 +153,11 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             .image(
                 StringUtils.hasText(functionSpec.getImage())
                     ? functionSpec.getImage()
-                    : K8sBuilderHelper.sanitizeNames(
-                        runSpecAccessor.getProject() +
-                        "-" +
-                        runSpecAccessor.getFunction() +
-                        ":" +
-                        run.getId().substring(0, 5)
-                    )
+                    : K8sBuilderHelper.sanitizeNames(runSpecAccessor.getProject()) +
+                    "-" +
+                    K8sBuilderHelper.sanitizeNames(runSpecAccessor.getFunction()) +
+                    ":" +
+                    K8sBuilderHelper.sanitizeNames(run.getId().substring(0, 5))
             )
             .envs(coreEnvList)
             .secrets(groupedSecrets)

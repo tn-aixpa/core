@@ -211,7 +211,7 @@ public class K8sSecretHelper {
 
     // Generate and return job name
     public String getSecretName(String runtime, String task, String id) {
-        return K8sBuilderHelper.sanitizeNames("sec" + "-" + runtime + "-" + task + "-" + id);
+        return K8sBuilderHelper.sanitizeNames("sec" + "-" + task + "-" + id);
     }
 
     public record PatchBody(Object value, String path) {

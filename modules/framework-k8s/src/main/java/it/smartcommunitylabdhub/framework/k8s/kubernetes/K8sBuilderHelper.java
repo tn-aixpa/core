@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -243,22 +242,22 @@ public class K8sBuilderHelper implements InitializingBean {
     //TODO align names!
     // Generate and return container name
     public String getContainerName(String runtime, String task, String id) {
-        return sanitizeNames("c" + "-" + runtime + "-" + task + "-" + id);
+        return sanitizeNames("c" + "-" + task + "-" + id);
     }
 
     // Generate and return job name
     public String getJobName(String runtime, String task, String id) {
-        return sanitizeNames("j" + "-" + runtime + "-" + task + "-" + id);
+        return sanitizeNames("j" + "-" + task + "-" + id);
     }
 
     // Generate and return deployment name
     public String getDeploymentName(String runtime, String task, String id) {
-        return sanitizeNames("d" + "-" + runtime + "-" + task + "-" + id);
+        return sanitizeNames("d" + "-" + task + "-" + id);
     }
 
     // Generate and return service name
     public String getServiceName(String runtime, String task, String id) {
-        return sanitizeNames("s" + "-" + runtime + "-" + task + "-" + id);
+        return sanitizeNames("s" + "-" + task + "-" + id);
     }
 
     public String getImageName(String image, String id) {
@@ -275,13 +274,19 @@ public class K8sBuilderHelper implements InitializingBean {
             return null;
         } else {
             //use only allowed chars in k8s resource names!
-            String value = name.toLowerCase().replaceAll("[^a-zA-Z0-9._-]+", "-");
+            String value = name.toLowerCase().replaceAll("[^a-zA-Z0-9._-]+", "");
             if (value.length() > K8S_NAME_MAX_LENGTH) {
-                return (
-                    value.substring(0, K8S_NAME_MAX_LENGTH - 7) +
-                    "-" +
-                    RandomStringUtils.randomAlphabetic(5).toLowerCase()
+                log.error("Name exceeds max length: {} ({})", String.valueOf(value.length()), value);
+
+                throw new IllegalArgumentException(
+                    "Name exceeds max length: " + String.valueOf(value.length()) + "(" + value + ")"
                 );
+                //DISABLED: multiple sanitizations should return the *same* value
+                // return (
+                //     value.substring(0, K8S_NAME_MAX_LENGTH - 7) +
+                //     "-" +
+                //     RandomStringUtils.randomAlphabetic(5).toLowerCase()
+                // );
             }
 
             return value;
