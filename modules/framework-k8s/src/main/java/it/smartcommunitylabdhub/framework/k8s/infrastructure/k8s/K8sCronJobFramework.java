@@ -58,9 +58,12 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         this.jobFramework.setMemResourceDefinition(memResourceDefinition);
         this.jobFramework.setNamespace(namespace);
         this.jobFramework.setRegistrySecret(registrySecret);
+        this.jobFramework.setTemplates(templateKeys);
         this.jobFramework.setVersion(version);
         this.jobFramework.setK8sBuilderHelper(k8sBuilderHelper);
         this.jobFramework.setK8sSecretHelper(k8sSecretHelper);
+
+        this.jobFramework.afterPropertiesSet();
     }
 
     @Override

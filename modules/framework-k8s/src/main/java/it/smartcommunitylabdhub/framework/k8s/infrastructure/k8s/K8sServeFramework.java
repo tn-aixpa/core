@@ -79,9 +79,12 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         this.deploymentFramework.setMemResourceDefinition(memResourceDefinition);
         this.deploymentFramework.setNamespace(namespace);
         this.deploymentFramework.setRegistrySecret(registrySecret);
+        this.deploymentFramework.setTemplates(templateKeys);
         this.deploymentFramework.setVersion(version);
         this.deploymentFramework.setK8sBuilderHelper(k8sBuilderHelper);
         this.deploymentFramework.setK8sSecretHelper(k8sSecretHelper);
+
+        this.deploymentFramework.afterPropertiesSet();
     }
 
     @Override

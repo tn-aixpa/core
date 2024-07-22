@@ -232,7 +232,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
             templateKeys.forEach(k -> {
                 try {
-                    String[] kk = k.split("|");
+                    String[] kk = k.split("\\|");
                     if (kk.length == 2) {
                         String key = kk[0];
                         String path = kk[1];
