@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.components.run;
 
+import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.events.RunnableChangedEvent;
@@ -77,6 +78,9 @@ public class RunManager {
 
     @Autowired
     ProcessorRegistry processorRegistry;
+
+    @Autowired
+    JwtTokenService jwtTokenService;
 
     public Run build(@NotNull Run run) throws NoSuchEntityException {
         // GET state machine, init state machine with status
@@ -197,8 +201,10 @@ public class RunManager {
                     //TODO refactor properly
                     if (r instanceof SecuredRunnable) {
                         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                        if (auth != null) {
-                            ((SecuredRunnable) r).setCredentials(auth);
+
+                        String token = jwtTokenService.generateToken(auth);
+                        if (token != null) {
+                            ((SecuredRunnable) r).setCredentials(token);
                         }
                     }
 
