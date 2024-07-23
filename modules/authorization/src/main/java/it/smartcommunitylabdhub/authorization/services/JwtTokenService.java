@@ -16,8 +16,11 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
+
+import java.io.Serializable;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,7 +30,6 @@ public class JwtTokenService {
 
     @Autowired
     private JWKSetKeyStore keyStoreUtil;
-
 
     @Autowired
     ApplicationProperties applicationProperties;
@@ -46,13 +48,7 @@ public class JwtTokenService {
             throws JwtTokenServiceException {
         try {
 
-            // check that jwt is enabled via securityProperties
-            if (!securityProperties.getJwt().isEnabled()) {
-                return null;
-            }
-
             // Extract claims from authentication if it's a JwtAuthenticationToken
-            Map<String, Object> additionalClaims = extractClaims(authentication);
 
 
             JWK jwk = keyStoreUtil.getJwk();
@@ -68,12 +64,12 @@ public class JwtTokenService {
                     .jwtID(UUID.randomUUID().toString())
                     .expirationTime(new Date(System.currentTimeMillis() + jwtExpiration));
 
-
-            // Add additional claims from the authentication token
-            if (additionalClaims != null) {
-                additionalClaims.forEach(claimsSetBuilder::claim);
+            List<String> additionalClaims = extractClaims(authentication);
+            if(additionalClaims != null){
+                claimsSetBuilder.claim(securityProperties.getJwt().getClaim(), additionalClaims);
             }
 
+            // Build claims set
             JWTClaimsSet claimsSet = claimsSetBuilder.build();
 
             // Create signed JWT
@@ -98,10 +94,10 @@ public class JwtTokenService {
     }
 
 
-    private Map<String, Object> extractClaims(Authentication authentication) {
+    private List<String> extractClaims(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken jwtAuthToken) {
             Jwt jwt = jwtAuthToken.getToken();
-            return jwt.getClaims();
+            return jwt.getClaimAsStringList(securityProperties.getJwt().getClaim());
         } else {
             log.warn("Authentication is not of type JwtAuthenticationToken");
             return null;

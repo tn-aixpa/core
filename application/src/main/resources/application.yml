@@ -1,16 +1,16 @@
 # server config
 server:
-   host: ${SERVER_HOST:localhost}
-   port: ${SERVER_PORT:8080}
-   servlet:
-     context-path: ${SERVER_CONTEXT:/}
-   tomcat:
-     remoteip:
+  host: ${SERVER_HOST:localhost}
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${SERVER_CONTEXT:/}
+  tomcat:
+    remoteip:
       remote_ip_header: ${SERVER_TOMCAT_REMOTE_IP_HEADER:x-forwarded-for}
       protocol_header: ${SERVER_TOMCAT_PROTOCOL_HEADER:x-forwarded-proto}
-   max-http-request-header-size: 32000
-   error:
-      include-stacktrace: never
+  max-http-request-header-size: 32000
+  error:
+    include-stacktrace: never
 
 # Spring configuration
 spring:
@@ -42,18 +42,18 @@ spring:
 
 # Management Endpoints
 management:
-    server:
-      port: ${MANAGEMENT_PORT:8081}
-    endpoints:
-      enabled-by-default: false
-      web:
-        base-path:
-        exposure.include: "health,info,metrics"
-    endpoint:
-      info:
-        enabled: true
-      health:
-        enabled: true
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path:
+      exposure.include: "health,info,metrics"
+  endpoint:
+    info:
+      enabled: true
+    health:
+      enabled: true
 
 
 # Runtimes
@@ -84,7 +84,7 @@ kaniko:
   image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
   image-registry: ${KANIKO_IMAGE_REGISTRY:${registry.name}}
   secret: ${KANIKO_SECRET:${registry.secret}}
-  args: ${KANIKO_ARGS:}    
+  args: ${KANIKO_ARGS:}
 
 # MLRun config
 mlrun:
@@ -93,7 +93,7 @@ mlrun:
   image-registry: ${MLRUN_IMAGE_REGISTRY:}
 
 # registry
-registry:  
+registry:
   name: ${DOCKER_REGISTRY:}
   secret: ${DOCKER_REGISTRY_SECRET:}
 
@@ -134,9 +134,9 @@ application:
 
 
 logging:
-   level:
-      ROOT: INFO
-      it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
+  level:
+    ROOT: INFO
+    it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
 
 security:
   api:
@@ -147,9 +147,9 @@ security:
     password: ${DH_AUTH_BASIC_PASSWORD:}
   jwt:
     issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:${security.oidc.issuer-uri}}
-    audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
+    audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.issuer-uri}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
-  oidc:    
+  oidc:
     issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}

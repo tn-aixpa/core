@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.authorization.utils.JWKUtils;
 import org.springframework.core.io.Resource;
 import com.google.common.base.Charsets;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,7 +24,7 @@ public class JWKSetKeyStore {
 
     public JWKSetKeyStore(Resource location, String kid) {
         this.jwkSet = loadJwkSet(location);
-        if (kid == null) {
+        if (!StringUtils.hasText(kid)) {
             this.kid = jwkSet.getKeys().getFirst().getKeyID(); // prendo la prima
             // se è null, non ci sono chiavi assert
             Assert.notNull(this.kid, "Key ID cannot be null");

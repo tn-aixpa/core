@@ -1,17 +1,26 @@
 package it.smartcommunitylabdhub.core.config;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.JWK;
+import it.smartcommunitylabdhub.authorization.config.KeyStoreConfig;
+import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,13 +32,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
+import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
@@ -60,19 +66,26 @@ public class SecurityConfig {
     @Value("${management.endpoints.web.base-path}")
     private String managementBasePath;
 
+    @Autowired
+    KeyStoreConfig keyStoreConfig;
+
+    @Autowired
+    ApplicationProperties applicationProperties;
+
     @Bean("apiSecurityFilterChain")
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+
         HttpSecurity securityChain = http
-            .securityMatcher(getApiRequestMatcher())
-            .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(getApiRequestMatcher()).hasRole("USER").anyRequest().authenticated();
-            })
-            // disable request cache
-            .requestCache(requestCache -> requestCache.disable())
-            //disable csrf
-            .csrf(csrf -> csrf.disable())
-            // we don't want a session for these endpoints, each request should be evaluated
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .securityMatcher(getApiRequestMatcher())
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(getApiRequestMatcher()).hasRole("USER").anyRequest().authenticated();
+                })
+                // disable request cache
+                .requestCache(requestCache -> requestCache.disable())
+                //disable csrf
+                .csrf(csrf -> csrf.disable())
+                // we don't want a session for these endpoints, each request should be evaluated
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // allow cors
         securityChain.cors(cors -> {
@@ -87,14 +100,22 @@ public class SecurityConfig {
         if (properties.isRequired()) {
             if (properties.isBasicAuthEnabled()) {
                 securityChain
-                    .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
-                    .userDetailsService(userDetailsService());
+                        .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+                        .userDetailsService(userDetailsService());
             }
             if (properties.isJwtAuthEnabled()) {
+
+                JwtAuthenticationProvider jwtAacAuthProvider = new JwtAuthenticationProvider(jwtDecoder());
+                JwtAuthenticationProvider jwtExchangeAuthProvider = new JwtAuthenticationProvider(exchangeJwtDecoder());
+
+                jwtAacAuthProvider.setJwtAuthenticationConverter(jwtAuthenticationConverter());
+                jwtExchangeAuthProvider.setJwtAuthenticationConverter(jwtAuthenticationConverter());
+
+                // Create authentication Manager
+                AuthenticationManager authenticationManager = new ProviderManager(jwtAacAuthProvider, jwtExchangeAuthProvider);
+
                 securityChain.oauth2ResourceServer(oauth2 ->
-                    oauth2.jwt(jwt -> jwt.decoder(jwtDecoder()).jwtAuthenticationConverter(jwtAuthenticationConverter())
-                    )
-                );
+                        oauth2.jwt(jwt -> jwt.authenticationManager(authenticationManager)));
             }
 
             //disable anonymous
@@ -109,8 +130,8 @@ public class SecurityConfig {
 
         securityChain.exceptionHandling(handling -> {
             handling
-                .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
-                .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
+                    .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+                    .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
         });
 
         return securityChain.build();
@@ -119,11 +140,11 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         //create admin user with full permissions
         UserDetails admin = User
-            .withDefaultPasswordEncoder()
-            .username(properties.getBasic().getUsername())
-            .password(properties.getBasic().getPassword())
-            .roles("ADMIN", "USER")
-            .build();
+                .withDefaultPasswordEncoder()
+                .username(properties.getBasic().getUsername())
+                .password(properties.getBasic().getPassword())
+                .roles("ADMIN", "USER")
+                .build();
 
         return new InMemoryUserDetailsManager(admin);
     }
@@ -133,11 +154,27 @@ public class SecurityConfig {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(jwtProps.getIssuerUri()).build();
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
-            JwtClaimNames.AUD,
-            (aud -> aud != null && aud.contains(jwtProps.getAudience()))
+                JwtClaimNames.AUD,
+                (aud -> aud != null && aud.contains(jwtProps.getAudience()))
         );
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(jwtProps.getIssuerUri());
+        OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
+        jwtDecoder.setJwtValidator(withAudience);
+
+        return jwtDecoder;
+    }
+
+    private JwtDecoder exchangeJwtDecoder() throws JOSEException {
+        JWK jwk = keyStoreConfig.getJWKSetKeyStore().getJwk();
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(jwk.toRSAKey().toRSAPublicKey()).build();
+
+        OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
+                JwtClaimNames.AUD,
+                (aud -> aud != null && aud.contains(applicationProperties.getName()))
+        );
+
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(applicationProperties.getEndpoint());
         OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
         jwtDecoder.setJwtValidator(withAudience);
 
@@ -177,41 +214,41 @@ public class SecurityConfig {
     @Bean("h2SecurityFilterChain")
     public SecurityFilterChain h2SecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .securityMatcher(new AntPathRequestMatcher("/h2-console/**"))
-            .authorizeHttpRequests(auth -> {
-                auth.anyRequest().permitAll();
-            })
-            //disable csrf
-            .csrf(csrf -> csrf.disable())
-            // we don't want a session for these endpoints, each request should be evaluated
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // enable frame options
-            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-            .build();
+                .securityMatcher(new AntPathRequestMatcher("/h2-console/**"))
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest().permitAll();
+                })
+                //disable csrf
+                .csrf(csrf -> csrf.disable())
+                // we don't want a session for these endpoints, each request should be evaluated
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // enable frame options
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .build();
     }
 
     @Bean("coreSecurityFilterChain")
     public SecurityFilterChain coreSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .authorizeHttpRequests(auth -> {
-                auth.anyRequest().permitAll();
-            })
-            // disable request cache
-            .requestCache(requestCache -> requestCache.disable())
-            .build();
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest().permitAll();
+                })
+                // disable request cache
+                .requestCache(requestCache -> requestCache.disable())
+                .build();
     }
 
     @Bean("monitoringSecurityFilterChain")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // match only actuator endpoints
         return http
-            .securityMatcher(getManagementRequestMatcher())
-            .authorizeHttpRequests(auth -> {
-                auth.anyRequest().permitAll();
-            })
-            .exceptionHandling(handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .build();
+                .securityMatcher(getManagementRequestMatcher())
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest().permitAll();
+                })
+                .exceptionHandling(handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .build();
     }
 
     public RequestMatcher getManagementRequestMatcher() {
