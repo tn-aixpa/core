@@ -41,16 +41,12 @@ public class JwtTokenService {
     @Value("${jwt.expiration:2592000000}")
     private long jwtExpiration;
 
-    @Value("${jwt.keyId:kid}")
-    private String keyId;
 
     public String generateToken(Authentication authentication)
             throws JwtTokenServiceException {
         try {
 
             // Extract claims from authentication if it's a JwtAuthenticationToken
-
-
             JWK jwk = keyStoreUtil.getJwk();
             RSAPrivateKey privateKey = jwk.toRSAKey().toRSAPrivateKey();
             RSASSASigner signer = new RSASSASigner(privateKey);

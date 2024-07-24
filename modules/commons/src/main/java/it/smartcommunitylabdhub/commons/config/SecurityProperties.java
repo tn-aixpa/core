@@ -20,9 +20,6 @@ public class SecurityProperties {
     private JwtAuthenticationProperties jwt;
 
     @NestedConfigurationProperty
-    private JwtExchangeAuthenticationProperties jwtExchange;
-
-    @NestedConfigurationProperty
     private OidcAuthenticationProperties oidc;
 
     public boolean isBasicAuthEnabled() {
@@ -56,19 +53,6 @@ public class SecurityProperties {
     @Getter
     @Setter
     public static class JwtAuthenticationProperties {
-
-        private String issuerUri;
-        private String audience;
-        private String claim;
-
-        public boolean isEnabled() {
-            return StringUtils.hasText(issuerUri) && StringUtils.hasText(audience);
-        }
-    }
-
-    @Getter
-    @Setter
-    public static class JwtExchangeAuthenticationProperties {
 
         private String issuerUri;
         private String audience;
