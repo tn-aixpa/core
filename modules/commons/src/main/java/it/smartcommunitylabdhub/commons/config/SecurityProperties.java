@@ -63,7 +63,6 @@ public class SecurityProperties {
         }
     }
 
-
     @Getter
     @Setter
     public static class OidcAuthenticationProperties {
