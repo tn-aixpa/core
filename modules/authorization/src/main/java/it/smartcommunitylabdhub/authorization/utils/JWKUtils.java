@@ -17,16 +17,16 @@ public class JWKUtils {
     private static final Logger logger = LoggerFactory.getLogger(JWKUtils.class);
 
     public static JWK generateRsaJWK(String id, String usage, String alg, int length)
-            throws IllegalArgumentException, JOSEException {
+        throws IllegalArgumentException, JOSEException {
         logger.debug(
-                "generate RSA jwk for " +
-                        id +
-                        " use " +
-                        usage +
-                        " with length " +
-                        String.valueOf(length) +
-                        "  with algorithm " +
-                        alg
+            "generate RSA jwk for " +
+            id +
+            " use " +
+            usage +
+            " with length " +
+            String.valueOf(length) +
+            "  with algorithm " +
+            alg
         );
 
         if (id == null || id.isEmpty()) {
@@ -43,9 +43,9 @@ public class JWKUtils {
     }
 
     public static JWK generateECJWK(String id, String usage, String alg, String curve)
-            throws IllegalArgumentException, JOSEException {
+        throws IllegalArgumentException, JOSEException {
         logger.debug(
-                "generate EC jwk for " + id + " use " + usage + " with curve " + curve + "  with algorithm " + alg
+            "generate EC jwk for " + id + " use " + usage + " with curve " + curve + "  with algorithm " + alg
         );
 
         if (id == null || id.isEmpty()) {
@@ -65,7 +65,7 @@ public class JWKUtils {
     }
 
     public static JWK generateHMACJWT(String id, String usage, String alg, int length)
-            throws IllegalArgumentException, JOSEException {
+        throws IllegalArgumentException, JOSEException {
         logger.debug("generate HMAC jwk for " + id + " use " + usage + "  with algorithm " + alg);
 
         if (id == null || id.isEmpty()) {

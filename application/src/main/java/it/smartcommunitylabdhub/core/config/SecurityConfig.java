@@ -103,20 +103,25 @@ public class SecurityConfig {
                         .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
                         .userDetailsService(userDetailsService());
             }
+            JwtAuthenticationProvider jwtExchangeAuthProvider = new JwtAuthenticationProvider(exchangeJwtDecoder());
+            jwtExchangeAuthProvider.setJwtAuthenticationConverter(jwtAuthenticationConverter());
+
+            // Create authentication Manager
+            securityChain.oauth2ResourceServer(oauth2 ->
+                    oauth2.jwt(jwt -> jwt.authenticationManager(new ProviderManager(jwtExchangeAuthProvider))));
+
             if (properties.isJwtAuthEnabled()) {
 
                 JwtAuthenticationProvider jwtAacAuthProvider = new JwtAuthenticationProvider(jwtDecoder());
-                JwtAuthenticationProvider jwtExchangeAuthProvider = new JwtAuthenticationProvider(exchangeJwtDecoder());
 
                 jwtAacAuthProvider.setJwtAuthenticationConverter(jwtAuthenticationConverter());
-                jwtExchangeAuthProvider.setJwtAuthenticationConverter(jwtAuthenticationConverter());
-
-                // Create authentication Manager
-                AuthenticationManager authenticationManager = new ProviderManager(jwtAacAuthProvider, jwtExchangeAuthProvider);
 
                 securityChain.oauth2ResourceServer(oauth2 ->
-                        oauth2.jwt(jwt -> jwt.authenticationManager(authenticationManager)));
+                        oauth2.jwt(jwt -> jwt.authenticationManager(
+                                new ProviderManager(jwtExchangeAuthProvider, jwtAacAuthProvider))));
+
             }
+
 
             //disable anonymous
             securityChain.anonymous(anon -> anon.disable());

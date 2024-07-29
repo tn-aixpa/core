@@ -195,6 +195,10 @@ files:
       bucket: ${S3_BUCKET:}
 
 # Keystore configuration
-keystore:
-  path: ${KEYSTORE_PATH:./data/keystore.jwks}
-  kid: ${KEYSTORE_KID:}
+jwks:
+  keystore:
+    path: ${KEYSTORE_PATH:classpath:/keystore.jwks}
+    kid: ${KEYSTORE_KID:}
+  jwt:
+    expiration: ${JWT_EXPIRATION:}
+  cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}
