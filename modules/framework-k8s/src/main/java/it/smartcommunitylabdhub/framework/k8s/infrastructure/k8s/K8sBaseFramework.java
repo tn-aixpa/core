@@ -680,6 +680,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                     if (gpuResourceKey != null && res.getGpu().getRequests() != null) {
                         requests.put(gpuResourceKey, res.getGpu().getRequests());
                     }
+                    if (gpuResourceKey != null && res.getGpu().getLimits() != null) {
+                        limits.put(gpuResourceKey, res.getGpu().getLimits());
+                    }
                 });
 
             resources.setRequests(k8sBuilderHelper.convertResources(requests));
