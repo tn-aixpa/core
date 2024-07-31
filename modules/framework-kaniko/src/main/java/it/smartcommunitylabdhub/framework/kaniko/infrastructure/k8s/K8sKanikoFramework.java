@@ -62,7 +62,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     @Value("${kaniko.image}")
     private String kanikoImage;
 
-    @Value("${kaniko.init-image}")
+    @Value("${kubernetes.init-image}")
     private String initImage;
 
     @Value("${kaniko.image-prefix}")
@@ -323,13 +323,14 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         List<V1VolumeMount> volumeMounts = new LinkedList<>(buildVolumeMounts(runnable));
 
         // Add secret for kaniko
-        //TODO refactor to support generic configuration
+        // NOTE: we support *only* docker config files
         if (StringUtils.hasText(kanikoSecret)) {
             V1Volume secretVolume = new V1Volume()
                 .name(kanikoSecret)
                 .secret(
-                    new V1SecretVolumeSource().secretName(kanikoSecret)
-                    // .items(List.of(new V1KeyToPath().key(".dockerconfigjson").path("config.json")))
+                    new V1SecretVolumeSource()
+                        .secretName(kanikoSecret)
+                        .items(List.of(new V1KeyToPath().key(".dockerconfigjson").path("config.json")))
                 );
 
             V1VolumeMount secretVolumeMount = new V1VolumeMount().name(kanikoSecret).mountPath("/kaniko/.docker");

@@ -31,6 +31,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * Helper class for building Kubernetes  environment variables.
@@ -256,7 +257,12 @@ public class K8sBuilderHelper implements InitializingBean {
     }
 
     public String getImageName(String image, String id) {
-        return image + ":" + id;
+        String tag = "latest";
+        if (StringUtils.hasText(id)) {
+            tag = sanitizeNames(id.substring(0, Math.min(5, id.length())));
+        }
+
+        return image + ":" + tag;
     }
 
     public String getLabelName(String name) {

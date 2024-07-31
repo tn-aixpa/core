@@ -81,7 +81,6 @@ springdoc:
 # Kaniko config
 kaniko:
   image: ${KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
-  init-image: ${KANIKO_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-builder-tool:latest}
   image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
   image-registry: ${KANIKO_IMAGE_REGISTRY:${registry.name}}
   secret: ${KANIKO_SECRET:${registry.secret}}
@@ -109,6 +108,7 @@ kubernetes:
   security: 
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
   image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}
+  init-image: ${K8S_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-builder-tool:latest}
   resources:
     cpu:
       requests: ${K8S_RESOURCE_CPU_DEFAULT:100m}

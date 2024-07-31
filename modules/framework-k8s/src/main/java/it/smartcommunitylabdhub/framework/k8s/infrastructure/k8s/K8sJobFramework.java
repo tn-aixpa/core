@@ -54,7 +54,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     >() {};
     private final BatchV1Api batchV1Api;
 
-    @Value("${kaniko.init-image}")
+    @Value("${kubernetes.init-image}")
     private String initImage;
 
     private int activeDeadlineSeconds = DEADLINE_SECONDS;
