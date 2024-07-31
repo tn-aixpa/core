@@ -1,13 +1,15 @@
 package it.smartcommunitylabdhub.commons.models.base;
 
+import java.io.Serializable;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,9 +18,13 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class FileInfo {
+public class FileInfo implements Serializable {
 
     private String path;
+    
+    @JsonProperty("src_path")
+    private String sourcePath;
+    
     private String name;
 
     @JsonProperty("content_type")
@@ -27,7 +33,7 @@ public class FileInfo {
     private long size;
 
     @JsonProperty("last_modified")
-    private Instant lastModified;
+    private Date lastModified;
 
     private String hash;
     private Map<String, Serializable> metadata = new HashMap<>();
