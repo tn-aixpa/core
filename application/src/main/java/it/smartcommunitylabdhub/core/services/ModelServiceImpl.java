@@ -14,6 +14,7 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.entities.FilesInfoService;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.model.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
@@ -65,6 +66,9 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
 
     @Autowired
     private FilesService filesService;
+    
+    @Autowired
+    private FilesInfoService filesInfoService;
 
     @Override
     public Page<Model> listModels(Pageable pageable) {
@@ -520,6 +524,19 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             throw new SystemException(e.getMessage());
         }
     }
+
+	@Override
+	public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
+		try {
+			entityService.get(id);
+			filesInfoService.saveFilesInfo(EntityName.MODEL.getValue(), id, files);
+		} catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.MODEL.getValue());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }	
+	}
 
     @Override
     public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
