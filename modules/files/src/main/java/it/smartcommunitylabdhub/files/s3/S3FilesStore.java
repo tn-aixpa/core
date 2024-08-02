@@ -10,6 +10,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
@@ -176,7 +177,7 @@ public class S3FilesStore implements FilesStore {
             response.setName(keys.fileName);
             response.setContentType(headObject.contentType());
             response.setSize(headObject.contentLength());
-            response.setLastModified(headObject.lastModified());
+            response.setLastModified(Date.from(headObject.lastModified()));
 
             if (StringUtils.hasText(headObject.checksumSHA256())) {
                 response.setHash("sha256:" + headObject.checksumSHA256());
