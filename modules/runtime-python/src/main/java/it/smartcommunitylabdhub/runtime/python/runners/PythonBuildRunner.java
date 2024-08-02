@@ -195,6 +195,20 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
         // Parse run spec
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runSpec.getTask());
 
+        //build image name
+        String imageName =
+            K8sBuilderHelper.sanitizeNames(runSpecAccessor.getProject()) +
+            "-" +
+            K8sBuilderHelper.sanitizeNames(runSpecAccessor.getFunction());
+
+        //evaluate user provided image name
+        if (StringUtils.hasText(functionSpec.getImage())) {
+            String name = functionSpec.getImage().split(":")[0]; //remove tag if present
+            if (StringUtils.hasText(name) && name.length() > 3) {
+                imageName = name;
+            }
+        }
+
         return K8sKanikoRunnable
             .builder()
             .id(run.getId())
@@ -208,15 +222,7 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
                     : null
             )
             //base
-            .image(
-                StringUtils.hasText(functionSpec.getImage())
-                    ? functionSpec.getImage()
-                    : K8sBuilderHelper.sanitizeNames(runSpecAccessor.getProject()) +
-                    "-" +
-                    K8sBuilderHelper.sanitizeNames(runSpecAccessor.getFunction()) +
-                    ":" +
-                    K8sBuilderHelper.sanitizeNames(run.getId().substring(0, 5))
-            )
+            .image(imageName)
             .contextRefs(contextRefs)
             .contextSources(contextSources)
             .envs(coreEnvList)

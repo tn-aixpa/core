@@ -19,7 +19,6 @@ import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.Dockerfil
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerBuildTaskSpec;
-import it.smartcommunitylabdhub.runtime.container.specs.ContainerDeployTaskSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec.SourceCodeLanguages;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerRunSpec;
@@ -136,13 +135,27 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
         // Parse run spec
         RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runSpec.getTask());
 
+        //build image name
+        String imageName =
+            K8sBuilderHelper.sanitizeNames(runSpecAccessor.getProject()) +
+            "-" +
+            K8sBuilderHelper.sanitizeNames(runSpecAccessor.getFunction());
+
+        //evaluate user provided image name
+        if (StringUtils.hasText(functionSpec.getImage())) {
+            String name = functionSpec.getImage().split(":")[0]; //remove tag if present
+            if (StringUtils.hasText(name) && name.length() > 3) {
+                imageName = name;
+            }
+        }
+
         // Build runnable
         return K8sKanikoRunnable
             .builder()
             .id(run.getId())
             .project(run.getProject())
             .runtime(ContainerRuntime.RUNTIME)
-            .task(ContainerDeployTaskSpec.KIND)
+            .task(ContainerBuildTaskSpec.KIND)
             .state(State.READY.name())
             .labels(
                 k8sBuilderHelper != null
@@ -150,15 +163,7 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
                     : null
             )
             // Base
-            .image(
-                StringUtils.hasText(functionSpec.getImage())
-                    ? functionSpec.getImage()
-                    : K8sBuilderHelper.sanitizeNames(runSpecAccessor.getProject()) +
-                    "-" +
-                    K8sBuilderHelper.sanitizeNames(runSpecAccessor.getFunction()) +
-                    ":" +
-                    K8sBuilderHelper.sanitizeNames(run.getId().substring(0, 5))
-            )
+            .image(imageName)
             .envs(coreEnvList)
             .secrets(groupedSecrets)
             .resources(taskSpec.getResources())

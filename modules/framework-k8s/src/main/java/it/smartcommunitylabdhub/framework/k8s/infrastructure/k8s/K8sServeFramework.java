@@ -62,7 +62,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     }
 
     @Autowired
-    public void setInitImage(@Value("${kaniko.init-image}") String initImage) {
+    public void setInitImage(@Value("${kubernetes.init-image}") String initImage) {
         this.initImage = initImage;
     }
 

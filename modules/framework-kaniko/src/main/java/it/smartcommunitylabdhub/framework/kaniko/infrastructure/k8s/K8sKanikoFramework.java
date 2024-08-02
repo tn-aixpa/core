@@ -10,11 +10,13 @@ import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1JobSpec;
+import io.kubernetes.client.openapi.models.V1KeyToPath;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
@@ -24,7 +26,6 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreItems;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import jakarta.validation.constraints.NotNull;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +62,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     @Value("${kaniko.image}")
     private String kanikoImage;
 
-    @Value("${kaniko.init-image}")
+    @Value("${kubernetes.init-image}")
     private String initImage;
 
     @Value("${kaniko.image-prefix}")
@@ -301,18 +303,6 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         );
         coreVolumes.add(configMapVolume);
 
-        // Add secret for kaniko
-        if (StringUtils.hasText(kanikoSecret)) {
-            CoreVolume secretVolume = new CoreVolume(
-                CoreVolume.VolumeType.secret,
-                "/kaniko/.docker",
-                kanikoSecret,
-                Map.of("items", CoreItems.builder().keyToPath(Map.of(".dockerconfigjson", "config.json")).build())
-            );
-            if (runnableVolumesOpt.stream().noneMatch(v -> kanikoSecret.equals(v.getName()))) {
-                coreVolumes.add(secretVolume);
-            }
-        }
         //Add all volumes
         Optional
             .ofNullable(runnable.getVolumes())
@@ -329,8 +319,25 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         List<V1EnvVar> env = buildEnv(runnable);
 
         // Volumes to attach to the pod based on the volume spec with the additional volume_type
-        List<V1Volume> volumes = buildVolumes(runnable);
-        List<V1VolumeMount> volumeMounts = buildVolumeMounts(runnable);
+        List<V1Volume> volumes = new LinkedList<>(buildVolumes(runnable));
+        List<V1VolumeMount> volumeMounts = new LinkedList<>(buildVolumeMounts(runnable));
+
+        // Add secret for kaniko
+        // NOTE: we support *only* docker config files
+        if (StringUtils.hasText(kanikoSecret)) {
+            V1Volume secretVolume = new V1Volume()
+                .name(kanikoSecret)
+                .secret(
+                    new V1SecretVolumeSource()
+                        .secretName(kanikoSecret)
+                        .items(List.of(new V1KeyToPath().key(".dockerconfigjson").path("config.json")))
+                );
+
+            V1VolumeMount secretVolumeMount = new V1VolumeMount().name(kanikoSecret).mountPath("/kaniko/.docker");
+
+            volumes.add(secretVolume);
+            volumeMounts.add(secretVolumeMount);
+        }
 
         // resources
         V1ResourceRequirements resources = buildResources(runnable);

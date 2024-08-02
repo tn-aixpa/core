@@ -58,7 +58,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     }
 
     @Autowired
-    public void setInitImage(@Value("${kaniko.init-image}") String initImage) {
+    public void setInitImage(@Value("${kubernetes.init-image}") String initImage) {
         this.initImage = initImage;
     }
 
