@@ -5,13 +5,12 @@
  * transitions of a Run. It defines the states, events, and transitions specific to the Run entity.
  */
 
-package it.smartcommunitylabdhub.fsm.types;
+package it.smartcommunitylabdhub.core.fsm;
 
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.FsmState;
 import it.smartcommunitylabdhub.fsm.Transaction;
-import it.smartcommunitylabdhub.fsm.enums.RunEvent;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;

@@ -15,7 +15,6 @@ package it.smartcommunitylabdhub.fsm;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
 import jakarta.annotation.Nullable;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
