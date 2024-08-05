@@ -27,6 +27,7 @@
 
     <modules>
         <module>modules/commons</module>
+        <module>modules/authorization</module>
         <module>modules/fsm</module>
         <module>modules/framework-k8s</module>
         <module>modules/framework-kaniko</module>

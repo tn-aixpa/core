@@ -804,7 +804,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected V1Secret buildRunSecret(T runnable) {
         if (runnable.getCredentials() != null) {
-            V1Secret secret = k8sSecretHelper.convertAuthentication(
+            V1Secret secret = k8sSecretHelper.convertCredentials(
                 k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId()),
                 runnable.getCredentials()
             );
