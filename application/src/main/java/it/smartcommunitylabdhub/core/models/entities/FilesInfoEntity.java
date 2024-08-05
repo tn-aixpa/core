@@ -40,7 +40,6 @@ public class FilesInfoEntity implements Serializable {
     private String entityId;
     
     @Lob
-    @Column(columnDefinition="BLOB")
     @ToString.Exclude
     private byte[] files;
 }
