@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.authorization.controllers;
 
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
+import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,9 @@ public class ConfigurationEndpoint {
     @Autowired
     private ApplicationProperties applicationProperties;
 
+    @Autowired
+    private SecurityProperties securityProperties;
+
     @Value("${jwt.cache-control}")
     private String cacheControl;
 
@@ -27,6 +31,10 @@ public class ConfigurationEndpoint {
 
     @GetMapping(value = { "/.well-known/openid-configuration", "/.well-known/oauth-authorization-server" })
     public ResponseEntity<Map<String, Object>> getCOnfiguration() {
+        if (!securityProperties.isRequired()) {
+            throw new UnsupportedOperationException();
+        }
+
         if (config == null) {
             config = generate();
         }

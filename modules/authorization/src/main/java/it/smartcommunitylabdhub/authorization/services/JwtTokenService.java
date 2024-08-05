@@ -22,6 +22,7 @@ import it.smartcommunitylabdhub.authorization.exceptions.JwtTokenServiceExceptio
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.utils.JWKUtils;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
+import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -48,6 +49,9 @@ public class JwtTokenService implements InitializingBean {
 
     @Autowired
     private ApplicationProperties applicationProperties;
+
+    @Autowired
+    private SecurityProperties securityProperties;
 
     @Value("${jwt.client-id}")
     private String clientId;
@@ -76,41 +80,42 @@ public class JwtTokenService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        //build signer for the given keys
-        this.jwk = keyStore.getJwk();
+        if (securityProperties.isRequired()) {
+            //build signer for the given keys
+            this.jwk = keyStore.getJwk();
 
-        if (jwk != null) {
-            try {
-                if (!(jwk.getAlgorithm() instanceof JWSAlgorithm)) {
-                    throw new JOSEException("key algorithm invalid");
+            if (jwk != null) {
+                try {
+                    if (jwk.getAlgorithm() == null) {
+                        throw new JOSEException("key algorithm invalid");
+                    }
+                    if (jwk instanceof RSAKey) {
+                        // build RSA signers & verifiers
+                        if (jwk.isPrivate()) { // only add the signer if there's a private key
+                            signer = new RSASSASigner((RSAKey) jwk);
+                        }
+                        verifier = new RSASSAVerifier((RSAKey) jwk);
+                    } else if (jwk instanceof ECKey) {
+                        // build EC signers & verifiers
+                        if (jwk.isPrivate()) {
+                            signer = new ECDSASigner((ECKey) jwk);
+                        }
+
+                        verifier = new ECDSAVerifier((ECKey) jwk);
+                    } else if (jwk instanceof OctetSequenceKey) {
+                        // build HMAC signers & verifiers
+
+                        if (jwk.isPrivate()) { // technically redundant check because all HMAC keys are private
+                            signer = new MACSigner((OctetSequenceKey) jwk);
+                        }
+
+                        verifier = new MACVerifier((OctetSequenceKey) jwk);
+                    } else {
+                        log.warn("Unknown key type: " + jwk);
+                    }
+                } catch (JOSEException e) {
+                    log.warn("Exception loading signer/verifier", e);
                 }
-
-                if (jwk instanceof RSAKey) {
-                    // build RSA signers & verifiers
-                    if (jwk.isPrivate()) { // only add the signer if there's a private key
-                        signer = new RSASSASigner((RSAKey) jwk);
-                    }
-                    verifier = new RSASSAVerifier((RSAKey) jwk);
-                } else if (jwk instanceof ECKey) {
-                    // build EC signers & verifiers
-                    if (jwk.isPrivate()) {
-                        signer = new ECDSASigner((ECKey) jwk);
-                    }
-
-                    verifier = new ECDSAVerifier((ECKey) jwk);
-                } else if (jwk instanceof OctetSequenceKey) {
-                    // build HMAC signers & verifiers
-
-                    if (jwk.isPrivate()) { // technically redundant check because all HMAC keys are private
-                        signer = new MACSigner((OctetSequenceKey) jwk);
-                    }
-
-                    verifier = new MACVerifier((OctetSequenceKey) jwk);
-                } else {
-                    log.warn("Unknown key type: " + jwk);
-                }
-            } catch (JOSEException e) {
-                log.warn("Exception loading signer/verifier", e);
             }
         }
     }
@@ -148,8 +153,7 @@ public class JwtTokenService implements InitializingBean {
         }
 
         try {
-            //cast because we checked during load
-            JWSAlgorithm jwsAlgorithm = (JWSAlgorithm) jwk.getAlgorithm();
+            JWSAlgorithm jwsAlgorithm = JWSAlgorithm.parse(jwk.getAlgorithm().getName());
 
             Instant now = Instant.now();
 
@@ -196,8 +200,7 @@ public class JwtTokenService implements InitializingBean {
         }
 
         try {
-            //cast because we checked during load
-            JWSAlgorithm jwsAlgorithm = (JWSAlgorithm) jwk.getAlgorithm();
+            JWSAlgorithm jwsAlgorithm = JWSAlgorithm.parse(jwk.getAlgorithm().getName());
 
             Instant now = Instant.now();
 
