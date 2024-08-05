@@ -204,12 +204,12 @@ public class RunManager {
                     //extract auth from security context to inflate secured credentials
                     //TODO refactor properly
                     if (r instanceof SecuredRunnable) {
-                        // check that jwt is enabled via securityProperties
+                        // check that auth is enabled via securityProperties
                         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                        if (auth != null) {
-                            String token = jwtTokenService.generateToken(auth);
-                            if (token != null) {
-                                ((SecuredRunnable) r).setCredentials(token);
+                        if (auth != null && securityProperties.isRequired()) {
+                            Serializable credentials = jwtTokenService.generateCredentials(auth);
+                            if (credentials != null) {
+                                ((SecuredRunnable) r).setCredentials(credentials);
                             }
                         }
                     }
