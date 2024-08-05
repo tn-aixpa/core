@@ -16,6 +16,6 @@ public interface SearchCriteria<T> extends Specification<T> {
         equal,
         gt,
         lt,
-        like
+        like,
     }
 }

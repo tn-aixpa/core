@@ -17,8 +17,7 @@ public class TaskUtils {
     private static final int third = 3;
     private static final int fourth = 4;
 
-    private TaskUtils() {
-    }
+    private TaskUtils() {}
 
     //TODO this goes into the accessor, via a with()
     public static TaskSpecAccessor parseFunction(String taskString) {

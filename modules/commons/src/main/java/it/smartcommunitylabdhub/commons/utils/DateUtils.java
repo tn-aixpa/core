@@ -10,7 +10,7 @@ import lombok.SneakyThrows;
  */
 public class DateUtils {
 
-    private final static long MULTIPLIER = 1000;
+    private static final long MULTIPLIER = 1000;
 
     /**
      * Parse a timestamp string into a Date object.
@@ -33,7 +33,7 @@ public class DateUtils {
      * @throws IllegalArgumentException if the date interval format is invalid.
      */
     public static DateInterval parseDateIntervalFromTimestamps(String intervalStr, boolean isMilliseconds)
-            throws IllegalArgumentException {
+        throws IllegalArgumentException {
         String[] timestampArray = intervalStr.split(",");
 
         if (timestampArray.length != 2) {
@@ -88,6 +88,5 @@ public class DateUtils {
     /**
      * A record representing a date interval with start and end dates.
      */
-    public record DateInterval(Date startDate, Date endDate) {
-    }
+    public record DateInterval(Date startDate, Date endDate) {}
 }

@@ -238,7 +238,11 @@ public class TokenEndpoint implements InitializingBean {
                 throw new IllegalArgumentException("invalid or missing subject_token");
             }
 
-            log.debug("exchange token request from {} resolved for {} via internal provider", clientAuth.getName(), userAuth.getName());
+            log.debug(
+                "exchange token request from {} resolved for {} via internal provider",
+                clientAuth.getName(),
+                userAuth.getName()
+            );
 
             //token is valid, use as context for generation
             return jwtTokenService.generateCredentials(userAuth);

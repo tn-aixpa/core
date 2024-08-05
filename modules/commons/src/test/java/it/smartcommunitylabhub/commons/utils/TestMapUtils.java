@@ -1,12 +1,9 @@
 package it.smartcommunitylabhub.commons.utils;
 
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
+import java.util.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.*;
-
-
 
 public class TestMapUtils {
 
