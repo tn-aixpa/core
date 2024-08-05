@@ -1,16 +1,16 @@
 # server config
 server:
-  host: ${SERVER_HOST:localhost}
-  port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: ${SERVER_CONTEXT:/}
-  tomcat:
-    remoteip:
+   host: ${SERVER_HOST:localhost}
+   port: ${SERVER_PORT:8080}
+   servlet:
+     context-path: ${SERVER_CONTEXT:/}
+   tomcat:
+     remoteip:
       remote_ip_header: ${SERVER_TOMCAT_REMOTE_IP_HEADER:x-forwarded-for}
       protocol_header: ${SERVER_TOMCAT_PROTOCOL_HEADER:x-forwarded-proto}
-  max-http-request-header-size: 32000
-  error:
-    include-stacktrace: never
+   max-http-request-header-size: 32000
+   error:
+      include-stacktrace: never
 
 # Spring configuration
 spring:
@@ -42,18 +42,18 @@ spring:
 
 # Management Endpoints
 management:
-  server:
-    port: ${MANAGEMENT_PORT:8081}
-  endpoints:
-    enabled-by-default: false
-    web:
-      base-path:
-      exposure.include: "health,info,metrics"
-  endpoint:
-    info:
-      enabled: true
-    health:
-      enabled: true
+    server:
+      port: ${MANAGEMENT_PORT:8081}
+    endpoints:
+      enabled-by-default: false
+      web:
+        base-path:
+        exposure.include: "health,info,metrics"
+    endpoint:
+      info:
+        enabled: true
+      health:
+        enabled: true
 
 
 # Runtimes
@@ -84,7 +84,7 @@ kaniko:
   image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
   image-registry: ${KANIKO_IMAGE_REGISTRY:${registry.name}}
   secret: ${KANIKO_SECRET:${registry.secret}}
-  args: ${KANIKO_ARGS:}
+  args: ${KANIKO_ARGS:}    
 
 # MLRun config
 mlrun:
@@ -93,7 +93,7 @@ mlrun:
   image-registry: ${MLRUN_IMAGE_REGISTRY:}
 
 # registry
-registry:
+registry:  
   name: ${DOCKER_REGISTRY:}
   secret: ${DOCKER_REGISTRY_SECRET:}
 
@@ -107,6 +107,8 @@ kubernetes:
   results: ${K8S_ENABLE_RESULTS:default}
   security: 
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
+  envs:
+    prefix: ${K8S_ENVS_PREFIX:${application.name}}    
   image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}
   init-image: ${K8S_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-builder-tool:latest}
   resources:
@@ -122,8 +124,6 @@ kubernetes:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}
   templates: ${K8S_TEMPLATES:}
-  envs:
-    prefix: ${K8S_ENVS_PREFIX:${application.name}}
 
 # Application endpoint
 application:
@@ -136,9 +136,9 @@ application:
 
 
 logging:
-  level:
-    ROOT: INFO
-    it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
+   level:
+      ROOT: INFO
+      it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
 
 security:
   api:
@@ -151,7 +151,7 @@ security:
     issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:${security.oidc.issuer-uri}}
     audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
-  oidc:
+  oidc:    
     issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
@@ -196,7 +196,7 @@ files:
       endpoint: ${S3_ENDPOINT:}
       bucket: ${S3_BUCKET:}
 
-# Keystore configuration
+# JWT configuration
 jwt:
   keystore:
     path: ${JWT_KEYSTORE_PATH:classpath:/keystore.jwks}
@@ -207,4 +207,4 @@ jwt:
     duration: ${JWT_REFRESH_TOKEN_DURATION:}    
   client-id: ${JWT_CLIENT_ID:${security.basic.username}}
   client-secret: ${JWT_CLIENT_SECRET:${security.basic.password}}
-  cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}
+  cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}      
