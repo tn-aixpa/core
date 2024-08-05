@@ -512,6 +512,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             List<FileInfo> metadata = statusFieldAccessor.getFiles();
             
             if(metadata == null) {
+            	log.debug("status files null, get from table for entity with id {}", String.valueOf(id));
             	FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.DATAITEM.getValue(), id);
             	if(filesInfo != null && (filesInfo.getFiles() != null)) {
             		metadata = filesInfo.getFiles();
