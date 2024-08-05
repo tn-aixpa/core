@@ -503,7 +503,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
 
     @Override
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
-        log.debug("get storage metadata for entity with id {}", String.valueOf(id));
+        log.debug("get files info for entity with id {}", String.valueOf(id));
         try {
             DataItem entity = entityService.get(id);
 
@@ -521,7 +521,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             }
             
             if (log.isTraceEnabled()) {
-                log.trace("metadata for entity with id {}: {} -> {}", id, EntityName.DATAITEM.getValue(), metadata);
+                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.DATAITEM.getValue(), metadata);
             }
             
             return metadata;
