@@ -42,6 +42,9 @@ public class K8sSecretHelper {
     @Value("${kubernetes.namespace}")
     private String namespace;
 
+    @Value("${kubernetes.envs.prefix}")
+    private String envsPrefix;
+
     public K8sSecretHelper(ApiClient client) {
         api = new CoreV1Api(client);
     }
@@ -183,6 +186,30 @@ public class K8sSecretHelper {
         }
     }
 
+    public @Nullable V1Secret convertCredentials(String name, Map<String, String> credentials) {
+        if (credentials != null) {
+            //map to secret as envs under declared prefix
+            Map<String, String> data = credentials
+                .entrySet()
+                .stream()
+                .collect(
+                    Collectors.toMap(
+                        e -> K8sBuilderHelper.sanitizeNames(envsPrefix).toUpperCase() + "_" + e.getKey().toUpperCase(),
+                        Entry::getValue
+                    )
+                );
+
+            return new V1Secret()
+                .metadata(new V1ObjectMeta().name(name).namespace(namespace))
+                .apiVersion("v1")
+                .kind("Secret")
+                .stringData(data);
+        }
+
+        return null;
+    }
+
+    @Deprecated
     public @Nullable V1Secret convertAuthentication(String name, AbstractAuthenticationToken auth) {
         if (auth instanceof JwtAuthenticationToken) {
             Jwt token = ((JwtAuthenticationToken) auth).getToken();
