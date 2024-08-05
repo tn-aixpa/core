@@ -1,5 +1,20 @@
 package it.smartcommunitylabdhub.core.services;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
+
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -7,6 +22,7 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
+import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.model.ModelBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
@@ -28,18 +44,7 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -502,20 +507,23 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
         try {
             Model entity = entityService.get(id);
 
-            //extract path from spec
-            ModelBaseSpec spec = new ModelBaseSpec();
-            spec.configure(entity.getSpec());
-
-            String path = spec.getPath();
-            if (!StringUtils.hasText(path)) {
-                throw new NoSuchEntityException("file");
+            StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+            
+            List<FileInfo> metadata = statusFieldAccessor.getFiles();
+            
+            if(metadata == null) {
+            	FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.MODEL.getValue(), id);
+            	if(filesInfo != null && (filesInfo.getFiles() != null)) {
+            		metadata = filesInfo.getFiles();
+            	} else {
+            		metadata = Collections.emptyList();
+            	}
             }
-
-            List<FileInfo> metadata = filesService.getFileInfo(path);
+            
             if (log.isTraceEnabled()) {
-                log.trace("metadata for entity with id {}: {} -> {}", id, path, metadata);
+                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.MODEL.getValue(), metadata);
             }
-
+            
             return metadata;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.MODEL.toString());
