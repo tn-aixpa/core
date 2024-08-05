@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @Slf4j
 public class FilesInfoEntityBuilder implements Converter<FilesInfo, FilesInfoEntity> {
-	private final ObjectMapper mapper = JacksonMapper.OBJECT_MAPPER;
+	private final ObjectMapper mapper = JacksonMapper.CBOR_OBJECT_MAPPER;
 	
 	public FilesInfoEntity build(FilesInfo dto) {
 		byte[] value = null;
