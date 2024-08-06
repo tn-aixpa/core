@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
@@ -22,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @Slf4j
 public class FilesInfoServiceImpl implements FilesInfoService {
+	@Value("${files.max-column-size}")
+	private int maxColumnSize;
 	
 	@Autowired
 	private FilesInfoDTOBuilder dtoBuilder;
@@ -43,7 +47,7 @@ public class FilesInfoServiceImpl implements FilesInfoService {
 	}
 
 	@Override
-	public FilesInfo saveFilesInfo(@NotNull String entityName, @NotNull String entityId, List<FileInfo> files) throws SystemException {
+	public FilesInfo saveFilesInfo(@NotNull String entityName, @NotNull String entityId, List<FileInfo> files) throws SystemException, StoreException {
 		log.debug("save files info with id {} / {}", entityName, entityId);
 		FilesInfo dto = FilesInfo.builder()
 				.entityName(entityName)
@@ -58,6 +62,9 @@ public class FilesInfoServiceImpl implements FilesInfoService {
         	dto.setId(UUID.randomUUID().toString());
         }
         entity = entityBuilder.convert(dto);
+        if((entity.getFiles() != null) && (entity.getFiles().length > maxColumnSize)) {
+        	throw new StoreException("files array exceds max value:" + String.valueOf(maxColumnSize));
+        }
         repository.save(entity);
 		return dto;
 	}
