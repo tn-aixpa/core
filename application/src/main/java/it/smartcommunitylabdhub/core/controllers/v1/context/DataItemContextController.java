@@ -278,7 +278,11 @@ public class DataItemContextController {
 
         return filesService.getFileInfo(id);
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> origin/file_info_repo
     @Operation(summary = "Store file info for a given entity, if available")
     @PutMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
     public void storeFilesInfoById(
@@ -295,5 +299,8 @@ public class DataItemContextController {
 
         filesService.storeFileInfo(id, files);
     }
+<<<<<<< HEAD
     
+=======
+>>>>>>> origin/file_info_repo
 }

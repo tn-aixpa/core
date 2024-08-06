@@ -1,7 +1,9 @@
 package it.smartcommunitylabdhub.core.components.run;
 
+import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
+import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.events.RunnableChangedEvent;
 import it.smartcommunitylabdhub.commons.events.RunnableMonitorObject;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
@@ -23,15 +25,15 @@ import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.processors.ProcessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
+import it.smartcommunitylabdhub.core.fsm.RunEvent;
+import it.smartcommunitylabdhub.core.fsm.RunStateMachineFactory;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.core.services.ExecutableEntityService;
 import it.smartcommunitylabdhub.fsm.Fsm;
-import it.smartcommunitylabdhub.fsm.enums.RunEvent;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
-import it.smartcommunitylabdhub.fsm.types.RunStateMachineFactory;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -77,6 +79,12 @@ public class RunManager {
 
     @Autowired
     ProcessorRegistry processorRegistry;
+
+    @Autowired
+    JwtTokenService jwtTokenService;
+
+    @Autowired
+    SecurityProperties securityProperties;
 
     public Run build(@NotNull Run run) throws NoSuchEntityException {
         // GET state machine, init state machine with status
@@ -196,9 +204,13 @@ public class RunManager {
                     //extract auth from security context to inflate secured credentials
                     //TODO refactor properly
                     if (r instanceof SecuredRunnable) {
+                        // check that auth is enabled via securityProperties
                         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                        if (auth != null) {
-                            ((SecuredRunnable) r).setCredentials(auth);
+                        if (auth != null && securityProperties.isRequired()) {
+                            Serializable credentials = jwtTokenService.generateCredentials(auth);
+                            if (credentials != null) {
+                                ((SecuredRunnable) r).setCredentials(credentials);
+                            }
                         }
                     }
 

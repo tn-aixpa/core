@@ -295,5 +295,8 @@ public class ModelContextController {
 
         filesService.storeFileInfo(id, files);
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/file_info_repo
 }

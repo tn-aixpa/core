@@ -107,6 +107,8 @@ kubernetes:
   results: ${K8S_ENABLE_RESULTS:default}
   security: 
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
+  envs:
+    prefix: ${K8S_ENVS_PREFIX:${application.name}}    
   image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}
   init-image: ${K8S_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-builder-tool:latest}
   resources:
@@ -193,4 +195,21 @@ files:
       secret-key: ${AWS_SECRET_KEY:}
       endpoint: ${S3_ENDPOINT:}
       bucket: ${S3_BUCKET:}
+<<<<<<< HEAD
   max-column-size: ${FILES_MAX_COLUMN_SIZE:2097152}  
+=======
+  max-column-size: ${FILES_MAX_COLUMN_SIZE:2097152}      
+
+# JWT configuration
+jwt:
+  keystore:
+    path: ${JWT_KEYSTORE_PATH:classpath:/keystore.jwks}
+    kid: ${JWT_KEYSTORE_KID:}
+  access-token:
+    duration: ${JWT_ACCESS_TOKEN_DURATION:}
+  refresh-token:
+    duration: ${JWT_REFRESH_TOKEN_DURATION:}    
+  client-id: ${JWT_CLIENT_ID:${security.basic.username}}
+  client-secret: ${JWT_CLIENT_SECRET:${security.basic.password}}
+  cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}      
+>>>>>>> origin/file_info_repo

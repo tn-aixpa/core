@@ -9,7 +9,14 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+<<<<<<< HEAD
 
+=======
+import java.io.Serializable;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+>>>>>>> origin/file_info_repo
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,10 +28,17 @@ import lombok.Setter;
 public class FileInfo implements Serializable {
 
     private String path;
+<<<<<<< HEAD
     
     @JsonProperty("src_path")
     private String sourcePath;
     
+=======
+
+    @JsonProperty("src_path")
+    private String sourcePath;
+
+>>>>>>> origin/file_info_repo
     private String name;
 
     @JsonProperty("content_type")

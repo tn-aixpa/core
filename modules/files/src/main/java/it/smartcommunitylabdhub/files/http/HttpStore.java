@@ -16,6 +16,16 @@ import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
+<<<<<<< HEAD
+=======
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+>>>>>>> origin/file_info_repo
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

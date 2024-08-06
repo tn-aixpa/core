@@ -30,7 +30,10 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/file_info_repo
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -71,6 +74,9 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
     @Autowired
     private FilesService filesService;
     
+    @Autowired
+    private FilesInfoService filesInfoService;
+
     @Autowired
     private FilesInfoService filesInfoService;
 
@@ -506,7 +512,10 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         log.debug("get files info for entity with id {}", String.valueOf(id));
         try {
             DataItem entity = entityService.get(id);
+            StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+            List<FileInfo> files = statusFieldAccessor.getFiles();
 
+<<<<<<< HEAD
             StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
             
             List<FileInfo> metadata = statusFieldAccessor.getFiles();
@@ -528,6 +537,40 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             return metadata;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.DATAITEM.getValue());
+=======
+            if (files == null) {
+                FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.DATAITEM.getValue(), id);
+                if (filesInfo != null && (filesInfo.getFiles() != null)) {
+                    files = filesInfo.getFiles();
+                } else {
+                    files = Collections.emptyList();
+                }
+            }
+
+            if (log.isTraceEnabled()) {
+                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.DATAITEM.getValue(), files);
+            }
+
+            return files;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.DATAITEM.getValue());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
+        try {
+            DataItem entity = entityService.get(id);
+            if (files != null) {
+                log.debug("store files info for {}", entity.getId());
+                filesInfoService.saveFilesInfo(EntityName.DATAITEM.getValue(), id, files);
+            }
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.DATAITEM.getValue());
+>>>>>>> origin/file_info_repo
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());

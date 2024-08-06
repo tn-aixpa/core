@@ -284,7 +284,7 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody List<FileInfo> files
     ) throws NoSuchEntityException {
-    	Artifact entity = artifactService.getArtifact(id);
+        Artifact entity = artifactService.getArtifact(id);
 
         //check for project and name match
         if (!entity.getProject().equals(project)) {
@@ -293,5 +293,4 @@ public class ArtifactContextController {
 
         filesService.storeFileInfo(id, files);
     }
-
 }

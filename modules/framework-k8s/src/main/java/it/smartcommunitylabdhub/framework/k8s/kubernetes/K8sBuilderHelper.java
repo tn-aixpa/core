@@ -63,6 +63,9 @@ public class K8sBuilderHelper implements InitializingBean {
     @Value("${kubernetes.namespace}")
     private String namespace;
 
+    @Value("${kubernetes.envs.prefix}")
+    private String envsPrefix;
+
     @Override
     public void afterPropertiesSet() {
         // Retrieve CoreV1Api
@@ -124,7 +127,7 @@ public class K8sBuilderHelper implements InitializingBean {
         List<V1EnvVar> vars = new ArrayList<>();
         //if no configMap build a minimal config
         if (sharedConfigMaps == null || sharedConfigMaps.isEmpty()) {
-            vars.add(new V1EnvVar().name("DIGITALHUB_CORE_ENDPOINT").value(coreEndpoint));
+            vars.add(new V1EnvVar().name(sanitizeNames(envsPrefix).toUpperCase() + "_ENDPOINT").value(coreEndpoint));
         }
 
         return vars;

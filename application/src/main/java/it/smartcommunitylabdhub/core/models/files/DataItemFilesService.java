@@ -14,6 +14,8 @@ public interface DataItemFilesService {
     
     public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException;
 
+    public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException;
+
     public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException;
 
     public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)

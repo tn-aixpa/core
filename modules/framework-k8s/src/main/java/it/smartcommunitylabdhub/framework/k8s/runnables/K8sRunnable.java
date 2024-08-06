@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
@@ -16,15 +18,17 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreToleration;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.CredentialsContainer;
 
 @SuperBuilder
@@ -82,7 +86,7 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     @JsonIgnore
     private List<CoreMetric> metrics;
 
-    private AbstractAuthenticationToken credentials;
+    private HashMap<String, String> credentials;
 
     @JsonProperty("context_refs")
     private List<ContextRef> contextRefs;
@@ -102,8 +106,32 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     @Override
     public void setCredentials(Serializable credentials) {
-        if (credentials instanceof AbstractAuthenticationToken) {
-            this.credentials = (AbstractAuthenticationToken) credentials;
+        if (credentials != null) {
+            //try to coerce into map
+            HashMap<String, Object> map = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+                credentials,
+                JacksonMapper.typeRef
+            );
+
+            this.credentials =
+                map
+                    .entrySet()
+                    .stream()
+                    .filter(e -> e.getValue() != null)
+                    .map(e -> {
+                        if (e.getValue() instanceof String) {
+                            return Map.entry(e.getKey(), (String) e.getValue());
+                        }
+
+                        try {
+                            String value = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(e.getValue());
+                            return Map.entry(e.getKey(), value);
+                        } catch (JsonProcessingException je) {
+                            return null;
+                        }
+                    })
+                    .filter(e -> e.getValue() != null)
+                    .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (o1, o2) -> o1, HashMap::new));
         }
     }
 }

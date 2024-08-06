@@ -19,8 +19,7 @@ public class RunUtils {
     private static final int third = 3;
     private static final int fourth = 4;
 
-    private RunUtils() {
-    }
+    private RunUtils() {}
 
     //TODO this goes into the accessor, via a with()
     public static RunSpecAccessor parseTask(String value) {
@@ -56,6 +55,8 @@ public class RunUtils {
             throw new IllegalArgumentException("invalid or missing function in task spec");
         }
 
-        return (task.getKind() + "://" + matcher.group(second) + "/" + matcher.group(third) + ":" + matcher.group(fourth));
+        return (
+            task.getKind() + "://" + matcher.group(second) + "/" + matcher.group(third) + ":" + matcher.group(fourth)
+        );
     }
 }

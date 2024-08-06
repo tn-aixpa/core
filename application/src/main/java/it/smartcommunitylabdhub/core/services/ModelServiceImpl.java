@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
+<<<<<<< HEAD
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 
+=======
+>>>>>>> origin/file_info_repo
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
@@ -44,6 +47,12 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+<<<<<<< HEAD
+=======
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+>>>>>>> origin/file_info_repo
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -72,6 +81,9 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
     @Autowired
     private FilesService filesService;
     
+    @Autowired
+    private FilesInfoService filesInfoService;
+
     @Autowired
     private FilesInfoService filesInfoService;
 
@@ -506,7 +518,10 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
         log.debug("get storage metadata for model with id {}", String.valueOf(id));
         try {
             Model entity = entityService.get(id);
+            StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+            List<FileInfo> files = statusFieldAccessor.getFiles();
 
+<<<<<<< HEAD
             StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
             
             List<FileInfo> metadata = statusFieldAccessor.getFiles();
@@ -525,6 +540,22 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             }
             
             return metadata;
+=======
+            if (files == null) {
+                FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.MODEL.getValue(), id);
+                if (filesInfo != null && (filesInfo.getFiles() != null)) {
+                    files = filesInfo.getFiles();
+                } else {
+                    files = Collections.emptyList();
+                }
+            }
+
+            if (log.isTraceEnabled()) {
+                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.MODEL.getValue(), files);
+            }
+
+            return files;
+>>>>>>> origin/file_info_repo
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.MODEL.toString());
         } catch (StoreException e) {
@@ -545,6 +576,22 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             throw new SystemException(e.getMessage());
         }	
 	}
+
+    @Override
+    public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
+        try {
+            Model entity = entityService.get(id);
+            if (files != null) {
+                log.debug("store files info for {}", entity.getId());
+                filesInfoService.saveFilesInfo(EntityName.MODEL.getValue(), id, files);
+            }
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.MODEL.getValue());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
 
     @Override
     public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
