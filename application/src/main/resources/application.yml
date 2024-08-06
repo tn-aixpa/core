@@ -193,4 +193,4 @@ files:
       secret-key: ${AWS_SECRET_KEY:}
       endpoint: ${S3_ENDPOINT:}
       bucket: ${S3_BUCKET:}
-      
+  max-column-size: ${FILES_MAX_COLUMN_SIZE:2097152}  
