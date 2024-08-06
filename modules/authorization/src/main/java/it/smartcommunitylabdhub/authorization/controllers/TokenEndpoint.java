@@ -20,7 +20,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
@@ -99,10 +101,15 @@ public class TokenEndpoint implements InitializingBean {
     }
 
     @PostMapping(TOKEN_URL)
-    public TokenResponse token(@RequestParam Map<String, String> parameters, Authentication authentication) {
+    public TokenResponse token(
+        @RequestParam Map<String, String> parameters,
+        @CurrentSecurityContext SecurityContext securityContext
+    ) {
         if (!securityProperties.isRequired()) {
             throw new UnsupportedOperationException();
         }
+
+        Authentication authentication = securityContext.getAuthentication();
 
         //resolve client authentication
         if (authentication == null || !(authentication.isAuthenticated())) {

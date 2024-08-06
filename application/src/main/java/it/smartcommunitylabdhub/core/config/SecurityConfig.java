@@ -312,16 +312,13 @@ public class SecurityConfig {
             securityChain
                 .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
                 .userDetailsService(userDetailsService(clientId, clientSecret));
-
-            //disable anonymous
-            securityChain.anonymous(anon -> anon.disable());
-        } else {
-            //assign both USER and ADMIN to anon user to bypass all scoped permission checks
-            securityChain.anonymous(anon -> {
-                anon.authorities("ROLE_USER", "ROLE_ADMIN");
-                anon.principal("anonymous");
-            });
         }
+
+        //assign both USER and ADMIN to anon user to bypass all scoped permission checks
+        securityChain.anonymous(anon -> {
+            anon.authorities("ROLE_USER", "ROLE_ADMIN");
+            anon.principal("anonymous");
+        });
 
         securityChain.exceptionHandling(handling -> {
             handling
