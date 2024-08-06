@@ -29,7 +29,6 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactS
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.validation.constraints.NotNull;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -73,7 +72,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
 
     @Autowired
     private FilesInfoService filesInfoService;
-    
+
     @Override
     public Page<Artifact> listArtifacts(Pageable pageable) {
         log.debug("list artifacts page {}", pageable);
@@ -509,25 +508,23 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         log.debug("get files info for artifact with id {}", String.valueOf(id));
         try {
             Artifact entity = entityService.get(id);
-            
             StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
-            
-            List<FileInfo> metadata = statusFieldAccessor.getFiles();
+            List<FileInfo> files = statusFieldAccessor.getFiles();
 
-            if(metadata == null) {
-            	FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.ARTIFACT.getValue(), id);
-            	if(filesInfo != null && (filesInfo.getFiles() != null)) {
-            		metadata = filesInfo.getFiles();
-            	} else {
-            		metadata = Collections.emptyList();
-            	}
+            if (files == null) {
+                FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.ARTIFACT.getValue(), id);
+                if (filesInfo != null && (filesInfo.getFiles() != null)) {
+                    files = filesInfo.getFiles();
+                } else {
+                    files = Collections.emptyList();
+                }
             }
-            
+
             if (log.isTraceEnabled()) {
-                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.ARTIFACT.getValue(), metadata);
+                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.ARTIFACT.getValue(), files);
             }
 
-            return metadata;
+            return files;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
         } catch (StoreException e) {
@@ -536,18 +533,21 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
         }
     }
 
-	@Override
-	public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
-		try {
-			entityService.get(id);
-			filesInfoService.saveFilesInfo(EntityName.ARTIFACT.getValue(), id, files);
-		} catch (NoSuchEntityException e) {
+    @Override
+    public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
+        try {
+            Artifact entity = entityService.get(id);
+            if (files != null) {
+                log.debug("store files info for {}", entity.getId());
+                filesInfoService.saveFilesInfo(EntityName.ARTIFACT.getValue(), id, files);
+            }
+        } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.ARTIFACT.getValue());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
-        }	
-	}
+        }
+    }
 
     @Override
     public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)

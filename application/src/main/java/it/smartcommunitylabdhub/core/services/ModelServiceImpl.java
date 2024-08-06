@@ -1,19 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
-
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
@@ -44,7 +30,19 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -71,7 +69,7 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
 
     @Autowired
     private FilesService filesService;
-    
+
     @Autowired
     private FilesInfoService filesInfoService;
 
@@ -506,25 +504,23 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
         log.debug("get storage metadata for model with id {}", String.valueOf(id));
         try {
             Model entity = entityService.get(id);
-
             StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
-            
-            List<FileInfo> metadata = statusFieldAccessor.getFiles();
-            
-            if(metadata == null) {
-            	FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.MODEL.getValue(), id);
-            	if(filesInfo != null && (filesInfo.getFiles() != null)) {
-            		metadata = filesInfo.getFiles();
-            	} else {
-            		metadata = Collections.emptyList();
-            	}
+            List<FileInfo> files = statusFieldAccessor.getFiles();
+
+            if (files == null) {
+                FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.MODEL.getValue(), id);
+                if (filesInfo != null && (filesInfo.getFiles() != null)) {
+                    files = filesInfo.getFiles();
+                } else {
+                    files = Collections.emptyList();
+                }
             }
-            
+
             if (log.isTraceEnabled()) {
-                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.MODEL.getValue(), metadata);
+                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.MODEL.getValue(), files);
             }
-            
-            return metadata;
+
+            return files;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.MODEL.toString());
         } catch (StoreException e) {
@@ -533,18 +529,21 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
         }
     }
 
-	@Override
-	public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
-		try {
-			entityService.get(id);
-			filesInfoService.saveFilesInfo(EntityName.MODEL.getValue(), id, files);
-		} catch (NoSuchEntityException e) {
+    @Override
+    public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
+        try {
+            Model entity = entityService.get(id);
+            if (files != null) {
+                log.debug("store files info for {}", entity.getId());
+                filesInfoService.saveFilesInfo(EntityName.MODEL.getValue(), id, files);
+            }
+        } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.MODEL.getValue());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
-        }	
-	}
+        }
+    }
 
     @Override
     public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)

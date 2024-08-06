@@ -1,13 +1,12 @@
 package it.smartcommunitylabdhub.core.models.entities;
 
-import java.io.Serializable;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,12 +19,11 @@ import lombok.ToString;
 @Getter
 @Setter
 @Builder
+@ToString
 @Entity
 @Table(
     name = "filesinfo",
-    indexes = {
-    		@Index(name = "files_name_id_index", columnList = "entityName, entityId", unique = true),
-    }
+    indexes = { @Index(name = "files_name_id_index", columnList = "entityName, entityId", unique = true) }
 )
 public class FilesInfoEntity implements Serializable {
 
@@ -38,7 +36,7 @@ public class FilesInfoEntity implements Serializable {
 
     @Column(nullable = false)
     private String entityId;
-    
+
     @Lob
     @ToString.Exclude
     private byte[] files;

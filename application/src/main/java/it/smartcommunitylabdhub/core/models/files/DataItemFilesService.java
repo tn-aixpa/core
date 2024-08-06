@@ -11,7 +11,7 @@ import org.springframework.lang.Nullable;
 
 public interface DataItemFilesService {
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException;
-    
+
     public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException;
 
     public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException;

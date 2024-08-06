@@ -1,15 +1,13 @@
 package it.smartcommunitylabdhub.commons.models.base;
 
-import java.io.Serializable;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.io.Serializable;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,10 +19,10 @@ import lombok.Setter;
 public class FileInfo implements Serializable {
 
     private String path;
-    
+
     @JsonProperty("src_path")
     private String sourcePath;
-    
+
     private String name;
 
     @JsonProperty("content_type")
