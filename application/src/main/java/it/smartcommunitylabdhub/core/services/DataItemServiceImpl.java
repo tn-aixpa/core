@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -9,11 +10,13 @@ import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.entities.FilesInfoService;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
@@ -27,6 +30,7 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +69,9 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
 
     @Autowired
     private FilesService filesService;
+
+    @Autowired
+    private FilesInfoService filesInfoService;
 
     @Override
     public Page<DataItem> listDataItems(Pageable pageable) {
@@ -486,7 +493,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
 
             return info;
         } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+            throw new NoSuchEntityException(EntityName.DATAITEM.getValue());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -495,27 +502,44 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
 
     @Override
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
-        log.debug("get storage metadata for entity with id {}", String.valueOf(id));
+        log.debug("get files info for entity with id {}", String.valueOf(id));
         try {
             DataItem entity = entityService.get(id);
+            StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+            List<FileInfo> files = statusFieldAccessor.getFiles();
 
-            //extract path from spec
-            DataItemBaseSpec spec = new DataItemBaseSpec();
-            spec.configure(entity.getSpec());
-
-            String path = spec.getPath();
-            if (!StringUtils.hasText(path)) {
-                throw new NoSuchEntityException("file");
+            if (files == null) {
+                FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.DATAITEM.getValue(), id);
+                if (filesInfo != null && (filesInfo.getFiles() != null)) {
+                    files = filesInfo.getFiles();
+                } else {
+                    files = Collections.emptyList();
+                }
             }
 
-            List<FileInfo> metadata = filesService.getFileInfo(path);
             if (log.isTraceEnabled()) {
-                log.trace("metadata for entity with id {}: {} -> {}", id, path, metadata);
+                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.DATAITEM.getValue(), files);
             }
 
-            return metadata;
+            return files;
         } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.DATAITEM.toString());
+            throw new NoSuchEntityException(EntityName.DATAITEM.getValue());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
+        try {
+            DataItem entity = entityService.get(id);
+            if (files != null) {
+                log.debug("store files info for {}", entity.getId());
+                filesInfoService.saveFilesInfo(EntityName.DATAITEM.getValue(), id, files);
+            }
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.DATAITEM.getValue());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());

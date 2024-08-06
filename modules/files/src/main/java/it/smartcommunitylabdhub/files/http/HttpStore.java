@@ -8,9 +8,9 @@ import jakarta.validation.constraints.NotNull;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -60,7 +60,7 @@ public class HttpStore implements FilesStore {
             response.setName(split[split.length - 1]);
             response.setContentType(headers.getContentType().toString());
             response.setSize(headers.getContentLength());
-            response.setLastModified(Instant.ofEpochMilli(headers.getLastModified()));
+            response.setLastModified(new Date(headers.getLastModified()));
             result.add(response);
         } catch (Exception e) {
             log.error("generate metadata for {}:  {}", path, e.getMessage());

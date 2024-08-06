@@ -260,7 +260,7 @@ public class ModelContextController {
         return filesService.completeMultiPartUpload(id, filename, uploadId, partList);
     }
 
-    @Operation(summary = "Get object storage metadata for a given entity, if available")
+    @Operation(summary = "Get file info for a given entity, if available")
     @GetMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
     public List<FileInfo> getFilesInfoById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
@@ -274,5 +274,22 @@ public class ModelContextController {
         }
 
         return filesService.getFileInfo(id);
+    }
+
+    @Operation(summary = "Store file info for a given entity, if available")
+    @PutMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
+    public void storeFilesInfoById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestBody List<FileInfo> files
+    ) throws NoSuchEntityException {
+        Model entity = modelService.getModel(id);
+
+        //check for project and name match
+        if (!entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        filesService.storeFileInfo(id, files);
     }
 }

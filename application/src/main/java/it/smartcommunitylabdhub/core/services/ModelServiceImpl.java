@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -7,6 +8,7 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
+import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.model.ModelBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
@@ -14,6 +16,7 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.entities.FilesInfoService;
 import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.model.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
@@ -27,6 +30,7 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +69,9 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
 
     @Autowired
     private FilesService filesService;
+
+    @Autowired
+    private FilesInfoService filesInfoService;
 
     @Override
     public Page<Model> listModels(Pageable pageable) {
@@ -497,24 +504,41 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
         log.debug("get storage metadata for model with id {}", String.valueOf(id));
         try {
             Model entity = entityService.get(id);
+            StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+            List<FileInfo> files = statusFieldAccessor.getFiles();
 
-            //extract path from spec
-            ModelBaseSpec spec = new ModelBaseSpec();
-            spec.configure(entity.getSpec());
-
-            String path = spec.getPath();
-            if (!StringUtils.hasText(path)) {
-                throw new NoSuchEntityException("file");
+            if (files == null) {
+                FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.MODEL.getValue(), id);
+                if (filesInfo != null && (filesInfo.getFiles() != null)) {
+                    files = filesInfo.getFiles();
+                } else {
+                    files = Collections.emptyList();
+                }
             }
 
-            List<FileInfo> metadata = filesService.getFileInfo(path);
             if (log.isTraceEnabled()) {
-                log.trace("metadata for entity with id {}: {} -> {}", id, path, metadata);
+                log.trace("files info for entity with id {}: {} -> {}", id, EntityName.MODEL.getValue(), files);
             }
 
-            return metadata;
+            return files;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.MODEL.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException {
+        try {
+            Model entity = entityService.get(id);
+            if (files != null) {
+                log.debug("store files info for {}", entity.getId());
+                filesInfoService.saveFilesInfo(EntityName.MODEL.getValue(), id, files);
+            }
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.MODEL.getValue());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
