@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Getter
 @Setter
-@SpecType(kind = "pickle", entity = EntityName.MODEL)
+@SpecType(kind = "sklearn", entity = EntityName.MODEL)
 public class SKLearnModelSpec extends ModelSpec {
 
     @JsonProperty("runtime_version")
