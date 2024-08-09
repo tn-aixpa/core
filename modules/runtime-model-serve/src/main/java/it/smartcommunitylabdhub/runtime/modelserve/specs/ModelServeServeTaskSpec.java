@@ -27,10 +27,6 @@ public class ModelServeServeTaskSpec extends K8sTaskBaseSpec {
     @Schema(defaultValue = "NodePort")
     private CoreServiceType serviceType;
 
-    public ModelServeServeTaskSpec(Map<String, Serializable> data) {
-        configure(data);
-    }
-
     @Override
     public void configure(Map<String, Serializable> data) {
         super.configure(data);

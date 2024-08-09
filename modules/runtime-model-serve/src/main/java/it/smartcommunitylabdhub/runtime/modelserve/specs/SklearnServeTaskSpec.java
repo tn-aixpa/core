@@ -1,10 +1,11 @@
 package it.smartcommunitylabdhub.runtime.modelserve.specs;
 
+import java.io.Serializable;
+import java.util.Map;
+
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.modelserve.SklearnServeRuntime;
-import java.io.Serializable;
-import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +18,11 @@ public class SklearnServeTaskSpec extends ModelServeServeTaskSpec {
 
     public static final String KIND = "sklearnserve+serve";
 
-    public SklearnServeTaskSpec(Map<String, Serializable> data) {
-        configure(data);
+
+    public static SklearnServeTaskSpec with(Map<String, Serializable> data) {
+        SklearnServeTaskSpec spec = new SklearnServeTaskSpec();
+        spec.configure(data);
+        return spec;
     }
+
 }
