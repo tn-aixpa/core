@@ -75,6 +75,8 @@ runtime:
     image: ${RUNTIME_SKLEARN_SERVE_IMAGE:kserve/sklearnserver:latest}
   mlflowserve:
     image: ${RUNTIME_MLFLOW_SERVE_IMAGE:seldonio/mlserver:1.6.0-mlflow}
+  huggingfaceserve:
+    image: ${RUNTIME_HUGGINGFACE_SERVE_IMAGE:kserve/huggingfaceserver:latest}
 
 # Spring Docs
 springdoc:
