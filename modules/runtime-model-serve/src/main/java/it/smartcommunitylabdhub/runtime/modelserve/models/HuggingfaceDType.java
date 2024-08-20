@@ -6,7 +6,7 @@ public enum HuggingfaceDType {
         FLOAT16("float16"),
         FLOAT32("float32"),
         BFLOAT16("bfloat16"),
-        FLOAT("float32"),
+        FLOAT("float"),
         HALF("half");
     
         private final String dtype;
