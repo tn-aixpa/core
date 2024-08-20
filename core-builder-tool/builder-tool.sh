@@ -84,7 +84,7 @@ source_dir="/init-config-map"
 
 # Destination directory shared between containers
 destination_dir="/shared"
-tmp_dir="/tmp_shared"
+tmp_dir="/tmp/shared"
 
 minio="minio"
 
