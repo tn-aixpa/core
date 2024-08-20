@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.modelserve.runners;
+package it.smartcommunitylabdhub.runtime.huggingface;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
@@ -13,18 +13,15 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-import it.smartcommunitylabdhub.runtime.modelserve.HuggingfaceServeRuntime;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.HuggingfaceServeFunctionSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.HuggingfaceServeRunSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.HuggingfaceServeTaskSpec;
-
+import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeFunctionSpec;
+import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeRunSpec;
+import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeTaskSpec;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -67,27 +64,34 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
 
         //read source and build context
-        List<ContextRef> contextRefs = null; 
+        List<ContextRef> contextRefs = null;
 
         List<String> args = new ArrayList<>(
             List.of(
-                "-m", "huggingfaceserver", 
-                "--model_name", StringUtils.hasText(functionSpec.getModelName()) ? functionSpec.getModelName() : "model",
-                "--protocol", "v2",
-                "--enable_docs_url", "true")
+                "-m",
+                "huggingfaceserver",
+                "--model_name",
+                StringUtils.hasText(functionSpec.getModelName()) ? functionSpec.getModelName() : "model",
+                "--protocol",
+                "v2",
+                "--enable_docs_url",
+                "true"
+            )
         );
-
 
         // model dir or model id
         if (!"huggingface".equals(uri.getScheme())) {
             args.add("--model_dir");
             args.add("/shared/model");
-            contextRefs = Collections.singletonList(
-                ContextRef.builder()
-                .source(functionSpec.getPath())
-                .protocol(uri.getScheme())
-                .destination("model")
-                .build());
+            contextRefs =
+                Collections.singletonList(
+                    ContextRef
+                        .builder()
+                        .source(functionSpec.getPath())
+                        .protocol(uri.getScheme())
+                        .destination("model")
+                        .build()
+                );
         } else {
             String mdlId = uri.getHost() + uri.getPath();
             String revision = null;
@@ -137,7 +141,7 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
             args.add("--tensor_input_names");
             args.add(StringUtils.collectionToCommaDelimitedString(taskSpec.getTensorInputNames()));
         }
-        // task 
+        // task
         if (taskSpec.getHuggingfaceTask() != null) {
             args.add("--task");
             args.add(taskSpec.getHuggingfaceTask().getTask());
@@ -161,12 +165,12 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         if (taskSpec.getDisableLogRequests() != null) {
             args.add("--disable_log_requests");
             args.add(taskSpec.getDisableLogRequests().toString());
-        }   
+        }
         // max_log_len
         if (taskSpec.getMaxLogLen() != null) {
             args.add("--max_log_len");
             args.add(taskSpec.getMaxLogLen().toString());
-        }   
+        }
         // dtype
         if (taskSpec.getDtype() != null) {
             args.add("--dtype");
@@ -176,9 +180,8 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         CorePort servicePort = new CorePort(HTTP_PORT, HTTP_PORT);
         CorePort grpcPort = new CorePort(GRPC_PORT, GRPC_PORT);
 
-
         String img = StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image;
-        
+
         //build runnable
         K8sRunnable k8sServeRunnable = K8sServeRunnable
             .builder()

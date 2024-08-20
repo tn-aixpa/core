@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.modelserve;
+package it.smartcommunitylabdhub.runtime.mlflow;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
@@ -10,10 +10,9 @@ import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
-import it.smartcommunitylabdhub.runtime.modelserve.runners.MlflowServeRunner;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.MlflowServeFunctionSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.MlflowServeRunSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.MlflowServeTaskSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeFunctionSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeRunSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeTaskSpec;
 import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeRunStatus;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -25,8 +24,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @RuntimeComponent(runtime = MlflowServeRuntime.RUNTIME)
-public class MlflowServeRuntime extends K8sBaseRuntime<MlflowServeFunctionSpec, MlflowServeRunSpec, ModelServeRunStatus, K8sRunnable> {
-
+public class MlflowServeRuntime
+    extends K8sBaseRuntime<MlflowServeFunctionSpec, MlflowServeRunSpec, ModelServeRunStatus, K8sRunnable> {
 
     public static final String RUNTIME = "mlflowserve";
 
@@ -45,7 +44,10 @@ public class MlflowServeRuntime extends K8sBaseRuntime<MlflowServeFunctionSpec, 
         //check run kind
         if (!MlflowServeRunSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), MlflowServeRunSpec.KIND)
+                "Run kind {} unsupported, expecting {}".formatted(
+                        String.valueOf(run.getKind()),
+                        MlflowServeRunSpec.KIND
+                    )
             );
         }
 
@@ -82,7 +84,10 @@ public class MlflowServeRuntime extends K8sBaseRuntime<MlflowServeFunctionSpec, 
         //check run kind
         if (!MlflowServeRunSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), MlflowServeRunSpec.KIND)
+                "Run kind {} unsupported, expecting {}".formatted(
+                        String.valueOf(run.getKind()),
+                        MlflowServeRunSpec.KIND
+                    )
             );
         }
 
@@ -98,8 +103,7 @@ public class MlflowServeRuntime extends K8sBaseRuntime<MlflowServeFunctionSpec, 
                 secretService.groupSecrets(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
                 k8sBuilderHelper
             )
-            .produce(run);
-
+                .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }

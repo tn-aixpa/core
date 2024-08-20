@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.modelserve.runners;
+package it.smartcommunitylabdhub.runtime.mlflow;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
@@ -16,15 +16,12 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-import it.smartcommunitylabdhub.runtime.modelserve.SklearnServeRuntime;
-import it.smartcommunitylabdhub.runtime.modelserve.models.MLFlowSettingsParameters;
-import it.smartcommunitylabdhub.runtime.modelserve.models.MLFlowSettingsSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.MlflowServeFunctionSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.MlflowServeRunSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.MlflowServeTaskSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeFunctionSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.models.MLFlowSettingsParameters;
+import it.smartcommunitylabdhub.runtime.mlflow.models.MLFlowSettingsSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeFunctionSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeRunSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeTaskSpec;
 import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeServeTaskSpec;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -33,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -44,7 +40,7 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
     private static final int GRPC_PORT = 8081;
 
     private final String image;
-    private final ModelServeFunctionSpec functionSpec;
+    private final MlflowServeFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
     private final K8sBuilderHelper k8sBuilderHelper;
@@ -79,11 +75,8 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
 
         //read source and build context
         List<ContextRef> contextRefs = Collections.singletonList(
-            ContextRef.builder()
-            .source(source)
-            .protocol(uri.getScheme())
-            .destination("model")
-            .build());
+            ContextRef.builder().source(source).protocol(uri.getScheme()).destination("model").build()
+        );
         List<ContextSource> contextSources = new ArrayList<>();
 
         MLFlowSettingsSpec mlFlowSettingsSpec = MLFlowSettingsSpec
@@ -113,19 +106,17 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
             throw new CoreRuntimeException("error with reading entrypoint for runtime-mlflow");
         }
 
-        List<String> args = new ArrayList<>(
-            List.of("start", "/shared")
-        );
+        List<String> args = new ArrayList<>(List.of("start", "/shared"));
 
         CorePort servicePort = new CorePort(HTTP_PORT, HTTP_PORT);
         CorePort grpcPort = new CorePort(GRPC_PORT, GRPC_PORT);
 
         String img = StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image;
-        
+
         //build runnable
         K8sRunnable k8sServeRunnable = K8sServeRunnable
             .builder()
-            .runtime(SklearnServeRuntime.RUNTIME)
+            .runtime(MlflowServeRuntime.RUNTIME)
             .task(MlflowServeTaskSpec.KIND)
             .state(State.READY.name())
             .labels(

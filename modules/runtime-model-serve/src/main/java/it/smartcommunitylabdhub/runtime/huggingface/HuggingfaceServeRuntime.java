@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.modelserve;
+package it.smartcommunitylabdhub.runtime.huggingface;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
@@ -10,10 +10,9 @@ import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
-import it.smartcommunitylabdhub.runtime.modelserve.runners.HuggingfaceServeRunner;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.HuggingfaceServeFunctionSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.HuggingfaceServeRunSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.HuggingfaceServeTaskSpec;
+import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeFunctionSpec;
+import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeRunSpec;
+import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeTaskSpec;
 import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeRunStatus;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -25,8 +24,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @RuntimeComponent(runtime = HuggingfaceServeRuntime.RUNTIME)
-public class HuggingfaceServeRuntime extends K8sBaseRuntime<HuggingfaceServeFunctionSpec, HuggingfaceServeRunSpec, ModelServeRunStatus, K8sRunnable> {
-
+public class HuggingfaceServeRuntime
+    extends K8sBaseRuntime<HuggingfaceServeFunctionSpec, HuggingfaceServeRunSpec, ModelServeRunStatus, K8sRunnable> {
 
     public static final String RUNTIME = "huggingfaceserve";
 
@@ -45,7 +44,10 @@ public class HuggingfaceServeRuntime extends K8sBaseRuntime<HuggingfaceServeFunc
         //check run kind
         if (!HuggingfaceServeRunSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), HuggingfaceServeRunSpec.KIND)
+                "Run kind {} unsupported, expecting {}".formatted(
+                        String.valueOf(run.getKind()),
+                        HuggingfaceServeRunSpec.KIND
+                    )
             );
         }
 
@@ -82,7 +84,10 @@ public class HuggingfaceServeRuntime extends K8sBaseRuntime<HuggingfaceServeFunc
         //check run kind
         if (!HuggingfaceServeRunSpec.KIND.equals(run.getKind())) {
             throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), HuggingfaceServeRunSpec.KIND)
+                "Run kind {} unsupported, expecting {}".formatted(
+                        String.valueOf(run.getKind()),
+                        HuggingfaceServeRunSpec.KIND
+                    )
             );
         }
 
@@ -98,8 +103,7 @@ public class HuggingfaceServeRuntime extends K8sBaseRuntime<HuggingfaceServeFunc
                 secretService.groupSecrets(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
                 k8sBuilderHelper
             )
-            .produce(run);
-
+                .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
     }

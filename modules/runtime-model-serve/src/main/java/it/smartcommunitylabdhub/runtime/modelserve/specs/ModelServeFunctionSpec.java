@@ -1,13 +1,11 @@
 package it.smartcommunitylabdhub.runtime.modelserve.specs;
 
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
-import jakarta.validation.constraints.NotNull;
-
-import java.io.Serializable;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
+import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ModelServeFunctionSpec extends FunctionBaseSpec {
-    
+
     @JsonProperty("path")
     @NotNull
     @Schema(title = "fields.modelserve.path.title", description = "fields.modelserve.path.description")
@@ -42,5 +40,4 @@ public class ModelServeFunctionSpec extends FunctionBaseSpec {
         this.path = spec.getPath();
         this.image = spec.getImage();
     }
-
 }

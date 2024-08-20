@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.modelserve.runners;
+package it.smartcommunitylabdhub.runtime.sklearn;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
@@ -13,20 +13,17 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-import it.smartcommunitylabdhub.runtime.modelserve.SklearnServeRuntime;
 import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeFunctionSpec;
 import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeServeTaskSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.SklearnServeFunctionSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.SklearnServeRunSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.SklearnServeTaskSpec;
-
+import it.smartcommunitylabdhub.runtime.sklearn.specs.SklearnServeFunctionSpec;
+import it.smartcommunitylabdhub.runtime.sklearn.specs.SklearnServeRunSpec;
+import it.smartcommunitylabdhub.runtime.sklearn.specs.SklearnServeTaskSpec;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -70,27 +67,29 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
 
         //read source and build context
         List<ContextRef> contextRefs = Collections.singletonList(
-            ContextRef.builder()
-            .source(functionSpec.getPath())
-            .protocol(uri.getScheme())
-            .destination("model")
-            .build());
+            ContextRef.builder().source(functionSpec.getPath()).protocol(uri.getScheme()).destination("model").build()
+        );
 
         List<String> args = new ArrayList<>(
             List.of(
-                "-m", "sklearnserver", 
-                "--model_dir", "/shared/model", 
-                "--model_name", StringUtils.hasText(functionSpec.getModelName()) ? functionSpec.getModelName() : "model",
-                "--protocol", "v2",
-                "--enable_docs_url", "true")
+                "-m",
+                "sklearnserver",
+                "--model_dir",
+                "/shared/model",
+                "--model_name",
+                StringUtils.hasText(functionSpec.getModelName()) ? functionSpec.getModelName() : "model",
+                "--protocol",
+                "v2",
+                "--enable_docs_url",
+                "true"
+            )
         );
 
         CorePort servicePort = new CorePort(HTTP_PORT, HTTP_PORT);
         CorePort grpcPort = new CorePort(GRPC_PORT, GRPC_PORT);
 
-
         String img = StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image;
-        
+
         //build runnable
         K8sRunnable k8sServeRunnable = K8sServeRunnable
             .builder()

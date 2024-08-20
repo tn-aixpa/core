@@ -1,15 +1,12 @@
-package it.smartcommunitylabdhub.runtime.modelserve.specs;
+package it.smartcommunitylabdhub.runtime.sklearn.specs;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.runtime.modelserve.SklearnServeRuntime;
-
+import it.smartcommunitylabdhub.runtime.sklearn.SklearnServeRuntime;
 import java.io.Serializable;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -42,15 +39,13 @@ public class SklearnServeRunSpec extends RunBaseSpec {
         this.functionSpec = functionSpec;
     }
 
-
     public void setTaskServeSpec(SklearnServeTaskSpec taskServeSpec) {
         this.taskServeSpec = taskServeSpec;
     }
+
     public static SklearnServeRunSpec with(Map<String, Serializable> data) {
         SklearnServeRunSpec spec = new SklearnServeRunSpec();
         spec.configure(data);
         return spec;
     }
-    
-
 }

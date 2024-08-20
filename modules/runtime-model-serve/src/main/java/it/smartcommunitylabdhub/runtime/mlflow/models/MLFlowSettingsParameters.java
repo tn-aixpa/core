@@ -1,10 +1,8 @@
-package it.smartcommunitylabdhub.runtime.modelserve.models;
-
-import java.io.Serializable;
-import java.util.Map;
+package it.smartcommunitylabdhub.runtime.mlflow.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.io.Serializable;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,8 +19,10 @@ import lombok.ToString;
 public class MLFlowSettingsParameters {
 
     private String uri;
+
     @JsonProperty("content_type")
     private String contentType;
+
     private String version;
     private String format;
     private Map<String, Serializable> extra;

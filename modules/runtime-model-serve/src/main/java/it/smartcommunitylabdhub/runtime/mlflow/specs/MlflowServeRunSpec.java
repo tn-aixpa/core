@@ -1,15 +1,12 @@
-package it.smartcommunitylabdhub.runtime.modelserve.specs;
+package it.smartcommunitylabdhub.runtime.mlflow.specs;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.runtime.modelserve.MlflowServeRuntime;
-
+import it.smartcommunitylabdhub.runtime.mlflow.MlflowServeRuntime;
 import java.io.Serializable;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
-
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -39,7 +36,6 @@ public class MlflowServeRunSpec extends RunBaseSpec {
     public void setFunctionSpec(MlflowServeFunctionSpec functionSpec) {
         this.functionSpec = functionSpec;
     }
-
 
     public void setTaskServeSpec(MlflowServeTaskSpec taskServeSpec) {
         this.taskServeSpec = taskServeSpec;

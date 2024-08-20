@@ -1,7 +1,4 @@
-package it.smartcommunitylabdhub.runtime.modelserve.models;
-
-import java.io.Serializable;
-import java.util.Map;
+package it.smartcommunitylabdhub.runtime.mlflow.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
