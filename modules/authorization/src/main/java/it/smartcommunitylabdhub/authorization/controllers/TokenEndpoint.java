@@ -8,11 +8,9 @@ import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,8 +102,8 @@ public class TokenEndpoint implements InitializingBean {
 
     @PostMapping(TOKEN_URL)
     public TokenResponse token(
-            @RequestParam Map<String, String> parameters,
-            @CurrentSecurityContext SecurityContext securityContext
+        @RequestParam Map<String, String> parameters,
+        @CurrentSecurityContext SecurityContext securityContext
     ) {
         if (!securityProperties.isRequired()) {
             throw new UnsupportedOperationException();
@@ -251,9 +249,9 @@ public class TokenEndpoint implements InitializingBean {
             }
 
             log.debug(
-                    "exchange token request from {} resolved for {} via internal provider",
-                    clientAuth.getName(),
-                    userAuth.getName()
+                "exchange token request from {} resolved for {} via internal provider",
+                clientAuth.getName(),
+                userAuth.getName()
             );
 
             //token is valid, use as context for generation
@@ -269,9 +267,9 @@ public class TokenEndpoint implements InitializingBean {
                     }
 
                     log.debug(
-                            "exchange token request from {} resolved for {} via external provider",
-                            clientAuth.getName(),
-                            userAuth.getName()
+                        "exchange token request from {} resolved for {} via external provider",
+                        clientAuth.getName(),
+                        userAuth.getName()
                     );
 
                     //token is valid, use as context for generation
@@ -295,23 +293,23 @@ public class TokenEndpoint implements InitializingBean {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(jwk.toRSAKey().toRSAPublicKey()).build();
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(
-                applicationProperties.getEndpoint()
+            applicationProperties.getEndpoint()
         );
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
-                JwtClaimNames.AUD,
-                (aud -> aud != null && aud.contains(applicationProperties.getName()))
+            JwtClaimNames.AUD,
+            (aud -> aud != null && aud.contains(applicationProperties.getName()))
         );
 
         //refresh tokens *must contain* at_hash, access token *not*
         OAuth2TokenValidator<Jwt> tokenValidator = new JwtClaimValidator<String>(
-                IdTokenClaimNames.AT_HASH,
-                (hash -> (asRefresh ? hash != null : hash == null))
+            IdTokenClaimNames.AT_HASH,
+            (hash -> (asRefresh ? hash != null : hash == null))
         );
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
-                withIssuer,
-                audienceValidator,
-                tokenValidator
+            withIssuer,
+            audienceValidator,
+            tokenValidator
         );
         jwtDecoder.setJwtValidator(validator);
 
@@ -326,8 +324,8 @@ public class TokenEndpoint implements InitializingBean {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(jwtProps.getIssuerUri()).build();
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
-                JwtClaimNames.AUD,
-                (aud -> aud != null && aud.contains(jwtProps.getAudience()))
+            JwtClaimNames.AUD,
+            (aud -> aud != null && aud.contains(jwtProps.getAudience()))
         );
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(jwtProps.getIssuerUri());

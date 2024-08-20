@@ -25,13 +25,11 @@ import it.smartcommunitylabdhub.authorization.repositories.RefreshTokenRepositor
 import it.smartcommunitylabdhub.authorization.utils.JWKUtils;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
-
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +46,6 @@ public class JwtTokenService implements InitializingBean {
 
     private static final int DEFAULT_ACCESS_TOKEN_DURATION = 3600 * 8; //8 hours
     private static final int DEFAULT_REFRESH_TOKEN_DURATION = 3600 * 24 * 30; //30 days
-
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
@@ -135,13 +132,13 @@ public class JwtTokenService implements InitializingBean {
         SignedJWT refreshToken = generateRefreshToken(authentication, accessToken);
 
         return TokenResponse
-                .builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .expiration(accessTokenDuration)
-                .clientId(clientId)
-                .issuer(applicationProperties.getEndpoint())
-                .build();
+            .builder()
+            .accessToken(accessToken)
+            .refreshToken(refreshToken)
+            .expiration(accessTokenDuration)
+            .clientId(clientId)
+            .issuer(applicationProperties.getEndpoint())
+            .build();
     }
 
     public String generateAccessTokenAsString(Authentication authentication) throws JwtTokenServiceException {
@@ -168,19 +165,19 @@ public class JwtTokenService implements InitializingBean {
 
             // build access token claims
             JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
-                    .subject(authentication.getName())
-                    .issuer(applicationProperties.getEndpoint())
-                    .issueTime(Date.from(now))
-                    .audience(applicationProperties.getName())
-                    .jwtID(UUID.randomUUID().toString())
-                    .expirationTime(Date.from(now.plusSeconds(accessTokenDuration)));
+                .subject(authentication.getName())
+                .issuer(applicationProperties.getEndpoint())
+                .issueTime(Date.from(now))
+                .audience(applicationProperties.getName())
+                .jwtID(UUID.randomUUID().toString())
+                .expirationTime(Date.from(now.plusSeconds(accessTokenDuration)));
 
             //define authorities as claims
             List<String> authorities = authentication
-                    .getAuthorities()
-                    .stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .toList();
+                .getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
 
             claims.claim("authorities", authorities);
 
@@ -203,7 +200,7 @@ public class JwtTokenService implements InitializingBean {
     }
 
     public SignedJWT generateRefreshToken(Authentication authentication, SignedJWT accessToken)
-            throws JwtTokenServiceException {
+        throws JwtTokenServiceException {
         if (signer == null) {
             throw new UnsupportedOperationException("signer not available");
         }
@@ -215,12 +212,12 @@ public class JwtTokenService implements InitializingBean {
 
             // build refresh token claims
             JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
-                    .subject(authentication.getName())
-                    .issuer(applicationProperties.getEndpoint())
-                    .issueTime(Date.from(now))
-                    .audience(applicationProperties.getName())
-                    .jwtID(UUID.randomUUID().toString())
-                    .expirationTime(Date.from(now.plusSeconds(refreshTokenDuration)));
+                .subject(authentication.getName())
+                .issuer(applicationProperties.getEndpoint())
+                .issueTime(Date.from(now))
+                .audience(applicationProperties.getName())
+                .jwtID(UUID.randomUUID().toString())
+                .expirationTime(Date.from(now.plusSeconds(refreshTokenDuration)));
 
             //associate access token via hash binding
             String hash = JWKUtils.getAccessTokenHash(jwsAlgorithm, accessToken);
@@ -228,10 +225,10 @@ public class JwtTokenService implements InitializingBean {
 
             //define authorities as claims
             List<String> authorities = authentication
-                    .getAuthorities()
-                    .stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .toList();
+                .getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
 
             claims.claim("authorities", authorities);
 
@@ -248,13 +245,14 @@ public class JwtTokenService implements InitializingBean {
 
             // Store Refresh Token into db.
             refreshTokenRepository.save(
-                    RefreshTokenEntity.builder()
-                            .id(claimsSet.getJWTID())
-                            .subject(authentication.getName())
-                            .refreshToken(jwt.serialize())
-                            .issuedTime(claimsSet.getIssueTime())
-                            .expirationTime(claimsSet.getExpirationTime())
-                            .build()
+                RefreshTokenEntity
+                    .builder()
+                    .id(claimsSet.getJWTID())
+                    .subject(authentication.getName())
+                    .refreshToken(jwt.serialize())
+                    .issuedTime(claimsSet.getIssueTime())
+                    .expirationTime(claimsSet.getExpirationTime())
+                    .build()
             );
 
             return jwt;
@@ -264,11 +262,8 @@ public class JwtTokenService implements InitializingBean {
         }
     }
 
-
     public void consume(Authentication authentication, String refreshToken) {
-
         try {
-
             if (verifier == null) {
                 throw new UnsupportedOperationException("verifier not available");
             }
@@ -301,7 +296,6 @@ public class JwtTokenService implements InitializingBean {
             refreshTokenRepository.deleteById(tokenId);
 
             log.info("Refresh token successfully consumed and removed from repository");
-
         } catch (ParseException e) {
             throw new RuntimeException(e);
         } catch (JOSEException e) {
