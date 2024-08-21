@@ -442,7 +442,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         List<String> args = buildArgs(runnable);
 
         //check if context build is required
-        if (runnable.getContextRefs() != null || runnable.getContextSources() != null) {
+        if (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty() || 
+            runnable.getContextSources() != null && !runnable.getContextSources().isEmpty()) {
             // Create sharedVolume
             CoreVolume sharedVolume = new CoreVolume(
                 CoreVolume.VolumeType.empty_dir,
@@ -502,7 +503,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             .imagePullSecrets(buildImagePullSecrets(runnable));
 
         //check if context build is required
-        if (runnable.getContextRefs() != null || runnable.getContextSources() != null) {
+        if (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty() || 
+            runnable.getContextSources() != null && !runnable.getContextSources().isEmpty()) {
             // Add Init container to the PodTemplateSpec
             // Build the Init Container
             V1Container initContainer = new V1Container()
