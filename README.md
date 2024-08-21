@@ -12,7 +12,7 @@ DH Core offers an API interface that give us the possibility to formalize the en
 
 
 1. **Projects** is the context in which all the object below are living.
-2. **Functions (FN)** are the logical description of an executable. They are associated with a given runtime (RUNTIME), which implements the actual execution and determines which are the actions available. Examples are dbt, nuclio, mlrun, python,spark.
+2. **Functions (FN)** are the logical description of an executable. They are associated with a given runtime (RUNTIME), which implements the actual execution and determines which are the actions available. Examples are dbt, nuclio, python,spark.
 3. **Tasks (TASK)** are the logical representations of an action which is performed via a given function, by a runtime, within a framework. As such, they define both the actual scope of the execution and its context, in terms of environment, dependencies, resources etc.
 4. **Runs (RUN)** are the representation of the execution of a given task with the given function, on (a set of) inputs to deliver (a set of) outputs. At a high level, they can be seen both as a summary of the union between a function and a task in a single instance, and as the representation of the actual execution phase, with parameters, status, results etc.
 
@@ -38,10 +38,9 @@ Modules include:
 6. Runtimes modules. These runtimes are essentially integrations with external tools that enable the execution of serverless functions. Currently, we support the execution of functions.
    1. Dbt database transformation function
    2. Kfp workflow execution
-   3. Mlrun function
-   4. Nefertem function for data validation, inference and profiling
-   5. Python function
-   6. Container
+   3. Nefertem function for data validation, inference and profiling
+   4. Python function
+   5. Container
 
 
 ## Configuration
@@ -117,8 +116,6 @@ runtime:
     image: ${RUNTIME_NEFERTEM_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-nefertem:latest}
   dbt:
     image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-dbt:latest}
-  mlrun:
-    image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
   kfp:
     image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
   python:
@@ -136,20 +133,13 @@ kaniko:
   secret: ${KANIKO_SECRET:${registry.secret}}
   args: ${KANIKO_ARGS:}    
 ```
-7. Mlrun configuration
-```yml
-mlrun:
-  base-image: ${MLRUN_BASE_IMAGE:mlrun/mlrun}
-  image-prefix: ${MLRUN_IMAGE_PREFIX:dhcore}
-  image-registry: ${MLRUN_IMAGE_REGISTRY:}
-```
-8. Docker Registry configuration
+7. Docker Registry configuration
 ```yml
 registry:
   name: ${DOCKER_REGISTRY:}
   secret: ${DOCKER_REGISTRY_SECRET:}
 ```
-9. Kubernetes configuration
+8. Kubernetes configuration
 ```yml
 kubernetes:
   namespace: ${K8S_NAMESPACE:default}
@@ -159,7 +149,7 @@ kubernetes:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}
 ```
-10. Application, quindi la configurazione relativa a Core
+9. Application, quindi la configurazione relativa a Core
 ```yml
 application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
@@ -168,14 +158,14 @@ application:
   version: @project.version@
   profiles: ${spring.profiles.active:default}
 ```
-11. Log configuration
+10. Log configuration
 ```yml
 logging:
   level:
     ROOT: INFO
     it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
 ```
-12. Spring Security configuration
+11. Spring Security configuration
 ```yml
 security:
   api:
@@ -193,7 +183,7 @@ security:
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
 ```
-13. Event Queue configuration
+12. Event Queue configuration
 ```yml
 event-queue:
   enabled: ${ENABLE_EVENTS:false}
@@ -210,13 +200,13 @@ event-queue:
       entity-routing-key: ${RABBITMQ_ROUTING_KEY:entityRoutingKey}
       enabled: ${RABBITMQ_ENABLE:false}
 ```
-14. Core Monitors configuration
+13. Core Monitors configuration
 ```yml
 monitors:
   min-delay: 60
   delay: ${MONITORS_DELAY:60}
 ```
-15. Solr configuration
+14. Solr configuration
 ```yml
 solr:
   enabled: ${ENABLE_SOLR:false}
