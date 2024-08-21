@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -265,6 +266,7 @@ public class JwtTokenService implements InitializingBean {
         }
     }
 
+    @Transactional
     public void consume(Authentication authentication, String refreshToken) {
         try {
             if (verifier == null) {

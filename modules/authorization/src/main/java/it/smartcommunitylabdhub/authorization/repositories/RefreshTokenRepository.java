@@ -19,7 +19,6 @@ public interface RefreshTokenRepository
 
     // Delete the token
     @Modifying
-    @Transactional
     @Query(value = "DELETE FROM RefreshTokenEntity WHERE id = :tokenId", nativeQuery = true)
     void deleteById(@Param("tokenId") String tokenId);
 }
