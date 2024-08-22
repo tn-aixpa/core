@@ -4,6 +4,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
 import it.smartcommunitylabdhub.authorization.components.JWKSetKeyStore;
+import it.smartcommunitylabdhub.authorization.exceptions.JwtTokenServiceException;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
@@ -15,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,7 +43,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -100,7 +105,7 @@ public class TokenEndpoint implements InitializingBean {
         }
     }
 
-    @PostMapping(TOKEN_URL)
+    @RequestMapping(value = TOKEN_URL, method = { RequestMethod.POST, RequestMethod.GET })
     public TokenResponse token(
         @RequestParam Map<String, String> parameters,
         @CurrentSecurityContext SecurityContext securityContext
@@ -134,14 +139,17 @@ public class TokenEndpoint implements InitializingBean {
         throw new IllegalArgumentException("invalid or unsupported grant type");
     }
 
+    @ExceptionHandler(JwtTokenServiceException.class)
+    public ResponseEntity<String> handleServiceException(JwtTokenServiceException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
     private TokenResponse refreshToken(Map<String, String> parameters, Authentication authentication) {
         if (refreshTokenAuthProvider == null) {
             throw new UnsupportedOperationException();
         }
 
         //refresh token is usable without credentials
-        //TODO add rotation by storing refresh tokens in db!
-
         String grantType = parameters.get(OAuth2ParameterNames.GRANT_TYPE);
         if (!AuthorizationGrantType.REFRESH_TOKEN.getValue().equals(grantType)) {
             throw new IllegalArgumentException("invalid grant type");
@@ -169,6 +177,9 @@ public class TokenEndpoint implements InitializingBean {
             if (!auth.isAuthenticated()) {
                 throw new IllegalArgumentException("invalid or missing refresh_token");
             }
+
+            // Consume refresh token
+            jwtTokenService.consume(auth, token);
 
             //token is valid, use as context for generation
             return jwtTokenService.generateCredentials(auth);

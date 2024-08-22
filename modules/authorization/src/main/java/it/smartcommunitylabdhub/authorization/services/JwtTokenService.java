@@ -19,18 +19,25 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import it.smartcommunitylabdhub.authorization.components.JWKSetKeyStore;
 import it.smartcommunitylabdhub.authorization.exceptions.JwtTokenServiceException;
+import it.smartcommunitylabdhub.authorization.model.RefreshTokenEntity;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
+import it.smartcommunitylabdhub.authorization.repositories.RefreshTokenRepository;
 import it.smartcommunitylabdhub.authorization.utils.JWKUtils;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
+import jakarta.transaction.Transactional;
+import java.sql.SQLTimeoutException;
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -43,6 +50,9 @@ public class JwtTokenService implements InitializingBean {
 
     private static final int DEFAULT_ACCESS_TOKEN_DURATION = 3600 * 8; //8 hours
     private static final int DEFAULT_REFRESH_TOKEN_DURATION = 3600 * 24 * 30; //30 days
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     private JWKSetKeyStore keyStore;
@@ -72,7 +82,7 @@ public class JwtTokenService implements InitializingBean {
     }
 
     @Autowired
-    public void setRefreshTokenDuration(@Value("${jwt.access-token.duration}") Integer refreshTokenDuration) {
+    public void setRefreshTokenDuration(@Value("${jwt.refresh-token.duration}") Integer refreshTokenDuration) {
         if (refreshTokenDuration != null) {
             this.refreshTokenDuration = refreshTokenDuration.intValue();
         }
@@ -199,10 +209,16 @@ public class JwtTokenService implements InitializingBean {
             throw new UnsupportedOperationException("signer not available");
         }
 
+        log.debug("generate refresh token for {}", authentication.getName());
+        if (log.isTraceEnabled()) {
+            log.trace("access token: {}", accessToken.serialize());
+        }
+
         try {
             JWSAlgorithm jwsAlgorithm = JWSAlgorithm.parse(jwk.getAlgorithm().getName());
 
             Instant now = Instant.now();
+            String jti = UUID.randomUUID().toString().replace("-", "");
 
             // build refresh token claims
             JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
@@ -210,7 +226,7 @@ public class JwtTokenService implements InitializingBean {
                 .issuer(applicationProperties.getEndpoint())
                 .issueTime(Date.from(now))
                 .audience(applicationProperties.getName())
-                .jwtID(UUID.randomUUID().toString())
+                .jwtID(jti)
                 .expirationTime(Date.from(now.plusSeconds(refreshTokenDuration)));
 
             //associate access token via hash binding
@@ -237,10 +253,77 @@ public class JwtTokenService implements InitializingBean {
             SignedJWT jwt = new SignedJWT(header, claimsSet);
             jwt.sign(signer);
 
+            if (log.isTraceEnabled()) {
+                log.trace("token: {}", jwt.serialize());
+            }
+
+            log.debug("store refresh token for {} with id {}", authentication.getName(), jti);
+            // store Refresh Token into db
+            RefreshTokenEntity refreshToken = RefreshTokenEntity
+                .builder()
+                .id(jti)
+                .subject(authentication.getName())
+                .token(jwt.serialize())
+                .issuedTime(claimsSet.getIssueTime())
+                .expirationTime(claimsSet.getExpirationTime())
+                .build();
+            refreshTokenRepository.save(refreshToken);
+
             return jwt;
         } catch (JOSEException e) {
             log.error("Error generating JWT token", e);
             return null;
+        }
+    }
+
+    @Transactional(dontRollbackOn = { PessimisticLockingFailureException.class, SQLTimeoutException.class })
+    public void consume(Authentication authentication, String refreshToken) {
+        try {
+            if (verifier == null) {
+                throw new UnsupportedOperationException("verifier not available");
+            }
+
+            log.debug("consume refresh token: {}", refreshToken);
+
+            // Lock the token
+            Optional<RefreshTokenEntity> tokenEntity = refreshTokenRepository.findByTokenForUpdate(refreshToken);
+            if (tokenEntity.isEmpty()) {
+                log.debug("refresh token does not exists: {}", refreshToken);
+                throw new JwtTokenServiceException("Refresh token does not exist");
+            }
+
+            RefreshTokenEntity token = tokenEntity.get();
+
+            if (log.isTraceEnabled()) {
+                log.trace("token: {}", token);
+            }
+
+            // Parse the refresh token
+            SignedJWT signedJWT = SignedJWT.parse(refreshToken);
+
+            // Verify the token signature
+            if (!signedJWT.verify(verifier)) {
+                throw new JwtTokenServiceException("Invalid refresh token");
+            }
+
+            // Validate the token subject matches the current authentication
+            if (!token.getSubject().equals(authentication.getName())) {
+                throw new JwtTokenServiceException("Token subject does not match authentication subject");
+            }
+
+            // Delete the token after usage: it matches the subject and should not be reused
+            refreshTokenRepository.deleteById(token.getId());
+
+            // Check expiration
+            if (token.getExpirationTime().before(Date.from(Instant.now()))) {
+                throw new JwtTokenServiceException("Refresh token has expired");
+            }
+
+            log.debug("Refresh token successfully consumed and removed from repository");
+        } catch (ParseException e) {
+            throw new JwtTokenServiceException("error parsing token", e);
+        } catch (JOSEException e) {
+            throw new JwtTokenServiceException("Error verifying JWT token", e);
         }
     }
 }
