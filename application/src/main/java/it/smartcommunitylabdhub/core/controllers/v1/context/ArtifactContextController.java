@@ -17,6 +17,7 @@ import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.files.ArtifactFilesService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -185,11 +186,11 @@ public class ArtifactContextController {
     }
 
     @Operation(summary = "Get download url for a given artifact file, if available")
-    @GetMapping(path = "/{id}/files/download/{path:.*}", produces = "application/json; charset=UTF-8")
+    @GetMapping(path = "/{id}/files/download/**", produces = "application/json; charset=UTF-8")
     public DownloadInfo downloadAsUrlFile(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.FILE_PATTERN) String path
+        HttpServletRequest request
     ) throws NoSuchEntityException {
         Artifact artifact = artifactService.getArtifact(id);
 
@@ -197,7 +198,7 @@ public class ArtifactContextController {
         if (!artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-
+        String path = request.getRequestURL().toString().split("files/download/")[1];
         return filesService.downloadFileAsUrl(id, path);
     }
 

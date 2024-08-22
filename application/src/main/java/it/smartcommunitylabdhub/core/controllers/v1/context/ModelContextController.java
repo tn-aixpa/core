@@ -17,6 +17,7 @@ import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.files.ModelFilesService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ModelEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableModelService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -189,11 +190,11 @@ public class ModelContextController {
     }
 
     @Operation(summary = "Get download url for a given artifact file, if available")
-    @GetMapping(path = "/{id}/files/download/{path:.*}", produces = "application/json; charset=UTF-8")
+    @GetMapping(path = "/{id}/files/download/**", produces = "application/json; charset=UTF-8")
     public DownloadInfo downloadAsUrlFile(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.FILE_PATTERN) String path
+        HttpServletRequest request
     ) throws NoSuchEntityException {
         Model model = modelService.getModel(id);
 
@@ -201,7 +202,7 @@ public class ModelContextController {
         if (!model.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-
+        String path = request.getRequestURL().toString().split("files/download/")[1];
         return filesService.downloadFileAsUrl(id, path);
     }
     @Operation(summary = "Create an upload url for a given entity, if available")
