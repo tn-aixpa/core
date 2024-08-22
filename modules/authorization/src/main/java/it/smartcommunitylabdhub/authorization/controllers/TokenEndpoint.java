@@ -150,8 +150,6 @@ public class TokenEndpoint implements InitializingBean {
         }
 
         //refresh token is usable without credentials
-        //TODO add rotation by storing refresh tokens in db!
-
         String grantType = parameters.get(OAuth2ParameterNames.GRANT_TYPE);
         if (!AuthorizationGrantType.REFRESH_TOKEN.getValue().equals(grantType)) {
             throw new IllegalArgumentException("invalid grant type");
@@ -181,7 +179,7 @@ public class TokenEndpoint implements InitializingBean {
             }
 
             // Consume refresh token
-            jwtTokenService.consume(authentication, token);
+            jwtTokenService.consume(auth, token);
 
             //token is valid, use as context for generation
             return jwtTokenService.generateCredentials(auth);

@@ -26,6 +26,7 @@ import it.smartcommunitylabdhub.authorization.utils.JWKUtils;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import jakarta.transaction.Transactional;
+import java.sql.SQLTimeoutException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.Date;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -274,7 +276,7 @@ public class JwtTokenService implements InitializingBean {
         }
     }
 
-    @Transactional
+    @Transactional(dontRollbackOn = { PessimisticLockingFailureException.class, SQLTimeoutException.class })
     public void consume(Authentication authentication, String refreshToken) {
         try {
             if (verifier == null) {
