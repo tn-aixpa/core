@@ -16,6 +16,8 @@ public interface ModelFilesService {
 
     public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException;
 
+    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String path) throws NoSuchEntityException, SystemException;
+
     public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException;
 

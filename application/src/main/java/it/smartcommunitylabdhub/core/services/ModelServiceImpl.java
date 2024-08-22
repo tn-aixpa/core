@@ -499,6 +499,38 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
         }
     }
 
+        @Override
+    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String sub) throws NoSuchEntityException, SystemException {
+        log.debug("download url for model file with id {} and path {}", String.valueOf(id), String.valueOf(sub));
+
+        try {
+            Model model = entityService.get(id);
+
+            //extract path from spec
+            ModelBaseSpec spec = new ModelBaseSpec();
+            spec.configure(model.getSpec());
+
+            String path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+            if (!path.endsWith("/")) path += "/";
+            path += sub;
+
+            DownloadInfo info = filesService.getDownloadAsUrl(path);
+            if (log.isTraceEnabled()) {
+                log.trace("download url for model with id {} and path {}: {} -> {}", id, sub, path, info);
+            }
+
+            return info;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.MODEL.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
     @Override
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("get storage metadata for model with id {}", String.valueOf(id));

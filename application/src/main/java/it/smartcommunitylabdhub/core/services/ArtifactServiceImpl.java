@@ -504,6 +504,37 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
+    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String sub) throws NoSuchEntityException, SystemException {
+        log.debug("download url for artifact file with id {} and path {}", String.valueOf(id), String.valueOf(sub));
+
+        try {
+            Artifact artifact = entityService.get(id);
+
+            //extract path from spec
+            ArtifactBaseSpec spec = new ArtifactBaseSpec();
+            spec.configure(artifact.getSpec());
+
+            String path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+            if (!path.endsWith("/")) path += "/";
+            path += sub;
+
+            DownloadInfo info = filesService.getDownloadAsUrl(path);
+            if (log.isTraceEnabled()) {
+                log.trace("download url for artifact with id {} and path {}: {} -> {}", id, sub, path, info);
+            }
+
+            return info;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+    @Override
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("get files info for artifact with id {}", String.valueOf(id));
         try {

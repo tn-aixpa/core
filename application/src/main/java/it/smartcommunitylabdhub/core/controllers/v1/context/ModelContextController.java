@@ -188,6 +188,22 @@ public class ModelContextController {
         return filesService.downloadFileAsUrl(id);
     }
 
+    @Operation(summary = "Get download url for a given artifact file, if available")
+    @GetMapping(path = "/{id}/files/download/{path:.*}", produces = "application/json; charset=UTF-8")
+    public DownloadInfo downloadAsUrlFile(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.FILE_PATTERN) String path
+    ) throws NoSuchEntityException {
+        Model model = modelService.getModel(id);
+
+        //check for project and name match
+        if (!model.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return filesService.downloadFileAsUrl(id, path);
+    }
     @Operation(summary = "Create an upload url for a given entity, if available")
     @PostMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
     public UploadInfo uploadAsUrlById(

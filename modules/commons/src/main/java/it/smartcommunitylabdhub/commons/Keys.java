@@ -7,6 +7,7 @@ public class Keys {
     public static final String STORE_PREFIX = "store://";
     public static final String PATH_DIVIDER = "/";
     public static final String ID_DIVIDER = ":";
-
+    public static final String FILE_PATTERN = "(([^/]+)/)*([^/]+)";
+    
     private Keys() {}
 }
