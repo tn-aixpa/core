@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -26,10 +27,13 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.core.models.specs.project.ProjectSpec;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -41,7 +45,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class ProjectServiceImpl implements SearchableProjectService {
+public class ProjectServiceImpl implements SearchableProjectService, AuthorizableAwareEntityService<Project> {
 
     @Autowired
     private EntityService<Project, ProjectEntity> entityService;
@@ -185,6 +189,17 @@ public class ProjectServiceImpl implements SearchableProjectService {
     }
 
     @Override
+    @CacheEvict(
+        value = {
+            "findIdByCreatedBy",
+            "findIdByUpdatedBy",
+            "findIdByProject",
+            "findNameByCreatedBy",
+            "findNameByUpdatedBy",
+            "findNameByProject",
+        },
+        allEntries = true
+    )
     public Project createProject(@NotNull Project dto)
         throws DuplicatedEntityException, BindException, IllegalArgumentException {
         log.debug("create project");
@@ -255,6 +270,17 @@ public class ProjectServiceImpl implements SearchableProjectService {
     }
 
     @Override
+    @CacheEvict(
+        value = {
+            "findIdByCreatedBy",
+            "findIdByUpdatedBy",
+            "findIdByProject",
+            "findNameByCreatedBy",
+            "findNameByUpdatedBy",
+            "findNameByProject",
+        },
+        allEntries = true
+    )
     public void deleteProject(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete project with id {}", String.valueOf(id));
         try {
@@ -285,6 +311,104 @@ public class ProjectServiceImpl implements SearchableProjectService {
                 //delete the project
                 entityService.delete(id);
             }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    @Cacheable("findIdByCreatedBy")
+    public List<String> findIdsByCreatedBy(@NotNull String createdBy) {
+        log.debug("find id of projects for createdBy {}", createdBy);
+        try {
+            return entityService
+                .searchAll(CommonSpecification.createdByEquals(createdBy))
+                .stream()
+                .map(p -> p.getId())
+                .toList();
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    @Cacheable("findIdByUpdatedBy")
+    public List<String> findIdsByUpdatedBy(@NotNull String updatedBy) {
+        log.debug("find id of projects for updatedBy {}", updatedBy);
+        try {
+            return entityService
+                .searchAll(CommonSpecification.updatedByEquals(updatedBy))
+                .stream()
+                .map(p -> p.getId())
+                .toList();
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    @Cacheable("findIdByProject")
+    public List<String> findIdsByProject(@NotNull String project) {
+        log.debug("find id of projects for project {}", project);
+        try {
+            Project p = entityService.find(project);
+            if (p == null) {
+                return Collections.emptyList();
+            }
+
+            return Collections.singletonList(p.getId());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    @Cacheable("findNameByCreatedBy")
+    public List<String> findNamesByCreatedBy(@NotNull String createdBy) {
+        log.debug("find name of projects for createdBy {}", createdBy);
+        try {
+            return entityService
+                .searchAll(CommonSpecification.createdByEquals(createdBy))
+                .stream()
+                .map(p -> p.getName())
+                .toList();
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    @Cacheable("findNameByUpdatedBy")
+    public List<String> findNamesByUpdatedBy(@NotNull String updatedBy) {
+        log.debug("find name of projects for updatedBy {}", updatedBy);
+        try {
+            return entityService
+                .searchAll(CommonSpecification.updatedByEquals(updatedBy))
+                .stream()
+                .map(p -> p.getName())
+                .toList();
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    @Cacheable("findNameByProject")
+    public List<String> findNamesByProject(@NotNull String project) {
+        log.debug("find name of projects for project {}", project);
+        try {
+            Project p = entityService.find(project);
+            if (p == null) {
+                return Collections.emptyList();
+            }
+
+            return Collections.singletonList(p.getName());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());

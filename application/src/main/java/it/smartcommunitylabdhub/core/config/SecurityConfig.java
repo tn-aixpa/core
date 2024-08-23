@@ -4,8 +4,10 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.RSAKey;
 import it.smartcommunitylabdhub.authorization.config.KeyStoreConfig;
+import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
+import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,6 +82,9 @@ public class SecurityConfig {
 
     @Autowired
     KeyStoreConfig keyStoreConfig;
+
+    @Autowired
+    AuthorizableAwareEntityService<Project> projectAuthHelper;
 
     @Bean("apiSecurityFilterChain")
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -263,6 +268,7 @@ public class SecurityConfig {
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
+            //read roles from token
             if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
                 List<String> roles = source.getClaimAsStringList(claim);
                 if (roles != null) {
@@ -278,6 +284,15 @@ public class SecurityConfig {
                 }
             }
 
+            //inject roles from ownership of projects
+            if (StringUtils.hasText(source.getSubject())) {
+                projectAuthHelper
+                    .findIdsByCreatedBy(source.getSubject())
+                    .forEach(p -> {
+                        //derive a scoped ADMIN role
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
+                    });
+            }
             return authorities;
         });
         return converter;
