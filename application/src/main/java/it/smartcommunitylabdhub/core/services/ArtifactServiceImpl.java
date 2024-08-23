@@ -22,15 +22,16 @@ import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.files.ArtifactFilesService;
 import it.smartcommunitylabdhub.core.models.indexers.ArtifactEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,8 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class ArtifactServiceImpl implements SearchableArtifactService, IndexableArtifactService, ArtifactFilesService {
+public class ArtifactServiceImpl
+    implements SearchableArtifactService, IndexableArtifactService, EntityFilesService<Artifact> {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
@@ -504,7 +506,8 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
     }
 
     @Override
-    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String sub) throws NoSuchEntityException, SystemException {
+    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String sub)
+        throws NoSuchEntityException, SystemException {
         log.debug("download url for artifact file with id {} and path {}", String.valueOf(id), String.valueOf(sub));
 
         try {
@@ -518,10 +521,20 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             if (!StringUtils.hasText(path)) {
                 throw new NoSuchEntityException("file");
             }
-            if (!path.endsWith("/")) path += "/";
-            path += sub;
 
-            DownloadInfo info = filesService.getDownloadAsUrl(path);
+            String fullPath = Optional
+                .ofNullable(sub)
+                .map(s -> {
+                    StringBuilder sb = new StringBuilder(path);
+                    if (!path.endsWith("/") && !sub.startsWith("/")) {
+                        sb.append("/");
+                    }
+                    sb.append(sub);
+                    return sb.toString();
+                })
+                .orElse(path);
+
+            DownloadInfo info = filesService.getDownloadAsUrl(fullPath);
             if (log.isTraceEnabled()) {
                 log.trace("download url for artifact with id {} and path {}: {} -> {}", id, sub, path, info);
             }
@@ -534,6 +547,7 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             throw new SystemException(e.getMessage());
         }
     }
+
     @Override
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("get files info for artifact with id {}", String.valueOf(id));
@@ -542,13 +556,30 @@ public class ArtifactServiceImpl implements SearchableArtifactService, Indexable
             StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
             List<FileInfo> files = statusFieldAccessor.getFiles();
 
-            if (files == null) {
+            if (files == null || files.isEmpty()) {
                 FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.ARTIFACT.getValue(), id);
                 if (filesInfo != null && (filesInfo.getFiles() != null)) {
                     files = filesInfo.getFiles();
                 } else {
-                    files = Collections.emptyList();
+                    files = null;
                 }
+            }
+
+            if (files == null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(entity.getSpec());
+
+                String path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+
+                files = filesService.getFileInfo(path);
+            }
+
+            if (files == null) {
+                files = Collections.emptyList();
             }
 
             if (log.isTraceEnabled()) {

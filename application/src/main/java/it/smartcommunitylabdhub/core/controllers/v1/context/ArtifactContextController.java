@@ -14,9 +14,9 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.files.ArtifactFilesService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
+import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -60,7 +60,7 @@ public class ArtifactContextController {
     SearchableArtifactService artifactService;
 
     @Autowired
-    ArtifactFilesService filesService;
+    EntityFilesService<Artifact> filesService;
 
     @Operation(summary = "Create an artifact in a project context")
     @PostMapping(
@@ -173,13 +173,18 @@ public class ArtifactContextController {
     @GetMapping(path = "/{id}/files/download", produces = "application/json; charset=UTF-8")
     public DownloadInfo downloadAsUrlArtifactById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @ParameterObject @RequestParam(required = false) String sub
     ) throws NoSuchEntityException {
         Artifact artifact = artifactService.getArtifact(id);
 
         //check for project and name match
         if (!artifact.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
+        }
+
+        if (sub != null) {
+            return filesService.downloadFileAsUrl(id, sub);
         }
 
         return filesService.downloadFileAsUrl(id);
@@ -201,8 +206,6 @@ public class ArtifactContextController {
         String path = request.getRequestURL().toString().split("files/download/")[1];
         return filesService.downloadFileAsUrl(id, path);
     }
-
-    
 
     @Operation(summary = "Create an upload url for a given artifact, if available")
     @PostMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")

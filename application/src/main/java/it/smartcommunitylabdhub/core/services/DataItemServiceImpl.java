@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
@@ -22,16 +23,17 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.files.DataItemFilesService;
 import it.smartcommunitylabdhub.core.models.indexers.DataItemEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +49,8 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class DataItemServiceImpl implements SearchableDataItemService, IndexableDataItemService, DataItemFilesService {
+public class DataItemServiceImpl
+    implements SearchableDataItemService, IndexableDataItemService, EntityFilesService<DataItem> {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
@@ -500,8 +503,9 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
         }
     }
 
-        @Override
-    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String sub) throws NoSuchEntityException, SystemException {
+    @Override
+    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String sub)
+        throws NoSuchEntityException, SystemException {
         log.debug("download url for dataitem file with id {} and path {}", String.valueOf(id), String.valueOf(sub));
 
         try {
@@ -515,10 +519,20 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             if (!StringUtils.hasText(path)) {
                 throw new NoSuchEntityException("file");
             }
-            if (!path.endsWith("/")) path += "/";
-            path += sub;
 
-            DownloadInfo info = filesService.getDownloadAsUrl(path);
+            String fullPath = Optional
+                .ofNullable(sub)
+                .map(s -> {
+                    StringBuilder sb = new StringBuilder(path);
+                    if (!path.endsWith("/") && !sub.startsWith("/")) {
+                        sb.append("/");
+                    }
+                    sb.append(sub);
+                    return sb.toString();
+                })
+                .orElse(path);
+
+            DownloadInfo info = filesService.getDownloadAsUrl(fullPath);
             if (log.isTraceEnabled()) {
                 log.trace("download url for dataitem with id {} and path {}: {} -> {}", id, sub, path, info);
             }
@@ -531,6 +545,7 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             throw new SystemException(e.getMessage());
         }
     }
+
     @Override
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException {
         log.debug("get files info for entity with id {}", String.valueOf(id));
@@ -539,13 +554,30 @@ public class DataItemServiceImpl implements SearchableDataItemService, Indexable
             StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
             List<FileInfo> files = statusFieldAccessor.getFiles();
 
-            if (files == null) {
+            if (files == null || files.isEmpty()) {
                 FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.DATAITEM.getValue(), id);
                 if (filesInfo != null && (filesInfo.getFiles() != null)) {
                     files = filesInfo.getFiles();
                 } else {
-                    files = Collections.emptyList();
+                    files = null;
                 }
+            }
+
+            if (files == null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(entity.getSpec());
+
+                String path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+
+                files = filesService.getFileInfo(path);
+            }
+
+            if (files == null) {
+                files = Collections.emptyList();
             }
 
             if (log.isTraceEnabled()) {

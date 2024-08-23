@@ -14,9 +14,9 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.files.DataItemFilesService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
+import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -60,7 +60,7 @@ public class DataItemContextController {
     SearchableDataItemService dataItemService;
 
     @Autowired
-    DataItemFilesService filesService;
+    EntityFilesService<DataItem> filesService;
 
     @Operation(summary = "Create a dataItem in a project context")
     @PostMapping(
@@ -177,7 +177,8 @@ public class DataItemContextController {
     @GetMapping(path = "/{id}/files/download", produces = "application/json; charset=UTF-8")
     public DownloadInfo downloadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @ParameterObject @RequestParam(required = false) String sub
     ) throws NoSuchEntityException {
         DataItem entity = dataItemService.getDataItem(id);
 
@@ -185,11 +186,12 @@ public class DataItemContextController {
         if (!entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
+        if (sub != null) {
+            return filesService.downloadFileAsUrl(id, sub);
+        }
 
         return filesService.downloadFileAsUrl(id);
     }
-
-
 
     @Operation(summary = "Get download url for a given artifact file, if available")
     @GetMapping(path = "/{id}/files/download/**", produces = "application/json; charset=UTF-8")

@@ -1,22 +1,24 @@
-package it.smartcommunitylabdhub.core.models.files;
+package it.smartcommunitylabdhub.files.service;
 
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import org.springframework.lang.Nullable;
 
-public interface ArtifactFilesService {
+public interface EntityFilesService<T extends BaseDTO> {
     public List<FileInfo> getFileInfo(@NotNull String id) throws NoSuchEntityException, SystemException;
 
     public void storeFileInfo(@NotNull String id, List<FileInfo> files) throws SystemException;
 
     public DownloadInfo downloadFileAsUrl(@NotNull String id) throws NoSuchEntityException, SystemException;
 
-    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String path) throws NoSuchEntityException, SystemException;
+    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String path)
+        throws NoSuchEntityException, SystemException;
 
     public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException;

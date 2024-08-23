@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
+import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.model.ModelBaseSpec;
@@ -22,16 +23,17 @@ import it.smartcommunitylabdhub.core.models.builders.model.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.files.ModelFilesService;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableModelService;
 import it.smartcommunitylabdhub.core.models.indexers.ModelEntityIndexer;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableModelService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +49,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class ModelServiceImpl implements SearchableModelService, IndexableModelService, ModelFilesService {
+public class ModelServiceImpl implements SearchableModelService, IndexableModelService, EntityFilesService<Model> {
 
     @Autowired
     private EntityService<Model, ModelEntity> entityService;
@@ -499,8 +501,9 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
         }
     }
 
-        @Override
-    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String sub) throws NoSuchEntityException, SystemException {
+    @Override
+    public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String sub)
+        throws NoSuchEntityException, SystemException {
         log.debug("download url for model file with id {} and path {}", String.valueOf(id), String.valueOf(sub));
 
         try {
@@ -514,10 +517,20 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             if (!StringUtils.hasText(path)) {
                 throw new NoSuchEntityException("file");
             }
-            if (!path.endsWith("/")) path += "/";
-            path += sub;
 
-            DownloadInfo info = filesService.getDownloadAsUrl(path);
+            String fullPath = Optional
+                .ofNullable(sub)
+                .map(s -> {
+                    StringBuilder sb = new StringBuilder(path);
+                    if (!path.endsWith("/") && !sub.startsWith("/")) {
+                        sb.append("/");
+                    }
+                    sb.append(sub);
+                    return sb.toString();
+                })
+                .orElse(path);
+
+            DownloadInfo info = filesService.getDownloadAsUrl(fullPath);
             if (log.isTraceEnabled()) {
                 log.trace("download url for model with id {} and path {}: {} -> {}", id, sub, path, info);
             }
@@ -539,13 +552,30 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
             List<FileInfo> files = statusFieldAccessor.getFiles();
 
-            if (files == null) {
+            if (files == null || files.isEmpty()) {
                 FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.MODEL.getValue(), id);
                 if (filesInfo != null && (filesInfo.getFiles() != null)) {
                     files = filesInfo.getFiles();
                 } else {
-                    files = Collections.emptyList();
+                    files = null;
                 }
+            }
+
+            if (files == null) {
+                //extract path from spec
+                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                spec.configure(entity.getSpec());
+
+                String path = spec.getPath();
+                if (!StringUtils.hasText(path)) {
+                    throw new NoSuchEntityException("file");
+                }
+
+                files = filesService.getFileInfo(path);
+            }
+
+            if (files == null) {
+                files = Collections.emptyList();
             }
 
             if (log.isTraceEnabled()) {

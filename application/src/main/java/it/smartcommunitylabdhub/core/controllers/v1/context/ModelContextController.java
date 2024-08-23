@@ -14,9 +14,9 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
-import it.smartcommunitylabdhub.core.models.files.ModelFilesService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ModelEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableModelService;
+import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -60,7 +60,7 @@ public class ModelContextController {
     SearchableModelService modelService;
 
     @Autowired
-    ModelFilesService filesService;
+    EntityFilesService<Model> filesService;
 
     @Operation(summary = "Create a model in a project context")
     @PostMapping(
@@ -177,13 +177,18 @@ public class ModelContextController {
     @GetMapping(path = "/{id}/files/download", produces = "application/json; charset=UTF-8")
     public DownloadInfo downloadAsUrlById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @ParameterObject @RequestParam(required = false) String sub
     ) throws NoSuchEntityException {
         Model entity = modelService.getModel(id);
 
         //check for project and name match
         if (!entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
+        }
+
+        if (sub != null) {
+            return filesService.downloadFileAsUrl(id, sub);
         }
 
         return filesService.downloadFileAsUrl(id);
@@ -205,6 +210,7 @@ public class ModelContextController {
         String path = request.getRequestURL().toString().split("files/download/")[1];
         return filesService.downloadFileAsUrl(id, path);
     }
+
     @Operation(summary = "Create an upload url for a given entity, if available")
     @PostMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
     public UploadInfo uploadAsUrlById(

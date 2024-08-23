@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -30,6 +31,7 @@ import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -44,6 +46,7 @@ import software.amazon.awssdk.services.s3.presigner.model.UploadPartPresignReque
 public class S3FilesStore implements FilesStore {
 
     public static final int URL_DURATION = 3600 * 8; //8 hours
+    public static final int MAX_KEYS = 200;
 
     private final String accessKey;
     private final String secretKey;
@@ -164,33 +167,57 @@ public class S3FilesStore implements FilesStore {
         try {
             //support single file in path for now
             if (key.endsWith("/")) {
-                log.warn("reading metadata for folders is not supported: {}", path);
-                return Collections.emptyList();
+                log.warn("reading metadata for folders is partially supported: {}", path);
+                String prefix = "/".equals(key) ? null : key;
+                ListObjectsV2Request req = ListObjectsV2Request
+                    .builder()
+                    .bucket(bucketName)
+                    .prefix(prefix)
+                    // .delimiter("/") //disable grouping by path to let api list all objects as flat
+                    .maxKeys(MAX_KEYS)
+                    .build();
+
+                return client
+                    .listObjectsV2(req)
+                    .contents()
+                    .stream()
+                    .limit(MAX_KEYS)
+                    .map(o -> {
+                        Keys kk = parseKey("s3://" + bucketName + "/" + (prefix != null ? prefix : "") + o.key());
+                        return FileInfo
+                            .builder()
+                            .path(prefix != null ? o.key().substring(prefix.length()) : o.key())
+                            .name(kk.fileName)
+                            .size(o.size())
+                            .lastModified(Date.from(o.lastModified()))
+                            .build();
+                    })
+                    .toList();
+            } else {
+                HeadObjectResponse headObject = client.headObject(
+                    HeadObjectRequest.builder().bucket(bucketName).key(key).build()
+                );
+
+                FileInfo response = new FileInfo();
+                response.setPath(path);
+                response.setName(keys.fileName);
+                response.setContentType(headObject.contentType());
+                response.setSize(headObject.contentLength());
+                response.setLastModified(Date.from(headObject.lastModified()));
+
+                if (StringUtils.hasText(headObject.checksumSHA256())) {
+                    response.setHash("sha256:" + headObject.checksumSHA256());
+                }
+
+                headObject
+                    .metadata()
+                    .entrySet()
+                    .forEach(entry -> {
+                        response.getMetadata().put("Metadata." + entry.getKey(), entry.getValue());
+                    });
+
+                return Collections.singletonList(response);
             }
-
-            HeadObjectResponse headObject = client.headObject(
-                HeadObjectRequest.builder().bucket(bucketName).key(key).build()
-            );
-
-            FileInfo response = new FileInfo();
-            response.setPath(path);
-            response.setName(keys.fileName);
-            response.setContentType(headObject.contentType());
-            response.setSize(headObject.contentLength());
-            response.setLastModified(Date.from(headObject.lastModified()));
-
-            if (StringUtils.hasText(headObject.checksumSHA256())) {
-                response.setHash("sha256:" + headObject.checksumSHA256());
-            }
-
-            headObject
-                .metadata()
-                .entrySet()
-                .forEach(entry -> {
-                    response.getMetadata().put("Metadata." + entry.getKey(), entry.getValue());
-                });
-
-            return Collections.singletonList(response);
         } catch (SdkException e) {
             log.error("error with s3 for {}: {}", path, e.getMessage());
             throw new StoreException("error with s3: " + e.getMessage());
@@ -417,6 +444,11 @@ public class S3FilesStore implements FilesStore {
 
         if (key.startsWith("/")) {
             key = key.substring(1);
+        }
+
+        //support root as /
+        if (key.isEmpty()) {
+            key = "/";
         }
 
         String fileName = key.endsWith("/") ? null : key.substring(key.lastIndexOf('/') + 1, key.length());
