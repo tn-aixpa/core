@@ -36,4 +36,9 @@ public class TaskEntity extends AbstractEntity implements SpecEntity {
     public @NotNull String getName() {
         return id;
     }
+
+    @Override
+    public void setName(String name) {
+        //not available
+    }
 }

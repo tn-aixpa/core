@@ -59,10 +59,6 @@ public abstract class AbstractEntity implements BaseEntity {
     @Lob
     @ToString.Exclude
     protected byte[] metadata;
-    // @PrePersist
-    // public void prePersist() {
-    //     if (id == null) {
-    //         this.id = UUID.randomUUID().toString();
-    //     }
-    // }
+
+    public abstract void setName(String name);
 }

@@ -44,6 +44,11 @@ public class LogEntity extends AbstractEntity implements SpecEntity, StatusEntit
     }
 
     @Override
+    public void setName(String name) {
+        //not available
+    }
+
+    @Override
     public @NotNull String getKind() {
         return "log";
     }
