@@ -51,4 +51,9 @@ public class RunEntity extends AbstractEntity implements SpecEntity, StatusEntit
     public @NotNull String getName() {
         return id;
     }
+
+    @Override
+    public void setName(String name) {
+        //not available
+    }
 }

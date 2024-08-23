@@ -164,6 +164,7 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
                     ae.setId(entity.getId());
                     ae.setKind(entity.getKind());
                     ae.setProject(entity.getProject());
+                    ae.setName(entity.getName());
 
                     ae.setCreated(entity.getCreated());
                     ae.setCreatedBy(entity.getCreatedBy());
