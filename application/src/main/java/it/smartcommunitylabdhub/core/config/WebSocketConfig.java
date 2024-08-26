@@ -10,6 +10,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    //TODO completare configurazione (es. timeout)
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/mywebsocket").setAllowedOrigins("*"); //endpoint for a client to connect for the handshake
@@ -17,7 +19,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
 	public void configureMessageBroker(MessageBrokerRegistry config) {
-		config.setApplicationDestinationPrefixes("/app"); 
-		config.enableSimpleBroker("/topic"); //endpoint for a client to subscribe to (e.g. /topic/runs)
+		// config.setApplicationDestinationPrefixes("/app");
+		config.enableSimpleBroker("/runs"); //endpoint for a client to subscribe to (e.g. /topic/runs)
 	}
 }

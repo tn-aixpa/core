@@ -34,8 +34,7 @@ public class RunEntityListener extends AbstractEntityListener<RunEntity, Run> {
     @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void receive(EntityEvent<RunEntity> event) {
-        // log.debug("receive event for {} {}", clazz.getSimpleName(), event.getAction());
-        log.info("receive event for {} {}, prev is {}", clazz.getSimpleName(), event.getAction(), event.getPrev());
+        log.debug("receive event for {} {}", clazz.getSimpleName(), event.getAction());
 
         RunEntity entity = event.getEntity();
         RunEntity prev = event.getPrev();
