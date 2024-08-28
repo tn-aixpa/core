@@ -449,7 +449,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                 CoreVolume.VolumeType.empty_dir,
                 "/shared",
                 "shared-dir",
-                Map.of("sizeLimit", "100Mi")
+                Map.of("sizeLimit", "100Gi")
             );
 
             // Create config map volume
