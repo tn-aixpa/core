@@ -62,6 +62,8 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
+        String source = functionSpec.getPath().trim();
+        if (!source.endsWith("/")) source += "/";
 
         //read source and build context
         List<ContextRef> contextRefs = null;
@@ -87,7 +89,7 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
                 Collections.singletonList(
                     ContextRef
                         .builder()
-                        .source(functionSpec.getPath())
+                        .source(source)
                         .protocol(uri.getScheme())
                         .destination("model")
                         .build()
