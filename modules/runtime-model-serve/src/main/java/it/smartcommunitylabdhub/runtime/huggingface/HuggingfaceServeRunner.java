@@ -18,6 +18,7 @@ import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeRunSpe
 import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeTaskSpec;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +64,6 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
 
         UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
         String source = functionSpec.getPath().trim();
-        if (!source.endsWith("/")) source += "/";
 
         //read source and build context
         List<ContextRef> contextRefs = null;
@@ -83,6 +83,8 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
 
         // model dir or model id
         if (!"huggingface".equals(uri.getScheme())) {
+            if (!source.endsWith("/")) source += "/";
+
             args.add("--model_dir");
             args.add("/shared/model");
             contextRefs =
