@@ -24,17 +24,17 @@ import lombok.Setter;
 )
 public class HuggingfaceServeFunctionSpec extends ModelServeFunctionSpec {
 
-    @JsonProperty("adapters")
-    @Schema(title = "fields.huggingface.adapters.title", description = "fields.huggingface.adapters.description")
-    private Map<String, String> adapters;
+    // @JsonProperty("adapters")
+    // @Schema(title = "fields.huggingface.adapters.title", description = "fields.huggingface.adapters.description")
+    // private Map<String, String> adapters;
 
-    @Override
-    public void configure(Map<String, Serializable> data) {
-        super.configure(data);
+    // @Override
+    // public void configure(Map<String, Serializable> data) {
+    //     super.configure(data);
 
-        HuggingfaceServeFunctionSpec spec = mapper.convertValue(data, HuggingfaceServeFunctionSpec.class);
-        this.adapters = spec.getAdapters();
-    }
+    //     HuggingfaceServeFunctionSpec spec = mapper.convertValue(data, HuggingfaceServeFunctionSpec.class);
+    //     this.adapters = spec.getAdapters();
+    // }
 
     public static HuggingfaceServeFunctionSpec with(Map<String, Serializable> data) {
         HuggingfaceServeFunctionSpec spec = new HuggingfaceServeFunctionSpec();

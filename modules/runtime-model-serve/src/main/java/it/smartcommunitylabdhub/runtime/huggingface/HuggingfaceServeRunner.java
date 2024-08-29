@@ -181,33 +181,32 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
             args.add(taskSpec.getDtype().getDType());
         }
 
-        if (functionSpec.getAdapters() != null && functionSpec.getAdapters().size() > 0) {
-            contextRefs = new LinkedList<>(contextRefs);
-            args.add("--enable-lora");
-            args.add(Boolean.TRUE.toString());
-            args.add("--lora-modules");
+        // if (functionSpec.getAdapters() != null && functionSpec.getAdapters().size() > 0) {
+        //     contextRefs = new LinkedList<>(contextRefs);
+        //     args.add("--enable-lora");
+        //     args.add("--lora-modules");
 
-            for (Map.Entry<String, String> adapter : functionSpec.getAdapters().entrySet()) {
-                UriComponents adapterUri = UriComponentsBuilder.fromUriString(adapter.getValue()).build();
-                String adapterSource = adapter.getValue().trim();
-                String ref = adapterSource;
+        //     for (Map.Entry<String, String> adapter : functionSpec.getAdapters().entrySet()) {
+        //         UriComponents adapterUri = UriComponentsBuilder.fromUriString(adapter.getValue()).build();
+        //         String adapterSource = adapter.getValue().trim();
+        //         String ref = adapterSource;
                 
-                if (!"huggingface".equals(adapterUri.getScheme())) {
-                    if (!adapterSource.endsWith("/")) adapterSource += "/";
-                    ref = "/shared/adapters/" + adapter.getKey() + "/";
-                    contextRefs =
-                        Collections.singletonList(
-                            ContextRef
-                                .builder()
-                                .source(adapterSource)
-                                .protocol(adapterUri.getScheme())
-                                .destination("adapters/" + adapter.getKey())
-                                .build()
-                        );
-                }
-                args.add(adapter.getKey() +  "=" + ref);
-            }
-        }
+        //         if (!"huggingface".equals(adapterUri.getScheme())) {
+        //             if (!adapterSource.endsWith("/")) adapterSource += "/";
+        //             ref = "/shared/adapters/" + adapter.getKey() + "/";
+        //             contextRefs =
+        //                 Collections.singletonList(
+        //                     ContextRef
+        //                         .builder()
+        //                         .source(adapterSource)
+        //                         .protocol(adapterUri.getScheme())
+        //                         .destination("adapters/" + adapter.getKey())
+        //                         .build()
+        //                 );
+        //         }
+        //         args.add(adapter.getKey() +  "=" + ref);
+        //     }
+        // }
 
         CorePort servicePort = new CorePort(HTTP_PORT, HTTP_PORT);
         CorePort grpcPort = new CorePort(GRPC_PORT, GRPC_PORT);
