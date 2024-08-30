@@ -16,12 +16,12 @@ public class HuggingFaceModelSpec extends ModelSpec {
 
     //Huggingface model id
     @JsonProperty("model_id")
-    @Schema(title = "fields.hugginface.modelid.title", description = "fields.hugginface.modelid.description")
+    @Schema(title = "fields.huggingface.modelid.title", description = "fields.huggingface.modelid.description")
     private String modelId;
 
     //Huggingface model revision
     @JsonProperty("model_revision")
-    @Schema(title = "fields.hugginface.modelrevision.title", description = "fields.hugginface.modelrevision.description")
+    @Schema(title = "fields.huggingface.modelrevision.title", description = "fields.huggingface.modelrevision.description")
     private String modelRevision;
 
     @Override
