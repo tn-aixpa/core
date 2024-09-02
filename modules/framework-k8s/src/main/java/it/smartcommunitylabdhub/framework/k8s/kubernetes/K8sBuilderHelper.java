@@ -242,7 +242,7 @@ public class K8sBuilderHelper implements InitializingBean {
         List<V1Volume> initVolumes = new LinkedList<>();
         List<V1VolumeMount> initVolumesMounts = new LinkedList<>();
 
-        if (runnable.getVolumes() !=null && runnable.getVolumes().stream().noneMatch(volume -> "/shared".equalsIgnoreCase(volume.getMountPath()))) {
+        if (runnable.getVolumes() ==null || runnable.getVolumes().isEmpty() || runnable.getVolumes().stream().noneMatch(volume -> "/shared".equalsIgnoreCase(volume.getMountPath()))) {
             // Create sharedVolume
             CoreVolume sharedVolume = new CoreVolume(
                 CoreVolume.VolumeType.empty_dir,
