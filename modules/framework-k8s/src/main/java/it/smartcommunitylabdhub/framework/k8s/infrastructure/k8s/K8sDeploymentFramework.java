@@ -22,7 +22,7 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper.VolumeData;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -250,37 +250,12 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         //check if context build is required
         if (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty() || 
             runnable.getContextSources() != null && !runnable.getContextSources().isEmpty()) {
-            // Create sharedVolume
-            CoreVolume sharedVolume = new CoreVolume(
-                CoreVolume.VolumeType.empty_dir,
-                "/shared",
-                "shared-dir",
-                Map.of("sizeLimit", "100Mi")
-            );
 
-            // Create config map volume
-            CoreVolume configMapVolume = new CoreVolume(
-                CoreVolume.VolumeType.config_map,
-                "/init-config-map",
-                "init-config-map",
-                Map.of("name", "init-config-map-" + runnable.getId())
-            );
+            VolumeData initVolumeData = k8sBuilderHelper.getInitVolumeData(runnable);
+            //add volumes
+            volumes = Stream.concat(buildVolumes(runnable).stream(), initVolumeData.volumes().stream()).collect(Collectors.toList());
+            volumeMounts = Stream .concat(buildVolumeMounts(runnable).stream(), initVolumeData.mounts().stream()) .collect(Collectors.toList());
 
-            List<V1Volume> initVolumes = List.of(
-                k8sBuilderHelper.getVolume(sharedVolume),
-                k8sBuilderHelper.getVolume(configMapVolume)
-            );
-            List<V1VolumeMount> initVolumesMounts = List.of(
-                k8sBuilderHelper.getVolumeMount(sharedVolume),
-                k8sBuilderHelper.getVolumeMount(configMapVolume)
-            );
-
-            //add volume
-            volumes = Stream.concat(buildVolumes(runnable).stream(), initVolumes.stream()).collect(Collectors.toList());
-            volumeMounts =
-                Stream
-                    .concat(buildVolumeMounts(runnable).stream(), initVolumesMounts.stream())
-                    .collect(Collectors.toList());
         }
 
         // Build Container
