@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.runtime.huggingface.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.huggingface.HuggingfaceServeRuntime;
@@ -17,6 +18,7 @@ import lombok.Setter;
 @SpecType(runtime = HuggingfaceServeRuntime.RUNTIME, kind = HuggingfaceServeRunSpec.KIND, entity = EntityName.RUN)
 public class HuggingfaceServeRunSpec extends RunBaseSpec {
 
+    @JsonSchemaIgnore
     @JsonUnwrapped
     private HuggingfaceServeFunctionSpec functionSpec;
 

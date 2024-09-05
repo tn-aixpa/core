@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.runtime.dbt.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.dbt.DbtRuntime;
@@ -29,6 +30,7 @@ public class DbtRunSpec extends RunBaseSpec {
     @JsonUnwrapped
     private DbtTransformSpec taskSpec;
 
+    @JsonSchemaIgnore
     @JsonUnwrapped
     private DbtFunctionSpec functionSpec;
 

@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.runtime.sklearn.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.sklearn.SklearnServeRuntime;
@@ -17,6 +18,7 @@ import lombok.Setter;
 @SpecType(runtime = SklearnServeRuntime.RUNTIME, kind = SklearnServeRunSpec.KIND, entity = EntityName.RUN)
 public class SklearnServeRunSpec extends RunBaseSpec {
 
+    @JsonSchemaIgnore
     @JsonUnwrapped
     private SklearnServeFunctionSpec functionSpec;
 

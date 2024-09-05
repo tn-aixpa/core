@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.runtime.container.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
@@ -35,6 +36,7 @@ public class ContainerRunSpec extends RunBaseSpec {
     private ContainerBuildTaskSpec taskBuildSpec;
 
     // @JsonProperty("function_spec")
+    @JsonSchemaIgnore
     @JsonUnwrapped
     private ContainerFunctionSpec functionSpec;
 
