@@ -131,7 +131,7 @@ public final class SchemaUtils {
                 return Serializable.class.equals(javaType.getErasedType())
                     ? new CustomDefinition(
                         context.createDefinition(context.getTypeContext().resolve(SerializableMixin.class)),
-                        CustomDefinition.DefinitionType.INLINE,
+                        CustomDefinition.DefinitionType.STANDARD,
                         CustomDefinition.AttributeInclusion.YES
                     )
                     : null;
@@ -142,7 +142,7 @@ public final class SchemaUtils {
                     //override with implementation type, inline
                     return new CustomDefinition(
                         context.createDefinition(context.getTypeContext().resolve(sa.implementation())),
-                        CustomDefinition.DefinitionType.INLINE,
+                        CustomDefinition.DefinitionType.STANDARD,
                         CustomDefinition.AttributeInclusion.YES
                     );
                 }
@@ -163,6 +163,11 @@ public final class SchemaUtils {
                         if (StringUtils.hasText(sa.defaultValue())) {
                             node.put("defaultValue", sa.defaultValue());
                         }
+                    }
+
+                    //also override title for array
+                    if (scope.getType().isArray()) {
+                        node.put("title", "array");
                     }
                 }
             });
