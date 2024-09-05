@@ -63,6 +63,13 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     }
 
     @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+
+        Assert.hasText(initImage, "init image should be set to a valid builder-tool image");
+    }
+
+    @Override
     public K8sDeploymentRunnable run(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
         log.info("run for {}", runnable.getId());
         if (log.isTraceEnabled()) {
@@ -205,7 +212,9 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         return runnable;
     }
 
-    @Override
+    /*
+     * K8s
+     */
     public V1Deployment build(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
         log.debug("build for {}", runnable.getId());
         if (log.isTraceEnabled()) {
@@ -284,8 +293,10 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .imagePullSecrets(buildImagePullSecrets(runnable));
 
         //check if context build is required
-        if (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty() || 
-            runnable.getContextSources() != null && !runnable.getContextSources().isEmpty()) {
+        if (
+            (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty()) ||
+            (runnable.getContextSources() != null && !runnable.getContextSources().isEmpty())
+        ) {
             // Add Init container to the PodTemplateSpec
             // Build the Init Container
             V1Container initContainer = new V1Container()
@@ -319,7 +330,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     /*
      * K8s
      */
-    @Override
     public V1Deployment apply(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         Assert.notNull(deployment.getSpec(), "spec can not be null");
@@ -339,7 +349,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
     }
 
-    @Override
     public V1Deployment get(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
 
@@ -358,7 +367,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
     }
 
-    @Override
     public V1Deployment create(V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         try {
@@ -376,7 +384,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
     }
 
-    @Override
     public void delete(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         try {

@@ -129,6 +129,8 @@ kubernetes:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}
   templates: ${K8S_TEMPLATES:}
+  jobs:
+    activeDeadlineSeconds: ${K8S_JOB_DEADLINE:259200}
 
 # Application endpoint
 application:

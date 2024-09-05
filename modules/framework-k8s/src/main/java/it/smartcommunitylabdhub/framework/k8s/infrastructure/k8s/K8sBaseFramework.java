@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.Metrics;
 import io.kubernetes.client.common.KubernetesObject;
@@ -70,10 +72,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     implements Framework<T>, InitializingBean {
 
     //custom object mapper with mixIn for IntOrString
-    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER.addMixIn(
-        IntOrString.class,
-        IntOrStringMixin.class
-    );
+    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        .addMixIn(IntOrString.class, IntOrStringMixin.class)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     protected final CoreV1Api coreV1Api;
     protected final Metrics metricsApi;
@@ -92,7 +93,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected CoreResourceDefinition memResourceDefinition = new CoreResourceDefinition();
     protected List<String> templateKeys = Collections.emptyList();
 
-    protected Map<String, K8sRunnable> templates = Collections.emptyMap();
+    protected Map<String, T> templates = Collections.emptyMap();
 
     protected Boolean collectLogs;
     protected Boolean collectMetrics;
@@ -231,11 +232,12 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         Assert.notNull(k8sBuilderHelper, "k8s helper is required");
         Assert.notNull(namespace, "k8s namespace required");
         Assert.notNull(version, "k8s version required");
+    }
 
+    protected Map<String, T> loadTemplates(TypeReference<T> typeRef) {
         //load templates if provided
+        Map<String, T> results = new HashMap<>();
         if (resourceLoader != null && templateKeys != null) {
-            templates = new HashMap<>();
-
             templateKeys.forEach(k -> {
                 try {
                     String[] kk = k.split("\\|");
@@ -250,16 +252,13 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                         // Load as resource and deserialize as template
                         log.debug("Read template {} from {}", key, path);
                         Resource res = resourceLoader.getResource(path);
-                        K8sRunnable t = mapper.readValue(
-                            res.getContentAsString(StandardCharsets.UTF_8),
-                            K8sRunnable.class
-                        );
+                        T t = mapper.readValue(res.getContentAsString(StandardCharsets.UTF_8), typeRef);
 
                         if (log.isTraceEnabled()) {
                             log.trace("Template result {}:\n {}", key, t);
                         }
 
-                        templates.put(key, t);
+                        results.put(key, t);
                     }
                 } catch (IOException | ClassCastException e) {
                     //skip
@@ -267,6 +266,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 }
             });
         }
+
+        return results;
     }
 
     /*
@@ -288,15 +289,6 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     /*
      * K8s methods
      */
-    public abstract K build(T runnable) throws K8sFrameworkException;
-
-    public abstract K apply(K object) throws K8sFrameworkException;
-
-    public abstract K create(K object) throws K8sFrameworkException;
-
-    public abstract K get(K object) throws K8sFrameworkException;
-
-    public abstract void delete(K object) throws K8sFrameworkException;
 
     public List<V1Pod> pods(K object) throws K8sFrameworkException {
         if (object == null || object.getMetadata() == null) {
