@@ -18,11 +18,8 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
-
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -238,36 +235,6 @@ public class K8sBuilderHelper implements InitializingBean {
         return new V1VolumeMount().name(coreVolume.getName()).mountPath(coreVolume.getMountPath());
     }
 
-    public VolumeData getInitVolumeData(K8sRunnable runnable) {
-        List<V1Volume> initVolumes = new LinkedList<>();
-        List<V1VolumeMount> initVolumesMounts = new LinkedList<>();
-
-        if (runnable.getVolumes() ==null || runnable.getVolumes().isEmpty() || runnable.getVolumes().stream().noneMatch(volume -> "/shared".equalsIgnoreCase(volume.getMountPath()))) {
-            // Create sharedVolume
-            CoreVolume sharedVolume = new CoreVolume(
-                CoreVolume.VolumeType.empty_dir,
-                "/shared",
-                "shared-dir",
-                Map.of("sizeLimit", "100Gi")
-            );
-            initVolumes.add(getVolume(sharedVolume));
-            initVolumesMounts.add(getVolumeMount(sharedVolume));
-        }
-
-        // Create config map volume
-        CoreVolume configMapVolume = new CoreVolume(
-            CoreVolume.VolumeType.config_map,
-            "/init-config-map",
-            "init-config-map",
-            Map.of("name", "init-config-map-" + runnable.getId())
-        );
-
-        initVolumes.add(getVolume(configMapVolume));
-        initVolumesMounts.add(getVolumeMount(configMapVolume));
-
-        return new VolumeData(initVolumes, initVolumesMounts);
-    }
-
     /*
      * Helpers
      */
@@ -329,11 +296,4 @@ public class K8sBuilderHelper implements InitializingBean {
             return value;
         }
     }
-
-
-    public record VolumeData (
-        List<V1Volume> volumes,
-        List<V1VolumeMount> mounts
-    ) {}
-
 }

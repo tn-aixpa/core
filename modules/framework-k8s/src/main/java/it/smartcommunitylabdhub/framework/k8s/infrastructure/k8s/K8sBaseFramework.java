@@ -31,6 +31,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
+import it.smartcommunitylabdhub.framework.k8s.config.KubernetesProperties;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
@@ -43,6 +44,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResourceDefinition;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -82,6 +84,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected ApplicationProperties applicationProperties;
     protected ResourceLoader resourceLoader;
 
+    protected KubernetesProperties k8sProperties;
+
+    //TODO move all props to bean
     protected String namespace;
     protected String registrySecret;
     protected String imagePullPolicy = "IfNotPresent";
@@ -117,6 +122,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Autowired
     public void setApplicationProperties(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
+    }
+
+    @Autowired
+    public void setK8sProperties(KubernetesProperties k8sProperties) {
+        this.k8sProperties = k8sProperties;
     }
 
     @Autowired
@@ -230,6 +240,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(k8sBuilderHelper, "k8s helper is required");
+        Assert.notNull(k8sProperties, "k8s properties required");
         Assert.notNull(namespace, "k8s namespace required");
         Assert.notNull(version, "k8s version required");
     }
@@ -581,6 +592,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                     }
                 });
         }
+
+        //volumes defined in template
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
             K8sRunnable template = templates.get(runnable.getTemplate());
@@ -595,6 +608,35 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                         }
                     });
             }
+        }
+
+        //check if context build volume is required
+        if (
+            (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty()) ||
+            (runnable.getContextSources() != null && !runnable.getContextSources().isEmpty())
+        ) {
+            //build shared context dir if missing and defined
+            if (
+                (k8sProperties.getSharedVolume() != null && runnable.getVolumes() == null) ||
+                runnable
+                    .getVolumes()
+                    .stream()
+                    .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+            ) {
+                //use framework definition
+                V1Volume volume = k8sBuilderHelper.getVolume(k8sProperties.getSharedVolume());
+                volumes.add(volume);
+            }
+
+            // build config map volume with fixed definition
+            CoreVolume configMapVolume = new CoreVolume(
+                CoreVolume.VolumeType.config_map,
+                "/init-config-map",
+                "init-config-map",
+                Map.of("name", "init-config-map-" + runnable.getId())
+            );
+            V1Volume configMap = k8sBuilderHelper.getVolume(configMapVolume);
+            volumes.add(configMap);
         }
 
         return volumes;
@@ -614,6 +656,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 });
         }
 
+        //volumes defined in template
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
             K8sRunnable template = templates.get(runnable.getTemplate());
@@ -628,6 +671,35 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                         }
                     });
             }
+        }
+
+        //check if context build volume is required
+        if (
+            (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty()) ||
+            (runnable.getContextSources() != null && !runnable.getContextSources().isEmpty())
+        ) {
+            //build shared context dir if missing and defined
+            if (
+                (k8sProperties.getSharedVolume() != null && runnable.getVolumes() == null) ||
+                runnable
+                    .getVolumes()
+                    .stream()
+                    .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+            ) {
+                //use framework definition
+                V1VolumeMount sharedMount = k8sBuilderHelper.getVolumeMount(k8sProperties.getSharedVolume());
+                volumeMounts.add(sharedMount);
+            }
+
+            // Create config map volume with fixed definition
+            CoreVolume configMapVolume = new CoreVolume(
+                CoreVolume.VolumeType.config_map,
+                "/init-config-map",
+                "init-config-map",
+                Map.of("name", "init-config-map-" + runnable.getId())
+            );
+            V1VolumeMount configMapMount = k8sBuilderHelper.getVolumeMount(configMapVolume);
+            volumeMounts.add(configMapMount);
         }
 
         return volumeMounts;

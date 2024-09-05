@@ -71,7 +71,7 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
     }
 
     @Autowired
-    public void setInitImage(@Value("${kubernetes.init-image}") String initImage) {
+    public void setInitImage(@Value("${kubernetes.init.image}") String initImage) {
         this.initImage = initImage;
     }
 

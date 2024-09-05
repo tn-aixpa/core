@@ -62,7 +62,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     @Value("${kaniko.image}")
     private String kanikoImage;
 
-    @Value("${kubernetes.init-image}")
+    @Value("${kubernetes.init.image}")
     private String initImage;
 
     @Value("${kaniko.image-prefix}")
