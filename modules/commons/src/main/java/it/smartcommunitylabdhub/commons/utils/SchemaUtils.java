@@ -1,8 +1,11 @@
 package it.smartcommunitylabdhub.commons.utils;
 
+import aj.org.objectweb.asm.Type;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.victools.jsonschema.generator.ConfigFunction;
+import com.github.victools.jsonschema.generator.CustomDefinition;
 import com.github.victools.jsonschema.generator.FieldScope;
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.OptionPreset;
@@ -15,16 +18,35 @@ import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
 import com.github.victools.jsonschema.module.swagger2.Swagger2Module;
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.jackson.introspect.JsonSchemaAnnotationIntrospector;
+import it.smartcommunitylabdhub.commons.jackson.mixins.SerializableMixin;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.asm.AsmVisitorWrapper;
+import net.bytebuddy.jar.asm.AnnotationVisitor;
+import net.bytebuddy.jar.asm.FieldVisitor;
+import net.bytebuddy.matcher.ElementMatchers;
+import net.bytebuddy.utility.OpenedClassReader;
+import org.springframework.util.StringUtils;
 
 //TODO refactor into a factory
 public final class SchemaUtils {
 
     public static final String FIELDS_PREFIX = "fields.";
     public static final String SPECS_PREFIX = "specs.";
+    private static final List<Class<?>> SERIALIZABLE_TYPES = Arrays.asList(
+        String.class,
+        Number.class,
+        Boolean.class,
+        Integer.class
+    );
 
     public static final SchemaGenerator GENERATOR;
 
@@ -95,18 +117,89 @@ public final class SchemaUtils {
                 }
 
                 return null;
+            })
+            .withIgnoreCheck(field -> {
+                return field.getAnnotation(JsonSchemaIgnore.class) != null;
             });
 
         configBuilder
             .forTypesInGeneral()
             .withTitleResolver(specTypeResolver("title"))
-            .withDescriptionResolver(specTypeResolver("description"));
+            .withDescriptionResolver(specTypeResolver("description"))
+            .withCustomDefinitionProvider((javaType, context) -> {
+                //redefine Serializable via mixin with annotations, and inline
+                return Serializable.class.equals(javaType.getErasedType())
+                    ? new CustomDefinition(
+                        context.createDefinition(context.getTypeContext().resolve(SerializableMixin.class)),
+                        CustomDefinition.DefinitionType.INLINE,
+                        CustomDefinition.AttributeInclusion.YES
+                    )
+                    : null;
+            })
+            .withCustomDefinitionProvider((javaType, context) -> {
+                Schema sa = javaType.getErasedType().getAnnotation(Schema.class);
+                if (sa != null && sa.implementation() != Void.class) {
+                    //override with implementation type, inline
+                    return new CustomDefinition(
+                        context.createDefinition(context.getTypeContext().resolve(sa.implementation())),
+                        CustomDefinition.DefinitionType.INLINE,
+                        CustomDefinition.AttributeInclusion.YES
+                    );
+                }
+
+                return null;
+            })
+            .withTypeAttributeOverride((node, scope, context) -> {
+                //for custom defined overrides also inject props from schema, since those are skipper by other modules
+                if (SerializableMixin.class.getPackage().equals(scope.getType().getErasedType().getPackage())) {
+                    Schema sa = scope.getType().getErasedType().getAnnotation(Schema.class);
+                    if (sa != null) {
+                        if (StringUtils.hasText(sa.title())) {
+                            node.put("title", sa.title());
+                        }
+                        if (StringUtils.hasText(sa.description())) {
+                            node.put("description", sa.description());
+                        }
+                        if (StringUtils.hasText(sa.defaultValue())) {
+                            node.put("defaultValue", sa.defaultValue());
+                        }
+                    }
+                }
+            });
 
         GENERATOR = new SchemaGenerator(configBuilder.build());
     }
 
     public static JsonNode schema(Class<? extends Spec> clazz) {
         return GENERATOR.generateSchema(clazz);
+    }
+
+    public static <T extends Spec> Class<? extends T> proxy(Class<T> clazz) {
+        return new ByteBuddy()
+            .redefine(clazz)
+            .visit(
+                new AsmVisitorWrapper.ForDeclaredFields()
+                    .field(
+                        //redefine fields marked with ignore
+                        ElementMatchers.isAnnotatedWith(JsonSchemaIgnore.class),
+                        (instrumentedType, fieldDescription, fieldVisitor) ->
+                            new FieldVisitor(OpenedClassReader.ASM_API, fieldVisitor) {
+                                @Override
+                                public AnnotationVisitor visitAnnotation(String description, boolean visible) {
+                                    //remove jsonUnwrapped to resolve issue with unwrapped fields skipping ignore
+                                    if (Type.getDescriptor(JsonUnwrapped.class).equals(description)) {
+                                        return null;
+                                    }
+
+                                    return super.visitAnnotation(description, visible);
+                                }
+                            }
+                    )
+            )
+            .name(clazz.getName() + "Proxy")
+            .make()
+            .load(clazz.getClassLoader())
+            .getLoaded();
     }
 
     private static ConfigFunction<TypeScope, String> specTypeResolver(String value) {

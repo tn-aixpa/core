@@ -100,7 +100,11 @@
             <artifactId>jsonschema-module-swagger-2</artifactId>
             <version>${jsonschema.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.14.17</version>
+        </dependency>
 
         <!-- JUnit 5 Jupiter API for writing tests -->
         <dependency>
