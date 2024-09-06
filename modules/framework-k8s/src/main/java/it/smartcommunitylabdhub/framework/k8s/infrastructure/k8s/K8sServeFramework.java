@@ -26,6 +26,7 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import jakarta.validation.constraints.NotNull;
@@ -91,7 +92,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         Assert.hasText(initImage, "init image should be set to a valid builder-tool image");
 
         //load templates
-        this.templates = loadTemplates(new TypeReference<K8sServeRunnable>() {});
+        this.templates = loadTemplates(K8sServeRunnable.class);
 
         //build default shared volume definition for context building
         if (k8sProperties.getSharedVolume() == null) {
@@ -299,7 +300,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         log.debug("build k8s service for {}", serviceName);
 
         //check template
-        K8sServeRunnable template = null;
+        K8sTemplate<K8sServeRunnable> template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //get template
             template = templates.get(runnable.getTemplate());
@@ -336,10 +337,11 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         //check template
         if (template != null) {
-            if (template.getServicePorts() != null && !template.getServicePorts().isEmpty()) {
+            K8sServeRunnable profile = template.getProfile();
+            if (profile.getServicePorts() != null && !profile.getServicePorts().isEmpty()) {
                 //override
                 ports =
-                    template
+                    profile
                         .getServicePorts()
                         .stream()
                         .filter(p -> p.port() != null && p.targetPort() != null)
@@ -353,14 +355,20 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                         .collect(Collectors.toList());
             }
 
-            if (template.getServiceType() != null) {
+            if (profile.getServiceType() != null) {
                 //override
-                type = template.getServiceType().name();
+                type = profile.getServiceType().name();
             }
         }
 
-        //build service spec
-        V1ServiceSpec serviceSpec = new V1ServiceSpec().type(type).ports(ports).selector(labels);
+        //build service spec, leveraging template
+        V1ServiceSpec serviceSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getService)
+            .map(V1Service::getSpec)
+            .orElse(new V1ServiceSpec());
+
+        serviceSpec.type(type).ports(ports).selector(labels);
         V1ObjectMeta serviceMetadata = new V1ObjectMeta().name(serviceName).labels(labels);
 
         return new V1Service().metadata(serviceMetadata).spec(serviceSpec);
@@ -450,7 +458,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         log.debug("build k8s deployment for {}", deploymentName);
 
         //check template
-        K8sServeRunnable template = null;
+        K8sTemplate<K8sServeRunnable> template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //get template
             template = templates.get(runnable.getTemplate());
@@ -490,8 +498,16 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             .env(env)
             .securityContext(buildSecurityContext(runnable));
 
-        // Create a PodSpec for the container
-        V1PodSpec podSpec = new V1PodSpec()
+        // Create a PodSpec for the container, leverage template if provided
+        V1PodSpec podSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getDeployment)
+            .map(V1Deployment::getSpec)
+            .map(V1DeploymentSpec::getTemplate)
+            .map(V1PodTemplateSpec::getSpec)
+            .orElse(new V1PodSpec());
+
+        podSpec
             .containers(Collections.singletonList(container))
             .nodeSelector(buildNodeSelector(runnable))
             .affinity(buildAffinity(runnable))
@@ -525,16 +541,19 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
 
         int replicas = Optional.ofNullable(runnable.getReplicas()).orElse(1);
-        if (template != null && template.getReplicas() != null) {
+        if (template != null && template.getProfile().getReplicas() != null) {
             //override with template
-            replicas = template.getReplicas().intValue();
+            replicas = template.getProfile().getReplicas().intValue();
         }
 
-        // Create the JobSpec with the PodTemplateSpec
-        V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
-            .replicas(replicas)
-            .selector(new V1LabelSelector().matchLabels(labels))
-            .template(podTemplateSpec);
+        // Create the deploymentSpec with the PodTemplateSpec, leveraging template
+        V1DeploymentSpec deploymentSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getDeployment)
+            .map(V1Deployment::getSpec)
+            .orElse(new V1DeploymentSpec());
+
+        deploymentSpec.replicas(replicas).selector(new V1LabelSelector().matchLabels(labels)).template(podTemplateSpec);
 
         // Create the V1Deployment object with metadata and JobSpec
         return new V1Deployment().metadata(metadata).spec(deploymentSpec);

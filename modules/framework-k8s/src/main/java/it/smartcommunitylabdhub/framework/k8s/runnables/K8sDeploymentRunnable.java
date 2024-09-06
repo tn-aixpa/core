@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @RunnableComponent(framework = K8sDeploymentFramework.FRAMEWORK)
@@ -14,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(callSuper = true)
 public class K8sDeploymentRunnable extends K8sRunnable {
 
     private Integer replicas;

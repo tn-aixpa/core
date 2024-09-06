@@ -21,8 +21,8 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -96,7 +96,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         Assert.hasText(initImage, "init image should be set to a valid builder-tool image");
 
         //load templates
-        this.templates = loadTemplates(new TypeReference<K8sJobRunnable>() {});
+        this.templates = loadTemplates(K8sJobRunnable.class);
 
         //build default shared volume definition for context building
         if (k8sProperties.getSharedVolume() == null) {
@@ -273,7 +273,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         log.debug("build k8s job for {}", jobName);
 
         //check template
-        K8sJobRunnable template = null;
+        K8sTemplate<K8sJobRunnable> template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //get template
             template = templates.get(runnable.getTemplate());
@@ -313,8 +313,16 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             .env(env)
             .securityContext(buildSecurityContext(runnable));
 
-        // Create a PodSpec for the container
-        V1PodSpec podSpec = new V1PodSpec()
+        // Create a PodSpec for the container, leverage template if provided
+        V1PodSpec podSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getJob)
+            .map(V1Job::getSpec)
+            .map(V1JobSpec::getTemplate)
+            .map(V1PodTemplateSpec::getSpec)
+            .orElse(new V1PodSpec());
+
+        podSpec
             .containers(Collections.singletonList(container))
             .nodeSelector(buildNodeSelector(runnable))
             .affinity(buildAffinity(runnable))
@@ -349,13 +357,19 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(DEFAULT_BACKOFF_LIMIT).intValue();
 
-        if (template != null && template.getBackoffLimit() != null) {
+        if (template != null && template.getProfile().getBackoffLimit() != null) {
             //override with template
-            backoffLimit = template.getBackoffLimit().intValue();
+            backoffLimit = template.getProfile().getBackoffLimit().intValue();
         }
 
-        // Create the JobSpec with the PodTemplateSpec
-        V1JobSpec jobSpec = new V1JobSpec()
+        // Create the JobSpec with the PodTemplateSpec, leverage template if provided
+        V1JobSpec jobSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getJob)
+            .map(V1Job::getSpec)
+            .orElse(new V1JobSpec());
+
+        jobSpec
             .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
             //TODO support work-queue style/parallel jobs
             .parallelism(1)

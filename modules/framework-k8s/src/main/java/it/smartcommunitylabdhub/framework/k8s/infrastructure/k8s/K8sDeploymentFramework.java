@@ -22,6 +22,7 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import jakarta.validation.constraints.NotNull;
@@ -80,7 +81,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         Assert.hasText(initImage, "init image should be set to a valid builder-tool image");
 
         //load templates
-        this.templates = loadTemplates(new TypeReference<K8sDeploymentRunnable>() {});
+        this.templates = loadTemplates(K8sDeploymentRunnable.class);
 
         //build default shared volume definition for context building
         if (k8sProperties.getSharedVolume() == null) {
@@ -257,7 +258,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         log.debug("build k8s deployment for {}", deploymentName);
 
         //check template
-        K8sDeploymentRunnable template = null;
+        K8sTemplate<K8sDeploymentRunnable> template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //get template
             template = templates.get(runnable.getTemplate());
@@ -297,8 +298,16 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .env(env)
             .securityContext(buildSecurityContext(runnable));
 
-        // Create a PodSpec for the container
-        V1PodSpec podSpec = new V1PodSpec()
+        // Create a PodSpec for the container, leverage template if provided
+        V1PodSpec podSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getDeployment)
+            .map(V1Deployment::getSpec)
+            .map(V1DeploymentSpec::getTemplate)
+            .map(V1PodTemplateSpec::getSpec)
+            .orElse(new V1PodSpec());
+
+        podSpec
             .containers(Collections.singletonList(container))
             .nodeSelector(buildNodeSelector(runnable))
             .affinity(buildAffinity(runnable))
@@ -332,16 +341,19 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
 
         int replicas = Optional.ofNullable(runnable.getReplicas()).orElse(1);
-        if (template != null && template.getReplicas() != null) {
+        if (template != null && template.getProfile().getReplicas() != null) {
             //override with template
-            replicas = template.getReplicas().intValue();
+            replicas = template.getProfile().getReplicas().intValue();
         }
 
-        // Create the JobSpec with the PodTemplateSpec
-        V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
-            .replicas(replicas)
-            .selector(new V1LabelSelector().matchLabels(labels))
-            .template(podTemplateSpec);
+        // Create the deploymentSpec with the PodTemplateSpec, leveraging template
+        V1DeploymentSpec deploymentSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getDeployment)
+            .map(V1Deployment::getSpec)
+            .orElse(new V1DeploymentSpec());
+
+        deploymentSpec.replicas(replicas).selector(new V1LabelSelector().matchLabels(labels)).template(podTemplateSpec);
 
         // Create the V1Deployment object with metadata and JobSpec
         return new V1Deployment().metadata(metadata).spec(deploymentSpec);
