@@ -29,4 +29,8 @@ public class K8sTemplate<T extends K8sRunnable> {
     private V1Deployment deployment;
     private V1Service service;
     private V1CronJob cronJob;
+
+    public String getId() {
+        return getProfile().getId();
+    }
 }

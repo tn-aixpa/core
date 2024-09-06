@@ -1,5 +1,7 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
 
+import com.github.victools.jsonschema.generator.SchemaGenerator;
+import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -12,9 +14,11 @@ import it.smartcommunitylabdhub.core.models.schemas.SchemaImpl.SchemaImplBuilder
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
@@ -28,16 +32,34 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 @Component
 @Slf4j
 @Validated
-public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
+public class SpecRegistryImpl implements SpecRegistry, SpecValidator, InitializingBean {
 
     private SmartValidator validator;
+    private List<com.github.victools.jsonschema.generator.Module> modules;
 
     // A map to store spec types and their corresponding classes.
     private final Map<String, SpecRegistration> registrations = new HashMap<>();
+    private SchemaGenerator generator = SchemaUtils.generator();
 
     @Autowired
     public void setValidator(SmartValidator validator) {
         this.validator = validator;
+    }
+
+    @Autowired
+    public void setModules(List<com.github.victools.jsonschema.generator.Module> modules) {
+        this.modules = modules;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        //register additional modules for generator
+        SchemaGeneratorConfigBuilder builder = SchemaUtils.BUILDER;
+        if (modules != null) {
+            modules.forEach(builder::with);
+        }
+
+        generator = new SchemaGenerator(builder.build());
     }
 
     @Override
@@ -54,7 +76,15 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
         }
 
         log.debug("generate schema for spec {}:{} ", entity, kind);
-        SchemaImplBuilder builder = SchemaImpl.builder().entity(entity).kind(kind).schema(SchemaUtils.schema(spec));
+        //build proxy
+        Class<? extends Spec> proxy = SchemaUtils.proxy(spec);
+
+        //generate
+        SchemaImplBuilder builder = SchemaImpl
+            .builder()
+            .entity(entity)
+            .kind(kind)
+            .schema(generator.generateSchema(proxy));
         if (StringUtils.hasText(type.runtime())) {
             builder.runtime(type.runtime());
         }
@@ -153,11 +183,16 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator {
             if (e.type() != null) {
                 EntityName entity = e.type().entity();
                 log.debug("generate schema for spec {}:{} ", entity, k);
+
+                //build proxy
+                Class<? extends Spec> proxy = SchemaUtils.proxy(e.spec());
+
+                //generate
                 SchemaImplBuilder builder = SchemaImpl
                     .builder()
                     .entity(entity)
                     .kind(k)
-                    .schema(SchemaUtils.schema(e.spec()));
+                    .schema(generator.generateSchema(proxy));
                 if (StringUtils.hasText(e.type().runtime())) {
                     builder.runtime(e.type().runtime());
                 }
