@@ -124,10 +124,12 @@ public class KubernetesModule implements com.github.victools.jsonschema.generato
                             ObjectNode o = config.createObjectNode();
                             o.put(config.getKeyword(SchemaKeyword.TAG_CONST), t.getId());
                             if (StringUtils.hasText(t.getName())) {
-                                o.put(config.getKeyword(SchemaKeyword.TAG_TITLE), t.getName());
+                                //DISABLED, using a fake object for display
+                                // o.put(config.getKeyword(SchemaKeyword.TAG_TITLE), t.getName());
                             }
                             if (StringUtils.hasText(t.getDescription())) {
-                                o.put(config.getKeyword(SchemaKeyword.TAG_DESCRIPTION), t.getDescription());
+                                //DISABLED, unsupported by frontend lib
+                                // o.put(config.getKeyword(SchemaKeyword.TAG_DESCRIPTION), t.getDescription());
                             }
 
                             return o;
@@ -136,16 +138,61 @@ public class KubernetesModule implements com.github.victools.jsonschema.generato
 
                     //override definition
                     ObjectNode profile = config.createObjectNode();
+                    profile.set(
+                        config.getKeyword(SchemaKeyword.TAG_TYPE),
+                        config
+                            .createArrayNode()
+                            .add(config.getKeyword(SchemaKeyword.TAG_TYPE_STRING))
+                            .add(config.getKeyword(SchemaKeyword.TAG_TYPE_NULL))
+                    );
                     profile
-                        .put(
-                            config.getKeyword(SchemaKeyword.TAG_TYPE),
-                            config.getKeyword(SchemaKeyword.TAG_TYPE_STRING)
-                        )
                         .put(config.getKeyword(SchemaKeyword.TAG_TITLE), "fields.profile.title")
                         .put(config.getKeyword(SchemaKeyword.TAG_DESCRIPTION), "fields.profile.description")
                         .set(config.getKeyword(SchemaKeyword.TAG_ONEOF), opts);
 
-                    ((ObjectNode) def.get("properties")).replace("profile", profile);
+                    ((ObjectNode) def.get(config.getKeyword(SchemaKeyword.TAG_PROPERTIES))).replace("profile", profile);
+
+                    //workaround: build a fake object to expose details about template
+                    //TODO: remove when frontend lib supports description on enumerables
+                    //see https://github.com/rjsf-team/react-jsonschema-form/issues/4214
+
+                    //set oneOf
+                    ArrayNode prps = config.createArrayNode();
+                    templates
+                        .stream()
+                        .map(t -> {
+                            ObjectNode o = config.createObjectNode();
+                            o.set(
+                                "profile",
+                                config.createObjectNode().put(config.getKeyword(SchemaKeyword.TAG_CONST), t.getId())
+                            );
+                            ObjectNode e = config
+                                .createObjectNode()
+                                .put(
+                                    config.getKeyword(SchemaKeyword.TAG_TYPE),
+                                    config.getKeyword(SchemaKeyword.TAG_TYPE_OBJECT)
+                                );
+                            if (StringUtils.hasText(t.getName())) {
+                                e.put(config.getKeyword(SchemaKeyword.TAG_TITLE), t.getName());
+                            }
+                            if (StringUtils.hasText(t.getDescription())) {
+                                e.put(config.getKeyword(SchemaKeyword.TAG_DESCRIPTION), t.getDescription());
+                            }
+
+                            o.set("template", e);
+
+                            ObjectNode s = config.createObjectNode();
+                            s.set(config.getKeyword(SchemaKeyword.TAG_PROPERTIES), o);
+
+                            return s;
+                        })
+                        .forEach(prps::add);
+
+                    //build deps to expose fake node for details
+                    ObjectNode deps = config.createObjectNode();
+                    deps.set(config.getKeyword(SchemaKeyword.TAG_ONEOF), prps);
+
+                    def.set("dependencies", config.createObjectNode().set("profile", deps));
                 }
 
                 return new CustomDefinition(
