@@ -756,10 +756,55 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
             K8sRunnable template = templates.get(runnable.getTemplate());
-            //TODO evaluate how to integrate resources
+            if (template != null && template.getResources() != null) {
+                //override *all* definitions if set
+                //translate requests and limits
+                CoreResource res = template.getResources();
+                Map<String, String> requests = new HashMap<>();
+                Map<String, String> limits = new HashMap<>();
+
+                //cpu
+                Optional
+                    .ofNullable(res.getCpu())
+                    .ifPresent(cpu -> {
+                        if (cpu.getRequests() != null) {
+                            requests.put("cpu", cpu.getRequests());
+                        }
+                        if (cpu.getLimits() != null) {
+                            limits.put("cpu", cpu.getLimits());
+                        }
+                    });
+
+                //mem
+                Optional
+                    .ofNullable(res.getMem())
+                    .ifPresent(mem -> {
+                        if (mem.getRequests() != null) {
+                            requests.put("memory", mem.getRequests());
+                        }
+                        if (mem.getLimits() != null) {
+                            limits.put("memory", mem.getLimits());
+                        }
+                    });
+
+                //gpu
+                Optional
+                    .ofNullable(res.getGpu())
+                    .ifPresent(cpu -> {
+                        if (gpuResourceKey != null && res.getGpu().getRequests() != null) {
+                            requests.put(gpuResourceKey, res.getGpu().getRequests());
+                        }
+                        if (gpuResourceKey != null && res.getGpu().getLimits() != null) {
+                            limits.put(gpuResourceKey, res.getGpu().getLimits());
+                        }
+                    });
+
+                resources.setRequests(k8sBuilderHelper.convertResources(requests));
+                resources.setLimits(k8sBuilderHelper.convertResources(limits));
+            }
         }
 
-        //default resources
+        //default resources fallback
         Map<String, Quantity> requests = resources.getRequests() == null
             ? new HashMap<>()
             : new HashMap<>(resources.getRequests());
