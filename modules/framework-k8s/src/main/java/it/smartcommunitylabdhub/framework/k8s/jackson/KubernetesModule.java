@@ -16,10 +16,9 @@ import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,35 +63,31 @@ public class KubernetesModule implements com.github.victools.jsonschema.generato
     @Override
     public void afterPropertiesSet() throws Exception {
         if (templateKeys != null && !templateKeys.isEmpty()) {
-            this.templates = loadTemplates().values();
+            this.templates = loadTemplates();
         }
     }
 
-    protected Map<String, K8sTemplate<K8sRunnable>> loadTemplates() {
+    protected List<K8sTemplate<K8sRunnable>> loadTemplates() {
         //load templates if provided
-        Map<String, K8sTemplate<K8sRunnable>> results = new HashMap<>();
+        List<K8sTemplate<K8sRunnable>> results = new ArrayList<>();
         if (resourceLoader != null && templateKeys != null) {
             templateKeys.forEach(k -> {
                 try {
-                    String[] kk = k.split("\\|");
-                    if (kk.length == 2) {
-                        String key = kk[0];
-                        String path = kk[1];
-                        //check if we received a bare path and fix
-                        if (!path.startsWith("classpath:") && !path.startsWith("file:")) {
-                            path = "file:" + kk[1];
-                        }
-
-                        // Load as resource and deserialize as template
-                        Resource res = resourceLoader.getResource(path);
-                        K8sTemplate<K8sRunnable> t = KubernetesMapper.readTemplate(
-                            res.getContentAsString(StandardCharsets.UTF_8),
-                            K8sRunnable.class
-                        );
-
-                        results.put(key, t);
+                    String path = k;
+                    //check if we received a bare path and fix
+                    if (!path.startsWith("classpath:") && !path.startsWith("file:")) {
+                        path = "file:" + k;
                     }
-                } catch (IOException | ClassCastException e) {
+
+                    // Load as resource and deserialize as template
+                    Resource res = resourceLoader.getResource(path);
+                    K8sTemplate<K8sRunnable> t = KubernetesMapper.readTemplate(
+                        res.getContentAsString(StandardCharsets.UTF_8),
+                        K8sRunnable.class
+                    );
+
+                    results.add(t);
+                } catch (IOException | ClassCastException | IllegalArgumentException e) {
                     //skip
                 }
             });

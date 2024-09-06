@@ -252,30 +252,27 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         if (resourceLoader != null && templateKeys != null) {
             templateKeys.forEach(k -> {
                 try {
-                    String[] kk = k.split("\\|");
-                    if (kk.length == 2) {
-                        String key = kk[0];
-                        String path = kk[1];
-                        //check if we received a bare path and fix
-                        if (!path.startsWith("classpath:") && !path.startsWith("file:")) {
-                            path = "file:" + kk[1];
-                        }
-
-                        // Load as resource and deserialize as template
-                        log.debug("Read template {} from {}", key, path);
-                        Resource res = resourceLoader.getResource(path);
-                        K8sTemplate<T> t = KubernetesMapper.readTemplate(
-                            res.getContentAsString(StandardCharsets.UTF_8),
-                            clazz
-                        );
-
-                        if (log.isTraceEnabled()) {
-                            log.trace("Template result {}:\n {}", key, t);
-                        }
-
-                        results.put(key, t);
+                    String path = k;
+                    //check if we received a bare path and fix
+                    if (!path.startsWith("classpath:") && !path.startsWith("file:")) {
+                        path = "file:" + k;
                     }
-                } catch (IOException | ClassCastException e) {
+
+                    // Load as resource and deserialize as template
+                    log.debug("Read template from {}", path);
+                    Resource res = resourceLoader.getResource(path);
+                    K8sTemplate<T> t = KubernetesMapper.readTemplate(
+                        res.getContentAsString(StandardCharsets.UTF_8),
+                        clazz
+                    );
+
+                    if (log.isTraceEnabled()) {
+                        log.trace("Template result {}:\n {}", t.getId(), t);
+                    }
+
+                    //TODO validate template via smartValidator
+                    results.put(t.getId(), t);
+                } catch (IOException | ClassCastException | IllegalArgumentException e) {
                     //skip
                     log.error("Error loading templates: " + e.getMessage());
                 }
