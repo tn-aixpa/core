@@ -58,7 +58,7 @@ public class K8sServiceProcessor implements RunProcessor<RunBaseStatus> {
                             String name = (String) metadata.getOrDefault("name", "");
                             String namespace = (String) metadata.getOrDefault("namespace", "");
 
-                            String url = String.format("%s.%s.svc.cluster.local:%d", name, namespace, port);
+                            String url = String.format("%s.%s:%d", name, namespace, port);
                             svc.put("url", url);
 
                             String ip = String.format("%s:%d", clusterIp, port);

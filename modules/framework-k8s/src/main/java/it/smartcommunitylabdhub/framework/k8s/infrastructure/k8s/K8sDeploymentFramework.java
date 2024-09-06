@@ -22,22 +22,25 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper.VolumeData;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @FrameworkComponent(framework = K8sDeploymentFramework.FRAMEWORK)
@@ -51,6 +54,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     private final AppsV1Api appsV1Api;
 
     private String initImage;
+    private List<String> initCommand = null;
 
     public K8sDeploymentFramework(ApiClient apiClient) {
         super(apiClient);
@@ -58,8 +62,33 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     }
 
     @Autowired
-    public void setInitImage(@Value("${kubernetes.init-image}") String initImage) {
+    public void setInitImage(@Value("${kubernetes.init.image}") String initImage) {
         this.initImage = initImage;
+    }
+
+    @Autowired
+    public void setInitCommand(@Value("${kubernetes.init.command}") String initCommand) {
+        if (StringUtils.hasText(initCommand)) {
+            this.initCommand =
+                new LinkedList<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(initCommand)));
+        }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+
+        Assert.hasText(initImage, "init image should be set to a valid builder-tool image");
+
+        //load templates
+        this.templates = loadTemplates(K8sDeploymentRunnable.class);
+
+        //build default shared volume definition for context building
+        if (k8sProperties.getSharedVolume() == null) {
+            k8sProperties.setSharedVolume(
+                new CoreVolume(CoreVolume.VolumeType.empty_dir, "/shared", "shared-dir", Map.of("sizeLimit", "100Mi"))
+            );
+        }
     }
 
     @Override
@@ -205,7 +234,9 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         return runnable;
     }
 
-    @Override
+    /*
+     * K8s
+     */
     public V1Deployment build(K8sDeploymentRunnable runnable) throws K8sFrameworkException {
         log.debug("build for {}", runnable.getId());
         if (log.isTraceEnabled()) {
@@ -225,6 +256,13 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         );
 
         log.debug("build k8s deployment for {}", deploymentName);
+
+        //check template
+        K8sTemplate<K8sDeploymentRunnable> template = null;
+        if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
+            //get template
+            template = templates.get(runnable.getTemplate());
+        }
 
         // Create labels for job
         Map<String, String> labels = buildLabels(runnable);
@@ -247,17 +285,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         List<String> command = buildCommand(runnable);
         List<String> args = buildArgs(runnable);
 
-        //check if context build is required
-        if (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty() || 
-            runnable.getContextSources() != null && !runnable.getContextSources().isEmpty()) {
-
-            VolumeData initVolumeData = k8sBuilderHelper.getInitVolumeData(runnable);
-            //add volumes
-            volumes = Stream.concat(buildVolumes(runnable).stream(), initVolumeData.volumes().stream()).collect(Collectors.toList());
-            volumeMounts = Stream .concat(buildVolumeMounts(runnable).stream(), initVolumeData.mounts().stream()) .collect(Collectors.toList());
-
-        }
-
         // Build Container
         V1Container container = new V1Container()
             .name(containerName)
@@ -271,8 +298,16 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .env(env)
             .securityContext(buildSecurityContext(runnable));
 
-        // Create a PodSpec for the container
-        V1PodSpec podSpec = new V1PodSpec()
+        // Create a PodSpec for the container, leverage template if provided
+        V1PodSpec podSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getDeployment)
+            .map(V1Deployment::getSpec)
+            .map(V1DeploymentSpec::getTemplate)
+            .map(V1PodTemplateSpec::getSpec)
+            .orElse(new V1PodSpec());
+
+        podSpec
             .containers(Collections.singletonList(container))
             .nodeSelector(buildNodeSelector(runnable))
             .affinity(buildAffinity(runnable))
@@ -284,8 +319,10 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .imagePullSecrets(buildImagePullSecrets(runnable));
 
         //check if context build is required
-        if (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty() || 
-            runnable.getContextSources() != null && !runnable.getContextSources().isEmpty()) {
+        if (
+            (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty()) ||
+            (runnable.getContextSources() != null && !runnable.getContextSources().isEmpty())
+        ) {
             // Add Init container to the PodTemplateSpec
             // Build the Init Container
             V1Container initContainer = new V1Container()
@@ -295,8 +332,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                 .resources(resources)
                 .env(env)
                 .envFrom(envFrom)
-                //TODO below execute a command that is a Go script
-                .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
+                .command(initCommand);
 
             podSpec.setInitContainers(Collections.singletonList(initContainer));
         }
@@ -305,12 +341,19 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
 
         int replicas = Optional.ofNullable(runnable.getReplicas()).orElse(1);
+        if (template != null && template.getProfile().getReplicas() != null) {
+            //override with template
+            replicas = template.getProfile().getReplicas().intValue();
+        }
 
-        // Create the JobSpec with the PodTemplateSpec
-        V1DeploymentSpec deploymentSpec = new V1DeploymentSpec()
-            .replicas(replicas)
-            .selector(new V1LabelSelector().matchLabels(labels))
-            .template(podTemplateSpec);
+        // Create the deploymentSpec with the PodTemplateSpec, leveraging template
+        V1DeploymentSpec deploymentSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getDeployment)
+            .map(V1Deployment::getSpec)
+            .orElse(new V1DeploymentSpec());
+
+        deploymentSpec.replicas(replicas).selector(new V1LabelSelector().matchLabels(labels)).template(podTemplateSpec);
 
         // Create the V1Deployment object with metadata and JobSpec
         return new V1Deployment().metadata(metadata).spec(deploymentSpec);
@@ -319,7 +362,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
     /*
      * K8s
      */
-    @Override
     public V1Deployment apply(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         Assert.notNull(deployment.getSpec(), "spec can not be null");
@@ -339,7 +381,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
     }
 
-    @Override
     public V1Deployment get(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
 
@@ -358,7 +399,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
     }
 
-    @Override
     public V1Deployment create(V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         try {
@@ -376,7 +416,6 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         }
     }
 
-    @Override
     public void delete(@NotNull V1Deployment deployment) throws K8sFrameworkException {
         Assert.notNull(deployment.getMetadata(), "metadata can not be null");
         try {

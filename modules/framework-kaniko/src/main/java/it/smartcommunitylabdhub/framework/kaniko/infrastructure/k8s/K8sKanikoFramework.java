@@ -26,12 +26,14 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -62,8 +65,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     @Value("${kaniko.image}")
     private String kanikoImage;
 
-    @Value("${kubernetes.init-image}")
     private String initImage;
+    private List<String> initCommand = null;
 
     @Value("${kaniko.image-prefix}")
     private String imagePrefix;
@@ -80,6 +83,36 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     public K8sKanikoFramework(ApiClient apiClient) {
         super(apiClient);
         this.batchV1Api = new BatchV1Api(apiClient);
+    }
+
+    @Autowired
+    public void setInitImage(@Value("${kubernetes.init.image}") String initImage) {
+        this.initImage = initImage;
+    }
+
+    @Autowired
+    public void setInitCommand(@Value("${kubernetes.init.command}") String initCommand) {
+        if (StringUtils.hasText(initCommand)) {
+            this.initCommand =
+                new LinkedList<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(initCommand)));
+        }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+
+        Assert.hasText(initImage, "init image should be set to a valid builder-tool image");
+
+        //load templates
+        this.templates = loadTemplates(K8sKanikoRunnable.class);
+
+        //build default shared volume definition for context building
+        if (k8sProperties.getSharedVolume() == null) {
+            k8sProperties.setSharedVolume(
+                new CoreVolume(CoreVolume.VolumeType.empty_dir, "/shared", "shared-dir", Map.of("sizeLimit", "100Mi"))
+            );
+        }
     }
 
     @Override
@@ -245,7 +278,6 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         return runnable;
     }
 
-    @Override
     public V1Job build(K8sKanikoRunnable runnable) throws K8sFrameworkException {
         log.debug("build for {}", runnable.getId());
         if (log.isTraceEnabled()) {
@@ -261,6 +293,13 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         );
 
         log.debug("build k8s job for {}", jobName);
+
+        //check template
+        K8sTemplate<K8sKanikoRunnable> template = null;
+        if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
+            //get template
+            template = templates.get(runnable.getTemplate());
+        }
 
         //build destination image name and set to runnable
         String prefix =
@@ -279,19 +318,15 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Create the Job metadata
         V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
 
-        // Create sharedVolume
-        CoreVolume sharedVolume = new CoreVolume(
-            CoreVolume.VolumeType.empty_dir,
-            "/shared",
-            "shared-dir",
-            Map.of("sizeLimit", "100Mi")
-        );
-
         List<CoreVolume> coreVolumes = new ArrayList<>();
         List<CoreVolume> runnableVolumesOpt = Optional.ofNullable(runnable.getVolumes()).orElseGet(List::of);
         // Check if runnable already contains shared-dir
-        if (runnableVolumesOpt.stream().noneMatch(v -> "shared-dir".equals(v.getName()))) {
-            coreVolumes.add(sharedVolume);
+        if (
+            runnableVolumesOpt
+                .stream()
+                .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+        ) {
+            coreVolumes.add(k8sProperties.getSharedVolume());
         }
 
         // Create config map volume
@@ -309,7 +344,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             .ifPresentOrElse(coreVolumes::addAll, () -> runnable.setVolumes(coreVolumes));
 
         List<String> kanikoArgsAll = new ArrayList<>(
-            List.of("--dockerfile=/init-config-map/Dockerfile", "--context=/shared", "--destination=" + imageName)
+            List.of(
+                "--dockerfile=/init-config-map/Dockerfile",
+                "--context=" + k8sProperties.getSharedVolume().getMountPath(),
+                "--destination=" + imageName
+            )
         );
         // Add Kaniko args
         kanikoArgsAll.addAll(kanikoArgs);
@@ -353,8 +392,16 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             .envFrom(envFrom)
             .env(env);
 
-        // Create a PodSpec for the container
-        V1PodSpec podSpec = new V1PodSpec()
+        // Create a PodSpec for the container, leverage template if provided
+        V1PodSpec podSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getJob)
+            .map(V1Job::getSpec)
+            .map(V1JobSpec::getTemplate)
+            .map(V1PodTemplateSpec::getSpec)
+            .orElse(new V1PodSpec());
+
+        podSpec
             .containers(Collections.singletonList(container))
             .nodeSelector(buildNodeSelector(runnable))
             .affinity(buildAffinity(runnable))
@@ -374,16 +421,21 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             .resources(resources)
             .env(env)
             .envFrom(envFrom)
-            //TODO below execute a command that is a Go script
-            .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
+            .command(initCommand);
 
         // Set initContainer as first container in the PodSpec
         podSpec.setInitContainers(Collections.singletonList(initContainer));
 
         int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(0);
 
-        // Create the JobSpec with the PodTemplateSpec
-        V1JobSpec jobSpec = new V1JobSpec()
+        // Create the JobSpec with the PodTemplateSpec, leverage template if provided
+        V1JobSpec jobSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getJob)
+            .map(V1Job::getSpec)
+            .orElse(new V1JobSpec());
+
+        jobSpec
             .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
             .parallelism(1)
             .completions(1)
@@ -397,12 +449,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     /*
      * K8s
      */
-    @Override
     public V1Job apply(@NotNull V1Job job) throws K8sFrameworkException {
         return job;
     }
 
-    @Override
     public V1Job get(@NotNull V1Job job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
@@ -421,7 +471,6 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         }
     }
 
-    @Override
     public V1Job create(V1Job job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
@@ -441,7 +490,6 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         }
     }
 
-    @Override
     public void delete(V1Job job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 

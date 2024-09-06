@@ -16,11 +16,19 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class K8sFrameworkConfig {
+
+    @Bean
+    @ConditionalOnKubernetes
+    @ConfigurationProperties(prefix = "kubernetes")
+    public KubernetesProperties kubernetesProperties() {
+        return new KubernetesProperties();
+    }
 
     @Bean
     @ConditionalOnKubernetes

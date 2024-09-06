@@ -2,10 +2,8 @@ package it.smartcommunitylabdhub.commons.utils;
 
 import aj.org.objectweb.asm.Type;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.victools.jsonschema.generator.ConfigFunction;
-import com.github.victools.jsonschema.generator.CustomDefinition;
 import com.github.victools.jsonschema.generator.FieldScope;
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.OptionPreset;
@@ -18,13 +16,11 @@ import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationModule;
 import com.github.victools.jsonschema.module.jakarta.validation.JakartaValidationOption;
 import com.github.victools.jsonschema.module.swagger2.Swagger2Module;
-import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
+import it.smartcommunitylabdhub.commons.jackson.definitions.SerializableDefinitionsModule;
 import it.smartcommunitylabdhub.commons.jackson.introspect.JsonSchemaAnnotationIntrospector;
-import it.smartcommunitylabdhub.commons.jackson.mixins.SerializableMixin;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +30,6 @@ import net.bytebuddy.jar.asm.AnnotationVisitor;
 import net.bytebuddy.jar.asm.FieldVisitor;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.OpenedClassReader;
-import org.springframework.util.StringUtils;
 
 //TODO refactor into a factory
 public final class SchemaUtils {
@@ -48,7 +43,8 @@ public final class SchemaUtils {
         Integer.class
     );
 
-    public static final SchemaGenerator GENERATOR;
+    // public static final SchemaGenerator GENERATOR;
+    public static final SchemaGeneratorConfigBuilder BUILDER;
 
     static {
         ObjectMapper schemaMapper = new ObjectMapper()
@@ -64,6 +60,7 @@ public final class SchemaUtils {
             JakartaValidationOption.INCLUDE_PATTERN_EXPRESSIONS
         );
         Swagger2Module swagger2Module = new Swagger2Module();
+        SerializableDefinitionsModule serializableModule = new SerializableDefinitionsModule();
 
         SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(
             schemaMapper,
@@ -73,6 +70,7 @@ public final class SchemaUtils {
             .with(jacksonModule)
             .with(jakartaModule)
             .with(swagger2Module)
+            .with(serializableModule)
             //options
             .with(Option.DEFINITIONS_FOR_ALL_OBJECTS)
             .with(Option.MAP_VALUES_AS_ADDITIONAL_PROPERTIES)
@@ -125,58 +123,19 @@ public final class SchemaUtils {
         configBuilder
             .forTypesInGeneral()
             .withTitleResolver(specTypeResolver("title"))
-            .withDescriptionResolver(specTypeResolver("description"))
-            .withCustomDefinitionProvider((javaType, context) -> {
-                //redefine Serializable via mixin with annotations, and inline
-                return Serializable.class.equals(javaType.getErasedType())
-                    ? new CustomDefinition(
-                        context.createDefinition(context.getTypeContext().resolve(SerializableMixin.class)),
-                        CustomDefinition.DefinitionType.STANDARD,
-                        CustomDefinition.AttributeInclusion.YES
-                    )
-                    : null;
-            })
-            .withCustomDefinitionProvider((javaType, context) -> {
-                Schema sa = javaType.getErasedType().getAnnotation(Schema.class);
-                if (sa != null && sa.implementation() != Void.class) {
-                    //override with implementation type, inline
-                    return new CustomDefinition(
-                        context.createDefinition(context.getTypeContext().resolve(sa.implementation())),
-                        CustomDefinition.DefinitionType.STANDARD,
-                        CustomDefinition.AttributeInclusion.YES
-                    );
-                }
+            .withDescriptionResolver(specTypeResolver("description"));
 
-                return null;
-            })
-            .withTypeAttributeOverride((node, scope, context) -> {
-                //for custom defined overrides also inject props from schema, since those are skipper by other modules
-                if (SerializableMixin.class.getPackage().equals(scope.getType().getErasedType().getPackage())) {
-                    Schema sa = scope.getType().getErasedType().getAnnotation(Schema.class);
-                    if (sa != null) {
-                        if (StringUtils.hasText(sa.title())) {
-                            node.put("title", sa.title());
-                        }
-                        if (StringUtils.hasText(sa.description())) {
-                            node.put("description", sa.description());
-                        }
-                        if (StringUtils.hasText(sa.defaultValue())) {
-                            node.put("defaultValue", sa.defaultValue());
-                        }
-                    }
-
-                    //also override title for array
-                    if (scope.getType().isArray()) {
-                        node.put("title", "array");
-                    }
-                }
-            });
-
-        GENERATOR = new SchemaGenerator(configBuilder.build());
+        // GENERATOR = new SchemaGenerator(configBuilder.build());
+        BUILDER = configBuilder;
     }
 
-    public static JsonNode schema(Class<? extends Spec> clazz) {
-        return GENERATOR.generateSchema(clazz);
+    // public static JsonNode schema(Class<? extends Spec> clazz) {
+    //     return GENERATOR.generateSchema(clazz);
+    // }
+
+    public static SchemaGenerator generator() {
+        //build new from config
+        return new SchemaGenerator(BUILDER.build());
     }
 
     public static <T extends Spec> Class<? extends T> proxy(Class<T> clazz) {

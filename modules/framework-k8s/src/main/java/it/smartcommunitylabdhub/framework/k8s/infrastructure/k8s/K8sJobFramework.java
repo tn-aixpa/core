@@ -21,10 +21,12 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper.VolumeData;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -34,10 +36,11 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @FrameworkComponent(framework = K8sJobFramework.FRAMEWORK)
@@ -55,8 +58,8 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     >() {};
     private final BatchV1Api batchV1Api;
 
-    @Value("${kubernetes.init-image}")
     private String initImage;
+    private List<String> initCommand = null;
 
     private int activeDeadlineSeconds = DEADLINE_SECONDS;
 
@@ -65,9 +68,42 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         batchV1Api = new BatchV1Api(apiClient);
     }
 
-    public void setActiveDeadlineSeconds(int activeDeadlineSeconds) {
+    @Autowired
+    public void setActiveDeadlineSeconds(
+        @Value("${kubernetes.jobs.activeDeadlineSeconds}") Integer activeDeadlineSeconds
+    ) {
         Assert.isTrue(activeDeadlineSeconds > DEADLINE_MIN, "Minimum deadline seconds is " + DEADLINE_MIN);
         this.activeDeadlineSeconds = activeDeadlineSeconds;
+    }
+
+    @Autowired
+    public void setInitImage(@Value("${kubernetes.init.image}") String initImage) {
+        this.initImage = initImage;
+    }
+
+    @Autowired
+    public void setInitCommand(@Value("${kubernetes.init.command}") String initCommand) {
+        if (StringUtils.hasText(initCommand)) {
+            this.initCommand =
+                new LinkedList<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(initCommand)));
+        }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        super.afterPropertiesSet();
+
+        Assert.hasText(initImage, "init image should be set to a valid builder-tool image");
+
+        //load templates
+        this.templates = loadTemplates(K8sJobRunnable.class);
+
+        //build default shared volume definition for context building
+        if (k8sProperties.getSharedVolume() == null) {
+            k8sProperties.setSharedVolume(
+                new CoreVolume(CoreVolume.VolumeType.empty_dir, "/shared", "shared-dir", Map.of("sizeLimit", "100Mi"))
+            );
+        }
     }
 
     @Override
@@ -236,6 +272,13 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         log.debug("build k8s job for {}", jobName);
 
+        //check template
+        K8sTemplate<K8sJobRunnable> template = null;
+        if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
+            //get template
+            template = templates.get(runnable.getTemplate());
+        }
+
         //build labels
         Map<String, String> labels = buildLabels(runnable);
 
@@ -257,15 +300,6 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         List<String> command = buildCommand(runnable);
         List<String> args = buildArgs(runnable);
 
-        //check if context build is required
-        if (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty() || 
-            runnable.getContextSources() != null && !runnable.getContextSources().isEmpty()) {
-            VolumeData initVolumeData = k8sBuilderHelper.getInitVolumeData(runnable);
-            //add volumes
-            volumes = Stream.concat(buildVolumes(runnable).stream(), initVolumeData.volumes().stream()).collect(Collectors.toList());
-            volumeMounts = Stream .concat(buildVolumeMounts(runnable).stream(), initVolumeData.mounts().stream()) .collect(Collectors.toList());
-        }
-
         // Build Container
         V1Container container = new V1Container()
             .name(containerName)
@@ -279,8 +313,16 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             .env(env)
             .securityContext(buildSecurityContext(runnable));
 
-        // Create a PodSpec for the container
-        V1PodSpec podSpec = new V1PodSpec()
+        // Create a PodSpec for the container, leverage template if provided
+        V1PodSpec podSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getJob)
+            .map(V1Job::getSpec)
+            .map(V1JobSpec::getTemplate)
+            .map(V1PodTemplateSpec::getSpec)
+            .orElse(new V1PodSpec());
+
+        podSpec
             .containers(Collections.singletonList(container))
             .nodeSelector(buildNodeSelector(runnable))
             .affinity(buildAffinity(runnable))
@@ -292,8 +334,10 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             .imagePullSecrets(buildImagePullSecrets(runnable));
 
         //check if context build is required
-        if (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty() || 
-            runnable.getContextSources() != null && !runnable.getContextSources().isEmpty()) {
+        if (
+            (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty()) ||
+            (runnable.getContextSources() != null && !runnable.getContextSources().isEmpty())
+        ) {
             // Add Init container to the PodTemplateSpec
             // Build the Init Container
             V1Container initContainer = new V1Container()
@@ -303,8 +347,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                 .resources(resources)
                 .env(env)
                 .envFrom(envFrom)
-                //TODO below execute a command that is a Go script
-                .command(List.of("/bin/bash", "-c", "/app/builder-tool.sh"));
+                .command(initCommand);
 
             podSpec.setInitContainers(Collections.singletonList(initContainer));
         }
@@ -314,8 +357,19 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(DEFAULT_BACKOFF_LIMIT).intValue();
 
-        // Create the JobSpec with the PodTemplateSpec
-        V1JobSpec jobSpec = new V1JobSpec()
+        if (template != null && template.getProfile().getBackoffLimit() != null) {
+            //override with template
+            backoffLimit = template.getProfile().getBackoffLimit().intValue();
+        }
+
+        // Create the JobSpec with the PodTemplateSpec, leverage template if provided
+        V1JobSpec jobSpec = Optional
+            .ofNullable(template)
+            .map(K8sTemplate::getJob)
+            .map(V1Job::getSpec)
+            .orElse(new V1JobSpec());
+
+        jobSpec
             .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
             //TODO support work-queue style/parallel jobs
             .parallelism(1)
@@ -330,11 +384,6 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     /*
      * K8s
      */
-
-    public V1Job apply(@NotNull V1Job job) throws K8sFrameworkException {
-        //nothing to do
-        return job;
-    }
 
     public V1Job get(@NotNull V1Job job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
@@ -354,7 +403,6 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         }
     }
 
-    @Override
     public V1Job create(V1Job job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
@@ -376,7 +424,6 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         }
     }
 
-    @Override
     public void delete(V1Job job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 

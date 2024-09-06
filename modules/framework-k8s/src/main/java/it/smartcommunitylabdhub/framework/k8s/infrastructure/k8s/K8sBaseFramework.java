@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.Metrics;
 import io.kubernetes.client.common.KubernetesObject;
@@ -29,18 +30,22 @@ import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
+import it.smartcommunitylabdhub.framework.k8s.config.KubernetesProperties;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
+import it.smartcommunitylabdhub.framework.k8s.jackson.KubernetesMapper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResourceDefinition;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -70,10 +75,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     implements Framework<T>, InitializingBean {
 
     //custom object mapper with mixIn for IntOrString
-    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER.addMixIn(
-        IntOrString.class,
-        IntOrStringMixin.class
-    );
+    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER
+        .addMixIn(IntOrString.class, IntOrStringMixin.class)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     protected final CoreV1Api coreV1Api;
     protected final Metrics metricsApi;
@@ -81,6 +85,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected ApplicationProperties applicationProperties;
     protected ResourceLoader resourceLoader;
 
+    protected KubernetesProperties k8sProperties;
+
+    //TODO move all props to bean
     protected String namespace;
     protected String registrySecret;
     protected String imagePullPolicy = "IfNotPresent";
@@ -92,7 +99,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected CoreResourceDefinition memResourceDefinition = new CoreResourceDefinition();
     protected List<String> templateKeys = Collections.emptyList();
 
-    protected Map<String, K8sRunnable> templates = Collections.emptyMap();
+    protected Map<String, K8sTemplate<T>> templates = Collections.emptyMap();
 
     protected Boolean collectLogs;
     protected Boolean collectMetrics;
@@ -116,6 +123,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Autowired
     public void setApplicationProperties(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
+    }
+
+    @Autowired
+    public void setK8sProperties(KubernetesProperties k8sProperties) {
+        this.k8sProperties = k8sProperties;
     }
 
     @Autowired
@@ -229,44 +241,45 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(k8sBuilderHelper, "k8s helper is required");
+        Assert.notNull(k8sProperties, "k8s properties required");
         Assert.notNull(namespace, "k8s namespace required");
         Assert.notNull(version, "k8s version required");
+    }
 
+    protected Map<String, K8sTemplate<T>> loadTemplates(Class<T> clazz) {
         //load templates if provided
+        Map<String, K8sTemplate<T>> results = new HashMap<>();
         if (resourceLoader != null && templateKeys != null) {
-            templates = new HashMap<>();
-
             templateKeys.forEach(k -> {
                 try {
-                    String[] kk = k.split("\\|");
-                    if (kk.length == 2) {
-                        String key = kk[0];
-                        String path = kk[1];
-                        //check if we received a bare path and fix
-                        if (!path.startsWith("classpath:") && !path.startsWith("file:")) {
-                            path = "file:" + kk[1];
-                        }
-
-                        // Load as resource and deserialize as template
-                        log.debug("Read template {} from {}", key, path);
-                        Resource res = resourceLoader.getResource(path);
-                        K8sRunnable t = mapper.readValue(
-                            res.getContentAsString(StandardCharsets.UTF_8),
-                            K8sRunnable.class
-                        );
-
-                        if (log.isTraceEnabled()) {
-                            log.trace("Template result {}:\n {}", key, t);
-                        }
-
-                        templates.put(key, t);
+                    String path = k;
+                    //check if we received a bare path and fix
+                    if (!path.startsWith("classpath:") && !path.startsWith("file:")) {
+                        path = "file:" + k;
                     }
-                } catch (IOException | ClassCastException e) {
+
+                    // Load as resource and deserialize as template
+                    log.debug("Read template from {}", path);
+                    Resource res = resourceLoader.getResource(path);
+                    K8sTemplate<T> t = KubernetesMapper.readTemplate(
+                        res.getContentAsString(StandardCharsets.UTF_8),
+                        clazz
+                    );
+
+                    if (log.isTraceEnabled()) {
+                        log.trace("Template result {}:\n {}", t.getId(), t);
+                    }
+
+                    //TODO validate template via smartValidator
+                    results.put(t.getId(), t);
+                } catch (IOException | ClassCastException | IllegalArgumentException e) {
                     //skip
                     log.error("Error loading templates: " + e.getMessage());
                 }
             });
         }
+
+        return results;
     }
 
     /*
@@ -288,15 +301,6 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     /*
      * K8s methods
      */
-    public abstract K build(T runnable) throws K8sFrameworkException;
-
-    public abstract K apply(K object) throws K8sFrameworkException;
-
-    public abstract K create(K object) throws K8sFrameworkException;
-
-    public abstract K get(K object) throws K8sFrameworkException;
-
-    public abstract void delete(K object) throws K8sFrameworkException;
 
     public List<V1Pod> pods(K object) throws K8sFrameworkException {
         if (object == null || object.getMetadata() == null) {
@@ -509,7 +513,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         Map<String, String> templateLabels = new HashMap<>();
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate());
+            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
             templateLabels.put(
                 K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/template",
                 runnable.getTemplate()
@@ -589,9 +593,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                     }
                 });
         }
+
+        //volumes defined in template
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate());
+            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
 
             if (template.getVolumes() != null) {
                 template
@@ -603,6 +609,35 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                         }
                     });
             }
+        }
+
+        //check if context build volume is required
+        if (
+            (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty()) ||
+            (runnable.getContextSources() != null && !runnable.getContextSources().isEmpty())
+        ) {
+            //build shared context dir if missing and defined
+            if (
+                (k8sProperties.getSharedVolume() != null && runnable.getVolumes() == null) ||
+                runnable
+                    .getVolumes()
+                    .stream()
+                    .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+            ) {
+                //use framework definition
+                V1Volume volume = k8sBuilderHelper.getVolume(k8sProperties.getSharedVolume());
+                volumes.add(volume);
+            }
+
+            // build config map volume with fixed definition
+            CoreVolume configMapVolume = new CoreVolume(
+                CoreVolume.VolumeType.config_map,
+                "/init-config-map",
+                "init-config-map",
+                Map.of("name", "init-config-map-" + runnable.getId())
+            );
+            V1Volume configMap = k8sBuilderHelper.getVolume(configMapVolume);
+            volumes.add(configMap);
         }
 
         return volumes;
@@ -622,9 +657,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 });
         }
 
+        //volumes defined in template
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate());
+            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
 
             if (template.getVolumes() != null) {
                 template
@@ -636,6 +672,35 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                         }
                     });
             }
+        }
+
+        //check if context build volume is required
+        if (
+            (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty()) ||
+            (runnable.getContextSources() != null && !runnable.getContextSources().isEmpty())
+        ) {
+            //build shared context dir if missing and defined
+            if (
+                (k8sProperties.getSharedVolume() != null && runnable.getVolumes() == null) ||
+                runnable
+                    .getVolumes()
+                    .stream()
+                    .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+            ) {
+                //use framework definition
+                V1VolumeMount sharedMount = k8sBuilderHelper.getVolumeMount(k8sProperties.getSharedVolume());
+                volumeMounts.add(sharedMount);
+            }
+
+            // Create config map volume with fixed definition
+            CoreVolume configMapVolume = new CoreVolume(
+                CoreVolume.VolumeType.config_map,
+                "/init-config-map",
+                "init-config-map",
+                Map.of("name", "init-config-map-" + runnable.getId())
+            );
+            V1VolumeMount configMapMount = k8sBuilderHelper.getVolumeMount(configMapVolume);
+            volumeMounts.add(configMapMount);
         }
 
         return volumeMounts;
@@ -691,11 +756,56 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate());
-            //TODO evaluate how to integrate resources
+            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
+            if (template != null && template.getResources() != null) {
+                //override *all* definitions if set
+                //translate requests and limits
+                CoreResource res = template.getResources();
+                Map<String, String> requests = new HashMap<>();
+                Map<String, String> limits = new HashMap<>();
+
+                //cpu
+                Optional
+                    .ofNullable(res.getCpu())
+                    .ifPresent(cpu -> {
+                        if (cpu.getRequests() != null) {
+                            requests.put("cpu", cpu.getRequests());
+                        }
+                        if (cpu.getLimits() != null) {
+                            limits.put("cpu", cpu.getLimits());
+                        }
+                    });
+
+                //mem
+                Optional
+                    .ofNullable(res.getMem())
+                    .ifPresent(mem -> {
+                        if (mem.getRequests() != null) {
+                            requests.put("memory", mem.getRequests());
+                        }
+                        if (mem.getLimits() != null) {
+                            limits.put("memory", mem.getLimits());
+                        }
+                    });
+
+                //gpu
+                Optional
+                    .ofNullable(res.getGpu())
+                    .ifPresent(cpu -> {
+                        if (gpuResourceKey != null && res.getGpu().getRequests() != null) {
+                            requests.put(gpuResourceKey, res.getGpu().getRequests());
+                        }
+                        if (gpuResourceKey != null && res.getGpu().getLimits() != null) {
+                            limits.put(gpuResourceKey, res.getGpu().getLimits());
+                        }
+                    });
+
+                resources.setRequests(k8sBuilderHelper.convertResources(requests));
+                resources.setLimits(k8sBuilderHelper.convertResources(limits));
+            }
         }
 
-        //default resources
+        //default resources fallback
         Map<String, Quantity> requests = resources.getRequests() == null
             ? new HashMap<>()
             : new HashMap<>(resources.getRequests());
@@ -745,7 +855,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate());
+            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
             if (template.getNodeSelector() != null && !template.getNodeSelector().isEmpty()) {
                 selectors.putAll(
                     template
@@ -772,7 +882,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate());
+            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
             if (template.getTolerations() != null && !template.getTolerations().isEmpty()) {
                 tolerations.addAll(template.getTolerations().stream().map(t -> t).collect(Collectors.toList()));
             }
@@ -955,7 +1065,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     public String buildPriorityClassName(T runnable) throws K8sFrameworkException {
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //use template
-            return templates.get(runnable.getTemplate()).getPriorityClass();
+            return templates.get(runnable.getTemplate()).getProfile().getPriorityClass();
         }
 
         return runnable.getPriorityClass();
@@ -964,7 +1074,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     public String buildRuntimeClassName(T runnable) throws K8sFrameworkException {
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //use template
-            return templates.get(runnable.getTemplate()).getRuntimeClass();
+            return templates.get(runnable.getTemplate()).getProfile().getRuntimeClass();
         }
 
         return runnable.getRuntimeClass();
@@ -973,7 +1083,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     public V1Affinity buildAffinity(T runnable) throws K8sFrameworkException {
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //use template
-            return templates.get(runnable.getTemplate()).getAffinity();
+            return templates.get(runnable.getTemplate()).getProfile().getAffinity();
         }
 
         return runnable.getAffinity();

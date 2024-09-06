@@ -28,6 +28,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.CredentialsContainer;
 
@@ -36,6 +37,7 @@ import org.springframework.security.core.CredentialsContainer;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsContainer {
 
     private String id;
