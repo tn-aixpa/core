@@ -621,7 +621,6 @@ public class DataItemServiceImpl
                 EntityName.DATAITEM.getValue() +
                 "/" +
                 id +
-                "/" +
                 (filename.startsWith("/") ? filename : "/" + filename);
 
             //dataItem may not exists (yet)

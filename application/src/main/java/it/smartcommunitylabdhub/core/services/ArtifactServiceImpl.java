@@ -623,7 +623,6 @@ public class ArtifactServiceImpl
                 EntityName.ARTIFACT.getValue() +
                 "/" +
                 id +
-                "/" +
                 (filename.startsWith("/") ? filename : "/" + filename);
 
             //artifact may not exists (yet)

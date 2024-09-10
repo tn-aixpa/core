@@ -619,7 +619,6 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
                 EntityName.MODEL.getValue() +
                 "/" +
                 id +
-                "/" +
                 (filename.startsWith("/") ? filename : "/" + filename);
 
             //model may not exists (yet)
