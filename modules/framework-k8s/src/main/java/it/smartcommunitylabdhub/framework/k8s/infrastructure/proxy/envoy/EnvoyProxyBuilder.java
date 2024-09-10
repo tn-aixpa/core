@@ -82,6 +82,7 @@ public class EnvoyProxyBuilder {
                                                 .build();
 
                                 EnvoyConfig.Route route = EnvoyConfig.Route.builder()
+                                                .name("")
                                                 .match(match)
                                                 .route(routeAction)
                                                 .build();

@@ -6,6 +6,7 @@ import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.proto.V1.ConfigMap;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
@@ -117,6 +118,20 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             throw new K8sFrameworkException(e.getMessage());
         }
 
+        // Build Envoy sidecar container
+        try {
+            V1ConfigMap envoyConfigMap = buildEnvoyConfigMap(runnable);
+            coreV1Api.createNamespacedConfigMap(namespace, envoyConfigMap, null, null, null, null);
+
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
+
         log.info("create deployment for {}", String.valueOf(deployment.getMetadata().getName()));
         deployment = deploymentFramework.create(deployment);
         results.put("deployment", deployment);
@@ -150,6 +165,17 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         return runnable;
     }
 
+    private V1ConfigMap buildEnvoyConfigMap(K8sServeRunnable runnable) throws K8sFrameworkException {
+        String envoyConfig = envoyProxyBuilder.getConfiguration(runnable.getServicePorts());
+
+        // Store the configuration in a ConfigMap
+        return new V1ConfigMap()
+                .kind("ConfigMap")
+                .metadata(new V1ObjectMeta().name("envoy-config-" + runnable.getId()).namespace(namespace))
+                .data(Collections.singletonMap("envoy.yaml", envoyConfig));
+
+    }
+
     @Override
     public K8sServeRunnable delete(K8sServeRunnable runnable) throws K8sFrameworkException {
         log.info("delete for {}", runnable.getId());
@@ -181,6 +207,18 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
                 coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+            }
+        } catch (ApiException | NullPointerException e) {
+            // ignore, not existing or error
+        }
+
+        try {
+            String configMapName = "envoy-config-" + runnable.getId();
+            V1ConfigMap envoyConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
+
+            if (envoyConfigMap != null) {
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null,
+                        null, null, null);
             }
         } catch (ApiException | NullPointerException e) {
             // ignore, not existing or error
@@ -292,7 +330,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                 .map(list -> list
                         .stream()
                         .filter(p -> p.port() != null && p.targetPort() != null)
-                        .map(p -> new V1ServicePort().port(p.port()).targetPort(new IntOrString(p.targetPort()))
+                        .map(p -> new V1ServicePort().port(p.port())
+                                .targetPort(new IntOrString(Integer.parseInt("5" + p.targetPort())))
                                 .protocol("TCP").name("port" + p.port()))
                         .collect(Collectors.toList()))
                 .orElse(null);
@@ -471,27 +510,6 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                 .env(env)
                 .securityContext(buildSecurityContext(runnable)); // TODO Try to build the envoy proxy container - work
                                                                   // in progress
-
-        // Build Envoy sidecar container
-        try {
-            String envoyConfig = envoyProxyBuilder.getConfiguration(runnable.getServicePorts());
-
-            // Store the configuration in a ConfigMap
-            V1ConfigMap envoyConfigMap = new V1ConfigMap()
-                    .kind("ConfigMap")
-                    .metadata(new V1ObjectMeta().name("envoy-config-" + runnable.getId()).namespace(namespace))
-                    .data(Collections.singletonMap("envoy.yaml", envoyConfig));
-
-            coreV1Api.createNamespacedConfigMap(namespace, envoyConfigMap, null, null, null, null);
-
-        } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getMessage());
-            if (log.isTraceEnabled()) {
-                log.trace("k8s api response: {}", e.getResponseBody());
-            }
-
-            throw new K8sFrameworkException(e.getMessage());
-        }
 
         // Add the ConfigMap to the volumes
         V1Volume envoyVolume = new V1Volume()
