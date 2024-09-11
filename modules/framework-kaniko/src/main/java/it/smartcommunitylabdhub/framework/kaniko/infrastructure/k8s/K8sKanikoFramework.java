@@ -318,41 +318,6 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Create the Job metadata
         V1ObjectMeta metadata = new V1ObjectMeta().name(jobName).labels(labels);
 
-        List<CoreVolume> coreVolumes = new ArrayList<>();
-        List<CoreVolume> runnableVolumesOpt = Optional.ofNullable(runnable.getVolumes()).orElseGet(List::of);
-        // Check if runnable already contains shared-dir
-        if (
-            runnableVolumesOpt
-                .stream()
-                .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
-        ) {
-            coreVolumes.add(k8sProperties.getSharedVolume());
-        }
-
-        // Create config map volume
-        CoreVolume configMapVolume = new CoreVolume(
-            CoreVolume.VolumeType.config_map,
-            "/init-config-map",
-            "init-config-map",
-            Map.of("name", "init-config-map-" + runnable.getId())
-        );
-        coreVolumes.add(configMapVolume);
-
-        //Add all volumes
-        Optional
-            .ofNullable(runnable.getVolumes())
-            .ifPresentOrElse(coreVolumes::addAll, () -> runnable.setVolumes(coreVolumes));
-
-        List<String> kanikoArgsAll = new ArrayList<>(
-            List.of(
-                "--dockerfile=/init-config-map/Dockerfile",
-                "--context=" + k8sProperties.getSharedVolume().getMountPath(),
-                "--destination=" + imageName
-            )
-        );
-        // Add Kaniko args
-        kanikoArgsAll.addAll(kanikoArgs);
-
         // Prepare environment variables for the Kubernetes job
         List<V1EnvFromSource> envFrom = buildEnvFrom(runnable);
         List<V1EnvVar> env = buildEnv(runnable);
@@ -360,6 +325,36 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Volumes to attach to the pod based on the volume spec with the additional volume_type
         List<V1Volume> volumes = new LinkedList<>(buildVolumes(runnable));
         List<V1VolumeMount> volumeMounts = new LinkedList<>(buildVolumeMounts(runnable));
+
+        //make sure init and shared volumes are defined
+        if (volumeMounts.stream().noneMatch(v -> "/init-config-map".equals(v.getMountPath()))) {
+            // Create config map volume with fixed definition
+            CoreVolume configMapVolume = new CoreVolume(
+                CoreVolume.VolumeType.config_map,
+                "/init-config-map",
+                "init-config-map",
+                Map.of("name", "init-config-map-" + runnable.getId())
+            );
+
+            V1Volume configMap = k8sBuilderHelper.getVolume(configMapVolume);
+            volumes.add(configMap);
+
+            V1VolumeMount configMapMount = k8sBuilderHelper.getVolumeMount(configMapVolume);
+            volumeMounts.add(configMapMount);
+        }
+
+        if (
+            volumeMounts
+                .stream()
+                .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+        ) {
+            //use framework definition
+            V1Volume sharedVolume = k8sBuilderHelper.getVolume(k8sProperties.getSharedVolume());
+            volumes.add(sharedVolume);
+
+            V1VolumeMount sharedVolumeMount = k8sBuilderHelper.getVolumeMount(k8sProperties.getSharedVolume());
+            volumeMounts.add(sharedVolumeMount);
+        }
 
         // Add secret for kaniko
         // NOTE: we support *only* docker config files
@@ -380,6 +375,16 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
         // resources
         V1ResourceRequirements resources = buildResources(runnable);
+
+        List<String> kanikoArgsAll = new ArrayList<>(
+            List.of(
+                "--dockerfile=/init-config-map/Dockerfile",
+                "--context=" + k8sProperties.getSharedVolume().getMountPath(),
+                "--destination=" + imageName
+            )
+        );
+        // Add Kaniko args
+        kanikoArgsAll.addAll(kanikoArgs);
 
         // Build Container
         V1Container container = new V1Container()
