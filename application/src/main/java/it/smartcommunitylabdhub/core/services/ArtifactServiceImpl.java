@@ -525,12 +525,8 @@ public class ArtifactServiceImpl
             String fullPath = Optional
                 .ofNullable(sub)
                 .map(s -> {
-                    StringBuilder sb = new StringBuilder(path);
-                    if (!path.endsWith("/") && !sub.startsWith("/")) {
-                        sb.append("/");
-                    }
-                    sb.append(sub);
-                    return sb.toString();
+                    //build sub path *only* if not matching spec path
+                    return path.endsWith(sub) ? path : path + sub;
                 })
                 .orElse(path);
 
