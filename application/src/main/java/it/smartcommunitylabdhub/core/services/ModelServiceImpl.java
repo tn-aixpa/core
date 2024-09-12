@@ -18,7 +18,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.FilesInfoService;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
+import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.model.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;

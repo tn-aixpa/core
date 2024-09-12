@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes.RuntimeFactory;
+import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.RuntimeFactory;
 import it.smartcommunitylabdhub.core.repositories.RunnableRepository;
 import it.smartcommunitylabdhub.core.services.RunnableStoreImpl;
 import java.util.List;

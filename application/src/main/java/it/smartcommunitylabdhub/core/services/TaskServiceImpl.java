@@ -16,7 +16,7 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
+import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;

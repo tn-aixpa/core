@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
+import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;

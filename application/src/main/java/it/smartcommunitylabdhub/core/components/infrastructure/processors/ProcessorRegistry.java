@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.components.infrastructure.factories.processors;
+package it.smartcommunitylabdhub.core.components.infrastructure.processors;
 
 import it.smartcommunitylabdhub.commons.annotations.common.RunProcessorType;
 import it.smartcommunitylabdhub.commons.infrastructure.RunProcessor;

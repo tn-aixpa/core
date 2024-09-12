@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
+package it.smartcommunitylabdhub.core.components.infrastructure.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.infrastructure.SpecFactory;

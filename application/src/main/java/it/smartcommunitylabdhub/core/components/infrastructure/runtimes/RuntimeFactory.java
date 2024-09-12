@@ -1,10 +1,4 @@
-/**
- * RuntimeFactory.java
- * <p>
- * This class is a factory for managing and providing Runtimes (runtimes).
- */
-
-package it.smartcommunitylabdhub.core.components.infrastructure.factories.runtimes;
+package it.smartcommunitylabdhub.core.components.infrastructure.runtimes;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;

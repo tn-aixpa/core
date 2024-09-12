@@ -20,7 +20,7 @@ import it.smartcommunitylabdhub.commons.services.entities.LabelService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
-import it.smartcommunitylabdhub.core.components.infrastructure.factories.specs.SpecValidator;
+import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;

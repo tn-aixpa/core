@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.components.infrastructure.factories.specs;
+package it.smartcommunitylabdhub.core.components.infrastructure.specs;
 
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
