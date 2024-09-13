@@ -21,8 +21,11 @@ public class K8sProcessor implements RunProcessor<RunBaseStatus> {
     public RunBaseStatus process(Run run, RunRunnable runRunnable, RunBaseStatus status) {
         if (runRunnable instanceof K8sRunnable) {
             Map<String, Serializable> res = ((K8sRunnable) runRunnable).getResults();
-            //extract k8s details
-            return K8sRunStatus.builder().k8s(res).build();
+
+            if (res != null && !res.isEmpty()) {
+                //extract k8s details
+                return K8sRunStatus.builder().k8s(res).build();
+            }
         }
         return null;
     }
