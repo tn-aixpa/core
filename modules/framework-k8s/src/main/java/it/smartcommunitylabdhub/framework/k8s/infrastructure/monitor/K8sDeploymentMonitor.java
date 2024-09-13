@@ -12,6 +12,7 @@ import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFr
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -63,6 +64,37 @@ public class K8sDeploymentMonitor extends K8sBaseMonitor<K8sDeploymentRunnable> 
                 pods = framework.pods(deployment);
             } catch (K8sFrameworkException e1) {
                 log.error("error collecting pods for deployment {}: {}", runnable.getId(), e1.getMessage());
+            }
+
+            //if number of retry on pods increases, stop
+            if (pods != null) {
+                boolean hasRestarts = pods
+                    .stream()
+                    .anyMatch(pod ->
+                        Optional
+                            .ofNullable(pod.getStatus())
+                            .map(status -> {
+                                boolean initRestarts = Optional
+                                    .ofNullable(status.getInitContainerStatuses())
+                                    .map(s -> s.stream().map(i -> i.getRestartCount()).anyMatch(r -> r > 1))
+                                    .orElse(false);
+
+                                boolean restarts = Optional
+                                    .ofNullable(status.getContainerStatuses())
+                                    .map(s -> s.stream().map(i -> i.getRestartCount()).anyMatch(r -> r > 1))
+                                    .orElse(false);
+
+                                return initRestarts || restarts;
+                            })
+                            .orElse(false)
+                    );
+
+                // if RESTARTS signal, otherwise let RUNNING
+                if (hasRestarts) {
+                    // we observed multiple restarts, stop it
+                    log.error("Multiple restarts observed {}", runnable.getId());
+                    runnable.setState(State.ERROR.name());
+                }
             }
 
             if (!"disable".equals(collectResults)) {
