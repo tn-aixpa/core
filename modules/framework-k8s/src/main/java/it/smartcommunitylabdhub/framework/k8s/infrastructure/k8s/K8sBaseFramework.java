@@ -359,23 +359,23 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             return Collections.emptyList();
         }
 
-        try {
-            List<CoreLog> logs = new ArrayList<>();
-            List<V1Pod> pods = pods(object);
+        List<CoreLog> logs = new ArrayList<>();
+        List<V1Pod> pods = pods(object);
 
-            for (V1Pod p : pods) {
-                if (p.getMetadata() != null && p.getStatus() != null) {
-                    String pod = p.getMetadata().getName();
+        for (V1Pod p : pods) {
+            if (p.getMetadata() != null && p.getStatus() != null) {
+                String pod = p.getMetadata().getName();
 
-                    //read container
-                    if (p.getStatus().getContainerStatuses() != null) {
-                        List<String> containers = p
-                            .getStatus()
-                            .getContainerStatuses()
-                            .stream()
-                            .map(s -> s.getName())
-                            .collect(Collectors.toList());
-                        for (String c : containers) {
+                //read init-containers first
+                if (p.getStatus().getInitContainerStatuses() != null) {
+                    List<String> containers = p
+                        .getStatus()
+                        .getInitContainerStatuses()
+                        .stream()
+                        .map(s -> s.getName())
+                        .collect(Collectors.toList());
+                    for (String c : containers) {
+                        try {
                             String log = coreV1Api.readNamespacedPodLog(
                                 pod,
                                 namespace,
@@ -391,18 +391,26 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                             );
 
                             logs.add(new CoreLog(pod, log, c, namespace));
+                        } catch (ApiException e) {
+                            //catch and skip this container's logs
+                            log.error("Error with k8s: {}", e.getMessage());
+                            if (log.isTraceEnabled()) {
+                                log.trace("k8s api response: {}", e.getResponseBody());
+                            }
                         }
                     }
+                }
 
-                    //read init-containers
-                    if (p.getStatus().getInitContainerStatuses() != null) {
-                        List<String> containers = p
-                            .getStatus()
-                            .getInitContainerStatuses()
-                            .stream()
-                            .map(s -> s.getName())
-                            .collect(Collectors.toList());
-                        for (String c : containers) {
+                //read container
+                if (p.getStatus().getContainerStatuses() != null) {
+                    List<String> containers = p
+                        .getStatus()
+                        .getContainerStatuses()
+                        .stream()
+                        .map(s -> s.getName())
+                        .collect(Collectors.toList());
+                    for (String c : containers) {
+                        try {
                             String log = coreV1Api.readNamespacedPodLog(
                                 pod,
                                 namespace,
@@ -418,20 +426,19 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                             );
 
                             logs.add(new CoreLog(pod, log, c, namespace));
+                        } catch (ApiException e) {
+                            //catch and skip this container's logs
+                            log.error("Error with k8s: {}", e.getMessage());
+                            if (log.isTraceEnabled()) {
+                                log.trace("k8s api response: {}", e.getResponseBody());
+                            }
                         }
                     }
                 }
             }
-
-            return logs;
-        } catch (ApiException e) {
-            log.error("Error with k8s: {}", e.getMessage());
-            if (log.isTraceEnabled()) {
-                log.trace("k8s api response: {}", e.getResponseBody());
-            }
-
-            throw new K8sFrameworkException(e.getMessage());
         }
+
+        return logs;
     }
 
     public List<CoreMetric> metrics(K object) throws K8sFrameworkException {
