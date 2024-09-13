@@ -109,7 +109,7 @@ public class K8sSecretHelper {
             V1Patch patch = new V1Patch(mapper.writeValueAsString(Collections.singleton(patchData)));
 
             //direct api call is broken as per 21.0.0 due to missing patch format
-            api.patchNamespacedSecret(secretName, namespace, patch, null, null, null, null, null);
+            // api.patchNamespacedSecret(secretName, namespace, patch, null, null, null, null, null);
 
             // json-patch via patch to avoid library bug
             PatchUtils.patch(
