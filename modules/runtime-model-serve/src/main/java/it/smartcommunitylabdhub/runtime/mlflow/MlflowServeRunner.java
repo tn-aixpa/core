@@ -70,12 +70,10 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
-        String source = functionSpec.getPath().trim();
-        if (!source.endsWith("/")) source += "/";
 
         //read source and build context
         List<ContextRef> contextRefs = Collections.singletonList(
-            ContextRef.builder().source(source).protocol(uri.getScheme()).destination("model").build()
+            ContextRef.builder().source(functionSpec.getPath()).protocol(uri.getScheme()).destination("model").build()
         );
         List<ContextSource> contextSources = new ArrayList<>();
 
@@ -95,18 +93,26 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
 
         //write model settings
         try {
-            String setttingsString = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(mlFlowSettingsSpec);
             ContextSource entry = ContextSource
                 .builder()
                 .name("model-settings.json")
-                .base64(Base64.getEncoder().encodeToString(setttingsString.getBytes()))
+                .base64(
+                    Base64
+                        .getEncoder()
+                        .encodeToString(
+                            JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(mlFlowSettingsSpec).getBytes()
+                        )
+                )
                 .build();
             contextSources.add(entry);
         } catch (IOException ioe) {
             throw new CoreRuntimeException("error with reading entrypoint for runtime-mlflow");
         }
 
-        List<String> args = new ArrayList<>(List.of("start", "/shared"));
+        //install dependencies from requirements before start
+        List<String> args = new ArrayList<>(
+            List.of("-c", "pip install -r /shared/model/requirements.txt && mlserver start /shared/")
+        );
 
         CorePort servicePort = new CorePort(HTTP_PORT, HTTP_PORT);
         CorePort grpcPort = new CorePort(GRPC_PORT, GRPC_PORT);
@@ -126,7 +132,7 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
             )
             //base
             .image(img)
-            .command("mlserver")
+            .command("/bin/sh")
             .args(args.toArray(new String[0]))
             .contextSources(contextSources)
             .contextRefs(contextRefs)
