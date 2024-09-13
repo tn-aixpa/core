@@ -18,7 +18,6 @@ import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeRunSpe
 import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeTaskSpec;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -62,11 +61,9 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
-        UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
-        String source = functionSpec.getPath().trim();
-
         //read source and build context
         List<ContextRef> contextRefs = null;
+        UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
 
         List<String> args = new ArrayList<>(
             List.of(
@@ -82,21 +79,7 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         );
 
         // model dir or model id
-        if (!"huggingface".equals(uri.getScheme())) {
-            if (!source.endsWith("/")) source += "/";
-
-            args.add("--model_dir");
-            args.add("/shared/model");
-            contextRefs =
-                Collections.singletonList(
-                    ContextRef
-                        .builder()
-                        .source(source)
-                        .protocol(uri.getScheme())
-                        .destination("model")
-                        .build()
-                );
-        } else {
+        if ("huggingface".equals(uri.getScheme())) {
             String mdlId = uri.getHost() + uri.getPath();
             String revision = null;
             if (mdlId.contains(":")) {
@@ -110,8 +93,21 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
                 args.add("--model_revision");
                 args.add(revision);
             }
-            contextRefs = Collections.emptyList();
+        } else {
+            args.add("--model_dir");
+            args.add("/shared/model");
+
+            contextRefs =
+                Collections.singletonList(
+                    ContextRef
+                        .builder()
+                        .source(functionSpec.getPath())
+                        .protocol(uri.getScheme())
+                        .destination("model")
+                        .build()
+                );
         }
+
         // tokenizer revision
         if (StringUtils.hasText(taskSpec.getTokenizerRevision())) {
             args.add("--tokenizer_revision");
@@ -190,7 +186,7 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         //         UriComponents adapterUri = UriComponentsBuilder.fromUriString(adapter.getValue()).build();
         //         String adapterSource = adapter.getValue().trim();
         //         String ref = adapterSource;
-                
+
         //         if (!"huggingface".equals(adapterUri.getScheme())) {
         //             if (!adapterSource.endsWith("/")) adapterSource += "/";
         //             ref = "/shared/adapters/" + adapter.getKey() + "/";

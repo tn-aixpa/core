@@ -63,9 +63,8 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
-        UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
-
         //read source and build context
+        UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
         List<ContextRef> contextRefs = Collections.singletonList(
             ContextRef.builder().source(functionSpec.getPath()).protocol(uri.getScheme()).destination("model").build()
         );
