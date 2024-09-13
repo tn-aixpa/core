@@ -26,9 +26,6 @@ public class FileInfo implements Serializable {
 
     private String path;
 
-    @JsonProperty("src_path")
-    private String sourcePath;
-
     private String name;
 
     @JsonProperty("content_type")

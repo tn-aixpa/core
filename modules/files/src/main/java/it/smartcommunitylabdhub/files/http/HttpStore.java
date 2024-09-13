@@ -7,13 +7,17 @@ import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -58,11 +62,13 @@ public class HttpStore implements FilesStore {
             FileInfo response = new FileInfo();
             response.setPath(path);
             response.setName(split[split.length - 1]);
-            response.setContentType(headers.getContentType().toString());
+            response.setContentType(
+                Optional.ofNullable(headers.getContentType()).map(MediaType::toString).orElse(null)
+            );
             response.setSize(headers.getContentLength());
             response.setLastModified(new Date(headers.getLastModified()));
             result.add(response);
-        } catch (Exception e) {
+        } catch (RestClientException | URISyntaxException e) {
             log.error("generate metadata for {}:  {}", path, e.getMessage());
         }
         return result;
