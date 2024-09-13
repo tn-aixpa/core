@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.kaniko.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
@@ -40,6 +41,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -122,6 +124,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             log.trace("runnable: {}", runnable);
         }
 
+        Map<String, KubernetesObject> results = new HashMap<>();
+
         //create job
         V1Job job = build(runnable);
 
@@ -129,6 +133,8 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         V1Secret secret = buildRunSecret(runnable);
         if (secret != null) {
             storeRunSecret(secret);
+            //clear data before storing
+            results.put("secret", secret.stringData(Collections.emptyMap()).data(Collections.emptyMap()));
         }
 
         //build and create configMap
@@ -200,21 +206,32 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 );
 
             coreV1Api.createNamespacedConfigMap(namespace, configMap, null, null, null, null);
+            //clear data before storing
+            results.put("configMap", configMap.data(Collections.emptyMap()));
         } catch (ApiException | NullPointerException e) {
             throw new K8sFrameworkException(e.getMessage());
         }
 
         log.info("create job for {}", String.valueOf(job.getMetadata().getName()));
         job = create(job);
+        results.put("job", job);
 
         //update state
         runnable.setState(State.RUNNING.name());
 
         //update results
-        try {
-            runnable.setResults(Map.of("job", mapper.convertValue(job, typeRef)));
-        } catch (IllegalArgumentException e) {
-            log.error("error reading k8s results: {}", e.getMessage());
+        if (!"disable".equals(collectResults)) {
+            //update results
+            try {
+                runnable.setResults(
+                    results
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
+                );
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
         }
 
         if (log.isTraceEnabled()) {

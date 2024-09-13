@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -93,6 +95,8 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             log.trace("runnable: {}", runnable);
         }
 
+        Map<String, KubernetesObject> results = new HashMap<>();
+
         //create job
         V1CronJob job = build(runnable);
 
@@ -100,6 +104,8 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         V1Secret secret = buildRunSecret(runnable);
         if (secret != null) {
             storeRunSecret(secret);
+            //clear data before storing
+            results.put("secret", secret.stringData(Collections.emptyMap()).data(Collections.emptyMap()));
         }
 
         try {
@@ -107,6 +113,8 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             if (initConfigMap != null) {
                 log.info("create initConfigMap for {}", String.valueOf(initConfigMap.getMetadata().getName()));
                 coreV1Api.createNamespacedConfigMap(namespace, initConfigMap, null, null, null, null);
+                //clear data before storing
+                results.put("configMap", initConfigMap.data(Collections.emptyMap()));
             }
         } catch (ApiException | NullPointerException e) {
             throw new K8sFrameworkException(e.getMessage());
@@ -114,6 +122,7 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
 
         log.info("create job for {}", String.valueOf(job.getMetadata().getName()));
         job = create(job);
+        results.put("cronJob", job);
 
         //update state
         runnable.setState(State.RUNNING.name());
@@ -121,7 +130,12 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         if (!"disable".equals(collectResults)) {
             //update results
             try {
-                runnable.setResults(Map.of("cronJob", mapper.convertValue(job, typeRef)));
+                runnable.setResults(
+                    results
+                        .entrySet()
+                        .stream()
+                        .collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
+                );
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());
             }

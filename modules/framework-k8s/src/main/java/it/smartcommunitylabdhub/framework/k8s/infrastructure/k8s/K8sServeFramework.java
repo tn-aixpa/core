@@ -117,7 +117,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         V1Secret secret = buildRunSecret(runnable);
         if (secret != null) {
             storeRunSecret(secret);
-            results.put("secret", secret);
+            //clear data before storing
+            results.put("secret", secret.stringData(Collections.emptyMap()).data(Collections.emptyMap()));
         }
 
         try {
@@ -125,7 +126,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             if (initConfigMap != null) {
                 log.info("create initConfigMap for {}", String.valueOf(initConfigMap.getMetadata().getName()));
                 coreV1Api.createNamespacedConfigMap(namespace, initConfigMap, null, null, null, null);
-                results.put("configMap", initConfigMap);
+                //clear data before storing
+                results.put("configMap", initConfigMap.data(Collections.emptyMap()));
             }
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
