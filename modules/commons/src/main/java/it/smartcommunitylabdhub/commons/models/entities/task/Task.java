@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.base.MetadataDTO;
 import it.smartcommunitylabdhub.commons.models.base.SpecDTO;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -60,7 +61,7 @@ public class Task implements BaseDTO, MetadataDTO, SpecDTO {
             Keys.STORE_PREFIX +
             getProject() +
             Keys.PATH_DIVIDER +
-            "tasks" +
+            EntityName.TASK.getValue() +
             Keys.PATH_DIVIDER +
             getKind() +
             Keys.PATH_DIVIDER +

@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.base.MetadataDTO;
 import it.smartcommunitylabdhub.commons.models.base.SpecDTO;
 import it.smartcommunitylabdhub.commons.models.base.StatusDTO;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -83,7 +84,7 @@ public class Secret implements BaseDTO, MetadataDTO, SpecDTO, StatusDTO {
             Keys.STORE_PREFIX +
             getProject() +
             Keys.PATH_DIVIDER +
-            "secrets" +
+            EntityName.SECRET.getValue() +
             Keys.PATH_DIVIDER +
             getKind() +
             Keys.PATH_DIVIDER +

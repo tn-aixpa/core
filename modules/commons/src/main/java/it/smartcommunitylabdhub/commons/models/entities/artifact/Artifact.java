@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.base.MetadataDTO;
 import it.smartcommunitylabdhub.commons.models.base.SpecDTO;
 import it.smartcommunitylabdhub.commons.models.base.StatusDTO;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -84,7 +85,7 @@ public class Artifact implements BaseDTO, MetadataDTO, SpecDTO, StatusDTO {
     public String getKey() {
         StringBuilder sb = new StringBuilder();
         sb.append(Keys.STORE_PREFIX).append(getProject());
-        sb.append(Keys.PATH_DIVIDER).append("artifacts");
+        sb.append(Keys.PATH_DIVIDER).append(EntityName.ARTIFACT.getValue());
         sb.append(Keys.PATH_DIVIDER).append(getKind());
         sb.append(Keys.PATH_DIVIDER).append(getName());
         if (getId() != null) {

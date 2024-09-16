@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -78,7 +79,7 @@ public class Workflow implements Executable {
     public String getKey() {
         StringBuilder sb = new StringBuilder();
         sb.append(Keys.STORE_PREFIX).append(getProject());
-        sb.append(Keys.PATH_DIVIDER).append("workflows");
+        sb.append(Keys.PATH_DIVIDER).append(EntityName.WORKFLOW.getValue());
         sb.append(Keys.PATH_DIVIDER).append(getKind());
         sb.append(Keys.PATH_DIVIDER).append(getName());
         if (getId() != null) {
