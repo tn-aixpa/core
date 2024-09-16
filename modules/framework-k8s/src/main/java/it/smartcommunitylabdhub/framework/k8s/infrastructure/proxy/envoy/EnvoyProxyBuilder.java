@@ -138,8 +138,19 @@ public class EnvoyProxyBuilder {
                                         .clusters(clusters)
                                         .build();
 
+                        EnvoyConfig.Admin admin = EnvoyConfig.Admin.builder().accessLogPath("/tmp/admin_access.log")
+                                        .address(EnvoyConfig.Address.builder()
+                                                        .socketAddress(EnvoyConfig.SocketAddress
+                                                                        .builder()
+                                                                        .address("0.0.0.0")
+                                                                        .portValue(9901)
+                                                                        .build())
+                                                        .build())
+                                        .build();
+
                         EnvoyConfig envoyConfig = EnvoyConfig.builder()
                                         .staticResources(staticResources)
+                                        .admin(admin)
                                         .build();
 
                         ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());

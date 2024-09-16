@@ -11,6 +11,15 @@ import java.util.List;
 public class EnvoyConfig {
     @JsonProperty("static_resources")
     private StaticResources staticResources;
+    private Admin admin;
+
+    @Data
+    @Builder
+    public static class Admin {
+        @JsonProperty("access_log_path")
+        private String accessLogPath;
+        private Address address;
+    }
 
     @Data
     @Builder

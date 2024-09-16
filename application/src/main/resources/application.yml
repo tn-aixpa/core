@@ -108,6 +108,7 @@ kubernetes:
   namespace: ${K8S_NAMESPACE:default}
   logs: ${K8S_ENABLE_LOGS:true}
   metrics: ${K8S_ENABLE_METRICS:true}
+  stats: ${K8S_ENABLE_STATS:true}
   # supported values for results: default,keep,disable
   results: ${K8S_ENABLE_RESULTS:default}
   security: 

@@ -1,17 +1,21 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.*;
-import io.kubernetes.client.proto.V1.ConfigMap;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.proxy.envoy.EnvoyProxyBuilder;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import it.smartcommunitylabdhub.framework.k8s.objects.envoy.CoreStat;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import jakarta.validation.constraints.NotNull;
 
@@ -28,7 +32,13 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @FrameworkComponent(framework = K8sServeFramework.FRAMEWORK)
@@ -41,13 +51,17 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     // TODO refactor usage of framework: should split framework from infrastructure!
     private final K8sDeploymentFramework deploymentFramework;
 
+    private final RestTemplate restTemplate = new RestTemplate();
+
     private String initImage;
 
     private EnvoyProxyBuilder envoyProxyBuilder;
 
     public K8sServeFramework(ApiClient apiClient) {
         super(apiClient);
+
         deploymentFramework = new K8sDeploymentFramework(apiClient);
+
     }
 
     @Autowired
@@ -575,5 +589,41 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         // Create the V1Deployment object with metadata and JobSpec
         return new V1Deployment().metadata(metadata).spec(deploymentSpec);
+    }
+
+    // Use rest template to collect envoy stats
+    // the same as for metrics...difference are on the ojbect that is retrieved.
+    public <O extends KubernetesObject> List<CoreStat> stats(O object) throws K8sFrameworkException {
+        if (object == null || object.getMetadata() == null) {
+            return null;
+        }
+
+        try {
+            // TODO build
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+            HttpEntity<CoreStat> entity = new HttpEntity<>(headers);
+
+            String urlTemplate = UriComponentsBuilder
+                    .fromHttpUrl("http://" + object.getMetadata().getName() + ":9901/stats")
+                    .queryParam("format", "json").toUriString();
+            HttpEntity<String> coreStat = restTemplate.exchange(
+                    urlTemplate,
+                    HttpMethod.GET,
+                    entity,
+                    String.class);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            CoreStat coreStatObject = objectMapper.readValue(coreStat.getBody(), CoreStat.class);
+
+            return List.of();
+        } catch (RuntimeException | JsonProcessingException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getMessage());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        }
     }
 }

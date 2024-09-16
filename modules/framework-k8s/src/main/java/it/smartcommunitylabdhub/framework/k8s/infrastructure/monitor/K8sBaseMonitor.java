@@ -23,23 +23,21 @@ import org.springframework.util.Assert;
 @Slf4j
 public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable {
 
-    //custom object mapper with mixIn for IntOrString
+    // custom object mapper with mixIn for IntOrString
     protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER.addMixIn(
-        IntOrString.class,
-        IntOrStringMixin.class
-    );
-    protected static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
-        HashMap<String, Serializable>
-    >() {};
-    protected static final TypeReference<ArrayList<HashMap<String, Serializable>>> arrayRef = new TypeReference<
-        ArrayList<HashMap<String, Serializable>>
-    >() {};
+            IntOrString.class,
+            IntOrStringMixin.class);
+    protected static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<HashMap<String, Serializable>>() {
+    };
+    protected static final TypeReference<ArrayList<HashMap<String, Serializable>>> arrayRef = new TypeReference<ArrayList<HashMap<String, Serializable>>>() {
+    };
 
     protected final RunnableStore<T> store;
     protected ApplicationEventPublisher eventPublisher;
 
     protected Boolean collectLogs = Boolean.TRUE;
     protected Boolean collectMetrics = Boolean.TRUE;
+    protected Boolean collectStats = Boolean.TRUE;
     protected String collectResults = "default";
 
     protected K8sBaseMonitor(RunnableStore<T> runnableStore) {
@@ -64,6 +62,11 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
     }
 
     @Autowired
+    public void setCollectStats(@Value("${kubernetes.stats}") Boolean collectStats) {
+        this.collectStats = collectStats;
+    }
+
+    @Autowired
     public void setCollectResults(@Value("${kubernetes.results}") String collectResults) {
         this.collectResults = collectResults;
     }
@@ -76,32 +79,32 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
     public void monitor() {
         log.debug("monitor all RUNNING...");
         store
-            .findAll()
-            .stream()
-            .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
-            .flatMap(runnable -> {
-                log.debug("monitor run {}", runnable.getId());
+                .findAll()
+                .stream()
+                .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
+                .flatMap(runnable -> {
+                    log.debug("monitor run {}", runnable.getId());
 
-                if (log.isTraceEnabled()) {
-                    log.trace("runnable: {}", runnable);
-                }
-                return Stream.of(refresh(runnable));
-            })
-            .forEach(runnable -> {
-                if (log.isTraceEnabled()) {
-                    log.trace("refreshed: {}", runnable);
-                }
+                    if (log.isTraceEnabled()) {
+                        log.trace("runnable: {}", runnable);
+                    }
+                    return Stream.of(refresh(runnable));
+                })
+                .forEach(runnable -> {
+                    if (log.isTraceEnabled()) {
+                        log.trace("refreshed: {}", runnable);
+                    }
 
-                // Update the runnable
-                try {
-                    log.debug("store run {}", runnable.getId());
-                    store.store(runnable.getId(), runnable);
+                    // Update the runnable
+                    try {
+                        log.debug("store run {}", runnable.getId());
+                        store.store(runnable.getId(), runnable);
 
-                    publish(runnable);
-                } catch (StoreException e) {
-                    log.error("Error with runnable store: {}", e.getMessage());
-                }
-            });
+                        publish(runnable);
+                    } catch (StoreException e) {
+                        log.error("Error with runnable store: {}", e.getMessage());
+                    }
+                });
 
         log.debug("monitor completed.");
     }
@@ -114,21 +117,19 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
 
             // Send message to Serve manager
             eventPublisher.publishEvent(
-                RunnableChangedEvent
-                    .builder()
-                    .runnable(runnable)
-                    .runMonitorObject(
-                        RunnableMonitorObject
+                    RunnableChangedEvent
                             .builder()
-                            .runId(runnable.getId())
-                            .stateId(runnable.getState())
-                            .project(runnable.getProject())
-                            .framework(runnable.getFramework())
-                            .task(runnable.getTask())
-                            .build()
-                    )
-                    .build()
-            );
+                            .runnable(runnable)
+                            .runMonitorObject(
+                                    RunnableMonitorObject
+                                            .builder()
+                                            .runId(runnable.getId())
+                                            .stateId(runnable.getState())
+                                            .project(runnable.getProject())
+                                            .framework(runnable.getFramework())
+                                            .task(runnable.getTask())
+                                            .build())
+                            .build());
         }
     }
 }
