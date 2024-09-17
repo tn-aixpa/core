@@ -16,8 +16,8 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-import it.smartcommunitylabdhub.runtime.mlflow.models.MLFlowSettingsParameters;
-import it.smartcommunitylabdhub.runtime.mlflow.models.MLFlowSettingsSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.models.MLServerSettingsParameters;
+import it.smartcommunitylabdhub.runtime.mlflow.models.MLServerSettingsSpec;
 import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeFunctionSpec;
 import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeRunSpec;
 import it.smartcommunitylabdhub.runtime.mlflow.specs.MlflowServeTaskSpec;
@@ -77,13 +77,13 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
         );
         List<ContextSource> contextSources = new ArrayList<>();
 
-        MLFlowSettingsSpec mlFlowSettingsSpec = MLFlowSettingsSpec
+        MLServerSettingsSpec mlServerSettingsSpec = MLServerSettingsSpec
             .builder()
             .name(StringUtils.hasText(functionSpec.getModelName()) ? functionSpec.getModelName() : "model")
             .implementation("mlserver_mlflow.MLflowRuntime")
             // .platform()
             .parameters(
-                MLFlowSettingsParameters
+                MLServerSettingsParameters
                     .builder()
                     .uri("./model")
                     // .contentType()
@@ -100,7 +100,7 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
                     Base64
                         .getEncoder()
                         .encodeToString(
-                            JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(mlFlowSettingsSpec).getBytes()
+                            JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(mlServerSettingsSpec).getBytes()
                         )
                 )
                 .build();

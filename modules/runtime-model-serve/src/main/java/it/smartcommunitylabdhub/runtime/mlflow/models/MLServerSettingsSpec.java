@@ -13,10 +13,10 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString
-public class MLFlowSettingsSpec {
+public class MLServerSettingsSpec {
 
     private String name;
     private String implementation;
-    private MLFlowSettingsParameters parameters;
+    private MLServerSettingsParameters parameters;
     private String platform;
 }

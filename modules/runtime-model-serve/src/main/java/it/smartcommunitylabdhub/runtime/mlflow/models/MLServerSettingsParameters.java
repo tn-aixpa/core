@@ -16,7 +16,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString
-public class MLFlowSettingsParameters {
+public class MLServerSettingsParameters {
 
     private String uri;
 
