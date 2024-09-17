@@ -138,6 +138,7 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
             .image(img)
             .command("mlserver")
             .args(args.toArray(new String[0]))
+            .contextSources(contextSources)
             .contextRefs(contextRefs)
             .envs(coreEnvList)
             .secrets(groupedSecrets)
