@@ -1,10 +1,12 @@
 package it.smartcommunitylabdhub.runtime.kfp.specs;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -21,6 +23,7 @@ public class KFPPipelineTaskSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "kfp+pipeline";
 
+    @Pattern(regexp = Keys.CRONTAB_PATTERN)
     private String schedule;
 
     @Schema(format = "yaml")

@@ -1,11 +1,13 @@
 package it.smartcommunitylabdhub.runtime.container.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -26,6 +28,7 @@ public class ContainerJobTaskSpec extends K8sTaskBaseSpec {
     @Min(0)
     private Integer backoffLimit;
 
+    @Pattern(regexp = Keys.CRONTAB_PATTERN)
     private String schedule;
 
     public ContainerJobTaskSpec(Map<String, Serializable> data) {
