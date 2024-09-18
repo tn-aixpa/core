@@ -1,7 +1,9 @@
 package it.smartcommunitylabdhub.commons.jackson.definitions;
 
 import com.github.victools.jsonschema.generator.CustomDefinition;
+import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
+import com.github.victools.jsonschema.generator.SchemaKeyword;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.jackson.mixins.SerializableMixin;
 import java.io.Serializable;
@@ -36,6 +38,28 @@ public class SerializableDefinitionsModule implements com.github.victools.jsonsc
 
                 return null;
             })
+            .withCustomDefinitionProvider((javaType, context) -> {
+                SchemaGeneratorConfig config = context.getGeneratorConfig();
+                //redefine ArrayField with items
+                return SerializableMixin.ArrayField.class.equals(javaType.getErasedType())
+                    ? new CustomDefinition(
+                        config
+                            .createObjectNode()
+                            .put(
+                                config.getKeyword(SchemaKeyword.TAG_TYPE),
+                                config.getKeyword(SchemaKeyword.TAG_TYPE_ARRAY)
+                            )
+                            .set(
+                                config.getKeyword(SchemaKeyword.TAG_ITEMS),
+                                config
+                                    .createObjectNode()
+                                    .put(config.getKeyword(SchemaKeyword.TAG_REF), "#/$defs/Serializable")
+                            ),
+                        CustomDefinition.DefinitionType.STANDARD,
+                        CustomDefinition.AttributeInclusion.YES
+                    )
+                    : null;
+            })
             .withTypeAttributeOverride((node, scope, context) -> {
                 //for custom defined overrides also inject props from schema, since those are skipper by other modules
                 if (SerializableMixin.class.getPackage().equals(scope.getType().getErasedType().getPackage())) {
@@ -50,11 +74,6 @@ public class SerializableDefinitionsModule implements com.github.victools.jsonsc
                         if (StringUtils.hasText(sa.defaultValue())) {
                             node.put("defaultValue", sa.defaultValue());
                         }
-                    }
-
-                    //also override title for array
-                    if (scope.getType().isArray()) {
-                        node.put("title", "array");
                     }
                 }
             });

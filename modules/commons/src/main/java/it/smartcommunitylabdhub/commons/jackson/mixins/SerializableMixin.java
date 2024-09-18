@@ -6,10 +6,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
     anyOf = {
         SerializableMixin.StringField.class,
         SerializableMixin.NumberField.class,
-        // SerializableMixin.IntegerField.class,
         SerializableMixin.BooleanField.class,
-        SerializableMixin.SerializableField.class,
-        SerializableMixin.SerializableField[].class,
+        SerializableMixin.ObjectField.class,
+        SerializableMixin.ArrayField.class,
     },
     nullable = true,
     title = "object"
@@ -28,17 +27,27 @@ public class SerializableMixin {
     @Schema(implementation = Boolean.class, title = "boolean", defaultValue = "")
     public class BooleanField {}
 
+    @Schema(type = "array", title = "array")
+    public class ArrayField {}
+
     @Schema(
         anyOf = {
             SerializableMixin.StringField.class,
             SerializableMixin.NumberField.class,
             // SerializableMixin.IntegerField.class,
             SerializableMixin.BooleanField.class,
-            SerializableMixin.SerializableField.class,
+            SerializableMixin.ObjectField.class,
             SerializableMixin.SerializableField[].class,
         },
         // nullable = true,
         title = "object"
     )
     public class SerializableField {}
+
+    @Schema(
+        type = "object",
+        // nullable = true,
+        title = "object"
+    )
+    public class ObjectField {}
 }
