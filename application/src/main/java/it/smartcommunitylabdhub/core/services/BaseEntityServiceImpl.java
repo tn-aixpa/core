@@ -181,7 +181,11 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
                 //publish
                 if (eventPublisher != null) {
                     log.debug("publish event: update for {}", id);
-                    EntityEvent<E> event = new EntityEvent<>(updated, entityBuilder.convert(prevAsDto), EntityAction.UPDATE);
+                    EntityEvent<E> event = new EntityEvent<>(
+                        updated,
+                        entityBuilder.convert(prevAsDto),
+                        EntityAction.UPDATE
+                    );
                     if (log.isTraceEnabled()) {
                         log.trace("event: {}", String.valueOf(event));
                     }

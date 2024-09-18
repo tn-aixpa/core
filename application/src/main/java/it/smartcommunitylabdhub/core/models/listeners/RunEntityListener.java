@@ -55,7 +55,6 @@ public class RunEntityListener extends AbstractEntityListener<RunEntity, Run> {
             //handle
             super.handle(event);
         }
-
         //TODO update project?
     }
 
