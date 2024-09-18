@@ -162,7 +162,15 @@ public class PythonServeRunner implements Runner<K8sRunnable> {
         }
 
         List<String> args = new ArrayList<>(
-            List.of("/shared/entrypoint.sh", "--processor", command, "--config", "/shared/function.yaml")
+            List.of(
+                "/shared/entrypoint.sh",
+                "--processor",
+                command,
+                "--config",
+                "/shared/function.yaml",
+                "--requirements",
+                "/shared/requirements.txt"
+            )
         );
 
         // requirements.txt
@@ -176,9 +184,6 @@ public class PythonServeRunner implements Runner<K8sRunnable> {
                     .base64(Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8)))
                     .build()
             );
-
-            //add as arg
-            args.addAll(List.of("--requirements", "/shared/requirements.txt"));
         }
 
         //merge env with PYTHON path override

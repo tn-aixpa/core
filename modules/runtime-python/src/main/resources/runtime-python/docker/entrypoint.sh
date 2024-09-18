@@ -57,15 +57,12 @@ fi
 
 # if requirements are defined try to install
 if [[ -n "${requirements}" ]]; then
-    echo "Installing requirements from ${requirements}..."
-
-    if ! [ -f "${requirements}" ]; then
-        die "Invalid or missing requirements file"
-    fi
-
-    ${PYTHON_BIN} -m pip install -r "${requirements}"
-    if ! [ $? -eq 0 ]; then
-        die "Error installing requirements from ${requirements}"
+    if  [[ -f "${requirements}" ]]; then
+        echo "Installing requirements from ${requirements}..."
+        ${PYTHON_BIN} -m pip install -r "${requirements}"
+        if ! [ $? -eq 0 ]; then
+            die "Error installing requirements from ${requirements}"
+        fi
     fi
 fi
 
