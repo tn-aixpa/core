@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernete
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import java.util.List;
 import java.util.Map;
@@ -112,22 +113,15 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                             "Collect metrics for deployment {} for run {}",
                             deployment.getMetadata().getName(),
                             runnable.getId());
-                    runnable.setMetrics(deploymentFramework.metrics(deployment));
+
+                    List<CoreMetric> coreMetrics = deploymentFramework.metrics(deployment);
+                    coreMetrics.addAll(serveFramework.stats(service));
+
+                    // Merge metrics and stats.from proxy
+                    runnable.setMetrics(
+                            coreMetrics);
                 } catch (K8sFrameworkException e1) {
                     log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
-                }
-            }
-
-            if (Boolean.TRUE.equals(collectStats)) {
-                try {
-                    log.debug(
-                            "Collect metrics for deployment {} for run {}",
-                            service.getMetadata().getName(),
-                            runnable.getId());
-                    runnable.setStats(serveFramework.stats(service));
-
-                } catch (K8sFrameworkException e1) {
-                    log.error("error collecting stats for {}: {}", runnable.getId(), e1.getMessage());
                 }
             }
         } catch (K8sFrameworkException e) {

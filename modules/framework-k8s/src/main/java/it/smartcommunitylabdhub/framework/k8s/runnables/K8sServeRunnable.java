@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableCompo
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
-import it.smartcommunitylabdhub.framework.k8s.objects.envoy.CoreStat;
+import it.smartcommunitylabdhub.framework.k8s.objects.envoy.CoreProxyStat;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -22,8 +22,6 @@ import lombok.experimental.SuperBuilder;
 public class K8sServeRunnable extends K8sRunnable {
 
     private List<CorePort> servicePorts;
-
-    private List<CoreStat> stats;
 
     private CoreServiceType serviceType;
 

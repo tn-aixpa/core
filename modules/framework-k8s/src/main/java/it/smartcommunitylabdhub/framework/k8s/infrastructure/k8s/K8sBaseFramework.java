@@ -1,9 +1,11 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.Metrics;
 import io.kubernetes.client.common.KubernetesObject;
+import io.kubernetes.client.custom.ContainerMetrics;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.PodMetrics;
 import io.kubernetes.client.custom.Quantity;
@@ -64,6 +66,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 public abstract class K8sBaseFramework<T extends K8sRunnable, K extends KubernetesObject>
@@ -76,6 +79,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected final CoreV1Api coreV1Api;
     protected final Metrics metricsApi;
+
+    protected final RestTemplate restTemplate;
 
     protected ApplicationProperties applicationProperties;
     protected ResourceLoader resourceLoader;
@@ -105,6 +110,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         Assert.notNull(apiClient, "k8s api client is required");
         coreV1Api = new CoreV1Api(apiClient);
         metricsApi = new Metrics(apiClient);
+        restTemplate = new RestTemplate();
     }
 
     @Autowired

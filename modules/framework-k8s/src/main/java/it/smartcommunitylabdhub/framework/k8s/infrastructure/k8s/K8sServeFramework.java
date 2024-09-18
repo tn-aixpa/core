@@ -2,11 +2,12 @@ package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.kubernetes.client.common.KubernetesObject;
+import io.kubernetes.client.custom.ContainerMetrics;
 import io.kubernetes.client.custom.IntOrString;
+import io.kubernetes.client.custom.PodMetrics;
+import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.*;
@@ -14,12 +15,15 @@ import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComp
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.proxy.envoy.EnvoyProxyBuilder;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
-import it.smartcommunitylabdhub.framework.k8s.objects.envoy.CoreStat;
+import it.smartcommunitylabdhub.framework.k8s.objects.envoy.CoreProxyStat;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +40,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -593,37 +598,86 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
     // Use rest template to collect envoy stats
     // the same as for metrics...difference are on the ojbect that is retrieved.
-    public <O extends KubernetesObject> List<CoreStat> stats(O object) throws K8sFrameworkException {
+    public List<CoreMetric> stats(V1Service object) throws K8sFrameworkException {
         if (object == null || object.getMetadata() == null) {
             return null;
         }
 
         try {
-            // TODO build
-            HttpHeaders headers = new HttpHeaders();
-            headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-            HttpEntity<CoreStat> entity = new HttpEntity<>(headers);
+            List<CoreMetric> metrics = new ArrayList<>();
+            List<V1Pod> pods = pods(object);
 
-            String urlTemplate = UriComponentsBuilder
-                    .fromHttpUrl("http://" + object.getMetadata().getName() + ":9901/stats")
-                    .queryParam("format", "json").toUriString();
-            HttpEntity<String> coreStat = restTemplate.exchange(
-                    urlTemplate,
-                    HttpMethod.GET,
-                    entity,
-                    String.class);
+            List<PodMetrics> podMetrics = metricsApi.getPodMetrics(namespace).getItems();
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            CoreStat coreStatObject = objectMapper.readValue(coreStat.getBody(), CoreStat.class);
+            for (V1Pod p : pods) {
+                if (p.getMetadata() != null && p.getStatus() != null) {
+                    String pod = p.getMetadata().getName();
 
-            return List.of();
-        } catch (RuntimeException | JsonProcessingException e) {
+                    // Prepare headers and request entity
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+                    HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+                    // Build the URL
+                    String url = UriComponentsBuilder
+                            .fromHttpUrl("http://" + object.getMetadata().getName() + ":9901/stats")
+                            .queryParam("format", "json")
+                            .toUriString();
+
+                    // Make HTTP GET request
+                    ResponseEntity<String> response = restTemplate.exchange(
+                            url,
+                            HttpMethod.GET,
+                            entity,
+                            String.class);
+
+                    // Parse the JSON response
+                    PodMetrics metric = podMetrics
+                            .stream()
+                            .filter(m -> pod.equals(m.getMetadata().getName()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (metric != null && metric.getContainers() != null) {
+                        metrics.add(
+                                new CoreMetric(
+                                        pod,
+                                        mapper.readValue(response.getBody(), CoreProxyStat.class).getStats()
+                                                .stream().filter(stat -> stat.getValue() != null).map(stat -> {
+                                                    ContainerMetrics containerMetrics = new ContainerMetrics();
+                                                    containerMetrics.setName(stat.getName());
+                                                    containerMetrics.setUsage(Map.of(
+                                                            stat.getName(), new Quantity(
+                                                                    new BigDecimal(stat.getValue()),
+                                                                    Quantity.Format.BINARY_SI)));
+
+                                                    return containerMetrics;
+                                                }).toList(),
+                                        metric.getTimestamp(),
+                                        metric.getWindow(),
+                                        namespace));
+
+                    }
+
+                }
+            }
+
+            return metrics;
+        } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isTraceEnabled()) {
-                log.trace("k8s api response: {}", e.getMessage());
+                log.trace("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage());
+        } catch (JsonProcessingException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s json processing exception: {}", e.getMessage());
             }
 
             throw new K8sFrameworkException(e.getMessage());
         }
+
     }
 }
