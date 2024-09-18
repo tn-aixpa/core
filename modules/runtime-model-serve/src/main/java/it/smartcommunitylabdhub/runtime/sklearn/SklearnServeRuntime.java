@@ -19,15 +19,19 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.Assert;
 
 @Slf4j
 @RuntimeComponent(runtime = SklearnServeRuntime.RUNTIME)
 public class SklearnServeRuntime
-    extends K8sBaseRuntime<SklearnServeFunctionSpec, SklearnServeRunSpec, ModelServeRunStatus, K8sRunnable> {
+    extends K8sBaseRuntime<SklearnServeFunctionSpec, SklearnServeRunSpec, ModelServeRunStatus, K8sRunnable>
+    implements InitializingBean {
 
     public static final String RUNTIME = "sklearnserve";
+    public static final String IMAGE = "seldonio/mlserver";
 
     @Autowired
     private SecretService secretService;
@@ -37,6 +41,12 @@ public class SklearnServeRuntime
 
     public SklearnServeRuntime() {
         super(SklearnServeRunSpec.KIND);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.hasText(image, "image can not be null or empty");
+        Assert.isTrue(image.startsWith(IMAGE), "image must be a version of " + IMAGE);
     }
 
     @Override

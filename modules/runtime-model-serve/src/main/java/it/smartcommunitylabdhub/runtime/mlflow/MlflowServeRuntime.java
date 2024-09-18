@@ -19,15 +19,19 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.Assert;
 
 @Slf4j
 @RuntimeComponent(runtime = MlflowServeRuntime.RUNTIME)
 public class MlflowServeRuntime
-    extends K8sBaseRuntime<MlflowServeFunctionSpec, MlflowServeRunSpec, ModelServeRunStatus, K8sRunnable> {
+    extends K8sBaseRuntime<MlflowServeFunctionSpec, MlflowServeRunSpec, ModelServeRunStatus, K8sRunnable>
+    implements InitializingBean {
 
     public static final String RUNTIME = "mlflowserve";
+    public static final String IMAGE = "seldonio/mlserver";
 
     @Autowired
     private SecretService secretService;
@@ -37,6 +41,12 @@ public class MlflowServeRuntime
 
     public MlflowServeRuntime() {
         super(MlflowServeRunSpec.KIND);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.hasText(image, "image can not be null or empty");
+        Assert.isTrue(image.startsWith(IMAGE), "image must be a version of " + IMAGE);
     }
 
     @Override

@@ -119,6 +119,11 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
 
         String img = StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image;
 
+        //validate image
+        if (img == null || !img.startsWith(MlflowServeRuntime.IMAGE)) {
+            throw new IllegalArgumentException("invalid or empty image, must be based on " + MlflowServeRuntime.IMAGE);
+        }
+
         //build runnable
         K8sRunnable k8sServeRunnable = K8sServeRunnable
             .builder()

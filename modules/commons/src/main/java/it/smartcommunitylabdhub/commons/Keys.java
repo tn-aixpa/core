@@ -8,6 +8,8 @@ public class Keys {
     public static final String PATH_DIVIDER = "/";
     public static final String ID_DIVIDER = ":";
     public static final String FILE_PATTERN = "(([^/]+)/)*([^/]+)";
-    
+    public static final String FOLDER_PATTERN = ".*\\/$";
+    public static final String ZIP_PATTERN = ".*\\.zip$";
+
     private Keys() {}
 }

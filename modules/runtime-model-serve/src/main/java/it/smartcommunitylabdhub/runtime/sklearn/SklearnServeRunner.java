@@ -18,7 +18,6 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.runtime.mlflow.models.MLServerSettingsParameters;
 import it.smartcommunitylabdhub.runtime.mlflow.models.MLServerSettingsSpec;
-import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeFunctionSpec;
 import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeServeTaskSpec;
 import it.smartcommunitylabdhub.runtime.sklearn.specs.SklearnServeFunctionSpec;
 import it.smartcommunitylabdhub.runtime.sklearn.specs.SklearnServeRunSpec;
@@ -41,7 +40,7 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
     private static final int GRPC_PORT = 8081;
 
     private final String image;
-    private final ModelServeFunctionSpec functionSpec;
+    private final SklearnServeFunctionSpec functionSpec;
     private final Map<String, Set<String>> groupedSecrets;
 
     private final K8sBuilderHelper k8sBuilderHelper;
@@ -119,6 +118,11 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
         CorePort grpcPort = new CorePort(GRPC_PORT, GRPC_PORT);
 
         String img = StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image;
+
+        //validate image
+        if (img == null || !img.startsWith(SklearnServeRuntime.IMAGE)) {
+            throw new IllegalArgumentException("invalid or empty image, must be based on " + SklearnServeRuntime.IMAGE);
+        }
 
         //build runnable
         K8sRunnable k8sServeRunnable = K8sServeRunnable

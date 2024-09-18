@@ -19,15 +19,19 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.Assert;
 
 @Slf4j
 @RuntimeComponent(runtime = HuggingfaceServeRuntime.RUNTIME)
 public class HuggingfaceServeRuntime
-    extends K8sBaseRuntime<HuggingfaceServeFunctionSpec, HuggingfaceServeRunSpec, ModelServeRunStatus, K8sRunnable> {
+    extends K8sBaseRuntime<HuggingfaceServeFunctionSpec, HuggingfaceServeRunSpec, ModelServeRunStatus, K8sRunnable>
+    implements InitializingBean {
 
     public static final String RUNTIME = "huggingfaceserve";
+    public static final String IMAGE = "kserve/huggingfaceserver";
 
     @Autowired
     private SecretService secretService;
@@ -37,6 +41,12 @@ public class HuggingfaceServeRuntime
 
     public HuggingfaceServeRuntime() {
         super(HuggingfaceServeRunSpec.KIND);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Assert.hasText(image, "image can not be null or empty");
+        Assert.isTrue(image.startsWith(IMAGE), "image must be a version of " + IMAGE);
     }
 
     @Override

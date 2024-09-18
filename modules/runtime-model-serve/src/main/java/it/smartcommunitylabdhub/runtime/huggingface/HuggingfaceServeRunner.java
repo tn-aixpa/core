@@ -209,6 +209,13 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
 
         String img = StringUtils.hasText(functionSpec.getImage()) ? functionSpec.getImage() : image;
 
+        //validate image
+        if (img == null || !img.startsWith(HuggingfaceServeRuntime.IMAGE)) {
+            throw new IllegalArgumentException(
+                "invalid or empty image, must be based on " + HuggingfaceServeRuntime.IMAGE
+            );
+        }
+
         //build runnable
         K8sRunnable k8sServeRunnable = K8sServeRunnable
             .builder()
