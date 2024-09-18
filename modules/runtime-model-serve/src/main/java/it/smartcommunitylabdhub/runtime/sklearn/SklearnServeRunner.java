@@ -72,7 +72,7 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
 
         //read source and build context
         UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
-        String fileName =uri.getPathSegments().getLast();
+        String fileName = uri.getPathSegments().getLast();
 
         //read source and build context
         List<ContextRef> contextRefs = Collections.singletonList(
@@ -81,7 +81,7 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
 
         List<ContextSource> contextSources = new ArrayList<>();
 
-                MLServerSettingsSpec mlServerSettingsSpec = MLServerSettingsSpec
+        MLServerSettingsSpec mlServerSettingsSpec = MLServerSettingsSpec
             .builder()
             .name(StringUtils.hasText(functionSpec.getModelName()) ? functionSpec.getModelName() : "model")
             .implementation("mlserver_sklearn.SKLearnModel")
@@ -89,7 +89,7 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
             .parameters(
                 MLServerSettingsParameters
                     .builder()
-                    .uri("./model/"+fileName)
+                    .uri("./model/" + fileName)
                     // .contentType()
                     .build()
             )
@@ -113,10 +113,7 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
             throw new CoreRuntimeException("error with reading entrypoint for runtime-sklearn", ioe);
         }
 
-        List<String> args = new ArrayList<>(
-            List.of("start", "/shared/")
-        );
-
+        List<String> args = new ArrayList<>(List.of("start", "/shared/"));
 
         CorePort servicePort = new CorePort(HTTP_PORT, HTTP_PORT);
         CorePort grpcPort = new CorePort(GRPC_PORT, GRPC_PORT);
