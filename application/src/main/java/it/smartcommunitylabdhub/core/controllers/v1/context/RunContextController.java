@@ -147,7 +147,7 @@ public class RunContextController {
 
     @Operation(summary = "Delete a specific run, with optional cascade")
     @DeleteMapping(path = "/{id}")
-    public void deleteRun(
+    public Run deleteRun(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
@@ -159,7 +159,7 @@ public class RunContextController {
         }
 
         //delete via manager
-        runManager.delete(run);
+        return runManager.delete(run);
     }
 
     /*

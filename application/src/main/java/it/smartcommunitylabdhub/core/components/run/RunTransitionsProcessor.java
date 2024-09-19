@@ -15,8 +15,22 @@ import java.util.LinkedList;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
-@RunProcessorType(stages = { "onRunning", "onCompleted", "onError", "onStopped", "onDeleted" }, id = K8sProcessor.ID)
+@RunProcessorType(
+    stages = {
+        "onBuilt",
+        "onReady",
+        "onRunning",
+        "onCompleted",
+        "onError",
+        "onStopping",
+        "onStopped",
+        "onDeleting",
+        "onDeleted",
+    },
+    id = K8sProcessor.ID
+)
 @Component(RunTransitionsProcessor.ID)
 @Slf4j
 public class RunTransitionsProcessor implements RunProcessor<RunTransitionsSpec> {
@@ -44,6 +58,7 @@ public class RunTransitionsProcessor implements RunProcessor<RunTransitionsSpec>
             .builder()
             .event(null) //TODO add explicit event
             .status(status != null ? status.getState() : null)
+            .message(status != null ? status.getMessage() : null)
             .time(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC))
             .build();
 

@@ -42,6 +42,7 @@ public class RunTransitionsSpec extends RunBaseStatus {
 
         private RunEvent event;
         private String status;
+        private String message;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING)
         protected OffsetDateTime time;

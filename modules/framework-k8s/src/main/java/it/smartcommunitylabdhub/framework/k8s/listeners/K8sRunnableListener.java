@@ -84,6 +84,7 @@ public abstract class K8sRunnableListener<R extends K8sRunnable> {
             // Set runnable to error state send event
             log.error("Error with k8s for runnable {} {}: {}", clazz.getSimpleName(), runnable.getId(), e.getMessage());
             runnable.setState(State.ERROR.name());
+            runnable.setError(clazz.getSimpleName() + ":" + String.valueOf(e.getMessage()));
 
             try {
                 log.debug("update runnable {} {} in store", clazz.getSimpleName(), runnable.getId());

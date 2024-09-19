@@ -80,6 +80,8 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private String state;
 
+    private String error;
+
     private Map<String, Serializable> results;
 
     @JsonIgnore

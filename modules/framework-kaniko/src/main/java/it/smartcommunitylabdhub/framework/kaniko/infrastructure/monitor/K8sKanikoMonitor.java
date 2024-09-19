@@ -38,7 +38,9 @@ public class K8sKanikoMonitor extends K8sBaseMonitor<K8sKanikoRunnable> {
 
             if (job == null || job.getStatus() == null) {
                 // something is missing, no recovery
+                log.error("Missing or invalid job for {}", runnable.getId());
                 runnable.setState(State.ERROR.name());
+                runnable.setError("Job missing or invalid");
             }
 
             log.info("Job status: {}", job.getStatus().toString());
@@ -50,6 +52,7 @@ public class K8sKanikoMonitor extends K8sBaseMonitor<K8sKanikoRunnable> {
             } else if (job.getStatus().getFailed() != null && job.getStatus().getFailed().intValue() > 0) {
                 // Job has failed delete job and pod
                 runnable.setState(State.ERROR.name());
+                runnable.setError("Job failed: " + job.getStatus().getFailed());
             }
 
             //try to fetch pods
@@ -91,6 +94,7 @@ public class K8sKanikoMonitor extends K8sBaseMonitor<K8sKanikoRunnable> {
         } catch (K8sFrameworkException e) {
             // Set Runnable to ERROR state
             runnable.setState(State.ERROR.name());
+            runnable.setError(e.getClass().getSimpleName() + ":" + String.valueOf(e.getMessage()));
         }
 
         return runnable;

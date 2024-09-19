@@ -46,6 +46,7 @@ public class K8sDeploymentMonitor extends K8sBaseMonitor<K8sDeploymentRunnable> 
                 // something is missing, no recovery
                 log.error("Missing or invalid deployment for {}", runnable.getId());
                 runnable.setState(State.ERROR.name());
+                runnable.setError("Deployment missing or invalid");
             }
 
             log.debug("deployment status: replicas {}", deployment.getStatus().getReadyReplicas());
@@ -94,6 +95,7 @@ public class K8sDeploymentMonitor extends K8sBaseMonitor<K8sDeploymentRunnable> 
                     // we observed multiple restarts, stop it
                     log.error("Multiple restarts observed {}", runnable.getId());
                     runnable.setState(State.ERROR.name());
+                    runnable.setError("Multiple pod restarts");
                 }
             }
 
@@ -147,6 +149,7 @@ public class K8sDeploymentMonitor extends K8sBaseMonitor<K8sDeploymentRunnable> 
         } catch (K8sFrameworkException e) {
             // Set Runnable to ERROR state
             runnable.setState(State.ERROR.name());
+            runnable.setError(e.getClass().getSimpleName() + ":" + String.valueOf(e.getMessage()));
         }
 
         return runnable;

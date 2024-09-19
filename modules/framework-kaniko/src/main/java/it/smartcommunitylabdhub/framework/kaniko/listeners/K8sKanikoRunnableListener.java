@@ -71,6 +71,7 @@ public class K8sKanikoRunnableListener {
             // Set runnable to error state send event
             log.error("Error with k8s: {}", e.getMessage());
             runnable.setState(State.ERROR.name());
+            runnable.setError(e.getClass().getSimpleName() + ":" + String.valueOf(e.getMessage()));
 
             try {
                 runnableStore.store(runnable.getId(), runnable);

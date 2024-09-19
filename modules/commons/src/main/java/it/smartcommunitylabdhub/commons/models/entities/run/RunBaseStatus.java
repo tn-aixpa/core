@@ -19,11 +19,24 @@ import lombok.Setter;
 public class RunBaseStatus extends BaseSpec {
 
     private String state;
+    private String message;
+
+    public RunBaseStatus(String state) {
+        this.state = state;
+    }
 
     @Override
     public void configure(Map<String, Serializable> data) {
-        RunBaseStatus meta = mapper.convertValue(data, RunBaseStatus.class);
+        RunBaseStatus spec = mapper.convertValue(data, RunBaseStatus.class);
 
-        this.state = meta.getState();
+        this.state = spec.getState();
+        this.message = spec.getMessage();
+    }
+
+    public static RunBaseStatus with(Map<String, Serializable> data) {
+        RunBaseStatus spec = new RunBaseStatus();
+        spec.configure(data);
+
+        return spec;
     }
 }

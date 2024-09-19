@@ -16,4 +16,8 @@ public class RunnableChangedEvent<R extends RunRunnable> {
 
     private RunnableMonitorObject runMonitorObject;
     private R runnable;
+
+    public String getId() {
+        return runnable != null ? runnable.getId() : null;
+    }
 }
