@@ -162,10 +162,13 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
             ".txt"
         );
 
+        //set workdir from now on
+        dockerfileGenerator.workdir("/shared");
+
         // Add user instructions
         Optional
             .ofNullable(taskSpec.getInstructions())
-            .ifPresent(instructions -> instructions.forEach(i -> dockerfileGenerator.run(i)));
+            .ifPresent(instructions -> instructions.forEach(dockerfileGenerator::run));
 
         // If requirements.txt are defined add to build
         if (functionSpec.getRequirements() != null && !functionSpec.getRequirements().isEmpty()) {
