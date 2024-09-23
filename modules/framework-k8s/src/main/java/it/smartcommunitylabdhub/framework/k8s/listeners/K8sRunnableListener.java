@@ -55,12 +55,23 @@ public abstract class K8sRunnableListener<R extends K8sRunnable> {
             runnable =
                 switch (State.valueOf(runnable.getState())) {
                     case State.READY -> {
+                        //sanity check: reset left-over messages
+                        runnable.setMessage(null);
                         yield k8sFramework.run(runnable);
                     }
                     case State.STOP -> {
+                        //sanity check: reset left-over messages
+                        runnable.setMessage(null);
                         yield k8sFramework.stop(runnable);
                     }
+                    case State.RESUME -> {
+                        //sanity check: reset left-over messages
+                        runnable.setMessage(null);
+                        yield k8sFramework.resume(runnable);
+                    }
                     case State.DELETING -> {
+                        //sanity check: reset left-over messages
+                        runnable.setMessage(null);
                         yield k8sFramework.delete(runnable);
                     }
                     default -> {

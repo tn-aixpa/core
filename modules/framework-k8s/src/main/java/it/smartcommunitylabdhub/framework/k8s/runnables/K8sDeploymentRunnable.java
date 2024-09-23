@@ -10,7 +10,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @RunnableComponent(framework = K8sDeploymentFramework.FRAMEWORK)
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @Getter
 @Setter
 @NoArgsConstructor

@@ -104,11 +104,56 @@ public abstract class AbstractBaseRuntime<
         if (runnable.isPresent()) {
             R runRunnable = runnable.get();
             runRunnable.setState(State.STOP.name());
-
+            runRunnable.setMessage("stopping runnable " + runRunnable.getId());
             return runRunnable;
         }
 
         log.warn("Error stopping run {}", run.getId());
+        throw new NoSuchEntityException("Error stopping run");
+    }
+
+    @Override
+    public R resume(@NotNull Run run) {
+        //check run kind
+        if (!kind.equals(run.getKind())) {
+            throw new IllegalArgumentException(
+                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), kind)
+            );
+        }
+
+        // Create string run accessor from task
+        RunBaseSpec runSpec = RunBaseSpec.with(run.getSpec());
+        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
+
+        if (!StringUtils.hasText(runAccessor.getTask())) {
+            throw new IllegalArgumentException("Run task invalid");
+        }
+
+        String task = runAccessor.getTask();
+
+        //iterate over stores to find first matching runnable and resume
+        Optional<R> runnable = stores
+            .stream()
+            .map(s -> {
+                try {
+                    return s.find(run.getId());
+                } catch (StoreException e) {
+                    return null;
+                }
+            })
+            .filter(f -> f != null)
+            //sanity check that task matches
+            .filter(r -> task.equals(r.getTask()))
+            .findFirst();
+
+        if (runnable.isPresent()) {
+            R runRunnable = runnable.get();
+            runRunnable.setState(State.RESUME.name());
+            runRunnable.setMessage("resuming runnable " + runRunnable.getId());
+            return runRunnable;
+        }
+
+        log.warn("Error resuming run {}", run.getId());
         throw new NoSuchEntityException("Error stopping run");
     }
 
@@ -150,7 +195,7 @@ public abstract class AbstractBaseRuntime<
         if (runnable.isPresent()) {
             R runRunnable = runnable.get();
             runRunnable.setState(State.DELETING.name());
-
+            runRunnable.setMessage("deleting runnable " + runRunnable.getId());
             return runRunnable;
         }
 

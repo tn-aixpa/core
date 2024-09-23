@@ -141,6 +141,10 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             }
         }
 
+        if (job != null) {
+            runnable.setMessage(String.format("cronJob %s created", job.getMetadata().getName()));
+        }
+
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
         }
@@ -193,6 +197,7 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
 
         //update state
         runnable.setState(State.DELETED.name());
+        runnable.setMessage(String.format("job %s deleted", job.getMetadata().getName()));
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);

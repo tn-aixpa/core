@@ -216,6 +216,23 @@ public class RunContextController {
         return runManager.stop(run);
     }
 
+    @Operation(summary = "Resume a specific run execution")
+    @PostMapping(path = "/{id}/resume")
+    public Run resumeRunById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        //check for project  match
+        if (!run.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        // via manager
+        return runManager.resume(run);
+    }
+
     @Operation(summary = "Delete a specific run execution")
     @PostMapping(path = "/{id}/delete")
     public Run deleteRunById(

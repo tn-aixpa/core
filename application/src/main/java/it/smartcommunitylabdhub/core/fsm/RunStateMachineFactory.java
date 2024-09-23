@@ -99,8 +99,21 @@ public class RunStateMachineFactory {
                 new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.STOPPED)
                     .withTransactions(
                         List.of(
+                            new Transaction<>(RunEvent.RESUME, State.RESUME, (context, input) -> true),
                             new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
                             new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true)
+                        )
+                    )
+                    .build()
+            )
+            .withState(
+                State.RESUME,
+                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.RESUME)
+                    .withTransactions(
+                        List.of(
+                            new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
+                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true),
+                            new Transaction<>(RunEvent.EXECUTE, State.RUNNING, (context, input) -> true)
                         )
                     )
                     .build()

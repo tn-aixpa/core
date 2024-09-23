@@ -15,6 +15,9 @@ public class K8sJobListener extends K8sRunnableListener<K8sJobRunnable> {
     @Async
     @EventListener
     public void listen(K8sJobRunnable runnable) {
-        process(runnable);
+        if (runnable != null) {
+            //clone to fully detach
+            process(runnable.toBuilder().build());
+        }
     }
 }

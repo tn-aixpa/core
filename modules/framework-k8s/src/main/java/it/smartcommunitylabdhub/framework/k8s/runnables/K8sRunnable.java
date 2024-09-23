@@ -32,7 +32,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.CredentialsContainer;
 
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -82,14 +82,19 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private String error;
 
+    private String message;
+
     private Map<String, Serializable> results;
 
     @JsonIgnore
+    @ToString.Exclude
     private List<CoreLog> logs;
 
     @JsonIgnore
+    @ToString.Exclude
     private List<CoreMetric> metrics;
 
+    @ToString.Exclude
     private HashMap<String, String> credentials;
 
     @JsonProperty("context_refs")

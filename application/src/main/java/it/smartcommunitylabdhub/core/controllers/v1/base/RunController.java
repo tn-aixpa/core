@@ -149,6 +149,16 @@ public class RunController {
         return runManager.stop(run);
     }
 
+    @Operation(summary = "Resume a specific run execution")
+    @PostMapping(path = "/{id}/resume")
+    public Run resumeRunById(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
+        throws NoSuchEntityException {
+        Run run = runService.getRun(id);
+
+        // via manager
+        return runManager.resume(run);
+    }
+
     @Operation(summary = "Delete a specific run execution")
     @PostMapping(path = "/{id}/delete")
     public Run deleteRunById(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)

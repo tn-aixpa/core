@@ -26,6 +26,7 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -164,6 +165,10 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             }
         }
 
+        if (job != null) {
+            runnable.setMessage(String.format("job %s created", job.getMetadata().getName()));
+        }
+
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
         }
@@ -178,11 +183,15 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             log.trace("runnable: {}", runnable);
         }
 
+        List<String> messages = new ArrayList<>();
+
         V1Job job = get(build(runnable));
 
         //stop by deleting
         log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
         delete(job);
+        messages.add(String.format("job %s deleted", job.getMetadata().getName()));
+
         //secrets
         cleanRunSecret(runnable);
 
@@ -192,6 +201,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
                 coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+                messages.add(String.format("configMap %s deleted", configMapName));
             }
         } catch (ApiException | NullPointerException e) {
             //ignore, not existing or error
@@ -199,6 +209,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         //update state
         runnable.setState(State.STOPPED.name());
+        runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);

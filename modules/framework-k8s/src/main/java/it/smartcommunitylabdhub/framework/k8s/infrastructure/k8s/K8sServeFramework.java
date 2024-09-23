@@ -25,12 +25,14 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -165,6 +167,16 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             }
         }
 
+        if (deployment != null && service != null) {
+            runnable.setMessage(
+                String.format(
+                    "deployment %s created, service %s created",
+                    deployment.getMetadata().getName(),
+                    service.getMetadata().getName()
+                )
+            );
+        }
+
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
         }
@@ -179,6 +191,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             log.trace("runnable: {}", runnable);
         }
 
+        List<String> messages = new ArrayList<>();
+
         V1Deployment deployment;
         try {
             // Retrieve the deployment
@@ -190,8 +204,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         if (deployment != null) {
             // Delete the deployment
             log.info("delete deployment for {}", String.valueOf(deployment.getMetadata().getName()));
-
             delete(deployment);
+            messages.add(String.format("deployment %s deleted", deployment.getMetadata().getName()));
         }
 
         //secrets
@@ -203,6 +217,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
                 coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+                messages.add(String.format("configMap %s deleted", configMapName));
             }
         } catch (ApiException | NullPointerException e) {
             //ignore, not existing or error
@@ -220,6 +235,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         //Delete the service
         log.info("delete service for {}", String.valueOf(service.getMetadata().getName()));
         delete(service);
+        messages.add(String.format("service %s deleted", service.getMetadata().getName()));
 
         if (!"keep".equals(collectResults)) {
             //update results
@@ -232,6 +248,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         //update state
         runnable.setState(State.DELETED.name());
+        runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
@@ -247,30 +264,30 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             log.trace("runnable: {}", runnable);
         }
 
-        //stop deployment and delete service
+        //stop deployment
         V1Deployment deployment = get(buildDeployment(runnable));
         if (deployment != null) {
             log.info("stop deployment for {}", String.valueOf(deployment.getMetadata().getName()));
             //stop by setting replicas to 0
             deployment.getSpec().setReplicas(0);
-            apply(deployment);
-        }
+            deployment = apply(deployment);
 
-        V1Service service = get(build(runnable));
-        log.info("delete service for {}", String.valueOf(service.getMetadata().getName()));
-        delete(service);
+            runnable.setMessage(String.format("deployment %s replicas set to 0", deployment.getMetadata().getName()));
+        }
 
         if (!"disable".equals(collectResults)) {
             //update results
             try {
-                runnable.setResults(
-                    Map.of(
-                        "deployment",
-                        deployment != null ? mapper.convertValue(deployment, typeRef) : null,
-                        "service",
-                        service != null ? mapper.convertValue(service, typeRef) : null
-                    )
+                Map<String, Serializable> results = MapUtils.mergeMultipleMaps(
+                    runnable.getResults(),
+                    Map.of("deployment", deployment != null ? mapper.convertValue(deployment, typeRef) : null)
                 );
+
+                //clear pods if present
+                results.remove("pods");
+
+                //store
+                runnable.setResults(results);
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());
             }
@@ -278,6 +295,55 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
         //update state
         runnable.setState(State.STOPPED.name());
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
+
+        return runnable;
+    }
+
+    @Override
+    public K8sServeRunnable resume(K8sServeRunnable runnable) throws K8sFrameworkException {
+        log.info("resume for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
+        //resume deployment
+        V1Deployment deployment = get(buildDeployment(runnable));
+        if (deployment != null) {
+            log.info("resume deployment for {}", String.valueOf(deployment.getMetadata().getName()));
+            //resume by setting replicas as per spec
+            int replicas = Optional.ofNullable(runnable.getReplicas()).orElse(1);
+            deployment.getSpec().setReplicas(replicas);
+            deployment = apply(deployment);
+
+            runnable.setMessage(
+                String.format("deployment %s replicas set to %d", deployment.getMetadata().getName(), replicas)
+            );
+        }
+
+        if (!"disable".equals(collectResults)) {
+            //update results
+            try {
+                Map<String, Serializable> results = MapUtils.mergeMultipleMaps(
+                    runnable.getResults(),
+                    Map.of("deployment", deployment != null ? mapper.convertValue(deployment, typeRef) : null)
+                );
+
+                //clear pods if present
+                results.remove("pods");
+
+                //store
+                runnable.setResults(results);
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
+        }
+
+        //update state
+        runnable.setState(State.RUNNING.name());
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);

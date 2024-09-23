@@ -15,14 +15,15 @@ import org.springframework.lang.Nullable;
 public interface Runtime<
     F extends ExecutableBaseSpec, S extends RunBaseSpec, Z extends RunBaseStatus, R extends RunRunnable
 > {
-    S build(@NotNull Executable execSpec, @NotNull Task taskSpec, @NotNull Run runSpec); // CREATED -> BUILT
+    S build(@NotNull Executable execSpec, @NotNull Task taskSpec, @NotNull Run runSpec);
 
-    R run(@NotNull Run run); // BUILT -> READY
+    R run(@NotNull Run run);
 
-    R stop(@NotNull Run run); // X -> STOPPED
+    R stop(@NotNull Run run);
+    R resume(@NotNull Run run);
 
     @Nullable
-    R delete(@NotNull Run run); // X -> STOPPED
+    R delete(@NotNull Run run);
 
     @Nullable
     default Z onRunning(@NotNull Run run, RunRunnable runnable) {

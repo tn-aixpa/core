@@ -29,6 +29,40 @@ public abstract class K8sBaseRuntime<
 
     @SuppressWarnings("unchecked")
     @Override
+    public Z onRunning(@NotNull Run run, RunRunnable runnable) {
+        if (runnable != null && runnable instanceof K8sRunnable) {
+            K8sRunnable k8sRunnable = (K8sRunnable) runnable;
+            RunBaseStatus status = RunBaseStatus
+                .baseBuilder()
+                .state(k8sRunnable.getState())
+                .message(k8sRunnable.getMessage())
+                .build();
+
+            return (Z) status;
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Z onComplete(@NotNull Run run, RunRunnable runnable) {
+        if (runnable != null && runnable instanceof K8sRunnable) {
+            K8sRunnable k8sRunnable = (K8sRunnable) runnable;
+            RunBaseStatus status = RunBaseStatus
+                .baseBuilder()
+                .state(k8sRunnable.getState())
+                .message(k8sRunnable.getMessage())
+                .build();
+
+            return (Z) status;
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public Z onError(@NotNull Run run, RunRunnable runnable) {
         if (runnable != null && runnable instanceof K8sRunnable) {
             K8sRunnable k8sRunnable = (K8sRunnable) runnable;
@@ -36,6 +70,40 @@ public abstract class K8sBaseRuntime<
                 .baseBuilder()
                 .state(k8sRunnable.getState())
                 .message(k8sRunnable.getError())
+                .build();
+
+            return (Z) status;
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Z onStopped(@NotNull Run run, RunRunnable runnable) {
+        if (runnable != null && runnable instanceof K8sRunnable) {
+            K8sRunnable k8sRunnable = (K8sRunnable) runnable;
+            RunBaseStatus status = RunBaseStatus
+                .baseBuilder()
+                .state(k8sRunnable.getState())
+                .message(k8sRunnable.getMessage())
+                .build();
+
+            return (Z) status;
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Z onDeleted(@NotNull Run run, RunRunnable runnable) {
+        if (runnable != null && runnable instanceof K8sRunnable) {
+            K8sRunnable k8sRunnable = (K8sRunnable) runnable;
+            RunBaseStatus status = RunBaseStatus
+                .baseBuilder()
+                .state(k8sRunnable.getState())
+                .message(k8sRunnable.getMessage())
                 .build();
 
             return (Z) status;

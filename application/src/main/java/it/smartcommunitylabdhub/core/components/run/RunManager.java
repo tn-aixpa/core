@@ -290,6 +290,7 @@ public class RunManager {
                         // Update run state to READY
                         RunBaseStatus runBaseStatus = RunBaseStatus.with(run.getStatus());
                         runBaseStatus.setState(State.READY.toString());
+                        runBaseStatus.setMessage(r.getMessage());
 
                         // Iterate over all processor and store all RunBaseStatus as optional
                         List<RunBaseStatus> processorsStatus = processorRegistry
@@ -381,10 +382,103 @@ public class RunManager {
                         // Update run state to STOP
                         RunBaseStatus runBaseStatus = RunBaseStatus.with(run.getStatus());
                         runBaseStatus.setState(State.STOP.toString());
+                        runBaseStatus.setMessage(r.getMessage());
 
                         // Iterate over all processor and store all RunBaseStatus as optional
                         List<RunBaseStatus> processorsStatus = processorRegistry
                             .getProcessors("onStopping")
+                            .stream()
+                            .map(processor -> processor.process(run, r, runBaseStatus))
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+
+                        Map<String, Serializable> runStatusMap = processorsStatus
+                            .stream()
+                            .map(RunBaseStatus::toMap)
+                            .reduce(new HashMap<>(), MapUtils::mergeMultipleMaps);
+
+                        run.setStatus(MapUtils.mergeMultipleMaps(run.getStatus(), runBaseStatus.toMap(), runStatusMap));
+                    });
+
+                    return entityService.update(run.getId(), run);
+                } catch (InvalidTransactionException e) {
+                    // log error
+                    log.debug("Invalid transaction from state {}  to state {}", e.getFromState(), e.getToState());
+                    throw e;
+                }
+            } catch (StoreException e) {
+                log.error("store error: {}", e.getMessage());
+                throw new SystemException(e.getMessage());
+            } finally {
+                getLock(id).unlock();
+            }
+        } catch (InterruptedException e) {
+            throw new SystemException("unable to acquire lock: " + e.getMessage());
+        }
+    }
+
+    public Run resume(@NotNull Run run) throws NoSuchEntityException {
+        log.debug("resume run with id {}", run.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("run: {}", run);
+        }
+
+        try {
+            String id = run.getId();
+
+            //acquire write lock
+            getLock(id).tryLock(timeout, TimeUnit.SECONDS);
+
+            try {
+                // GET state machine, init state machine with status
+                RunBaseSpec runBaseSpec = new RunBaseSpec();
+                runBaseSpec.configure(run.getSpec());
+                RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runBaseSpec.getTask());
+
+                // Retrieve Executable
+                String executableId = runSpecAccessor.getVersion();
+                Executable executable = executableEntityServiceProvider
+                    .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
+                    .get(executableId);
+
+                // Retrieve state machine
+                Fsm<State, RunEvent, Map<String, Serializable>> fsm = createFsm(run);
+
+                fsm
+                    .getState(State.STOPPED)
+                    .getTransaction(RunEvent.RESUME)
+                    .setInternalLogic((context, input, stateMachine) -> {
+                        if (!Optional.ofNullable(runBaseSpec.getLocalExecution()).orElse(Boolean.FALSE)) {
+                            // Retrieve Runtime and build run
+                            Runtime<
+                                ? extends ExecutableBaseSpec,
+                                ? extends RunBaseSpec,
+                                ? extends RunBaseStatus,
+                                ? extends RunRunnable
+                            > runtime = runtimeFactory.getRuntime(executable.getKind());
+                            // Create Runnable
+                            RunRunnable runnable = runtime.resume(run);
+
+                            return Optional.of(runnable);
+                        } else {
+                            return Optional.empty();
+                        }
+                    });
+
+                try {
+                    Optional<RunRunnable> runnable = fsm.goToState(State.RESUME, null);
+                    runnable.ifPresent(r -> {
+                        // Dispatch Runnable event to specific event listener es (serve,job,deploy...)
+                        eventPublisher.publishEvent(r);
+
+                        // Update run state to RESUME
+                        RunBaseStatus runBaseStatus = RunBaseStatus.with(run.getStatus());
+                        runBaseStatus.setState(State.RESUME.toString());
+                        runBaseStatus.setMessage(r.getMessage());
+
+                        // Iterate over all processor and store all RunBaseStatus as optional
+                        List<RunBaseStatus> processorsStatus = processorRegistry
+                            .getProcessors("onResuming")
                             .stream()
                             .map(processor -> processor.process(run, r, runBaseStatus))
                             .filter(Objects::nonNull)
@@ -696,6 +790,22 @@ public class RunManager {
                 );
                 if (log.isTraceEnabled()) {
                     log.trace("Executing internal logic for state RUNNING, " + "context: {}", context);
+                }
+                RunRunnable runnable = event != null ? event.getRunnable() : null;
+                RunBaseStatus runStatus = runtime.onRunning(run, runnable);
+                return Optional.ofNullable(runStatus);
+            });
+        fsm
+            .getState(State.RESUME)
+            .getTransaction(RunEvent.EXECUTE)
+            .setInternalLogic((context, input, fsmInstance) -> {
+                log.debug(
+                    "Executing internal logic for state RESUME, " + "event :{},  input: {}",
+                    RunEvent.EXECUTE,
+                    input
+                );
+                if (log.isTraceEnabled()) {
+                    log.trace("Executing internal logic for state RESUME, " + "context: {}", context);
                 }
                 RunRunnable runnable = event != null ? event.getRunnable() : null;
                 RunBaseStatus runStatus = runtime.onRunning(run, runnable);

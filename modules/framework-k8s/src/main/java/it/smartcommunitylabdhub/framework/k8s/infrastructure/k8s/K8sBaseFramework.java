@@ -298,6 +298,12 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         return runnable;
     }
 
+    @Override
+    public T resume(T runnable) throws K8sFrameworkException {
+        //not resumable by default
+        return null;
+    }
+
     /*
      * K8s methods
      */
