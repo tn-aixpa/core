@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.authorization.config.KeyStoreConfig;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
+import it.smartcommunitylabdhub.commons.config.SecurityProperties.JwtAuthenticationProperties;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -112,8 +113,14 @@ public class SecurityConfig {
         //authentication (when configured)
         if (properties.isRequired()) {
             //always enable internal jwt auth provider
-            JwtAuthenticationProvider coreJwtAuthProvider = new JwtAuthenticationProvider(coreJwtDecoder());
-            coreJwtAuthProvider.setJwtAuthenticationConverter(coreJwtAuthenticationConverter());
+            JwtAuthenticationProvider coreJwtAuthProvider = new JwtAuthenticationProvider(
+                coreJwtDecoder(
+                    applicationProperties.getEndpoint(),
+                    applicationProperties.getName(),
+                    keyStoreConfig.getJWKSetKeyStore().getJwk()
+                )
+            );
+            coreJwtAuthProvider.setJwtAuthenticationConverter(coreJwtAuthenticationConverter("authorities"));
 
             // Create authentication Manager
             securityChain.oauth2ResourceServer(oauth2 ->
@@ -121,10 +128,15 @@ public class SecurityConfig {
             );
 
             if (properties.isJwtAuthEnabled()) {
+                JwtAuthenticationProperties jwtProps = properties.getJwt();
                 // rebuild auth manager to include external jwt provider
-                JwtAuthenticationProvider externalJwtAuthProvider = new JwtAuthenticationProvider(externalJwtDecoder());
+                JwtAuthenticationProvider externalJwtAuthProvider = new JwtAuthenticationProvider(
+                    externalJwtDecoder(jwtProps.getIssuerUri(), jwtProps.getAudience())
+                );
 
-                externalJwtAuthProvider.setJwtAuthenticationConverter(externalJwtAuthenticationConverter());
+                externalJwtAuthProvider.setJwtAuthenticationConverter(
+                    externalJwtAuthenticationConverter(jwtProps.getClaim(), projectAuthHelper)
+                );
 
                 securityChain.oauth2ResourceServer(oauth2 ->
                     oauth2.jwt(jwt ->
@@ -159,143 +171,6 @@ public class SecurityConfig {
         });
 
         return securityChain.build();
-    }
-
-    /**
-     * Internal basic auth
-     */
-    public UserDetailsService userDetailsService(String username, String password) {
-        //create admin user with full permissions
-        UserDetails admin = User
-            .withDefaultPasswordEncoder()
-            .username(username)
-            .password(password)
-            .roles("ADMIN", "USER")
-            .build();
-
-        return new InMemoryUserDetailsManager(admin);
-    }
-
-    /**
-     * Internal auth via JWT
-     */
-
-    private JwtDecoder coreJwtDecoder() throws JOSEException {
-        JWK jwk = keyStoreConfig.getJWKSetKeyStore().getJwk();
-
-        //we support only RSA keys
-        if (!(jwk instanceof RSAKey)) {
-            throw new IllegalArgumentException("the provided key is not suitable for token authentication");
-        }
-
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(jwk.toRSAKey().toRSAPublicKey()).build();
-
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(
-            applicationProperties.getEndpoint()
-        );
-
-        OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
-            JwtClaimNames.AUD,
-            (aud -> aud != null && aud.contains(applicationProperties.getName()))
-        );
-
-        //access tokens *do not contain* at_hash, those are refresh
-        OAuth2TokenValidator<Jwt> accessTokenValidator = new JwtClaimValidator<String>(
-            IdTokenClaimNames.AT_HASH,
-            (Objects::isNull)
-        );
-
-        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
-            withIssuer,
-            audienceValidator,
-            accessTokenValidator
-        );
-        jwtDecoder.setJwtValidator(validator);
-
-        return jwtDecoder;
-    }
-
-    private JwtAuthenticationConverter coreJwtAuthenticationConverter() {
-        String claim = "authorities";
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
-            if (source == null) return null;
-
-            List<GrantedAuthority> authorities = new ArrayList<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-
-            if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
-                List<String> roles = source.getClaimAsStringList(claim);
-                if (roles != null) {
-                    roles.forEach(r -> {
-                        //use as is
-                        authorities.add(new SimpleGrantedAuthority(r));
-                    });
-                }
-            }
-
-            return authorities;
-        });
-        return converter;
-    }
-
-    /**
-     * External auth via JWT
-     */
-    private JwtDecoder externalJwtDecoder() {
-        SecurityProperties.JwtAuthenticationProperties jwtProps = properties.getJwt();
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(jwtProps.getIssuerUri()).build();
-
-        OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
-            JwtClaimNames.AUD,
-            (aud -> aud != null && aud.contains(jwtProps.getAudience()))
-        );
-
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(jwtProps.getIssuerUri());
-        OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
-        jwtDecoder.setJwtValidator(withAudience);
-
-        return jwtDecoder;
-    }
-
-    private JwtAuthenticationConverter externalJwtAuthenticationConverter() {
-        SecurityProperties.JwtAuthenticationProperties jwtProps = properties.getJwt();
-        String claim = jwtProps.getClaim();
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
-            if (source == null) return null;
-
-            List<GrantedAuthority> authorities = new ArrayList<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-
-            //read roles from token
-            if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
-                List<String> roles = source.getClaimAsStringList(claim);
-                if (roles != null) {
-                    roles.forEach(r -> {
-                        if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
-                            //use as is
-                            authorities.add(new SimpleGrantedAuthority(r));
-                        } else {
-                            //derive a scoped USER role
-                            authorities.add(new SimpleGrantedAuthority(r + ":ROLE_USER"));
-                        }
-                    });
-                }
-            }
-
-            //inject roles from ownership of projects
-            if (StringUtils.hasText(source.getSubject())) {
-                projectAuthHelper
-                    .findIdsByCreatedBy(source.getSubject())
-                    .forEach(p -> {
-                        //derive a scoped ADMIN role
-                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
-                    });
-            }
-            return authorities;
-        });
-        return converter;
     }
 
     @Bean("authSecurityFilterChain")
@@ -410,5 +285,139 @@ public class SecurityConfig {
     @Bean
     public AuditorAware<String> auditorProvider() {
         return () -> Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication()).map(a -> a.getName());
+    }
+
+    /**
+     * Internal basic auth
+     */
+    public static UserDetailsService userDetailsService(String username, String password) {
+        //create admin user with full permissions
+        UserDetails admin = User
+            .withDefaultPasswordEncoder()
+            .username(username)
+            .password(password)
+            .roles("ADMIN", "USER")
+            .build();
+
+        return new InMemoryUserDetailsManager(admin);
+    }
+
+    /**
+     * Internal auth via JWT
+     */
+
+    public static JwtDecoder coreJwtDecoder(String issuer, String audience, JWK jwk) throws JOSEException {
+        //we support only RSA keys
+        if (!(jwk instanceof RSAKey)) {
+            throw new IllegalArgumentException("the provided key is not suitable for token authentication");
+        }
+
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(jwk.toRSAKey().toRSAPublicKey()).build();
+
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
+
+        OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
+            JwtClaimNames.AUD,
+            (aud -> aud != null && aud.contains(audience))
+        );
+
+        //access tokens *do not contain* at_hash, those are refresh
+        OAuth2TokenValidator<Jwt> accessTokenValidator = new JwtClaimValidator<String>(
+            IdTokenClaimNames.AT_HASH,
+            (Objects::isNull)
+        );
+
+        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
+            withIssuer,
+            audienceValidator,
+            accessTokenValidator
+        );
+        jwtDecoder.setJwtValidator(validator);
+
+        return jwtDecoder;
+    }
+
+    public static JwtAuthenticationConverter coreJwtAuthenticationConverter(String claim) {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
+            if (source == null) return null;
+
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+            if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
+                List<String> roles = source.getClaimAsStringList(claim);
+                if (roles != null) {
+                    roles.forEach(r -> {
+                        //use as is
+                        authorities.add(new SimpleGrantedAuthority(r));
+                    });
+                }
+            }
+
+            //TODO evaluate refreshing project authorities via helper
+
+            return authorities;
+        });
+        return converter;
+    }
+
+    /**
+     * External auth via JWT
+     */
+    public static JwtDecoder externalJwtDecoder(String issuer, String audience) {
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuer).build();
+
+        OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
+            JwtClaimNames.AUD,
+            (aud -> aud != null && aud.contains(audience))
+        );
+
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
+        OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
+        jwtDecoder.setJwtValidator(withAudience);
+
+        return jwtDecoder;
+    }
+
+    public static JwtAuthenticationConverter externalJwtAuthenticationConverter(
+        String claim,
+        AuthorizableAwareEntityService<Project> projectAuthHelper
+    ) {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
+            if (source == null) return null;
+
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+            //read roles from token
+            if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
+                List<String> roles = source.getClaimAsStringList(claim);
+                if (roles != null) {
+                    roles.forEach(r -> {
+                        if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
+                            //use as is
+                            authorities.add(new SimpleGrantedAuthority(r));
+                        } else {
+                            //derive a scoped USER role
+                            authorities.add(new SimpleGrantedAuthority(r + ":ROLE_USER"));
+                        }
+                    });
+                }
+            }
+
+            //inject roles from ownership of projects
+            if (projectAuthHelper != null && StringUtils.hasText(source.getSubject())) {
+                projectAuthHelper
+                    .findIdsByCreatedBy(source.getSubject())
+                    .forEach(p -> {
+                        //derive a scoped ADMIN role
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
+                    });
+            }
+            return authorities;
+        });
+        return converter;
     }
 }

@@ -37,10 +37,17 @@ public class RunEntityListener extends AbstractEntityListener<RunEntity, Run> {
         log.debug("receive event for {} {}", clazz.getSimpleName(), event.getAction());
 
         RunEntity entity = event.getEntity();
+        RunEntity prev = event.getPrev();
         if (log.isTraceEnabled()) {
             log.trace("{}: {}", clazz.getSimpleName(), String.valueOf(entity));
         }
-        //no-op for now
+
+        //handle event if either: prev == null (for create/delete), prev != null and state has changed (update)
+        if (prev == null || (prev != null && prev.getState() != entity.getState())) {
+            //handle
+            super.handle(event);
+        }
+        //TODO update project?
     }
 
     @Async
