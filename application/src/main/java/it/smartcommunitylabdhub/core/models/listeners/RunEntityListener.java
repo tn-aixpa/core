@@ -43,15 +43,7 @@ public class RunEntityListener extends AbstractEntityListener<RunEntity, Run> {
         }
 
         //handle event if either: prev == null (for create/delete), prev != null and state has changed (update)
-        if (prev == null || (prev != null && !prev.getState().toString().equals(entity.getState().toString()))) {
-            String prevState = prev != null ? prev.getState().toString() : "";
-            log.info(
-                "-----handling event for run {}, action: {}, curr state: {}, prev state: {}",
-                entity.getName(),
-                event.getAction(),
-                entity.getState().toString(),
-                prevState
-            );
+        if (prev == null || (prev != null && prev.getState() != entity.getState())) {
             //handle
             super.handle(event);
         }
