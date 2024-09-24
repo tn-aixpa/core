@@ -407,13 +407,22 @@ public class SecurityConfig {
                 }
             }
 
-            //inject roles from ownership of projects
             if (projectAuthHelper != null && StringUtils.hasText(source.getSubject())) {
+                //inject roles from ownership of projects
                 projectAuthHelper
                     .findIdsByCreatedBy(source.getSubject())
                     .forEach(p -> {
                         //derive a scoped ADMIN role
                         authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
+                    });
+
+                //inject roles from sharing of projects
+                projectAuthHelper
+                    .findNamesBySharedTo(source.getSubject())
+                    .forEach(p -> {
+                        //derive a scoped USER role
+                        //TODO make configurable?
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER"));
                     });
             }
             return authorities;

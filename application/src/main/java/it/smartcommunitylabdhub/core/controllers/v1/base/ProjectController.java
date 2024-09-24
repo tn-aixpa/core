@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.authorization.model.ResourceShareEntity;
+import it.smartcommunitylabdhub.authorization.services.ShareableAwareEntityService;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
@@ -54,6 +56,9 @@ public class ProjectController {
 
     @Autowired
     SearchableProjectService projectService;
+
+    @Autowired
+    ShareableAwareEntityService<Project> shareService;
 
     @Autowired
     private AuditorAware<String> auditor;
@@ -162,5 +167,14 @@ public class ProjectController {
         }
 
         projectService.deleteProject(id, cascade);
+    }
+
+    @Operation(summary = "Share a project with a user", description = "Share project")
+    @PostMapping(path = "/{id}/share", produces = "application/json; charset=UTF-8")
+    public ResourceShareEntity shareProject(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @Valid @NotNull String user
+    ) throws NoSuchEntityException {
+        return shareService.share(id, user);
     }
 }

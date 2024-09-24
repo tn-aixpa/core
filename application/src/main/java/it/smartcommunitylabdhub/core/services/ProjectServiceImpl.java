@@ -1,6 +1,9 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.authorization.model.ResourceShareEntity;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
+import it.smartcommunitylabdhub.authorization.services.ResourceSharingService;
+import it.smartcommunitylabdhub.authorization.services.ShareableAwareEntityService;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -45,7 +48,8 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class ProjectServiceImpl implements SearchableProjectService, AuthorizableAwareEntityService<Project> {
+public class ProjectServiceImpl
+    implements SearchableProjectService, AuthorizableAwareEntityService<Project>, ShareableAwareEntityService {
 
     @Autowired
     private EntityService<Project, ProjectEntity> entityService;
@@ -68,6 +72,9 @@ public class ProjectServiceImpl implements SearchableProjectService, Authorizabl
 
     @Autowired
     private LabelService labelService;
+
+    @Autowired
+    private ResourceSharingService sharingService;
 
     @Autowired
     private SpecRegistry specRegistry;
@@ -413,5 +420,100 @@ public class ProjectServiceImpl implements SearchableProjectService, Authorizabl
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
         }
+    }
+
+    @Override
+    public List<String> findIdsBySharedTo(@NotNull String user) {
+        log.debug("find ids of projects shared to {}", user);
+        try {
+            List<ResourceShareEntity> shares = sharingService
+                .listByUser(user)
+                .stream()
+                .filter(s -> EntityName.PROJECT.getValue().equals(s.getEntity()))
+                .toList();
+
+            //for every project check if owner matches
+            return shares
+                .stream()
+                .map(s -> {
+                    try {
+                        Project p = entityService.find(s.getId());
+                        if (p != null && p.getUser() != null && p.getUser().equals(s.getOwner())) {
+                            return p;
+                        }
+                    } catch (StoreException e) {
+                        log.error("store error: {}", e.getMessage());
+                    }
+
+                    return null;
+                })
+                .filter(p -> p != null)
+                .map(p -> p.getId())
+                .toList();
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<String> findNamesBySharedTo(@NotNull String user) {
+        log.debug("find name of projects shared to {}", user);
+        try {
+            List<ResourceShareEntity> shares = sharingService
+                .listByUser(user)
+                .stream()
+                .filter(s -> EntityName.PROJECT.getValue().equals(s.getEntity()))
+                .toList();
+
+            //for every project check if owner matches
+            return shares
+                .stream()
+                .map(s -> {
+                    try {
+                        Project p = entityService.find(s.getId());
+                        if (p != null && p.getUser() != null && p.getUser().equals(s.getOwner())) {
+                            return p;
+                        }
+                    } catch (StoreException e) {
+                        log.error("store error: {}", e.getMessage());
+                    }
+
+                    return null;
+                })
+                .filter(p -> p != null)
+                .map(p -> p.getName())
+                .toList();
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public ResourceShareEntity share(@NotNull String id, @NotNull String user) {
+        log.debug("sahre project with id {} to {}", String.valueOf(id), String.valueOf(user));
+
+        try {
+            Project project = entityService.get(id);
+            ResourceShareEntity share = sharingService.share(project.getProject(), EntityName.PROJECT, id, user);
+
+            if (log.isTraceEnabled()) {
+                log.trace("share: {}", share);
+            }
+
+            return share;
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.PROJECT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public ResourceShareEntity revoke(@NotNull String id, @NotNull String user) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'revoke'");
     }
 }

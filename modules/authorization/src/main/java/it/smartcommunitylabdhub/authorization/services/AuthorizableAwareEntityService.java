@@ -31,6 +31,13 @@ public interface AuthorizableAwareEntityService<T extends BaseDTO> {
     List<String> findIdsByProject(@NotNull String project);
 
     /**
+     * Find identifiers of entities via share
+     * @param createdBy
+     * @return
+     */
+    List<String> findIdsBySharedTo(@NotNull String user);
+
+    /**
      * Find names of entities via createdBy
      * @param createdBy
      * @return
@@ -50,4 +57,11 @@ public interface AuthorizableAwareEntityService<T extends BaseDTO> {
      * @return
      */
     List<String> findNamesByProject(@NotNull String project);
+
+    /**
+     * Find names of entities via share
+     * @param createdBy
+     * @return
+     */
+    List<String> findNamesBySharedTo(@NotNull String user);
 }
