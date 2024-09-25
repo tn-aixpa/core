@@ -2,16 +2,22 @@ package it.smartcommunitylabdhub.runtime.kfp;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
+import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
+import it.smartcommunitylabdhub.runtime.kfp.runners.KFPBuildRunner;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPPipelineRunner;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPBuildTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunStatus;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec;
@@ -31,6 +37,9 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
 
     @Autowired
     SecretService secretService;
+
+    @Autowired
+    private WorkflowService workflowService;
 
     @Value("${runtime.kfp.image}")
     private String image;
@@ -57,6 +66,9 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
             switch (kind) {
                 case KFPPipelineTaskSpec.KIND -> {
                     yield new KFPPipelineTaskSpec(task.getSpec());
+                }
+                case KFPBuildTaskSpec.KIND -> {
+                    yield new KFPBuildTaskSpec(task.getSpec());
                 }
                 default -> throw new IllegalArgumentException(
                     "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
@@ -98,5 +110,28 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
         };
+    }
+
+    @Override
+    public KFPRunStatus onComplete(Run run, RunRunnable runnable) {
+        KFPRunSpec kfpRunSpec = new KFPRunSpec(run.getSpec());
+        RunSpecAccessor runAccessor = RunUtils.parseTask(kfpRunSpec.getTask());
+
+        if(KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
+            if (((K8sJobRunnable) runnable).getResults() != null) {
+                String workflow = (String)((K8sJobRunnable) runnable).getResults().get("workflow");
+                String wId = runAccessor.getVersion();
+                Workflow wf = workflowService.getWorkflow(wId);
+    
+                log.debug("update workflow {} spec to use built workflow", wId);
+    
+                KFPWorkflowSpec wfSpec = new KFPWorkflowSpec(wf.getSpec());
+                wfSpec.setWorkflow(workflow);
+                wf.setSpec(wfSpec.toMap());
+                workflowService.updateWorkflow(wId, wf, true);    
+            }
+        }
+
+        return null;
     }
 }
