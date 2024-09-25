@@ -135,6 +135,16 @@ public interface WorkflowService {
     Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO)
         throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
+            /**
+     * Update a specific workflow version
+     * @param id
+     * @param workflowDTO
+     * @param force
+     * @return
+     * @throws NoSuchEntityException
+     */
+    Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO, boolean force)
+    throws NoSuchEntityException, SystemException;
     /**
      * Delete a specific workflow (version) via unique ID
      * @param id
