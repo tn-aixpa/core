@@ -5,7 +5,12 @@ import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.console.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -87,11 +92,22 @@ public class ConsoleController {
     }
 
     @RequestMapping(value = "/api/auth", method = { RequestMethod.GET, RequestMethod.POST })
-    public ResponseEntity<Object> auth(Authentication auth) {
+    public ResponseEntity<User> auth(Authentication auth) {
         if (auth == null) {
             return ResponseEntity.internalServerError().build();
         }
 
-        return ResponseEntity.ok(auth.getPrincipal());
+        User user = new User(auth.getName(), auth.getAuthorities().stream().map(a -> a.getAuthority()).toList());
+        return ResponseEntity.ok(user);
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public class User {
+
+        private String username;
+        private List<String> permissions;
     }
 }

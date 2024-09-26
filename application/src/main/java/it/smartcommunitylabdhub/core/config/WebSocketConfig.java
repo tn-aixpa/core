@@ -127,7 +127,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     SecurityConfig.externalJwtDecoder(jwtProps.getIssuerUri(), jwtProps.getAudience())
                 );
                 provider.setJwtAuthenticationConverter(
-                    SecurityConfig.externalJwtAuthenticationConverter(jwtProps.getClaim(), projectAuthHelper)
+                    SecurityConfig.externalJwtAuthenticationConverter(
+                        jwtProps.getUsername(),
+                        jwtProps.getClaim(),
+                        projectAuthHelper
+                    )
                 );
 
                 providers.add(provider);

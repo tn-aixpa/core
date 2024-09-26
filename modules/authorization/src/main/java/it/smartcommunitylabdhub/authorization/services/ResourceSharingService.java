@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -32,6 +33,7 @@ public class ResourceSharingService {
 
         ResourceShareEntity share = ResourceShareEntity
             .builder()
+            .id(UUID.randomUUID().toString().replace("-", ""))
             .project(project)
             .entity(entityName.getValue())
             .entityId(id)
@@ -64,6 +66,21 @@ public class ResourceSharingService {
         return share;
     }
 
+    public ResourceShareEntity get(@NotNull String id) throws StoreException {
+        log.debug("get share {}", id);
+        Optional<ResourceShareEntity> res = repository.findById(id);
+        if (res.isEmpty()) {
+            return null;
+        }
+
+        ResourceShareEntity share = res.get();
+        if (log.isTraceEnabled()) {
+            log.trace("share: ", share);
+        }
+
+        return share;
+    }
+
     public List<ResourceShareEntity> listByProject(@NotNull String project) throws StoreException {
         return repository.findByProject(project);
     }
@@ -84,5 +101,22 @@ public class ResourceSharingService {
     public List<ResourceShareEntity> listByProjectAndUser(@NotNull String project, @NotNull String user)
         throws StoreException {
         return repository.findByProjectAndUser(project, user);
+    }
+
+    public List<ResourceShareEntity> listByProjectAndEntity(
+        @NotNull String project,
+        @NotNull EntityName entity,
+        @NotNull String id
+    ) throws StoreException {
+        return repository.findByProjectAndEntityAndEntityId(project, entity.getValue(), id);
+    }
+
+    public List<ResourceShareEntity> listByProjectAndEntity(
+        @NotNull String project,
+        @NotNull EntityName entity,
+        @NotNull String id,
+        @NotNull String user
+    ) throws StoreException {
+        return repository.findByProjectAndEntityAndEntityIdAndUser(project, entity.getValue(), id, user);
     }
 }

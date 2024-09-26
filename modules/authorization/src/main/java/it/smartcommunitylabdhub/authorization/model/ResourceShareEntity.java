@@ -48,7 +48,7 @@ public class ResourceShareEntity {
     private String owner;
 
     @NotNull
-    @Column(name = "user", updatable = false)
+    @Column(name = "username", updatable = false)
     private String user;
 
     @CreatedDate

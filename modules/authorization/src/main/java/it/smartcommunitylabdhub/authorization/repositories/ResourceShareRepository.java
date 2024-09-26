@@ -13,4 +13,12 @@ public interface ResourceShareRepository
 
     List<ResourceShareEntity> findByProjectAndOwner(String project, String owner);
     List<ResourceShareEntity> findByProjectAndUser(String project, String user);
+
+    List<ResourceShareEntity> findByProjectAndEntityAndEntityId(String project, String entity, String entityId);
+    List<ResourceShareEntity> findByProjectAndEntityAndEntityIdAndUser(
+        String project,
+        String entity,
+        String entityId,
+        String user
+    );
 }

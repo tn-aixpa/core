@@ -57,6 +57,7 @@ public class SecurityProperties {
         private String issuerUri;
         private String audience;
         private String claim;
+        private String username;
 
         public boolean isEnabled() {
             return StringUtils.hasText(issuerUri) && StringUtils.hasText(audience);

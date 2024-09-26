@@ -135,7 +135,7 @@ public class SecurityConfig {
                 );
 
                 externalJwtAuthProvider.setJwtAuthenticationConverter(
-                    externalJwtAuthenticationConverter(jwtProps.getClaim(), projectAuthHelper)
+                    externalJwtAuthenticationConverter(jwtProps.getUsername(), jwtProps.getClaim(), projectAuthHelper)
                 );
 
                 securityChain.oauth2ResourceServer(oauth2 ->
@@ -297,6 +297,7 @@ public class SecurityConfig {
             .username(username)
             .password(password)
             .roles("ADMIN", "USER")
+            // .roles("USER")
             .build();
 
         return new InMemoryUserDetailsManager(admin);
@@ -381,7 +382,8 @@ public class SecurityConfig {
     }
 
     public static JwtAuthenticationConverter externalJwtAuthenticationConverter(
-        String claim,
+        String usernameClaim,
+        String rolesClaim,
         AuthorizableAwareEntityService<Project> projectAuthHelper
     ) {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
@@ -392,8 +394,8 @@ public class SecurityConfig {
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
             //read roles from token
-            if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
-                List<String> roles = source.getClaimAsStringList(claim);
+            if (StringUtils.hasText(rolesClaim) && source.hasClaim(rolesClaim)) {
+                List<String> roles = source.getClaimAsStringList(rolesClaim);
                 if (roles != null) {
                     roles.forEach(r -> {
                         if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
@@ -407,10 +409,12 @@ public class SecurityConfig {
                 }
             }
 
-            if (projectAuthHelper != null && StringUtils.hasText(source.getSubject())) {
+            if (projectAuthHelper != null && StringUtils.hasText(source.getClaimAsString(usernameClaim))) {
+                String username = source.getClaimAsString(usernameClaim);
+
                 //inject roles from ownership of projects
                 projectAuthHelper
-                    .findIdsByCreatedBy(source.getSubject())
+                    .findIdsByCreatedBy(username)
                     .forEach(p -> {
                         //derive a scoped ADMIN role
                         authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
@@ -418,7 +422,7 @@ public class SecurityConfig {
 
                 //inject roles from sharing of projects
                 projectAuthHelper
-                    .findNamesBySharedTo(source.getSubject())
+                    .findNamesBySharedTo(username)
                     .forEach(p -> {
                         //derive a scoped USER role
                         //TODO make configurable?
@@ -427,6 +431,7 @@ public class SecurityConfig {
             }
             return authorities;
         });
+        converter.setPrincipalClaimName(usernameClaim);
         return converter;
     }
 }

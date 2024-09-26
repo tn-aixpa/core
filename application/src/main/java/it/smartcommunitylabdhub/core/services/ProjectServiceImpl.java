@@ -492,10 +492,23 @@ public class ProjectServiceImpl
 
     @Override
     public ResourceShareEntity share(@NotNull String id, @NotNull String user) {
-        log.debug("sahre project with id {} to {}", String.valueOf(id), String.valueOf(user));
+        log.debug("share project with id {} to {}", String.valueOf(id), String.valueOf(user));
 
         try {
             Project project = entityService.get(id);
+
+            //check if a share with same user already exists
+            List<ResourceShareEntity> shares = sharingService.listByProjectAndEntity(
+                project.getProject(),
+                EntityName.PROJECT,
+                id,
+                user
+            );
+            if (!shares.isEmpty()) {
+                return shares.get(0);
+            }
+
+            //create
             ResourceShareEntity share = sharingService.share(project.getProject(), EntityName.PROJECT, id, user);
 
             if (log.isTraceEnabled()) {
@@ -512,8 +525,45 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public ResourceShareEntity revoke(@NotNull String id, @NotNull String user) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'revoke'");
+    public void revoke(@NotNull String id, @NotNull String shareId) {
+        log.debug("revoke share project {} with id {}", String.valueOf(id), String.valueOf(shareId));
+
+        try {
+            Project project = entityService.get(id);
+            ResourceShareEntity share = sharingService.get(shareId);
+
+            if (share == null) {
+                return;
+            }
+
+            //check project match
+            if (!project.getId().equals(share.getProject())) {
+                throw new IllegalArgumentException("project-mismatch");
+            }
+            if (!id.equals(share.getEntityId()) || !EntityName.PROJECT.getValue().equals(share.getEntity())) {
+                throw new IllegalArgumentException("invalid");
+            }
+
+            //revoke
+            sharingService.revoke(shareId);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.PROJECT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<ResourceShareEntity> listSharesById(@NotNull String id) {
+        log.debug("list shares for project with id {}", String.valueOf(id));
+        try {
+            return sharingService.listByProjectAndEntity(id, EntityName.PROJECT, id);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.PROJECT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 }
