@@ -422,7 +422,7 @@ public class SecurityConfig {
 
                 //inject roles from sharing of projects
                 projectAuthHelper
-                    .findNamesBySharedTo(username)
+                    .findIdsBySharedTo(username)
                     .forEach(p -> {
                         //derive a scoped USER role
                         //TODO make configurable?

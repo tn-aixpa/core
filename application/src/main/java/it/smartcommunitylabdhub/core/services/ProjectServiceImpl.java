@@ -285,6 +285,8 @@ public class ProjectServiceImpl
             "findNameByCreatedBy",
             "findNameByUpdatedBy",
             "findNameByProject",
+            "findIdsBySharedTo",
+            "findNamesBySharedTo",
         },
         allEntries = true
     )
@@ -423,6 +425,7 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Cacheable("findIdsBySharedTo")
     public List<String> findIdsBySharedTo(@NotNull String user) {
         log.debug("find ids of projects shared to {}", user);
         try {
@@ -433,14 +436,15 @@ public class ProjectServiceImpl
                 .toList();
 
             //for every project check if owner matches
+            //DISABLED, we expect shares to be valid
             return shares
                 .stream()
                 .map(s -> {
                     try {
-                        Project p = entityService.find(s.getId());
-                        if (p != null && p.getUser() != null && p.getUser().equals(s.getOwner())) {
-                            return p;
-                        }
+                        Project p = entityService.find(s.getEntityId());
+                        // if (p != null && p.getUser() != null && p.getUser().equals(s.getOwner())) {
+                        return p;
+                        // }
                     } catch (StoreException e) {
                         log.error("store error: {}", e.getMessage());
                     }
@@ -457,6 +461,7 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Cacheable("findNamesBySharedTo")
     public List<String> findNamesBySharedTo(@NotNull String user) {
         log.debug("find name of projects shared to {}", user);
         try {
@@ -467,14 +472,15 @@ public class ProjectServiceImpl
                 .toList();
 
             //for every project check if owner matches
+            //DISABLED, we expect shares to be valid
             return shares
                 .stream()
                 .map(s -> {
                     try {
-                        Project p = entityService.find(s.getId());
-                        if (p != null && p.getUser() != null && p.getUser().equals(s.getOwner())) {
-                            return p;
-                        }
+                        Project p = entityService.find(s.getEntityId());
+                        // if (p != null && p.getUser() != null && p.getUser().equals(s.getOwner())) {
+                        return p;
+                        // }
                     } catch (StoreException e) {
                         log.error("store error: {}", e.getMessage());
                     }
@@ -491,6 +497,7 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @CacheEvict(value = { "findIdsBySharedTo", "findNamesBySharedTo" }, allEntries = true)
     public ResourceShareEntity share(@NotNull String id, @NotNull String user) {
         log.debug("share project with id {} to {}", String.valueOf(id), String.valueOf(user));
 
@@ -525,6 +532,7 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @CacheEvict(value = { "findIdsBySharedTo", "findNamesBySharedTo" }, allEntries = true)
     public void revoke(@NotNull String id, @NotNull String shareId) {
         log.debug("revoke share project {} with id {}", String.valueOf(id), String.valueOf(shareId));
 

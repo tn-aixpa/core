@@ -73,7 +73,8 @@ public class ProjectController {
         @ParameterObject @Valid @Nullable ProjectEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "name", direction = Direction.ASC) }
-        ) Pageable pageable
+        ) Pageable pageable,
+        Authentication auth
     ) {
         SearchFilter<ProjectEntity> sf = null;
         if (filter != null) {
@@ -177,8 +178,21 @@ public class ProjectController {
         @RequestParam @Valid @NotNull String user,
         Authentication auth
     ) throws NoSuchEntityException {
+        if (auth == null || auditor == null) {
+            throw new InsufficientAuthenticationException("missing valid authentication");
+        }
+
         //only owner is authorized
         checkAuthorization(auth, id);
+
+        //sanity check: user should be distinct
+        String curUser = auditor
+            .getCurrentAuditor()
+            .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
+
+        if (curUser.equals(user)) {
+            throw new IllegalArgumentException("user should be distinct from current auth");
+        }
 
         return shareService.share(id, user);
     }
