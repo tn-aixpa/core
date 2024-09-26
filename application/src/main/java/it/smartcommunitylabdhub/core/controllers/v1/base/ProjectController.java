@@ -2,6 +2,8 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.authorization.model.ResourceShareEntity;
+import it.smartcommunitylabdhub.authorization.services.ShareableAwareEntityService;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
@@ -17,6 +19,7 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectSe
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.util.List;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
@@ -56,6 +59,9 @@ public class ProjectController {
     SearchableProjectService projectService;
 
     @Autowired
+    ShareableAwareEntityService<Project> shareService;
+
+    @Autowired
     private AuditorAware<String> auditor;
 
     @Autowired
@@ -67,7 +73,8 @@ public class ProjectController {
         @ParameterObject @Valid @Nullable ProjectEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "name", direction = Direction.ASC) }
-        ) Pageable pageable
+        ) Pageable pageable,
+        Authentication auth
     ) {
         SearchFilter<ProjectEntity> sf = null;
         if (filter != null) {
@@ -162,5 +169,82 @@ public class ProjectController {
         }
 
         projectService.deleteProject(id, cascade);
+    }
+
+    @Operation(summary = "Share a project with a user", description = "Share project")
+    @PostMapping(path = "/{id}/share", produces = "application/json; charset=UTF-8")
+    public ResourceShareEntity shareProject(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam @Valid @NotNull String user,
+        Authentication auth
+    ) throws NoSuchEntityException {
+        if (auth == null || auditor == null) {
+            throw new InsufficientAuthenticationException("missing valid authentication");
+        }
+
+        //only owner is authorized
+        checkAuthorization(auth, id);
+
+        //sanity check: user should be distinct
+        String curUser = auditor
+            .getCurrentAuditor()
+            .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
+
+        if (curUser.equals(user)) {
+            throw new IllegalArgumentException("user should be distinct from current auth");
+        }
+
+        return shareService.share(id, user);
+    }
+
+    @Operation(summary = "List project shares", description = "Share project")
+    @GetMapping(path = "/{id}/share", produces = "application/json; charset=UTF-8")
+    public List<ResourceShareEntity> shares(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        Authentication auth
+    ) throws NoSuchEntityException {
+        return shareService.listSharesById(id);
+    }
+
+    @Operation(summary = "Revoke a share with a user", description = "Revoke sharing project")
+    @DeleteMapping(path = "/{id}/share", produces = "application/json; charset=UTF-8")
+    public void revokeShare(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(name = "id") @Valid @NotNull String shareId,
+        Authentication auth
+    ) throws NoSuchEntityException {
+        //only owner is authorized
+        checkAuthorization(auth, id);
+
+        shareService.revoke(id, shareId);
+    }
+
+    private void checkAuthorization(Authentication auth, String id) {
+        if (securityProperties.isRequired()) {
+            //custom authorization check: only owner or with (scoped) admin role can delete
+            //TODO move to bean
+            if (auth == null || auditor == null) {
+                throw new InsufficientAuthenticationException("missing valid authentication");
+            }
+
+            String user = auditor
+                .getCurrentAuditor()
+                .orElseThrow(() -> new InsufficientAuthenticationException("missing valid authentication"));
+
+            Project project = projectService.findProject(id);
+
+            if (project != null) {
+                boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+                boolean hasRole = auth
+                    .getAuthorities()
+                    .stream()
+                    .anyMatch(a -> (id + ":ROLE_ADMIN").equals(a.getAuthority()));
+                boolean isOwner = user.equals(project.getUser());
+
+                if (!isAdmin && !isOwner && !hasRole) {
+                    throw new InsufficientAuthenticationException("current user is not authorized");
+                }
+            }
+        }
     }
 }
