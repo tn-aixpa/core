@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.websocket;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,26 @@ public class UserNotificationService {
         this.messagingTemplate = messagingTemplate;
     }
 
+    public void notifyOwner(@NotNull UserNotification<? extends BaseDTO> notification) {
+        if (notification.getUser() == null) {
+            log.warn("notification has no user");
+            return;
+        }
+
+        log.debug(
+            "notify {} {} change to user {}",
+            notification.getEntity(),
+            notification.getId(),
+            notification.getUser()
+        );
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", notification.getDto());
+        }
+
+        //send whole event as payload
+        notify(notification.getUser(), buildDestination(notification.getEntity()), notification);
+    }
+
     public void notifyOwner(@NotNull BaseDTO dto) {
         if (dto.getUser() == null) {
             log.warn("dto has no user");
@@ -36,6 +57,7 @@ public class UserNotificationService {
             log.trace("dto: {}", dto);
         }
 
+        //send dto as payload
         notify(dto.getUser(), buildDestination(dto.getClass()), dto);
     }
 
@@ -52,6 +74,11 @@ public class UserNotificationService {
         } catch (MessagingException e) {
             log.error("Error sending message", e);
         }
+    }
+
+    private String buildDestination(EntityName name) {
+        //use simple name  (pluralized) as dest
+        return PREFIX + "/" + name.getValue().toLowerCase() + "s";
     }
 
     private String buildDestination(Class<?> clazz) {

@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.core.components.cloud;
 
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.core.websocket.UserNotification;
 import it.smartcommunitylabdhub.core.websocket.UserNotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +29,19 @@ public class RunCloudListener {
         if (run != null) {
             log.debug("receive event for {}: {}", run.getId(), event.getAction());
 
-            if (notificationService != null) {
+            if (notificationService != null && event.getDto() != null) {
                 //forward all events to users via notification
                 //TODO support filtering/config
-                notificationService.notifyOwner(run);
+                Run dto = event.getDto();
+                UserNotification<Run> notification = UserNotification
+                    .<Run>builder()
+                    .action(event.getAction())
+                    .entity(EntityName.RUN)
+                    .user(dto.getUser())
+                    .dto(dto)
+                    .build();
+
+                notificationService.notifyOwner(notification);
             }
         }
     }
