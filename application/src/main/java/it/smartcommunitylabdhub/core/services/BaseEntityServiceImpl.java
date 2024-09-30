@@ -356,7 +356,26 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
         log.debug("delete all with spec {} ", specification);
 
         if (repository instanceof JpaSpecificationExecutor) {
-            return ((JpaSpecificationExecutor<E>) repository).delete(specification);
+            //collect all via search
+            List<E> entities = ((JpaSpecificationExecutor<E>) repository).findAll(specification);
+
+            //remove in batch
+            repository.deleteAllInBatch(entities);
+
+            //publish
+            if (eventPublisher != null) {
+                entities.forEach(entity -> {
+                    log.debug("publish event: delete for {}", entity.getId());
+                    EntityEvent<E> event = new EntityEvent<>(entity, EntityAction.DELETE);
+                    if (log.isTraceEnabled()) {
+                        log.trace("event: {}", String.valueOf(event));
+                    }
+
+                    eventPublisher.publishEvent(event);
+                });
+            }
+
+            return entities.size();
         }
 
         throw new UnsupportedOperationException();
