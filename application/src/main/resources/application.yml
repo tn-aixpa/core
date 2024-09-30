@@ -62,8 +62,6 @@ runtime:
     image: ${RUNTIME_NEFERTEM_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-nefertem:latest}
   dbt:
     image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-dbt:latest}
-  mlrun:
-    image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
   kfp:
     image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
   python:
@@ -89,13 +87,7 @@ kaniko:
   image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
   image-registry: ${KANIKO_IMAGE_REGISTRY:${registry.name}}
   secret: ${KANIKO_SECRET:${registry.secret}}
-  args: ${KANIKO_ARGS:}    
-
-# MLRun config
-mlrun:
-  base-image: ${MLRUN_BASE_IMAGE:mlrun/mlrun}
-  image-prefix: ${MLRUN_IMAGE_PREFIX:dhcore}
-  image-registry: ${MLRUN_IMAGE_REGISTRY:}
+  args: ${KANIKO_ARGS:}
 
 # registry
 registry:  
