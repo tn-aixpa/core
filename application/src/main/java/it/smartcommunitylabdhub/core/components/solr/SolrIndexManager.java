@@ -25,6 +25,7 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.MultiMapSolrParams;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -35,6 +36,11 @@ import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 public class SolrIndexManager {
+    @Value("${solr.auth_user}")
+    private String solrUser;
+
+    @Value("${solr.auth_password}")
+    private String solrPassword;
 
     private Http2SolrClient solrClient;
     private String solrUrl;
@@ -48,7 +54,12 @@ public class SolrIndexManager {
     public SolrIndexManager(String url, String collection) {
         solrUrl = url;
         solrCollection = collection;
-        solrClient = new Http2SolrClient.Builder(solrUrl).withConnectionTimeout(5000, TimeUnit.MILLISECONDS).build();
+        if(StringUtils.hasLength(solrUser) && StringUtils.hasLength(solrPassword)) {
+        	solrClient = new Http2SolrClient.Builder(solrUrl).withConnectionTimeout(5000, TimeUnit.MILLISECONDS)
+        			.withBasicAuthCredentials(solrUrl, solrPassword).build();
+        } else {
+        	solrClient = new Http2SolrClient.Builder(solrUrl).withConnectionTimeout(5000, TimeUnit.MILLISECONDS).build();
+        }
         restTemplate = new RestTemplate();
     }
 

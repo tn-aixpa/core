@@ -204,6 +204,8 @@ solr:
   url: ${SOLR_URL:http://localhost:8983/solr}
   collection: ${SOLR_COLLECTION:dhcore}
   reindex: ${SOLR_REINDEX:never}
+  auth_user: ${SOLR_USER:}
+  auth_password: ${SOLR_PASSWORD:}
 
 # files support
 files:
