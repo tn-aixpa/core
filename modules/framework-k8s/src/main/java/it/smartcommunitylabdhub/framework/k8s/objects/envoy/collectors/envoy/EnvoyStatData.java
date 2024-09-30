@@ -16,6 +16,8 @@ public class EnvoyStatData implements Serializable {
 
     @JsonProperty("total_requests")
     private Long totalRequests;
+
+    @JsonProperty("current_requests")
     private Long currentRequests;
 
     private Long request2xx;

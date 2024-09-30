@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -29,6 +30,13 @@ public class PythonServeTaskSpec extends K8sTaskBaseSpec {
     @Min(0)
     private Integer replicas;
 
+    @JsonProperty(value = "scale_to_zero", defaultValue = "False")
+    @Schema(defaultValue = "False")
+    private Boolean scaleToZero;
+
+    @JsonProperty("inactivity_period")
+    private Long inactivityPeriod;
+
     // ClusterIP or NodePort
     @JsonProperty(value = "service_type", defaultValue = "NodePort")
     @Schema(defaultValue = "NodePort")
@@ -45,6 +53,9 @@ public class PythonServeTaskSpec extends K8sTaskBaseSpec {
         PythonServeTaskSpec spec = mapper.convertValue(data, PythonServeTaskSpec.class);
 
         this.replicas = spec.getReplicas();
+        this.scaleToZero = spec.getScaleToZero();
+        this.inactivityPeriod = spec.getInactivityPeriod();
+
         this.setServiceType(spec.getServiceType());
     }
 }

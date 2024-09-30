@@ -544,7 +544,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         // Envoy sidecar container
         V1Container envoyContainer = new V1Container()
                 .name("envoy")
-                .image("envoyproxy/envoy:v1.31.0")
+                .image("envoyproxy/envoy:v1.31.2")
                 .imagePullPolicy("IfNotPresent")
                 .volumeMounts(Collections.singletonList(envoyVolumeMount))
                 .ports(Collections.singletonList(
@@ -600,7 +600,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     // the same as for metrics...difference are on the ojbect that is retrieved.
     public List<CoreMetric> stats(V1Service object) throws K8sFrameworkException {
         if (object == null || object.getMetadata() == null) {
-            return null;
+            return List.of();
         }
 
         try {

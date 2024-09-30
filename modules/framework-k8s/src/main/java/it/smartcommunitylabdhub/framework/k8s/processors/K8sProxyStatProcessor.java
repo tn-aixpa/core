@@ -17,11 +17,8 @@ import it.smartcommunitylabdhub.commons.infrastructure.RunProcessor;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
-import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sProxyStatus;
-import it.smartcommunitylabdhub.framework.k8s.model.K8sServiceStatus;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
-import it.smartcommunitylabdhub.framework.k8s.objects.envoy.collectors.envoy.EnvoyStatData;
 import it.smartcommunitylabdhub.framework.k8s.objects.envoy.collectors.envoy.ProxyStatCollector;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
@@ -52,7 +49,8 @@ public class K8sProxyStatProcessor implements RunProcessor<RunBaseStatus> {
             if (metrics != null) {
                 try {
                     String envoyStats = mapper.writeValueAsString(
-                            envoyStatCollector.collectEnvoyStats(metrics, status));
+                            envoyStatCollector.collectEnvoyStats(metrics, run));
+                    log.info(envoyStats);
 
                     Map<String, Serializable> proxyStatus = mapper.readValue(envoyStats,
                             new TypeReference<HashMap<String, Serializable>>() {

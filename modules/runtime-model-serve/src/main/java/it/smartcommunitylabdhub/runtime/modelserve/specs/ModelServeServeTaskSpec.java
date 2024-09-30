@@ -22,6 +22,13 @@ public class ModelServeServeTaskSpec extends K8sTaskBaseSpec {
     @Min(0)
     private Integer replicas;
 
+    @JsonProperty(value = "scale_to_zero", defaultValue = "False")
+    @Schema(defaultValue = "False")
+    private Boolean scaleToZero;
+
+    @JsonProperty("inactivity_period")
+    private Long inactivityPeriod;
+
     // ClusterIP or NodePort
     @JsonProperty(value = "service_type", defaultValue = "NodePort")
     @Schema(defaultValue = "NodePort")
@@ -34,6 +41,8 @@ public class ModelServeServeTaskSpec extends K8sTaskBaseSpec {
         ModelServeServeTaskSpec spec = mapper.convertValue(data, ModelServeServeTaskSpec.class);
 
         this.replicas = spec.getReplicas();
+        this.scaleToZero = spec.getScaleToZero();
+        this.inactivityPeriod = spec.getInactivityPeriod();
 
         this.setServiceType(spec.getServiceType());
     }

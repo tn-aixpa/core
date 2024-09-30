@@ -115,6 +115,8 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                             runnable.getId());
 
                     List<CoreMetric> coreMetrics = deploymentFramework.metrics(deployment);
+
+                    // TODO fix this, mix with stats from proxy
                     coreMetrics.addAll(serveFramework.stats(service));
 
                     // Merge metrics and stats.from proxy
