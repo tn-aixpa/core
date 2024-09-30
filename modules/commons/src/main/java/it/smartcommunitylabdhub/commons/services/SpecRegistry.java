@@ -24,6 +24,4 @@ public interface SpecRegistry {
     Schema getSchema(@NotNull String kind);
     Collection<Schema> getSchemas(@NotNull EntityName name, @NotNull String runtime);
     Collection<Schema> listSchemas(@NotNull EntityName name);
-
-    public void refresh();
 }

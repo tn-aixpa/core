@@ -46,7 +46,7 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator, Initializi
         this.validator = validator;
     }
 
-    @Autowired
+    @Autowired(required = false)
     public void setModules(List<com.github.victools.jsonschema.generator.Module> modules) {
         this.modules = modules;
     }
@@ -175,35 +175,6 @@ public class SpecRegistryImpl implements SpecRegistry, SpecValidator, Initializi
                 }
             }
         }
-    }
-
-    public void refresh() {
-        //refresh schemas for collected specs
-        registrations.replaceAll((k, e) -> {
-            if (e.type() != null) {
-                EntityName entity = e.type().entity();
-                log.debug("generate schema for spec {}:{} ", entity, k);
-
-                //build proxy
-                Class<? extends Spec> proxy = SchemaUtils.proxy(e.spec());
-
-                //generate
-                SchemaImplBuilder builder = SchemaImpl
-                    .builder()
-                    .entity(entity)
-                    .kind(k)
-                    .schema(generator.generateSchema(proxy));
-                if (StringUtils.hasText(e.type().runtime())) {
-                    builder.runtime(e.type().runtime());
-                }
-                SchemaImpl schema = builder.build();
-
-                //rebuild reg
-                return new SpecRegistration(e.type(), e.spec(), e.factory(), schema);
-            }
-
-            return e;
-        });
     }
 
     private record SpecRegistration(
