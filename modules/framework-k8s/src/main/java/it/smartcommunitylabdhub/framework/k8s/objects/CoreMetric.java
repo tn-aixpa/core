@@ -12,4 +12,5 @@ public record CoreMetric(
     String window,
     String namespace
 )
-    implements Serializable {}
+    implements Serializable {
+}

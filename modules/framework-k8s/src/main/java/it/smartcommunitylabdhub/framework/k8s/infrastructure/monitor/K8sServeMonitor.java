@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
+import io.kubernetes.client.custom.ContainerMetrics;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
@@ -116,8 +117,11 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
 
                     List<CoreMetric> coreMetrics = deploymentFramework.metrics(deployment);
 
-                    // TODO fix this, mix with stats from proxy
-                    coreMetrics.addAll(serveFramework.stats(service));
+                    // Retrieve proxy metrics
+                    List<ContainerMetrics> proxyMetrics = serveFramework.proxyMetrics(service);
+
+                    // Merge metrics and stats
+                    coreMetrics.stream().findFirst().ifPresent(metric -> metric.metrics().addAll(proxyMetrics));
 
                     // Merge metrics and stats.from proxy
                     runnable.setMetrics(

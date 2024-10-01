@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.framework.k8s.processors;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -25,10 +24,10 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import lombok.extern.slf4j.Slf4j;
 
 @RunProcessorType(stages = { "onRunning", "onCompleted", "onError", "onStopped",
-        "onDeleted" }, id = K8sProxyStatProcessor.ID)
-@Component(K8sProxyStatProcessor.ID)
+        "onDeleted" }, id = K8sProxyProcessor.ID)
+@Component(K8sProxyProcessor.ID)
 @Slf4j
-public class K8sProxyStatProcessor implements RunProcessor<RunBaseStatus> {
+public class K8sProxyProcessor implements RunProcessor<RunBaseStatus> {
 
     public static final String ID = "k8sProxyProcessor";
 
@@ -36,7 +35,7 @@ public class K8sProxyStatProcessor implements RunProcessor<RunBaseStatus> {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public K8sProxyStatProcessor(ProxyStatCollector envoyStatCollector) {
+    public K8sProxyProcessor(ProxyStatCollector envoyStatCollector) {
         this.envoyStatCollector = envoyStatCollector;
     }
 
