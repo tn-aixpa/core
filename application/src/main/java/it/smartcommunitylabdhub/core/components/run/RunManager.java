@@ -693,6 +693,7 @@ public class RunManager {
                 Run run = entityService.find(id);
                 if (run == null) {
                     log.error("Run with id {} not found", runnableMonitorObject.getRunId());
+                    return;
                 }
 
                 if (
