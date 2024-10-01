@@ -16,7 +16,7 @@
 
     <properties>
         <yarn.version>v1.22.19</yarn.version>
-        <node.version>v18.17.1</node.version>
+        <node.version>v18.18.1</node.version>
     </properties>
     <dependencies>
         <dependency>
@@ -90,7 +90,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <arguments>install</arguments>
+                            <arguments>install --frozen-lockfile</arguments>
                             <workingDirectory>${project.basedir}/console</workingDirectory>
                         </configuration>
                     </execution>
