@@ -34,9 +34,11 @@ import it.smartcommunitylabdhub.core.services.BaseEntityServiceImpl;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 
 @Configuration
+@Order(2)
 public class PersistenceConfig {
 
     @Bean

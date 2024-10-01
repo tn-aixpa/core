@@ -4,9 +4,11 @@ import it.smartcommunitylabdhub.core.config.handlers.VersionedHandlerMapping;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @Configuration
+@Order(15)
 public class ApiVersioningMappingConfig {
 
     @Bean
