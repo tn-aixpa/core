@@ -111,7 +111,7 @@ public class K8sJobMonitor extends K8sBaseMonitor<K8sJobRunnable> {
         } catch (K8sFrameworkException e) {
             // Set Runnable to ERROR state
             runnable.setState(State.ERROR.name());
-            runnable.setError(e.getClass().getSimpleName() + ":" + String.valueOf(e.getMessage()));
+            runnable.setError(e.toError());
         }
 
         return runnable;

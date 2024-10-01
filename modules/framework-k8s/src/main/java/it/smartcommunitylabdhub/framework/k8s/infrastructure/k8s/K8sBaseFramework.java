@@ -348,7 +348,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -493,7 +493,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -952,8 +952,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected void storeRunSecret(V1Secret secret) throws K8sFrameworkException {
         try {
             k8sSecretHelper.storeSecretData(secret.getMetadata().getName(), secret.getStringData());
-        } catch (JsonProcessingException | ApiException e) {
+        } catch (JsonProcessingException e) {
             throw new K8sFrameworkException(e.getMessage());
+        } catch (ApiException e) {
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 

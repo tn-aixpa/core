@@ -125,7 +125,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
 
         log.info("create deployment for {}", String.valueOf(deployment.getMetadata().getName()));
@@ -446,7 +446,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -464,7 +464,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getResponseBody());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -481,7 +481,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getResponseBody());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -498,7 +498,7 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getResponseBody());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 }

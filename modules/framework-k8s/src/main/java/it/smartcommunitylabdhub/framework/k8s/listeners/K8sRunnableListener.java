@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import lombok.extern.slf4j.Slf4j;
@@ -96,6 +97,10 @@ public abstract class K8sRunnableListener<R extends K8sRunnable> {
             log.error("Error with k8s for runnable {} {}: {}", clazz.getSimpleName(), runnable.getId(), e.getMessage());
             runnable.setState(State.ERROR.name());
             runnable.setError(clazz.getSimpleName() + ":" + String.valueOf(e.getMessage()));
+
+            if (e instanceof K8sFrameworkException) {
+                runnable.setError(((K8sFrameworkException) e).toError());
+            }
 
             try {
                 log.debug("update runnable {} {} in store", clazz.getSimpleName(), runnable.getId());

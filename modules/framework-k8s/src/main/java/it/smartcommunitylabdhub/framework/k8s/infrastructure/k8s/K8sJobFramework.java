@@ -141,7 +141,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
 
         log.info("create job for {}", String.valueOf(job.getMetadata().getName()));
@@ -412,7 +412,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -433,7 +433,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getResponseBody());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -451,7 +451,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                 log.trace("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getResponseBody());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 }

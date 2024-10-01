@@ -208,8 +208,10 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             coreV1Api.createNamespacedConfigMap(namespace, configMap, null, null, null, null);
             //clear data before storing
             results.put("configMap", configMap.data(Collections.emptyMap()));
-        } catch (ApiException | NullPointerException e) {
+        } catch (NullPointerException e) {
             throw new K8sFrameworkException(e.getMessage());
+        } catch (ApiException e) {
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
 
         log.info("create job for {}", String.valueOf(job.getMetadata().getName()));
@@ -489,7 +491,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 log.debug("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getMessage());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -508,7 +510,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 log.debug("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getResponseBody());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 
@@ -526,7 +528,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 log.debug("k8s api response: {}", e.getResponseBody());
             }
 
-            throw new K8sFrameworkException(e.getResponseBody());
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 }
