@@ -210,7 +210,7 @@ public class K8sBuilderHelper implements InitializingBean {
             case "persistent_volume_claim":
                 return volume.persistentVolumeClaim(
                     new V1PersistentVolumeClaimVolumeSource()
-                        .claimName(spec.getOrDefault("claim_name", coreVolume.getName()))
+                        .claimName(spec.getOrDefault("claimName", coreVolume.getName()))
                 );
             case "empty_dir":
                 return volume.emptyDir(
