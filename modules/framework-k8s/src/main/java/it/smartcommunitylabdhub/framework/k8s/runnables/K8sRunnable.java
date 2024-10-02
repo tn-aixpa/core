@@ -83,7 +83,7 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     @JsonIgnore
     private List<CoreLog> logs;
 
-    @JsonIgnore
+//    @JsonIgnore
     private List<CoreMetric> metrics;
 
     private HashMap<String, String> credentials;

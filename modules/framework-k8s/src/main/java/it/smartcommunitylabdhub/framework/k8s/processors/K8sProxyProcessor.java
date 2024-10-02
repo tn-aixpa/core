@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import it.smartcommunitylabdhub.framework.k8s.objects.envoy.collectors.envoy.ProxyStatsData;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,8 +24,8 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import lombok.extern.slf4j.Slf4j;
 
-@RunProcessorType(stages = { "onRunning", "onCompleted", "onError", "onStopped",
-        "onDeleted" }, id = K8sProxyProcessor.ID)
+@RunProcessorType(stages = {"onRunning", "onCompleted", "onError", "onStopped",
+        "onDeleted"}, id = K8sProxyProcessor.ID)
 @Component(K8sProxyProcessor.ID)
 @Slf4j
 public class K8sProxyProcessor implements RunProcessor<RunBaseStatus> {
@@ -47,9 +48,10 @@ public class K8sProxyProcessor implements RunProcessor<RunBaseStatus> {
 
             if (metrics != null) {
                 try {
-                    String envoyStats = mapper.writeValueAsString(
-                            envoyStatCollector.collectEnvoyStats(metrics, run));
-                    log.info(envoyStats);
+
+                    ProxyStatsData envoyStatData = envoyStatCollector.collectEnvoyStats(metrics, run);
+
+                    String envoyStats = mapper.writeValueAsString(envoyStatData);
 
                     Map<String, Serializable> proxyStatus = mapper.readValue(envoyStats,
                             new TypeReference<HashMap<String, Serializable>>() {

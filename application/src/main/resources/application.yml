@@ -132,12 +132,13 @@ application:
   level: ${DH_API_LEVEL:}
   profiles: ${spring.profiles.active:default}
 
-
+# Logging
 logging:
    level:
       ROOT: INFO
       it.smartcommunitylabdhub: ${LOG_LEVEL:INFO}
 
+# Security
 security:
   api:
     cors:
@@ -153,8 +154,6 @@ security:
     issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
-
-
 
 # Conditional Configuration Cloud
 event-queue:
@@ -206,4 +205,10 @@ jwt:
     duration: ${JWT_REFRESH_TOKEN_DURATION:}    
   client-id: ${JWT_CLIENT_ID:${security.basic.username}}
   client-secret: ${JWT_CLIENT_SECRET:${security.basic.password}}
-  cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}      
+  cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}
+
+# Task serve
+task:
+  serve:
+    inactivity-period: ${TASK_SERVE_INACTIVITY_PERIOD:100000}
+    scale-to-zero: ${TASK_SERVE_SCALE_TO_ZERO:false}

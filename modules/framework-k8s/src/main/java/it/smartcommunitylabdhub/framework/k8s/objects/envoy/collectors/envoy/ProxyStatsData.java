@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class EnvoyStatData implements Serializable {
+public class ProxyStatsData implements Serializable {
 
     @JsonProperty("total_requests")
     private Long totalRequests;
@@ -22,7 +22,9 @@ public class EnvoyStatData implements Serializable {
     private Long request3xx;
     private Long request4xx;
     private Long request5xx;
+
     private String timestamp;
+
     @JsonProperty("inactivity_time")
     private Long inactivityTime;
 }

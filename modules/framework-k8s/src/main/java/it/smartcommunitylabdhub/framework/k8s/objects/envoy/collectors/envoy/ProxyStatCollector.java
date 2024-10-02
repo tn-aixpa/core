@@ -26,15 +26,14 @@ public class ProxyStatCollector {
             IntOrString.class,
             IntOrStringMixin.class);
 
-    public EnvoyStatData collectEnvoyStats(List<CoreMetric> coreMetricsList, Run run) {
+    public ProxyStatsData collectEnvoyStats(List<CoreMetric> coreMetricsList, Run run) {
         Map<String, Quantity> aggregatedMetrics = new HashMap<>();
 
         // get previous stats
-        EnvoyStatData prevEnvoyStatData = mapper.convertValue(
-                run.getStatus().getOrDefault("proxy", new HashMap<>()), EnvoyStatData.class);
+        ProxyStatsData prevEnvoyStatData = mapper.convertValue(
+                run.getStatus().getOrDefault("proxy", new HashMap<>()), ProxyStatsData.class);
 
         Optional<CoreMetric> metric = coreMetricsList.stream().findFirst();
-
 
         return metric.map(coreMetric -> {
             coreMetric.metrics().stream().flatMap(containerMetric -> containerMetric.getUsage().entrySet().stream())
@@ -46,7 +45,7 @@ public class ProxyStatCollector {
 
             Long windowRequests = totalRequests - previousTotalRequests;
 
-            return EnvoyStatData.builder()
+            return ProxyStatsData.builder()
                     .timestamp(coreMetric.timestamp())
                     .totalRequests(totalRequests)
                     .windowRequests(windowRequests)
@@ -66,6 +65,34 @@ public class ProxyStatCollector {
                     ).build();
 
         }).orElse(prevEnvoyStatData);
+    }
+
+    public ProxyStatsData collectProxyMetrics(List<CoreMetric> coreMetricsList) {
+
+        Map<String, Quantity> aggregatedMetrics = new HashMap<>();
+
+        Optional<CoreMetric> metric = coreMetricsList.stream().findFirst();
+
+        return metric.map(coreMetric -> {
+
+            coreMetric.metrics().stream().flatMap(containerMetric -> containerMetric.getUsage().entrySet().stream())
+                    .forEach(entry -> aggregatedMetrics.put(entry.getKey(), entry.getValue()));
+
+            return ProxyStatsData.builder()
+                    .timestamp(coreMetric.timestamp())
+                    .totalRequests(getStatValue(aggregatedMetrics,
+                            "http.mainapp_sidecar_hcm_filter_(.*).downstream_rq_total"))
+                    .request2xx(getStatValue(aggregatedMetrics,
+                            "http.mainapp_sidecar_hcm_filter_(.*).downstream_rq_2xx"))
+                    .request3xx(getStatValue(aggregatedMetrics,
+                            "http.mainapp_sidecar_hcm_filter_(.*).downstream_rq_3xx"))
+                    .request4xx(getStatValue(aggregatedMetrics,
+                            "http.mainapp_sidecar_hcm_filter_(.*).downstream_rq_4xx"))
+                    .request5xx(getStatValue(aggregatedMetrics,
+                            "http.mainapp_sidecar_hcm_filter_(.*).downstream_rq_5xx"))
+                    .build();
+
+        }).orElse(null);
     }
 
     private Long getStatValue(Map<String, Quantity> statMap, String statNamePattern) {

@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
-import io.kubernetes.client.custom.ContainerMetrics;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Service;
@@ -13,10 +12,16 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
+import it.smartcommunitylabdhub.framework.k8s.objects.envoy.collectors.envoy.ProxyStatsData;
+import it.smartcommunitylabdhub.framework.k8s.objects.envoy.collectors.envoy.ProxyStatCollector;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
@@ -26,20 +31,30 @@ import org.springframework.util.Assert;
 @MonitorComponent(framework = K8sServeFramework.FRAMEWORK)
 public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
 
+    @Value("${task.serve.inactivity-period}")
+    private Long inactivityPeriod;
+
+    @Value("${task.serve.scale-to-zero}")
+    private Boolean scaleToZero;
+
     private final K8sServeFramework serveFramework;
     // TODO remove
     private final K8sDeploymentFramework deploymentFramework;
 
+    private final ProxyStatCollector proxyStatCollector;
+
     public K8sServeMonitor(
             RunnableStore<K8sServeRunnable> runnableStore,
             K8sServeFramework serveFramework,
-            K8sDeploymentFramework deploymentFramework) {
+            K8sDeploymentFramework deploymentFramework, ProxyStatCollector proxyStatCollector) {
         super(runnableStore);
+
         Assert.notNull(deploymentFramework, "deployment framework is required");
         Assert.notNull(serveFramework, "serve framework is required");
 
         this.serveFramework = serveFramework;
         this.deploymentFramework = deploymentFramework;
+        this.proxyStatCollector = proxyStatCollector;
     }
 
     @Override
@@ -115,13 +130,32 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                             deployment.getMetadata().getName(),
                             runnable.getId());
 
+                    // Retrieve pod metrics
                     List<CoreMetric> coreMetrics = deploymentFramework.metrics(deployment);
 
                     // Retrieve proxy metrics
-                    List<ContainerMetrics> proxyMetrics = serveFramework.proxyMetrics(service);
+                    List<CoreMetric> proxyMetrics = serveFramework.proxyMetrics(service);
 
-                    // Merge metrics and stats
-                    coreMetrics.stream().findFirst().ifPresent(metric -> metric.metrics().addAll(proxyMetrics));
+                    // Merge metrics and stats based on pod
+                    coreMetrics.forEach(coreMetric ->
+                            coreMetric.metrics().addAll(proxyMetrics.stream().filter(proxyMetric ->
+                                            proxyMetric.pod().equals(coreMetric.pod()) &&
+                                                    proxyMetric.namespace().equals(coreMetric.namespace()))
+                                    .map(CoreMetric::metrics).flatMap(List::stream).toList()
+                            )
+                    );
+
+                    // Collect new proxy metrics
+                    ProxyStatsData previousEnvoyStatData =
+                            proxyStatCollector.collectProxyMetrics(
+                                    proxyMetrics);
+
+                    // Collect stored runnable proxy metrics, if first time null fallback to new metrics
+                    // nothing is gonna happen
+                    ProxyStatsData currentEnvoyStatData =
+                            proxyStatCollector.collectProxyMetrics(
+                                    Optional.ofNullable(runnable.getMetrics()).orElse(proxyMetrics));
+
 
                     // Merge metrics and stats.from proxy
                     runnable.setMetrics(
@@ -134,6 +168,16 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
             // Set Runnable to ERROR state
             runnable.setState(State.ERROR.name());
         }
+
+        //TODO check if inactivity_period is expired
+        //TODO set to STOP state the runnable
+//        runnable.getMetrics().forEach(coreMetric -> {
+//            coreMetric.metrics().forEach(containerMetric -> {
+//                if (containerMetric.getName().equals("inactivity_period")) {
+//                    log.info("here we are", containerMetric.getUsage().get("inactivity_period"));
+//                }
+//            });
+//        });
 
         return runnable;
     }
