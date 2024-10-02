@@ -18,7 +18,7 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class K8sServiceStatus extends RunBaseStatus {
 
-    private Map<String, Serializable> service;
+    private K8sServiceInfo service;
 
     @Override
     public void configure(Map<String, Serializable> data) {

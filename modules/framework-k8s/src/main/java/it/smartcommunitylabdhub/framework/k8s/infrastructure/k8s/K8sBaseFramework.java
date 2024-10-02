@@ -75,9 +75,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     implements Framework<T>, InitializingBean {
 
     //custom object mapper with mixIn for IntOrString
-    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER
-        .addMixIn(IntOrString.class, IntOrStringMixin.class)
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    protected static final ObjectMapper mapper = KubernetesMapper.OBJECT_MAPPER;
 
     protected final CoreV1Api coreV1Api;
     protected final Metrics metricsApi;

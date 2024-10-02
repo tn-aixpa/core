@@ -1,20 +1,31 @@
 package it.smartcommunitylabdhub.framework.k8s.processors;
 
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1ServicePort;
+import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1ServiceStatus;
 import it.smartcommunitylabdhub.commons.annotations.common.RunProcessorType;
 import it.smartcommunitylabdhub.commons.infrastructure.RunProcessor;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
+import it.smartcommunitylabdhub.framework.k8s.jackson.KubernetesMapper;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sServiceInfo;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sServiceStatus;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @RunProcessorType(stages = { "onRunning" }, id = K8sServiceProcessor.ID)
 @Component(K8sServiceProcessor.ID)
+@Slf4j
 public class K8sServiceProcessor implements RunProcessor<RunBaseStatus> {
 
     public static final String ID = "k8sServiceProcessor";
@@ -27,46 +38,149 @@ public class K8sServiceProcessor implements RunProcessor<RunBaseStatus> {
             if (res != null && res.containsKey("service")) {
                 try {
                     Map<String, Serializable> s = (Map<String, Serializable>) res.get("service");
+                    V1Service service = KubernetesMapper.OBJECT_MAPPER.convertValue(s, V1Service.class);
 
-                    if (!s.containsKey("metadata") || !s.containsKey("spec") || !s.containsKey("status")) {
-                        //missing fields
+                    if (
+                        service.getMetadata() == null ||
+                        service.getStatus() == null ||
+                        service.getSpec() == null ||
+                        service.getSpec().getPorts() == null
+                    ) {
+                        //missing info
                         return null;
                     }
 
-                    Map<String, Serializable> metadata = (Map<String, Serializable>) s.get("metadata");
-                    Map<String, Serializable> spec = (Map<String, Serializable>) s.get("spec");
+                    log.debug("extract info for service {}", String.valueOf(service.getMetadata().getName()));
 
-                    //build as map
-                    //TODO define proper struct
-                    HashMap<String, Serializable> svc = new HashMap<>();
-                    svc.put("name", metadata.getOrDefault("name", ""));
-                    svc.put("namespace", metadata.getOrDefault("namespace", null));
+                    K8sServiceInfo.K8sServiceInfoBuilder builder = K8sServiceInfo.builder();
 
-                    svc.put("type", spec.getOrDefault("type", null));
-                    svc.put("clusterIP", spec.getOrDefault("clusterIP", null));
-                    svc.put("ports", spec.get("ports"));
+                    //metadata
+                    V1ObjectMeta metadata = service.getMetadata();
+                    builder.name(metadata.getName()).namespace(metadata.getNamespace());
 
-                    //try building urls
-                    if (spec.get("ports") != null) {
-                        List<Serializable> ps = (List<Serializable>) spec.get("ports");
-                        if (!ps.isEmpty()) {
-                            Map<String, Serializable> ports = (Map<String, Serializable>) ps.get(0);
+                    //spec
+                    V1ServiceSpec spec = service.getSpec();
+                    builder.type(spec.getType()).externalIps(spec.getExternalIPs()).ports(spec.getPorts());
 
-                            Integer port = (Integer) ports.getOrDefault("port", 0);
+                    //status
+                    String type = spec.getType();
 
-                            String clusterIp = (String) spec.getOrDefault("clusterIP", "");
-                            String name = (String) metadata.getOrDefault("name", "");
-                            String namespace = (String) metadata.getOrDefault("namespace", "");
+                    if (CoreServiceType.ClusterIP.name().equals(type) && !spec.getPorts().isEmpty()) {
+                        //add ip
+                        builder.clusterIP(spec.getClusterIP());
 
-                            String url = String.format("%s.%s:%d", name, namespace, port);
-                            svc.put("url", url);
+                        //public url is first port exposed
+                        V1ServicePort port = spec.getPorts().getFirst();
+                        String url = String.format(
+                            "%s.%s:%d",
+                            metadata.getName(),
+                            metadata.getNamespace(),
+                            port.getPort()
+                        );
+                        builder.url(url);
+                        log.debug("service {} clusterIp url {}", metadata.getName(), url);
 
-                            String ip = String.format("%s:%d", clusterIp, port);
-                            svc.put("ip", ip);
+                        //expose all urls if more than 1 port
+                        if (spec.getPorts().size() > 1) {
+                            List<String> urls = spec
+                                .getPorts()
+                                .stream()
+                                .map(p ->
+                                    String.format("%s.%s:%d", metadata.getName(), metadata.getNamespace(), p.getPort())
+                                )
+                                .toList();
+
+                            builder.urls(urls);
+                        }
+                    } else if (CoreServiceType.NodePort.name().equals(type) && !spec.getPorts().isEmpty()) {
+                        //add ip
+                        builder.clusterIP(spec.getClusterIP());
+
+                        //public url is first port exposed
+                        V1ServicePort port = spec.getPorts().getFirst();
+                        String url = String.format(
+                            "%s.%s:%d",
+                            metadata.getName(),
+                            metadata.getNamespace(),
+                            port.getPort()
+                        );
+                        builder.url(url);
+                        log.debug("service {} nodePort url {}", metadata.getName(), url);
+
+                        //expose all urls if more than 1 port
+                        if (spec.getPorts().size() > 1) {
+                            List<String> urls = spec
+                                .getPorts()
+                                .stream()
+                                .map(p ->
+                                    String.format("%s.%s:%d", metadata.getName(), metadata.getNamespace(), p.getPort())
+                                )
+                                .toList();
+
+                            builder.urls(urls);
+                        }
+                    } else if (CoreServiceType.LoadBalancer.name().equals(type) && !spec.getPorts().isEmpty()) {
+                        //add ip
+                        builder.clusterIP(spec.getClusterIP());
+
+                        //if loadbalancer is in status we can build url
+                        V1ServiceStatus status = service.getStatus();
+                        Optional
+                            .ofNullable(status.getLoadBalancer())
+                            .map(l -> l.getIngress())
+                            .map(i -> i.getFirst())
+                            .map(i -> i.getIp() != null ? i : null)
+                            .ifPresent(ingress -> {
+                                //set ip and host
+                                builder.ip(ingress.getIp()).hostname(ingress.getHostname());
+                                String host = StringUtils.hasText(ingress.getHostname())
+                                    ? ingress.getHostname()
+                                    : ingress.getIp();
+
+                                //public url is first port exposed
+                                V1ServicePort port = spec.getPorts().getFirst();
+                                String url = String.format("%s:%d", host, port.getPort());
+                                builder.url(url);
+                                log.debug("service {} loadBalancer url {}", metadata.getName(), url);
+
+                                //expose all urls if more than 1 port
+                                if (spec.getPorts().size() > 1) {
+                                    List<String> urls = spec
+                                        .getPorts()
+                                        .stream()
+                                        .map(p -> String.format("%s:%d", host, p.getPort()))
+                                        .toList();
+
+                                    builder.urls(urls);
+                                }
+                            });
+                    } else if (CoreServiceType.ExternalName.name().equals(type) && !spec.getPorts().isEmpty()) {
+                        //add ip
+                        builder.clusterIP(spec.getClusterIP());
+
+                        //expose name
+                        String externalName = spec.getExternalName();
+                        builder.externalName(externalName);
+
+                        //public url is first port exposed
+                        V1ServicePort port = spec.getPorts().getFirst();
+                        String url = String.format("%s:%d", externalName, port.getPort());
+                        builder.url(url);
+                        log.debug("service {} externalName url {}", metadata.getName(), url);
+
+                        //expose all urls if more than 1 port
+                        if (spec.getPorts().size() > 1) {
+                            List<String> urls = spec
+                                .getPorts()
+                                .stream()
+                                .map(p -> String.format("%s:%d", externalName, p.getPort()))
+                                .toList();
+
+                            builder.urls(urls);
                         }
                     }
 
-                    return K8sServiceStatus.builder().service(svc).build();
+                    return K8sServiceStatus.builder().service(builder.build()).build();
                 } catch (ClassCastException | NullPointerException e) {
                     //invalid definition, skip
                 }
