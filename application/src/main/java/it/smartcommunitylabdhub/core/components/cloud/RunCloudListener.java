@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.components.cloud;
 
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.metadata.AuditMetadata;
 import it.smartcommunitylabdhub.core.websocket.UserNotification;
 import it.smartcommunitylabdhub.core.websocket.UserNotificationService;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,8 @@ public class RunCloudListener {
                 //forward all events to users via notification
                 //TODO support filtering/config
                 Run dto = event.getDto();
+
+                //notify owner
                 UserNotification<Run> notification = UserNotification
                     .<Run>builder()
                     .action(event.getAction())
@@ -41,7 +44,21 @@ public class RunCloudListener {
                     .dto(dto)
                     .build();
 
-                notificationService.notifyOwner(notification);
+                notificationService.notifyUser(notification);
+
+                //if updated by a different user, notify
+                AuditMetadata audit = AuditMetadata.from(dto.getMetadata());
+                if (audit.getUpdatedBy() != null && !dto.getUser().equals(audit.getUpdatedBy())) {
+                    notificationService.notifyUser(
+                        UserNotification
+                            .<Run>builder()
+                            .action(event.getAction())
+                            .entity(EntityName.RUN)
+                            .user(audit.getUpdatedBy())
+                            .dto(dto)
+                            .build()
+                    );
+                }
             }
         }
     }

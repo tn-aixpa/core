@@ -22,7 +22,7 @@ public class UserNotificationService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void notifyOwner(@NotNull UserNotification<? extends BaseDTO> notification) {
+    public void notifyUser(@NotNull UserNotification<? extends BaseDTO> notification) {
         if (notification.getUser() == null) {
             log.warn("notification has no user");
             return;
