@@ -401,7 +401,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             .orElse(null);
 
         // service type (ClusterIP or NodePort)
-        String type = Optional.ofNullable(runnable.getServiceType().name()).orElse(serviceType);
+        String type = Optional.ofNullable(runnable.getServiceType()).map(Enum::name).orElse(serviceType);
 
         //check template
         if (template != null) {
