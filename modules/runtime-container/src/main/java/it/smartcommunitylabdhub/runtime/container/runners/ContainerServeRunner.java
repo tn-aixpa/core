@@ -5,20 +5,28 @@ import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
+import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec;
+import it.smartcommunitylabdhub.runtime.container.specs.ContainerFunctionSpec.SourceCodeLanguages;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerRunSpec;
 import it.smartcommunitylabdhub.runtime.container.specs.ContainerServeTaskSpec;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * ContainerDeployRunner
@@ -58,6 +66,36 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
+        //read source and build context
+        List<ContextRef> contextRefs = null;
+        List<ContextSource> contextSources = null;
+
+        if (functionSpec.getSource() != null && StringUtils.hasText(functionSpec.getSource().getSource())) {
+            SourceCode<SourceCodeLanguages> source = functionSpec.getSource();
+
+            try {
+                //evaluate if local path (no scheme)
+                UriComponents uri = UriComponentsBuilder.fromUriString(source.getSource()).build();
+                String scheme = uri.getScheme();
+
+                if (scheme != null) {
+                    //write as ref
+                    contextRefs = Collections.singletonList(ContextRef.from(source.getSource()));
+                } else {
+                    //write as source
+                    String path = source.getSource();
+                    if (StringUtils.hasText(source.getBase64())) {
+                        contextSources =
+                            Collections.singletonList(
+                                (ContextSource.builder().name(path).base64(source.getBase64()).build())
+                            );
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                //skip invalid source
+            }
+        }
+
         K8sServeRunnable k8sServeRunnable = K8sServeRunnable
             .builder()
             .runtime(ContainerRuntime.RUNTIME)
@@ -83,6 +121,8 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
             .priorityClass(taskSpec.getPriorityClass())
             .template(taskSpec.getProfile())
             //specific
+            .contextRefs(contextRefs)
+            .contextSources(contextSources)
             .servicePorts(taskSpec.getServicePorts())
             .serviceType(taskSpec.getServiceType())
             .build();
