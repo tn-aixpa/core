@@ -33,8 +33,8 @@ public class ConsoleController {
     @Autowired
     private SecurityProperties securityProperties;
 
-    @Value("${solr.enabled}")
-    private boolean enableSolr;
+    @Value("${solr.url}")
+    private String solrUrl;
 
     public static final String CONSOLE_CONTEXT = Keys.CONSOLE_CONTEXT;
 
@@ -85,7 +85,7 @@ public class ConsoleController {
             }
         }
 
-        config.put("REACT_APP_ENABLE_SOLR", String.valueOf(enableSolr));
+        config.put("REACT_APP_ENABLE_SOLR", String.valueOf(StringUtils.hasText(solrUrl)));
 
         model.addAttribute("config", config);
         return "console.html";

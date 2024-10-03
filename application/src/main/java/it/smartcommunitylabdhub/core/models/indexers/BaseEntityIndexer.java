@@ -23,6 +23,8 @@ import org.springframework.util.Assert;
 public abstract class BaseEntityIndexer<T extends BaseEntity, D extends BaseDTO>
     implements SolrEntityIndexer<T>, InitializingBean {
 
+    public static final int PAGE_MAX_SIZE = 100;
+
     protected SolrComponent solr;
 
     @Autowired(required = false)

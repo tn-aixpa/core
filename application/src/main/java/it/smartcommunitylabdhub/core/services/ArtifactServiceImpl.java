@@ -23,7 +23,8 @@ import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.indexers.ArtifactEntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableArtifactService;
+import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
@@ -49,7 +50,7 @@ import org.springframework.validation.BindException;
 @Transactional
 @Slf4j
 public class ArtifactServiceImpl
-    implements SearchableArtifactService, IndexableArtifactService, EntityFilesService<Artifact> {
+    implements SearchableArtifactService, IndexableEntityService<ArtifactEntity>, EntityFilesService<Artifact> {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
@@ -435,7 +436,7 @@ public class ArtifactServiceImpl
     }
 
     @Override
-    public void indexArtifact(@NotNull String id) {
+    public void indexOne(@NotNull String id) {
         log.debug("index artifact with id {}", String.valueOf(id));
         try {
             Artifact artifact = entityService.get(id);
@@ -447,7 +448,7 @@ public class ArtifactServiceImpl
     }
 
     @Override
-    public void reindexArtifacts() {
+    public void reindexAll() {
         log.debug("reindex all artifacts");
 
         //clear index
@@ -460,9 +461,7 @@ public class ArtifactServiceImpl
             hasMore = false;
 
             try {
-                Page<Artifact> page = entityService.list(
-                    PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE)
-                );
+                Page<Artifact> page = entityService.list(PageRequest.of(pageNumber, BaseEntityIndexer.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );

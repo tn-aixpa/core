@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableDataItemService;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.DataItemEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import jakarta.validation.Valid;
@@ -54,7 +54,7 @@ public class DataItemController {
     SearchableDataItemService dataItemService;
 
     @Autowired
-    IndexableDataItemService indexService;
+    IndexableEntityService<DataItemEntity> indexService;
 
     @Operation(summary = "Create dataItem", description = "Create a dataItem and return")
     @PostMapping(
@@ -121,6 +121,6 @@ public class DataItemController {
     @PostMapping(value = "/search/reindex", produces = "application/json; charset=UTF-8")
     public void reindexDataItems() {
         //via async
-        indexService.reindexDataItems();
+        indexService.reindexAll();
     }
 }

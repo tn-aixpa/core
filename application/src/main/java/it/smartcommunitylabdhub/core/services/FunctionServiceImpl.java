@@ -16,8 +16,9 @@ import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.FunctionEntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableFunctionService;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
@@ -38,7 +39,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class FunctionServiceImpl implements SearchableFunctionService, IndexableFunctionService {
+public class FunctionServiceImpl implements SearchableFunctionService, IndexableEntityService<FunctionEntity> {
 
     @Autowired
     private EntityService<Function, FunctionEntity> entityService;
@@ -436,7 +437,7 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     }
 
     @Override
-    public void indexFunction(@NotNull String id) {
+    public void indexOne(@NotNull String id) {
         log.debug("index function with id {}", String.valueOf(id));
         try {
             Function function = entityService.get(id);
@@ -448,7 +449,7 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
     }
 
     @Override
-    public void reindexFunctions() {
+    public void reindexAll() {
         log.debug("reindex all functions");
 
         //clear index
@@ -461,9 +462,7 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
             hasMore = false;
 
             try {
-                Page<Function> page = entityService.list(
-                    PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE)
-                );
+                Page<Function> page = entityService.list(PageRequest.of(pageNumber, BaseEntityIndexer.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
