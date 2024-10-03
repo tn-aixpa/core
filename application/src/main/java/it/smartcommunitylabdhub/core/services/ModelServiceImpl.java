@@ -23,7 +23,8 @@ import it.smartcommunitylabdhub.core.models.builders.model.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableModelService;
+import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.indexers.ModelEntityIndexer;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableModelService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
@@ -49,7 +50,8 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class ModelServiceImpl implements SearchableModelService, IndexableModelService, EntityFilesService<Model> {
+public class ModelServiceImpl
+    implements SearchableModelService, IndexableEntityService<ModelEntity>, EntityFilesService<Model> {
 
     @Autowired
     private EntityService<Model, ModelEntity> entityService;
@@ -433,7 +435,7 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
     }
 
     @Override
-    public void indexModel(@NotNull String id) {
+    public void indexOne(@NotNull String id) {
         log.debug("index model with id {}", String.valueOf(id));
         try {
             Model model = entityService.get(id);
@@ -445,7 +447,7 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
     }
 
     @Override
-    public void reindexModels() {
+    public void reindexAll() {
         log.debug("reindex all models");
 
         //clear index
@@ -458,7 +460,7 @@ public class ModelServiceImpl implements SearchableModelService, IndexableModelS
             hasMore = false;
 
             try {
-                Page<Model> page = entityService.list(PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE));
+                Page<Model> page = entityService.list(PageRequest.of(pageNumber, BaseEntityIndexer.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );

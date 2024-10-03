@@ -23,8 +23,9 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.DataItemEntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableDataItemService;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
@@ -50,7 +51,7 @@ import org.springframework.validation.BindException;
 @Transactional
 @Slf4j
 public class DataItemServiceImpl
-    implements SearchableDataItemService, IndexableDataItemService, EntityFilesService<DataItem> {
+    implements SearchableDataItemService, IndexableEntityService<DataItemEntity>, EntityFilesService<DataItem> {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
@@ -433,7 +434,7 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public void indexDataItem(@NotNull String id) {
+    public void indexOne(@NotNull String id) {
         log.debug("index dataItem with id {}", String.valueOf(id));
         try {
             DataItem dataItem = entityService.get(id);
@@ -445,7 +446,7 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public void reindexDataItems() {
+    public void reindexAll() {
         log.debug("reindex all dataItems");
 
         //clear index
@@ -458,9 +459,7 @@ public class DataItemServiceImpl
             hasMore = false;
 
             try {
-                Page<DataItem> page = entityService.list(
-                    PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE)
-                );
+                Page<DataItem> page = entityService.list(PageRequest.of(pageNumber, BaseEntityIndexer.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );

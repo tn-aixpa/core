@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableModelService;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ModelEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableModelService;
 import jakarta.validation.Valid;
@@ -54,7 +54,7 @@ public class ModelController {
     SearchableModelService modelService;
 
     @Autowired
-    IndexableModelService indexService;
+    IndexableEntityService<ModelEntity> indexService;
 
     @Operation(summary = "Create model", description = "Create a model and return")
     @PostMapping(
@@ -121,6 +121,6 @@ public class ModelController {
     @PostMapping(value = "/search/reindex", produces = "application/json; charset=UTF-8")
     public void reindexModels() {
         //via async
-        indexService.reindexModels();
+        indexService.reindexAll();
     }
 }

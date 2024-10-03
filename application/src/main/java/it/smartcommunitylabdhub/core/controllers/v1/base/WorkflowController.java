@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableWorkflowService;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.WorkflowEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import jakarta.validation.Valid;
@@ -54,7 +54,7 @@ public class WorkflowController {
     SearchableWorkflowService workflowService;
 
     @Autowired
-    IndexableWorkflowService indexService;
+    IndexableEntityService<WorkflowEntity> indexService;
 
     @Operation(summary = "Create workflow", description = "Create an workflow and return")
     @PostMapping(
@@ -124,6 +124,6 @@ public class WorkflowController {
     @PostMapping(value = "/search/reindex", produces = "application/json; charset=UTF-8")
     public void reindexWorkflows() {
         //via async
-        indexService.reindexWorkflows();
+        indexService.reindexAll();
     }
 }

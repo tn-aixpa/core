@@ -11,7 +11,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableFunctionService;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
 import jakarta.validation.Valid;
@@ -54,7 +54,7 @@ public class FunctionController {
     SearchableFunctionService functionService;
 
     @Autowired
-    IndexableFunctionService indexService;
+    IndexableEntityService<FunctionEntity> indexService;
 
     @Operation(summary = "Create function", description = "Create a function and return")
     @PostMapping(
@@ -124,6 +124,6 @@ public class FunctionController {
     @PostMapping(value = "/search/reindex", produces = "application/json; charset=UTF-8")
     public void reindexFunctions() {
         //via async
-        indexService.reindexFunctions();
+        indexService.reindexAll();
     }
 }

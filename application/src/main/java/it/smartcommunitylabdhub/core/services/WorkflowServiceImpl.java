@@ -16,7 +16,8 @@ import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableWorkflowService;
+import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.indexers.WorkflowEntityIndexer;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
@@ -38,7 +39,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class WorkflowServiceImpl implements SearchableWorkflowService, IndexableWorkflowService {
+public class WorkflowServiceImpl implements SearchableWorkflowService, IndexableEntityService<WorkflowEntity> {
 
     @Autowired
     private EntityService<Workflow, WorkflowEntity> entityService;
@@ -422,7 +423,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     }
 
     @Override
-    public void indexWorkflow(@NotNull String id) {
+    public void indexOne(@NotNull String id) {
         log.debug("index workflow with id {}", String.valueOf(id));
         try {
             Workflow workflow = entityService.get(id);
@@ -434,7 +435,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
     }
 
     @Override
-    public void reindexWorkflows() {
+    public void reindexAll() {
         log.debug("reindex all workflows");
 
         //clear index
@@ -447,9 +448,7 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
             hasMore = false;
 
             try {
-                Page<Workflow> page = entityService.list(
-                    PageRequest.of(pageNumber, BaseEntityServiceImpl.PAGE_MAX_SIZE)
-                );
+                Page<Workflow> page = entityService.list(PageRequest.of(pageNumber, BaseEntityIndexer.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
