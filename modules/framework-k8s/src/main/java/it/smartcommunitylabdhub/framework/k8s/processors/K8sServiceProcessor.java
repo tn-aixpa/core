@@ -42,7 +42,6 @@ public class K8sServiceProcessor implements RunProcessor<RunBaseStatus> {
 
                     if (
                         service.getMetadata() == null ||
-                        service.getStatus() == null ||
                         service.getSpec() == null ||
                         service.getSpec().getPorts() == null
                     ) {
@@ -124,9 +123,9 @@ public class K8sServiceProcessor implements RunProcessor<RunBaseStatus> {
                         builder.clusterIP(spec.getClusterIP());
 
                         //if loadbalancer is in status we can build url
-                        V1ServiceStatus status = service.getStatus();
                         Optional
-                            .ofNullable(status.getLoadBalancer())
+                            .ofNullable(service.getStatus())
+                            .map(V1ServiceStatus::getLoadBalancer)
                             .map(l -> l.getIngress())
                             .map(i -> i.getFirst())
                             .map(i -> i.getIp() != null ? i : null)
