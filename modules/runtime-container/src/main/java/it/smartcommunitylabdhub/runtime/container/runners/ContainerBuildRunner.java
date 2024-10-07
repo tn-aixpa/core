@@ -86,8 +86,8 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
         dockerfileGenerator.from(functionSpec.getBaseImage());
 
         // copy context content to workdir
-        dockerfileGenerator.copy(".", "/build");
-        dockerfileGenerator.workdir("/build");
+        dockerfileGenerator.copy(".", "/shared");
+        dockerfileGenerator.workdir("/shared");
 
         if (log.isDebugEnabled()) {
             //add debug instructions to docker file
