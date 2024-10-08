@@ -6,9 +6,12 @@ import com.nimbusds.jose.jwk.RSAKey;
 import it.smartcommunitylabdhub.authorization.components.JWKSetKeyStore;
 import it.smartcommunitylabdhub.authorization.exceptions.JwtTokenServiceException;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
+import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
+import it.smartcommunitylabdhub.commons.config.SecurityProperties.JwtAuthenticationProperties;
+import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +78,9 @@ public class TokenEndpoint implements InitializingBean {
     @Autowired
     private SecurityProperties securityProperties;
 
+    @Autowired
+    AuthorizableAwareEntityService<Project> projectAuthHelper;
+
     //TODO move to dedicated filter initalized via securityConfig!
     private JwtAuthenticationProvider accessTokenAuthProvider;
     private JwtAuthenticationProvider refreshTokenAuthProvider;
@@ -99,8 +105,13 @@ public class TokenEndpoint implements InitializingBean {
             refreshTokenAuthProvider.setJwtAuthenticationConverter(jwtConverter);
 
             if (securityProperties.isJwtAuthEnabled()) {
-                externalTokenAuthProvider = new JwtAuthenticationProvider(externalJwtDecoder());
-                externalTokenAuthProvider.setJwtAuthenticationConverter(externalJwtAuthenticationConverter());
+                JwtAuthenticationProperties jwtProps = securityProperties.getJwt();
+                externalTokenAuthProvider =
+                    new JwtAuthenticationProvider(externalJwtDecoder(jwtProps.getIssuerUri(), jwtProps.getAudience()));
+
+                externalTokenAuthProvider.setJwtAuthenticationConverter(
+                    externalJwtAuthenticationConverter(jwtProps.getUsername(), jwtProps.getClaim(), projectAuthHelper)
+                );
             }
         }
     }
@@ -248,47 +259,29 @@ public class TokenEndpoint implements InitializingBean {
             log.trace("subject token {}", token);
         }
 
-        //validate via provider
-        try {
-            BearerTokenAuthenticationToken request = new BearerTokenAuthenticationToken(token);
-            Authentication userAuth = accessTokenAuthProvider.authenticate(request);
-            if (!userAuth.isAuthenticated()) {
-                throw new IllegalArgumentException("invalid or missing subject_token");
-            }
-
-            log.debug(
-                "exchange token request from {} resolved for {} via internal provider",
-                clientAuth.getName(),
-                userAuth.getName()
-            );
-
-            //token is valid, use as context for generation
-            return jwtTokenService.generateCredentials(userAuth);
-        } catch (AuthenticationException ae) {
-            //fall back to external if available
-            if (externalTokenAuthProvider != null) {
-                try {
-                    BearerTokenAuthenticationToken request = new BearerTokenAuthenticationToken(token);
-                    Authentication userAuth = externalTokenAuthProvider.authenticate(request);
-                    if (!userAuth.isAuthenticated()) {
-                        throw new IllegalArgumentException("invalid or missing subject_token");
-                    }
-
-                    log.debug(
-                        "exchange token request from {} resolved for {} via external provider",
-                        clientAuth.getName(),
-                        userAuth.getName()
-                    );
-
-                    //token is valid, use as context for generation
-                    return jwtTokenService.generateCredentials(userAuth);
-                } catch (AuthenticationException ae1) {
+        //validate external provider
+        if (externalTokenAuthProvider != null) {
+            try {
+                BearerTokenAuthenticationToken request = new BearerTokenAuthenticationToken(token);
+                Authentication userAuth = externalTokenAuthProvider.authenticate(request);
+                if (!userAuth.isAuthenticated()) {
                     throw new IllegalArgumentException("invalid or missing subject_token");
                 }
-            }
 
-            throw new IllegalArgumentException("invalid or missing subject_token");
+                log.debug(
+                    "exchange token request from {} resolved for {} via external provider",
+                    clientAuth.getName(),
+                    userAuth.getName()
+                );
+
+                //token is valid, use as context for generation
+                return jwtTokenService.generateCredentials(userAuth);
+            } catch (AuthenticationException ae1) {
+                throw new IllegalArgumentException("invalid or missing subject_token");
+            }
         }
+
+        throw new IllegalArgumentException("invalid or missing subject_token");
     }
 
     //TODO move to filter + config!
@@ -326,26 +319,29 @@ public class TokenEndpoint implements InitializingBean {
 
     /**
      * External auth via JWT
+     * TODO! use SecurityConfig instead (move tokenEndpoint to app!)
+     * copied from SecurityConfig
      */
-    private JwtDecoder externalJwtDecoder() {
-        SecurityProperties.JwtAuthenticationProperties jwtProps = securityProperties.getJwt();
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(jwtProps.getIssuerUri()).build();
+    public static JwtDecoder externalJwtDecoder(String issuer, String audience) {
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuer).build();
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
             JwtClaimNames.AUD,
-            (aud -> aud != null && aud.contains(jwtProps.getAudience()))
+            (aud -> aud != null && aud.contains(audience))
         );
 
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(jwtProps.getIssuerUri());
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
         OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
         jwtDecoder.setJwtValidator(withAudience);
 
         return jwtDecoder;
     }
 
-    private JwtAuthenticationConverter externalJwtAuthenticationConverter() {
-        SecurityProperties.JwtAuthenticationProperties jwtProps = securityProperties.getJwt();
-        String claim = jwtProps.getClaim();
+    public static JwtAuthenticationConverter externalJwtAuthenticationConverter(
+        String usernameClaim,
+        String rolesClaim,
+        AuthorizableAwareEntityService<Project> projectAuthHelper
+    ) {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
             if (source == null) return null;
@@ -353,8 +349,9 @@ public class TokenEndpoint implements InitializingBean {
             List<GrantedAuthority> authorities = new ArrayList<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-            if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
-                List<String> roles = source.getClaimAsStringList(claim);
+            //read roles from token
+            if (StringUtils.hasText(rolesClaim) && source.hasClaim(rolesClaim)) {
+                List<String> roles = source.getClaimAsStringList(rolesClaim);
                 if (roles != null) {
                     roles.forEach(r -> {
                         if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
@@ -368,8 +365,29 @@ public class TokenEndpoint implements InitializingBean {
                 }
             }
 
+            if (projectAuthHelper != null && StringUtils.hasText(source.getClaimAsString(usernameClaim))) {
+                String username = source.getClaimAsString(usernameClaim);
+
+                //inject roles from ownership of projects
+                projectAuthHelper
+                    .findIdsByCreatedBy(username)
+                    .forEach(p -> {
+                        //derive a scoped ADMIN role
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
+                    });
+
+                //inject roles from sharing of projects
+                projectAuthHelper
+                    .findIdsBySharedTo(username)
+                    .forEach(p -> {
+                        //derive a scoped USER role
+                        //TODO make configurable?
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER"));
+                    });
+            }
             return authorities;
         });
+        converter.setPrincipalClaimName(usernameClaim);
         return converter;
     }
 }
