@@ -12,9 +12,10 @@ import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties.JwtAuthenticationProperties;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,6 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -92,13 +92,8 @@ public class TokenEndpoint implements InitializingBean {
             Assert.notNull(jwkSetKeyStore, "jwks store is required");
             Assert.notNull(jwkSetKeyStore.getJwk(), "jwk is required");
 
-            JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-            JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-            authoritiesConverter.setAuthoritiesClaimName("authorities");
-            authoritiesConverter.setAuthorityPrefix("");
-            jwtConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-
             //build auth provider to validate tokens
+            JwtAuthenticationConverter jwtConverter = coreJwtAuthenticationConverter("authorities", projectAuthHelper);
             accessTokenAuthProvider = new JwtAuthenticationProvider(coreJwtDecoder(jwkSetKeyStore.getJwk(), false));
             accessTokenAuthProvider.setJwtAuthenticationConverter(jwtConverter);
             refreshTokenAuthProvider = new JwtAuthenticationProvider(coreJwtDecoder(jwkSetKeyStore.getJwk(), true));
@@ -346,7 +341,7 @@ public class TokenEndpoint implements InitializingBean {
         converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
             if (source == null) return null;
 
-            List<GrantedAuthority> authorities = new ArrayList<>();
+            Set<GrantedAuthority> authorities = new HashSet<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
             //read roles from token
@@ -388,6 +383,54 @@ public class TokenEndpoint implements InitializingBean {
             return authorities;
         });
         converter.setPrincipalClaimName(usernameClaim);
+        return converter;
+    }
+
+    public static JwtAuthenticationConverter coreJwtAuthenticationConverter(
+        String claim,
+        AuthorizableAwareEntityService<Project> projectAuthHelper
+    ) {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
+            if (source == null) return null;
+
+            Set<GrantedAuthority> authorities = new HashSet<>();
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+            if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
+                List<String> roles = source.getClaimAsStringList(claim);
+                if (roles != null) {
+                    roles.forEach(r -> {
+                        //use as is
+                        authorities.add(new SimpleGrantedAuthority(r));
+                    });
+                }
+            }
+
+            //refresh project authorities via helper
+            if (projectAuthHelper != null && StringUtils.hasText(source.getSubject())) {
+                String username = source.getSubject();
+
+                //inject roles from ownership of projects
+                projectAuthHelper
+                    .findIdsByCreatedBy(username)
+                    .forEach(p -> {
+                        //derive a scoped ADMIN role
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
+                    });
+
+                //inject roles from sharing of projects
+                projectAuthHelper
+                    .findIdsBySharedTo(username)
+                    .forEach(p -> {
+                        //derive a scoped USER role
+                        //TODO make configurable?
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER"));
+                    });
+            }
+
+            return authorities;
+        });
         return converter;
     }
 }

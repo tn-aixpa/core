@@ -12,9 +12,11 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -122,7 +124,9 @@ public class SecurityConfig {
                     keyStoreConfig.getJWKSetKeyStore().getJwk()
                 )
             );
-            coreJwtAuthProvider.setJwtAuthenticationConverter(coreJwtAuthenticationConverter("authorities"));
+            coreJwtAuthProvider.setJwtAuthenticationConverter(
+                coreJwtAuthenticationConverter("authorities", projectAuthHelper)
+            );
 
             // Create authentication Manager
             securityChain.oauth2ResourceServer(oauth2 ->
@@ -340,12 +344,15 @@ public class SecurityConfig {
         return jwtDecoder;
     }
 
-    public static JwtAuthenticationConverter coreJwtAuthenticationConverter(String claim) {
+    public static JwtAuthenticationConverter coreJwtAuthenticationConverter(
+        String claim,
+        AuthorizableAwareEntityService<Project> projectAuthHelper
+    ) {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
             if (source == null) return null;
 
-            List<GrantedAuthority> authorities = new ArrayList<>();
+            Set<GrantedAuthority> authorities = new HashSet<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
             if (StringUtils.hasText(claim) && source.hasClaim(claim)) {
@@ -358,7 +365,27 @@ public class SecurityConfig {
                 }
             }
 
-            //TODO evaluate refreshing project authorities via helper
+            //refresh project authorities via helper
+            if (projectAuthHelper != null && StringUtils.hasText(source.getSubject())) {
+                String username = source.getSubject();
+
+                //inject roles from ownership of projects
+                projectAuthHelper
+                    .findIdsByCreatedBy(username)
+                    .forEach(p -> {
+                        //derive a scoped ADMIN role
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
+                    });
+
+                //inject roles from sharing of projects
+                projectAuthHelper
+                    .findIdsBySharedTo(username)
+                    .forEach(p -> {
+                        //derive a scoped USER role
+                        //TODO make configurable?
+                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER"));
+                    });
+            }
 
             return authorities;
         });
@@ -392,7 +419,7 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
             if (source == null) return null;
 
-            List<GrantedAuthority> authorities = new ArrayList<>();
+            Set<GrantedAuthority> authorities = new HashSet<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
             //read roles from token
