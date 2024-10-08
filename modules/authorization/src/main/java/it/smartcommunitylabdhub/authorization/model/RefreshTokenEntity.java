@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.authorization.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
@@ -26,6 +27,7 @@ public class RefreshTokenEntity {
     private String id;
 
     @Lob
+    @Column(columnDefinition = "text")
     private String token;
 
     private String subject;
