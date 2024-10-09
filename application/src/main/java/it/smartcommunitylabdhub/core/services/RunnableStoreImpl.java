@@ -1,6 +1,10 @@
 package it.smartcommunitylabdhub.core.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import io.kubernetes.client.custom.Quantity;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
@@ -29,6 +33,10 @@ public class RunnableStoreImpl<T extends RunRunnable> implements RunnableStore<T
 
         //use CBOR mapper as default
         this.objectMapper = JacksonMapper.CBOR_OBJECT_MAPPER;
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Quantity.class, new QuantityCBORDeserializer());
+        module.addSerializer(Quantity.class, new QuantityCBORSerializer());
+        this.objectMapper.registerModule(module);
     }
 
     public void setObjectMapper(ObjectMapper objectMapper) {
@@ -104,5 +112,24 @@ public class RunnableStoreImpl<T extends RunRunnable> implements RunnableStore<T
     @Override
     public ResolvableType getResolvableType() {
         return ResolvableType.forClass(this.clazz);
+    }
+
+    private static class QuantityCBORDeserializer extends JsonDeserializer<Quantity> {
+
+        @Override
+        public Quantity deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            String value = p.getText(); // Read the value from the CBOR
+            return new Quantity(value); // Use the existing constructor
+        }
+    }
+
+    private static class QuantityCBORSerializer extends JsonSerializer<Quantity> {
+
+        @Override
+        public void serialize(Quantity quantity, JsonGenerator jsonGenerator, SerializerProvider provider) throws IOException {
+            // Use the existing method to get a string representation of the Quantity
+            String quantityString = quantity.toSuffixedString();
+            jsonGenerator.writeString(quantityString); // Write it as a string in CBOR
+        }
     }
 }

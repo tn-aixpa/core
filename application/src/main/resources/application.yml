@@ -210,5 +210,5 @@ jwt:
 # Task serve
 task:
   serve:
-    inactivity-period: ${TASK_SERVE_INACTIVITY_PERIOD:100000}
-    scale-to-zero: ${TASK_SERVE_SCALE_TO_ZERO:false}
+    inactivity-period: ${TASK_SERVE_INACTIVITY_PERIOD:50}
+    scale-to-zero: ${TASK_SERVE_SCALE_TO_ZERO:true}

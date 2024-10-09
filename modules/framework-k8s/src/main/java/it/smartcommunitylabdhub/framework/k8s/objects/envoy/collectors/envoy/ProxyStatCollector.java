@@ -108,10 +108,10 @@ public class ProxyStatCollector {
     // Calculate inactivity time
     public Long getInactivityTime(String previousTimestamp,
                                   String currentTimestamp,
-                                  Long diffRequests,
+                                  Long windowRequests,
                                   Long inactivityTime) {
         // If previous and current requests are 0, increase inactivity time
-        if (diffRequests == 0) {
+        if (windowRequests == 0) {
 
             ZonedDateTime current = ZonedDateTime.parse(currentTimestamp, DateTimeFormatter.ISO_ZONED_DATE_TIME);
             ZonedDateTime previous = ZonedDateTime.parse(previousTimestamp, DateTimeFormatter.ISO_ZONED_DATE_TIME);
@@ -122,7 +122,7 @@ public class ProxyStatCollector {
             inactivityTime += duration.toSeconds();  // Accumulate inactivity time
         }
         // If current requests > 0, reset inactivity time
-        else if (diffRequests > 0) {
+        else if (windowRequests > 0) {
             inactivityTime = 0L;
         }
         return inactivityTime;

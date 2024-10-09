@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.framework.k8s.runnables;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableComponent;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
@@ -26,6 +27,9 @@ public class K8sServeRunnable extends K8sRunnable {
     private CoreServiceType serviceType;
 
     private Integer replicas;
+
+    @JsonProperty("inactivity_time")
+    private Long inactivityTime;
 
     @Override
     public String getFramework() {

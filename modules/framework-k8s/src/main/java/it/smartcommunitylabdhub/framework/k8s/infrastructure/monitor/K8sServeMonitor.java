@@ -146,13 +146,13 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                     );
 
                     // Collect new proxy metrics
-                    ProxyStatsData previousEnvoyStatData =
+                    ProxyStatsData currentEnvoyStatData =
                             proxyStatCollector.collectProxyMetrics(
                                     proxyMetrics);
 
-                    // Collect stored runnable proxy metrics, if first time null fallback to new metrics
-                    // nothing is gonna happen
-                    ProxyStatsData currentEnvoyStatData =
+                    // Collect previous stored runnable proxy metrics, if first time null fallback to new metrics
+                    // nothing is going to happen
+                    ProxyStatsData previousEnvoyStatData =
                             proxyStatCollector.collectProxyMetrics(
                                     Optional.ofNullable(runnable.getMetrics()).orElse(proxyMetrics));
 
@@ -160,6 +160,16 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                     // Merge metrics and stats.from proxy
                     runnable.setMetrics(
                             coreMetrics);
+
+
+                    // Set into runnable inactivity time
+                    runnable.setInactivityTime(
+                            proxyStatCollector.getInactivityTime(
+                                    previousEnvoyStatData.getTimestamp(),
+                                    currentEnvoyStatData.getTimestamp(),
+                                    currentEnvoyStatData.getTotalRequests() - previousEnvoyStatData.getTotalRequests(),
+                                    Optional.ofNullable(runnable.getInactivityTime()).orElse(0L))
+                    );
                 } catch (K8sFrameworkException e1) {
                     log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
                 }
@@ -169,15 +179,12 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
             runnable.setState(State.ERROR.name());
         }
 
-        //TODO check if inactivity_period is expired
-        //TODO set to STOP state the runnable
-//        runnable.getMetrics().forEach(coreMetric -> {
-//            coreMetric.metrics().forEach(containerMetric -> {
-//                if (containerMetric.getName().equals("inactivity_period")) {
-//                    log.info("here we are", containerMetric.getUsage().get("inactivity_period"));
-//                }
-//            });
-//        });
+        if (runnable.getInactivityTime() > inactivityPeriod && scaleToZero) {
+
+            // Set Runnable to STOPPING state
+            log.info("Set Runnable to STOPPING state for {}", runnable.getId());
+            runnable.setState(State.STOPPING.name());
+        }
 
         return runnable;
     }

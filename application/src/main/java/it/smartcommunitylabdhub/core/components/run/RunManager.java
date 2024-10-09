@@ -449,6 +449,9 @@ public class RunManager {
                                 case RUNNING:
                                     onRunning(run, event);
                                     break;
+                                case STOPPING:
+                                    stop(run);
+                                    break;
                                 case STOPPED:
                                     onStopped(run, event);
                                     break;
