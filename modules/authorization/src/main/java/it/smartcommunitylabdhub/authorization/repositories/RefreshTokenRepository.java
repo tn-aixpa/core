@@ -13,8 +13,8 @@ import org.springframework.lang.NonNull;
 public interface RefreshTokenRepository
     extends JpaRepository<RefreshTokenEntity, String>, JpaSpecificationExecutor<RefreshTokenEntity> {
     // Select the token with a FOR UPDATE lock
-    @Query(value = "SELECT * FROM refresh_tokens WHERE token = :token FOR UPDATE", nativeQuery = true)
-    Optional<RefreshTokenEntity> findByTokenForUpdate(@Param("token") @NonNull String token);
+    @Query(value = "SELECT * FROM refresh_tokens WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<RefreshTokenEntity> findByIdForUpdate(@Param("id") @NonNull String id);
 
     // Delete the token
     @Modifying

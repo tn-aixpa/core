@@ -241,6 +241,11 @@ public class TokenEndpoint implements InitializingBean {
             throw new IllegalArgumentException("invalid grant type");
         }
 
+        String cid = parameters.get("client_id");
+        if (cid != null && !clientId.equals(cid)) {
+            throw new IllegalArgumentException("invalid or missing client_id");
+        }
+
         //validate token as well
         String token = parameters.get("subject_token");
         if (token == null) {

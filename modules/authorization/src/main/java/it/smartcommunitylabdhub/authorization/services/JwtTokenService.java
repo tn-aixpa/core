@@ -285,10 +285,14 @@ public class JwtTokenService implements InitializingBean {
 
             log.debug("consume refresh token: {}", refreshToken);
 
+            //decode jwt
+            SignedJWT jwt = SignedJWT.parse(refreshToken);
+            String id = jwt.getJWTClaimsSet().getJWTID();
+
             // Lock the token
-            Optional<RefreshTokenEntity> tokenEntity = refreshTokenRepository.findByTokenForUpdate(refreshToken);
+            Optional<RefreshTokenEntity> tokenEntity = refreshTokenRepository.findByIdForUpdate(id);
             if (tokenEntity.isEmpty()) {
-                log.debug("refresh token does not exists: {}", refreshToken);
+                log.debug("refresh token does not exists: {} id {}", refreshToken, id);
                 throw new JwtTokenServiceException("Refresh token does not exist");
             }
 
