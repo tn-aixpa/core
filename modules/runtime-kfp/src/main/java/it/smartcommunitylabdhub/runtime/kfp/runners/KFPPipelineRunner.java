@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,13 @@ public class KFPPipelineRunner implements Runner<K8sRunnable> {
         );
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
+
+        //validate workflow definition
+        KFPWorkflowSpec workflowSpec = runSpec.getWorkflowSpec();
+        if (!StringUtils.hasText(workflowSpec.getWorkflow())) {
+            //not executable
+            throw new IllegalArgumentException("missing or invalid workflow definition");
+        }
 
         K8sRunnable k8sJobRunnable = K8sJobRunnable
             .builder()

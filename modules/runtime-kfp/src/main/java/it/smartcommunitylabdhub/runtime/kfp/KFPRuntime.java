@@ -16,8 +16,8 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPBuildRunner;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPPipelineRunner;
-import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPBuildTaskSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunStatus;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec;
@@ -122,18 +122,22 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         KFPRunSpec kfpRunSpec = new KFPRunSpec(run.getSpec());
         RunSpecAccessor runAccessor = RunUtils.parseTask(kfpRunSpec.getTask());
 
-        if(KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
-            if (((K8sJobRunnable) runnable).getResults() != null) {
-                String workflow = (String)((K8sJobRunnable) runnable).getResults().get("workflow");
+        if (runnable instanceof K8sJobRunnable && KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
+            K8sJobRunnable job = (K8sJobRunnable) runnable;
+
+            if (job.getResults() != null) {
+                //extract workflow yaml from results
+                String workflow = KFPWorkflowSpec.with(job.getResults()).getWorkflow();
                 String wId = runAccessor.getVersion();
                 Workflow wf = workflowService.getWorkflow(wId);
-    
+
                 log.debug("update workflow {} spec to use built workflow", wId);
-    
+
+                //update workflow definition
                 KFPWorkflowSpec wfSpec = new KFPWorkflowSpec(wf.getSpec());
                 wfSpec.setWorkflow(workflow);
                 wf.setSpec(wfSpec.toMap());
-                workflowService.updateWorkflow(wId, wf, true);    
+                workflowService.updateWorkflow(wId, wf, true);
             }
         }
 
