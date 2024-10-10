@@ -46,7 +46,8 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
     public K8sServeMonitor(
             RunnableStore<K8sServeRunnable> runnableStore,
             K8sServeFramework serveFramework,
-            K8sDeploymentFramework deploymentFramework, ProxyStatCollector proxyStatCollector) {
+            K8sDeploymentFramework deploymentFramework,
+            ProxyStatCollector proxyStatCollector) {
         super(runnableStore);
 
         Assert.notNull(deploymentFramework, "deployment framework is required");
@@ -163,12 +164,12 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
 
 
                     // Set into runnable inactivity time
-                    runnable.setInactivityTime(
-                            proxyStatCollector.getInactivityTime(
+                    runnable.setIdleTime(
+                            proxyStatCollector.getIdleTime(
                                     previousEnvoyStatData.getTimestamp(),
                                     currentEnvoyStatData.getTimestamp(),
                                     currentEnvoyStatData.getTotalRequests() - previousEnvoyStatData.getTotalRequests(),
-                                    Optional.ofNullable(runnable.getInactivityTime()).orElse(0L))
+                                    Optional.ofNullable(runnable.getIdleTime()).orElse(0L))
                     );
                 } catch (K8sFrameworkException e1) {
                     log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
@@ -179,7 +180,11 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
             runnable.setState(State.ERROR.name());
         }
 
-        if (runnable.getInactivityTime() > inactivityPeriod && scaleToZero) {
+        // check inactivity period and scale to zero if runnable has inactivity period and scale to zero
+        // use the runnable values otherwise use the default
+        if (runnable.getIdleTime() >
+                Optional.ofNullable(runnable.getInactivityPeriod()).orElse(inactivityPeriod) &&
+                Optional.ofNullable(runnable.getScaleToZero()).orElse(scaleToZero)) {
 
             // Set Runnable to STOPPING state
             log.info("Set Runnable to STOP state for {}", runnable.getId());

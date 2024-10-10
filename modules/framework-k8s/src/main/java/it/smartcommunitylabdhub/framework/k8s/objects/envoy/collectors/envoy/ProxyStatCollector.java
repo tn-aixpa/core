@@ -26,7 +26,7 @@ public class ProxyStatCollector {
             IntOrString.class,
             IntOrStringMixin.class);
 
-    public ProxyStatsData collectEnvoyStats(List<CoreMetric> coreMetricsList, Run run) {
+    public ProxyStatsData collectProxyMetrics(List<CoreMetric> coreMetricsList, Run run) {
         Map<String, Quantity> aggregatedMetrics = new HashMap<>();
 
         // get previous stats
@@ -58,7 +58,7 @@ public class ProxyStatCollector {
                     .request5xx(getStatValue(aggregatedMetrics,
                             "http.mainapp_sidecar_hcm_filter_(.*).downstream_rq_5xx"))
                     .inactivityTime(
-                            getInactivityTime(
+                            getIdleTime(
                                     Optional.ofNullable(prevEnvoyStatData.getTimestamp()).orElse(coreMetric.timestamp()),
                                     coreMetric.timestamp(), windowRequests,
                                     Optional.ofNullable(prevEnvoyStatData.getInactivityTime()).orElse(0L))
@@ -106,10 +106,10 @@ public class ProxyStatCollector {
 
 
     // Calculate inactivity time
-    public Long getInactivityTime(String previousTimestamp,
-                                  String currentTimestamp,
-                                  Long windowRequests,
-                                  Long inactivityTime) {
+    public Long getIdleTime(String previousTimestamp,
+                            String currentTimestamp,
+                            Long windowRequests,
+                            Long inactivityTime) {
         // If previous and current requests are 0, increase inactivity time
         if (windowRequests == 0) {
 

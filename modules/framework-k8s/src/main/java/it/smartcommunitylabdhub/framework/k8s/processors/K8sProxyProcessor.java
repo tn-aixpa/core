@@ -49,9 +49,9 @@ public class K8sProxyProcessor implements RunProcessor<RunBaseStatus> {
             if (metrics != null) {
                 try {
 
-                    ProxyStatsData envoyStatData = envoyStatCollector.collectEnvoyStats(metrics, run);
+                    ProxyStatsData proxyStatsData = envoyStatCollector.collectProxyMetrics(metrics, run);
 
-                    String envoyStats = mapper.writeValueAsString(envoyStatData);
+                    String envoyStats = mapper.writeValueAsString(proxyStatsData);
 
                     Map<String, Serializable> proxyStatus = mapper.readValue(envoyStats,
                             new TypeReference<HashMap<String, Serializable>>() {

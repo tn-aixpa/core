@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableCompo
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
-import it.smartcommunitylabdhub.framework.k8s.objects.envoy.CoreProxyStat;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -28,8 +27,14 @@ public class K8sServeRunnable extends K8sRunnable {
 
     private Integer replicas;
 
-    @JsonProperty("inactivity_time")
-    private Long inactivityTime;
+    @JsonProperty("idle_time")
+    private Long idleTime;
+
+    @JsonProperty("inactivity_period")
+    private Long inactivityPeriod;
+
+    @JsonProperty("scale_to_zero")
+    private Boolean scaleToZero;
 
     @Override
     public String getFramework() {

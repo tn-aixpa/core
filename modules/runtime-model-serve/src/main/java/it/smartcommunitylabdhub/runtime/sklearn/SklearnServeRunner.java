@@ -117,6 +117,8 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
             .priorityClass(taskSpec.getPriorityClass())
             .template(taskSpec.getProfile())
             //specific
+            .inactivityPeriod(taskSpec.getInactivityPeriod())
+            .scaleToZero(taskSpec.getScaleToZero())
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort, grpcPort))
             .serviceType(taskSpec.getServiceType() != null ? taskSpec.getServiceType() : CoreServiceType.NodePort)
