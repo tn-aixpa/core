@@ -35,7 +35,7 @@ public class KFPWorkflowSpec extends WorkflowBaseSpec {
 
     @JsonSchemaIgnore
     private String workflow;
-    
+
     public KFPWorkflowSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -55,5 +55,11 @@ public class KFPWorkflowSpec extends WorkflowBaseSpec {
 
     public enum KFPSourceCodeLanguages {
         python,
+    }
+
+    public static KFPWorkflowSpec with(Map<String, Serializable> data) {
+        KFPWorkflowSpec spec = new KFPWorkflowSpec();
+        spec.configure(data);
+        return spec;
     }
 }
