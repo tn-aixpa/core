@@ -20,8 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -44,6 +46,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -317,7 +320,7 @@ public class TokenEndpoint implements InitializingBean {
      * TODO! use SecurityConfig instead (move tokenEndpoint to app!)
      * copied from SecurityConfig
      */
-    public static JwtDecoder externalJwtDecoder(String issuer, String audience) {
+    private static JwtDecoder externalJwtDecoder(String issuer, String audience) {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuer).build();
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
@@ -332,21 +335,18 @@ public class TokenEndpoint implements InitializingBean {
         return jwtDecoder;
     }
 
-    public static JwtAuthenticationConverter externalJwtAuthenticationConverter(
-        String usernameClaim,
-        String rolesClaim,
+    private static Converter<Jwt, AbstractAuthenticationToken> externalJwtAuthenticationConverter(
+        String usernameClaimName,
+        String rolesClaimName,
         AuthorizableAwareEntityService<Project> projectAuthHelper
     ) {
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
-            if (source == null) return null;
-
+        return (Jwt jwt) -> {
             Set<GrantedAuthority> authorities = new HashSet<>();
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
             //read roles from token
-            if (StringUtils.hasText(rolesClaim) && source.hasClaim(rolesClaim)) {
-                List<String> roles = source.getClaimAsStringList(rolesClaim);
+            if (StringUtils.hasText(rolesClaimName) && jwt.hasClaim(rolesClaimName)) {
+                List<String> roles = jwt.getClaimAsStringList(rolesClaimName);
                 if (roles != null) {
                     roles.forEach(r -> {
                         if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
@@ -360,33 +360,34 @@ public class TokenEndpoint implements InitializingBean {
                 }
             }
 
-            if (projectAuthHelper != null && StringUtils.hasText(source.getClaimAsString(usernameClaim))) {
-                String username = source.getClaimAsString(usernameClaim);
+            //principalName
+            String username = jwt.getClaimAsString(usernameClaimName);
 
+            //fallback to SUB if missing
+            if (!StringUtils.hasText(username)) {
+                username = jwt.getSubject();
+            }
+
+            if (projectAuthHelper != null) {
                 //inject roles from ownership of projects
+                //derive a scoped ADMIN role
                 projectAuthHelper
                     .findIdsByCreatedBy(username)
-                    .forEach(p -> {
-                        //derive a scoped ADMIN role
-                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
-                    });
+                    .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN")));
 
                 //inject roles from sharing of projects
+                //derive a scoped USER role
+                //TODO make configurable?
                 projectAuthHelper
                     .findIdsBySharedTo(username)
-                    .forEach(p -> {
-                        //derive a scoped USER role
-                        //TODO make configurable?
-                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER"));
-                    });
+                    .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER")));
             }
-            return authorities;
-        });
-        converter.setPrincipalClaimName(usernameClaim);
-        return converter;
+
+            return new JwtAuthenticationToken(jwt, authorities, username);
+        };
     }
 
-    public static JwtAuthenticationConverter coreJwtAuthenticationConverter(
+    private static JwtAuthenticationConverter coreJwtAuthenticationConverter(
         String claim,
         AuthorizableAwareEntityService<Project> projectAuthHelper
     ) {
