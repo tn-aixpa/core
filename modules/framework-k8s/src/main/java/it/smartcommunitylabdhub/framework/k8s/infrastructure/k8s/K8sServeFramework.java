@@ -599,7 +599,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     }
 
     // Use rest template to collect envoy stats
-    // the same as for metrics...difference are on the ojbect that is retrieved.
+    // the same as for metrics...difference are on the object that is retrieved.
     public List<CoreMetric> proxyMetrics(V1Service object) throws K8sFrameworkException {
         if (object == null || object.getMetadata() == null) {
             return null;
