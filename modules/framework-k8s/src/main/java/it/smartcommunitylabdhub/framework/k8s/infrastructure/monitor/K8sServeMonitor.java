@@ -182,8 +182,8 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
         if (runnable.getInactivityTime() > inactivityPeriod && scaleToZero) {
 
             // Set Runnable to STOPPING state
-            log.info("Set Runnable to STOPPING state for {}", runnable.getId());
-            runnable.setState(State.STOPPING.name());
+            log.info("Set Runnable to STOP state for {}", runnable.getId());
+            runnable.setState(State.STOP.name());
         }
 
         return runnable;

@@ -449,8 +449,8 @@ public class RunManager {
                                 case RUNNING:
                                     onRunning(run, event);
                                     break;
-                                case STOPPING:
-                                    stop(run);
+                                case STOP:
+                                    onStop(run, event);
                                     break;
                                 case STOPPED:
                                     onStopped(run, event);
@@ -481,6 +481,11 @@ public class RunManager {
                     log.error("Run with id {} not found", runnableMonitorObject.getRunId());
                 }
             );
+    }
+
+    private void onStop(Run run, RunnableChangedEvent<RunRunnable> event) {
+        // For now just stop
+        stop(run);
     }
 
     // Callback Methods

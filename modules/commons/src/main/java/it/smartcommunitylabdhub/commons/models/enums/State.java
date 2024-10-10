@@ -20,7 +20,6 @@ public enum State {
     FSM_ERROR,
     SUCCESS,
     STOPPED,
-    STOPPING,
     STOP,
     UNKNOWN,
     NONE,
