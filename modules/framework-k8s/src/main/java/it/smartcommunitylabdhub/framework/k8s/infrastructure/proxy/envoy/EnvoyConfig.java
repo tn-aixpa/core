@@ -69,6 +69,23 @@ public class EnvoyConfig {
         private TypedConfig typedConfig;
     }
 
+
+    @Data
+    @Builder
+    public static class Provider {
+
+        private String name;
+
+        @JsonProperty("typed_config")
+        private TypedConfig typedConfig;
+    }
+
+    @Data
+    @Builder
+    public static class Tracing {
+        private Provider provider;
+    }
+
     @Data
     @Builder
     public static class TypedConfig {
@@ -78,11 +95,30 @@ public class EnvoyConfig {
         @JsonProperty("stat_prefix")
         private String statPrefix;
 
+        @JsonProperty("codec_type")
+        private String codecType;
+
         @JsonProperty("http_filters")
         private List<HttpFilter> httpFilters;
 
+        @JsonProperty("tracing")
+        private Tracing tracing;
+
         @JsonProperty("route_config")
         private RouteConfig routeConfig;
+
+        @JsonProperty("collector_cluster")
+        private String collectorCluster;
+
+        @JsonProperty("collector_endpoint")
+        private String collectorEndpoint;
+
+        @JsonProperty("collector_endpoint_version")
+        private String collectorEndpointVersion;
+
+        @JsonProperty("inline_code")
+        private String inlineCode;
+
     }
 
     @Data
@@ -111,12 +147,40 @@ public class EnvoyConfig {
         private List<Route> routes;
     }
 
+
+
+    @Data
+    @Builder
+    public static class Header {
+        private String key;
+        private String value;
+    }
+
+    @Data
+    @Builder
+    public static class ResponseHeadersToAdd {
+        private Header header;
+    }
+
+    @Data
+    @Builder
+    public static class RequestHeadersToAdd {
+        private Header header;
+    }
+
     @Data
     @Builder
     public static class Route {
         private String name;
         private Match match;
         private RouteAction route;
+
+        @JsonProperty("response_headers_to_add")
+        private List<ResponseHeadersToAdd> responseHeadersToAdd;
+
+        @JsonProperty("request_headers_to_add")
+        private List<RequestHeadersToAdd> requestHeadersToAdd;
+
     }
 
     @Data
@@ -141,6 +205,9 @@ public class EnvoyConfig {
 
         @JsonProperty("lb_policy")
         private String lbPolicy;
+
+        @JsonProperty("connect_timeout")
+        private String connectTimeout;
 
         @JsonProperty("load_assignment")
         private LoadAssignment loadAssignment;
