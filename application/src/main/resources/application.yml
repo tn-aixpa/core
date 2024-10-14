@@ -65,7 +65,7 @@ runtime:
   mlrun:
     image: ${RUNTIME_MLRUN_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-mlrun:latest}
   kfp:
-    image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-wrapper-kfp:latest}
+    image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-kfp:latest}
   python:
     images:
       PYTHON3_9: ${RUNTIME_PYTHON_IMAGE_3_9:ghcr.io/scc-digitalhub/digitalhub-serverless/python-runtime:3.9-latest}
