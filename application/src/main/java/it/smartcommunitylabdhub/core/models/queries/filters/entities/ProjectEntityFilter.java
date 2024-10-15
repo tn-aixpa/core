@@ -46,6 +46,9 @@ public class ProjectEntityFilter {
     @Nullable
     protected String updated;
 
+    @Nullable
+    protected String user;
+
     public SearchFilter<ProjectEntity> toSearchFilter() {
         //build default search fields in AND
         List<SearchCriteria<ProjectEntity>> criteria = new ArrayList<>();
@@ -132,6 +135,12 @@ public class ProjectEntityFilter {
                     //invalid dates, skip
                 }
             });
+
+        Optional
+            .ofNullable(user)
+            .ifPresent(value ->
+                criteria.add(new BaseEntitySearchCriteria<>("createdBy", value, SearchCriteria.Operation.equal))
+            );
 
         return BaseEntityFilter
             .<ProjectEntity>builder()
