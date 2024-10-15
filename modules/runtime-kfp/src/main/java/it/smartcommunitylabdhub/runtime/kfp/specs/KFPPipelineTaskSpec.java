@@ -26,7 +26,7 @@ public class KFPPipelineTaskSpec extends K8sTaskBaseSpec {
     @Pattern(regexp = Keys.CRONTAB_PATTERN)
     private String schedule;
 
-    @Schema(format = "yaml")
+    @Schema(format = "yaml+base64")
     private String workflow;
 
     public KFPPipelineTaskSpec(Map<String, Serializable> data) {
