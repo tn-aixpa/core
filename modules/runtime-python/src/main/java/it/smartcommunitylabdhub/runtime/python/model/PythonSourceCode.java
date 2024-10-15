@@ -21,8 +21,7 @@ public class PythonSourceCode
     @Nullable
     @Schema(
         title = "fields.sourceCode.init_function.title",
-        description = "fields.sourceCode.init_function.description",
-        format = "yaml+base64"
+        description = "fields.sourceCode.init_function.description"
     )
     @JsonProperty("init_function")
     private String initFunction;
