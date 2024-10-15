@@ -123,21 +123,31 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         RunSpecAccessor runAccessor = RunUtils.parseTask(kfpRunSpec.getTask());
 
         if (runnable instanceof K8sJobRunnable && KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
-            K8sJobRunnable job = (K8sJobRunnable) runnable;
+            if (run.getStatus() != null && run.getStatus().containsKey("results")) {
+                try {
+                    //extract workflow yaml from *run* results
+                    @SuppressWarnings("unchecked")
+                    Map<String, Serializable> results = (Map<String, Serializable>) run
+                        .getStatus()
+                        .getOrDefault("results", new HashMap<>());
+                    String workflow = KFPWorkflowSpec.with(results).getWorkflow();
+                    String wId = runAccessor.getVersion();
+                    Workflow wf = workflowService.getWorkflow(wId);
 
-            if (job.getResults() != null) {
-                //extract workflow yaml from results
-                String workflow = KFPWorkflowSpec.with(job.getResults()).getWorkflow();
-                String wId = runAccessor.getVersion();
-                Workflow wf = workflowService.getWorkflow(wId);
+                    log.debug("update workflow {} spec to use built workflow", wId);
 
-                log.debug("update workflow {} spec to use built workflow", wId);
+                    //update workflow definition
+                    KFPWorkflowSpec wfSpec = new KFPWorkflowSpec(wf.getSpec());
+                    wfSpec.setWorkflow(workflow);
+                    wf.setSpec(wfSpec.toMap());
+                    workflowService.updateWorkflow(wId, wf, true);
+                } catch (ClassCastException e) {
+                    log.error("invalid run results for {}", run.getId());
 
-                //update workflow definition
-                KFPWorkflowSpec wfSpec = new KFPWorkflowSpec(wf.getSpec());
-                wfSpec.setWorkflow(workflow);
-                wf.setSpec(wfSpec.toMap());
-                workflowService.updateWorkflow(wId, wf, true);
+                    if (log.isTraceEnabled()) {
+                        log.trace("results: {}", run.getStatus().get("results"));
+                    }
+                }
             }
         }
 
