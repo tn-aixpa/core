@@ -19,6 +19,7 @@ import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.models.specs.secret.SecretSecretSpec;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
@@ -381,7 +382,7 @@ public class SecretServiceImpl implements SecretService {
     }
 
     private String getProjectSecretName(String project) {
-        return String.format("dhcore-proj-secrets-%s", project);
+        return K8sBuilderHelper.sanitizeNames("proj-secrets-" + "-" + project);
     }
 
     private String getSecretPath(String provider, String secret, String key) {
