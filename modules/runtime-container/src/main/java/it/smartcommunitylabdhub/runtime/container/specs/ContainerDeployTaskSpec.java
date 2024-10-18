@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
+import jakarta.validation.constraints.Min;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -18,7 +19,11 @@ public class ContainerDeployTaskSpec extends K8sTaskBaseSpec {
 
     public static final String KIND = "container+deploy";
 
+    @Min(1)
     private Integer replicas;
+
+    @Min(1)
+    private Integer fsGroup;
 
     public ContainerDeployTaskSpec(Map<String, Serializable> data) {
         configure(data);

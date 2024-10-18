@@ -362,7 +362,8 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
             .priorityClassName(buildPriorityClassName(runnable))
             .volumes(volumes)
             .restartPolicy("Never")
-            .imagePullSecrets(buildImagePullSecrets(runnable));
+            .imagePullSecrets(buildImagePullSecrets(runnable))
+            .securityContext(buildPodSecurityContext(runnable));
 
         //check if context build is required
         if (

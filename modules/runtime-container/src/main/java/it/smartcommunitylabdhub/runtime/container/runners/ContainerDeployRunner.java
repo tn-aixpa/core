@@ -120,6 +120,8 @@ public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
             .runtimeClass(taskSpec.getRuntimeClass())
             .priorityClass(taskSpec.getPriorityClass())
             .template(taskSpec.getProfile())
+            //securityContext
+            .fsGroup(taskSpec.getFsGroup())
             //specific
             .contextRefs(contextRefs)
             .contextSources(contextSources)

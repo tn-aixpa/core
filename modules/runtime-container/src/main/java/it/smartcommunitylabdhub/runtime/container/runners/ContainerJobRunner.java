@@ -122,6 +122,8 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
             .runtimeClass(taskSpec.getRuntimeClass())
             .priorityClass(taskSpec.getPriorityClass())
             .template(taskSpec.getProfile())
+            //securityContext
+            .fsGroup(taskSpec.getFsGroup())
             //specific
             .contextRefs(contextRefs)
             .contextSources(contextSources)
@@ -150,6 +152,8 @@ public class ContainerJobRunner implements Runner<K8sRunnable> {
                     .runtimeClass(taskSpec.getRuntimeClass())
                     .priorityClass(taskSpec.getPriorityClass())
                     .template(taskSpec.getProfile())
+                    //securityContext
+                    .fsGroup(taskSpec.getFsGroup())
                     //specific
                     .contextRefs(contextRefs)
                     .contextSources(contextSources)

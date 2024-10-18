@@ -208,6 +208,8 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 .runtimeClass(taskSpec.getRuntimeClass())
                 .priorityClass(taskSpec.getPriorityClass())
                 .template(taskSpec.getProfile())
+                //securityContext
+                .fsGroup(1000)
                 //specific
                 .backoffLimit(0)
                 .build();

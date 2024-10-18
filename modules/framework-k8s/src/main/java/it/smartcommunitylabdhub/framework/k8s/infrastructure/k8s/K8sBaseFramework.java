@@ -1,11 +1,9 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kubernetes.client.Metrics;
 import io.kubernetes.client.common.KubernetesObject;
-import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.PodMetrics;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
@@ -19,6 +17,7 @@ import io.kubernetes.client.openapi.models.V1LocalObjectReference;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
+import io.kubernetes.client.openapi.models.V1PodSecurityContext;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecurityContext;
@@ -27,12 +26,10 @@ import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.config.KubernetesProperties;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
 import it.smartcommunitylabdhub.framework.k8s.jackson.KubernetesMapper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
@@ -1072,6 +1069,35 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             context.runAsNonRoot(true);
         }
 
+        //check for additional config, root is *always* disallowed
+        if (runnable.getRunAsUser() != null && runnable.getRunAsUser() != 0) {
+            context.setRunAsUser((long) runnable.getRunAsUser().intValue());
+        }
+        if (runnable.getRunAsGroup() != null && runnable.getRunAsGroup() != 0) {
+            context.setRunAsGroup((long) runnable.getRunAsGroup().intValue());
+        }
+
+        return context;
+    }
+
+    public V1PodSecurityContext buildPodSecurityContext(T runnable) throws K8sFrameworkException {
+        V1PodSecurityContext context = new V1PodSecurityContext();
+
+        //enforce policy for non root when requested by admin
+        if (disableRoot) {
+            context.runAsNonRoot(true);
+        }
+
+        //check for additional config, root is *always* disallowed
+        if (runnable.getRunAsUser() != null && runnable.getRunAsUser() != 0) {
+            context.setRunAsUser((long) runnable.getRunAsUser().intValue());
+        }
+        if (runnable.getRunAsGroup() != null && runnable.getRunAsGroup() != 0) {
+            context.setRunAsGroup((long) runnable.getRunAsGroup().intValue());
+        }
+        if (runnable.getFsGroup() != null && runnable.getFsGroup() != 0) {
+            context.setFsGroup((long) runnable.getFsGroup().intValue());
+        }
         return context;
     }
 

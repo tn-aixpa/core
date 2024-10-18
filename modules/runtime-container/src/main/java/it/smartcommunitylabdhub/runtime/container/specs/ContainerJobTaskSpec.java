@@ -31,6 +31,9 @@ public class ContainerJobTaskSpec extends K8sTaskBaseSpec {
     @Pattern(regexp = Keys.CRONTAB_PATTERN)
     private String schedule;
 
+    @Min(1)
+    private Integer fsGroup;
+
     public ContainerJobTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -42,5 +45,6 @@ public class ContainerJobTaskSpec extends K8sTaskBaseSpec {
         ContainerJobTaskSpec spec = mapper.convertValue(data, ContainerJobTaskSpec.class);
         this.backoffLimit = spec.getBackoffLimit();
         this.schedule = spec.getSchedule();
+        this.fsGroup = spec.getFsGroup();
     }
 }

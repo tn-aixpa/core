@@ -385,7 +385,8 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             .priorityClassName(buildPriorityClassName(runnable))
             .volumes(volumes)
             .restartPolicy("Always")
-            .imagePullSecrets(buildImagePullSecrets(runnable));
+            .imagePullSecrets(buildImagePullSecrets(runnable))
+            .securityContext(buildPodSecurityContext(runnable));
 
         //check if context build is required
         if (

@@ -120,6 +120,8 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
             .runtimeClass(taskSpec.getRuntimeClass())
             .priorityClass(taskSpec.getPriorityClass())
             .template(taskSpec.getProfile())
+            //securityContext
+            .fsGroup(taskSpec.getFsGroup())
             //specific
             .contextRefs(contextRefs)
             .contextSources(contextSources)

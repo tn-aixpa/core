@@ -584,7 +584,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             .priorityClassName(buildPriorityClassName(runnable))
             .volumes(volumes)
             .restartPolicy("Always")
-            .imagePullSecrets(buildImagePullSecrets(runnable));
+            .imagePullSecrets(buildImagePullSecrets(runnable))
+            .securityContext(buildPodSecurityContext(runnable));
 
         //check if context build is required
         if (

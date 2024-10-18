@@ -344,7 +344,8 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             .priorityClassName(buildPriorityClassName(runnable))
             .volumes(volumes)
             .restartPolicy("Never")
-            .imagePullSecrets(buildImagePullSecrets(runnable));
+            .imagePullSecrets(buildImagePullSecrets(runnable))
+            .securityContext(buildPodSecurityContext(runnable));
 
         //check if context build is required
         if (

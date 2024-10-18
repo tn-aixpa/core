@@ -74,6 +74,11 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private String priorityClass;
 
+    //securityContext
+    private Integer runAsUser;
+    private Integer runAsGroup;
+    private Integer fsGroup;
+
     private List<CoreLabel> labels;
 
     private String template;
