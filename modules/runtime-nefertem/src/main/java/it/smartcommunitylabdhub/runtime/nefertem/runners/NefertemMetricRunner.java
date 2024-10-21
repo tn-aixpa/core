@@ -13,25 +13,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
-/**
- * DbtMetricRunner
- * <p>
- * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
- * you have to register it using the following annotation:
- *
- * @RunnerComponent(runtime = "dbt", task = "metric")
- */
 public class NefertemMetricRunner implements Runner<K8sJobRunnable> {
 
     private final String image;
 
-    private final Map<String, Set<String>> groupedSecrets;
+    private final Map<String, String> secretData;
 
-    public NefertemMetricRunner(String image, Map<String, Set<String>> groupedSecrets) {
+    public NefertemMetricRunner(String image, Map<String, String> secretData) {
         this.image = image;
-        this.groupedSecrets = groupedSecrets;
+        this.secretData = secretData;
     }
 
     @Override
@@ -47,6 +38,10 @@ public class NefertemMetricRunner implements Runner<K8sJobRunnable> {
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
 
+        List<CoreEnv> coreSecrets = secretData == null
+            ? null
+            : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
+
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         //TODO: Create runnable using information from Run completed spec.
@@ -60,7 +55,7 @@ public class NefertemMetricRunner implements Runner<K8sJobRunnable> {
             .resources(taskSpec.getResources())
             .nodeSelector(taskSpec.getNodeSelector())
             .volumes(taskSpec.getVolumes())
-            .secrets(groupedSecrets)
+            .secrets(coreSecrets)
             .envs(coreEnvList)
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())

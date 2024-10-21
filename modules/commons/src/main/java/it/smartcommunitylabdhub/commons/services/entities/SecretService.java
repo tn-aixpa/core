@@ -5,7 +5,6 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import jakarta.validation.constraints.NotNull;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,6 +90,14 @@ public interface SecretService {
      */
     void deleteSecretsByProject(@NotNull String project) throws SystemException;
 
+    //TODO move to separated interface
+    /**
+     * Retrieve the project secret values for the specified names of the project
+     * @param id
+     * @return
+     */
+    Map.Entry<String, String> getSecretData(@NotNull String id) throws SystemException;
+
     /**
      * Retrieve the project secret values for the specified names of the project
      * @param project
@@ -100,20 +107,26 @@ public interface SecretService {
     Map<String, String> getSecretData(@NotNull String project, @NotNull Set<String> names) throws SystemException;
 
     /**
+     * Store the values for the project secrets.
+     * @param id
+     * @param value
+     */
+    void storeSecretData(@NotNull String id, @NotNull String value) throws SystemException;
+
+    /**
      * Store the values for the project secrets. If the secret does not exist, it will be created.
      * @param project
      * @param values
      */
     void storeSecretData(@NotNull String project, @NotNull Map<String, String> values) throws SystemException;
-
-    /**
-     * Group the specifiedsecrets by secret name as stored in provider.
-     * Only Kubernetes provider is supported at this moment.
-     * @param projectId
-     * @param secrets
-     * @return
-     */
-    //TODO move to runtimes, this logic is outside the service
-    @Deprecated(forRemoval = true)
-    Map<String, Set<String>> groupSecrets(String projectId, Collection<String> secrets) throws SystemException;
+    // /**
+    //  * Group the specifiedsecrets by secret name as stored in provider.
+    //  * Only Kubernetes provider is supported at this moment.
+    //  * @param projectId
+    //  * @param secrets
+    //  * @return
+    //  */
+    // //TODO move to runtimes, this logic is outside the service
+    // @Deprecated(forRemoval = true)
+    // Map<String, Set<String>> groupSecrets(String projectId, Collection<String> secrets) throws SystemException;
 }

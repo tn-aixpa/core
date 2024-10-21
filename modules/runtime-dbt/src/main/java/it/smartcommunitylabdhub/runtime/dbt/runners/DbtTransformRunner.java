@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * DbtTransformRunner
@@ -26,11 +25,11 @@ import java.util.Set;
 public class DbtTransformRunner implements Runner<K8sJobRunnable> {
 
     private final String image;
-    private final Map<String, Set<String>> groupedSecrets;
+    private final Map<String, String> secretData;
 
-    public DbtTransformRunner(String image, Map<String, Set<String>> groupedSecrets) {
+    public DbtTransformRunner(String image, Map<String, String> secretData) {
         this.image = image;
-        this.groupedSecrets = groupedSecrets;
+        this.secretData = secretData;
     }
 
     @Override
@@ -45,6 +44,9 @@ public class DbtTransformRunner implements Runner<K8sJobRunnable> {
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
+        List<CoreEnv> coreSecrets = secretData == null
+            ? null
+            : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
@@ -59,7 +61,7 @@ public class DbtTransformRunner implements Runner<K8sJobRunnable> {
             .resources(taskSpec.getResources())
             .nodeSelector(taskSpec.getNodeSelector())
             .volumes(taskSpec.getVolumes())
-            .secrets(groupedSecrets)
+            .secrets(coreSecrets)
             .envs(coreEnvList)
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())

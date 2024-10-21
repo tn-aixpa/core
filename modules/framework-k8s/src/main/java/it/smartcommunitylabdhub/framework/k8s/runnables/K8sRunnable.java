@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -56,8 +55,7 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private List<CoreEnv> envs;
 
-    // mapping secret name to the list of keys to of the secret to use
-    private Map<String, Set<String>> secrets;
+    private List<CoreEnv> secrets;
 
     private CoreResource resources;
 

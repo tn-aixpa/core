@@ -93,7 +93,7 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         return switch (runAccessor.getTask()) {
             case KFPPipelineTaskSpec.KIND -> new KFPPipelineRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runKfpSpec.getTaskSpec().getSecrets())
+                secretService.getSecretData(run.getProject(), runKfpSpec.getTaskSpec().getSecrets())
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

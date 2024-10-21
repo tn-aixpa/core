@@ -117,7 +117,7 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
                 images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);
@@ -125,7 +125,7 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
                 images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);
@@ -133,7 +133,7 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
                 images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
                 command,
                 runPythonSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runPythonSpec.getTaskBuildSpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runPythonSpec.getTaskBuildSpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);

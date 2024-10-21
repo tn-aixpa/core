@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.kubernetes.client.openapi.ApiException;
+import it.smartcommunitylabdhub.commons.annotations.common.Identifier;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -10,23 +9,19 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.entities.secret.SecretBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.SecretsProvider;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.specs.secret.SecretSecretSpec;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
-import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -49,9 +44,9 @@ import org.springframework.validation.BindException;
 @Slf4j
 public class SecretServiceImpl implements SecretService {
 
-    private static final String K8S_PROVIDER = "kubernetes";
+    // private static final String K8S_PROVIDER = "kubernetes";
     private static final String PATH_FORMAT = "%s://%s/%s";
-    private static final Pattern PATH_PATTERN = Pattern.compile("(\\w+)://([\\w-]+)/([\\w-]+)");
+    private static final Pattern PATH_PATTERN = Pattern.compile("secret://([\\w-]+)");
 
     @Autowired
     private EntityService<Secret, SecretEntity> entityService;
@@ -65,8 +60,23 @@ public class SecretServiceImpl implements SecretService {
     @Autowired
     private SpecValidator validator;
 
+    private Map<String, SecretsProvider> providers = new HashMap<>();
+
     @Autowired(required = false)
-    private K8sSecretHelper secretHelper;
+    public void setProviders(List<SecretsProvider> providers) {
+        this.providers = new HashMap<>();
+        providers
+            .stream()
+            .forEach(p -> {
+                //read identifier as key
+                //TODO move to a shared registry
+                Identifier id = p.getClass().getAnnotation(Identifier.class);
+                if (id != null) {
+                    //register
+                    this.providers.put(id.value(), p);
+                }
+            });
+    }
 
     @Override
     public Page<Secret> listSecrets(Pageable pageable) {
@@ -160,6 +170,11 @@ public class SecretServiceImpl implements SecretService {
                     throw new IllegalArgumentException("invalid or missing path in spec");
                 }
 
+                //path must match
+                if (!PATH_PATTERN.matcher(path).matches()) {
+                    throw new IllegalArgumentException("invalid or missing path in spec");
+                }
+
                 // Parse and export Spec
                 Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
                 if (spec == null) {
@@ -219,20 +234,28 @@ public class SecretServiceImpl implements SecretService {
         try {
             Secret secret = findSecret(id);
             if (secret != null) {
-                if (secretHelper != null) {
-                    log.debug("cascade delete secret data for secret with id {}", String.valueOf(id));
+                //read spec and call provider
+                SecretBaseSpec secretSpec = new SecretBaseSpec();
+                secretSpec.configure(secret.getSpec());
 
-                    try {
-                        secretHelper.deleteSecretKeys(
-                            getProjectSecretName(secret.getProject()),
-                            //TODO use accessor for path
-                            Collections.singleton((String) secret.getSpec().get("path"))
-                        );
-                    } catch (JsonProcessingException | ApiException e) {
-                        log.error("error deleting secret data: {}", e.getMessage());
-                        //TODO throw a dedicated error
-                        throw new RuntimeException("error writing secrets");
-                    }
+                String path = secretSpec.getPath();
+                String provider = secretSpec.getProvider();
+
+                if (
+                    StringUtils.hasText(path) &&
+                    StringUtils.hasText(provider) &&
+                    providers != null &&
+                    providers.containsKey(provider)
+                ) {
+                    log.debug(
+                        "cascade delete secret data for secret with id {} via provider {}",
+                        String.valueOf(id),
+                        provider
+                    );
+
+                    providers
+                        .get(provider)
+                        .clearSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), path));
                 }
 
                 //delete the secret
@@ -248,18 +271,9 @@ public class SecretServiceImpl implements SecretService {
     public void deleteSecretsByProject(@NotNull String project) {
         log.debug("delete secrets for project {}", project);
         try {
-            //clear data first
-            if (secretHelper != null) {
-                try {
-                    secretHelper.deleteSecret(getProjectSecretName(project));
-                } catch (ApiException e) {
-                    log.error("error deleting secret data for project {}:{}", project, e.getMessage());
-                    throw new RuntimeException("error reading secrets");
-                }
-            }
-
-            //delete entities
-            entityService.deleteAll(CommonSpecification.projectEquals(project));
+            //delete one-by-one to clear data
+            Specification<SecretEntity> specification = Specification.allOf(CommonSpecification.projectEquals(project));
+            entityService.searchAll(specification).stream().forEach(s -> deleteSecret(s.getName()));
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -269,11 +283,81 @@ public class SecretServiceImpl implements SecretService {
     /*
      * Secret data (via provider)
      */
+
+    @Override
+    public Map.Entry<String, String> getSecretData(@NotNull String id) {
+        log.debug("read secret data with id {}", String.valueOf(id));
+        try {
+            Secret secret = getSecret(id);
+            //read spec and call provider
+            SecretBaseSpec secretSpec = new SecretBaseSpec();
+            secretSpec.configure(secret.getSpec());
+
+            String path = secretSpec.getPath();
+            String provider = secretSpec.getProvider();
+            Matcher matcher = PATH_PATTERN.matcher(path);
+
+            if (
+                StringUtils.hasText(path) &&
+                StringUtils.hasText(provider) &&
+                matcher.matches() &&
+                providers != null &&
+                providers.containsKey(provider)
+            ) {
+                log.debug("read secret data for secret with id {} via provider {}", String.valueOf(id), provider);
+
+                String key = matcher.group(1);
+                String value = providers
+                    .get(provider)
+                    .readSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), path));
+
+                return Map.entry(key, value);
+            }
+
+            throw new StoreException("invalid or unavailable provider");
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void storeSecretData(@NotNull String id, @NotNull String value) {
+        log.debug("store secret data with id {}", String.valueOf(id));
+        try {
+            Secret secret = getSecret(id);
+            //read spec and call provider
+            SecretBaseSpec secretSpec = new SecretBaseSpec();
+            secretSpec.configure(secret.getSpec());
+
+            String path = secretSpec.getPath();
+            String provider = secretSpec.getProvider();
+
+            if (
+                StringUtils.hasText(path) &&
+                StringUtils.hasText(provider) &&
+                providers != null &&
+                providers.containsKey(provider)
+            ) {
+                log.debug("store secret data for secret with id {} via provider {}", String.valueOf(id), provider);
+
+                providers
+                    .get(provider)
+                    .writeSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), path), value);
+            }
+
+            throw new StoreException("invalid or unavailable provider");
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
     @Override
     public Map<String, String> getSecretData(@NotNull String project, @NotNull Set<String> names) {
         if (names == null || names.isEmpty()) return Collections.emptyMap();
 
-        if (secretHelper == null) {
+        if (providers == null || providers.isEmpty()) {
             return Collections.emptyMap();
         }
 
@@ -283,103 +367,59 @@ public class SecretServiceImpl implements SecretService {
             .filter(s -> names.contains(s.getName()))
             .collect(Collectors.toList());
 
-        try {
-            //unseal project secret data via provider
-            Map<String, String> secretData = secretHelper.getSecretData(getProjectSecretName(project));
-            if (secretData == null) {
-                return Collections.emptyMap();
-            }
-
-            return secrets.stream().collect(Collectors.toMap(s -> s.getName(), s -> secretData.get(s.getName())));
-        } catch (ApiException e) {
-            log.error("error reading secret data for project {}:{}", project, e.getMessage());
-            throw new RuntimeException("error reading secrets");
-        }
+        //unseal project secret data via provider
+        return secrets
+            .stream()
+            .map(s -> getSecretData(s.getId()))
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
     @Override
     public void storeSecretData(@NotNull String project, @NotNull Map<String, String> values) {
         if (values == null || values.isEmpty()) return;
 
-        String secretName = getProjectSecretName(project);
-
-        for (Entry<String, String> entry : values.entrySet()) {
-            String name = entry.getKey();
-
-            //define a spec for tasks building function path
-            Specification<SecretEntity> where = Specification.allOf(
-                CommonSpecification.projectEquals(project),
-                CommonSpecification.nameEquals(name)
-            );
-            try {
-                Secret secret = entityService.searchAll(where).stream().findFirst().orElse(null);
-                if (secret == null) {
-                    //store as new
-                    secret = new Secret();
-                    secret.setKind("secret");
-                    secret.setName(name);
-                    secret.setProject(project);
-
-                    //secrets are embedded by default
-                    EmbeddableMetadata embeddableMetadata = new EmbeddableMetadata();
-                    embeddableMetadata.setEmbedded(true);
-                    secret.setMetadata(embeddableMetadata.toMap());
-
-                    SecretBaseSpec spec = new SecretSecretSpec();
-                    spec.setProvider(K8S_PROVIDER);
-                    spec.setPath(getSecretPath(K8S_PROVIDER, secretName, entry.getKey()));
-                    secret.setSpec(spec.toMap());
-
-                    try {
-                        entityService.create(secret);
-                    } catch (DuplicatedEntityException e) {
-                        //should not happen
-                    }
-                }
-            } catch (StoreException e) {
-                log.error("store error: {}", e.getMessage());
-                throw new SystemException(e.getMessage());
-            }
+        if (providers == null || providers.isEmpty()) {
+            return;
         }
 
-        if (secretHelper != null) {
-            try {
-                secretHelper.storeSecretData(secretName, values);
-            } catch (ApiException | JsonProcessingException e) {
-                log.error("error writing secret data for project {}:{}", project, e.getMessage());
-                throw new RuntimeException("error writing secrets");
-            }
-        }
+        //fetch requested secrets
+        List<Secret> secrets = listSecretsByProject(project)
+            .stream()
+            .filter(s -> values.containsKey(s.getName()))
+            .collect(Collectors.toList());
+
+        //store project secret data via provider
+        secrets.stream().forEach(s -> storeSecretData(s.getId(), values.get(s.getName())));
     }
 
-    /**
-     * Group secrets by secret name as stored in provider. Only Kubernetes provider is supported at this moment.
-     */
-    @Override
-    public Map<String, Set<String>> groupSecrets(String project, Collection<String> secrets) {
-        Map<String, Set<String>> result = new HashMap<>();
-        if (secrets != null && !secrets.isEmpty()) {
-            listSecretsByProject(project)
-                .stream()
-                .filter(s -> secrets.contains(s.getName()))
-                .forEach(secret -> {
-                    String path = (String) secret.getSpec().get("path");
-                    Matcher matcher = PATH_PATTERN.matcher(path);
-                    if (matcher.matches()) {
-                        String provider = matcher.group(1);
-                        String secretName = matcher.group(2);
-                        String key = matcher.group(3);
-                        if (K8S_PROVIDER.equals(provider)) {
-                            if (!result.containsKey(secretName)) {
-                                result.put(secretName, new HashSet<>());
-                            }
-                            result.get(secretName).add(key);
-                        }
-                    }
-                });
-        }
-        return result.isEmpty() ? Map.of() : result;
-    }
+    // /**
+    //  * Group secrets by secret name as stored in provider. Only Kubernetes provider is supported at this moment.
+    //  */
+    // @Override
+    // public Map<String, Set<String>> groupSecrets(String project, Collection<String> secrets) {
+    //     Map<String, Set<String>> result = new HashMap<>();
+    //     if (secrets != null && !secrets.isEmpty()) {
+    //         listSecretsByProject(project)
+    //             .stream()
+    //             .filter(s -> secrets.contains(s.getName()))
+    //             .forEach(secret -> {
+    //                 String path = (String) secret.getSpec().get("path");
+    //                 Matcher matcher = PATH_PATTERN.matcher(path);
+    //                 if (matcher.matches()) {
+    //                     String provider = matcher.group(1);
+    //                     String secretName = matcher.group(2);
+    //                     String key = matcher.group(3);
+    //                     if (K8S_PROVIDER.equals(provider)) {
+    //                         if (!result.containsKey(secretName)) {
+    //                             result.put(secretName, new HashSet<>());
+    //                         }
+    //                         result.get(secretName).add(key);
+    //                     }
+    //                 }
+    //             });
+    //     }
+    //     return result.isEmpty() ? Map.of() : result;
+    // }
 
     private String getProjectSecretName(String project) {
         return K8sBuilderHelper.sanitizeNames("proj-secrets-" + "-" + project);

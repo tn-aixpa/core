@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -33,19 +32,19 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
 
     private final String image;
     private final HuggingfaceServeFunctionSpec functionSpec;
-    private final Map<String, Set<String>> groupedSecrets;
+    private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
 
     public HuggingfaceServeRunner(
         String image,
         HuggingfaceServeFunctionSpec functionSpec,
-        Map<String, Set<String>> groupedSecrets,
+        Map<String, String> secretData,
         K8sBuilderHelper k8sBuilderHelper
     ) {
         this.image = image;
         this.functionSpec = functionSpec;
-        this.groupedSecrets = groupedSecrets;
+        this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
@@ -58,6 +57,10 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
+
+        List<CoreEnv> coreSecrets = secretData == null
+            ? null
+            : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
@@ -233,7 +236,7 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
             .args(args.toArray(new String[0]))
             .contextRefs(contextRefs)
             .envs(coreEnvList)
-            .secrets(groupedSecrets)
+            .secrets(coreSecrets)
             .resources(taskSpec.getResources())
             .volumes(taskSpec.getVolumes())
             .nodeSelector(taskSpec.getNodeSelector())
