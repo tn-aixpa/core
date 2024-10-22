@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -31,6 +32,8 @@ public class ProjectSpec extends ProjectBaseSpec {
 
     private List<DataItem> dataitems = new ArrayList<>();
 
+    private List<Model> models = new ArrayList<>();
+
     @Override
     public void configure(Map<String, Serializable> data) {
         ProjectSpec concreteSpec = mapper.convertValue(data, ProjectSpec.class);
@@ -38,6 +41,7 @@ public class ProjectSpec extends ProjectBaseSpec {
         this.functions = concreteSpec.getFunctions();
         this.artifacts = concreteSpec.getArtifacts();
         this.dataitems = concreteSpec.getDataitems();
+        this.models = concreteSpec.getModels();
         this.workflows = concreteSpec.getWorkflows();
 
         super.configure(data);

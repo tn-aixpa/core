@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -20,6 +21,7 @@ import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
 import it.smartcommunitylabdhub.commons.services.entities.DataItemService;
 import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.LabelService;
+import it.smartcommunitylabdhub.commons.services.entities.ModelService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
@@ -63,6 +65,9 @@ public class ProjectServiceImpl
 
     @Autowired
     private DataItemService dataItemService;
+
+    @Autowired
+    private ModelService modelService;
 
     @Autowired
     private WorkflowService workflowService;
@@ -154,6 +159,7 @@ public class ProjectServiceImpl
 
             List<Artifact> artifacts = artifactService.listLatestArtifactsByProject(id);
             List<DataItem> dataItems = dataItemService.listLatestDataItemsByProject(id);
+            List<Model> models = modelService.listLatestModelsByProject(id);
             List<Function> functions = functionService.listLatestFunctionsByProject(id);
             List<Workflow> workflows = workflowService.listLatestWorkflowsByProject(id);
 
@@ -164,6 +170,7 @@ public class ProjectServiceImpl
             //embed
             spec.setArtifacts(artifacts.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
             spec.setDataitems(dataItems.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
+            spec.setModels(models.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
             spec.setFunctions(functions.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
             spec.setWorkflows(workflows.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
 
