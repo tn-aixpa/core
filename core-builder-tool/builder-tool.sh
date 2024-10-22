@@ -247,4 +247,5 @@ if [ -f "$source_dir/context-refs.txt" ]; then
     done < "$source_dir/context-refs.txt"
 fi
 
+chmod -R 655 "$destination_dir"
 ls "$destination_dir"
