@@ -240,10 +240,12 @@ public class SecretServiceImpl implements SecretService {
 
                 String path = secretSpec.getPath();
                 String provider = secretSpec.getProvider();
+                Matcher matcher = PATH_PATTERN.matcher(path);
 
                 if (
                     StringUtils.hasText(path) &&
                     StringUtils.hasText(provider) &&
+                    matcher.matches() &&
                     providers != null &&
                     providers.containsKey(provider)
                 ) {
@@ -253,9 +255,10 @@ public class SecretServiceImpl implements SecretService {
                         provider
                     );
 
+                    String key = matcher.group(1);
                     providers
                         .get(provider)
-                        .clearSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), path));
+                        .clearSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), key));
                 }
 
                 //delete the secret
@@ -309,7 +312,7 @@ public class SecretServiceImpl implements SecretService {
                 String key = matcher.group(1);
                 String value = providers
                     .get(provider)
-                    .readSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), path));
+                    .readSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), key));
 
                 return Map.entry(key, value);
             }
@@ -332,21 +335,24 @@ public class SecretServiceImpl implements SecretService {
 
             String path = secretSpec.getPath();
             String provider = secretSpec.getProvider();
+            Matcher matcher = PATH_PATTERN.matcher(path);
 
             if (
                 StringUtils.hasText(path) &&
                 StringUtils.hasText(provider) &&
+                matcher.matches() &&
                 providers != null &&
                 providers.containsKey(provider)
             ) {
                 log.debug("store secret data for secret with id {} via provider {}", String.valueOf(id), provider);
 
+                String key = matcher.group(1);
                 providers
                     .get(provider)
-                    .writeSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), path), value);
+                    .writeSecretData(getSecretPath(provider, getProjectSecretName(secret.getProject()), key), value);
+            } else {
+                throw new StoreException("invalid or unavailable provider");
             }
-
-            throw new StoreException("invalid or unavailable provider");
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -387,6 +393,14 @@ public class SecretServiceImpl implements SecretService {
             .stream()
             .filter(s -> values.containsKey(s.getName()))
             .collect(Collectors.toList());
+
+        //we expect all secrets to exists *before* settings
+        List<String> found = secrets.stream().map(s -> s.getName()).toList();
+        List<String> invalid = values.keySet().stream().filter(k -> !found.contains(k)).toList();
+
+        if (!invalid.isEmpty()) {
+            throw new IllegalArgumentException("missing secrets for " + String.join(",", invalid));
+        }
 
         //store project secret data via provider
         secrets.stream().forEach(s -> storeSecretData(s.getId(), values.get(s.getName())));
