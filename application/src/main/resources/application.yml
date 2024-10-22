@@ -102,6 +102,10 @@ registry:
   name: ${DOCKER_REGISTRY:}
   secret: ${DOCKER_REGISTRY_SECRET:}
 
+argoworkflows:
+  artifacts:
+    configmap: ${ARGOWORKFLOWS_ARTIFACTS_CONFIGMAP:artifact-repositories}
+    key: ${ARGOWORKFLOWS_ARTIFACTS_KEY:default-artifact-repository}
 
 # Kubernetes
 kubernetes:

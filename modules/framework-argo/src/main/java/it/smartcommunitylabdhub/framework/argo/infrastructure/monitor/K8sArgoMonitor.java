@@ -1,0 +1,104 @@
+package it.smartcommunitylabdhub.framework.argo.infrastructure.monitor;
+
+import io.kubernetes.client.openapi.models.V1Pod;
+import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
+import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
+import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoFramework;
+import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sWorkflowObject;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoRunnable;
+import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
+
+@Slf4j
+@ConditionalOnKubernetes
+@Component
+@MonitorComponent(framework = "build")
+public class K8sArgoMonitor extends K8sBaseMonitor<K8sArgoRunnable> {
+
+    private final K8sArgoFramework framework;
+
+    public K8sArgoMonitor(RunnableStore<K8sArgoRunnable> runnableStore, K8sArgoFramework argoFramework) {
+        super(runnableStore);
+        Assert.notNull(argoFramework, "argo framework is required");
+
+        this.framework = argoFramework;
+    }
+
+    @Override
+    public K8sArgoRunnable refresh(K8sArgoRunnable runnable) {
+        try {
+             K8sWorkflowObject workflow = framework.get(framework.build(runnable));
+
+            if (workflow == null || workflow.getWorkflow().getStatus() == null) {
+                // something is missing, no recovery
+                log.error("Missing or invalid Argo Workflow for {}", runnable.getId());
+                runnable.setState(State.ERROR.name());
+                runnable.setError("Argo Workflow missing or invalid");
+            }
+
+            log.info("Argo Workflow status: {}", workflow.getWorkflow().getStatus().toString());
+
+            //target for succeded/failed is 1
+            String phase = workflow.getWorkflow().getStatus().getPhase();
+            if (phase != null && "Succeeded".equals(phase)) {
+                // Job has succeeded
+                runnable.setState(State.COMPLETED.name());
+            } else if (phase != null && ("Failed".equals(phase) || "Error".equals(phase))) {
+                // Job has failed delete job and pod
+                runnable.setState(State.ERROR.name());
+                runnable.setError("Job failed: " + workflow.getWorkflow().getStatus().getMessage());
+            }
+
+            //try to fetch pods
+            List<V1Pod> pods = null;
+            try {
+                pods = framework.pods(workflow);
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting pods for job {}: {}", runnable.getId(), e1.getMessage());
+            }
+
+            //update results
+            try {
+                runnable.setResults(
+                    Map.of(
+                        "workflow",
+                        mapper.convertValue(workflow, typeRef),
+                        "pods",
+                        pods != null ? mapper.convertValue(pods, arrayRef) : null
+                    )
+                );
+            } catch (IllegalArgumentException e) {
+                log.error("error reading k8s results: {}", e.getMessage());
+            }
+
+            //collect logs, optional
+            try {
+                // TODO add sinceTime when available
+                // TODO read native argo logs
+                runnable.setLogs(framework.logs(workflow));
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting logs for Argo Workflow {}: {}", runnable.getId(), e1.getMessage());
+            }
+
+            //collect metrics, optional
+            try {
+                runnable.setMetrics(framework.metrics(workflow));
+            } catch (K8sFrameworkException e1) {
+                log.error("error collecting metrics for {}: {}", runnable.getId(), e1.getMessage());
+            }
+        } catch (K8sFrameworkException e) {
+            // Set Runnable to ERROR state
+            runnable.setState(State.ERROR.name());
+            runnable.setError(e.toError());
+        }
+
+        return runnable;
+    }
+}
