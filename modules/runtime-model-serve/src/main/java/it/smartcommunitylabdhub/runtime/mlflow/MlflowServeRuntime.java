@@ -110,7 +110,7 @@ public class MlflowServeRuntime
             case MlflowServeTaskSpec.KIND -> new MlflowServeRunner(
                 image,
                 runSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);

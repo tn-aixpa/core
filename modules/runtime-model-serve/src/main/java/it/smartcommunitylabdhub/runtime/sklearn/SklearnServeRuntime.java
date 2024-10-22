@@ -110,7 +110,7 @@ public class SklearnServeRuntime
             case SklearnServeTaskSpec.KIND -> new SklearnServeRunner(
                 image,
                 runSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);

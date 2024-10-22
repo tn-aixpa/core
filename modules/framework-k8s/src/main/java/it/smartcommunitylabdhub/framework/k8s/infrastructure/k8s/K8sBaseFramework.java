@@ -551,9 +551,6 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         //shared envs
         List<V1EnvVar> sharedEnvs = k8sBuilderHelper.getV1EnvVar();
 
-        //secretd based envs
-        List<V1EnvVar> secretEnvs = k8sBuilderHelper.geEnvVarsFromSecrets(runnable.getSecrets());
-
         //secrets
         V1Secret secret = buildRunSecret(runnable);
         List<V1EnvVar> runSecretEnvs = new LinkedList<>();
@@ -562,7 +559,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 secret.getMetadata().getName(),
                 secret.getStringData().keySet()
             );
-            runSecretEnvs.addAll(k8sBuilderHelper.geEnvVarsFromSecrets(runSecretKeys));
+            runSecretEnvs.addAll(k8sBuilderHelper.getEnvVarsFromSecrets(runSecretKeys));
             runSecretEnvs.add(new V1EnvVar().name("DH_RUN_SECRET_NAME").value(secret.getMetadata().getName()));
         }
 
@@ -576,7 +573,6 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         //merge all avoiding duplicates
         Map<String, V1EnvVar> envs = new HashMap<>();
         sharedEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
-        secretEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
         functionEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
         runSecretEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
 
@@ -921,8 +917,20 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     }
 
     protected V1Secret buildRunSecret(T runnable) {
+        Map<String, String> data = new HashMap<>();
+
+        //add all user-defined secrets
+        if (runnable.getSecrets() != null) {
+            runnable.getSecrets().forEach(s -> data.put(s.name(), s.value()));
+        }
+
+        //set core credentials
         if (runnable.getCredentials() != null) {
-            V1Secret secret = k8sSecretHelper.convertCredentials(
+            data.putAll(runnable.getCredentials());
+        }
+
+        if (!data.isEmpty()) {
+            V1Secret secret = k8sSecretHelper.convertSecrets(
                 k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId()),
                 runnable.getCredentials()
             );

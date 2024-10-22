@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
@@ -48,7 +47,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
     private final String image;
     private final String command;
     private final PythonFunctionSpec functionSpec;
-    private final Map<String, Set<String>> groupedSecrets;
+    private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
     private final Resource entrypoint = new ClassPathResource("runtime-python/docker/entrypoint.sh");
@@ -57,13 +56,13 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
         String image,
         String command,
         PythonFunctionSpec functionPythonSpec,
-        Map<String, Set<String>> groupedSecrets,
+        Map<String, String> secretData,
         K8sBuilderHelper k8sBuilderHelper
     ) {
         this.image = image;
         this.command = command;
         this.functionSpec = functionPythonSpec;
-        this.groupedSecrets = groupedSecrets;
+        this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
@@ -77,6 +76,10 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
             List<CoreEnv> coreEnvList = new ArrayList<>(
                 List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
             );
+
+            List<CoreEnv> coreSecrets = secretData == null
+                ? null
+                : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
 
             Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
@@ -199,7 +202,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                 .contextRefs(contextRefs)
                 .contextSources(contextSources)
                 .envs(coreEnvList)
-                .secrets(groupedSecrets)
+                .secrets(coreSecrets)
                 .resources(taskSpec.getResources())
                 .volumes(taskSpec.getVolumes())
                 .nodeSelector(taskSpec.getNodeSelector())
@@ -236,7 +239,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
                         .contextRefs(contextRefs)
                         .contextSources(contextSources)
                         .envs(coreEnvList)
-                        .secrets(groupedSecrets)
+                        .secrets(coreSecrets)
                         .resources(taskSpec.getResources())
                         .volumes(taskSpec.getVolumes())
                         .nodeSelector(taskSpec.getNodeSelector())

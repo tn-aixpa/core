@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
@@ -48,17 +47,17 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
         "PWD=`pwd`;echo \"DEBUG: dir ${PWD}\";LS=`ls -R`;echo \"DEBUG: dir content:\" && echo \"${LS}\";";
 
     private final ContainerFunctionSpec functionSpec;
-    private final Map<String, Set<String>> groupedSecrets;
+    private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
 
     public ContainerBuildRunner(
         ContainerFunctionSpec functionContainerSpec,
-        Map<String, Set<String>> groupedSecrets,
+        Map<String, String> secretData,
         K8sBuilderHelper k8sBuilderHelper
     ) {
         this.functionSpec = functionContainerSpec;
-        this.groupedSecrets = groupedSecrets;
+        this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
@@ -72,6 +71,10 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
+
+        List<CoreEnv> coreSecrets = secretData == null
+            ? null
+            : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
@@ -165,7 +168,7 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
             // Base
             .image(imageName)
             .envs(coreEnvList)
-            .secrets(groupedSecrets)
+            .secrets(coreSecrets)
             .resources(taskSpec.getResources())
             .volumes(taskSpec.getVolumes())
             .nodeSelector(taskSpec.getNodeSelector())

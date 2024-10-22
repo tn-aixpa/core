@@ -44,6 +44,7 @@ import org.springframework.util.StringUtils;
 public class K8sBuilderHelper implements InitializingBean {
 
     public static final int K8S_NAME_MAX_LENGTH = 62;
+    public static final int TAG_LENGTH = 5;
 
     @Autowired
     ApiClient apiClient;
@@ -155,7 +156,7 @@ public class K8sBuilderHelper implements InitializingBean {
             .toList();
     }
 
-    public List<V1EnvVar> geEnvVarsFromSecrets(Map<String, Set<String>> secrets) {
+    public List<V1EnvVar> getEnvVarsFromSecrets(Map<String, Set<String>> secrets) {
         if (secrets != null) {
             return secrets
                 .entrySet()
@@ -262,7 +263,7 @@ public class K8sBuilderHelper implements InitializingBean {
     public String getImageName(String image, String id) {
         String tag = "latest";
         if (StringUtils.hasText(id)) {
-            tag = sanitizeNames(id.substring(0, Math.min(5, id.length())));
+            tag = sanitizeNames(id.substring(0, Math.min(TAG_LENGTH, id.length())));
         }
 
         return image + ":" + tag;
