@@ -143,7 +143,7 @@ sync_files() {
 
         # Check rsync exit status
         if [ $? -eq 0 ]; then
-            echo "Successfully copied '$source_file' to '$destination_path'"
+            echo "Successfully copied '$source_file' to '$destination_dir/$destination_path'"
         else
             echo "Error: Failed to rsync '$source_file' to '$destination_path'"
         fi
@@ -248,4 +248,4 @@ if [ -f "$source_dir/context-refs.txt" ]; then
 fi
 
 chmod -R 655 "$destination_dir/*" || true
-ls "$destination_dir"
+ls -1l "$destination_dir"
