@@ -49,6 +49,10 @@ public class K8sSecretHelper {
         api = new CoreV1Api(client);
     }
 
+    public String getEnvsPrefix() {
+        return envsPrefix;
+    }
+
     public Map<String, String> getSecretData(String secretName) throws ApiException {
         V1Secret secret = api.readNamespacedSecret(secretName, namespace, "");
         if (secret != null) {
@@ -203,16 +207,13 @@ public class K8sSecretHelper {
 
     public @Nullable V1Secret convertSecrets(String name, Map<String, String> values) {
         if (values != null) {
-            //map to secret as envs under declared prefix
+            //map to secret as envs
+            //NOTE: keys should be usable, only sanitization is applied
             Map<String, String> data = values
                 .entrySet()
                 .stream()
-                .collect(
-                    Collectors.toMap(
-                        e -> K8sBuilderHelper.sanitizeNames(envsPrefix).toUpperCase() + "_" + e.getKey().toUpperCase(),
-                        Entry::getValue
-                    )
-                );
+                .filter(e -> e.getKey() != null)
+                .collect(Collectors.toMap(e -> e.getKey().replaceAll("[^a-zA-Z0-9._-]+", ""), Entry::getValue));
 
             return new V1Secret()
                 .metadata(new V1ObjectMeta().name(name).namespace(namespace))

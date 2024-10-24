@@ -236,6 +236,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(k8sBuilderHelper, "k8s helper is required");
+        Assert.notNull(k8sSecretHelper, "k8s secret helper is required");
         Assert.notNull(k8sProperties, "k8s properties required");
         Assert.notNull(namespace, "k8s namespace required");
         Assert.notNull(version, "k8s version required");
@@ -919,20 +920,30 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected V1Secret buildRunSecret(T runnable) {
         Map<String, String> data = new HashMap<>();
 
-        //add all user-defined secrets
+        //add all user-defined secrets as-is
         if (runnable.getSecrets() != null) {
             runnable.getSecrets().forEach(s -> data.put(s.name(), s.value()));
         }
 
-        //set core credentials
+        //set core credentials as env with prefix (when required)
         if (runnable.getCredentials() != null) {
-            data.putAll(runnable.getCredentials());
+            String envsPrefix = k8sSecretHelper.getEnvsPrefix();
+            runnable
+                .getCredentials()
+                .entrySet()
+                .forEach(e -> {
+                    if (envsPrefix != null) {
+                        data.put(envsPrefix.toUpperCase() + "_" + e.getKey().toUpperCase(), e.getValue());
+                    } else {
+                        data.put(e.getKey().toUpperCase(), e.getValue());
+                    }
+                });
         }
 
         if (!data.isEmpty()) {
             V1Secret secret = k8sSecretHelper.convertSecrets(
                 k8sSecretHelper.getSecretName(runnable.getRuntime(), runnable.getTask(), runnable.getId()),
-                runnable.getCredentials()
+                data
             );
 
             if (secret != null && secret.getMetadata() != null) {
