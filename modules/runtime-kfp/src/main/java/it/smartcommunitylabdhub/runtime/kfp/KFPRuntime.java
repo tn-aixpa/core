@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.runtime.kfp;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
+import it.smartcommunitylabdhub.commons.jackson.YamlMapperFactory;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -28,6 +29,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @RuntimeComponent(runtime = KFPRuntime.RUNTIME)
 @Slf4j
@@ -103,10 +106,7 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         RunSpecAccessor runAccessor = RunUtils.parseTask(runKfpSpec.getTask());
 
         return switch (runAccessor.getTask()) {
-            case KFPPipelineTaskSpec.KIND -> new KFPPipelineRunner(
-                image,
-                secretService.groupSecrets(run.getProject(), runKfpSpec.getTaskPipelineSpec().getSecrets())
-            )
+            case KFPPipelineTaskSpec.KIND -> new KFPPipelineRunner()
                 .produce(run);
             case KFPBuildTaskSpec.KIND -> new KFPBuildRunner(
                 image,
@@ -125,6 +125,15 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         if(KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
             if (((K8sJobRunnable) runnable).getResults() != null) {
                 String workflow = (String)((K8sJobRunnable) runnable).getResults().get("workflow");
+                // extract workflow spec part and convert to String again
+                try {
+                    io.argoproj.workflow.models.Workflow argoWorkflow = YamlMapperFactory.yamlObjectMapper().readValue(workflow, io.argoproj.workflow.models.Workflow.class);
+                    workflow = YamlMapperFactory.yamlObjectMapper().writeValueAsString(argoWorkflow.getSpec());
+                } catch (JsonProcessingException e) {
+                    log.error("Error storing Workflow specification", e);
+                    return null;
+                }
+                
                 String wId = runAccessor.getVersion();
                 Workflow wf = workflowService.getWorkflow(wId);
     
