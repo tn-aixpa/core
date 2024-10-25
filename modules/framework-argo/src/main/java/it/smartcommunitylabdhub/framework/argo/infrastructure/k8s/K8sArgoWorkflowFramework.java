@@ -3,8 +3,10 @@ package it.smartcommunitylabdhub.framework.argo.infrastructure.k8s;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.argoproj.workflow.models.ArtifactRepositoryRef;
+import io.argoproj.workflow.models.ExecutorConfig;
 import io.argoproj.workflow.models.Template;
 import io.argoproj.workflow.models.Workflow;
+import io.argoproj.workflow.models.WorkflowSpec;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -12,6 +14,7 @@ import io.kubernetes.client.openapi.apis.CustomObjectsApi;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1PodSecurityContext;
 import io.kubernetes.client.openapi.models.V1Secret;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
@@ -21,7 +24,8 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
 import it.smartcommunitylabdhub.framework.argo.exceptions.K8sArgoFrameworkException;
-import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoRunnable;
+import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Collections;
@@ -38,12 +42,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 
 @Slf4j
-@FrameworkComponent(framework = K8sArgoFramework.FRAMEWORK)
-public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkflowObject> {
+@FrameworkComponent(framework = K8sArgoWorkflowFramework.FRAMEWORK)
+public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRunnable, K8sWorkflowObject> {
 
     private static final String ARGO_PLURAL = "workflows";
     private static final String ARGO_VERSION = "v1alpha1";
     private static final String ARGO_GROUP = "argoproj.io";
+    private static final String ARGO_API_VERSION = "argoproj.io/v1alpha1";
 
     public static final int DEFAULT_BACKOFF_LIMIT = 3;
     public static final String FRAMEWORK = "argoworkflow";
@@ -52,12 +57,13 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
     
     private String artifactRepositoryConfigMap;
     private String artifactRepositoryKey;
+    private String serviceAccountName;
 
     private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
         HashMap<String, Serializable>
     >() {};
 
-    public K8sArgoFramework(ApiClient apiClient) {
+    public K8sArgoWorkflowFramework(ApiClient apiClient) {
         super(apiClient);
         customObjectsApi = new CustomObjectsApi(apiClient);
     }
@@ -71,9 +77,13 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
     public void setArtifactRepositoryKey(@Value("${argoworkflows.artifacts.key}") String key) {
         this.artifactRepositoryKey = key;
     }
+    @Autowired
+    public void setServiceAccountName(@Value("${argoworkflows.serviceaccount}") String serviceAccountName) {
+        this.serviceAccountName = serviceAccountName;
+    }
 
     @Override
-    public K8sArgoRunnable run(K8sArgoRunnable runnable) throws K8sFrameworkException {
+    public K8sArgoWorkflowRunnable run(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
         log.info("run for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
@@ -133,7 +143,7 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
     }
 
     @Override
-    public K8sArgoRunnable stop(K8sArgoRunnable runnable) throws K8sFrameworkException {
+    public K8sArgoWorkflowRunnable stop(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
         log.info("stop for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
@@ -156,7 +166,7 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
     }
 
     @Override
-    public K8sArgoRunnable delete(K8sArgoRunnable runnable) throws K8sFrameworkException {
+    public K8sArgoWorkflowRunnable delete(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
         log.info("delete for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
@@ -193,14 +203,20 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
      * @return
      * @throws K8sArgoFrameworkException
      */
-    public K8sWorkflowObject build(K8sArgoRunnable runnable) throws K8sArgoFrameworkException {
+    public K8sWorkflowObject build(K8sArgoWorkflowRunnable runnable) throws K8sArgoFrameworkException {
         log.debug("build for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
         }
 
         try {
-            Workflow workflow = YamlMapperFactory.yamlObjectMapper().readValue(runnable.getWorkflowSpec(), Workflow.class);
+            Workflow workflow = new Workflow();
+            workflow.setApiVersion(ARGO_API_VERSION);
+            workflow.setKind("Workflow");
+            workflow.setMetadata(new V1ObjectMeta());
+            workflow.getMetadata().setName(runnable.getId());
+            WorkflowSpec workflowSpec = YamlMapperFactory.yamlObjectMapper().readValue(runnable.getWorkflowSpec(), WorkflowSpec.class);
+            workflow.setSpec(workflowSpec);
             sanitize(workflow);
             //build labels
             Map<String, String> labels = buildLabels(runnable);
@@ -210,9 +226,10 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
             appendTemplateDefaults(workflow, runnable);
             //populate artifact repository
             appendArtifactRepository(workflow);
+            workflow.getSpec().setSecurityContext(buildPodSecurityContext(runnable));
             return new K8sWorkflowObject(workflow);
         } catch (Exception e) {
-            throw new K8sArgoFrameworkException("Error parsing the Argo workflow specification: " + e.getMessage());
+            throw new K8sArgoFrameworkException("Error parsing the Argo workflow specification: " + e.getMessage(), e);
         }
     }
 
@@ -240,7 +257,7 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
         workflow.getSpec().setArtifactRepositoryRef(ref);
     }
 
-    private void appendTemplateDefaults(Workflow workflow, K8sArgoRunnable runnable) throws K8sFrameworkException {
+    private void appendTemplateDefaults(Workflow workflow, K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
         // Prepare environment variables for the Kubernetes job
         Template templateDefaults = workflow.getSpec().getTemplateDefaults();
         if (templateDefaults == null) {
@@ -263,12 +280,18 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
 
         container
             .envFrom(envFrom)
-            .env(env);
+            .env(env)
+            .resources(buildResources(runnable));
 
         templateDefaults
             .automountServiceAccountToken(false)
             .securityContext(buildPodSecurityContext(runnable))
             .container(container);
+
+        if (templateDefaults.getExecutor() == null) {
+            templateDefaults.setExecutor(new ExecutorConfig());
+        }
+        templateDefaults.getExecutor().setServiceAccountName(serviceAccountName);
 
         if (workflow.getSpec().getTemplates() != null) {
             for (Template template : workflow.getSpec().getTemplates()) {
@@ -279,7 +302,7 @@ public class K8sArgoFramework extends K8sBaseFramework<K8sArgoRunnable, K8sWorkf
         }
     }
 
-    public V1PodSecurityContext buildPodSecurityContext(K8sArgoRunnable runnable) throws K8sFrameworkException {
+    public V1PodSecurityContext buildPodSecurityContext(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
         V1PodSecurityContext context = new V1PodSecurityContext();
         //enforce policy for non root when requested by admin
         if (disableRoot) {

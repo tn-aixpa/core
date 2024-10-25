@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.runtime.kfp.specs;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
@@ -26,9 +25,6 @@ public class KFPPipelineTaskSpec extends K8sTaskBaseSpec {
     @Pattern(regexp = Keys.CRONTAB_PATTERN)
     private String schedule;
 
-    @Schema(format = "yaml+base64")
-    private String workflow;
-
     public KFPPipelineTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -39,6 +35,5 @@ public class KFPPipelineTaskSpec extends K8sTaskBaseSpec {
 
         KFPPipelineTaskSpec spec = mapper.convertValue(data, KFPPipelineTaskSpec.class);
         this.schedule = spec.getSchedule();
-        this.workflow = spec.getWorkflow();
     }
 }

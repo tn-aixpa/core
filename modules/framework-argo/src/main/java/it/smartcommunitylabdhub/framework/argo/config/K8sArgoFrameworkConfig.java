@@ -3,8 +3,10 @@ package it.smartcommunitylabdhub.framework.argo.config;
 import io.kubernetes.client.openapi.ApiClient;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
-import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoFramework;
-import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoRunnable;
+import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoCronWorkflowFramework;
+import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoWorkflowFramework;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoCronWorkflowRunnable;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,13 +15,25 @@ public class K8sArgoFrameworkConfig {
 
     @Bean
     @ConditionalOnKubernetes
-    public RunnableStore<K8sArgoRunnable> k8sArgoRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
-        return storeSupplier.get(K8sArgoRunnable.class);
+    public RunnableStore<K8sArgoWorkflowRunnable> k8sArgoRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
+        return storeSupplier.get(K8sArgoWorkflowRunnable.class);
     }
 
     @Bean
     @ConditionalOnKubernetes
-    public K8sArgoFramework k8sArgoFramework(ApiClient apiClient) {
-        return new K8sArgoFramework(apiClient);
+    public RunnableStore<K8sArgoCronWorkflowRunnable> k8sArgoCronRunnableStoreService(RunnableStore.StoreSupplier storeSupplier) {
+        return storeSupplier.get(K8sArgoCronWorkflowRunnable.class);
     }
+
+    @Bean
+    @ConditionalOnKubernetes
+    public K8sArgoWorkflowFramework k8sArgoWorkflowFramework(ApiClient apiClient) {
+        return new K8sArgoWorkflowFramework(apiClient);
+    }
+    @Bean
+    @ConditionalOnKubernetes
+    public K8sArgoCronWorkflowFramework k8sArgoCronWorkflowFramework(ApiClient apiClient) {
+        return new K8sArgoCronWorkflowFramework(apiClient);
+    }
+
 }

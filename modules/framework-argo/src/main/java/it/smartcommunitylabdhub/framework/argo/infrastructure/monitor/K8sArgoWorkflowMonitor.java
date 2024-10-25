@@ -7,9 +7,9 @@ import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
-import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoFramework;
-import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sWorkflowObject;
-import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoRunnable;
+import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoWorkflowFramework;
+import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +20,11 @@ import org.springframework.util.Assert;
 @ConditionalOnKubernetes
 @Component
 @MonitorComponent(framework = "build")
-public class K8sArgoMonitor extends K8sBaseMonitor<K8sArgoRunnable> {
+public class K8sArgoWorkflowMonitor extends K8sBaseMonitor<K8sArgoWorkflowRunnable> {
 
-    private final K8sArgoFramework framework;
+    private final K8sArgoWorkflowFramework framework;
 
-    public K8sArgoMonitor(RunnableStore<K8sArgoRunnable> runnableStore, K8sArgoFramework argoFramework) {
+    public K8sArgoWorkflowMonitor(RunnableStore<K8sArgoWorkflowRunnable> runnableStore, K8sArgoWorkflowFramework argoFramework) {
         super(runnableStore);
         Assert.notNull(argoFramework, "argo framework is required");
 
@@ -32,7 +32,7 @@ public class K8sArgoMonitor extends K8sBaseMonitor<K8sArgoRunnable> {
     }
 
     @Override
-    public K8sArgoRunnable refresh(K8sArgoRunnable runnable) {
+    public K8sArgoWorkflowRunnable refresh(K8sArgoWorkflowRunnable runnable) {
         try {
              K8sWorkflowObject workflow = framework.get(framework.build(runnable));
 

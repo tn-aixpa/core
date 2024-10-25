@@ -7,8 +7,11 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoFramework;
-import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoRunnable;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
+import it.smartcommunitylabdhub.framework.k8s.listeners.K8sRunnableListener;
+import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoCronWorkflowFramework;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoCronWorkflowRunnable;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -20,20 +23,20 @@ import org.springframework.util.Assert;
 @Component
 @ConditionalOnKubernetes
 @Slf4j
-public class K8sArgoRunnableListener {
+public class K8sArgoCronWorkflowRunnableListener  {
 
     @Autowired
-    K8sArgoFramework k8sFramework;
+    K8sArgoCronWorkflowFramework k8sFramework;
 
     @Autowired
     ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    private RunnableStore<K8sArgoRunnable> runnableStore;
+    private RunnableStore<K8sArgoCronWorkflowRunnable> runnableStore;
 
     @Async
     @EventListener
-    public void listen(K8sArgoRunnable runnable) {
+    public void listen(K8sArgoCronWorkflowRunnable runnable) {
         Assert.notNull(runnable, "runnable can not be null");
         Assert.hasText(runnable.getId(), "runnable id can not be null or empty");
         log.info("Receive runnable for execution: {}", runnable.getId());

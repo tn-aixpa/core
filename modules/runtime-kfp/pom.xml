@@ -25,6 +25,11 @@
             <artifactId>dh-framework-k8s</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-framework-argo</artifactId>
+            <version>${revision}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
