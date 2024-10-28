@@ -49,6 +49,10 @@ public class K8sSecretHelper {
         api = new CoreV1Api(client);
     }
 
+    public String getEnvsPrefix() {
+        return envsPrefix;
+    }
+
     public Map<String, String> getSecretData(String secretName) throws ApiException {
         V1Secret secret = api.readNamespacedSecret(secretName, namespace, "");
         if (secret != null) {
@@ -97,30 +101,45 @@ public class K8sSecretHelper {
             //remove values from map and keep everything else
             keys.forEach(secretData::remove);
 
-            log.debug("patch existing secret {}", secretName);
+            if (secretData.isEmpty()) {
+                //remove secret
+                api.deleteNamespacedSecret(
+                    secretName,
+                    namespace,
+                    null,
+                    null,
+                    0,
+                    null,
+                    "Foreground",
+                    new V1DeleteOptions()
+                );
+            } else {
+                log.debug("patch existing secret {}", secretName);
 
-            //write as base64 for patch
-            Map<String, String> writeData = secretData
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(Entry::getKey, d -> Base64.getEncoder().encodeToString(d.getValue())));
+                //write as base64 for patch
+                Map<String, String> writeData = secretData
+                    .entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(Entry::getKey, d -> Base64.getEncoder().encodeToString(d.getValue())));
 
-            PatchBody patchData = new PatchBody(writeData, "/data");
-            V1Patch patch = new V1Patch(mapper.writeValueAsString(Collections.singleton(patchData)));
+                PatchBody patchData = new PatchBody(writeData, "/data");
+                V1Patch patch = new V1Patch(mapper.writeValueAsString(Collections.singleton(patchData)));
 
-            //direct api call is broken as per 21.0.0 due to missing patch format
-            // api.patchNamespacedSecret(secretName, namespace, patch, null, null, null, null, null);
+                //direct api call is broken as per 21.0.0 due to missing patch format
+                // api.patchNamespacedSecret(secretName, namespace, patch, null, null, null, null, null);
 
-            // json-patch via patch to avoid library bug
-            PatchUtils.patch(
-                V1Secret.class,
-                () -> api.patchNamespacedSecretCall(secretName, namespace, patch, null, null, null, null, null, null),
-                V1Patch.PATCH_FORMAT_JSON_PATCH,
-                api.getApiClient()
-            );
+                // json-patch via patch to avoid library bug
+                PatchUtils.patch(
+                    V1Secret.class,
+                    () ->
+                        api.patchNamespacedSecretCall(secretName, namespace, patch, null, null, null, null, null, null),
+                    V1Patch.PATCH_FORMAT_JSON_PATCH,
+                    api.getApiClient()
+                );
 
-            if (log.isTraceEnabled()) {
-                log.trace("patched secret {}", secretName);
+                if (log.isTraceEnabled()) {
+                    log.trace("patched secret {}", secretName);
+                }
             }
         }
     }
@@ -186,18 +205,15 @@ public class K8sSecretHelper {
         }
     }
 
-    public @Nullable V1Secret convertCredentials(String name, Map<String, String> credentials) {
-        if (credentials != null) {
-            //map to secret as envs under declared prefix
-            Map<String, String> data = credentials
+    public @Nullable V1Secret convertSecrets(String name, Map<String, String> values) {
+        if (values != null) {
+            //map to secret as envs
+            //NOTE: keys should be usable, only sanitization is applied
+            Map<String, String> data = values
                 .entrySet()
                 .stream()
-                .collect(
-                    Collectors.toMap(
-                        e -> K8sBuilderHelper.sanitizeNames(envsPrefix).toUpperCase() + "_" + e.getKey().toUpperCase(),
-                        Entry::getValue
-                    )
-                );
+                .filter(e -> e.getKey() != null)
+                .collect(Collectors.toMap(e -> e.getKey().replaceAll("[^a-zA-Z0-9._-]+", ""), Entry::getValue));
 
             return new V1Secret()
                 .metadata(new V1ObjectMeta().name(name).namespace(namespace))

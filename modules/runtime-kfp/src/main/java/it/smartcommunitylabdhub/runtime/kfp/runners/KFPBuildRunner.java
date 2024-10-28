@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * KFPBuildRunner
@@ -27,11 +26,11 @@ import java.util.Set;
 public class KFPBuildRunner implements Runner<K8sRunnable> {
 
     private final String image;
-    private final Map<String, Set<String>> groupedSecrets;
+    private final Map<String, String> secretData;
 
-    public KFPBuildRunner(String image, Map<String, Set<String>> groupedSecrets) {
+    public KFPBuildRunner(String image, Map<String, String> secretData) {
         this.image = image;
-        this.groupedSecrets = groupedSecrets;
+        this.secretData = secretData;
     }
 
     @Override
@@ -47,6 +46,10 @@ public class KFPBuildRunner implements Runner<K8sRunnable> {
             )
         );
 
+        List<CoreEnv> coreSecrets = secretData == null
+        ? null
+        : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
+
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
         K8sRunnable k8sJobRunnable = K8sJobRunnable
@@ -59,7 +62,7 @@ public class KFPBuildRunner implements Runner<K8sRunnable> {
             .resources(taskSpec.getResources())
             .nodeSelector(taskSpec.getNodeSelector())
             .volumes(taskSpec.getVolumes())
-            .secrets(groupedSecrets)
+            .secrets(coreSecrets)
             .envs(coreEnvList)
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())

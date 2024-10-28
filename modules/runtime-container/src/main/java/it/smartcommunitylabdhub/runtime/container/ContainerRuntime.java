@@ -115,25 +115,25 @@ public class ContainerRuntime
         return switch (runAccessor.getTask()) {
             case ContainerDeployTaskSpec.KIND -> new ContainerDeployRunner(
                 runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runContainerSpec.getTaskDeploySpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);
             case ContainerJobTaskSpec.KIND -> new ContainerJobRunner(
                 runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runContainerSpec.getTaskJobSpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);
             case ContainerServeTaskSpec.KIND -> new ContainerServeRunner(
                 runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runContainerSpec.getTaskServeSpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);
             case ContainerBuildTaskSpec.KIND -> new ContainerBuildRunner(
                 runContainerSpec.getFunctionSpec(),
-                secretService.groupSecrets(run.getProject(), runContainerSpec.getTaskBuildSpec().getSecrets()),
+                secretService.getSecretData(run.getProject(), runContainerSpec.getTaskBuildSpec().getSecrets()),
                 k8sBuilderHelper
             )
                 .produce(run);

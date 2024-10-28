@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -39,17 +38,17 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class ContainerServeRunner implements Runner<K8sServeRunnable> {
 
     private final ContainerFunctionSpec functionSpec;
-    private final Map<String, Set<String>> groupedSecrets;
+    private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
 
     public ContainerServeRunner(
         ContainerFunctionSpec functionContainerSpec,
-        Map<String, Set<String>> groupedSecrets,
+        Map<String, String> secretData,
         K8sBuilderHelper k8sBuilderHelper
     ) {
         this.functionSpec = functionContainerSpec;
-        this.groupedSecrets = groupedSecrets;
+        this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
@@ -63,6 +62,9 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
+        List<CoreEnv> coreSecrets = secretData == null
+            ? null
+            : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
@@ -111,7 +113,7 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
             .command(functionSpec.getCommand())
             .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
             .envs(coreEnvList)
-            .secrets(groupedSecrets)
+            .secrets(coreSecrets)
             .resources(taskSpec.getResources())
             .volumes(taskSpec.getVolumes())
             .nodeSelector(taskSpec.getNodeSelector())

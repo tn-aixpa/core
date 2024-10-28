@@ -1,6 +1,10 @@
 package it.smartcommunitylabdhub.commons.models.entities.secret;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -12,15 +16,20 @@ import lombok.Setter;
 @NoArgsConstructor
 public class SecretBaseSpec extends BaseSpec {
 
-    //TODO remove, these are for `secret` kind
+    @JsonProperty("path")
+    @NotNull
+    @Pattern(regexp = "secret://([\\w-]+)")
     String path;
+
+    @NotNull
+    @Schema(allowableValues = { "kubernetes" }, defaultValue = "kubernetes")
     String provider;
 
     @Override
     public void configure(Map<String, Serializable> data) {
-        SecretBaseSpec concreteSpec = mapper.convertValue(data, SecretBaseSpec.class);
+        SecretBaseSpec spec = mapper.convertValue(data, SecretBaseSpec.class);
 
-        this.path = concreteSpec.getPath();
-        this.provider = concreteSpec.getProvider();
+        this.path = spec.getPath();
+        this.provider = spec.getProvider();
     }
 }

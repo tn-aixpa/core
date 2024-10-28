@@ -110,7 +110,7 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
                 .produce(run);
             case KFPBuildTaskSpec.KIND -> new KFPBuildRunner(
                 image,
-                secretService.groupSecrets(run.getProject(), runKfpSpec.getTaskBuildSpec().getSecrets())
+                secretService.getSecretData(run.getProject(), runKfpSpec.getTaskBuildSpec().getSecrets())
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

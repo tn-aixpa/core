@@ -25,6 +25,7 @@ import org.springframework.util.StringUtils;
  */
 public class KFPPipelineRunner implements Runner<K8sArgoWorkflowRunnable> {
 
+
     @Override
     public K8sArgoWorkflowRunnable produce(Run run) {
         KFPRunSpec runSpec = new KFPRunSpec(run.getSpec());
