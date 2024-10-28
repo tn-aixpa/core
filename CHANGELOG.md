@@ -1,3 +1,65 @@
+# [0.8.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.8.0...0.7.0) (2024-10-24)
+
+## What's Changed
+* Websocket for run states by @etomaselli in https://github.com/scc-digitalhub/digitalhub-core/pull/120
+* Project sharing by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/123
+* add solr basic auth by @micnori in https://github.com/scc-digitalhub/digitalhub-core/pull/122
+* refactor: solr update + implement reindex + fixes by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/124
+* feat: drop mlrun runtime by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/125
+* refactor: secrets handled via providers + clear path logic to avoid s… by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/129
+
+### Features
+
+* update embedding to keep ids by default and reduce meta to base metadata ([360ab4c](https://github.com/scc-digitalhub/digitalhub-core/commit/360ab4cde4a9b26828abd9da90188a397aeb65db))
+* add fsGroup to secContext + make user configurable for container ([ee75082](https://github.com/scc-digitalhub/digitalhub-core/commit/ee750828a4a90b59c405ac7527fbd762e1eb61b6))
+* drop mlrun from application ([d54ec17](https://github.com/scc-digitalhub/digitalhub-core/commit/d54ec17914ea8f059eae01b5e60dca5cf68137f0))
+* drop mlrun runtime ([71e3a4b](https://github.com/scc-digitalhub/digitalhub-core/commit/71e3a4b38182b5991df689ad078f48c3e3c15154))
+* kfp workflow encoded as base64 ([8871bd8](https://github.com/scc-digitalhub/digitalhub-core/commit/8871bd8321d7b55b6ba3a977854a8b5bb7ccbec7))
+* projects search by user ([71f746b](https://github.com/scc-digitalhub/digitalhub-core/commit/71f746be13f816e519fd03789330f5a51899acb9))
+* refresh project authorities for internal tokens ([e6343df](https://github.com/scc-digitalhub/digitalhub-core/commit/e6343df0fb20ff0e914c8d5edb215c334a1f5a44))
+* use preferred_username by default for jwt auth, with fallback to sub ([5c57559](https://github.com/scc-digitalhub/digitalhub-core/commit/5c575591d7f36e9af900499e1405f91405ed9276))
+* container tasks export context for source ([1356ee2](https://github.com/scc-digitalhub/digitalhub-core/commit/1356ee2634e8e371c1a23a4335145bc31daa0214))
+* k8s service status info detailed collection ([88d4149](https://github.com/scc-digitalhub/digitalhub-core/commit/88d41490eb7a1bcbe33ed771d3a03bf408cb1a81))
+* notify updatedBy user if different from owner ([769b7c0](https://github.com/scc-digitalhub/digitalhub-core/commit/769b7c0d7c231bc756706c910cc5bdf576b0c6d1))
+* k8s api response error reporting ([c33456e](https://github.com/scc-digitalhub/digitalhub-core/commit/c33456e083357fb3853262aad8995f6dc9f95e8a))
+* cache on project share lookup ([80f989d](https://github.com/scc-digitalhub/digitalhub-core/commit/80f989d86975cc0f9c35841a1bddb622716b545a))
+* k8s serve/deploy resume + framework messages ([f0c3d42](https://github.com/scc-digitalhub/digitalhub-core/commit/f0c3d42db6a27e5a24b8258d1a0b316ede18cf30))
+* project sharing ([03dc7a4](https://github.com/scc-digitalhub/digitalhub-core/commit/03dc7a4fef91abdeb0262537a54dfd1ac49075f1))
+* project sharing + user permissions ([017e6bc](https://github.com/scc-digitalhub/digitalhub-core/commit/017e6bcc1b457c3342a941952a3877257f959d11))
+* user notifications model ([41da04e](https://github.com/scc-digitalhub/digitalhub-core/commit/41da04e8dc29148b2640c6ed9b2cfce72ac6ff61))
+* websocket authentication + config ([fdcb968](https://github.com/scc-digitalhub/digitalhub-core/commit/fdcb9680183245035d8755c72976b453a6669373))
+
+
+### Bug Fixes
+
+* secrets should be exposed as ENVS as provided ([3faa787](https://github.com/scc-digitalhub/digitalhub-core/commit/3faa787efc0907ec2cc09b0e0e4272e12b57146a))
+* builder-tool as non root ([7587cd1](https://github.com/scc-digitalhub/digitalhub-core/commit/7587cd15381f7f64ab0e3e6a02e6b6251b053031))
+* builder-tool does not exit for chmod issues ([07b4667](https://github.com/scc-digitalhub/digitalhub-core/commit/07b4667ebf189e2eed0ecacc2ce85ac8051aaa1d))
+* cronJob framework avoid double build of volumes ([d17e52e](https://github.com/scc-digitalhub/digitalhub-core/commit/d17e52e92297e11f010ccdf65b83ad10685101df))
+* project spec includes models ([a63c7e6](https://github.com/scc-digitalhub/digitalhub-core/commit/a63c7e6392a441e023e1a8bfac123a4cfb583591))
+* align secrets provider + add path checks ([047ae8f](https://github.com/scc-digitalhub/digitalhub-core/commit/047ae8f55b4b200480e4d3d8a6030a40059566fd))
+* fix huggingface path regex ([d957384](https://github.com/scc-digitalhub/digitalhub-core/commit/d9573844f754a7006d74c236c58c94fea6c6ce02))
+* sanitize project secrets name for k8s ([5444f16](https://github.com/scc-digitalhub/digitalhub-core/commit/5444f163e9b02d7cf4e9591cd7fd78c87d26e878))
+* fix crontab regex ([6c783b2](https://github.com/scc-digitalhub/digitalhub-core/commit/6c783b2d0bda9160fab07df238e2f69aeebff57f))
+* python init_function field is a plain string ([81e7827](https://github.com/scc-digitalhub/digitalhub-core/commit/81e7827c889cd176d02e13881bdf1be489022aa3))
+* refresh_token native queries require token as text, postgres uses oid by default ([d62c80e](https://github.com/scc-digitalhub/digitalhub-core/commit/d62c80e9db196478c2c550c413f65777ab99618a))
+* rewrite native query for refresh_tokens to fix text issues ([e78b808](https://github.com/scc-digitalhub/digitalhub-core/commit/e78b808512526975b3eb6d96afa3fa626adc34fe))
+* token exchange should propagate claims as extracted by securityConfig ([e904839](https://github.com/scc-digitalhub/digitalhub-core/commit/e904839b0de58f896b1d3f687c66313d4ce207e1))
+* wrong kfp wrapper image ([9677b2e](https://github.com/scc-digitalhub/digitalhub-core/commit/9677b2e589547f216a92f6e65bb90642a4734537))
+* container build workdir set to /shared ([1a18ba1](https://github.com/scc-digitalhub/digitalhub-core/commit/1a18ba1af214f9109b556e36014694d595523abc))
+* fix container build mismatch between workdir and copy dest ([bbb1655](https://github.com/scc-digitalhub/digitalhub-core/commit/bbb165586dfb7afaaf3ecf76b55a1644b5dc6ed6))
+* fix serve framework nullpointer ex ([d3ee34b](https://github.com/scc-digitalhub/digitalhub-core/commit/d3ee34bbc5c9cc0cc7c14f31d20a1baeea1b04ea))
+* service processor should avoid looking for status if type != loadBalancer ([569b7b9](https://github.com/scc-digitalhub/digitalhub-core/commit/569b7b9d6e75fbd4df08a4d613ab64f75329d358))
+* set LOGIN_URL for console for oidc ([1fc3a2f](https://github.com/scc-digitalhub/digitalhub-core/commit/1fc3a2ffe6d03511dd97a4a1861a4dac49aec9d5))
+* fix nullpointer on run callback when not existing ([8607fd5](https://github.com/scc-digitalhub/digitalhub-core/commit/8607fd5e2a8a337c0888fbbef3d823abfa1b3885))
+* k8s pvc claimName in place of claim_name ([0dab756](https://github.com/scc-digitalhub/digitalhub-core/commit/0dab756cbb4f420c86305b6ae015b4daedfac76a))
+* batch delete should send events ([72d17be](https://github.com/scc-digitalhub/digitalhub-core/commit/72d17be2e97e8d12b026105d0a7ae05302fb03d4))
+* fix delete of run with no runnable ([e6dc6d7](https://github.com/scc-digitalhub/digitalhub-core/commit/e6dc6d7a897579cb7038f2079993f8eae5a8f34f))
+* specRegistry schema generator additional modules should be optional + cleanups ([013eb30](https://github.com/scc-digitalhub/digitalhub-core/commit/013eb30d0d28bcac71b65b950c4de9a2b41e999d))
+
+
+
+
 # [0.7.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.7.0-beta10...0.7.0) (2024-09-20)
 
 
