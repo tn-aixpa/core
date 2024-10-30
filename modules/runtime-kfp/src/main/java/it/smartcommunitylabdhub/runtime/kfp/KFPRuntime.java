@@ -123,8 +123,9 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         RunSpecAccessor runAccessor = RunUtils.parseTask(kfpRunSpec.getTask());
 
         if(KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
-            if (((K8sJobRunnable) runnable).getResults() != null) {
-                String workflow = (String)((K8sJobRunnable) runnable).getResults().get("workflow");
+            if (run.getStatus() != null && run.getStatus().containsKey("results")) {
+                @SuppressWarnings({ "rawtypes"})
+                String workflow = (String)((Map)run.getStatus().get("results")).get("workflow");
                 // extract workflow spec part and convert to String again
                 try {
                     io.argoproj.workflow.models.Workflow argoWorkflow = YamlMapperFactory.yamlObjectMapper().readValue(workflow, io.argoproj.workflow.models.Workflow.class);
