@@ -106,6 +106,7 @@ argoworkflows:
   artifacts:
     configmap: ${ARGOWORKFLOWS_ARTIFACTS_CONFIGMAP:artifact-repositories}
     key: ${ARGOWORKFLOWS_ARTIFACTS_KEY:default-artifact-repository}
+  serviceaccount: ${ARGOWORKFLOWS_SERVICE_ACCOUNT:default}
 
 # Kubernetes
 kubernetes:
