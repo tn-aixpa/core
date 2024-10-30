@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -62,7 +61,7 @@ public class FunctionContextController {
 
     @Autowired
     TaskService taskService;
-    
+
     @Autowired
     RelationshipsFunctionService relationshipsService;
 
@@ -191,20 +190,20 @@ public class FunctionContextController {
 
         return taskService.getTasksByFunctionId(id, EntityName.FUNCTION);
     }
-    
+
     @Operation(summary = "Get relationships info for a given entity, if available")
     @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")
     public List<RelationshipDetail> getRelationshipsById(
-    		@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-    		@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) throws NoSuchEntityException {
-    	Function entity = functionService.getFunction(id);
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Function entity = functionService.getFunction(id);
 
         //check for project and name match
         if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-        
+
         return relationshipsService.getRelationships(project, id);
     }
-    
 }

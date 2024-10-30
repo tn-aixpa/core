@@ -53,7 +53,11 @@ import org.springframework.validation.BindException;
 @Transactional
 @Slf4j
 public class ArtifactServiceImpl
-    implements SearchableArtifactService, IndexableEntityService<ArtifactEntity>, EntityFilesService<Artifact>, RelationshipsArtifactService {
+    implements
+        SearchableArtifactService,
+        IndexableEntityService<ArtifactEntity>,
+        EntityFilesService<Artifact>,
+        RelationshipsArtifactService {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
@@ -78,7 +82,7 @@ public class ArtifactServiceImpl
 
     @Autowired
     private FilesInfoService filesInfoService;
-    
+
     @Autowired
     private ArtifactEntityRelationshipsManager relationshipsManager;
 
@@ -781,8 +785,8 @@ public class ArtifactServiceImpl
         }
     }
 
-	@Override
-	public List<RelationshipDetail> getRelationships(String project, String entityId) {
-		return relationshipsManager.getRelationships(project, entityId);
-	}
+    @Override
+    public List<RelationshipDetail> getRelationships(String project, String entityId) {
+        return relationshipsManager.getRelationships(project, entityId);
+    }
 }

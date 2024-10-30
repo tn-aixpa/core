@@ -42,7 +42,8 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class FunctionServiceImpl implements SearchableFunctionService, IndexableEntityService<FunctionEntity>, RelationshipsFunctionService {
+public class FunctionServiceImpl
+    implements SearchableFunctionService, IndexableEntityService<FunctionEntity>, RelationshipsFunctionService {
 
     @Autowired
     private EntityService<Function, FunctionEntity> entityService;
@@ -64,7 +65,7 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
 
     @Autowired
     private SpecValidator validator;
-    
+
     @Autowired
     private FunctionEntityRelationshipsManager relationshipsManager;
 
@@ -481,8 +482,8 @@ public class FunctionServiceImpl implements SearchableFunctionService, Indexable
         }
     }
 
-	@Override
-	public List<RelationshipDetail> getRelationships(String project, String entityId) {
-		return relationshipsManager.getRelationships(project, entityId);
-	}
+    @Override
+    public List<RelationshipDetail> getRelationships(String project, String entityId) {
+        return relationshipsManager.getRelationships(project, entityId);
+    }
 }

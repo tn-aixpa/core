@@ -72,7 +72,7 @@ public class TaskServiceImpl implements SearchableTaskService, RelationshipsTask
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
-    
+
     @Autowired
     private TaskEntityRelationshipsManager relationshipsManager;
 
@@ -377,8 +377,8 @@ public class TaskServiceImpl implements SearchableTaskService, RelationshipsTask
         };
     }
 
-	@Override
-	public List<RelationshipDetail> getRelationships(String project, String entityId) {
-		return relationshipsManager.getRelationships(project, entityId);
-	}
+    @Override
+    public List<RelationshipDetail> getRelationships(String project, String entityId) {
+        return relationshipsManager.getRelationships(project, entityId);
+    }
 }
