@@ -17,16 +17,17 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.LogService;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
+import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsRunService;
-import it.smartcommunitylabdhub.core.models.relationships.RunEntityRelationshipsManager;
+import it.smartcommunitylabdhub.core.relationships.RunEntityRelationshipsManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
@@ -44,10 +45,13 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class RunServiceImpl implements SearchableRunService, RelationshipsRunService {
+public class RunServiceImpl implements SearchableRunService, RelationshipsAwareEntityService<Run> {
 
     @Autowired
     private EntityService<Run, RunEntity> entityService;
+
+    @Autowired
+    private RunEntityBuilder entityBuilder;
 
     @Autowired
     private EntityService<Task, TaskEntity> taskEntityService;
@@ -374,7 +378,15 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsRunSer
     }
 
     @Override
-    public List<RelationshipDetail> getRelationships(String project, String entityId) {
-        return relationshipsManager.getRelationships(project, entityId);
+    public List<RelationshipDetail> getRelationships(String id) {
+        log.debug("get relationships for run {}", String.valueOf(id));
+
+        try {
+            Run run = entityService.get(id);
+            return relationshipsManager.getRelationships(entityBuilder.convert(run));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 }

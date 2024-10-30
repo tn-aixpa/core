@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.model.ModelBaseSpec;
@@ -17,6 +16,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.FilesInfoService;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
@@ -29,8 +29,7 @@ import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.indexers.ModelEntityIndexer;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableModelService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.relationships.ModelEntityRelationshipsManager;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsModelService;
+import it.smartcommunitylabdhub.core.relationships.ModelEntityRelationshipsManager;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
@@ -58,7 +57,7 @@ public class ModelServiceImpl
         SearchableModelService,
         IndexableEntityService<ModelEntity>,
         EntityFilesService<Model>,
-        RelationshipsModelService {
+        RelationshipsAwareEntityService<Model> {
 
     @Autowired
     private EntityService<Model, ModelEntity> entityService;
@@ -571,7 +570,7 @@ public class ModelServiceImpl
 
             if (files == null) {
                 //extract path from spec
-                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                ModelBaseSpec spec = new ModelBaseSpec();
                 spec.configure(entity.getSpec());
 
                 String path = spec.getPath();
@@ -785,7 +784,15 @@ public class ModelServiceImpl
     }
 
     @Override
-    public List<RelationshipDetail> getRelationships(String project, String entityId) {
-        return relationshipsManager.getRelationships(project, entityId);
+    public List<RelationshipDetail> getRelationships(String id) {
+        log.debug("get relationships for model {}", String.valueOf(id));
+
+        try {
+            Model model = entityService.get(id);
+            return relationshipsManager.getRelationships(entityBuilder.convert(model));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 }

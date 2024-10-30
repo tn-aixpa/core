@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItemBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
@@ -17,6 +16,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.FilesInfoService;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
@@ -29,8 +29,7 @@ import it.smartcommunitylabdhub.core.models.indexers.DataItemEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.relationships.DataItemEntityRelationshipsManager;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsDataItemService;
+import it.smartcommunitylabdhub.core.relationships.DataItemEntityRelationshipsManager;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
@@ -58,7 +57,7 @@ public class DataItemServiceImpl
         SearchableDataItemService,
         IndexableEntityService<DataItemEntity>,
         EntityFilesService<DataItem>,
-        RelationshipsDataItemService {
+        RelationshipsAwareEntityService<DataItem> {
 
     @Autowired
     private EntityService<DataItem, DataItemEntity> entityService;
@@ -570,7 +569,7 @@ public class DataItemServiceImpl
 
             if (files == null) {
                 //extract path from spec
-                ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                DataItemBaseSpec spec = new DataItemBaseSpec();
                 spec.configure(entity.getSpec());
 
                 String path = spec.getPath();
@@ -784,7 +783,15 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public List<RelationshipDetail> getRelationships(String project, String entityId) {
-        return relationshipsManager.getRelationships(project, entityId);
+    public List<RelationshipDetail> getRelationships(String id) {
+        log.debug("get relationships for dataitem {}", String.valueOf(id));
+
+        try {
+            DataItem dataitem = entityService.get(id);
+            return relationshipsManager.getRelationships(entityBuilder.convert(dataitem));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 }

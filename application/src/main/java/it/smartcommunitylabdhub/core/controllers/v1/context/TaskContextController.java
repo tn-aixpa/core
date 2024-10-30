@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -16,7 +15,6 @@ import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.TaskEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsTaskService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -60,9 +58,6 @@ public class TaskContextController {
 
     @Autowired
     RunService runService;
-
-    @Autowired
-    RelationshipsTaskService relationshipsService;
 
     @Operation(summary = "Create a task in a project context")
     @PostMapping(
@@ -170,21 +165,5 @@ public class TaskContextController {
         }
 
         return runService.getRunsByTaskId(id);
-    }
-
-    @Operation(summary = "Get relationships info for a given entity, if available")
-    @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")
-    public List<RelationshipDetail> getRelationshipsById(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
-    ) throws NoSuchEntityException {
-        Task entity = taskService.getTask(id);
-
-        //check for project and name match
-        if ((entity != null) && !entity.getProject().equals(project)) {
-            throw new IllegalArgumentException("invalid project");
-        }
-
-        return relationshipsService.getRelationships(project, id);
     }
 }

@@ -12,13 +12,13 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.LogService;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.components.run.RunManager;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsRunService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -66,7 +66,7 @@ public class RunContextController {
     LogService logService;
 
     @Autowired
-    RelationshipsRunService relationshipsService;
+    RelationshipsAwareEntityService<Run> relationshipsService;
 
     @Operation(summary = "Create a run in a project context")
     @PostMapping(
@@ -288,6 +288,6 @@ public class RunContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return relationshipsService.getRelationships(project, id);
+        return relationshipsService.getRelationships(id);
     }
 }

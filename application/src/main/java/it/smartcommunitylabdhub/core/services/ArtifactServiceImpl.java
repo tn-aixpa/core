@@ -16,6 +16,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.FilesInfoService;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
@@ -28,8 +29,7 @@ import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.relationships.ArtifactEntityRelationshipsManager;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsArtifactService;
+import it.smartcommunitylabdhub.core.relationships.ArtifactEntityRelationshipsManager;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.validation.constraints.NotNull;
@@ -57,7 +57,7 @@ public class ArtifactServiceImpl
         SearchableArtifactService,
         IndexableEntityService<ArtifactEntity>,
         EntityFilesService<Artifact>,
-        RelationshipsArtifactService {
+        RelationshipsAwareEntityService<Artifact> {
 
     @Autowired
     private EntityService<Artifact, ArtifactEntity> entityService;
@@ -786,7 +786,15 @@ public class ArtifactServiceImpl
     }
 
     @Override
-    public List<RelationshipDetail> getRelationships(String project, String entityId) {
-        return relationshipsManager.getRelationships(project, entityId);
+    public List<RelationshipDetail> getRelationships(String id) {
+        log.debug("get relationships for artifact {}", String.valueOf(id));
+
+        try {
+            Artifact artifact = entityService.get(id);
+            return relationshipsManager.getRelationships(entityBuilder.convert(artifact));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 }

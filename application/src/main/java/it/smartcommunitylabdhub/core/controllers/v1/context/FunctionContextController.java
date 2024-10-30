@@ -11,13 +11,13 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsFunctionService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -63,7 +63,7 @@ public class FunctionContextController {
     TaskService taskService;
 
     @Autowired
-    RelationshipsFunctionService relationshipsService;
+    RelationshipsAwareEntityService<Function> relationshipsService;
 
     @Operation(summary = "Create a function in a project context")
     @PostMapping(
@@ -204,6 +204,6 @@ public class FunctionContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return relationshipsService.getRelationships(project, id);
+        return relationshipsService.getRelationships(id);
     }
 }

@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
@@ -22,8 +23,7 @@ import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.indexers.WorkflowEntityIndexer;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsWorkflowService;
-import it.smartcommunitylabdhub.core.models.relationships.WorkflowEntityRelationshipsManager;
+import it.smartcommunitylabdhub.core.relationships.WorkflowEntityRelationshipsManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -43,7 +43,8 @@ import org.springframework.validation.BindException;
 @Transactional
 @Slf4j
 public class WorkflowServiceImpl
-    implements SearchableWorkflowService, IndexableEntityService<WorkflowEntity>, RelationshipsWorkflowService {
+    implements
+        SearchableWorkflowService, IndexableEntityService<WorkflowEntity>, RelationshipsAwareEntityService<Workflow> {
 
     @Autowired
     private EntityService<Workflow, WorkflowEntity> entityService;
@@ -386,22 +387,6 @@ public class WorkflowServiceImpl
     }
 
     @Override
-    public Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO, boolean force)
-        throws NoSuchEntityException {
-        log.debug("force update workflow with id {}", String.valueOf(id));
-        try {
-            //force update
-            //no validation
-            return entityService.update(id, workflowDTO);
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.WORKFLOW.toString());
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
     public void deleteWorkflow(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete workflow with id {}", String.valueOf(id));
         try {
@@ -485,7 +470,15 @@ public class WorkflowServiceImpl
     }
 
     @Override
-    public List<RelationshipDetail> getRelationships(String project, String entityId) {
-        return relationshipsManager.getRelationships(project, entityId);
+    public List<RelationshipDetail> getRelationships(String id) {
+        log.debug("get relationships for workflow {}", String.valueOf(id));
+
+        try {
+            Workflow workflow = entityService.get(id);
+            return relationshipsManager.getRelationships(entityBuilder.convert(workflow));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 }

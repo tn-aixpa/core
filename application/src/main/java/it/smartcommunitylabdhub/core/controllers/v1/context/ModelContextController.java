@@ -12,12 +12,12 @@ import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ModelEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableModelService;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsModelService;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -65,7 +65,7 @@ public class ModelContextController {
     EntityFilesService<Model> filesService;
 
     @Autowired
-    RelationshipsModelService relationshipsService;
+    RelationshipsAwareEntityService<Model> relationshipsService;
 
     @Operation(summary = "Create a model in a project context")
     @PostMapping(
@@ -334,6 +334,6 @@ public class ModelContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return relationshipsService.getRelationships(project, id);
+        return relationshipsService.getRelationships(id);
     }
 }

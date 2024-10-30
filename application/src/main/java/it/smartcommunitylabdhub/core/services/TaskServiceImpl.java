@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
-import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
@@ -26,8 +25,6 @@ import it.smartcommunitylabdhub.core.models.events.EntityAction;
 import it.smartcommunitylabdhub.core.models.events.EntityOperation;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTaskService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsTaskService;
-import it.smartcommunitylabdhub.core.models.relationships.TaskEntityRelationshipsManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
@@ -50,7 +47,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class TaskServiceImpl implements SearchableTaskService, RelationshipsTaskService {
+public class TaskServiceImpl implements SearchableTaskService {
 
     @Autowired
     private EntityService<Task, TaskEntity> entityService;
@@ -72,9 +69,6 @@ public class TaskServiceImpl implements SearchableTaskService, RelationshipsTask
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
-    private TaskEntityRelationshipsManager relationshipsManager;
 
     @Override
     public Page<Task> listTasks(Pageable pageable) {
@@ -375,10 +369,5 @@ public class TaskServiceImpl implements SearchableTaskService, RelationshipsTask
         return (root, query, criteriaBuilder) -> {
             return criteriaBuilder.equal(root.get("function"), function);
         };
-    }
-
-    @Override
-    public List<RelationshipDetail> getRelationships(String project, String entityId) {
-        return relationshipsManager.getRelationships(project, entityId);
     }
 }

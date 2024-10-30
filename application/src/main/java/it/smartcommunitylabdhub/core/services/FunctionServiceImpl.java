@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
@@ -22,8 +23,7 @@ import it.smartcommunitylabdhub.core.models.indexers.FunctionEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.relationships.FunctionEntityRelationshipsManager;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsFunctionService;
+import it.smartcommunitylabdhub.core.relationships.FunctionEntityRelationshipsManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -43,7 +43,8 @@ import org.springframework.validation.BindException;
 @Transactional
 @Slf4j
 public class FunctionServiceImpl
-    implements SearchableFunctionService, IndexableEntityService<FunctionEntity>, RelationshipsFunctionService {
+    implements
+        SearchableFunctionService, IndexableEntityService<FunctionEntity>, RelationshipsAwareEntityService<Function> {
 
     @Autowired
     private EntityService<Function, FunctionEntity> entityService;
@@ -483,7 +484,15 @@ public class FunctionServiceImpl
     }
 
     @Override
-    public List<RelationshipDetail> getRelationships(String project, String entityId) {
-        return relationshipsManager.getRelationships(project, entityId);
+    public List<RelationshipDetail> getRelationships(String id) {
+        log.debug("get relationships for function {}", String.valueOf(id));
+
+        try {
+            Function function = entityService.get(id);
+            return relationshipsManager.getRelationships(entityBuilder.convert(function));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
     }
 }

@@ -12,12 +12,12 @@ import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsArtifactService;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -65,7 +65,7 @@ public class ArtifactContextController {
     EntityFilesService<Artifact> filesService;
 
     @Autowired
-    RelationshipsArtifactService relationshipsService;
+    RelationshipsAwareEntityService<Artifact> relationshipsService;
 
     @Operation(summary = "Create an artifact in a project context")
     @PostMapping(
@@ -332,6 +332,6 @@ public class ArtifactContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return relationshipsService.getRelationships(project, id);
+        return relationshipsService.getRelationships(id);
     }
 }

@@ -9,12 +9,12 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.WorkflowEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
-import it.smartcommunitylabdhub.core.models.relationships.RelationshipsWorkflowService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -57,7 +57,7 @@ public class WorkflowContextController {
     SearchableWorkflowService workflowService;
 
     @Autowired
-    RelationshipsWorkflowService relationshipsService;
+    RelationshipsAwareEntityService<Workflow> relationshipsService;
 
     @Operation(
         summary = "Create a workflow in a project context",
@@ -183,6 +183,6 @@ public class WorkflowContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return relationshipsService.getRelationships(project, id);
+        return relationshipsService.getRelationships(id);
     }
 }
