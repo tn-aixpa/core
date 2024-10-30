@@ -32,7 +32,7 @@ public class EntityRelationshipsService {
     public List<RelationshipEntity> listByProject(@NotNull String project) throws StoreException {
         log.debug("list relationships for project {}", project);
 
-        return repository.findByProjectId(project);
+        return repository.findByProject(project);
     }
 
     @Transactional(readOnly = true)
@@ -40,7 +40,7 @@ public class EntityRelationshipsService {
         throws StoreException {
         log.debug("list relationships for project {} entity type {}", project, entityName);
 
-        return repository.findByProjectIdAndEntity(project, entityName.getValue());
+        return repository.findByProjectAndEntity(project, entityName.getValue());
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +51,7 @@ public class EntityRelationshipsService {
     ) throws StoreException {
         log.debug("list relationships for project {} entity type {} id {}", project, entityName, String.valueOf(id));
 
-        return repository.findByProjectIdAndEntityId(project, entityName.getValue(), id);
+        return repository.findByProjectAndEntityId(project, entityName.getValue(), id);
     }
 
     public List<RelationshipEntity> register(
@@ -70,7 +70,7 @@ public class EntityRelationshipsService {
         List<RelationshipEntity> result = new ArrayList<>();
 
         //update if needed
-        List<RelationshipEntity> current = repository.findByProjectIdAndEntityId(project, entityName.getValue(), id);
+        List<RelationshipEntity> current = repository.findByProjectAndEntityId(project, entityName.getValue(), id);
         List<RelationshipEntity> toKeep = current
             .stream()
             .filter(r ->
@@ -150,7 +150,7 @@ public class EntityRelationshipsService {
         throws StoreException {
         log.debug("clear relationships for project {} entity type {} id {}", project, entityName, String.valueOf(id));
 
-        List<RelationshipEntity> list = repository.findByProjectIdAndEntityId(project, entityName.getValue(), id);
+        List<RelationshipEntity> list = repository.findByProjectAndEntityId(project, entityName.getValue(), id);
         if (!list.isEmpty()) {
             if (log.isTraceEnabled()) {
                 log.trace("relationships: {}", list);

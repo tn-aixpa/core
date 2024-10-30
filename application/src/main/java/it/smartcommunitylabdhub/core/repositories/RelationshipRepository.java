@@ -11,10 +11,10 @@ public interface RelationshipRepository
     @Query(
         "SELECT r FROM RelationshipEntity r WHERE r.project=:project AND (r.sourceId=:entityId OR r.destId=:entityId) AND (r.sourceType=:type OR r.destType=:type)"
     )
-    List<RelationshipEntity> findByProjectIdAndEntityId(String project, String type, String entityId);
+    List<RelationshipEntity> findByProjectAndEntityId(String project, String type, String entityId);
 
     @Query("SELECT r FROM RelationshipEntity r WHERE r.project=:project AND (r.sourceType=:type OR r.destType=:type)")
-    List<RelationshipEntity> findByProjectIdAndEntity(String project, String type);
+    List<RelationshipEntity> findByProjectAndEntity(String project, String type);
 
-    List<RelationshipEntity> findByProjectId(String entityId);
+    List<RelationshipEntity> findByProject(String project);
 }
