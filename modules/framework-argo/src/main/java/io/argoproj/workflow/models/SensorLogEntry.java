@@ -55,7 +55,7 @@ public class SensorLogEntry {
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
-  private org.joda.time.DateTime time;
+  private java.time.OffsetDateTime time;
 
   public static final String SERIALIZED_NAME_TRIGGER_NAME = "triggerName";
   @SerializedName(SERIALIZED_NAME_TRIGGER_NAME)
@@ -200,7 +200,7 @@ public class SensorLogEntry {
   }
 
 
-  public SensorLogEntry time(org.joda.time.DateTime time) {
+  public SensorLogEntry time(java.time.OffsetDateTime time) {
     
     this.time = time;
     return this;
@@ -213,12 +213,12 @@ public class SensorLogEntry {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getTime() {
+  public java.time.OffsetDateTime getTime() {
     return time;
   }
 
 
-  public void setTime(org.joda.time.DateTime time) {
+  public void setTime(java.time.OffsetDateTime time) {
     this.time = time;
   }
 

@@ -43,7 +43,7 @@ public class CronWorkflowStatus {
 
   public static final String SERIALIZED_NAME_LAST_SCHEDULED_TIME = "lastScheduledTime";
   @SerializedName(SERIALIZED_NAME_LAST_SCHEDULED_TIME)
-  private org.joda.time.DateTime lastScheduledTime;
+  private java.time.OffsetDateTime lastScheduledTime;
 
 
   public CronWorkflowStatus active(List<io.kubernetes.client.openapi.models.V1ObjectReference> active) {
@@ -100,7 +100,7 @@ public class CronWorkflowStatus {
   }
 
 
-  public CronWorkflowStatus lastScheduledTime(org.joda.time.DateTime lastScheduledTime) {
+  public CronWorkflowStatus lastScheduledTime(java.time.OffsetDateTime lastScheduledTime) {
     
     this.lastScheduledTime = lastScheduledTime;
     return this;
@@ -112,12 +112,12 @@ public class CronWorkflowStatus {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public org.joda.time.DateTime getLastScheduledTime() {
+  public java.time.OffsetDateTime getLastScheduledTime() {
     return lastScheduledTime;
   }
 
 
-  public void setLastScheduledTime(org.joda.time.DateTime lastScheduledTime) {
+  public void setLastScheduledTime(java.time.OffsetDateTime lastScheduledTime) {
     this.lastScheduledTime = lastScheduledTime;
   }
 

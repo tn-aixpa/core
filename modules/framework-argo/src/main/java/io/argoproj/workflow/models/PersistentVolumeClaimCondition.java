@@ -32,11 +32,11 @@ import java.io.IOException;
 public class PersistentVolumeClaimCondition {
   public static final String SERIALIZED_NAME_LAST_PROBE_TIME = "lastProbeTime";
   @SerializedName(SERIALIZED_NAME_LAST_PROBE_TIME)
-  private org.joda.time.DateTime lastProbeTime;
+  private java.time.OffsetDateTime lastProbeTime;
 
   public static final String SERIALIZED_NAME_LAST_TRANSITION_TIME = "lastTransitionTime";
   @SerializedName(SERIALIZED_NAME_LAST_TRANSITION_TIME)
-  private org.joda.time.DateTime lastTransitionTime;
+  private java.time.OffsetDateTime lastTransitionTime;
 
   public static final String SERIALIZED_NAME_MESSAGE = "message";
   @SerializedName(SERIALIZED_NAME_MESSAGE)
@@ -102,7 +102,7 @@ public class PersistentVolumeClaimCondition {
   private TypeEnum type;
 
 
-  public PersistentVolumeClaimCondition lastProbeTime(org.joda.time.DateTime lastProbeTime) {
+  public PersistentVolumeClaimCondition lastProbeTime(java.time.OffsetDateTime lastProbeTime) {
     
     this.lastProbeTime = lastProbeTime;
     return this;
@@ -115,17 +115,17 @@ public class PersistentVolumeClaimCondition {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getLastProbeTime() {
+  public java.time.OffsetDateTime getLastProbeTime() {
     return lastProbeTime;
   }
 
 
-  public void setLastProbeTime(org.joda.time.DateTime lastProbeTime) {
+  public void setLastProbeTime(java.time.OffsetDateTime lastProbeTime) {
     this.lastProbeTime = lastProbeTime;
   }
 
 
-  public PersistentVolumeClaimCondition lastTransitionTime(org.joda.time.DateTime lastTransitionTime) {
+  public PersistentVolumeClaimCondition lastTransitionTime(java.time.OffsetDateTime lastTransitionTime) {
     
     this.lastTransitionTime = lastTransitionTime;
     return this;
@@ -138,12 +138,12 @@ public class PersistentVolumeClaimCondition {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getLastTransitionTime() {
+  public java.time.OffsetDateTime getLastTransitionTime() {
     return lastTransitionTime;
   }
 
 
-  public void setLastTransitionTime(org.joda.time.DateTime lastTransitionTime) {
+  public void setLastTransitionTime(java.time.OffsetDateTime lastTransitionTime) {
     this.lastTransitionTime = lastTransitionTime;
   }
 

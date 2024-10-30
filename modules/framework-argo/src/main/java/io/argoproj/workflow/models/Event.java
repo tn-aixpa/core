@@ -14,18 +14,10 @@
 package io.argoproj.workflow.models;
 
 import java.util.Objects;
-import java.util.Arrays;
-import com.google.gson.TypeAdapter;
-import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import io.argoproj.workflow.models.EventSeries;
-import io.argoproj.workflow.models.EventSource;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.io.IOException;
-import org.joda.time.DateTime;
+import java.time.OffsetDateTime;
 
 /**
  * Event is a report of an event somewhere in the cluster.  Events have a limited retention time and triggers and messages may evolve with time.  Event consumers should not rely on the timing of an event with a given Reason reflecting a consistent underlying trigger, or the continued existence of events with that Reason.  Events should be treated as informative, best-effort, supplemental data.
@@ -47,11 +39,11 @@ public class Event {
 
   public static final String SERIALIZED_NAME_EVENT_TIME = "eventTime";
   @SerializedName(SERIALIZED_NAME_EVENT_TIME)
-  private DateTime eventTime;
+  private OffsetDateTime eventTime;
 
   public static final String SERIALIZED_NAME_FIRST_TIMESTAMP = "firstTimestamp";
   @SerializedName(SERIALIZED_NAME_FIRST_TIMESTAMP)
-  private org.joda.time.DateTime firstTimestamp;
+  private java.time.OffsetDateTime firstTimestamp;
 
   public static final String SERIALIZED_NAME_INVOLVED_OBJECT = "involvedObject";
   @SerializedName(SERIALIZED_NAME_INVOLVED_OBJECT)
@@ -63,7 +55,7 @@ public class Event {
 
   public static final String SERIALIZED_NAME_LAST_TIMESTAMP = "lastTimestamp";
   @SerializedName(SERIALIZED_NAME_LAST_TIMESTAMP)
-  private org.joda.time.DateTime lastTimestamp;
+  private java.time.OffsetDateTime lastTimestamp;
 
   public static final String SERIALIZED_NAME_MESSAGE = "message";
   @SerializedName(SERIALIZED_NAME_MESSAGE)
@@ -171,7 +163,7 @@ public class Event {
   }
 
 
-  public Event eventTime(DateTime eventTime) {
+  public Event eventTime(OffsetDateTime eventTime) {
     
     this.eventTime = eventTime;
     return this;
@@ -184,17 +176,17 @@ public class Event {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "MicroTime is version of Time with microsecond level precision.")
 
-  public DateTime getEventTime() {
+  public OffsetDateTime getEventTime() {
     return eventTime;
   }
 
 
-  public void setEventTime(DateTime eventTime) {
+  public void setEventTime(OffsetDateTime eventTime) {
     this.eventTime = eventTime;
   }
 
 
-  public Event firstTimestamp(org.joda.time.DateTime firstTimestamp) {
+  public Event firstTimestamp(java.time.OffsetDateTime firstTimestamp) {
     
     this.firstTimestamp = firstTimestamp;
     return this;
@@ -207,12 +199,12 @@ public class Event {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getFirstTimestamp() {
+  public java.time.OffsetDateTime getFirstTimestamp() {
     return firstTimestamp;
   }
 
 
-  public void setFirstTimestamp(org.joda.time.DateTime firstTimestamp) {
+  public void setFirstTimestamp(java.time.OffsetDateTime firstTimestamp) {
     this.firstTimestamp = firstTimestamp;
   }
 
@@ -262,7 +254,7 @@ public class Event {
   }
 
 
-  public Event lastTimestamp(org.joda.time.DateTime lastTimestamp) {
+  public Event lastTimestamp(java.time.OffsetDateTime lastTimestamp) {
     
     this.lastTimestamp = lastTimestamp;
     return this;
@@ -275,12 +267,12 @@ public class Event {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getLastTimestamp() {
+  public java.time.OffsetDateTime getLastTimestamp() {
     return lastTimestamp;
   }
 
 
-  public void setLastTimestamp(org.joda.time.DateTime lastTimestamp) {
+  public void setLastTimestamp(java.time.OffsetDateTime lastTimestamp) {
     this.lastTimestamp = lastTimestamp;
   }
 

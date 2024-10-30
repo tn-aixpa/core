@@ -31,7 +31,7 @@ import java.io.IOException;
 public class IoArgoprojEventsV1alpha1Condition {
   public static final String SERIALIZED_NAME_LAST_TRANSITION_TIME = "lastTransitionTime";
   @SerializedName(SERIALIZED_NAME_LAST_TRANSITION_TIME)
-  private org.joda.time.DateTime lastTransitionTime;
+  private java.time.OffsetDateTime lastTransitionTime;
 
   public static final String SERIALIZED_NAME_MESSAGE = "message";
   @SerializedName(SERIALIZED_NAME_MESSAGE)
@@ -50,7 +50,7 @@ public class IoArgoprojEventsV1alpha1Condition {
   private String type;
 
 
-  public IoArgoprojEventsV1alpha1Condition lastTransitionTime(org.joda.time.DateTime lastTransitionTime) {
+  public IoArgoprojEventsV1alpha1Condition lastTransitionTime(java.time.OffsetDateTime lastTransitionTime) {
     
     this.lastTransitionTime = lastTransitionTime;
     return this;
@@ -63,12 +63,12 @@ public class IoArgoprojEventsV1alpha1Condition {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getLastTransitionTime() {
+  public java.time.OffsetDateTime getLastTransitionTime() {
     return lastTransitionTime;
   }
 
 
-  public void setLastTransitionTime(org.joda.time.DateTime lastTransitionTime) {
+  public void setLastTransitionTime(java.time.OffsetDateTime lastTransitionTime) {
     this.lastTransitionTime = lastTransitionTime;
   }
 

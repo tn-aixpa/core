@@ -38,7 +38,7 @@ public class IoArgoprojEventsV1alpha1ResourceFilter {
 
   public static final String SERIALIZED_NAME_CREATED_BY = "createdBy";
   @SerializedName(SERIALIZED_NAME_CREATED_BY)
-  private org.joda.time.DateTime createdBy;
+  private java.time.OffsetDateTime createdBy;
 
   public static final String SERIALIZED_NAME_FIELDS = "fields";
   @SerializedName(SERIALIZED_NAME_FIELDS)
@@ -76,7 +76,7 @@ public class IoArgoprojEventsV1alpha1ResourceFilter {
   }
 
 
-  public IoArgoprojEventsV1alpha1ResourceFilter createdBy(org.joda.time.DateTime createdBy) {
+  public IoArgoprojEventsV1alpha1ResourceFilter createdBy(java.time.OffsetDateTime createdBy) {
     
     this.createdBy = createdBy;
     return this;
@@ -89,12 +89,12 @@ public class IoArgoprojEventsV1alpha1ResourceFilter {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getCreatedBy() {
+  public java.time.OffsetDateTime getCreatedBy() {
     return createdBy;
   }
 
 
-  public void setCreatedBy(org.joda.time.DateTime createdBy) {
+  public void setCreatedBy(java.time.OffsetDateTime createdBy) {
     this.createdBy = createdBy;
   }
 

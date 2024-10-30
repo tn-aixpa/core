@@ -14,16 +14,11 @@
 package io.argoproj.workflow.models;
 
 import java.util.Objects;
-import java.util.Arrays;
-import com.google.gson.TypeAdapter;
-import com.google.gson.annotations.JsonAdapter;
+
 import com.google.gson.annotations.SerializedName;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.io.IOException;
-import org.joda.time.DateTime;
+import java.time.OffsetDateTime;
 
 /**
  * EventSeries contain information on series of events, i.e. thing that was/is happening continuously for some time.
@@ -37,7 +32,7 @@ public class EventSeries {
 
   public static final String SERIALIZED_NAME_LAST_OBSERVED_TIME = "lastObservedTime";
   @SerializedName(SERIALIZED_NAME_LAST_OBSERVED_TIME)
-  private DateTime lastObservedTime;
+  private OffsetDateTime lastObservedTime;
 
 
   public EventSeries count(Integer count) {
@@ -63,7 +58,7 @@ public class EventSeries {
   }
 
 
-  public EventSeries lastObservedTime(DateTime lastObservedTime) {
+  public EventSeries lastObservedTime(OffsetDateTime lastObservedTime) {
     
     this.lastObservedTime = lastObservedTime;
     return this;
@@ -76,12 +71,12 @@ public class EventSeries {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "MicroTime is version of Time with microsecond level precision.")
 
-  public DateTime getLastObservedTime() {
+  public OffsetDateTime getLastObservedTime() {
     return lastObservedTime;
   }
 
 
-  public void setLastObservedTime(DateTime lastObservedTime) {
+  public void setLastObservedTime(OffsetDateTime lastObservedTime) {
     this.lastObservedTime = lastObservedTime;
   }
 

@@ -51,7 +51,7 @@ public class IoArgoprojEventsV1alpha1EventContext {
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
-  private org.joda.time.DateTime time;
+  private java.time.OffsetDateTime time;
 
   public static final String SERIALIZED_NAME_TYPE = "type";
   @SerializedName(SERIALIZED_NAME_TYPE)
@@ -173,7 +173,7 @@ public class IoArgoprojEventsV1alpha1EventContext {
   }
 
 
-  public IoArgoprojEventsV1alpha1EventContext time(org.joda.time.DateTime time) {
+  public IoArgoprojEventsV1alpha1EventContext time(java.time.OffsetDateTime time) {
     
     this.time = time;
     return this;
@@ -186,12 +186,12 @@ public class IoArgoprojEventsV1alpha1EventContext {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getTime() {
+  public java.time.OffsetDateTime getTime() {
     return time;
   }
 
 
-  public void setTime(org.joda.time.DateTime time) {
+  public void setTime(java.time.OffsetDateTime time) {
     this.time = time;
   }
 

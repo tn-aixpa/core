@@ -62,7 +62,7 @@ public class NodeStatus {
 
   public static final String SERIALIZED_NAME_FINISHED_AT = "finishedAt";
   @SerializedName(SERIALIZED_NAME_FINISHED_AT)
-  private org.joda.time.DateTime finishedAt;
+  private java.time.OffsetDateTime finishedAt;
 
   public static final String SERIALIZED_NAME_HOST_NODE_NAME = "hostNodeName";
   @SerializedName(SERIALIZED_NAME_HOST_NODE_NAME)
@@ -118,7 +118,7 @@ public class NodeStatus {
 
   public static final String SERIALIZED_NAME_STARTED_AT = "startedAt";
   @SerializedName(SERIALIZED_NAME_STARTED_AT)
-  private org.joda.time.DateTime startedAt;
+  private java.time.OffsetDateTime startedAt;
 
   public static final String SERIALIZED_NAME_SYNCHRONIZATION_STATUS = "synchronizationStatus";
   @SerializedName(SERIALIZED_NAME_SYNCHRONIZATION_STATUS)
@@ -264,7 +264,7 @@ public class NodeStatus {
   }
 
 
-  public NodeStatus finishedAt(org.joda.time.DateTime finishedAt) {
+  public NodeStatus finishedAt(java.time.OffsetDateTime finishedAt) {
     
     this.finishedAt = finishedAt;
     return this;
@@ -277,12 +277,12 @@ public class NodeStatus {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getFinishedAt() {
+  public java.time.OffsetDateTime getFinishedAt() {
     return finishedAt;
   }
 
 
-  public void setFinishedAt(org.joda.time.DateTime finishedAt) {
+  public void setFinishedAt(java.time.OffsetDateTime finishedAt) {
     this.finishedAt = finishedAt;
   }
 
@@ -600,7 +600,7 @@ public class NodeStatus {
   }
 
 
-  public NodeStatus startedAt(org.joda.time.DateTime startedAt) {
+  public NodeStatus startedAt(java.time.OffsetDateTime startedAt) {
     
     this.startedAt = startedAt;
     return this;
@@ -613,12 +613,12 @@ public class NodeStatus {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public org.joda.time.DateTime getStartedAt() {
+  public java.time.OffsetDateTime getStartedAt() {
     return startedAt;
   }
 
 
-  public void setStartedAt(org.joda.time.DateTime startedAt) {
+  public void setStartedAt(java.time.OffsetDateTime startedAt) {
     this.startedAt = startedAt;
   }
 
