@@ -2,10 +2,12 @@ package it.smartcommunitylabdhub.framework.argo.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import io.argoproj.workflow.models.Arguments;
 import io.argoproj.workflow.models.ArtifactRepositoryRef;
 import io.argoproj.workflow.models.CronWorkflow;
 import io.argoproj.workflow.models.CronWorkflowSpec;
 import io.argoproj.workflow.models.ExecutorConfig;
+import io.argoproj.workflow.models.Parameter;
 import io.argoproj.workflow.models.Template;
 import io.argoproj.workflow.models.WorkflowSpec;
 import io.kubernetes.client.common.KubernetesObject;
@@ -229,9 +231,31 @@ public class K8sArgoCronWorkflowFramework extends K8sBaseFramework<K8sArgoCronWo
             appendTemplateDefaults(workflow, runnable);
             //populate artifact repository
             appendArtifactRepository(workflow);
+            // populate inputs
+            populateInputs(runnable, workflow);
             return new K8sCronWorkflowObject(workflow);
         } catch (Exception e) {
             throw new K8sArgoFrameworkException("Error parsing the Argo workflow specification: " + e.getMessage());
+        }
+    }
+
+
+    private void populateInputs(K8sArgoCronWorkflowRunnable runnable, CronWorkflow cronWorkflow) {
+        CronWorkflowSpec workflow = cronWorkflow.getSpec();
+        if (runnable.getParameters() != null) {
+            if (workflow.getWorkflowSpec().getArguments() == null) {
+                workflow.getWorkflowSpec().setArguments(new Arguments());
+            }
+            final Map<String, Parameter> parameters = workflow.getWorkflowSpec().getArguments().getParameters().stream().collect(Collectors.toMap(p -> p.getName(), p -> p));                
+            runnable.getParameters().entrySet().stream().forEach(e -> {
+                Parameter p = parameters.get(e.getKey());
+                if (p == null) {
+                    p = new Parameter();
+                    p.setName(e.getKey());
+                    workflow.getWorkflowSpec().getArguments().addParametersItem(p);
+                }
+                p.setValue(e.getValue() != null ? e.getValue().toString() : null);
+            });
         }
     }
 
@@ -250,6 +274,8 @@ public class K8sArgoCronWorkflowFramework extends K8sBaseFramework<K8sArgoCronWo
                 }
             }
         }
+        workflow.getSpec().getWorkflowSpec().setServiceAccountName(serviceAccountName);
+
     }
 
     private void appendArtifactRepository(CronWorkflow workflow) {
@@ -266,11 +292,17 @@ public class K8sArgoCronWorkflowFramework extends K8sBaseFramework<K8sArgoCronWo
             templateDefaults = new Template();
             workflow.getSpec().getWorkflowSpec().setTemplateDefaults(templateDefaults);
         }
+
+        if (runnable.getEnvs()== null) {
+            runnable.setEnvs(Collections.emptyList());
+        }
+
         V1Container container = templateDefaults.getContainer();
         if (container == null) {
             container = new V1Container();
             templateDefaults.setContainer(container);
         }
+
         List<V1EnvFromSource> envFrom = new LinkedList<>(buildEnvFrom(runnable));
         List<V1EnvVar> env = new LinkedList<>(buildEnv(runnable));
         if (container.getEnv() != null) {
@@ -330,7 +362,7 @@ public class K8sArgoCronWorkflowFramework extends K8sBaseFramework<K8sArgoCronWo
 
             Object object = customObjectsApi.getNamespacedCustomObject(
                     ARGO_GROUP, ARGO_VERSION, namespace, ARGO_PLURAL, wfName);
-            CronWorkflow readWorkflow = JacksonMapper.OBJECT_MAPPER.convertValue(object, CronWorkflow.class);
+            CronWorkflow readWorkflow = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(object, CronWorkflow.class);
             return new K8sCronWorkflowObject(readWorkflow);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
@@ -353,7 +385,7 @@ public class K8sArgoCronWorkflowFramework extends K8sBaseFramework<K8sArgoCronWo
             Object created = customObjectsApi.createNamespacedCustomObject(
                     ARGO_GROUP, ARGO_VERSION, namespace, ARGO_PLURAL, workflow.getWorkflow(),
                     "true", null, null, null);
-            CronWorkflow createdWorkflow = JacksonMapper.OBJECT_MAPPER.convertValue(created, CronWorkflow.class);
+            CronWorkflow createdWorkflow = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(created, CronWorkflow.class);
 
             return new K8sCronWorkflowObject(createdWorkflow);
         } catch (ApiException e) {

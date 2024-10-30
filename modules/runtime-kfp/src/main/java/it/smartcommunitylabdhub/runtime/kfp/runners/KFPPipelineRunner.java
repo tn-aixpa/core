@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.runtime.kfp.runners;
 
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoCronWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -12,8 +13,11 @@ import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 import org.springframework.util.StringUtils;
+import java.io.Serializable;
 
 /**
  * KFPPipelineRunner
@@ -44,11 +48,17 @@ public class KFPPipelineRunner implements Runner<K8sArgoWorkflowRunnable> {
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
+        Map<String, Serializable> parameters = new HashMap<>();
+        if (runSpec.getParameters() != null) parameters.putAll(runSpec.getParameters());
+        if (runSpec.getInputs() != null) parameters.putAll(runSpec.getInputs());
+
         K8sArgoWorkflowRunnable argoRunnable = K8sArgoWorkflowRunnable
             .builder()
             .runtime(KFPRuntime.RUNTIME)
             .task(KFPPipelineTaskSpec.KIND)
+            .state(State.READY.name())
             .workflowSpec(workflowSpec.getWorkflow())
+            .parameters(parameters)
             .build();
 
         if (StringUtils.hasText(taskSpec.getSchedule())) {
@@ -56,8 +66,10 @@ public class KFPPipelineRunner implements Runner<K8sArgoWorkflowRunnable> {
             argoRunnable = K8sArgoCronWorkflowRunnable
                 .builder()
                 .runtime(KFPRuntime.RUNTIME)
+                .state(State.READY.name())
                 .task(KFPPipelineTaskSpec.KIND)
                 .workflowSpec(workflowSpec.getWorkflow())
+                .parameters(parameters)
                 .schedule(taskSpec.getSchedule())
                 .build();
         }

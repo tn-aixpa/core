@@ -2,8 +2,10 @@ package it.smartcommunitylabdhub.framework.argo.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import io.argoproj.workflow.models.Arguments;
 import io.argoproj.workflow.models.ArtifactRepositoryRef;
 import io.argoproj.workflow.models.ExecutorConfig;
+import io.argoproj.workflow.models.Parameter;
 import io.argoproj.workflow.models.Template;
 import io.argoproj.workflow.models.Workflow;
 import io.argoproj.workflow.models.WorkflowSpec;
@@ -227,9 +229,30 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
             //populate artifact repository
             appendArtifactRepository(workflow);
             workflow.getSpec().setSecurityContext(buildPodSecurityContext(runnable));
+            // populate inputs
+            populateInputs(runnable, workflow);
+
             return new K8sWorkflowObject(workflow);
         } catch (Exception e) {
             throw new K8sArgoFrameworkException("Error parsing the Argo workflow specification: " + e.getMessage(), e);
+        }
+    }
+
+    private void populateInputs(K8sArgoWorkflowRunnable runnable, Workflow workflow) {
+        if (runnable.getParameters() != null) {
+            if (workflow.getSpec().getArguments() == null) {
+                workflow.getSpec().setArguments(new Arguments());
+            }
+            final Map<String, Parameter> parameters = workflow.getSpec().getArguments().getParameters().stream().collect(Collectors.toMap(p -> p.getName(), p -> p));                
+            runnable.getParameters().entrySet().stream().forEach(e -> {
+                Parameter p = parameters.get(e.getKey());
+                if (p == null) {
+                    p = new Parameter();
+                    p.setName(e.getKey());
+                    workflow.getSpec().getArguments().addParametersItem(p);
+                }
+                p.setValue(e.getValue() != null ? e.getValue().toString() : null);
+            });
         }
     }
 
@@ -248,6 +271,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
                 }
             }
         }
+        workflow.getSpec().setServiceAccountName(serviceAccountName);
     }
 
     private void appendArtifactRepository(Workflow workflow) {
@@ -264,6 +288,11 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
             templateDefaults = new Template();
             workflow.getSpec().setTemplateDefaults(templateDefaults);
         }
+
+        if (runnable.getEnvs()== null) {
+            runnable.setEnvs(Collections.emptyList());
+        }
+
         V1Container container = templateDefaults.getContainer();
         if (container == null) {
             container = new V1Container();
@@ -328,7 +357,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
 
             Object object = customObjectsApi.getNamespacedCustomObject(
                     ARGO_GROUP, ARGO_VERSION, namespace, ARGO_PLURAL, wfName);
-            Workflow readWorkflow = JacksonMapper.OBJECT_MAPPER.convertValue(object, Workflow.class);
+            Workflow readWorkflow = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(object, Workflow.class);
             return new K8sWorkflowObject(readWorkflow);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
@@ -351,7 +380,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
             Object created = customObjectsApi.createNamespacedCustomObject(
                     ARGO_GROUP, ARGO_VERSION, namespace, ARGO_PLURAL, workflow.getWorkflow(),
                     "true", null, null, null);
-            Workflow createdWorkflow = JacksonMapper.OBJECT_MAPPER.convertValue(created, Workflow.class);
+            Workflow createdWorkflow = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(created, Workflow.class);
             return new K8sWorkflowObject(createdWorkflow);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
