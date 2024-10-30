@@ -14,7 +14,7 @@ build:
 		-p dateLibrary=joda \
 		--model-package io.argoproj.workflow.models \
 		--skip-validate-spec \
-		--import-mappings Time=org.joda.time.DateTime \
+		--import-mappings Time=java.time.OffsetDateTime \
 		--import-mappings Affinity=io.kubernetes.client.openapi.models.V1Affinity \
 		--import-mappings ConfigMapKeySelector=io.kubernetes.client.openapi.models.V1ConfigMapKeySelector \
 		--import-mappings Container=io.kubernetes.client.openapi.models.V1Container \
