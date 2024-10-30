@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.runtime.kfp.specs;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
@@ -33,9 +32,6 @@ public class KFPWorkflowSpec extends WorkflowBaseSpec {
     @Schema(title = "fields.sourceCode.handler.title", description = "fields.sourceCode.handler.description")
     private String handler;
 
-    @JsonSchemaIgnore
-    private String workflow;
-    
     public KFPWorkflowSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -50,7 +46,6 @@ public class KFPWorkflowSpec extends WorkflowBaseSpec {
         this.image = spec.getImage();
         this.tag = spec.getTag();
         this.handler = spec.getHandler();
-        this.workflow = spec.getWorkflow();
     }
 
     public enum KFPSourceCodeLanguages {

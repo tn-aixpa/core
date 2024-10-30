@@ -34,10 +34,7 @@ public class KFPRunSpec extends RunBaseSpec {
 
     // @JsonProperty("pipeline_spec")
     @JsonUnwrapped
-    private KFPPipelineTaskSpec taskPipelineSpec;
-
-    @JsonUnwrapped
-    private KFPBuildTaskSpec taskBuildSpec;
+    private KFPPipelineTaskSpec taskSpec;
 
     public KFPRunSpec(Map<String, Serializable> data) {
         configure(data);
@@ -52,8 +49,7 @@ public class KFPRunSpec extends RunBaseSpec {
         this.outputs = spec.getOutputs();
         this.parameters = spec.getParameters();
 
-        this.taskPipelineSpec = spec.getTaskPipelineSpec();
-        this.taskBuildSpec = spec.getTaskBuildSpec();
+        this.taskSpec = spec.getTaskSpec();
         this.workflowSpec = spec.getWorkflowSpec();
     }
 
@@ -61,12 +57,7 @@ public class KFPRunSpec extends RunBaseSpec {
         this.workflowSpec = workflowSpec;
     }
 
-    public void setTaskPipelineSpec(KFPPipelineTaskSpec taskPipelineSpec) {
-        this.taskPipelineSpec = taskPipelineSpec;
+    public void setTaskSpec(KFPPipelineTaskSpec taskSpec) {
+        this.taskSpec = taskSpec;
     }
-
-    public void setTaskBuildSpec(KFPBuildTaskSpec taskBuildSpec) {
-        this.taskBuildSpec = taskBuildSpec;
-    }
-
 }
