@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
@@ -16,6 +17,7 @@ import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.ArtifactService;
 import it.smartcommunitylabdhub.commons.services.entities.DataItemService;
@@ -27,13 +29,17 @@ import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.RelationshipEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.models.specs.project.ProjectSpec;
+import it.smartcommunitylabdhub.core.relationships.EntityRelationshipsService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +57,11 @@ import org.springframework.validation.BindException;
 @Transactional
 @Slf4j
 public class ProjectServiceImpl
-    implements SearchableProjectService, AuthorizableAwareEntityService<Project>, ShareableAwareEntityService {
+    implements
+        SearchableProjectService,
+        AuthorizableAwareEntityService<Project>,
+        ShareableAwareEntityService,
+        RelationshipsAwareEntityService<Project> {
 
     @Autowired
     private EntityService<Project, ProjectEntity> entityService;
@@ -80,6 +90,9 @@ public class ProjectServiceImpl
 
     @Autowired
     private ResourceSharingService sharingService;
+
+    @Autowired
+    private EntityRelationshipsService relationshipsService;
 
     @Autowired
     private SpecRegistry specRegistry;
@@ -576,6 +589,37 @@ public class ProjectServiceImpl
             return sharingService.listByProjectAndEntity(id, EntityName.PROJECT, id);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.PROJECT.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<RelationshipDetail> getRelationships(@NotNull String id) {
+        log.debug("list relationships for project with id {}", String.valueOf(id));
+        try {
+            //fully load project
+            Project project = getProject(id);
+            ProjectSpec spec = new ProjectSpec();
+            spec.configure(project.getSpec());
+
+            //load all relationships
+            List<RelationshipEntity> list = relationshipsService.listByProject(id);
+
+            //filter for elements embedded in project
+            List<String> ids = new ArrayList<>();
+            Optional.ofNullable(spec.getArtifacts()).ifPresent(artifacts -> artifacts.forEach(a -> ids.add(a.getId())));
+            Optional.ofNullable(spec.getDataitems()).ifPresent(dataItems -> dataItems.forEach(d -> ids.add(d.getId())));
+            Optional.ofNullable(spec.getFunctions()).ifPresent(functions -> functions.forEach(f -> ids.add(f.getId())));
+            Optional.ofNullable(spec.getModels()).ifPresent(models -> models.forEach(m -> ids.add(m.getId())));
+            Optional.ofNullable(spec.getWorkflows()).ifPresent(workflows -> workflows.forEach(w -> ids.add(w.getId())));
+
+            return list
+                .stream()
+                .filter(e -> ids.contains(e.getSourceId()) || ids.contains(e.getDestId()))
+                .map(e -> new RelationshipDetail(e.getRelationship(), e.getSourceKey(), e.getDestKey()))
+                .toList();
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
