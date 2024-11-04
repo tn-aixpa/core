@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum RelationshipName {
-    PRODUCEDBY("producedBy"),
+    PRODUCEDBY("produced_by"),
     CONSUMES("consumes");
 
     private final String value;
@@ -30,7 +30,7 @@ public enum RelationshipName {
     public String toString() {
         switch (this) {
             case PRODUCEDBY:
-                return "producedBy";
+                return "produced_by";
             case CONSUMES:
                 return "consumes";
             default:
