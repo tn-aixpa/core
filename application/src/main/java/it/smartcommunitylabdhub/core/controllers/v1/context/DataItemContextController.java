@@ -8,9 +8,11 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
@@ -61,6 +63,9 @@ public class DataItemContextController {
 
     @Autowired
     EntityFilesService<DataItem> filesService;
+
+    @Autowired
+    RelationshipsAwareEntityService<DataItem> relationshipsService;
 
     @Operation(summary = "Create a dataItem in a project context")
     @PostMapping(
@@ -314,5 +319,21 @@ public class DataItemContextController {
         }
 
         filesService.storeFileInfo(id, files);
+    }
+
+    @Operation(summary = "Get relationships info for a given entity, if available")
+    @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")
+    public List<RelationshipDetail> getRelationshipsById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        DataItem entity = dataItemService.getDataItem(id);
+
+        //check for project and name match
+        if ((entity != null) && !entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return relationshipsService.getRelationships(id);
     }
 }

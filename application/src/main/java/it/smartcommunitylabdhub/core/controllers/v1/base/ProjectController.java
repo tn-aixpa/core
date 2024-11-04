@@ -9,8 +9,10 @@ import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
@@ -60,6 +62,9 @@ public class ProjectController {
 
     @Autowired
     ShareableAwareEntityService<Project> shareService;
+
+    @Autowired
+    RelationshipsAwareEntityService<Project> relationshipsService;
 
     @Autowired
     private AuditorAware<String> auditor;
@@ -217,6 +222,14 @@ public class ProjectController {
         checkAuthorization(auth, id);
 
         shareService.revoke(id, shareId);
+    }
+
+    @Operation(summary = "Get relationships info for a given entity, if available")
+    @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")
+    public List<RelationshipDetail> getRelationshipsById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        return relationshipsService.getRelationships(id);
     }
 
     private void checkAuthorization(Authentication auth, String id) {

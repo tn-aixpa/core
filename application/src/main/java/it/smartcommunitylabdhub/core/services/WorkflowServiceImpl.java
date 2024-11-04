@@ -4,11 +4,13 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
@@ -21,6 +23,7 @@ import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.indexers.WorkflowEntityIndexer;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.core.relationships.WorkflowEntityRelationshipsManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -39,7 +42,9 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class WorkflowServiceImpl implements SearchableWorkflowService, IndexableEntityService<WorkflowEntity> {
+public class WorkflowServiceImpl
+    implements
+        SearchableWorkflowService, IndexableEntityService<WorkflowEntity>, RelationshipsAwareEntityService<Workflow> {
 
     @Autowired
     private EntityService<Workflow, WorkflowEntity> entityService;
@@ -61,6 +66,9 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
 
     @Autowired
     private SpecValidator validator;
+
+    @Autowired
+    private WorkflowEntityRelationshipsManager relationshipsManager;
 
     @Override
     public Page<Workflow> listWorkflows(Pageable pageable) {
@@ -458,6 +466,19 @@ public class WorkflowServiceImpl implements SearchableWorkflowService, Indexable
 
                 log.error("error with indexing: {}", e.getMessage());
             }
+        }
+    }
+
+    @Override
+    public List<RelationshipDetail> getRelationships(String id) {
+        log.debug("get relationships for workflow {}", String.valueOf(id));
+
+        try {
+            Workflow workflow = entityService.get(id);
+            return relationshipsManager.getRelationships(entityBuilder.convert(workflow));
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
         }
     }
 }

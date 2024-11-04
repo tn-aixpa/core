@@ -6,8 +6,10 @@ import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
@@ -16,6 +18,7 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableWorkflowS
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.util.List;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
@@ -52,6 +55,9 @@ public class WorkflowContextController {
 
     @Autowired
     SearchableWorkflowService workflowService;
+
+    @Autowired
+    RelationshipsAwareEntityService<Workflow> relationshipsService;
 
     @Operation(
         summary = "Create a workflow in a project context",
@@ -162,5 +168,21 @@ public class WorkflowContextController {
         }
 
         workflowService.deleteWorkflow(id, cascade);
+    }
+
+    @Operation(summary = "Get relationships info for a given entity, if available")
+    @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")
+    public List<RelationshipDetail> getRelationshipsById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Workflow entity = workflowService.getWorkflow(id);
+
+        //check for project and name match
+        if ((entity != null) && !entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return relationshipsService.getRelationships(id);
     }
 }

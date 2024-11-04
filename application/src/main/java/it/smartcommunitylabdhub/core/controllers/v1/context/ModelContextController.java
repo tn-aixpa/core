@@ -8,9 +8,11 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
 import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
@@ -61,6 +63,9 @@ public class ModelContextController {
 
     @Autowired
     EntityFilesService<Model> filesService;
+
+    @Autowired
+    RelationshipsAwareEntityService<Model> relationshipsService;
 
     @Operation(summary = "Create a model in a project context")
     @PostMapping(
@@ -314,5 +319,21 @@ public class ModelContextController {
         }
 
         filesService.storeFileInfo(id, files);
+    }
+
+    @Operation(summary = "Get relationships info for a given entity, if available")
+    @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")
+    public List<RelationshipDetail> getRelationshipsById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Model entity = modelService.findModel(id);
+
+        //check for project and name match
+        if ((entity != null) && !entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        return relationshipsService.getRelationships(id);
     }
 }

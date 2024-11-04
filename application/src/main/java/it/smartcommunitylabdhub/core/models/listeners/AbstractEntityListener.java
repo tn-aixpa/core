@@ -1,10 +1,12 @@
 package it.smartcommunitylabdhub.core.models.listeners;
 
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
 import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
+import it.smartcommunitylabdhub.core.relationships.BaseEntityRelationshipsManager;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,8 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
 
     protected BaseEntityIndexer<E, T> indexer;
 
+    protected BaseEntityRelationshipsManager<E> relationshipsManager;
+
     protected AbstractEntityListener(Converter<E, T> converter) {
         this.converter = converter;
         clazz = extractClass();
@@ -36,6 +40,11 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
         this.indexer = indexer;
     }
 
+    @Autowired(required = false)
+    public void setRelationshipsManager(BaseEntityRelationshipsManager<E> manager) {
+        this.relationshipsManager = manager;
+    }
+
     protected void handle(EntityEvent<E> event) {
         log.debug("receive event for {} {}", clazz.getSimpleName(), event.getAction());
 
@@ -49,15 +58,24 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
         }
 
         T dto = converter.convert(entity);
-
-        //index
-        if (indexer != null) {
-            try {
-                log.debug("index document with id {}", event.getEntity().getId());
-                indexer.index(event.getEntity());
-            } catch (Exception e) {
-                log.error("error with solr: {}", e.getMessage());
-            }
+        switch (event.getAction()) {
+            case CREATE:
+                {
+                    onCreate(entity, dto);
+                    break;
+                }
+            case UPDATE:
+                {
+                    onUpdate(entity, dto);
+                    break;
+                }
+            case DELETE:
+                {
+                    onDelete(entity, dto);
+                    break;
+                }
+            default:
+                break;
         }
 
         //publish external event
@@ -69,6 +87,68 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
             }
 
             eventPublisher.publishEvent(cloud);
+        }
+    }
+
+    protected void onCreate(E entity, T dto) {
+        log.debug("onCreate for {}", entity.getId());
+        //index
+        if (indexer != null) {
+            try {
+                log.debug("index document with id {}", entity.getId());
+                indexer.index(entity);
+            } catch (Exception e) {
+                log.error("error with solr: {}", e.getMessage());
+            }
+        }
+
+        //relationships
+        if (relationshipsManager != null) {
+            try {
+                log.debug("set relationship for entity with id {}", entity.getId());
+                relationshipsManager.register(entity);
+            } catch (StoreException e) {
+                log.error("error with relationshipsManager: {}", e.getMessage());
+            }
+        }
+    }
+
+    protected void onUpdate(E entity, T dto) {
+        log.debug("onUpdate for {}", entity.getId());
+        //index
+        if (indexer != null) {
+            try {
+                log.debug("index document with id {}", entity.getId());
+                indexer.index(entity);
+            } catch (Exception e) {
+                log.error("error with solr: {}", e.getMessage());
+            }
+        }
+
+        //relationships
+        if (relationshipsManager != null) {
+            try {
+                log.debug("set relationship for entity with id {}", entity.getId());
+                relationshipsManager.register(entity);
+            } catch (StoreException e) {
+                log.error("error with relationshipsManager: {}", e.getMessage());
+            }
+        }
+    }
+
+    protected void onDelete(E entity, T dto) {
+        log.debug("onDelete for {}", entity.getId());
+
+        //TODO! index
+
+        //relationships
+        if (relationshipsManager != null) {
+            try {
+                log.debug("clear relationship for entity with id {}", entity.getId());
+                relationshipsManager.clear(entity);
+            } catch (StoreException e) {
+                log.error("error with relationshipsManager: {}", e.getMessage());
+            }
         }
     }
 
