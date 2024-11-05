@@ -25,7 +25,7 @@ public class MlflowServeFunctionSpec extends FunctionBaseSpec {
 
     @JsonProperty("path")
     @NotNull
-    @Pattern(regexp = Keys.FOLDER_PATTERN + "|" + Keys.ZIP_PATTERN)
+    @Pattern(regexp = "^(store://([^/]+)/model/mlflow/.*)" + "|" + Keys.FOLDER_PATTERN + "|" + Keys.ZIP_PATTERN)
     @Schema(title = "fields.path.title", description = "fields.mlflow.path.description")
     private String path;
 

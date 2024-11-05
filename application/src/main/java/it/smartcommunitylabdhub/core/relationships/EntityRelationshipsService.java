@@ -132,7 +132,7 @@ public class EntityRelationshipsService {
         entity.setSourceKey(key);
 
         //dest
-        KeyAccessor dest = KeyUtils.parseKey(relationship.getDest());
+        KeyAccessor dest = KeyUtils.parseKey(relationship.getDest(), true);
         if (dest.getId() == null) {
             throw new IllegalArgumentException("invalid destination");
         }

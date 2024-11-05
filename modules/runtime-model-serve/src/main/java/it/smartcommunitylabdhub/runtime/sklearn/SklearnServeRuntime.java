@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
+import it.smartcommunitylabdhub.commons.services.entities.ModelService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
@@ -35,6 +36,8 @@ public class SklearnServeRuntime
 
     @Autowired
     private SecretService secretService;
+    @Autowired
+    private ModelService modelService;
 
     @Value("${runtime.sklearnserve.image}")
     private String image;
@@ -111,7 +114,8 @@ public class SklearnServeRuntime
                 image,
                 runSpec.getFunctionSpec(),
                 secretService.getSecretData(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
-                k8sBuilderHelper
+                k8sBuilderHelper,
+                modelService
             )
                 .produce(run);
             default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");

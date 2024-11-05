@@ -1,12 +1,21 @@
 package it.smartcommunitylabdhub.runtime.mlflow;
 
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
+import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.entities.ModelService;
+import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
@@ -43,17 +52,20 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
     private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
+    private final ModelService modelService;
 
     public MlflowServeRunner(
         String image,
         MlflowServeFunctionSpec functionSpec,
         Map<String, String> secretData,
-        K8sBuilderHelper k8sBuilderHelper
+        K8sBuilderHelper k8sBuilderHelper,
+        ModelService modelService
     ) {
         this.image = image;
         this.functionSpec = functionSpec;
         this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
+        this.modelService = modelService;
     }
 
     @Override
@@ -72,11 +84,43 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
-        UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
+        String path = functionSpec.getPath();
+        if (functionSpec.getPath().startsWith(Keys.STORE_PREFIX)) {
+            KeyAccessor keyAccessor = KeyUtils.parseKey(path, false);
+            if (!EntityName.MODEL.getValue().equals(keyAccessor.getType())) {
+                throw new CoreRuntimeException("invalid entity kind reference, expected model");
+            }
+            Model model = keyAccessor.getId() != null 
+                ? modelService.findModel(keyAccessor.getId()) 
+                : modelService.getLatestModel(keyAccessor.getProject(), keyAccessor.getName());
+            if (model == null) {
+                throw new CoreRuntimeException("invalid entity reference, MLFlow model not found");
+            }
+            if (!model.getKind().equals("mlflow")) {
+                throw new CoreRuntimeException("invalid entity reference, expected MLFlow model");
+            }
+            RelationshipDetail rel = new RelationshipDetail();
+            rel.setType(RelationshipName.CONSUMES);
+            rel.setDest(run.getKey());
+            rel.setSource(model.getKey());
+            RelationshipsMetadata relationships = RelationshipsMetadata.from(run.getMetadata());
+            relationships.getRelationships().add(rel);
+            run.getMetadata().putAll(relationships.toMap());
+
+            path = (String)model.getSpec().get("path");
+            if (!path.endsWith(".zip")) {
+                if (!path.endsWith("/")) {
+                    path += "/";
+                }
+                path += "model/";    
+            }
+        }        
+
+        UriComponents uri = UriComponentsBuilder.fromUriString(path).build();
 
         //read source and build context
         List<ContextRef> contextRefs = Collections.singletonList(
-            ContextRef.builder().source(functionSpec.getPath()).protocol(uri.getScheme()).destination("model").build()
+            ContextRef.builder().source(path).protocol(uri.getScheme()).destination("model").build()
         );
         List<ContextSource> contextSources = new ArrayList<>();
 

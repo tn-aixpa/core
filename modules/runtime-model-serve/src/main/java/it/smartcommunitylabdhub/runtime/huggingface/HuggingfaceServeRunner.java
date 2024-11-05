@@ -1,10 +1,20 @@
 package it.smartcommunitylabdhub.runtime.huggingface;
 
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
+import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
+import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.entities.ModelService;
+import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -35,17 +45,20 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
     private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
+    private final ModelService modelService;
 
     public HuggingfaceServeRunner(
         String image,
         HuggingfaceServeFunctionSpec functionSpec,
         Map<String, String> secretData,
-        K8sBuilderHelper k8sBuilderHelper
+        K8sBuilderHelper k8sBuilderHelper,
+        ModelService modelService
     ) {
         this.image = image;
         this.functionSpec = functionSpec;
         this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
+        this.modelService = modelService;
     }
 
     @Override
@@ -66,7 +79,32 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
 
         //read source and build context
         List<ContextRef> contextRefs = null;
-        UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
+        String path = functionSpec.getPath();
+        if (path.startsWith(Keys.STORE_PREFIX)) {
+            KeyAccessor keyAccessor = KeyUtils.parseKey(path, false);
+            if (!EntityName.MODEL.getValue().equals(keyAccessor.getType())) {
+                throw new CoreRuntimeException("invalid entity kind reference, expected model");
+            }
+            Model model = keyAccessor.getId() != null 
+                ? modelService.findModel(keyAccessor.getId()) 
+                : modelService.getLatestModel(keyAccessor.getProject(), keyAccessor.getName());
+            if (model == null) {
+                throw new CoreRuntimeException("invalid entity reference, HuggingFace model not found");
+            }
+            if (!model.getKind().equals("huggingface")) {
+                throw new CoreRuntimeException("invalid entity reference, expected HuggingFace model");
+            }
+            RelationshipDetail rel = new RelationshipDetail();
+            rel.setType(RelationshipName.CONSUMES);
+            rel.setDest(run.getKey());
+            rel.setSource(model.getKey());
+            RelationshipsMetadata relationships = RelationshipsMetadata.from(run.getMetadata());
+            relationships.getRelationships().add(rel);
+            run.getMetadata().putAll(relationships.toMap());
+            path = (String) model.getSpec().get("path");
+        }
+
+        UriComponents uri = UriComponentsBuilder.fromUriString(path).build();
 
         List<String> args = new ArrayList<>(
             List.of(
@@ -104,7 +142,7 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
                 Collections.singletonList(
                     ContextRef
                         .builder()
-                        .source(functionSpec.getPath())
+                        .source(path)
                         .protocol(uri.getScheme())
                         .destination("model")
                         .build()
