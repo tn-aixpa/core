@@ -27,16 +27,16 @@ public class KeyUtils {
         return sb.toString();
     }
 
-    public static KeyAccessor parseKey(String key, boolean idRequired) {
+    public static KeyAccessor parseKey(String key) {
         if (key == null || key.isEmpty() || !key.startsWith(Keys.STORE_PREFIX)) {
             return KeyAccessor.with(Collections.emptyMap());
         }
 
+        //match full key first
         Matcher matcher = KEY_PATTERN.matcher(key);
-        if (!idRequired) {
-            if (!matcher.matches()) {
-                matcher = KEY_PATTERN_NO_ID.matcher(key);
-            }
+        if (!matcher.matches()) {
+            //fallback to partial key
+            matcher = KEY_PATTERN_NO_ID.matcher(key);
         }
 
         if (matcher.matches()) {
@@ -57,7 +57,6 @@ public class KeyUtils {
         }
         throw new IllegalArgumentException("Cannot create accessor for the given task string.");
     }
-    
 
     private KeyUtils() {}
 }

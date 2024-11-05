@@ -86,12 +86,12 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
 
         String path = functionSpec.getPath();
         if (functionSpec.getPath().startsWith(Keys.STORE_PREFIX)) {
-            KeyAccessor keyAccessor = KeyUtils.parseKey(path, false);
+            KeyAccessor keyAccessor = KeyUtils.parseKey(path);
             if (!EntityName.MODEL.getValue().equals(keyAccessor.getType())) {
                 throw new CoreRuntimeException("invalid entity kind reference, expected model");
             }
-            Model model = keyAccessor.getId() != null 
-                ? modelService.findModel(keyAccessor.getId()) 
+            Model model = keyAccessor.getId() != null
+                ? modelService.findModel(keyAccessor.getId())
                 : modelService.getLatestModel(keyAccessor.getProject(), keyAccessor.getName());
             if (model == null) {
                 throw new CoreRuntimeException("invalid entity reference, MLFlow model not found");
@@ -107,14 +107,14 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
             relationships.getRelationships().add(rel);
             run.getMetadata().putAll(relationships.toMap());
 
-            path = (String)model.getSpec().get("path");
+            path = (String) model.getSpec().get("path");
             if (!path.endsWith(".zip")) {
                 if (!path.endsWith("/")) {
                     path += "/";
                 }
-                path += "model/";    
+                path += "model/";
             }
-        }        
+        }
 
         UriComponents uri = UriComponentsBuilder.fromUriString(path).build();
 

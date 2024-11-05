@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.sklearn;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
@@ -32,7 +33,6 @@ import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeServeTaskSpec
 import it.smartcommunitylabdhub.runtime.sklearn.specs.SklearnServeFunctionSpec;
 import it.smartcommunitylabdhub.runtime.sklearn.specs.SklearnServeRunSpec;
 import it.smartcommunitylabdhub.runtime.sklearn.specs.SklearnServeTaskSpec;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -43,8 +43,6 @@ import java.util.Optional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 
 public class SklearnServeRunner implements Runner<K8sRunnable> {
 
@@ -62,7 +60,7 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
         String image,
         SklearnServeFunctionSpec functionSpec,
         Map<String, String> secretData,
-        K8sBuilderHelper k8sBuilderHelper, 
+        K8sBuilderHelper k8sBuilderHelper,
         ModelService modelService
     ) {
         this.image = image;
@@ -92,12 +90,12 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
 
         // special case: path as entity key - reference to a model
         if (functionSpec.getPath().startsWith(Keys.STORE_PREFIX)) {
-            KeyAccessor keyAccessor = KeyUtils.parseKey(path, false);
+            KeyAccessor keyAccessor = KeyUtils.parseKey(path);
             if (!EntityName.MODEL.getValue().equals(keyAccessor.getType())) {
                 throw new CoreRuntimeException("invalid entity kind reference, expected model");
             }
-            Model model = keyAccessor.getId() != null 
-                ? modelService.findModel(keyAccessor.getId()) 
+            Model model = keyAccessor.getId() != null
+                ? modelService.findModel(keyAccessor.getId())
                 : modelService.getLatestModel(keyAccessor.getProject(), keyAccessor.getName());
             if (model == null) {
                 throw new CoreRuntimeException("invalid entity reference, sklearn model not found");
@@ -218,16 +216,20 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
      * @throws CoreRuntimeException if the model files are not present or the model file is not found
      */
     private String getFilePath(Model model) {
-        TypeReference<List<FileInfo>> typeRef = new TypeReference<List<FileInfo>>(){};
+        TypeReference<List<FileInfo>> typeRef = new TypeReference<List<FileInfo>>() {};
         List<FileInfo> files = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(model.getStatus().get("files"), typeRef);
         if (files == null || files.isEmpty()) {
             throw new CoreRuntimeException("model files not found");
         }
-        FileInfo modelFile = files.stream().filter(f -> f.getName().matches(".*\\.pkl$|.*\\.joblib$")).findFirst().orElse(null);
+        FileInfo modelFile = files
+            .stream()
+            .filter(f -> f.getName().matches(".*\\.pkl$|.*\\.joblib$"))
+            .findFirst()
+            .orElse(null);
         if (modelFile == null) {
             throw new CoreRuntimeException("model file not found");
         }
-        String path = (String)model.getSpec().get("path");
+        String path = (String) model.getSpec().get("path");
         if (!path.endsWith("/")) {
             path += "/";
         }

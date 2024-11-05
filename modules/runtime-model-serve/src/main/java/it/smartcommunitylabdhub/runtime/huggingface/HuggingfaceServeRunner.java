@@ -81,12 +81,12 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         List<ContextRef> contextRefs = null;
         String path = functionSpec.getPath();
         if (path.startsWith(Keys.STORE_PREFIX)) {
-            KeyAccessor keyAccessor = KeyUtils.parseKey(path, false);
+            KeyAccessor keyAccessor = KeyUtils.parseKey(path);
             if (!EntityName.MODEL.getValue().equals(keyAccessor.getType())) {
                 throw new CoreRuntimeException("invalid entity kind reference, expected model");
             }
-            Model model = keyAccessor.getId() != null 
-                ? modelService.findModel(keyAccessor.getId()) 
+            Model model = keyAccessor.getId() != null
+                ? modelService.findModel(keyAccessor.getId())
                 : modelService.getLatestModel(keyAccessor.getProject(), keyAccessor.getName());
             if (model == null) {
                 throw new CoreRuntimeException("invalid entity reference, HuggingFace model not found");
@@ -140,12 +140,7 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
 
             contextRefs =
                 Collections.singletonList(
-                    ContextRef
-                        .builder()
-                        .source(path)
-                        .protocol(uri.getScheme())
-                        .destination("model")
-                        .build()
+                    ContextRef.builder().source(path).protocol(uri.getScheme()).destination("model").build()
                 );
         }
 
