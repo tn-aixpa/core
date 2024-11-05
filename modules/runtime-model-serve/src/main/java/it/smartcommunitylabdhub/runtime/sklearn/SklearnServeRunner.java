@@ -1,12 +1,23 @@
 package it.smartcommunitylabdhub.runtime.sklearn;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.base.FileInfo;
+import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
+import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
 import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
+import it.smartcommunitylabdhub.commons.services.entities.ModelService;
+import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
@@ -43,17 +54,20 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
     private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
+    private final ModelService modelService;
 
     public SklearnServeRunner(
         String image,
         SklearnServeFunctionSpec functionSpec,
         Map<String, String> secretData,
-        K8sBuilderHelper k8sBuilderHelper
+        K8sBuilderHelper k8sBuilderHelper,
+        ModelService modelService
     ) {
         this.image = image;
         this.functionSpec = functionSpec;
         this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
+        this.modelService = modelService;
     }
 
     @Override
@@ -72,13 +86,41 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
+        String path = functionSpec.getPath();
+
+        // special case: path as entity key - reference to a model
+        if (functionSpec.getPath().startsWith(Keys.STORE_PREFIX)) {
+            KeyAccessor keyAccessor = KeyUtils.parseKey(path);
+            if (!EntityName.MODEL.getValue().equals(keyAccessor.getType())) {
+                throw new CoreRuntimeException("invalid entity kind reference, expected model");
+            }
+            Model model = keyAccessor.getId() != null
+                ? modelService.findModel(keyAccessor.getId())
+                : modelService.getLatestModel(keyAccessor.getProject(), keyAccessor.getName());
+            if (model == null) {
+                throw new CoreRuntimeException("invalid entity reference, sklearn model not found");
+            }
+            if (!model.getKind().equals("sklearn")) {
+                throw new CoreRuntimeException("invalid entity reference, expected sklearn model");
+            }
+            RelationshipDetail rel = new RelationshipDetail();
+            rel.setType(RelationshipName.CONSUMES);
+            rel.setDest(run.getKey());
+            rel.setSource(model.getKey());
+            RelationshipsMetadata relationships = RelationshipsMetadata.from(run.getMetadata());
+            relationships.getRelationships().add(rel);
+            run.getMetadata().putAll(relationships.toMap());
+
+            path = getFilePath(model);
+        }
+
         //read source and build context
-        UriComponents uri = UriComponentsBuilder.fromUriString(functionSpec.getPath()).build();
+        UriComponents uri = UriComponentsBuilder.fromUriString(path).build();
         String fileName = uri.getPathSegments().getLast();
 
         //read source and build context
         List<ContextRef> contextRefs = Collections.singletonList(
-            ContextRef.builder().source(functionSpec.getPath()).protocol(uri.getScheme()).destination("model").build()
+            ContextRef.builder().source(path).protocol(uri.getScheme()).destination("model").build()
         );
 
         List<ContextSource> contextSources = new ArrayList<>();
@@ -164,5 +206,34 @@ public class SklearnServeRunner implements Runner<K8sRunnable> {
         k8sServeRunnable.setProject(run.getProject());
 
         return k8sServeRunnable;
+    }
+
+    /**
+     * Retrieves the path of the model file (either .pkl or .joblib) inside the model.
+     *
+     * @param model the model
+     * @return the path of the model file
+     * @throws CoreRuntimeException if the model files are not present or the model file is not found
+     */
+    private String getFilePath(Model model) {
+        TypeReference<List<FileInfo>> typeRef = new TypeReference<List<FileInfo>>() {};
+        List<FileInfo> files = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(model.getStatus().get("files"), typeRef);
+        if (files == null || files.isEmpty()) {
+            throw new CoreRuntimeException("model files not found");
+        }
+        FileInfo modelFile = files
+            .stream()
+            .filter(f -> f.getName().matches(".*\\.pkl$|.*\\.joblib$"))
+            .findFirst()
+            .orElse(null);
+        if (modelFile == null) {
+            throw new CoreRuntimeException("model file not found");
+        }
+        String path = (String) model.getSpec().get("path");
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        path += modelFile.getPath();
+        return path;
     }
 }

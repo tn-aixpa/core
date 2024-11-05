@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 public class KeyUtils {
 
     private static final Pattern KEY_PATTERN = Pattern.compile(Keys.KEY_PATTERN);
+    private static final Pattern KEY_PATTERN_NO_ID = Pattern.compile(Keys.KEY_PATTERN_NO_ID);
 
     public static String getKey(BaseDTO dto, String entityType) {
         StringBuilder sb = new StringBuilder();
@@ -31,7 +32,13 @@ public class KeyUtils {
             return KeyAccessor.with(Collections.emptyMap());
         }
 
+        //match full key first
         Matcher matcher = KEY_PATTERN.matcher(key);
+        if (!matcher.matches()) {
+            //fallback to partial key
+            matcher = KEY_PATTERN_NO_ID.matcher(key);
+        }
+
         if (matcher.matches()) {
             String project = matcher.group(1);
             String type = matcher.group(2);

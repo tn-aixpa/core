@@ -24,7 +24,7 @@ public class SklearnServeFunctionSpec extends FunctionBaseSpec {
 
     @JsonProperty("path")
     @NotNull
-    @Pattern(regexp = ".*\\.pkl$|.*\\.joblib$")
+    @Pattern(regexp = "^(store://([^/]+)/model/sklearn/.*)|.*\\.pkl$|.*\\.joblib$")
     @Schema(title = "fields.path.title", description = "fields.sklearn.path.description")
     private String path;
 
