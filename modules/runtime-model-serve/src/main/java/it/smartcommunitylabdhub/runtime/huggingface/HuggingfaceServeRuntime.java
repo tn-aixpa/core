@@ -36,9 +36,9 @@ public class HuggingfaceServeRuntime
 
     @Autowired
     private SecretService secretService;
+
     @Autowired
     private ModelService modelService;
-
 
     @Value("${runtime.huggingfaceserve.image}")
     private String image;

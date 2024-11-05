@@ -36,6 +36,7 @@ public class SklearnServeRuntime
 
     @Autowired
     private SecretService secretService;
+
     @Autowired
     private ModelService modelService;
 

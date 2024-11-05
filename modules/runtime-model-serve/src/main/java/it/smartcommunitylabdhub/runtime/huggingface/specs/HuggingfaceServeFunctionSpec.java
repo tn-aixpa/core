@@ -29,7 +29,15 @@ public class HuggingfaceServeFunctionSpec extends FunctionBaseSpec {
 
     @JsonProperty("path")
     @NotNull
-    @Pattern(regexp = "^(store://([^/]+)/model/huggingface/.*)" + "|" + Keys.FOLDER_PATTERN + "|" + Keys.ZIP_PATTERN + "|" + "^huggingface?://.*$")
+    @Pattern(
+        regexp = "^(store://([^/]+)/model/huggingface/.*)" +
+        "|" +
+        Keys.FOLDER_PATTERN +
+        "|" +
+        Keys.ZIP_PATTERN +
+        "|" +
+        "^huggingface?://.*$"
+    )
     @Schema(title = "fields.path.title", description = "fields.huggingface.path.description")
     private String path;
 

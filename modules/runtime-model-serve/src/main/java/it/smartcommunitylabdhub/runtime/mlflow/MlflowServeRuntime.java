@@ -36,6 +36,7 @@ public class MlflowServeRuntime
 
     @Autowired
     private SecretService secretService;
+
     @Autowired
     private ModelService modelService;
 
