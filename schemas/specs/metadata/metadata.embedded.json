@@ -1,0 +1,13 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "properties" : {
+    "embedded" : {
+      "type" : "boolean",
+      "title" : "fields.embedded.title",
+      "description" : "fields.embedded.description"
+    }
+  },
+  "title" : "specs.metadata.embedded.title",
+  "description" : "specs.metadata.embedded.description"
+}
