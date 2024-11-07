@@ -1,0 +1,88 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "$defs" : {
+    "ArrayField" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/$defs/Serializable"
+      },
+      "title" : "array"
+    },
+    "BooleanField" : {
+      "type" : "boolean",
+      "title" : "boolean"
+    },
+    "Map_String.Serializable_" : {
+      "type" : "object",
+      "additionalProperties" : {
+        "$ref" : "#/$defs/Serializable"
+      }
+    },
+    "NumberField" : {
+      "type" : "number",
+      "title" : "number"
+    },
+    "ObjectField" : {
+      "type" : "object",
+      "title" : "object"
+    },
+    "Serializable" : {
+      "anyOf" : [ {
+        "$ref" : "#/$defs/StringField"
+      }, {
+        "$ref" : "#/$defs/NumberField"
+      }, {
+        "$ref" : "#/$defs/BooleanField"
+      }, {
+        "$ref" : "#/$defs/ObjectField"
+      }, {
+        "$ref" : "#/$defs/ArrayField"
+      } ],
+      "title" : "object"
+    },
+    "StringField" : {
+      "type" : "string",
+      "title" : "string"
+    }
+  },
+  "type" : "object",
+  "properties" : {
+    "constraints" : {
+      "title" : "fields.constraints.title",
+      "description" : "fields.constraints.description",
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/$defs/Map_String.Serializable_",
+        "title" : "fields.constraints.item.title",
+        "description" : "fields.constraints.item.description",
+        "additionalProperties" : {
+          "$ref" : "#/$defs/Serializable",
+          "title" : "fields.constraints.item.title",
+          "description" : "fields.constraints.item.description"
+        }
+      }
+    },
+    "error_report" : {
+      "type" : "string",
+      "title" : "fields.errorReport.title",
+      "description" : "fields.errorReport.description"
+    },
+    "metrics" : {
+      "title" : "fields.metrics.title",
+      "description" : "fields.metrics.description",
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/$defs/Map_String.Serializable_",
+        "title" : "fields.metrics.item.title",
+        "description" : "fields.metrics.item.description",
+        "additionalProperties" : {
+          "$ref" : "#/$defs/Serializable",
+          "title" : "fields.metrics.item.title",
+          "description" : "fields.metrics.item.description"
+        }
+      }
+    }
+  },
+  "title" : "specs.nefertem.title",
+  "description" : "specs.nefertem.description"
+}
