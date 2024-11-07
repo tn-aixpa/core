@@ -17,17 +17,26 @@
 package it.smartcommunitylabdhub.core.components.infrastructure.specs;
 
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("local")
+@Slf4j
+@Profile("generate-schemas")
 public class SpecExportRunner implements CommandLineRunner {
 
     @Autowired
@@ -38,15 +47,35 @@ public class SpecExportRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("export");
+        log.info("Running spec exported...");
 
-        registry
-            .listSchemas(EntityName.ARTIFACT)
-            .forEach(schema -> {
-                System.out.println("s: " + schema.getSchema());
-            });
+        String path = "specs/";
+        int returnCode = 0;
+        try {
+            for (EntityName entity : EntityName.values()) {
+                String dest = path + entity.getValue();
+                log.info("exporting specs for {} to {}...", entity.getValue(), dest);
 
-        int exitCode = SpringApplication.exit(context, () -> 0);
+                for (Schema schema : registry.listSchemas(entity)) {
+                    String out = dest + "/" + schema.kind() + ".json";
+                    Path fp = Paths.get(out);
+                    Files.createDirectories(fp.getParent());
+
+                    log.info("writing spec {} to {}...", entity.getValue(), dest);
+
+                    File file = new File(out);
+                    String jsonSchema = schema.getSchema();
+                    FileUtils.writeStringToFile(file, jsonSchema, StandardCharsets.UTF_8);
+                }
+            }
+        } catch (IOException e) {
+            log.error("Error with exported: {}", e.getMessage());
+            returnCode = 1;
+        }
+
+        int exitCode = returnCode == 0
+            ? SpringApplication.exit(context, () -> 0)
+            : SpringApplication.exit(context, () -> 1);
         System.exit(exitCode);
     }
 }
