@@ -61,10 +61,10 @@ public class SpecExportRunner implements CommandLineRunner {
                     Path fp = Paths.get(out);
                     Files.createDirectories(fp.getParent());
 
-                    log.info("writing spec {} to {}...", entity.getValue(), dest);
+                    log.info("writing spec {}:{} to {}...", entity.getValue(), schema.kind(), out);
 
                     File file = new File(out);
-                    String jsonSchema = schema.getSchema();
+                    String jsonSchema = schema.schema().toPrettyString();
                     FileUtils.writeStringToFile(file, jsonSchema, StandardCharsets.UTF_8);
                 }
             }
