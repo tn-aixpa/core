@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import java.io.Serializable;
 import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,5 +21,4 @@ public class KFPBuildTaskSpec extends K8sTaskBaseSpec {
     public KFPBuildTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
-
 }

@@ -47,8 +47,8 @@ public class KFPBuildRunner implements Runner<K8sRunnable> {
         );
 
         List<CoreEnv> coreSecrets = secretData == null
-        ? null
-        : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
+            ? null
+            : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 

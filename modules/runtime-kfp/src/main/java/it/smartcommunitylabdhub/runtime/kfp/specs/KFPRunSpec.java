@@ -68,5 +68,4 @@ public class KFPRunSpec extends RunBaseSpec {
     public void setTaskBuildSpec(KFPBuildTaskSpec taskBuildSpec) {
         this.taskBuildSpec = taskBuildSpec;
     }
-
 }

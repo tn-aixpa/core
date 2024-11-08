@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.kfp;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
@@ -17,8 +18,8 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPBuildRunner;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPPipelineRunner;
-import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPBuildTaskSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunStatus;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec;
@@ -29,8 +30,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 @RuntimeComponent(runtime = KFPRuntime.RUNTIME)
 @Slf4j
@@ -106,8 +105,7 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         RunSpecAccessor runAccessor = RunUtils.parseTask(runKfpSpec.getTask());
 
         return switch (runAccessor.getTask()) {
-            case KFPPipelineTaskSpec.KIND -> new KFPPipelineRunner()
-                .produce(run);
+            case KFPPipelineTaskSpec.KIND -> new KFPPipelineRunner().produce(run);
             case KFPBuildTaskSpec.KIND -> new KFPBuildRunner(
                 image,
                 secretService.getSecretData(run.getProject(), runKfpSpec.getTaskBuildSpec().getSecrets())
@@ -122,28 +120,30 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         KFPRunSpec kfpRunSpec = new KFPRunSpec(run.getSpec());
         RunSpecAccessor runAccessor = RunUtils.parseTask(kfpRunSpec.getTask());
 
-        if(KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
+        if (KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
             if (run.getStatus() != null && run.getStatus().containsKey("results")) {
-                @SuppressWarnings({ "rawtypes"})
-                String workflow = (String)((Map)run.getStatus().get("results")).get("workflow");
+                @SuppressWarnings({ "rawtypes" })
+                String workflow = (String) ((Map) run.getStatus().get("results")).get("workflow");
                 // extract workflow spec part and convert to String again
                 try {
-                    io.argoproj.workflow.models.Workflow argoWorkflow = YamlMapperFactory.yamlObjectMapper().readValue(workflow, io.argoproj.workflow.models.Workflow.class);
+                    io.argoproj.workflow.models.Workflow argoWorkflow = YamlMapperFactory
+                        .yamlObjectMapper()
+                        .readValue(workflow, io.argoproj.workflow.models.Workflow.class);
                     workflow = YamlMapperFactory.yamlObjectMapper().writeValueAsString(argoWorkflow.getSpec());
                 } catch (JsonProcessingException e) {
                     log.error("Error storing Workflow specification", e);
                     return null;
                 }
-                
+
                 String wId = runAccessor.getVersion();
                 Workflow wf = workflowService.getWorkflow(wId);
-    
+
                 log.debug("update workflow {} spec to use built workflow", wId);
-    
+
                 KFPWorkflowSpec wfSpec = new KFPWorkflowSpec(wf.getSpec());
                 wfSpec.setWorkflow(workflow);
                 wf.setSpec(wfSpec.toMap());
-                workflowService.updateWorkflow(wId, wf, true);    
+                workflowService.updateWorkflow(wId, wf, true);
             }
         }
 
