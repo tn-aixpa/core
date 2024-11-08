@@ -4,12 +4,12 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
-import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
-import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
 import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoCronWorkflowFramework;
 import it.smartcommunitylabdhub.framework.argo.objects.K8sCronWorkflowObject;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoCronWorkflowRunnable;
+import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,10 @@ public class K8sArgoCronWorkflowMonitor extends K8sBaseMonitor<K8sArgoCronWorkfl
 
     private final K8sArgoCronWorkflowFramework framework;
 
-    public K8sArgoCronWorkflowMonitor(RunnableStore<K8sArgoCronWorkflowRunnable> runnableStore, K8sArgoCronWorkflowFramework argoFramework) {
+    public K8sArgoCronWorkflowMonitor(
+        RunnableStore<K8sArgoCronWorkflowRunnable> runnableStore,
+        K8sArgoCronWorkflowFramework argoFramework
+    ) {
         super(runnableStore);
         Assert.notNull(argoFramework, "argo framework is required");
 
@@ -34,7 +37,7 @@ public class K8sArgoCronWorkflowMonitor extends K8sBaseMonitor<K8sArgoCronWorkfl
     @Override
     public K8sArgoCronWorkflowRunnable refresh(K8sArgoCronWorkflowRunnable runnable) {
         try {
-             K8sCronWorkflowObject workflow = framework.get(framework.build(runnable));
+            K8sCronWorkflowObject workflow = framework.get(framework.build(runnable));
 
             if (workflow == null || workflow.getWorkflow().getStatus() == null) {
                 // something is missing, no recovery

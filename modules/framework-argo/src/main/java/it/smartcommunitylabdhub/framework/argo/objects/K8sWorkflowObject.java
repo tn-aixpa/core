@@ -1,15 +1,15 @@
 package it.smartcommunitylabdhub.framework.argo.objects;
 
-import java.io.Serializable;
-
-import io.argoproj.workflow.models.Workflow;
+import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1Workflow;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import java.io.Serializable;
 
 public class K8sWorkflowObject implements KubernetesObject, Serializable {
-    private Workflow workflow;
 
-    public K8sWorkflowObject(Workflow workflow) {
+    private IoArgoprojWorkflowV1alpha1Workflow workflow;
+
+    public K8sWorkflowObject(IoArgoprojWorkflowV1alpha1Workflow workflow) {
         this.workflow = workflow;
     }
 
@@ -28,7 +28,7 @@ public class K8sWorkflowObject implements KubernetesObject, Serializable {
         return workflow.getMetadata();
     }
 
-    public Workflow getWorkflow() {
+    public IoArgoprojWorkflowV1alpha1Workflow getWorkflow() {
         return workflow;
     }
 }

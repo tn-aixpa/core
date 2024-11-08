@@ -4,12 +4,12 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
-import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
-import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
-import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
 import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoWorkflowFramework;
 import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
+import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,10 @@ public class K8sArgoWorkflowMonitor extends K8sBaseMonitor<K8sArgoWorkflowRunnab
 
     private final K8sArgoWorkflowFramework framework;
 
-    public K8sArgoWorkflowMonitor(RunnableStore<K8sArgoWorkflowRunnable> runnableStore, K8sArgoWorkflowFramework argoFramework) {
+    public K8sArgoWorkflowMonitor(
+        RunnableStore<K8sArgoWorkflowRunnable> runnableStore,
+        K8sArgoWorkflowFramework argoFramework
+    ) {
         super(runnableStore);
         Assert.notNull(argoFramework, "argo framework is required");
 
@@ -34,7 +37,7 @@ public class K8sArgoWorkflowMonitor extends K8sBaseMonitor<K8sArgoWorkflowRunnab
     @Override
     public K8sArgoWorkflowRunnable refresh(K8sArgoWorkflowRunnable runnable) {
         try {
-             K8sWorkflowObject workflow = framework.get(framework.build(runnable));
+            K8sWorkflowObject workflow = framework.get(framework.build(runnable));
 
             if (workflow == null || workflow.getWorkflow().getStatus() == null) {
                 // something is missing, no recovery

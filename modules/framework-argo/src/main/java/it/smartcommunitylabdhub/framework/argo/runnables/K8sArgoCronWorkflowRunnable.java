@@ -1,10 +1,8 @@
 package it.smartcommunitylabdhub.framework.argo.runnables;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RunnableComponent;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoCronWorkflowFramework;
 import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoWorkflowFramework;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

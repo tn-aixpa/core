@@ -1,15 +1,15 @@
 package it.smartcommunitylabdhub.framework.argo.objects;
 
-import java.io.Serializable;
-
-import io.argoproj.workflow.models.CronWorkflow;
+import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1CronWorkflow;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import java.io.Serializable;
 
 public class K8sCronWorkflowObject implements KubernetesObject, Serializable {
-    private CronWorkflow workflow;
 
-    public K8sCronWorkflowObject(CronWorkflow workflow) {
+    private IoArgoprojWorkflowV1alpha1CronWorkflow workflow;
+
+    public K8sCronWorkflowObject(IoArgoprojWorkflowV1alpha1CronWorkflow workflow) {
         this.workflow = workflow;
     }
 
@@ -28,7 +28,7 @@ public class K8sCronWorkflowObject implements KubernetesObject, Serializable {
         return workflow.getMetadata();
     }
 
-    public CronWorkflow getWorkflow() {
+    public IoArgoprojWorkflowV1alpha1CronWorkflow getWorkflow() {
         return workflow;
     }
 }
