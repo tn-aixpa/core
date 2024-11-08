@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.runtime.kfp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1Workflow;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
@@ -14,7 +15,6 @@ import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPBuildRunner;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPPipelineRunner;
@@ -126,9 +126,9 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
                 String workflow = (String) ((Map) run.getStatus().get("results")).get("workflow");
                 // extract workflow spec part and convert to String again
                 try {
-                    io.argoproj.workflow.models.Workflow argoWorkflow = YamlMapperFactory
+                    IoArgoprojWorkflowV1alpha1Workflow argoWorkflow = YamlMapperFactory
                         .yamlObjectMapper()
-                        .readValue(workflow, io.argoproj.workflow.models.Workflow.class);
+                        .readValue(workflow, IoArgoprojWorkflowV1alpha1Workflow.class);
                     workflow = YamlMapperFactory.yamlObjectMapper().writeValueAsString(argoWorkflow.getSpec());
                 } catch (JsonProcessingException e) {
                     log.error("Error storing Workflow specification", e);
