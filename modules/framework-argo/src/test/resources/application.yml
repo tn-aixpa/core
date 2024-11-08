@@ -110,7 +110,7 @@ argoworkflows:
 
 # Kubernetes
 kubernetes:
-  namespace: ${K8S_NAMESPACE:default}
+  namespace: ${K8S_NAMESPACE:argo}
   logs: ${K8S_ENABLE_LOGS:true}
   metrics: ${K8S_ENABLE_METRICS:true}
   # supported values for results: default,keep,disable
@@ -150,9 +150,9 @@ kubernetes:
 # Application endpoint
 application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
-  name: @project.name@
-  description: @project.description@
-  version: @project.version@
+  name: test
+  description: test
+  version: test
   level: ${DH_API_LEVEL:}
   profiles: ${spring.profiles.active:default}
 

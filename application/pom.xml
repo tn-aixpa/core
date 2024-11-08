@@ -212,6 +212,11 @@
         </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-framework-argo</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-container</artifactId>
             <version>${revision}</version>
         </dependency>

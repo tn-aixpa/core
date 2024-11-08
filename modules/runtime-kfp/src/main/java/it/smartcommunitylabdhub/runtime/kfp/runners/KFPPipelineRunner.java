@@ -3,14 +3,16 @@ package it.smartcommunitylabdhub.runtime.kfp.runners;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoCronWorkflowRunnable;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
-import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,78 +26,53 @@ import org.springframework.util.StringUtils;
  *
  * @RunnerComponent(runtime = "kfp", task = "pipeline")
  */
-public class KFPPipelineRunner implements Runner<K8sRunnable> {
-
-    private final String image;
-    private final Map<String, String> secretData;
-
-    public KFPPipelineRunner(String image, Map<String, String> secretData) {
-        this.image = image;
-        this.secretData = secretData;
-    }
+public class KFPPipelineRunner implements Runner<K8sArgoWorkflowRunnable> {
 
     @Override
-    public K8sRunnable produce(Run run) {
+    public K8sArgoWorkflowRunnable produce(Run run) {
         KFPRunSpec runSpec = new KFPRunSpec(run.getSpec());
-        KFPPipelineTaskSpec taskSpec = runSpec.getTaskSpec();
+        KFPPipelineTaskSpec taskSpec = runSpec.getTaskPipelineSpec();
+        KFPWorkflowSpec workflowSpec = runSpec.getWorkflowSpec();
+        if (workflowSpec == null || workflowSpec.getWorkflow() == null) {
+            throw new IllegalArgumentException("workflowSpec is null");
+        }
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
-            List.of(
-                new CoreEnv("PROJECT_NAME", run.getProject()),
-                new CoreEnv("RUN_ID", run.getId()),
-                new CoreEnv("DIGITALHUB_CORE_WORKFLOW_IMAGE", image)
-            )
+            List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
         );
-
-        List<CoreEnv> coreSecrets = secretData == null
-            ? null
-            : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
 
         Optional.ofNullable(taskSpec.getEnvs()).ifPresent(coreEnvList::addAll);
 
-        K8sRunnable k8sJobRunnable = K8sJobRunnable
+        Map<String, Serializable> parameters = new HashMap<>();
+        if (runSpec.getParameters() != null) parameters.putAll(runSpec.getParameters());
+        if (runSpec.getInputs() != null) parameters.putAll(runSpec.getInputs());
+
+        K8sArgoWorkflowRunnable argoRunnable = K8sArgoWorkflowRunnable
             .builder()
             .runtime(KFPRuntime.RUNTIME)
             .task(KFPPipelineTaskSpec.KIND)
-            .image(image)
-            .command("python")
-            .args(List.of("wrapper.py").toArray(String[]::new))
-            .resources(taskSpec.getResources())
-            .nodeSelector(taskSpec.getNodeSelector())
-            .volumes(taskSpec.getVolumes())
-            .secrets(coreSecrets)
-            .envs(coreEnvList)
-            .affinity(taskSpec.getAffinity())
-            .tolerations(taskSpec.getTolerations())
             .state(State.READY.name())
+            .workflowSpec(workflowSpec.getWorkflow())
+            .parameters(parameters)
             .build();
 
         if (StringUtils.hasText(taskSpec.getSchedule())) {
             //build a cronJob
-            k8sJobRunnable =
-                K8sCronJobRunnable
+            argoRunnable =
+                K8sArgoCronWorkflowRunnable
                     .builder()
                     .runtime(KFPRuntime.RUNTIME)
-                    .task(KFPPipelineTaskSpec.KIND)
-                    //base
-                    .image(image)
-                    .command("python")
-                    .args(List.of("wrapper.py").toArray(String[]::new))
-                    .resources(taskSpec.getResources())
-                    .nodeSelector(taskSpec.getNodeSelector())
-                    .volumes(taskSpec.getVolumes())
-                    .secrets(coreSecrets)
-                    .envs(coreEnvList)
-                    .affinity(taskSpec.getAffinity())
-                    .tolerations(taskSpec.getTolerations())
                     .state(State.READY.name())
+                    .task(KFPPipelineTaskSpec.KIND)
+                    .workflowSpec(workflowSpec.getWorkflow())
+                    .parameters(parameters)
                     .schedule(taskSpec.getSchedule())
                     .build();
         }
 
-        k8sJobRunnable.setId(run.getId());
-        k8sJobRunnable.setProject(run.getProject());
+        argoRunnable.setId(run.getId());
+        argoRunnable.setProject(run.getProject());
 
-        return k8sJobRunnable;
+        return argoRunnable;
     }
 }

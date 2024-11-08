@@ -386,6 +386,23 @@ public class WorkflowServiceImpl
         }
     }
 
+
+    @Override
+    public Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO, boolean force)
+        throws NoSuchEntityException {
+        log.debug("force update workflow with id {}", String.valueOf(id));
+        try {
+            //force update
+            //no validation
+            return entityService.update(id, workflowDTO);
+        } catch (NoSuchEntityException e) {
+            throw new NoSuchEntityException(EntityName.WORKFLOW.toString());
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
     @Override
     public void deleteWorkflow(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete workflow with id {}", String.valueOf(id));
