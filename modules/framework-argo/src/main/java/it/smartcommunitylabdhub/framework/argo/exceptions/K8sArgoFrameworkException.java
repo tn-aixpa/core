@@ -7,6 +7,7 @@ public class K8sArgoFrameworkException extends K8sFrameworkException {
     public K8sArgoFrameworkException(String message) {
         super(message);
     }
+
     public K8sArgoFrameworkException(String message, Throwable cause) {
         super(message, cause);
     }
