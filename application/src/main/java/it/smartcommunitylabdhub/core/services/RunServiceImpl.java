@@ -12,6 +12,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
@@ -19,6 +20,7 @@ import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
@@ -32,6 +34,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -383,7 +386,33 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
 
         try {
             Run run = entityService.get(id);
-            return relationshipsManager.getRelationships(entityBuilder.convert(run));
+            List<RelationshipDetail> list = relationshipsManager.getRelationships(entityBuilder.convert(run));
+
+            //run is *always* related to function, check and inject if missing
+            String taskPath = RunBaseSpec.with(run.getSpec()).getTask();
+            if (StringUtils.hasText(taskPath)) {
+                RunSpecAccessor accessor = RunUtils.parseTask(taskPath);
+                if (accessor.isValid()) {
+                    //rebuild key and check
+                    String fk = KeyUtils.buildKey(
+                        accessor.getProject(),
+                        EntityName.FUNCTION.getValue(),
+                        accessor.getRuntime(),
+                        accessor.getFunction(),
+                        accessor.getVersion()
+                    );
+
+                    if (
+                        list.stream().noneMatch(r -> r.getType() == RelationshipName.RUN_OF && fk.equals(r.getDest()))
+                    ) {
+                        //missing, let's add
+                        RelationshipDetail fr = new RelationshipDetail(RelationshipName.RUN_OF, run.getKey(), fk);
+                        list = Stream.concat(list.stream(), Stream.of(fr)).toList();
+                    }
+                }
+            }
+
+            return list;
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());

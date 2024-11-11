@@ -24,6 +24,10 @@ public interface RunSpecAccessor extends Accessor<String> {
         return get("version");
     }
 
+    default boolean isValid() {
+        return getProject() != null && getRuntime() != null && getFunction() != null && getVersion() != null;
+    }
+
     static RunSpecAccessor with(Map<String, String> map) {
         return () -> map;
     }

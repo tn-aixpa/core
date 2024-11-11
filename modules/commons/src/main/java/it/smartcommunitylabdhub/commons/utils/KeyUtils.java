@@ -14,17 +14,21 @@ public class KeyUtils {
     private static final Pattern KEY_PATTERN = Pattern.compile(Keys.KEY_PATTERN);
     private static final Pattern KEY_PATTERN_NO_ID = Pattern.compile(Keys.KEY_PATTERN_NO_ID);
 
-    public static String getKey(BaseDTO dto, String entityType) {
+    public static String buildKey(String project, String entityType, String kind, String name, String id) {
         StringBuilder sb = new StringBuilder();
-        sb.append(Keys.STORE_PREFIX).append(dto.getProject());
+        sb.append(Keys.STORE_PREFIX).append(project);
         sb.append(Keys.PATH_DIVIDER).append(entityType);
-        sb.append(Keys.PATH_DIVIDER).append(dto.getKind());
-        sb.append(Keys.PATH_DIVIDER).append(dto.getName());
-        if (dto.getId() != null) {
-            sb.append(Keys.ID_DIVIDER).append(dto.getId());
+        sb.append(Keys.PATH_DIVIDER).append(kind);
+        sb.append(Keys.PATH_DIVIDER).append(name);
+        if (id != null) {
+            sb.append(Keys.ID_DIVIDER).append(id);
         }
 
         return sb.toString();
+    }
+
+    public static String getKey(BaseDTO dto, String entityType) {
+        return buildKey(dto.getProject(), entityType, dto.getKind(), dto.getName(), dto.getId());
     }
 
     public static KeyAccessor parseKey(String key) {
