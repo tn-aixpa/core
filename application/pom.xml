@@ -202,6 +202,11 @@
         </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-runtime-base</artifactId>
+            <version>${revision}</version>
+        </dependency>        
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-framework-k8s</artifactId>
             <version>${revision}</version>
         </dependency>
