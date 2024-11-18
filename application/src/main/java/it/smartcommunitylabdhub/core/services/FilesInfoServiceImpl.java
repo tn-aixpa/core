@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.commons.models.files.FilesInfo;
-import it.smartcommunitylabdhub.commons.services.entities.FilesInfoService;
+import it.smartcommunitylabdhub.commons.services.FilesInfoService;
 import it.smartcommunitylabdhub.core.models.builders.files.FilesInfoDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.files.FilesInfoEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.FilesInfoEntity;

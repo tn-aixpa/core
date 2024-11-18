@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.queries.services;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.services.entities.ProjectService;
+import it.smartcommunitylabdhub.commons.services.ProjectService;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;

@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.models.label.Label;
-import it.smartcommunitylabdhub.commons.services.entities.LabelService;
+import it.smartcommunitylabdhub.commons.services.LabelService;
 import it.smartcommunitylabdhub.core.models.builders.label.LabelDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.LabelEntity;
 import it.smartcommunitylabdhub.core.repositories.LabelRepository;

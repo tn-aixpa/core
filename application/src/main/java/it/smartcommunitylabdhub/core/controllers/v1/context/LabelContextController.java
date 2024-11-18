@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.label.Label;
-import it.smartcommunitylabdhub.commons.services.entities.LabelService;
+import it.smartcommunitylabdhub.commons.services.LabelService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

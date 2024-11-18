@@ -14,7 +14,7 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.task.Task;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
-import it.smartcommunitylabdhub.commons.services.entities.TaskService;
+import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.function.FunctionEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;

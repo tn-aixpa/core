@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.queries.services;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.function.Function;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
+import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;

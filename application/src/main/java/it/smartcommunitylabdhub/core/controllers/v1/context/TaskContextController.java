@@ -9,7 +9,7 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.models.task.Task;
-import it.smartcommunitylabdhub.commons.services.entities.RunService;
+import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
