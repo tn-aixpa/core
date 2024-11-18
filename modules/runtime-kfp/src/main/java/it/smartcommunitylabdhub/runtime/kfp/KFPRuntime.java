@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
+import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
@@ -22,8 +23,11 @@ import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunStatus;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec.KFPWorkflowCodeLanguages;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -121,7 +125,11 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         if (KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
             if (run.getStatus() != null && run.getStatus().containsKey("results")) {
                 @SuppressWarnings({ "rawtypes" })
-                String workflow = (String) ((Map) run.getStatus().get("results")).get("workflow");
+                String raw = (String) ((Map) run.getStatus().get("results")).get("workflow");
+
+                //result is base64 encoded
+                String workflow = new String(Base64.getDecoder().decode(raw), StandardCharsets.UTF_8);
+
                 // extract workflow spec part and convert to String again
                 try {
                     IoArgoprojWorkflowV1alpha1Workflow argoWorkflow = YamlMapperFactory
@@ -138,8 +146,12 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
 
                 log.debug("update workflow {} spec to use built workflow", wId);
 
+                SourceCode<KFPWorkflowCodeLanguages> build = new SourceCode<>();
+                build.setBase64(Base64.getEncoder().encodeToString(workflow.getBytes(StandardCharsets.UTF_8)));
+                build.setLang(KFPWorkflowCodeLanguages.yaml);
+
                 KFPWorkflowSpec wfSpec = new KFPWorkflowSpec(wf.getSpec());
-                wfSpec.setWorkflow(workflow);
+                wfSpec.setBuild(build);
                 wf.setSpec(wfSpec.toMap());
                 workflowService.updateWorkflow(wId, wf, true);
             }
