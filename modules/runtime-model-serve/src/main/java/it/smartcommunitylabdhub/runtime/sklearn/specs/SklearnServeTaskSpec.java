@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.runtime.sklearn.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.runtime.modelserve.specs.ModelServeServeTaskSpec;
 import it.smartcommunitylabdhub.runtime.sklearn.SklearnServeRuntime;
 import java.io.Serializable;

@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.queries.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.entities.log.Log;
+import it.smartcommunitylabdhub.commons.models.log.Log;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.core.models.entities.LogEntity;

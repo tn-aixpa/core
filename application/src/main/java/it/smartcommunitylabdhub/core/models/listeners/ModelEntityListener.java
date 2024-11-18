@@ -1,8 +1,8 @@
 package it.smartcommunitylabdhub.core.models.listeners;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.models.entities.model.Model;
-import it.smartcommunitylabdhub.commons.models.entities.project.Project;
+import it.smartcommunitylabdhub.commons.models.model.Model;
+import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;

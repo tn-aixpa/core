@@ -1,7 +1,8 @@
 package it.smartcommunitylabdhub.runtime.modelserve.specs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
+
+import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.run;
 
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
+import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;

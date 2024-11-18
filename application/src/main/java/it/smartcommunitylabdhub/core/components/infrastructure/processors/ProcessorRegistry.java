@@ -2,7 +2,8 @@ package it.smartcommunitylabdhub.core.components.infrastructure.processors;
 
 import it.smartcommunitylabdhub.commons.annotations.common.RunProcessorType;
 import it.smartcommunitylabdhub.commons.infrastructure.RunProcessor;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
+import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

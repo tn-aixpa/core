@@ -2,8 +2,8 @@ package it.smartcommunitylabdhub.core.relationships;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.core.models.entities.RelationshipEntity;
 import it.smartcommunitylabdhub.core.repositories.RelationshipRepository;
 import jakarta.validation.constraints.NotNull;

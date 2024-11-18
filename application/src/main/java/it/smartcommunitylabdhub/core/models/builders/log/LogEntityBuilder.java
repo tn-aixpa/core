@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.log;
 
-import it.smartcommunitylabdhub.commons.models.entities.log.Log;
-import it.smartcommunitylabdhub.commons.models.entities.log.LogBaseSpec;
+import it.smartcommunitylabdhub.commons.models.log.Log;
+import it.smartcommunitylabdhub.commons.models.log.LogBaseSpec;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import jakarta.persistence.AttributeConverter;

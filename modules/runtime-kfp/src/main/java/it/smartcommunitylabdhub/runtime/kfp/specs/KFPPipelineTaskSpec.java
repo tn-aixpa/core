@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.runtime.kfp.specs;
 
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sWorkflowTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import jakarta.validation.constraints.Pattern;

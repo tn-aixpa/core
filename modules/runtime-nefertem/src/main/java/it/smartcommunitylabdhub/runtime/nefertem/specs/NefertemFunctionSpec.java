@@ -2,8 +2,8 @@ package it.smartcommunitylabdhub.runtime.nefertem.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionBaseSpec;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.runtime.nefertem.NefertemRuntime;
 import java.io.Serializable;
 import java.util.List;

@@ -1,13 +1,14 @@
 package it.smartcommunitylabdhub.core.models.specs.project;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.entities.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.entities.function.Function;
-import it.smartcommunitylabdhub.commons.models.entities.model.Model;
-import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.function.Function;
+import it.smartcommunitylabdhub.commons.models.model.Model;
+import it.smartcommunitylabdhub.commons.models.project.ProjectBaseSpec;
+import it.smartcommunitylabdhub.commons.models.workflow.Workflow;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

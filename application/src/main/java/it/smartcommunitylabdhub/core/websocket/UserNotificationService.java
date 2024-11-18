@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.websocket;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import lombok.extern.slf4j.Slf4j;

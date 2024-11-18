@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.log;
 
-import it.smartcommunitylabdhub.commons.models.entities.log.Log;
+import it.smartcommunitylabdhub.commons.models.log.Log;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;

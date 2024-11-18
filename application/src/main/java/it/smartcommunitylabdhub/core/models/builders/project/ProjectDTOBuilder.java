@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.models.builders.project;
 
-import it.smartcommunitylabdhub.commons.models.entities.project.Project;
-import it.smartcommunitylabdhub.commons.models.entities.project.ProjectBaseSpec;
+import it.smartcommunitylabdhub.commons.models.project.Project;
+import it.smartcommunitylabdhub.commons.models.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;

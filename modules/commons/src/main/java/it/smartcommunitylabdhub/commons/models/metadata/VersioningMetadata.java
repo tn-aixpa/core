@@ -3,7 +3,8 @@ package it.smartcommunitylabdhub.commons.models.metadata;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;

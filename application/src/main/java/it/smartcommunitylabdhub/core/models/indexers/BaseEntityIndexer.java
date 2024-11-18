@@ -2,10 +2,10 @@ package it.smartcommunitylabdhub.core.models.indexers;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.base.MetadataDTO;
-import it.smartcommunitylabdhub.commons.models.base.StatusDTO;
 import it.smartcommunitylabdhub.commons.models.metadata.AuditMetadata;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.MetadataDTO;
+import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
 import it.smartcommunitylabdhub.core.components.solr.IndexField;
 import it.smartcommunitylabdhub.core.components.solr.SolrBaseEntityParser;
 import it.smartcommunitylabdhub.core.components.solr.SolrComponent;

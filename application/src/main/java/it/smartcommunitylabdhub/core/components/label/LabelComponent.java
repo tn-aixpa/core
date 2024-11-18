@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.components.label;
 
-import it.smartcommunitylabdhub.commons.models.entities.label.Label;
+import it.smartcommunitylabdhub.commons.models.label.Label;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.commons.services.entities.LabelService;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;

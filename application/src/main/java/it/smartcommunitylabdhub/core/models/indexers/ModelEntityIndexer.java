@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.core.models.indexers;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.models.entities.model.Model;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.metadata.VersioningMetadata;
+import it.smartcommunitylabdhub.commons.models.model.Model;
 import it.smartcommunitylabdhub.core.components.solr.IndexField;
 import it.smartcommunitylabdhub.core.models.builders.model.ModelDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;

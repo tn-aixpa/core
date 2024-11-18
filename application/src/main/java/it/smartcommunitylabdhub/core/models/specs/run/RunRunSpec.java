@@ -1,8 +1,9 @@
 package it.smartcommunitylabdhub.core.models.specs.run;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
+
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;

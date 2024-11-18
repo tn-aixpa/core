@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.core.models.builders.task;
 
-import it.smartcommunitylabdhub.commons.models.entities.function.FunctionTaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowTaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.function.FunctionTaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
+import it.smartcommunitylabdhub.commons.models.task.Task;
+import it.smartcommunitylabdhub.commons.models.workflow.WorkflowTaskBaseSpec;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;

@@ -1,8 +1,8 @@
 package it.smartcommunitylabdhub.core.models.queries.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.services.entities.RunService;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import jakarta.annotation.Nullable;

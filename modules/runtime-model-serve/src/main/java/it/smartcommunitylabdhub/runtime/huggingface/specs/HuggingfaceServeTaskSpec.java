@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.runtime.huggingface.specs;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.runtime.huggingface.HuggingfaceServeRuntime;
 import it.smartcommunitylabdhub.runtime.huggingface.models.HuggingfaceBackend;
 import it.smartcommunitylabdhub.runtime.huggingface.models.HuggingfaceDType;

@@ -2,10 +2,10 @@ package it.smartcommunitylabdhub.commons.utils;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.EmbeddedFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.base.MetadataDTO;
-import it.smartcommunitylabdhub.commons.models.base.SpecDTO;
-import it.smartcommunitylabdhub.commons.models.base.StatusDTO;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.MetadataDTO;
+import it.smartcommunitylabdhub.commons.models.specs.SpecDTO;
+import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
 
 public class EmbedUtils {
 

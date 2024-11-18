@@ -1,8 +1,8 @@
 package it.smartcommunitylabdhub.core.relationships;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 

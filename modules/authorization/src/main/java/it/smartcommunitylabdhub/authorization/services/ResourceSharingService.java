@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.authorization.services;
 import it.smartcommunitylabdhub.authorization.model.ResourceShareEntity;
 import it.smartcommunitylabdhub.authorization.repositories.ResourceShareRepository;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Optional;

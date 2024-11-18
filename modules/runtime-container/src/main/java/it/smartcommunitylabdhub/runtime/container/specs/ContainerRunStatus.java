@@ -1,7 +1,9 @@
 package it.smartcommunitylabdhub.runtime.container.specs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
+
+import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
+
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;

@@ -1,8 +1,9 @@
 package it.smartcommunitylabdhub.core.models.specs.artifact;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.entities.artifact.ArtifactBaseSpec;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.artifact.ArtifactBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;

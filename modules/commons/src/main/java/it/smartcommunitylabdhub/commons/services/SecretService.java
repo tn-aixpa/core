@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.commons.services;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.entities.secret.Secret;
+import it.smartcommunitylabdhub.commons.models.secret.Secret;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;

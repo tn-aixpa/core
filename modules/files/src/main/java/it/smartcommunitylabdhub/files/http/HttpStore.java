@@ -1,8 +1,8 @@
 package it.smartcommunitylabdhub.files.http;
 
-import it.smartcommunitylabdhub.commons.models.base.DownloadInfo;
-import it.smartcommunitylabdhub.commons.models.base.FileInfo;
-import it.smartcommunitylabdhub.commons.models.base.UploadInfo;
+import it.smartcommunitylabdhub.commons.models.files.FileInfo;
+import it.smartcommunitylabdhub.files.models.DownloadInfo;
+import it.smartcommunitylabdhub.files.models.UploadInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
 import jakarta.validation.constraints.NotNull;
 import java.net.MalformedURLException;

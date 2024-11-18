@@ -1,7 +1,8 @@
 package it.smartcommunitylabdhub.framework.k8s.base;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowTaskBaseSpec;
+
+import it.smartcommunitylabdhub.commons.models.workflow.WorkflowTaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;

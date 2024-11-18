@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.controllers.v1.context;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.Keys;
-import it.smartcommunitylabdhub.commons.models.entities.label.Label;
+import it.smartcommunitylabdhub.commons.models.label.Label;
 import it.smartcommunitylabdhub.commons.services.entities.LabelService;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.validation.Valid;

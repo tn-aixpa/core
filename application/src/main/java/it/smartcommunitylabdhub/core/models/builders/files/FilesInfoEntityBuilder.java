@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.models.builders.files;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
+import it.smartcommunitylabdhub.commons.models.files.FilesInfo;
 import it.smartcommunitylabdhub.core.models.entities.FilesInfoEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;

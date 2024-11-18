@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.models.builders.label;
 
-import it.smartcommunitylabdhub.commons.models.entities.label.Label;
+import it.smartcommunitylabdhub.commons.models.label.Label;
 import it.smartcommunitylabdhub.core.models.entities.LabelEntity;
 import org.springframework.stereotype.Component;
 

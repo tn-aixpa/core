@@ -2,8 +2,8 @@ package it.smartcommunitylabdhub.commons.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.base.FileInfo;
-import it.smartcommunitylabdhub.commons.models.entities.files.FilesInfo;
+import it.smartcommunitylabdhub.commons.models.files.FileInfo;
+import it.smartcommunitylabdhub.commons.models.files.FilesInfo;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 

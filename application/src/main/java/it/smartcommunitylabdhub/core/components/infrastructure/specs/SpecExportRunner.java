@@ -16,7 +16,7 @@
 
 package it.smartcommunitylabdhub.core.components.infrastructure.specs;
 
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import java.io.File;

@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.relationships;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

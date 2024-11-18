@@ -1,7 +1,8 @@
 package it.smartcommunitylabdhub.runtime.nefertem.specs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
+
+import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
