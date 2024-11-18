@@ -15,7 +15,6 @@ import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
 import it.smartcommunitylabdhub.commons.services.entities.ModelService;
-import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
@@ -87,7 +86,7 @@ public class SklearnServeRunner {
 
         // special case: path as entity key - reference to a model
         if (functionSpec.getPath().startsWith(Keys.STORE_PREFIX)) {
-            KeyAccessor keyAccessor = KeyUtils.parseKey(path);
+            KeyAccessor keyAccessor = KeyAccessor.with(path);
             if (!EntityName.MODEL.getValue().equals(keyAccessor.getType())) {
                 throw new CoreRuntimeException("invalid entity kind reference, expected model");
             }

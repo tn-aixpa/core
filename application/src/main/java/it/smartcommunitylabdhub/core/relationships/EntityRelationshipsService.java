@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.core.models.entities.RelationshipEntity;
 import it.smartcommunitylabdhub.core.repositories.RelationshipRepository;
 import jakarta.validation.constraints.NotNull;
@@ -132,7 +131,7 @@ public class EntityRelationshipsService {
         entity.setSourceKey(key);
 
         //dest
-        KeyAccessor dest = KeyUtils.parseKey(relationship.getDest());
+        KeyAccessor dest = KeyAccessor.with(relationship.getDest());
         if (dest.getId() == null) {
             throw new IllegalArgumentException("invalid destination");
         }
