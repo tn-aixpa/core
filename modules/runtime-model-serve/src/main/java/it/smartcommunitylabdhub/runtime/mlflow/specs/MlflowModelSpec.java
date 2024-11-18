@@ -1,26 +1,26 @@
-package it.smartcommunitylabdhub.commons.models.model;
+package it.smartcommunitylabdhub.runtime.mlflow.specs;
 
-
-import lombok.Getter;
-import lombok.Setter;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.model.ModelSpec;
+import it.smartcommunitylabdhub.runtime.mlflow.models.Dataset;
+import it.smartcommunitylabdhub.runtime.mlflow.models.Signature;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-import it.smartcommunitylabdhub.commons.models.model.mlflow.Dataset;
-import it.smartcommunitylabdhub.commons.models.model.mlflow.Signature;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
+@SpecType(kind = "mlflow", entity = EntityName.MODEL)
 public class MlflowModelSpec extends ModelSpec {
 
     @Schema(title = "fields.mlflow.flavor.title", description = "fields.mlflow.flavor.description")
     private String flavor;
-    
+
     @JsonProperty("model_config")
     @Schema(title = "fields.mlflow.modelconfig.title", description = "fields.mlflow.modelconfig.description")
     private Map<String, String> modelConfig;

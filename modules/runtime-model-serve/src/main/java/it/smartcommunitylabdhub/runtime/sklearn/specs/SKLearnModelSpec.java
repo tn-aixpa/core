@@ -1,9 +1,8 @@
-package it.smartcommunitylabdhub.core.models.specs.model;
-
+package it.smartcommunitylabdhub.runtime.sklearn.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.model.ModelSpec;
 
 @SpecType(kind = "sklearn", entity = EntityName.MODEL)
-public class SKLearnModelSpec extends it.smartcommunitylabdhub.commons.models.model.SKLearnModelSpec {
-}
+public class SKLearnModelSpec extends ModelSpec {}

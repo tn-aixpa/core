@@ -1,17 +1,18 @@
-package it.smartcommunitylabdhub.commons.models.model;
+package it.smartcommunitylabdhub.runtime.huggingface.specs;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.model.ModelSpec;
+import java.io.Serializable;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.Serializable;
-import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
 @Getter
 @Setter
+@SpecType(kind = "huggingface", entity = EntityName.MODEL)
 public class HuggingFaceModelSpec extends ModelSpec {
 
     //Huggingface model id
@@ -21,7 +22,10 @@ public class HuggingFaceModelSpec extends ModelSpec {
 
     //Huggingface model revision
     @JsonProperty("model_revision")
-    @Schema(title = "fields.huggingface.modelrevision.title", description = "fields.huggingface.modelrevision.description")
+    @Schema(
+        title = "fields.huggingface.modelrevision.title",
+        description = "fields.huggingface.modelrevision.description"
+    )
     private String modelRevision;
 
     @Override
