@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.runtime.kfp.runners;
 
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoCronWorkflowRunnable;
@@ -18,17 +17,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.springframework.util.StringUtils;
 
-/**
- * KFPPipelineRunner
- * <p>
- * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
- * you have to register it using the following annotation:
- *
- * @RunnerComponent(runtime = "kfp", task = "pipeline")
- */
-public class KFPPipelineRunner implements Runner<K8sArgoWorkflowRunnable> {
+public class KFPPipelineRunner {
 
-    @Override
     public K8sArgoWorkflowRunnable produce(Run run) {
         KFPRunSpec runSpec = new KFPRunSpec(run.getSpec());
         KFPPipelineTaskSpec taskSpec = runSpec.getTaskPipelineSpec();

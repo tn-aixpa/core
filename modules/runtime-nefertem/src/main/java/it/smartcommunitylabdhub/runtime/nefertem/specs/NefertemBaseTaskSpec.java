@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.runtime.nefertem.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sFunctionTaskBaseSpec;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class NefertemBaseTaskSpec extends K8sTaskBaseSpec {
+public class NefertemBaseTaskSpec extends K8sFunctionTaskBaseSpec {
 
     protected String framework;
 

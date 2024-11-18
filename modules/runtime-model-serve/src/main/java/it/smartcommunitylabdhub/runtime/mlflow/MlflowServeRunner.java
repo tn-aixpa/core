@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
@@ -13,7 +12,6 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.entities.ModelService;
 import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
@@ -42,7 +40,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public class MlflowServeRunner implements Runner<K8sRunnable> {
+public class MlflowServeRunner {
 
     private static final int HTTP_PORT = 8080;
     private static final int GRPC_PORT = 8081;
@@ -68,11 +66,10 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
         this.modelService = modelService;
     }
 
-    @Override
     public K8sRunnable produce(Run run) {
         MlflowServeRunSpec runSpec = MlflowServeRunSpec.with(run.getSpec());
         ModelServeServeTaskSpec taskSpec = runSpec.getTaskServeSpec();
-        TaskSpecAccessor taskAccessor = TaskUtils.parseFunction(taskSpec.getFunction());
+        TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))

@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.commons.services.entities;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -135,7 +136,7 @@ public interface WorkflowService {
     Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO)
         throws NoSuchEntityException, BindException, IllegalArgumentException, SystemException;
 
-            /**
+    /**
      * Update a specific workflow version
      * @param id
      * @param workflowDTO
@@ -144,7 +145,7 @@ public interface WorkflowService {
      * @throws NoSuchEntityException
      */
     Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO, boolean force)
-    throws NoSuchEntityException, SystemException;
+        throws NoSuchEntityException, SystemException;
     /**
      * Delete a specific workflow (version) via unique ID
      * @param id
@@ -164,4 +165,11 @@ public interface WorkflowService {
      * @param project
      */
     void deleteWorkflowsByProject(@NotNull String project) throws SystemException;
+
+    /**
+     * List all tasks for a given workflow
+     * @param workflow
+     * @return
+     */
+    List<Task> getTasksByWorkflowId(@NotNull String workflow) throws SystemException;
 }

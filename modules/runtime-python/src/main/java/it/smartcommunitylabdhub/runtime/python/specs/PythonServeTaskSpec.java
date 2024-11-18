@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sFunctionTaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -21,7 +20,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @SpecType(runtime = PythonRuntime.RUNTIME, kind = PythonServeTaskSpec.KIND, entity = EntityName.TASK)
-public class PythonServeTaskSpec extends K8sTaskBaseSpec {
+public class PythonServeTaskSpec extends K8sFunctionTaskBaseSpec {
 
     public static final String KIND = "python+serve";
 

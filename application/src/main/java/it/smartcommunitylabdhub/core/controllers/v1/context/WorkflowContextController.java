@@ -7,6 +7,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
+import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
@@ -169,6 +170,30 @@ public class WorkflowContextController {
 
         workflowService.deleteWorkflow(id, cascade);
     }
+
+    /*
+     * Tasks
+     */
+
+    @Operation(summary = "List tasks for a given function")
+    @GetMapping(path = "/{id}/tasks", produces = "application/json; charset=UTF-8")
+    public List<Task> getTasks(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Workflow workflow = workflowService.getWorkflow(id);
+
+        //check for project and name match
+        if (!workflow.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project or name");
+        }
+
+        return workflowService.getTasksByWorkflowId(id);
+    }
+
+    /*
+     * Relationships
+     */
 
     @Operation(summary = "Get relationships info for a given entity, if available")
     @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")

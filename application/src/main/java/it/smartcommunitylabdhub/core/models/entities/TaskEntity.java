@@ -21,12 +21,20 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @ToString
 @Entity
-@Table(name = "tasks", uniqueConstraints = { @UniqueConstraint(columnNames = { "function", "kind" }) })
+@Table(
+    name = "tasks",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "function", "kind" }),
+        @UniqueConstraint(columnNames = { "workflow", "kind" }),
+    }
+)
 public class TaskEntity extends AbstractEntity implements SpecEntity {
 
-    @Column(nullable = false)
-    // COMMENT: {function_kind}://{project}/{function}:{version}
+    @Column(nullable = true)
     private String function;
+
+    @Column(nullable = true)
+    private String workflow;
 
     @Lob
     @ToString.Exclude

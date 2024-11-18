@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.base;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.commons.models.entities.workflow.WorkflowTaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
@@ -19,7 +19,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class K8sTaskBaseSpec extends TaskBaseSpec {
+public class K8sWorkflowTaskBaseSpec extends WorkflowTaskBaseSpec {
 
     private List<CoreVolume> volumes;
 
@@ -46,7 +46,7 @@ public class K8sTaskBaseSpec extends TaskBaseSpec {
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
 
-        K8sTaskBaseSpec spec = mapper.convertValue(data, K8sTaskBaseSpec.class);
+        K8sWorkflowTaskBaseSpec spec = mapper.convertValue(data, K8sWorkflowTaskBaseSpec.class);
 
         this.volumes = spec.getVolumes();
         this.nodeSelector = spec.getNodeSelector();

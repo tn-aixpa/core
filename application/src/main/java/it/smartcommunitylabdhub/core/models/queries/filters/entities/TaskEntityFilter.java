@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.models.queries.filters.entities;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import it.smartcommunitylabdhub.commons.Fields;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -25,9 +26,14 @@ import lombok.Setter;
 public class TaskEntityFilter extends AbstractEntityFilter<TaskEntity> {
 
     @Nullable
-    @Pattern(regexp = Keys.PATH_PATTERN)
+    @Pattern(regexp = Keys.FUNCTION_PATTERN)
     @Schema(example = "kind://my-project/my-function:function-id", defaultValue = "", description = "Function path")
     private String function;
+
+    @Nullable
+    @Pattern(regexp = Keys.WORKFLOW_PATTERN)
+    @Schema(example = "kind://my-project/my-workflow:workflow-id", defaultValue = "", description = "Workflow path")
+    private String workflow;
 
     @Override
     public SearchFilter<TaskEntity> toSearchFilter() {
@@ -40,7 +46,14 @@ public class TaskEntityFilter extends AbstractEntityFilter<TaskEntity> {
         Optional
             .ofNullable(function)
             .ifPresent(value ->
-                criteria.add(new BaseEntitySearchCriteria<>("function", value, SearchCriteria.Operation.equal))
+                criteria.add(new BaseEntitySearchCriteria<>(Fields.FUNCTION, value, SearchCriteria.Operation.equal))
+            );
+
+        //workflow exact match
+        Optional
+            .ofNullable(workflow)
+            .ifPresent(value ->
+                criteria.add(new BaseEntitySearchCriteria<>(Fields.WORKFLOW, value, SearchCriteria.Operation.equal))
             );
 
         return BaseEntityFilter.<TaskEntity>builder().criteria(criteria).condition(SearchFilter.Condition.and).build();

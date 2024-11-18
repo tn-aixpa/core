@@ -1,11 +1,13 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.Fields;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
+import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -17,6 +19,7 @@ import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidat
 import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
@@ -26,6 +29,7 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.core.relationships.WorkflowEntityRelationshipsManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +58,9 @@ public class WorkflowServiceImpl
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private EntityService<Task, TaskEntity> taskEntityService;
 
     @Autowired
     private WorkflowEntityIndexer indexer;
@@ -386,7 +393,6 @@ public class WorkflowServiceImpl
         }
     }
 
-
     @Override
     public Workflow updateWorkflow(@NotNull String id, @NotNull Workflow workflowDTO, boolean force)
         throws NoSuchEntityException {
@@ -412,7 +418,7 @@ public class WorkflowServiceImpl
                 if (Boolean.TRUE.equals(cascade)) {
                     //tasks
                     log.debug("cascade delete tasks for function with id {}", String.valueOf(id));
-                    taskService.deleteTasksByFunctionId(id, EntityName.WORKFLOW);
+                    getTasksByWorkflowId(id).forEach(task -> taskService.deleteTask(task.getId(), Boolean.TRUE));
                 }
 
                 //delete the function
@@ -497,5 +503,48 @@ public class WorkflowServiceImpl
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
         }
+    }
+
+    @Override
+    public List<Task> getTasksByWorkflowId(@NotNull String workflowId) throws SystemException {
+        log.debug("list tasks for workflow {}", workflowId);
+        try {
+            Workflow workflow = entityService.find(workflowId);
+            if (workflow == null) {
+                return Collections.emptyList();
+            }
+
+            //define a spec for tasks building function path
+            String path =
+                (workflow.getKind() +
+                    "://" +
+                    workflow.getProject() +
+                    "/" +
+                    workflow.getName() +
+                    ":" +
+                    workflow.getId());
+
+            Specification<TaskEntity> where = Specification.allOf(
+                CommonSpecification.projectEquals(workflow.getProject()),
+                createWorkflowSpecification(path)
+            );
+
+            //fetch all tasks ordered by kind ASC
+            Specification<TaskEntity> specification = (root, query, builder) -> {
+                query.orderBy(builder.asc(root.get(AbstractEntity_.KIND)));
+                return where.toPredicate(root, query, builder);
+            };
+
+            return taskEntityService.searchAll(specification);
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    private Specification<TaskEntity> createWorkflowSpecification(String workflow) {
+        return (root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get(Fields.WORKFLOW), workflow);
+        };
     }
 }

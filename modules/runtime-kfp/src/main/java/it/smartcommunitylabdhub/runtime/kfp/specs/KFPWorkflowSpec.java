@@ -34,7 +34,7 @@ public class KFPWorkflowSpec extends WorkflowBaseSpec {
     private String handler;
 
     @JsonSchemaIgnore
-    private String workflow;
+    private SourceCode<KFPWorkflowCodeLanguages> build;
 
     public KFPWorkflowSpec(Map<String, Serializable> data) {
         configure(data);
@@ -50,10 +50,14 @@ public class KFPWorkflowSpec extends WorkflowBaseSpec {
         this.image = spec.getImage();
         this.tag = spec.getTag();
         this.handler = spec.getHandler();
-        this.workflow = spec.getWorkflow();
+        this.build = spec.getBuild();
     }
 
     public enum KFPSourceCodeLanguages {
         python,
+    }
+
+    public enum KFPWorkflowCodeLanguages {
+        yaml,
     }
 }

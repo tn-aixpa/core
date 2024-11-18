@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.runtime.dbt.runners;
 
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -22,7 +21,7 @@ import java.util.Optional;
  *
  * @RunnerComponent(runtime = "dbt", task = "transform")
  */
-public class DbtTransformRunner implements Runner<K8sJobRunnable> {
+public class DbtTransformRunner {
 
     private final String image;
     private final Map<String, String> secretData;
@@ -32,7 +31,6 @@ public class DbtTransformRunner implements Runner<K8sJobRunnable> {
         this.secretData = secretData;
     }
 
-    @Override
     public K8sJobRunnable produce(Run run) {
         // Retrieve information about RunDbtSpec
         DbtRunSpec runSpec = new DbtRunSpec(run.getSpec());

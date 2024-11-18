@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.ModelService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
@@ -108,7 +107,7 @@ public class HuggingfaceServeRuntime
         HuggingfaceServeRunSpec runSpec = HuggingfaceServeRunSpec.with(run.getSpec());
 
         // Create string run accessor from task
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         return switch (runAccessor.getTask()) {
             case HuggingfaceServeTaskSpec.KIND -> new HuggingfaceServeRunner(

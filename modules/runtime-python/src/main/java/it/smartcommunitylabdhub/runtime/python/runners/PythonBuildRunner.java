@@ -2,11 +2,8 @@ package it.smartcommunitylabdhub.runtime.python.runners;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
@@ -37,7 +34,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
-public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
+public class PythonBuildRunner {
 
     private final String image;
     private final String command;
@@ -60,11 +57,10 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
-    @Override
     public K8sKanikoRunnable produce(Run run) {
         PythonRunSpec runSpec = new PythonRunSpec(run.getSpec());
         PythonBuildTaskSpec taskSpec = runSpec.getTaskBuildSpec();
-        TaskSpecAccessor taskAccessor = TaskUtils.parseFunction(taskSpec.getFunction());
+        TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
@@ -199,7 +195,7 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
         coreEnvList.add(new CoreEnv("PYTHONPATH", "${PYTHONPATH}:/shared/"));
 
         // Parse run spec
-        RunSpecAccessor runSpecAccessor = RunUtils.parseTask(runSpec.getTask());
+        RunSpecAccessor runSpecAccessor = RunSpecAccessor.with(run.getSpec());
 
         //build image name
         String imageName =

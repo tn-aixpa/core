@@ -28,8 +28,6 @@ import lombok.experimental.SuperBuilder;
 public class RunEntity extends AbstractEntity implements SpecEntity, StatusEntity {
 
     @Column(nullable = false)
-    // COMMENT: {kind}+{action}://{project_name}/{function_name}:{version(uuid)} action can be
-    // 'build', 'other...'
     private String task;
 
     @Lob

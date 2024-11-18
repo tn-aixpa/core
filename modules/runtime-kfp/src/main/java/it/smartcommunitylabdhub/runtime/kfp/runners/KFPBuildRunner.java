@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.runtime.kfp.runners;
 
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -23,7 +22,7 @@ import java.util.Optional;
  *
  * @RunnerComponent(runtime = "kfp", task = "build")
  */
-public class KFPBuildRunner implements Runner<K8sRunnable> {
+public class KFPBuildRunner {
 
     private final String image;
     private final Map<String, String> secretData;
@@ -33,7 +32,6 @@ public class KFPBuildRunner implements Runner<K8sRunnable> {
         this.secretData = secretData;
     }
 
-    @Override
     public K8sRunnable produce(Run run) {
         KFPRunSpec runSpec = new KFPRunSpec(run.getSpec());
         KFPBuildTaskSpec taskSpec = runSpec.getTaskBuildSpec();

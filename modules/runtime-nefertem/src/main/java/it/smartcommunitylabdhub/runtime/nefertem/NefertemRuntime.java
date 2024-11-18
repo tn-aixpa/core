@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
@@ -105,7 +104,7 @@ public class NefertemRuntime
         NefertemRunSpec runSpec = new NefertemRunSpec(run.getSpec());
 
         // Create string run accessor from task
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         return switch (runAccessor.getTask()) {
             case NefertemInferTaskSpec.KIND -> new NefertemInferRunner(

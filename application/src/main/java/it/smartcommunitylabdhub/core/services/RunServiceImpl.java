@@ -1,11 +1,11 @@
 package it.smartcommunitylabdhub.core.services;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
+import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -15,8 +15,6 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
@@ -61,9 +59,6 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
 
     @Autowired
     private LogService logService;
-
-    @Autowired
-    private ExecutableEntityService executableEntityServiceProvider;
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
@@ -168,9 +163,10 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
             }
 
             //define a spec for runs building task path
+            String path = (task.getKind() + "://" + task.getProject() + "/" + task.getId());
             Specification<RunEntity> where = Specification.allOf(
                 CommonSpecification.projectEquals(task.getProject()),
-                createTaskSpecification(RunUtils.buildTaskString(task))
+                createTaskSpecification(path)
             );
 
             //fetch all runs ordered by created DESC
@@ -246,7 +242,7 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
                 throw new IllegalArgumentException("missing task");
             }
 
-            RunSpecAccessor runSpecAccessor = RunUtils.parseTask(taskPath);
+            RunSpecAccessor runSpecAccessor = RunSpecAccessor.with(dto.getSpec());
             if (!StringUtils.hasText(runSpecAccessor.getProject())) {
                 throw new IllegalArgumentException("spec: missing project");
             }
@@ -258,40 +254,20 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
             if (!StringUtils.hasText(runSpecAccessor.getTask())) {
                 throw new IllegalArgumentException("spec: missing task");
             }
-            if (!StringUtils.hasText(runSpecAccessor.getFunction())) {
-                throw new IllegalArgumentException("spec: missing function");
-            }
-            if (!StringUtils.hasText(runSpecAccessor.getVersion())) {
-                throw new IllegalArgumentException("spec: missing version");
-            }
-            String functionId = runSpecAccessor.getVersion();
-
-            //check if function exists and matches
-            Executable executable = executableEntityServiceProvider
-                .getEntityServiceByRuntime(runSpecAccessor.getRuntime())
-                .find(functionId);
-            if (executable == null) {
-                throw new IllegalArgumentException("invalid function");
-            }
-            if (!projectId.equals(executable.getProject())) {
-                throw new IllegalArgumentException("project mismatch");
-            }
-            if (!executable.getName().equals(runSpecAccessor.getFunction())) {
-                throw new IllegalArgumentException("function name mismatch");
+            if (!StringUtils.hasText(runSpecAccessor.getTaskId())) {
+                throw new IllegalArgumentException("spec: missing task id");
             }
 
-            // retrieve task by looking up value
-            // define a spec for matching task
-            Specification<TaskEntity> where = Specification.allOf(
-                CommonSpecification.projectEquals(executable.getProject()),
-                createFunctionSpecification(TaskUtils.buildString(executable)),
-                createTaskKindSpecification(runSpecAccessor.getTask())
-            );
-
-            Task task = taskEntityService.searchAll(where).stream().findFirst().orElse(null);
+            //check if task exists and matches
+            Task task = taskEntityService.find(runSpecAccessor.getTaskId());
             if (task == null) {
                 throw new IllegalArgumentException("invalid task");
             }
+            if (!projectId.equals(task.getProject())) {
+                throw new IllegalArgumentException("project mismatch");
+            }
+
+            //TODO check if run kind matches allowed for task/runtime
 
             try {
                 // store the run in db
@@ -391,7 +367,14 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
             //run is *always* related to function, check and inject if missing
             String taskPath = RunBaseSpec.with(run.getSpec()).getTask();
             if (StringUtils.hasText(taskPath)) {
-                RunSpecAccessor accessor = RunUtils.parseTask(taskPath);
+                // Read spec and retrieve executables
+                RunSpecAccessor accessor = RunSpecAccessor.with(run.getSpec());
+
+                //resolve runtime either from runSpec or from taskSpec
+                String runtime = accessor.getRuntime() != null
+                    ? accessor.getRuntime()
+                    : TaskSpecAccessor.with(taskEntityService.get(accessor.getTaskId()).getSpec()).getRuntime();
+
                 if (accessor.isValid()) {
                     //rebuild key and check
                     String fk = KeyUtils.buildKey(
@@ -399,7 +382,7 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
                         EntityName.FUNCTION.getValue(),
                         accessor.getRuntime(),
                         accessor.getFunction(),
-                        accessor.getVersion()
+                        accessor.getFunctionId()
                     );
 
                     if (

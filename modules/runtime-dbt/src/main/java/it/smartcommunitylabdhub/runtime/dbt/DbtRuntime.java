@@ -7,7 +7,6 @@ import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
@@ -94,8 +93,7 @@ public class DbtRuntime extends K8sBaseRuntime<DbtFunctionSpec, DbtRunSpec, DbtR
         DbtRunSpec runSpec = new DbtRunSpec(run.getSpec());
 
         // Create string run accessor from task
-        //TODO drop the utils and get the task accessor from the spec.
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         return switch (runAccessor.getTask()) {
             case DbtTransformSpec.KIND -> {

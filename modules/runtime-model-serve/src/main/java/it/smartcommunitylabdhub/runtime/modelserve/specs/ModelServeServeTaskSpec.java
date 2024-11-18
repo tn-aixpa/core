@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.runtime.modelserve.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sFunctionTaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import jakarta.validation.constraints.Min;
 import java.io.Serializable;
@@ -16,7 +16,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModelServeServeTaskSpec extends K8sTaskBaseSpec {
+public class ModelServeServeTaskSpec extends K8sFunctionTaskBaseSpec {
 
     @JsonProperty("replicas")
     @Min(0)
