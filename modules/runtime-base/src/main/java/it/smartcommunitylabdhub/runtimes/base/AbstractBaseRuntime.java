@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.commons.runtimes.base;
+package it.smartcommunitylabdhub.runtimes.base;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;

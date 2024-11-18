@@ -29,6 +29,7 @@
         <module>modules/commons</module>
         <module>modules/authorization</module>
         <module>modules/fsm</module>
+        <module>modules/runtime-base</module>        
         <module>modules/framework-k8s</module>
         <module>modules/framework-argo</module>
         <module>modules/framework-kaniko</module>

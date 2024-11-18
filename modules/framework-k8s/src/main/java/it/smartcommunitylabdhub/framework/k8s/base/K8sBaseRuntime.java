@@ -5,9 +5,9 @@ import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
-import it.smartcommunitylabdhub.commons.runtimes.base.AbstractBaseRuntime;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
+import it.smartcommunitylabdhub.runtimes.base.AbstractBaseRuntime;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 

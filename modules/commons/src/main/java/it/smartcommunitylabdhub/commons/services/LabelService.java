@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.commons.services.entities;
+package it.smartcommunitylabdhub.commons.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
