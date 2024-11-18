@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.Map;

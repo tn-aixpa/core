@@ -4,7 +4,6 @@ import io.micrometer.common.lang.Nullable;
 import it.smartcommunitylabdhub.commons.accessors.Accessor;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
-
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;

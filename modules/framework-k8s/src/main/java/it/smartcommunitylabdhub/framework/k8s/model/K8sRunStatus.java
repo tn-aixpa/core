@@ -1,9 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
-
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;

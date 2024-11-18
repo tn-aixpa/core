@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.commons.models.log;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-
 import java.io.Serializable;
 import java.util.Map;
 import lombok.AllArgsConstructor;

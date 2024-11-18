@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.core.models.schemas;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import java.io.Serializable;

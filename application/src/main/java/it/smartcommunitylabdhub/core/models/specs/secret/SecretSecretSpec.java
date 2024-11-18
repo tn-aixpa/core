@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.core.models.specs.secret;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.secret.SecretBaseSpec;
-
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;

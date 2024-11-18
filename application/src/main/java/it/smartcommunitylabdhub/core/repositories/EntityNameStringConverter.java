@@ -1,11 +1,10 @@
 package it.smartcommunitylabdhub.core.repositories;
 
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
-
-import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 
 @Component
 public class EntityNameStringConverter implements Converter<String, EntityName> {

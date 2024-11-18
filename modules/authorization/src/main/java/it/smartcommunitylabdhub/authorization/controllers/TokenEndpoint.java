@@ -12,7 +12,6 @@ import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties.JwtAuthenticationProperties;
 import it.smartcommunitylabdhub.commons.models.project.Project;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;

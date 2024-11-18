@@ -6,7 +6,6 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,10 +1,9 @@
 package it.smartcommunitylabdhub.commons.models.function;
 
+import it.smartcommunitylabdhub.commons.models.task.TaskBaseSpec;
 import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Map;
-
-import it.smartcommunitylabdhub.commons.models.task.TaskBaseSpec;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

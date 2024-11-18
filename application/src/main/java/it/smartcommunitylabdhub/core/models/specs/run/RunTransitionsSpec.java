@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.core.models.specs.run;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
 import it.smartcommunitylabdhub.core.fsm.RunEvent;
 import java.io.Serializable;

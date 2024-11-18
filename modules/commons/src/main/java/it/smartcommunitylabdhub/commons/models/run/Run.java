@@ -89,7 +89,7 @@ public class Run implements BaseDTO, MetadataDTO, SpecDTO, StatusDTO {
             Keys.PATH_DIVIDER +
             getKind() +
             Keys.PATH_DIVIDER +
-            getId() + 
+            getId() +
             Keys.ID_DIVIDER +
             getId()
         );

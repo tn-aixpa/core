@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.commons.models.function.Function;
 import it.smartcommunitylabdhub.commons.models.model.Model;
 import it.smartcommunitylabdhub.commons.models.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.commons.models.workflow.Workflow;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
