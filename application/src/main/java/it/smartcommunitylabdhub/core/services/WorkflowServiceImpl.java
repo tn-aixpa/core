@@ -412,7 +412,7 @@ public class WorkflowServiceImpl
                 if (Boolean.TRUE.equals(cascade)) {
                     //tasks
                     log.debug("cascade delete tasks for function with id {}", String.valueOf(id));
-                    taskService.deleteTasksByFunctionId(id, EntityName.WORKFLOW);
+                    // taskService.deleteTasksByFunctionId(id, EntityName.WORKFLOW);
                 }
 
                 //delete the function

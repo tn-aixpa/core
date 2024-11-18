@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.commons.models.entities.task;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseSpec;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TaskBaseSpec extends BaseSpec {
 
+    @NotBlank
     String function;
 
     @Override

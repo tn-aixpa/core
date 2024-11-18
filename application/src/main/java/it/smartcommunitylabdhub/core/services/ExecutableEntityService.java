@@ -15,32 +15,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExecutableEntityService {
 
-    @Autowired
-    private EntityService<Function, FunctionEntity> functionEntityService;
+    // @Autowired
+    // private EntityService<Function, FunctionEntity> functionEntityService;
 
-    @Autowired
-    private EntityService<Workflow, WorkflowEntity> workflowEntityService;
+    // @Autowired
+    // private EntityService<Workflow, WorkflowEntity> workflowEntityService;
 
-    @Autowired
-    private SpecRegistry specRegistry;
+    // @Autowired
+    // private SpecRegistry specRegistry;
 
-    public EntityService<? extends Executable, ? extends BaseEntity> getEntityServiceByRuntime(String runtime) {
-        Schema schema = specRegistry.getSchema(runtime);
-        if (EntityName.FUNCTION.name().equals(schema.entity())) {
-            return functionEntityService;
-        }
-        if (EntityName.WORKFLOW.name().equals(schema.entity())) {
-            return workflowEntityService;
-        }
-        throw new IllegalArgumentException("Invalid entity for runtime " + runtime);
-    }
+    // public EntityService<? extends Executable, ? extends BaseEntity> getEntityServiceByRuntime(String runtime) {
+    //     Schema schema = specRegistry.getSchema(runtime);
+    //     if (EntityName.FUNCTION.name().equals(schema.entity())) {
+    //         return functionEntityService;
+    //     }
+    //     if (EntityName.WORKFLOW.name().equals(schema.entity())) {
+    //         return workflowEntityService;
+    //     }
+    //     throw new IllegalArgumentException("Invalid entity for runtime " + runtime);
+    // }
 
-    public EntityService<? extends Executable, ? extends BaseEntity> getEntityServiceByEntity(EntityName entity) {
-        return EntityName.FUNCTION.equals(entity) ? functionEntityService : workflowEntityService;
-    }
+    // public EntityService<? extends Executable, ? extends BaseEntity> getEntityServiceByEntity(EntityName entity) {
+    //     return EntityName.FUNCTION.equals(entity) ? functionEntityService : workflowEntityService;
+    // }
 
-    public EntityName getEntityNameByRuntime(String runtime) {
-        Schema schema = specRegistry.getSchema(runtime);
-        return EntityName.valueOf(schema.entity());
-    }
+    // public EntityName getEntityNameByRuntime(String runtime) {
+    //     Schema schema = specRegistry.getSchema(runtime);
+    //     return EntityName.valueOf(schema.entity());
+    // }
 }

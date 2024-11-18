@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.models.queries.specifications;
 
+import it.smartcommunitylabdhub.commons.Fields;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import jakarta.persistence.criteria.Root;
@@ -28,7 +29,7 @@ public class CommonSpecification {
 
     public static <T extends BaseEntity> Specification<T> nameEquals(String name) {
         return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("name"), name);
+            return criteriaBuilder.equal(root.get(Fields.NAME), name);
         };
     }
 
@@ -44,8 +45,8 @@ public class CommonSpecification {
             Root<T> subqueryRoot = (Root<T>) subquery.from(root.getJavaType());
 
             subquery.select(criteriaBuilder.max(subqueryRoot.get(AbstractEntity_.CREATED)));
-            subquery.where(criteriaBuilder.equal(subqueryRoot.get("name"), root.get("name")));
-            subquery.groupBy(subqueryRoot.get("name"), subqueryRoot.get(AbstractEntity_.PROJECT));
+            subquery.where(criteriaBuilder.equal(subqueryRoot.get(Fields.NAME), root.get(Fields.NAME)));
+            subquery.groupBy(subqueryRoot.get(Fields.NAME), subqueryRoot.get(AbstractEntity_.PROJECT));
 
             return criteriaBuilder.and(criteriaBuilder.in(root.get(AbstractEntity_.CREATED)).value(subquery));
         };
@@ -59,9 +60,9 @@ public class CommonSpecification {
             subquery.select(criteriaBuilder.max(subqueryRoot.get(AbstractEntity_.CREATED)));
             subquery.where(
                 criteriaBuilder.equal(subqueryRoot.get(AbstractEntity_.PROJECT), project),
-                criteriaBuilder.equal(subqueryRoot.get("name"), root.get("name"))
+                criteriaBuilder.equal(subqueryRoot.get(Fields.NAME), root.get(Fields.NAME))
             );
-            subquery.groupBy(subqueryRoot.get("name"), subqueryRoot.get(AbstractEntity_.PROJECT));
+            subquery.groupBy(subqueryRoot.get(Fields.NAME), subqueryRoot.get(AbstractEntity_.PROJECT));
 
             return criteriaBuilder.and(
                 criteriaBuilder.equal(root.get(AbstractEntity_.PROJECT), project),
@@ -78,14 +79,16 @@ public class CommonSpecification {
             subquery.select(criteriaBuilder.max(subqueryRoot.get(AbstractEntity_.CREATED)));
             subquery.where(
                 criteriaBuilder.equal(subqueryRoot.get(AbstractEntity_.PROJECT), project),
-                criteriaBuilder.equal(subqueryRoot.get("name"), name)
+                criteriaBuilder.equal(subqueryRoot.get(Fields.NAME), name)
             );
 
             return criteriaBuilder.and(
                 criteriaBuilder.equal(root.get(AbstractEntity_.PROJECT), project),
-                criteriaBuilder.equal(root.get("name"), name),
+                criteriaBuilder.equal(root.get(Fields.NAME), name),
                 criteriaBuilder.in(root.get(AbstractEntity_.CREATED)).value(subquery)
             );
         };
     }
+
+    private CommonSpecification() {}
 }

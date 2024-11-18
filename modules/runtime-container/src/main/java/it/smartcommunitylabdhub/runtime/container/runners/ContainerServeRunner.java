@@ -1,12 +1,10 @@
 package it.smartcommunitylabdhub.runtime.container.runners;
 
-import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
@@ -56,8 +54,7 @@ public class ContainerServeRunner implements Runner<K8sServeRunnable> {
     public K8sServeRunnable produce(Run run) {
         ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
         ContainerServeTaskSpec taskSpec = runSpec.getTaskServeSpec();
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
-        TaskSpecAccessor taskAccessor = TaskUtils.parseFunction(taskSpec.getFunction());
+        TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))

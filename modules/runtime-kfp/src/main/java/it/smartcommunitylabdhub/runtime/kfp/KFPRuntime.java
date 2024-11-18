@@ -11,7 +11,6 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.commons.services.entities.WorkflowService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
@@ -102,7 +101,7 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         KFPRunSpec runKfpSpec = new KFPRunSpec(run.getSpec());
 
         // Create string run accessor from task
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runKfpSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         return switch (runAccessor.getTask()) {
             case KFPPipelineTaskSpec.KIND -> new KFPPipelineRunner().produce(run);
@@ -117,8 +116,7 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
 
     @Override
     public KFPRunStatus onComplete(Run run, RunRunnable runnable) {
-        KFPRunSpec kfpRunSpec = new KFPRunSpec(run.getSpec());
-        RunSpecAccessor runAccessor = RunUtils.parseTask(kfpRunSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         if (KFPBuildTaskSpec.KIND.equals(runAccessor.getTask())) {
             if (run.getStatus() != null && run.getStatus().containsKey("results")) {
@@ -135,7 +133,7 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
                     return null;
                 }
 
-                String wId = runAccessor.getVersion();
+                String wId = runAccessor.getWorkflowId();
                 Workflow wf = workflowService.getWorkflow(wId);
 
                 log.debug("update workflow {} spec to use built workflow", wId);

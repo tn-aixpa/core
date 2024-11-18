@@ -9,10 +9,8 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
-import it.smartcommunitylabdhub.commons.services.entities.TaskService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
@@ -59,8 +57,8 @@ public class FunctionContextController {
     @Autowired
     SearchableFunctionService functionService;
 
-    @Autowired
-    TaskService taskService;
+    // @Autowired
+    // TaskService taskService;
 
     @Autowired
     RelationshipsAwareEntityService<Function> relationshipsService;
@@ -188,7 +186,7 @@ public class FunctionContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return taskService.getTasksByFunctionId(id, EntityName.FUNCTION);
+        return functionService.getTasksByFunctionId(id);
     }
 
     @Operation(summary = "Get relationships info for a given entity, if available")

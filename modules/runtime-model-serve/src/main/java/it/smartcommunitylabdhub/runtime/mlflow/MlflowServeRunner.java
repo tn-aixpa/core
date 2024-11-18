@@ -13,7 +13,6 @@ import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.commons.services.entities.ModelService;
 import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
@@ -72,7 +71,7 @@ public class MlflowServeRunner implements Runner<K8sRunnable> {
     public K8sRunnable produce(Run run) {
         MlflowServeRunSpec runSpec = MlflowServeRunSpec.with(run.getSpec());
         ModelServeServeTaskSpec taskSpec = runSpec.getTaskServeSpec();
-        TaskSpecAccessor taskAccessor = TaskUtils.parseFunction(taskSpec.getFunction());
+        TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))

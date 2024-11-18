@@ -25,7 +25,7 @@ import lombok.Setter;
 public class TaskEntityFilter extends AbstractEntityFilter<TaskEntity> {
 
     @Nullable
-    @Pattern(regexp = Keys.PATH_PATTERN)
+    @Pattern(regexp = Keys.FUNCTION_PATTERN)
     @Schema(example = "kind://my-project/my-function:function-id", defaultValue = "", description = "Function path")
     private String function;
 

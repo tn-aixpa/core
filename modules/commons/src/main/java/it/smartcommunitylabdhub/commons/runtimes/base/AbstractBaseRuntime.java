@@ -10,7 +10,6 @@ import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.run.RunBaseStatus;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import jakarta.validation.constraints.NotNull;
 import java.lang.reflect.InvocationTargetException;
@@ -77,8 +76,7 @@ public abstract class AbstractBaseRuntime<
         }
 
         // Create string run accessor from task
-        RunBaseSpec runSpec = RunBaseSpec.with(run.getSpec());
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         if (!StringUtils.hasText(runAccessor.getTask())) {
             throw new IllegalArgumentException("Run task invalid");
@@ -122,8 +120,7 @@ public abstract class AbstractBaseRuntime<
         }
 
         // Create string run accessor from task
-        RunBaseSpec runSpec = RunBaseSpec.with(run.getSpec());
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         if (!StringUtils.hasText(runAccessor.getTask())) {
             throw new IllegalArgumentException("Run task invalid");
@@ -168,8 +165,7 @@ public abstract class AbstractBaseRuntime<
         }
 
         // Create string run accessor from task
-        RunBaseSpec runSpec = RunBaseSpec.with(run.getSpec());
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         if (!StringUtils.hasText(runAccessor.getTask())) {
             throw new IllegalArgumentException("Run task invalid");
@@ -219,8 +215,7 @@ public abstract class AbstractBaseRuntime<
             }
 
             // Create string run accessor from task
-            RunBaseSpec runSpec = RunBaseSpec.with(run.getSpec());
-            RunSpecAccessor runAccessor = RunUtils.parseTask(runSpec.getTask());
+            RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
             if (!StringUtils.hasText(runAccessor.getTask())) {
                 throw new IllegalArgumentException("Run task invalid");

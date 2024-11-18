@@ -4,6 +4,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.function.Function;
+import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -164,4 +165,11 @@ public interface FunctionService {
      * @param project
      */
     void deleteFunctionsByProject(@NotNull String project) throws SystemException;
+
+    /**
+     * List all tasks for a given function
+     * @param function
+     * @return
+     */
+    List<Task> getTasksByFunctionId(@NotNull String functionId) throws SystemException;
 }

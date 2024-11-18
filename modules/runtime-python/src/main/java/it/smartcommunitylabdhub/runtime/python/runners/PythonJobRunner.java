@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.utils.TaskUtils;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
@@ -70,7 +69,7 @@ public class PythonJobRunner implements Runner<K8sRunnable> {
     public K8sRunnable produce(Run run) {
         PythonRunSpec runSpec = new PythonRunSpec(run.getSpec());
         PythonJobTaskSpec taskSpec = runSpec.getTaskJobSpec();
-        TaskSpecAccessor taskAccessor = TaskUtils.parseFunction(taskSpec.getFunction());
+        TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
 
         try {
             List<CoreEnv> coreEnvList = new ArrayList<>(

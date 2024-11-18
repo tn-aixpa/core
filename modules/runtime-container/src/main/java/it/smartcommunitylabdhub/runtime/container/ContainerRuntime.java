@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
 import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
-import it.smartcommunitylabdhub.commons.models.utils.RunUtils;
 import it.smartcommunitylabdhub.commons.services.entities.FunctionService;
 import it.smartcommunitylabdhub.commons.services.entities.SecretService;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
@@ -110,7 +109,7 @@ public class ContainerRuntime
         ContainerRunSpec runContainerSpec = new ContainerRunSpec(run.getSpec());
 
         // Create string run accessor from task
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runContainerSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         return switch (runAccessor.getTask()) {
             case ContainerDeployTaskSpec.KIND -> new ContainerDeployRunner(
@@ -143,14 +142,13 @@ public class ContainerRuntime
 
     @Override
     public ContainerRunStatus onComplete(Run run, RunRunnable runnable) {
-        ContainerRunSpec runContainerSpec = new ContainerRunSpec(run.getSpec());
-        RunSpecAccessor runAccessor = RunUtils.parseTask(runContainerSpec.getTask());
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
         //update image name after build
         if (runnable instanceof K8sKanikoRunnable) {
             String image = ((K8sKanikoRunnable) runnable).getImage();
 
-            String functionId = runAccessor.getVersion();
+            String functionId = runAccessor.getFunctionId();
             Function function = functionService.getFunction(functionId);
 
             log.debug("update function {} spec to use built image: {}", functionId, image);
