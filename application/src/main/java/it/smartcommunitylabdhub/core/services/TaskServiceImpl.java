@@ -10,7 +10,6 @@ import it.smartcommunitylabdhub.commons.models.entities.function.Function;
 import it.smartcommunitylabdhub.commons.models.entities.project.Project;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.entities.task.Task;
-import it.smartcommunitylabdhub.commons.models.entities.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -266,9 +265,6 @@ public class TaskServiceImpl implements SearchableTaskService {
             if (current.getSpec() != null) {
                 specMap.put("function", current.getSpec().get("function"));
             }
-
-            TaskBaseSpec taskSpec = new TaskBaseSpec();
-            taskSpec.configure(dto.getSpec());
 
             Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
             if (spec == null) {

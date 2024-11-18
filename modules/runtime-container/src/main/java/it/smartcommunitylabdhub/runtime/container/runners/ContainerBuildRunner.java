@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.runtime.container.runners;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
@@ -29,16 +28,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * ContainerJobRunner
- * <p>
- * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
- * you have to register it using the following annotation:
- *
- * @RunnerComponent(runtime = "container", task = "job")
- */
 @Slf4j
-public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
+public class ContainerBuildRunner {
 
     private static final String RUN_DEBUG =
         "PWD=`pwd`;echo \"DEBUG: dir ${PWD}\";LS=`ls -R`;echo \"DEBUG: dir content:\" && echo \"${LS}\";";
@@ -58,7 +49,6 @@ public class ContainerBuildRunner implements Runner<K8sKanikoRunnable> {
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
-    @Override
     public K8sKanikoRunnable produce(Run run) {
         ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
         ContainerBuildTaskSpec taskSpec = runSpec.getTaskBuildSpec();

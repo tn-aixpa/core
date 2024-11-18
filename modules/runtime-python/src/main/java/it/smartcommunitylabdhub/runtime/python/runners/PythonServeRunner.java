@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.runtime.python.runners;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
@@ -39,7 +38,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public class PythonServeRunner implements Runner<K8sRunnable> {
+public class PythonServeRunner {
 
     private static ObjectMapper jsonMapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
     private static final int HTTP_PORT = 8080;
@@ -66,7 +65,6 @@ public class PythonServeRunner implements Runner<K8sRunnable> {
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
-    @Override
     public K8sRunnable produce(Run run) {
         PythonRunSpec runSpec = new PythonRunSpec(run.getSpec());
         PythonServeTaskSpec taskSpec = runSpec.getTaskServeSpec();

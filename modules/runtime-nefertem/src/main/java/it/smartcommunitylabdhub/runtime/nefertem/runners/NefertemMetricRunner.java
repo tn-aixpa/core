@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.runtime.nefertem.runners;
 
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
@@ -14,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class NefertemMetricRunner implements Runner<K8sJobRunnable> {
+public class NefertemMetricRunner {
 
     private final String image;
 
@@ -25,7 +24,6 @@ public class NefertemMetricRunner implements Runner<K8sJobRunnable> {
         this.secretData = secretData;
     }
 
-    @Override
     public K8sJobRunnable produce(Run run) {
         // Retrieve information about Spec
         NefertemRunSpec runSpec = new NefertemRunSpec(run.getSpec());

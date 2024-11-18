@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.runtime.python.runners;
 
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
@@ -35,7 +34,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
-public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
+public class PythonBuildRunner {
 
     private final String image;
     private final String command;
@@ -58,7 +57,6 @@ public class PythonBuildRunner implements Runner<K8sKanikoRunnable> {
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
-    @Override
     public K8sKanikoRunnable produce(Run run) {
         PythonRunSpec runSpec = new PythonRunSpec(run.getSpec());
         PythonBuildTaskSpec taskSpec = runSpec.getTaskBuildSpec();

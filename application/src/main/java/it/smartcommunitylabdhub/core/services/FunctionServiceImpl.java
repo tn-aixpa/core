@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.Fields;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
@@ -542,7 +543,7 @@ public class FunctionServiceImpl
 
     private Specification<TaskEntity> createFunctionSpecification(String function) {
         return (root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("function"), function);
+            return criteriaBuilder.equal(root.get(Fields.FUNCTION), function);
         };
     }
 }

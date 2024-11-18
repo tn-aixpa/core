@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.runtime.container.runners;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
@@ -26,15 +25,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * ContainerDeployRunner
- * <p>
- * You can use this as a simple class or as a registered bean. If you want to retrieve this as bean from RunnerFactory
- * you have to register it using the following annotation:
- *
- * @RunnerComponent(runtime = "container", task = "deploy")
- */
-public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
+public class ContainerDeployRunner {
 
     private final ContainerFunctionSpec functionSpec;
     private final Map<String, String> secretData;
@@ -51,7 +42,6 @@ public class ContainerDeployRunner implements Runner<K8sDeploymentRunnable> {
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
-    @Override
     public K8sDeploymentRunnable produce(Run run) {
         ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
         ContainerDeployTaskSpec taskSpec = runSpec.getTaskDeploySpec();

@@ -1,19 +1,17 @@
 package it.smartcommunitylabdhub.framework.k8s.base;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.smartcommunitylabdhub.commons.models.entities.function.FunctionTaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreToleration;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
-import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.Min;
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,42 +19,44 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class K8sTaskSpec {
+public class K8sFunctionTaskBaseSpec extends FunctionTaskBaseSpec {
 
-    @Nullable
     private List<CoreVolume> volumes;
 
-    @Nullable
     @JsonProperty("node_selector")
     private List<CoreNodeSelector> nodeSelector;
 
-    @Nullable
     private List<CoreEnv> envs;
 
-    @Nullable
     private CoreResource resources;
 
-    @Nullable
     private Set<String> secrets;
 
-    @Nullable
     private CoreAffinity affinity;
 
-    @Nullable
     private List<CoreToleration> tolerations;
 
-    @Nullable
-    @JsonProperty("backoff_limit")
-    @Min(1)
-    private Integer backoffLimit;
+    private String runtimeClass;
 
-    @Nullable
-    private String schedule;
+    private String priorityClass;
 
-    @Nullable
-    @Min(0)
-    private Integer replicas;
+    private String profile;
+
+    @Override
+    public void configure(Map<String, Serializable> data) {
+        super.configure(data);
+
+        K8sFunctionTaskBaseSpec spec = mapper.convertValue(data, K8sFunctionTaskBaseSpec.class);
+
+        this.volumes = spec.getVolumes();
+        this.nodeSelector = spec.getNodeSelector();
+        this.envs = spec.getEnvs();
+        this.resources = spec.getResources();
+        this.secrets = spec.getSecrets();
+        this.affinity = spec.getAffinity();
+        this.tolerations = spec.getTolerations();
+        this.runtimeClass = spec.getRuntimeClass();
+        this.priorityClass = spec.getPriorityClass();
+        this.profile = spec.getProfile();
+    }
 }

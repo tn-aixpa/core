@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.runtime.python.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sFunctionTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import java.io.Serializable;
 import java.util.List;
@@ -15,7 +15,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @SpecType(runtime = PythonRuntime.RUNTIME, kind = PythonBuildTaskSpec.KIND, entity = EntityName.TASK)
-public class PythonBuildTaskSpec extends K8sTaskBaseSpec {
+public class PythonBuildTaskSpec extends K8sFunctionTaskBaseSpec {
 
     public static final String KIND = "python+build";
 

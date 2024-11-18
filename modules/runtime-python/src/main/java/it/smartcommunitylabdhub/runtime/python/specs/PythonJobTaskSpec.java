@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.enums.EntityName;
-import it.smartcommunitylabdhub.framework.k8s.base.K8sTaskBaseSpec;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sFunctionTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
@@ -20,7 +20,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @SpecType(runtime = PythonRuntime.RUNTIME, kind = PythonJobTaskSpec.KIND, entity = EntityName.TASK)
-public class PythonJobTaskSpec extends K8sTaskBaseSpec {
+public class PythonJobTaskSpec extends K8sFunctionTaskBaseSpec {
 
     public static final String KIND = "python+job";
 

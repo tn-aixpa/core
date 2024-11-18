@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
-import it.smartcommunitylabdhub.commons.infrastructure.Runner;
 import it.smartcommunitylabdhub.commons.models.base.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.entities.model.Model;
 import it.smartcommunitylabdhub.commons.models.entities.run.Run;
@@ -34,7 +33,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
+public class HuggingfaceServeRunner {
 
     private static final int HTTP_PORT = 8080;
     private static final int GRPC_PORT = 8081;
@@ -60,7 +59,6 @@ public class HuggingfaceServeRunner implements Runner<K8sRunnable> {
         this.modelService = modelService;
     }
 
-    @Override
     public K8sRunnable produce(Run run) {
         HuggingfaceServeRunSpec runSpec = HuggingfaceServeRunSpec.with(run.getSpec());
         HuggingfaceServeTaskSpec taskSpec = runSpec.getTaskServeSpec();

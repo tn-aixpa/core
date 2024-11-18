@@ -189,6 +189,9 @@ public class FunctionContextController {
         return functionService.getTasksByFunctionId(id);
     }
 
+    /*
+     * Relationships
+     */
     @Operation(summary = "Get relationships info for a given entity, if available")
     @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")
     public List<RelationshipDetail> getRelationshipsById(
