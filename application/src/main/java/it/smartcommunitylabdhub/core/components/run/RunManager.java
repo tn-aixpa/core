@@ -11,15 +11,16 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
+import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.base.ExecutableBaseSpec;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.function.Function;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
 import it.smartcommunitylabdhub.commons.models.task.Task;
 import it.smartcommunitylabdhub.commons.services.FunctionService;
 import it.smartcommunitylabdhub.commons.services.RunService;
+import it.smartcommunitylabdhub.commons.services.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.processors.ProcessorRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.RuntimeFactory;
@@ -71,6 +72,9 @@ public class RunManager {
 
     @Autowired
     private FunctionService functionService;
+
+    @Autowired
+    private WorkflowService workflowService;
 
     // @Autowired
     // private ExecutableEntityService executableEntityServiceProvider;
@@ -157,8 +161,9 @@ public class RunManager {
                                 ? extends RunRunnable
                             > r = runtimeFactory.getRuntime(runtime);
 
-                            String functionId = runSpecAccessor.getFunctionId();
-                            Function function = functionService.getFunction(functionId);
+                            Executable function = runSpecAccessor.getWorkflowId() != null
+                                ? workflowService.getWorkflow(runSpecAccessor.getWorkflowId())
+                                : functionService.getFunction(runSpecAccessor.getFunctionId());
 
                             RunBaseSpec runSpecBuilt = r.build(function, task, run);
 
