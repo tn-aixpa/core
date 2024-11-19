@@ -15,7 +15,7 @@ public interface RunSpecAccessor extends Accessor<Serializable> {
      */
     //get task *kind*
     default String getTask() {
-        return get("task");
+        return get(Fields.TASK);
     }
 
     default String getTaskId() {
@@ -23,7 +23,7 @@ public interface RunSpecAccessor extends Accessor<Serializable> {
     }
 
     default String getProject() {
-        return get("project");
+        return get(Fields.PROJECT);
     }
 
     default Boolean getLocalExecution() {
@@ -95,12 +95,12 @@ public interface RunSpecAccessor extends Accessor<Serializable> {
         //try parse
         Matcher matcher = Pattern.compile(Keys.TASK_PATTERN).matcher((String) tsk);
         if (matcher.matches()) {
-            String kind = matcher.group(1);
+            String task = matcher.group(1);
             String project = matcher.group(2);
             String taskId = matcher.group(3);
 
-            m.put("kind", kind);
-            m.put("project", project);
+            m.put(Fields.TASK, task);
+            m.put(Fields.PROJECT, project);
             m.put("taskId", taskId);
 
             return () -> m;
