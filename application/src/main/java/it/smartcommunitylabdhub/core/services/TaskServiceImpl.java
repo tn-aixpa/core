@@ -216,10 +216,6 @@ public class TaskServiceImpl implements SearchableTaskService {
                 }
                 dto.setProject(taskSpecAccessor.getProject());
 
-                if (!StringUtils.hasText(taskSpecAccessor.getFunctionId())) {
-                    throw new IllegalArgumentException("spec: missing version");
-                }
-
                 // task may belong to function or to workflow
                 Executable executable = null;
                 String function = taskSpecAccessor.getFunction();
@@ -230,7 +226,7 @@ public class TaskServiceImpl implements SearchableTaskService {
                     executable = functionService.find(functionId);
                 }
                 if (StringUtils.hasText(workflow)) {
-                    String workflowId = taskSpecAccessor.getFunctionId();
+                    String workflowId = taskSpecAccessor.getWorkflowId();
                     executable = workflowService.find(workflowId);
                 }
 

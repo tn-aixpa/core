@@ -38,6 +38,14 @@ public interface TaskSpecAccessor extends Accessor<String> {
         return get("workflowId");
     }
 
+    default boolean isValid() {
+        return (
+            getProject() != null &&
+            getRuntime() != null &&
+            ((getFunction() != null && getFunctionId() != null) || (getWorkflow() != null && getWorkflowId() != null))
+        );
+    }
+
     /**
      * Build an accessor over a task spec map.
      * We expect to find either a function or a workflow ref to parse

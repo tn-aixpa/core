@@ -368,22 +368,25 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
             String taskPath = RunBaseSpec.with(run.getSpec()).getTask();
             if (StringUtils.hasText(taskPath)) {
                 // Read spec and retrieve executables
-                RunSpecAccessor accessor = RunSpecAccessor.with(run.getSpec());
-
-                //resolve runtime either from runSpec or from taskSpec
-                String runtime = accessor.getRuntime() != null
-                    ? accessor.getRuntime()
-                    : TaskSpecAccessor.with(taskEntityService.get(accessor.getTaskId()).getSpec()).getRuntime();
+                TaskSpecAccessor accessor = TaskSpecAccessor.with(run.getSpec());
 
                 if (accessor.isValid()) {
                     //rebuild key and check
-                    String fk = KeyUtils.buildKey(
-                        accessor.getProject(),
-                        EntityName.FUNCTION.getValue(),
-                        accessor.getRuntime(),
-                        accessor.getFunction(),
-                        accessor.getFunctionId()
-                    );
+                    String fk = accessor.getWorkflowId() != null
+                        ? KeyUtils.buildKey(
+                            accessor.getProject(),
+                            EntityName.WORKFLOW.getValue(),
+                            accessor.getRuntime(),
+                            accessor.getWorkflow(),
+                            accessor.getWorkflowId()
+                        )
+                        : KeyUtils.buildKey(
+                            accessor.getProject(),
+                            EntityName.FUNCTION.getValue(),
+                            accessor.getRuntime(),
+                            accessor.getFunction(),
+                            accessor.getFunctionId()
+                        );
 
                     if (
                         list.stream().noneMatch(r -> r.getType() == RelationshipName.RUN_OF && fk.equals(r.getDest()))
