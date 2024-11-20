@@ -470,7 +470,7 @@
     },
     "VolumeType" : {
       "type" : "string",
-      "enum" : [ "config_map", "persistent_volume_claim", "empty_dir" ]
+      "enum" : [ "persistent_volume_claim", "empty_dir" ]
     }
   },
   "type" : "object",
@@ -556,7 +556,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -629,6 +630,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.nefertem+infer.title",
     "description" : "specs.nefertem+infer.description"
   }, {
@@ -667,7 +669,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -740,6 +743,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.nefertem+metric.title",
     "description" : "specs.nefertem+metric.description"
   }, {
@@ -778,7 +782,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -851,6 +856,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.nefertem+profile.title",
     "description" : "specs.nefertem+profile.description"
   }, {
@@ -889,7 +895,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -962,6 +969,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.nefertem+validate.title",
     "description" : "specs.nefertem+validate.description"
   } ]

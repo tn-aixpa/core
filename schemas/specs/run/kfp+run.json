@@ -470,7 +470,7 @@
     },
     "VolumeType" : {
       "type" : "string",
-      "enum" : [ "config_map", "persistent_volume_claim", "empty_dir" ]
+      "enum" : [ "persistent_volume_claim", "empty_dir" ]
     }
   },
   "type" : "object",
@@ -537,11 +537,6 @@
           "title" : "fields.envs.item.title",
           "description" : "fields.envs.item.description"
         }
-      },
-      "function" : {
-        "type" : "string",
-        "title" : "fields.function.title",
-        "description" : "fields.function.description"
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -613,10 +608,99 @@
         "type" : "string",
         "title" : "fields.workflow.title",
         "description" : "fields.workflow.description",
-        "format" : "yaml+base64"
+        "minLength" : 1
       }
     },
+    "required" : [ "workflow" ],
     "title" : "specs.kfp+pipeline.title",
     "description" : "specs.kfp+pipeline.description"
+  }, {
+    "type" : "object",
+    "properties" : {
+      "affinity" : {
+        "$ref" : "#/$defs/CoreAffinity",
+        "title" : "fields.affinity.title",
+        "description" : "fields.affinity.description"
+      },
+      "envs" : {
+        "title" : "fields.envs.title",
+        "description" : "fields.envs.description",
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/$defs/CoreEnv",
+          "title" : "fields.envs.item.title",
+          "description" : "fields.envs.item.description"
+        }
+      },
+      "node_selector" : {
+        "title" : "fields.nodeSelector.title",
+        "description" : "fields.nodeSelector.description",
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/$defs/CoreNodeSelector",
+          "title" : "fields.nodeSelector.item.title",
+          "description" : "fields.nodeSelector.item.description"
+        }
+      },
+      "priorityClass" : {
+        "type" : "string",
+        "title" : "fields.priorityClass.title",
+        "description" : "fields.priorityClass.description"
+      },
+      "profile" : {
+        "type" : "string",
+        "title" : "fields.profile.title",
+        "description" : "fields.profile.description"
+      },
+      "resources" : {
+        "$ref" : "#/$defs/CoreResource",
+        "title" : "fields.resources.title",
+        "description" : "fields.resources.description"
+      },
+      "runtimeClass" : {
+        "type" : "string",
+        "title" : "fields.runtimeClass.title",
+        "description" : "fields.runtimeClass.description"
+      },
+      "secrets" : {
+        "title" : "fields.secrets.title",
+        "description" : "fields.secrets.description",
+        "type" : "array",
+        "items" : {
+          "type" : "string",
+          "title" : "fields.secrets.item.title",
+          "description" : "fields.secrets.item.description"
+        }
+      },
+      "tolerations" : {
+        "title" : "fields.tolerations.title",
+        "description" : "fields.tolerations.description",
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/$defs/CoreToleration",
+          "title" : "fields.tolerations.item.title",
+          "description" : "fields.tolerations.item.description"
+        }
+      },
+      "volumes" : {
+        "title" : "fields.volumes.title",
+        "description" : "fields.volumes.description",
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/$defs/CoreVolume",
+          "title" : "fields.volumes.item.title",
+          "description" : "fields.volumes.item.description"
+        }
+      },
+      "workflow" : {
+        "type" : "string",
+        "title" : "fields.workflow.title",
+        "description" : "fields.workflow.description",
+        "minLength" : 1
+      }
+    },
+    "required" : [ "workflow" ],
+    "title" : "specs.kfp+build.title",
+    "description" : "specs.kfp+build.description"
   } ]
 }

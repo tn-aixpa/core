@@ -427,7 +427,7 @@
     },
     "VolumeType" : {
       "type" : "string",
-      "enum" : [ "config_map", "persistent_volume_claim", "empty_dir" ]
+      "enum" : [ "persistent_volume_claim", "empty_dir" ]
     }
   },
   "type" : "object",
@@ -446,11 +446,6 @@
         "title" : "fields.envs.item.title",
         "description" : "fields.envs.item.description"
       }
-    },
-    "function" : {
-      "type" : "string",
-      "title" : "fields.function.title",
-      "description" : "fields.function.description"
     },
     "node_selector" : {
       "title" : "fields.nodeSelector.title",
@@ -522,9 +517,10 @@
       "type" : "string",
       "title" : "fields.workflow.title",
       "description" : "fields.workflow.description",
-      "format" : "yaml+base64"
+      "minLength" : 1
     }
   },
+  "required" : [ "workflow" ],
   "title" : "specs.kfp+pipeline.title",
   "description" : "specs.kfp+pipeline.description"
 }

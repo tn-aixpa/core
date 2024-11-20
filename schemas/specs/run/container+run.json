@@ -446,7 +446,7 @@
     },
     "VolumeType" : {
       "type" : "string",
-      "enum" : [ "config_map", "persistent_volume_claim", "empty_dir" ]
+      "enum" : [ "persistent_volume_claim", "empty_dir" ]
     }
   },
   "type" : "object",
@@ -499,7 +499,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -568,6 +569,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.container+job.title",
     "description" : "specs.container+job.description"
   }, {
@@ -597,7 +599,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -666,6 +669,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.container+deploy.title",
     "description" : "specs.container+deploy.description"
   }, {
@@ -695,7 +699,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -779,6 +784,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.container+serve.title",
     "description" : "specs.container+serve.description"
   }, {
@@ -802,7 +808,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "instructions" : {
         "title" : "fields.container.instructions.title",
@@ -875,6 +882,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.container+build.title",
     "description" : "specs.container+build.description"
   } ]

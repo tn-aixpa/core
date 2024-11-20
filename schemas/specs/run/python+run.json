@@ -474,7 +474,7 @@
     },
     "VolumeType" : {
       "type" : "string",
-      "enum" : [ "config_map", "persistent_volume_claim", "empty_dir" ]
+      "enum" : [ "persistent_volume_claim", "empty_dir" ]
     }
   },
   "type" : "object",
@@ -551,7 +551,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -620,6 +621,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.python+job.title",
     "description" : "specs.python+job.description"
   }, {
@@ -643,7 +645,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "node_selector" : {
         "title" : "fields.nodeSelector.title",
@@ -718,6 +721,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.python+serve.title",
     "description" : "specs.python+serve.description"
   }, {
@@ -741,7 +745,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "instructions" : {
         "title" : "fields.instructions.title",
@@ -814,6 +819,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.python+build.title",
     "description" : "specs.python+build.description"
   } ]

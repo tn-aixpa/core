@@ -168,7 +168,7 @@
     },
     "HuggingfaceTask" : {
       "type" : "string",
-      "enum" : [ "sequence_classification", "token_classification", "fill_mask", "text_generation", "text2text_generation" ]
+      "enum" : [ "sequence_classification", "token_classification", "fill_mask", "text_generation", "text2text_generation", "text_embedding" ]
     },
     "Map_String.String_" : {
       "type" : "object",
@@ -443,7 +443,7 @@
     },
     "VolumeType" : {
       "type" : "string",
-      "enum" : [ "config_map", "persistent_volume_claim", "empty_dir" ]
+      "enum" : [ "persistent_volume_claim", "empty_dir" ]
     }
   },
   "type" : "object",
@@ -509,7 +509,8 @@
       "function" : {
         "type" : "string",
         "title" : "fields.function.title",
-        "description" : "fields.function.description"
+        "description" : "fields.function.description",
+        "minLength" : 1
       },
       "huggingface_task" : {
         "$ref" : "#/$defs/HuggingfaceTask",
@@ -629,6 +630,7 @@
         }
       }
     },
+    "required" : [ "function" ],
     "title" : "specs.huggingfaceserve+serve.title",
     "description" : "specs.huggingfaceserve+serve.description"
   } ]

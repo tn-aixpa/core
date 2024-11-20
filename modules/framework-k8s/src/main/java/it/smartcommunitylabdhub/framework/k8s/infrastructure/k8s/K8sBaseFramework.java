@@ -11,6 +11,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Affinity;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1LocalObjectReference;
@@ -42,7 +43,6 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResourceDefinition;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -635,14 +635,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             }
 
             // build config map volume with fixed definition
-            CoreVolume configMapVolume = new CoreVolume(
-                CoreVolume.VolumeType.config_map,
-                "/init-config-map",
-                "init-config-map",
-                Map.of("name", "init-config-map-" + runnable.getId())
-            );
-            V1Volume configMap = k8sBuilderHelper.getVolume(configMapVolume);
-            volumes.add(configMap);
+            V1Volume volume = new V1Volume().name("init-config-map");
+            volume.configMap(new V1ConfigMapVolumeSource().name("init-config-map-" + runnable.getId()));
+            volumes.add(volume);
         }
 
         return volumes;
@@ -697,14 +692,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 volumeMounts.add(sharedMount);
             }
 
-            // Create config map volume with fixed definition
-            CoreVolume configMapVolume = new CoreVolume(
-                CoreVolume.VolumeType.config_map,
-                "/init-config-map",
-                "init-config-map",
-                Map.of("name", "init-config-map-" + runnable.getId())
-            );
-            V1VolumeMount configMapMount = k8sBuilderHelper.getVolumeMount(configMapVolume);
+            // Create config map volume mount with fixed definition
+            V1VolumeMount configMapMount = new V1VolumeMount().name("init-config-map").mountPath("/init-config-map");
             volumeMounts.add(configMapMount);
         }
 

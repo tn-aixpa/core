@@ -5,7 +5,6 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
-import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
@@ -186,10 +185,11 @@ public class K8sBuilderHelper implements InitializingBean {
         Map<String, String> spec = coreVolume.getSpec();
         switch (type) {
             // TODO: support items
-            case "config_map":
-                return volume.configMap(
-                    new V1ConfigMapVolumeSource().name(spec.getOrDefault("name", coreVolume.getName()))
-                );
+            //DISABLED: users should not be able to mount arbitrary config maps
+            // case "config_map":
+            //     return volume.configMap(
+            //         new V1ConfigMapVolumeSource().name(spec.getOrDefault("name", coreVolume.getName()))
+            //     );
             //DISABLED: users should not be able to mount arbitrary secrets
             // case "secret":
             //     CoreItems coreItems = JacksonMapper.OBJECT_MAPPER.convertValue(

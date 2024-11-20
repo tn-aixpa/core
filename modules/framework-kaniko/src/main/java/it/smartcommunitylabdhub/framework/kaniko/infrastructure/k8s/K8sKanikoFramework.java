@@ -6,6 +6,7 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
@@ -348,17 +349,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         //make sure init and shared volumes are defined
         if (volumeMounts.stream().noneMatch(v -> "/init-config-map".equals(v.getMountPath()))) {
             // Create config map volume with fixed definition
-            CoreVolume configMapVolume = new CoreVolume(
-                CoreVolume.VolumeType.config_map,
-                "/init-config-map",
-                "init-config-map",
-                Map.of("name", "init-config-map-" + runnable.getId())
-            );
-
-            V1Volume configMap = k8sBuilderHelper.getVolume(configMapVolume);
+            V1Volume configMap = new V1Volume().name("init-config-map");
+            configMap.configMap(new V1ConfigMapVolumeSource().name("init-config-map-" + runnable.getId()));
             volumes.add(configMap);
 
-            V1VolumeMount configMapMount = k8sBuilderHelper.getVolumeMount(configMapVolume);
+            V1VolumeMount configMapMount = new V1VolumeMount().name("init-config-map").mountPath("/init-config-map");
             volumeMounts.add(configMapMount);
         }
 
