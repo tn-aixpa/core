@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
@@ -8,6 +9,7 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
@@ -289,25 +291,28 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
             //fetch current and merge
             Run current = entityService.get(id);
 
-            //spec is not modifiable unless in specific states
-            //TODO: implement logic to disable spec update in some states
-            // runDTO.setSpec(current.getSpec());
+            //spec is not modifiable *after* build
+            StatusFieldAccessor status = StatusFieldAccessor.with(current.getStatus());
+            if (State.CREATED.name().equals(status.getState())) {
+                //we accept updates, parse and export Spec
+                Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
+                if (spec == null) {
+                    throw new IllegalArgumentException("invalid kind");
+                }
+
+                //validate
+                validator.validateSpec(spec);
+
+                //update spec as exported
+                dto.setSpec(spec.toMap());
+            } else {
+                //spec is sealed, enforce
+                dto.setSpec(current.getSpec());
+            }
 
             //TODO: implement logic to update status only in some states
 
-            // Parse and export Spec
-            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
-            if (spec == null) {
-                throw new IllegalArgumentException("invalid kind");
-            }
-
-            //validate
-            validator.validateSpec(spec);
-
-            //update spec as exported
-            dto.setSpec(spec.toMap());
-
-            //full update, run is modifiable
+            //update, run is modifiable
             return entityService.update(id, dto);
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.RUN.toString());
