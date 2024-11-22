@@ -32,25 +32,25 @@ public class StateMachineTest {
             .withState(
                 "State1",
                 new FsmState.StateBuilder<String, String, Map<String, Object>>("State1")
-                    .withTransaction(new Transaction<>("Event1", "State2", (context, input) -> true))
+                    .withTransition(new Transition<>("Event1", "State2", (context, input) -> true))
                     .build()
             )
             .withState(
                 "State2",
                 new FsmState.StateBuilder<String, String, Map<String, Object>>("State2")
-                    .withTransaction(new Transaction<>("Event2", "State3", (context, input) -> true))
+                    .withTransition(new Transition<>("Event2", "State3", (context, input) -> true))
                     .build()
             )
             .withState(
                 "State3",
                 new FsmState.StateBuilder<String, String, Map<String, Object>>("State3")
-                    .withTransaction(new Transaction<>("Event3", "State4", (context, input) -> true))
+                    .withTransition(new Transition<>("Event3", "State4", (context, input) -> true))
                     .build()
             )
             .withState(
                 "State4",
                 new FsmState.StateBuilder<String, String, Map<String, Object>>("State4")
-                    .withTransaction(new Transaction<>("Event4", "State1", (context, input) -> true))
+                    .withTransition(new Transition<>("Event4", "State1", (context, input) -> true))
                     .build()
             )
             .withStateChangeListener((newState, context) ->
@@ -82,7 +82,7 @@ public class StateMachineTest {
 
         stateMachine
             .getState("State1")
-            .getTransaction("Event1")
+            .getTransition("Event1")
             .setInternalLogic((context, input, fs) -> {
                 System.out.println("Executing internal logic of State1 with context: " + context);
                 Optional.ofNullable(context).ifPresent(c -> c.put("value", 1));
@@ -90,7 +90,7 @@ public class StateMachineTest {
             });
         stateMachine
             .getState("State2")
-            .getTransaction("Event2")
+            .getTransition("Event2")
             .setInternalLogic((context, input, fs) -> {
                 System.out.println("Executing internal logic of State2 with context: " + context);
                 Optional.ofNullable(context).ifPresent(c -> c.put("value", 1));

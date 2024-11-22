@@ -173,7 +173,7 @@ public abstract class AbstractBaseRuntime<
 
         String task = runAccessor.getTask();
 
-        //iterate over stores to find first matching runnable and stop
+        //iterate over stores to find first matching runnable and delete
         Optional<R> runnable = stores
             .stream()
             .map(s -> {
@@ -195,7 +195,7 @@ public abstract class AbstractBaseRuntime<
             return runRunnable;
         }
 
-        log.warn("Error deleting run {}", run.getId());
+        log.debug("Error deleting run {}", run.getId());
         return null;
     }
 

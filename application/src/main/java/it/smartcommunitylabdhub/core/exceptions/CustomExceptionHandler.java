@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.exceptions.FrameworkException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransactionException;
+import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransitionException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
@@ -73,8 +73,8 @@ public class CustomExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
-    @ExceptionHandler(InvalidTransactionException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidTransactionException(InvalidTransactionException ex) {
+    @ExceptionHandler(InvalidTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTransactionException(InvalidTransitionException ex) {
         // Create and return the error response
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());

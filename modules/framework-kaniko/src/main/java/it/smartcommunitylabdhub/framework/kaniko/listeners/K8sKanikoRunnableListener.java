@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.k8s.K8sKanikoFramework;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
 import it.smartcommunitylabdhub.runtimes.events.RunnableChangedEvent;
-import it.smartcommunitylabdhub.runtimes.events.RunnableMonitorObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -38,9 +37,11 @@ public class K8sKanikoRunnableListener {
         Assert.hasText(runnable.getId(), "runnable id can not be null or empty");
         log.info("Receive runnable for execution: {}", runnable.getId());
 
+        String state = runnable.getState();
+
         try {
             runnable =
-                switch (State.valueOf(runnable.getState())) {
+                switch (State.valueOf(state)) {
                     case State.READY -> {
                         yield k8sFramework.run(runnable);
                     }
@@ -83,22 +84,7 @@ public class K8sKanikoRunnableListener {
                 log.debug("Processed runnable {}", runnable.getId());
 
                 // Publish event to Run Manager
-                eventPublisher.publishEvent(
-                    RunnableChangedEvent
-                        .builder()
-                        .runnable(runnable)
-                        .runMonitorObject(
-                            RunnableMonitorObject
-                                .builder()
-                                .runId(runnable.getId())
-                                .stateId(runnable.getState())
-                                .project(runnable.getProject())
-                                .framework(runnable.getFramework())
-                                .task(runnable.getTask())
-                                .build()
-                        )
-                        .build()
-                );
+                eventPublisher.publishEvent(RunnableChangedEvent.build(runnable, state));
             }
         }
     }

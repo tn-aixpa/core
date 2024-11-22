@@ -8,7 +8,6 @@ import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.runtimes.events.RunnableChangedEvent;
-import it.smartcommunitylabdhub.runtimes.events.RunnableMonitorObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,7 +22,7 @@ import org.springframework.util.Assert;
 public class K8sArgoWorkflowRunnableListener {
 
     @Autowired
-    K8sArgoWorkflowFramework k8sFramework;
+    K8sArgoWorkflowFramework argoFramework;
 
     @Autowired
     ApplicationEventPublisher eventPublisher;
@@ -38,17 +37,19 @@ public class K8sArgoWorkflowRunnableListener {
         Assert.hasText(runnable.getId(), "runnable id can not be null or empty");
         log.info("Receive runnable for execution: {}", runnable.getId());
 
+        String state = runnable.getState();
+
         try {
             runnable =
-                switch (State.valueOf(runnable.getState())) {
+                switch (State.valueOf(state)) {
                     case State.READY -> {
-                        yield k8sFramework.run(runnable);
+                        yield argoFramework.run(runnable);
                     }
                     case State.STOP -> {
-                        yield k8sFramework.stop(runnable);
+                        yield argoFramework.stop(runnable);
                     }
                     case State.DELETING -> {
-                        yield k8sFramework.delete(runnable);
+                        yield argoFramework.delete(runnable);
                     }
                     default -> {
                         yield null;
@@ -83,22 +84,7 @@ public class K8sArgoWorkflowRunnableListener {
                 log.debug("Processed runnable {}", runnable.getId());
 
                 // Publish event to Run Manager
-                eventPublisher.publishEvent(
-                    RunnableChangedEvent
-                        .builder()
-                        .runnable(runnable)
-                        .runMonitorObject(
-                            RunnableMonitorObject
-                                .builder()
-                                .runId(runnable.getId())
-                                .stateId(runnable.getState())
-                                .project(runnable.getProject())
-                                .framework(runnable.getFramework())
-                                .task(runnable.getTask())
-                                .build()
-                        )
-                        .build()
-                );
+                eventPublisher.publishEvent(RunnableChangedEvent.build(runnable, state));
             }
         }
     }

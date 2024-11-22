@@ -10,7 +10,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.components.run.RunManager;
+import it.smartcommunitylabdhub.core.components.run.RunLifecycleManager;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
@@ -53,7 +53,7 @@ public class RunController {
     SearchableRunService runService;
 
     @Autowired
-    RunManager runManager;
+    RunLifecycleManager runManager;
 
     @Operation(summary = "Create run and exec", description = "Create a run and exec")
     @PostMapping(
