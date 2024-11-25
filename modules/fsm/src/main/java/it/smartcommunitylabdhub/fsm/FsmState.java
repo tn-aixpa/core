@@ -6,7 +6,7 @@ import java.util.Optional;
 import lombok.Getter;
 
 /*
- * Compact connected state representation, grouping state + transactions towards different states
+ * Compact connected state representation, grouping state + transitions towards different states
  */
 public class FsmState<S, E, C, I> {
 
@@ -16,9 +16,9 @@ public class FsmState<S, E, C, I> {
     @Getter
     protected final List<Transition<S, E, C, I>> transitions;
 
-    public FsmState(S state, List<Transition<S, E, C, I>> transactions) {
+    public FsmState(S state, List<Transition<S, E, C, I>> transitions) {
         this.state = state;
-        this.transitions = transactions;
+        this.transitions = transitions;
     }
 
     /**
@@ -68,24 +68,24 @@ public class FsmState<S, E, C, I> {
     //     }
 
     //     /**
-    //      * Add a transaction associated with this state.
+    //      * Add a transition associated with this state.
     //      *
-    //      * @param transaction The transaction to add.
+    //      * @param transition The transition to add.
     //      * @return The StateBuilder instance.
     //      */
-    //     public Builder<S, E, C, I> withTransition(Transition<S, E, C, I> transaction) {
-    //         transitions.add(transaction);
+    //     public Builder<S, E, C, I> withTransition(Transition<S, E, C, I> transition) {
+    //         transitions.add(transition);
     //         return this;
     //     }
 
     //     /**
-    //      * Add a transaction associated with this state.
+    //      * Add a transition associated with this state.
     //      *
-    //      * @param transactionList List of transactions
+    //      * @param transitionList List of transitions
     //      * @return The StateBuilder instance.
     //      */
-    //     public Builder<S, E, C, I> withTransitions(List<Transition<S, E, C, I>> transactionList) {
-    //         transitions.addAll(transactionList);
+    //     public Builder<S, E, C, I> withTransitions(List<Transition<S, E, C, I>> transitionList) {
+    //         transitions.addAll(transitionList);
     //         return this;
     //     }
 

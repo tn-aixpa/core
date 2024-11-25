@@ -44,7 +44,7 @@ public class Fsm<S, E, C, I> {
     @Getter
     private S currentState;
 
-    //graph as a map state -> definitions of state+transactions
+    //graph as a map state -> definitions of state+transitions
     private Map<S, FsmState<S, E, C, I>> states;
 
     //context
@@ -112,7 +112,7 @@ public class Fsm<S, E, C, I> {
                             throw new InvalidTransitionException(currentState.toString(), null);
                         }
 
-                        // Execute the transaction to next state and collect result.
+                        // Execute the transition to next state and collect result.
                         return execute(transition.get(), input);
                     } finally {
                         stateLock.unlock();
@@ -143,7 +143,7 @@ public class Fsm<S, E, C, I> {
     //                     }
 
     //                     //if path is single and state matches we are in the same state
-    //                     //no transaction available
+    //                     //no transition available
     //                     if (path.size() == 1 && path.get(0).equals(targetState)) {
     //                         log.debug("found path from {} to the same state", targetState);
     //                         throw new InvalidTransactionException(currentState.toString(), targetState.toString());
@@ -164,13 +164,13 @@ public class Fsm<S, E, C, I> {
     //                     //     throw new InvalidTransactionException(currentState.toString(), targetState.toString());
     //                     // }
 
-    //                     // only a single step is allowed for a single transaction
+    //                     // only a single step is allowed for a single transition
     //                     if (path.size() > 2) {
     //                         log.debug("path from {} to {} has more than 1-step", currentState, targetState);
     //                         throw new InvalidTransactionException(currentState.toString(), targetState.toString());
     //                     }
 
-    //                     // Execute the transaction and collect result.
+    //                     // Execute the transition and collect result.
     //                     return execute(path.get(0), path.get(1), input);
     //                 } finally {
     //                     stateLock.unlock();
@@ -196,7 +196,7 @@ public class Fsm<S, E, C, I> {
                 if (Boolean.TRUE.equals(lockAcquired)) {
                     log.debug("lock acquired for transition for event {}", event);
                     try {
-                        //check if there is a transaction for this event connected to current state
+                        //check if there is a transition for this event connected to current state
                         FsmState<S, E, C, I> stateDefinition = states.get(currentState);
                         if (stateDefinition == null) {
                             throw new InvalidTransitionException(currentState.toString(), null);
@@ -208,7 +208,7 @@ public class Fsm<S, E, C, I> {
                             throw new InvalidTransitionException(currentState.toString(), null);
                         }
 
-                        // Execute the transaction to next state and collect result.
+                        // Execute the transition to next state and collect result.
                         return execute(transition.get(), input);
                     } finally {
                         stateLock.unlock();
@@ -235,7 +235,7 @@ public class Fsm<S, E, C, I> {
     //     path.addFirst(sourceState);
 
     //     // If the current state is the target state, a valid path is found
-    //     //DISABLED, this is wrong, we are looking for a transaction TO dest!
+    //     //DISABLED, this is wrong, we are looking for a transition TO dest!
     //     // if (sourceState.equals(targetState)) {
     //     //     return path;
     //     // }
@@ -257,14 +257,14 @@ public class Fsm<S, E, C, I> {
     //         return path;
     //     }
 
-    //     Optional<Transition<S, E, C, I>> transaction = stateDefinition
+    //     Optional<Transition<S, E, C, I>> transition = stateDefinition
     //         .getTransactions()
     //         .stream()
     //         .filter(t -> targetState == t.getNextState())
     //         .findFirst();
 
-    //     if (transaction.isPresent()) {
-    //         path.addLast(transaction.get().getNextState());
+    //     if (transition.isPresent()) {
+    //         path.addLast(transition.get().getNextState());
     //     }
 
     //     return path;
@@ -315,11 +315,11 @@ public class Fsm<S, E, C, I> {
 
     //     if (stateDefinition != null) {
     //         // Iterate over the transitions from the current state
-    //         for (Transition<S, E, C, I> transaction : stateDefinition.getTransactions()) {
-    //             // Check if the next state in the transaction is unvisited
-    //             if (!visited.contains(transaction.getNextState())) {
+    //         for (Transition<S, E, C, I> transition : stateDefinition.getTransactions()) {
+    //             // Check if the next state in the transition is unvisited
+    //             if (!visited.contains(transition.getNextState())) {
     //                 // Recursively search for a path from the next state to the target state
-    //                 if (this.<R>dfs(transaction.getNextState(), targetState, visited, path)) {
+    //                 if (this.<R>dfs(transition.getNextState(), targetState, visited, path)) {
     //                     return true; // A valid path is found
     //                 }
     //             }

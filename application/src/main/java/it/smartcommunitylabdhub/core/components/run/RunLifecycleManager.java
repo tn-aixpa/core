@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.Runtime;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.run.Run;
+import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
@@ -32,9 +33,11 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Slf4j
+@Component
 public class RunLifecycleManager extends LifecycleManager<Run, RunEntity> {
 
     @Autowired
@@ -79,7 +82,7 @@ public class RunLifecycleManager extends LifecycleManager<Run, RunEntity> {
             r -> {
                 try {
                     //perform via FSM
-                    Optional<RunBaseStatus> spec = fsm.perform(RunEvent.BUILD, null);
+                    Optional<RunBaseSpec> spec = fsm.perform(RunEvent.BUILD, null);
                     State state = fsm.getCurrentState();
 
                     // Update run spec

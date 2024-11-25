@@ -16,10 +16,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class RunStateMachineFactory implements Fsm.Factory<State, RunEvent, RunContext, RunRunnable> {
 
-    private List<FsmState<State, RunEvent, RunContext, RunRunnable>> states = new ArrayList<>();
+    private List<FsmState.Builder<State, RunEvent, RunContext, RunRunnable>> stateBuilders = new ArrayList<>();
 
-    public RunStateMachineFactory(List<FsmState<State, RunEvent, RunContext, RunRunnable>> states) {
-        this.states = states;
+    public RunStateMachineFactory(List<FsmState.Builder<State, RunEvent, RunContext, RunRunnable>> stateBuilders) {
+        this.stateBuilders = stateBuilders;
     }
 
     /**
@@ -34,7 +34,10 @@ public class RunStateMachineFactory implements Fsm.Factory<State, RunEvent, RunC
         Fsm.Builder<State, RunEvent, RunContext, RunRunnable> builder = new Fsm.Builder<>(initialState, context);
 
         //add all states
-        states.forEach(state -> builder.withState(state.getState(), state));
+        stateBuilders.forEach(sb -> {
+            FsmState<State, RunEvent, RunContext, RunRunnable> state = sb.build();
+            builder.withState(state.getState(), state);
+        });
 
         //build to seal
         return builder.build();
