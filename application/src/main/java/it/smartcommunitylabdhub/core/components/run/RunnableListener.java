@@ -16,7 +16,6 @@ import org.springframework.util.Assert;
 public class RunnableListener {
 
     private final RunService runService;
-    // private final RunManager runManager;
     private final RunLifecycleManager runManager;
 
     public RunnableListener(RunService runService, RunLifecycleManager runManager) {
