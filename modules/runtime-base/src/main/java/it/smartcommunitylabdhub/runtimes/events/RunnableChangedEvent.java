@@ -14,10 +14,19 @@ import lombok.Setter;
 @NoArgsConstructor
 public class RunnableChangedEvent<R extends RunRunnable> {
 
-    private RunnableMonitorObject runMonitorObject;
     private R runnable;
+    private String state;
+    private String previousState;
 
     public String getId() {
         return runnable != null ? runnable.getId() : null;
+    }
+
+    public String getState() {
+        return state != null ? state : runnable != null ? runnable.getState() : null;
+    }
+
+    public static <R extends RunRunnable> RunnableChangedEvent<R> build(R runnable, String previousState) {
+        return new RunnableChangedEvent<>(runnable, null, previousState);
     }
 }

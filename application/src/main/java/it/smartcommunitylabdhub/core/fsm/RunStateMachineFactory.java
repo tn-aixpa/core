@@ -1,30 +1,26 @@
-/**
- * RunStateMachine.java
- * <p>
- * This class is responsible for creating and configuring the StateMachine for managing the state
- * transitions of a Run. It defines the states, events, and transitions specific to the Run entity.
- */
-
 package it.smartcommunitylabdhub.core.fsm;
 
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.FsmState;
-import it.smartcommunitylabdhub.fsm.Transaction;
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+/**
+ * State machine factory for runs
+ */
 @Component
 @Slf4j
-public class RunStateMachineFactory {
+public class RunStateMachineFactory implements Fsm.Factory<State, RunEvent, RunContext, RunRunnable> {
 
-    @Autowired
-    ApplicationEventPublisher applicationEventPublisher;
+    private List<FsmState.Builder<State, RunEvent, RunContext, RunRunnable>> stateBuilders = new ArrayList<>();
+
+    public RunStateMachineFactory(List<FsmState.Builder<State, RunEvent, RunContext, RunRunnable>> stateBuilders) {
+        this.stateBuilders = stateBuilders;
+    }
 
     /**
      * Create and configure the StateMachine for managing the state transitions of a Run.
@@ -33,143 +29,169 @@ public class RunStateMachineFactory {
      * @param initialContext The initial context for the StateMachine.
      * @return The configured StateMachine instance.
      */
-    public Fsm<State, RunEvent, Map<String, Serializable>> builder(
-        State initialState,
-        Map<String, Serializable> initialContext
-    ) {
+    public Fsm<State, RunEvent, RunContext, RunRunnable> create(State initialState, RunContext context) {
         // Create a new StateMachine builder with the initial state and context
-        Fsm.Builder<State, RunEvent, Map<String, Serializable>> builder = new Fsm.Builder<>(
-            initialState,
-            initialContext
-        );
+        Fsm.Builder<State, RunEvent, RunContext, RunRunnable> builder = new Fsm.Builder<>(initialState, context);
 
-        // Configure the StateMachine with the defined states and transitions
-        builder
-            .withState(
-                State.CREATED,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.CREATED)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.BUILD, State.BUILT, (context, input) -> true),
-                            new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.BUILT,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.BUILT)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.RUN, State.READY, (context, input) -> true),
-                            new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.READY,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.READY)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.EXECUTE, State.RUNNING, (context, input) -> true),
-                            new Transaction<>(RunEvent.PENDING, State.READY, (context, input) -> true),
-                            new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.STOP,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.STOP)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.STOP, State.STOPPED, (context, input) -> true),
-                            new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.STOPPED,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.STOPPED)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.RESUME, State.RESUME, (context, input) -> true),
-                            new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.RESUME,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.RESUME)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true),
-                            new Transaction<>(RunEvent.EXECUTE, State.RUNNING, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.RUNNING,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.RUNNING)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.LOOP, State.RUNNING, (context, input) -> true),
-                            new Transaction<>(RunEvent.COMPLETE, State.COMPLETED, (context, input) -> true),
-                            new Transaction<>(RunEvent.ERROR, State.ERROR, (context, input) -> true),
-                            new Transaction<>(RunEvent.STOP, State.STOP, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.COMPLETED,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.COMPLETED)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.ERROR,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.ERROR)
-                    .withTransactions(
-                        List.of(
-                            new Transaction<>(RunEvent.DELETING, State.DELETING, (context, input) -> true),
-                            new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true)
-                        )
-                    )
-                    .build()
-            )
-            .withState(
-                State.DELETING,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.DELETING)
-                    .withTransactions(
-                        List.of(new Transaction<>(RunEvent.DELETING, State.DELETED, (context, input) -> true))
-                    )
-                    .build()
-            )
-            .withState(
-                State.DELETED,
-                new FsmState.StateBuilder<State, RunEvent, Map<String, Serializable>>(State.DELETED).build()
-            )
-            .build();
+        //add all states
+        stateBuilders.forEach(sb -> {
+            FsmState<State, RunEvent, RunContext, RunRunnable> state = sb.build();
+            builder.withState(state.getState(), state);
+        });
 
-        // Return the builder
-
+        //build to seal
         return builder.build();
     }
+    // /**
+    //  * Create and configure the StateMachine for managing the state transitions of a Run.
+    //  *
+    //  * @param initialState   The initial state for the StateMachine.
+    //  * @param initialContext The initial context for the StateMachine.
+    //  * @return The configured StateMachine instance.
+    //  */
+    // public Fsm<State, RunEvent, RunContext, RunRunnable> build(
+    //     Run run,
+    //     Runtime<
+    //         ? extends ExecutableBaseSpec,
+    //         ? extends RunBaseSpec,
+    //         ? extends RunBaseStatus,
+    //         ? extends RunRunnable
+    //     > runtime
+    // ) {
+    //     //initial state is run current state
+    //     State initialState = State.valueOf(StatusFieldAccessor.with(run.getStatus()).getState());
+
+    //     // Create a new StateMachine builder with the initial state and context
+    //     Fsm.Builder<State, RunEvent, RunContext, RunRunnable> builder = new Fsm.Builder<>(
+    //         initialState,
+    //         RunContext.builder().run(run).runtime(runtime).build()
+    //     );
+
+    //     // Configure the StateMachine with the defined states and transitions
+    //     builder
+    //         .withState(
+    //             State.CREATED,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.CREATED)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.BUILD, State.BUILT),
+    //                         new Transition<>(RunEvent.ERROR, State.ERROR),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.BUILT,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.BUILT)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.RUN, State.READY),
+    //                         new Transition<>(RunEvent.ERROR, State.ERROR),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.READY,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.READY)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.EXECUTE, State.RUNNING),
+    //                         new Transition<>(RunEvent.PENDING, State.READY),
+    //                         new Transition<>(RunEvent.ERROR, State.ERROR),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.STOP,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.STOP)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.STOP, State.STOPPED),
+    //                         new Transition<>(RunEvent.ERROR, State.ERROR),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.STOPPED,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.STOPPED)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.RESUME, State.RESUME),
+    //                         new Transition<>(RunEvent.ERROR, State.ERROR),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.RESUME,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.RESUME)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.ERROR, State.ERROR),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING),
+    //                         new Transition<>(RunEvent.EXECUTE, State.RUNNING)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.RUNNING,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.RUNNING)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.LOOP, State.RUNNING),
+    //                         new Transition<>(RunEvent.COMPLETE, State.COMPLETED),
+    //                         new Transition<>(RunEvent.ERROR, State.ERROR),
+    //                         new Transition<>(RunEvent.STOP, State.STOP),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.COMPLETED,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.COMPLETED)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETED)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.ERROR,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.ERROR)
+    //                 .withTransitions(
+    //                     List.of(
+    //                         new Transition<>(RunEvent.DELETING, State.DELETING),
+    //                         new Transition<>(RunEvent.DELETING, State.DELETED)
+    //                     )
+    //                 )
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.DELETING,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.DELETING)
+    //                 .withTransitions(List.of(new Transition<>(RunEvent.DELETING, State.DELETED)))
+    //                 .build()
+    //         )
+    //         .withState(
+    //             State.DELETED,
+    //             new FsmState.Builder<State, RunEvent, RunContext, RunRunnable>(State.DELETED).build()
+    //         )
+    //         .build();
+
+    //     // Return the builder
+
+    //     return builder.build();
+    // }
 }

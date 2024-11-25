@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtimes.events.RunnableChangedEvent;
-import it.smartcommunitylabdhub.runtimes.events.RunnableMonitorObject;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -113,22 +112,7 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
             log.debug("publish run {}", runnable.getId());
 
             // Send message to Serve manager
-            eventPublisher.publishEvent(
-                RunnableChangedEvent
-                    .builder()
-                    .runnable(runnable)
-                    .runMonitorObject(
-                        RunnableMonitorObject
-                            .builder()
-                            .runId(runnable.getId())
-                            .stateId(runnable.getState())
-                            .project(runnable.getProject())
-                            .framework(runnable.getFramework())
-                            .task(runnable.getTask())
-                            .build()
-                    )
-                    .build()
-            );
+            eventPublisher.publishEvent(RunnableChangedEvent.build(runnable, null));
         }
     }
 }

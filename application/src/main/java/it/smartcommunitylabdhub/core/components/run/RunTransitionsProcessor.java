@@ -63,7 +63,7 @@ public class RunTransitionsProcessor implements RunProcessor<RunTransitionsSpec>
             .build();
 
         if (log.isTraceEnabled()) {
-            log.trace("transaction for {}: {}", run.getId(), tr);
+            log.trace("transition for {}: {}", run.getId(), tr);
         }
 
         //avoid duplicated events

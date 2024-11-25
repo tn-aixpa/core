@@ -2,7 +2,7 @@ package it.smartcommunitylabdhub.commons.models.enums;
 
 // Put a couple of example state
 //TODO drop: overused, switch to specific states when needed
-@Deprecated
+// @Deprecated
 public enum State {
     BUILT,
     CANCELLED,

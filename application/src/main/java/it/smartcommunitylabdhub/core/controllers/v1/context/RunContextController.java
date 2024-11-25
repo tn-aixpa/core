@@ -15,7 +15,7 @@ import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.components.run.RunManager;
+import it.smartcommunitylabdhub.core.components.run.RunLifecycleManager;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
@@ -60,7 +60,7 @@ public class RunContextController {
     SearchableRunService runService;
 
     @Autowired
-    RunManager runManager;
+    RunLifecycleManager runManager;
 
     @Autowired
     LogService logService;

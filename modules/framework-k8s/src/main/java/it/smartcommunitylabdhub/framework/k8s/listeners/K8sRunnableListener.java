@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtimes.events.RunnableChangedEvent;
-import it.smartcommunitylabdhub.runtimes.events.RunnableMonitorObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -52,9 +51,11 @@ public abstract class K8sRunnableListener<R extends K8sRunnable> {
             log.trace("runnable {}: {}", clazz.getSimpleName(), runnable);
         }
 
+        String state = runnable.getState();
+
         try {
             runnable =
-                switch (State.valueOf(runnable.getState())) {
+                switch (State.valueOf(state)) {
                     case State.READY -> {
                         //sanity check: reset left-over messages
                         runnable.setMessage(null);
@@ -115,20 +116,7 @@ public abstract class K8sRunnableListener<R extends K8sRunnable> {
                 if (eventPublisher != null) {
                     log.debug("Publish runnable {} {}", clazz.getSimpleName(), runnable.getId());
 
-                    RunnableChangedEvent<RunRunnable> event = RunnableChangedEvent
-                        .builder()
-                        .runnable(runnable)
-                        .runMonitorObject(
-                            RunnableMonitorObject
-                                .builder()
-                                .runId(runnable.getId())
-                                .stateId(runnable.getState())
-                                .project(runnable.getProject())
-                                .framework(runnable.getFramework())
-                                .task(runnable.getTask())
-                                .build()
-                        )
-                        .build();
+                    RunnableChangedEvent<RunRunnable> event = RunnableChangedEvent.build(runnable, state);
 
                     if (log.isTraceEnabled()) {
                         log.trace("runnable {} {} event {}", clazz.getSimpleName(), runnable.getId(), event);
