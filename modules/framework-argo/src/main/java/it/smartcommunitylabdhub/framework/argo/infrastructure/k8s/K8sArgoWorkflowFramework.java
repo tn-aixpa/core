@@ -59,6 +59,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
     private String artifactRepositoryConfigMap;
     private String artifactRepositoryKey;
     private String serviceAccountName;
+    private Integer runAsUser;
 
     private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
         HashMap<String, Serializable>
@@ -82,6 +83,10 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
     @Autowired
     public void setServiceAccountName(@Value("${argoworkflows.serviceaccount}") String serviceAccountName) {
         this.serviceAccountName = serviceAccountName;
+    }
+    @Autowired
+    public void setRunAsUser(@Value("${argoworkflows.user}") Integer runAsUser) {
+        this.runAsUser = runAsUser;
     }
 
     @Override
@@ -346,6 +351,10 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
         if (disableRoot) {
             context.runAsNonRoot(true);
         }
+        if (runAsUser != null && runAsUser != 0) {
+            context.setRunAsUser((long) runAsUser);
+        }
+
 
         return context;
     }
