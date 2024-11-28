@@ -289,7 +289,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
                 }
             }
         }
-        workflow.getSpec().setServiceAccountName(serviceAccountName);
+        // workflow.getSpec().setServiceAccountName(serviceAccountName);
     }
 
     private void appendArtifactRepository(IoArgoprojWorkflowV1alpha1Workflow workflow) {
@@ -329,18 +329,20 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
         container.envFrom(envFrom).env(env).resources(buildResources(runnable));
 
         templateDefaults
-            .automountServiceAccountToken(false)
+            // .automountServiceAccountToken(false)
             .securityContext(buildPodSecurityContext(runnable))
             .container(container);
 
         if (templateDefaults.getExecutor() == null) {
             templateDefaults.setExecutor(new IoArgoprojWorkflowV1alpha1ExecutorConfig());
         }
-        templateDefaults.getExecutor().setServiceAccountName(serviceAccountName);
+        // templateDefaults.getExecutor().setServiceAccountName(serviceAccountName);
 
         if (workflow.getSpec().getTemplates() != null) {
             for (IoArgoprojWorkflowV1alpha1Template template : workflow.getSpec().getTemplates()) {
-                template.automountServiceAccountToken(false).securityContext(templateDefaults.getSecurityContext());
+                template
+                // .automountServiceAccountToken(false)
+                .securityContext(templateDefaults.getSecurityContext());
             }
         }
     }
