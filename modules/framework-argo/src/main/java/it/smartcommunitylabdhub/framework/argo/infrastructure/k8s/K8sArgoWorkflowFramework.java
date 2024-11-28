@@ -277,6 +277,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
     private void sanitize(IoArgoprojWorkflowV1alpha1Workflow workflow) {
         // clean up envFrom from template defaults and templates
         if (workflow.getSpec().getTemplateDefaults() != null) {
+            workflow.getSpec().getTemplateDefaults().setServiceAccountName(serviceAccountName);
             V1Container container = workflow.getSpec().getTemplateDefaults().getContainer();
             if (container != null) {
                 container.setEnvFrom(Collections.emptyList());
@@ -284,12 +285,13 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
         }
         if (workflow.getSpec().getTemplates() != null) {
             for (IoArgoprojWorkflowV1alpha1Template template : workflow.getSpec().getTemplates()) {
+                template.setServiceAccountName(serviceAccountName);
                 if (template.getContainer() != null) {
                     template.getContainer().setEnvFrom(Collections.emptyList());
                 }
             }
         }
-        // workflow.getSpec().setServiceAccountName(serviceAccountName);
+        workflow.getSpec().setServiceAccountName(serviceAccountName);
     }
 
     private void appendArtifactRepository(IoArgoprojWorkflowV1alpha1Workflow workflow) {
