@@ -1,27 +1,9 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.Keys;
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.function.Function;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
-import it.smartcommunitylabdhub.commons.models.task.Task;
-import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
-import it.smartcommunitylabdhub.core.ApplicationKeys;
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
-import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import java.util.List;
+
 import javax.annotation.Nullable;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,6 +25,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.function.Function;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
+import it.smartcommunitylabdhub.commons.models.task.Task;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableTemplateService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
 @ApiVersion("v1")
 @RequestMapping("/-/{project}/functions")
@@ -62,6 +66,10 @@ public class FunctionContextController {
 
     @Autowired
     RelationshipsAwareEntityService<Function> relationshipsService;
+    
+	@Autowired
+	SearchableTemplateService templateService;
+
 
     @Operation(summary = "Create a function in a project context")
     @PostMapping(
@@ -207,4 +215,19 @@ public class FunctionContextController {
 
         return relationshipsService.getRelationships(id);
     }
+
+    @Operation(summary = "List function's templates", description = "Return a list of all function's templates")
+    @GetMapping(path = "/templates", produces = "application/json; charset=UTF-8")
+    public Page<Function> searchTemplates(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @ParameterObject @Valid @Nullable FunctionEntityFilter filter,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+            { @SortDefault(sort = "created", direction = Direction.DESC) }
+        ) Pageable pageable
+    ) {
+    	if(filter == null)
+    		filter = new FunctionEntityFilter();
+    	return templateService.searchFunctions(pageable, filter);
+    }
+    
 }

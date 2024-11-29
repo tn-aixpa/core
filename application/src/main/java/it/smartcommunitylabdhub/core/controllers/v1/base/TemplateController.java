@@ -42,6 +42,8 @@ public class TemplateController {
         @ParameterObject @Valid @Nullable FunctionEntityFilter filter,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "id", direction = Direction.ASC) }) Pageable pageable) {
+    	if(filter == null)
+    		filter = new FunctionEntityFilter();
         return templateService.searchFunctions(pageable, filter);
     }
 
