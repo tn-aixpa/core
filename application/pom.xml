@@ -227,11 +227,6 @@
         </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
-            <artifactId>dh-runtime-nefertem</artifactId>
-            <version>${revision}</version>
-        </dependency>
-        <dependency>
-            <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-dbt</artifactId>
             <version>${revision}</version>
         </dependency>
