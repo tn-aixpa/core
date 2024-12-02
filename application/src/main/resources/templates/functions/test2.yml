@@ -1,3 +1,4 @@
+id: test2-template
 kind: huggingfaceserve
 name: llm_classification
 metadata:

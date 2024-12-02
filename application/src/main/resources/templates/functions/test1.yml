@@ -1,3 +1,4 @@
+id: test1-template
 kind: python
 name: process-measures
 metadata:
