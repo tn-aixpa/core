@@ -4,14 +4,18 @@ import it.smartcommunitylabdhub.authorization.model.ResourceShareEntity;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.authorization.services.ResourceSharingService;
 import it.smartcommunitylabdhub.authorization.services.ShareableAwareEntityService;
+import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.function.Function;
+import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
+import it.smartcommunitylabdhub.commons.models.metadata.MetadataDTO;
 import it.smartcommunitylabdhub.commons.models.model.Model;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
@@ -27,6 +31,7 @@ import it.smartcommunitylabdhub.commons.services.SecretService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.RelationshipEntity;
@@ -34,6 +39,7 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectSe
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.models.specs.project.ProjectSpec;
 import it.smartcommunitylabdhub.core.relationships.EntityRelationshipsService;
+import it.smartcommunitylabdhub.core.utils.RefUtils;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -62,6 +68,9 @@ public class ProjectServiceImpl
         AuthorizableAwareEntityService<Project>,
         ShareableAwareEntityService,
         RelationshipsAwareEntityService<Project> {
+
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     @Autowired
     private EntityService<Project, ProjectEntity> entityService;
@@ -180,12 +189,20 @@ public class ProjectServiceImpl
             ProjectSpec spec = new ProjectSpec();
             spec.configure(project.getSpec());
 
-            //embed
-            spec.setArtifacts(artifacts.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
-            spec.setDataitems(dataItems.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
-            spec.setModels(models.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
-            spec.setFunctions(functions.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
-            spec.setWorkflows(workflows.stream().map(EmbedUtils::embed).collect(Collectors.toList()));
+            //embed + ref
+            spec.setArtifacts(
+                artifacts.stream().map(EmbedUtils::embed).map(this::inlineRef).collect(Collectors.toList())
+            );
+            spec.setDataitems(
+                dataItems.stream().map(EmbedUtils::embed).map(this::inlineRef).collect(Collectors.toList())
+            );
+            spec.setModels(models.stream().map(EmbedUtils::embed).map(this::inlineRef).collect(Collectors.toList()));
+            spec.setFunctions(
+                functions.stream().map(EmbedUtils::embed).map(this::inlineRef).collect(Collectors.toList())
+            );
+            spec.setWorkflows(
+                workflows.stream().map(EmbedUtils::embed).map(this::inlineRef).collect(Collectors.toList())
+            );
 
             project.setSpec(spec.toMap());
 
@@ -627,5 +644,22 @@ public class ProjectServiceImpl
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
         }
+    }
+
+    //TODO add to all services
+    private <T extends BaseDTO & MetadataDTO> T inlineRef(T d) {
+        String applicationUrl = applicationProperties.getEndpoint();
+        String api = applicationProperties.getApi();
+
+        if (applicationUrl != null && api != null) {
+            String ref = RefUtils.getRefPath(d);
+            if (ref != null) {
+                EmbeddableMetadata em = EmbeddableMetadata.from(d.getMetadata());
+                em.setRef(applicationUrl + "/api/" + api + ref);
+                d.setMetadata(MapUtils.mergeMultipleMaps(d.getMetadata(), em.toMap()));
+            }
+        }
+
+        return d;
     }
 }

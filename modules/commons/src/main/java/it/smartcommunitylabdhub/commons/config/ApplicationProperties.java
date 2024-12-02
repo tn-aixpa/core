@@ -15,6 +15,7 @@ public class ApplicationProperties {
     private String description;
     private String version;
     private String level;
+    private String api;
     private List<String> profiles;
 
     // @ConstructorBinding
@@ -24,6 +25,7 @@ public class ApplicationProperties {
         String description,
         String version,
         String level,
+        String api,
         List<String> profiles
     ) {
         this.endpoint = endpoint;
@@ -34,6 +36,8 @@ public class ApplicationProperties {
 
         //level can be automagically extracted from version
         this.level = StringUtils.hasText(level) ? level : inferApiLevel(version);
+
+        this.api = api;
     }
 
     public static String inferApiLevel(String version) {

@@ -17,6 +17,10 @@ public interface EmbeddedFieldAccessor extends Accessor<Serializable> {
         return getEmbedded() != null ? getEmbedded().booleanValue() : false;
     }
 
+    default @Nullable String getRef() {
+        return get("ref");
+    }
+
     static EmbeddedFieldAccessor with(Map<String, Serializable> map) {
         return () -> map;
     }

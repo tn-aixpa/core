@@ -22,12 +22,14 @@ import lombok.Setter;
 public final class EmbeddableMetadata extends BaseSpec implements Metadata {
 
     private Boolean embedded;
+    private String ref;
 
     @Override
     public void configure(Map<String, Serializable> data) {
         EmbeddableMetadata meta = mapper.convertValue(data, EmbeddableMetadata.class);
 
         this.embedded = meta.getEmbedded();
+        this.ref = meta.getRef();
     }
 
     public static EmbeddableMetadata from(Map<String, Serializable> map) {
