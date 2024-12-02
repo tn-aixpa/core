@@ -63,6 +63,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     private List<String> initCommand = null;
 
     private int activeDeadlineSeconds = DEADLINE_SECONDS;
+    private boolean suspend = false;
 
     public K8sJobFramework(ApiClient apiClient) {
         super(apiClient);
@@ -75,6 +76,13 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     ) {
         Assert.isTrue(activeDeadlineSeconds > DEADLINE_MIN, "Minimum deadline seconds is " + DEADLINE_MIN);
         this.activeDeadlineSeconds = activeDeadlineSeconds;
+    }
+
+    @Autowired
+    public void setSuspend(@Value("${kubernetes.jobs.suspend}") Boolean suspend) {
+        if (suspend != null) {
+            this.suspend = suspend.booleanValue();
+        }
     }
 
     @Autowired
@@ -390,6 +398,11 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             .completions(1)
             .backoffLimit(backoffLimit)
             .template(podTemplateSpec);
+
+        //opt-int for suspend==true
+        if (suspend) {
+            jobSpec.suspend(suspend);
+        }
 
         // Create the V1Job object with metadata and JobSpec
         return new V1Job().metadata(metadata).spec(jobSpec);

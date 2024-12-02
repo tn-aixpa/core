@@ -147,6 +147,7 @@ kubernetes:
   templates: ${K8S_TEMPLATES:}
   jobs:
     activeDeadlineSeconds: ${K8S_JOB_DEADLINE:259200}
+    suspend: ${K8S_JOB_SUSPEND:false}
 
 # Application endpoint
 application:
