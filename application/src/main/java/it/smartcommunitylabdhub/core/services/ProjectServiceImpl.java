@@ -324,6 +324,9 @@ public class ProjectServiceImpl
                     log.debug("cascade delete dataItems for project with id {}", String.valueOf(id));
                     dataItemService.deleteDataItemsByProject(project);
 
+                    log.debug("cascade delete models for project with id {}", String.valueOf(id));
+                    modelService.deleteModelsByProject(project);
+
                     log.debug("cascade delete functions for project with id {}", String.valueOf(id));
                     functionService.deleteFunctionsByProject(project);
 
