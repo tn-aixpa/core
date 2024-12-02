@@ -30,9 +30,6 @@ public class KFPWorkflowSpec extends WorkflowBaseSpec {
     @Schema(title = "fields.container.tag.title", description = "fields.container.tag.description")
     private String tag;
 
-    @Schema(title = "fields.sourceCode.handler.title", description = "fields.sourceCode.handler.description")
-    private String handler;
-
     @JsonSchemaIgnore
     private SourceCode<KFPWorkflowCodeLanguages> build;
 
@@ -49,7 +46,6 @@ public class KFPWorkflowSpec extends WorkflowBaseSpec {
         this.source = spec.getSource();
         this.image = spec.getImage();
         this.tag = spec.getTag();
-        this.handler = spec.getHandler();
         this.build = spec.getBuild();
     }
 
