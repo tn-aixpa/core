@@ -8,11 +8,11 @@ import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityAction;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
+import it.smartcommunitylabdhub.core.utils.UUIDKeyGenerator;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -28,6 +28,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.util.Pair;
+import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
@@ -42,6 +43,7 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
     protected final Converter<D, E> entityBuilder;
     protected final Converter<E, D> dtoBuilder;
 
+    private StringKeyGenerator keyGenerator = new UUIDKeyGenerator();
     private ApplicationEventPublisher eventPublisher;
 
     private Map<String, Pair<ReentrantLock, Instant>> locks = new ConcurrentHashMap<>();
@@ -59,6 +61,12 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
         this.repository = repository;
         this.entityBuilder = entityBuilder;
         this.dtoBuilder = dtoBuilder;
+    }
+
+    @Autowired(required = false)
+    public void setKeyGenerator(StringKeyGenerator keyGenerator) {
+        Assert.notNull(keyGenerator, "key generator can not be null");
+        this.keyGenerator = keyGenerator;
     }
 
     @Autowired
@@ -99,7 +107,7 @@ public class BaseEntityServiceImpl<D extends BaseDTO, E extends BaseEntity> impl
         }
 
         //generate id now
-        String id = dto.getId() != null ? dto.getId() : UUID.randomUUID().toString();
+        String id = dto.getId() != null ? dto.getId() : keyGenerator.generateKey();
         dto.setId(id);
 
         try {

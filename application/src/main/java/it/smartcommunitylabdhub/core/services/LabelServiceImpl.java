@@ -6,17 +6,19 @@ import it.smartcommunitylabdhub.commons.services.LabelService;
 import it.smartcommunitylabdhub.core.models.builders.label.LabelDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.LabelEntity;
 import it.smartcommunitylabdhub.core.repositories.LabelRepository;
+import it.smartcommunitylabdhub.core.utils.UUIDKeyGenerator;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 @Service
 @Transactional
@@ -28,6 +30,14 @@ public class LabelServiceImpl implements LabelService {
 
     @Autowired
     private LabelDTOBuilder dtoBuilder;
+
+    private StringKeyGenerator keyGenerator = new UUIDKeyGenerator();
+
+    @Autowired(required = false)
+    public void setKeyGenerator(StringKeyGenerator keyGenerator) {
+        Assert.notNull(keyGenerator, "key generator can not be null");
+        this.keyGenerator = keyGenerator;
+    }
 
     @Override
     public List<Label> findLabelsByProject(String project) {
@@ -119,7 +129,7 @@ public class LabelServiceImpl implements LabelService {
         entity =
             LabelEntity
                 .builder()
-                .id(UUID.randomUUID().toString())
+                .id(keyGenerator.generateKey())
                 .project(project)
                 .label(label.toLowerCase().trim())
                 .build();

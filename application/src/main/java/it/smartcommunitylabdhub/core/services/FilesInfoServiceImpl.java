@@ -9,14 +9,16 @@ import it.smartcommunitylabdhub.core.models.builders.files.FilesInfoDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.files.FilesInfoEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.FilesInfoEntity;
 import it.smartcommunitylabdhub.core.repositories.FilesInfoRepository;
+import it.smartcommunitylabdhub.core.utils.UUIDKeyGenerator;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 @Service
 @Transactional
@@ -34,6 +36,14 @@ public class FilesInfoServiceImpl implements FilesInfoService {
 
     @Autowired
     private FilesInfoRepository repository;
+
+    private StringKeyGenerator keyGenerator = new UUIDKeyGenerator();
+
+    @Autowired(required = false)
+    public void setKeyGenerator(StringKeyGenerator keyGenerator) {
+        Assert.notNull(keyGenerator, "key generator can not be null");
+        this.keyGenerator = keyGenerator;
+    }
 
     @Override
     public FilesInfo getFilesInfo(@NotNull String entityName, @NotNull String entityId)
@@ -58,7 +68,7 @@ public class FilesInfoServiceImpl implements FilesInfoService {
         if (entity != null) {
             dto.setId(entity.getId());
         } else {
-            dto.setId(UUID.randomUUID().toString());
+            dto.setId(keyGenerator.generateKey());
         }
 
         entity = entityBuilder.convert(dto);

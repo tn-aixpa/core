@@ -6,11 +6,13 @@ import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.core.models.entities.RelationshipEntity;
 import it.smartcommunitylabdhub.core.repositories.RelationshipRepository;
+import it.smartcommunitylabdhub.core.utils.UUIDKeyGenerator;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -21,10 +23,17 @@ import org.springframework.util.Assert;
 public class EntityRelationshipsService {
 
     private final RelationshipRepository repository;
+    private StringKeyGenerator keyGenerator = new UUIDKeyGenerator();
 
     public EntityRelationshipsService(RelationshipRepository repository) {
         Assert.notNull(repository, "relationships repository can not be null");
         this.repository = repository;
+    }
+
+    @Autowired(required = false)
+    public void setKeyGenerator(StringKeyGenerator keyGenerator) {
+        Assert.notNull(keyGenerator, "key generator can not be null");
+        this.keyGenerator = keyGenerator;
     }
 
     @Transactional(readOnly = true)
@@ -119,7 +128,7 @@ public class EntityRelationshipsService {
         }
 
         RelationshipEntity entity = new RelationshipEntity();
-        entity.setId(UUID.randomUUID().toString());
+        entity.setId(keyGenerator.generateKey());
         entity.setProject(project);
 
         //rel
