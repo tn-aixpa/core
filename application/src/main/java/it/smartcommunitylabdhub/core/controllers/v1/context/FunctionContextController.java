@@ -216,18 +216,4 @@ public class FunctionContextController {
         return relationshipsService.getRelationships(id);
     }
 
-    @Operation(summary = "List function's templates", description = "Return a list of all function's templates")
-    @GetMapping(path = "/templates", produces = "application/json; charset=UTF-8")
-    public Page<Function> searchTemplates(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @Valid @Nullable FunctionEntityFilter filter,
-        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
-            { @SortDefault(sort = "created", direction = Direction.DESC) }
-        ) Pageable pageable
-    ) {
-    	if(filter == null)
-    		filter = new FunctionEntityFilter();
-    	return templateService.searchFunctions(pageable, filter);
-    }
-    
 }

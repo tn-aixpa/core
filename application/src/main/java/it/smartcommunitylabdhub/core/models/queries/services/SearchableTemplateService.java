@@ -4,9 +4,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.function.Function;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
-import jakarta.annotation.Nullable;
+import it.smartcommunitylabdhub.commons.models.template.Template;
+import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.TemplateFilter;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 /*
  * Searchable service for managing function
@@ -18,7 +19,10 @@ public interface SearchableTemplateService {
      * @param filter
      * @return
      */
-    Page<Function> searchFunctions(Pageable pageable, @Nullable FunctionEntityFilter filter)
+    Page<Template> searchTemplates(Pageable pageable,  @NotNull String type, @Valid TemplateFilter filter)
         throws SystemException;
+    
+    Template getTemplate(@NotNull String type, @NotNull String id)
+            throws SystemException;
 
 }

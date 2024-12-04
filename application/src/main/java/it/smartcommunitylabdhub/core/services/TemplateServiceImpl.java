@@ -22,10 +22,10 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-import it.smartcommunitylabdhub.commons.models.function.Function;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.FunctionEntityFilter;
+import it.smartcommunitylabdhub.commons.models.template.Template;
+import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.TemplateFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTemplateService;
+import jakarta.validation.constraints.NotNull;
 
 @Service
 public class TemplateServiceImpl implements SearchableTemplateService {
@@ -37,23 +37,23 @@ public class TemplateServiceImpl implements SearchableTemplateService {
 	
 	ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 	
-	LoadingCache<String, List<Function>> functionCache = CacheBuilder.newBuilder()
+	LoadingCache<String, List<Template>> templateCache = CacheBuilder.newBuilder()
 			.expireAfterWrite(60, TimeUnit.MINUTES)
-			.build(new CacheLoader<String, List<Function>>() {
+			.build(new CacheLoader<String, List<Template>>() {
 				@Override
-				public List<Function> load(String key) throws Exception {
-					List<Function> result = new ArrayList<>();
-					Resource[] resources = resourceResolver.getResources("classpath:templates/functions/*.yml");
+				public List<Template> load(String key) throws Exception {
+					List<Template> result = new ArrayList<>();
+					Resource[] resources = resourceResolver.getResources("classpath:templates/" + key + "/*.yml");
 					for(Resource resource : resources) {
-						Function function = mapper.readValue(resource.getFile(), Function.class);
-						result.add(function);
+						Template template = mapper.readValue(resource.getFile(), Template.class);
+						result.add(template);
 					}
 					return result;
 				}
 			});
 	
-	private List<Function> filterFunction(Pageable pageable, FunctionEntityFilter filter) throws Exception {
-		List<Function> list = functionCache.get(EntityName.FUNCTION.getValue());
+	private List<Template> filterTemplate(Pageable pageable, String type, TemplateFilter filter) throws Exception {
+		List<Template> list = templateCache.get(type);
 		return list.stream().filter(f -> {
 			boolean isOk = true;
 			if(StringUtils.hasLength(filter.getName())) {
@@ -74,18 +74,32 @@ public class TemplateServiceImpl implements SearchableTemplateService {
 		}).collect(Collectors.toList());
 	}
 	
+	private Template filterTemplate(String type, String id) throws Exception {
+		List<Template> list = templateCache.get(type);
+		return list.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
+	}
+
 	@Override
-	public Page<Function> searchFunctions(Pageable pageable, FunctionEntityFilter filter)
+	public Page<Template> searchTemplates(Pageable pageable, @NotNull String type, TemplateFilter filter)
 			throws SystemException {
 		 try {
-			 List<Function> list = filterFunction(pageable, filter);
+			 List<Template> list = filterTemplate(pageable, type, filter);
 			 int start = (int) pageable.getOffset();
 			 int end = Math.min((start + pageable.getPageSize()), list.size());
-			 List<Function> pageContent  = list.subList(start, end);
+			 List<Template> pageContent  = list.subList(start, end);
 			 return new PageImpl<>(pageContent, pageable, list.size());
 		} catch (Exception e) {
 			throw new SystemException("error retriving templates:" + e.getMessage(), e);
-		}
+		}	
+	}
+
+	@Override
+	public Template getTemplate(@NotNull String type, @NotNull String id) throws SystemException {
+		 try {
+			 return filterTemplate(type, id);
+		} catch (Exception e) {
+			throw new SystemException("error retriving templates:" + e.getMessage(), e);
+		}	
 	}
 
 }

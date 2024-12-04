@@ -1,6 +1,7 @@
 id: test2-template
 kind: huggingfaceserve
 name: llm_classification
+type: function
 metadata:
   name: llm_classification
   embedded: false

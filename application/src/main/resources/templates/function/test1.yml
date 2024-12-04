@@ -1,6 +1,7 @@
 id: test1-template
 kind: python
 name: process-measures
+type: function
 metadata:
   name: process-measures
   embedded: false
