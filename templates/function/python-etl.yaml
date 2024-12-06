@@ -1,0 +1,17 @@
+name: python-etl
+kind: python
+metadata:
+  description: A simple ETL procedure in Python that downloads a csv file and then
+    returns the result as a dataframe that is stored in the project repository
+    as table.
+  version: 8ee36148df634014adf6ab64039477fd
+  labels:
+    - python
+    - etl
+spec:
+  python_version: PYTHON3_10
+  source:
+    source: etl.py
+    handler: download_and_process
+    base64: aW1wb3J0IHBhbmRhcyBhcyBwZApmcm9tIGRpZ2l0YWxodWJfcnVudGltZV9weXRob24gaW1wb3J0IGhhbmRsZXIKClVSTD0iaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2RhdGFzZXRzL3dvcmxkLWNpdGllcy9yZWZzL2hlYWRzL21haW4vZGF0YS93b3JsZC1jaXRpZXMuY3N2IgoKQGhhbmRsZXIob3V0cHV0cz1bIndvcmxkLWNpdGllcyJdKQpkZWYgZG93bmxvYWRfYW5kX3Byb2Nlc3MoKToKICAgIGRmID0gcGQucmVhZF9jc3YoVVJMKQogICAgZGYucmVzZXRfaW5kZXgoaW5wbGFjZT1UcnVlKQogICAgcmV0dXJuIGRm
+    lang: python

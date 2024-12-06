@@ -1,0 +1,15 @@
+name: llm-serving
+kind: huggingfaceserve
+metadata:
+  description: Expose OpenAI - compatible API based on a model from HugginFace.
+    The model should be one of the models/derivatives supported by vLLM or
+    compatible with the Huggingface transformer library. The examples deploys
+    Qwen/Qwen2.5-0.5B model as an example. 
+  version: 2184afc12d9e40e593da77c16ddaf969
+  labels:
+    - openai
+    - huggingface
+    - llm
+spec:
+  model_name: model
+  path: huggingface://Qwen/Qwen2.5-0.5B

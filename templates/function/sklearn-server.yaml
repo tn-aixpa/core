@@ -1,0 +1,14 @@
+name: sklearn-server
+kind: sklearnserve
+metadata:
+  description: "A Open Inference-compatible API exposing a trained scikit-learn ML
+    model. The model should already exist and is expected to be found in the
+    project with the specified key. " 
+  version: 83cb0f2727204b99905f22c7167369de
+  labels:
+    - scikit-learn
+    - service
+    - open inference
+spec:
+  model_name: model
+  path: store://test1/model/sklearn/cancer_classifier

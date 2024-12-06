@@ -1,0 +1,16 @@
+name: dbt-transform
+kind: dbt
+metadata:
+  description: 'A simple DBT transformation operation example that converts the
+    input file (employee table dataitem) to another table using a SQL-based
+    transformation.  Run it with e.g. inputs={"employees": di.key},
+    and  outputs={"output_table": "department-60"})' 
+  version: 91da740dccfc42ee8acf82c1f9165439
+  labels:
+    - dbt
+    - etl
+spec:
+  source:
+    base64: V0lUSCB0YWIgQVMgKAogICAgU0VMRUNUICAqCiAgICBGUk9NICAgIHt7IHJlZignZW1wbG95ZWVzJykgfX0KKQpTRUxFQ1QgICoKRlJPTSAgICB0YWIKV0hFUkUgICB0YWIuIkRFUEFSVE1FTlRfSUQiID0gJzYwJwo=
+    lang: sql
+

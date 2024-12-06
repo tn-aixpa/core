@@ -1,0 +1,18 @@
+name: echoservice
+kind: python
+metadata:
+  description: A simple python-based API responding to a POST message with the
+    "text" field. The function exposes an API using "serve" task.  
+  version: 5cdc18d933df4efb9d157f0c460db724
+  labels:
+    - python
+    - api
+spec:
+  python_version: PYTHON3_10
+  source:
+    source: src/serve.py
+    handler: serve
+    base64: aW1wb3J0IGpzb24KCmRlZiBpbml0KGNvbnRleHQpOgogICAgcHJpbnQoInNvbWUgaW5pdGlhbGl6YXRpb24gZnVuY3Rpb24iKQogICAgc2V0YXR0cihjb250ZXh0LCAidmFsdWUiLCAic29tZSB2YWx1ZSIpCgpkZWYgc2VydmUoY29udGV4dCwgZXZlbnQpOgoKICAgIGlmIGlzaW5zdGFuY2UoZXZlbnQuYm9keSwgYnl0ZXMpOgogICAgICAgIGJvZHkgPSBqc29uLmxvYWRzKGV2ZW50LmJvZHkpCiAgICBlbHNlOgogICAgICAgIGJvZHkgPSBldmVudC5ib2R5CiAgICBjb250ZXh0LmxvZ2dlci5pbmZvKGYiUmVjZWl2ZWQgZXZlbnQ6IHtib2R5fSIpCiAgICB0ZXh0ID0gYm9keVsidGV4dCJdCgogICAgcmV0dXJuIHsicmVzdWx0IjogZiJoZWxsbyB7dGV4dH0gZnJvbSAne2NvbnRleHQudmFsdWV9JyJ9
+    lang: python
+    init_function: init
+

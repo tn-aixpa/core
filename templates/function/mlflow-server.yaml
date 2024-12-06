@@ -1,0 +1,14 @@
+name: mlflow-server
+kind: mlflowserve
+metadata:
+  name: mlflow-server
+  description: An Open Inference-compatible API that exposes trained ML Model in
+    the MLFlow format. The model is specified as a reference to the Model entity
+    already present in the project.
+  version: 12a6081daaf640f792ea726786ad255f
+  labels:
+    - open inference
+    - mlflow
+spec:
+  model_name: model
+  path: store://test1/model/mlflow/model-mlflow
