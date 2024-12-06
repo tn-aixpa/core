@@ -1,0 +1,13 @@
+kind: python
+metadata:
+  name: hello-world
+  description: "Hello world with python: write a string to stdout"  
+  version: 3d64037407ee4c95989a205bb4674cad
+  labels: []
+name: hello-world
+spec:
+  python_version: PYTHON3_10
+  source:
+    lang: python
+    handler: main
+    base64: ZGVmIG1haW4oKToKICAgIHByaW50KCItLS0gSGVsbG8gd29ybGQgLS0tIikK

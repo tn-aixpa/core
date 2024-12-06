@@ -205,7 +205,7 @@
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-base</artifactId>
             <version>${revision}</version>
-        </dependency>        
+        </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-framework-k8s</artifactId>
@@ -309,6 +309,27 @@
                                 <java.version>${java.version}</java.version>
                                 <description>${project.description}</description>
                             </additionalProperties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>templates package</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/templates</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../templates</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
