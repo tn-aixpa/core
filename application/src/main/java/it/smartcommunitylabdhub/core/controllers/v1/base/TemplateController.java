@@ -36,6 +36,18 @@ public class TemplateController {
     @Autowired
     SearchableTemplateService templateService;
 
+    @Operation(summary = "List templates", description = "Return a list of all templates")
+    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
+    public Page<Template> listTemplates(
+        @ParameterObject @Valid @Nullable TemplateFilter filter,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+            { @SortDefault(sort = "id", direction = Direction.ASC) }
+        ) Pageable pageable
+    ) {
+        if (filter == null) filter = new TemplateFilter();
+        return templateService.searchTemplates(pageable, filter);
+    }
+
     @Operation(summary = "List entity's templates", description = "Return a list of all entity's templates")
     @GetMapping(path = "/{entity}", produces = "application/json; charset=UTF-8")
     public Page<Template> getTemplates(

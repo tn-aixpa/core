@@ -27,6 +27,11 @@ public class TemplateFilter {
 
     @Nullable
     @Pattern(regexp = Keys.SLUG_PATTERN)
+    @Schema(example = "type", defaultValue = "", description = "Type identifier")
+    protected String type;
+
+    @Nullable
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     @Schema(example = "function", defaultValue = "", description = "Kind identifier")
     protected String kind;
 }

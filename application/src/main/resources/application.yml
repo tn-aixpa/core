@@ -240,3 +240,8 @@ jwt:
   client-id: ${JWT_CLIENT_ID:${security.basic.username}}
   client-secret: ${JWT_CLIENT_SECRET:${security.basic.password}}
   cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}      
+
+
+# Templates
+templates:
+  path: ${TEMPLATES_PATH:classpath:/templates}

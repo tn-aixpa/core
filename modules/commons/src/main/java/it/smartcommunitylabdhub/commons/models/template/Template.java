@@ -40,12 +40,6 @@ public class Template implements BaseDTO, MetadataDTO, SpecDTO {
     @Pattern(regexp = Keys.SLUG_PATTERN)
     private String kind;
 
-    @NotNull
-    @Pattern(regexp = Keys.SLUG_PATTERN)
-    private String project;
-
-    private String user;
-
     private String type;
 
     @Builder.Default
@@ -66,5 +60,15 @@ public class Template implements BaseDTO, MetadataDTO, SpecDTO {
             sb.append(Keys.ID_DIVIDER).append(getId());
         }
         return sb.toString();
+    }
+
+    @Override
+    public String getProject() {
+        return null;
+    }
+
+    @Override
+    public String getUser() {
+        return null;
     }
 }

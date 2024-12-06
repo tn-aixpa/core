@@ -12,12 +12,8 @@ import org.springframework.data.domain.Pageable;
  * Searchable service for managing function
  */
 public interface SearchableTemplateService {
-    /**
-     * List all functions, with optional filters
-     * @param pageable
-     * @param filter
-     * @return
-     */
+    Page<Template> searchTemplates(Pageable pageable, @Valid TemplateFilter filter) throws SystemException;
+
     Page<Template> searchTemplates(Pageable pageable, @NotNull String type, @Valid TemplateFilter filter)
         throws SystemException;
 
