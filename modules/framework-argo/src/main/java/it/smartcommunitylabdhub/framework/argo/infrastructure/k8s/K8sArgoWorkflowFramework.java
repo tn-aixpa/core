@@ -36,6 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,6 +85,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
     public void setServiceAccountName(@Value("${argoworkflows.serviceaccount}") String serviceAccountName) {
         this.serviceAccountName = serviceAccountName;
     }
+
     @Autowired
     public void setRunAsUser(@Value("${argoworkflows.user}") Integer runAsUser) {
         this.runAsUser = runAsUser;
@@ -248,16 +250,23 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
     }
 
     private void populateInputs(K8sArgoWorkflowRunnable runnable, IoArgoprojWorkflowV1alpha1Workflow workflow) {
-        if (runnable.getParameters() != null) {
+        //set parameters in workflow if defined in runnable
+        if (runnable.getParameters() != null && workflow.getSpec() != null) {
+            //args must be set to set parameters
+            IoArgoprojWorkflowV1alpha1Arguments arguments = Optional
+                .ofNullable(workflow.getSpec().getArguments())
+                .orElse(new IoArgoprojWorkflowV1alpha1Arguments());
+
             if (workflow.getSpec().getArguments() == null) {
                 workflow.getSpec().setArguments(new IoArgoprojWorkflowV1alpha1Arguments());
             }
-            final Map<String, IoArgoprojWorkflowV1alpha1Parameter> parameters = workflow
-                .getSpec()
-                .getArguments()
-                .getParameters()
-                .stream()
-                .collect(Collectors.toMap(p -> p.getName(), p -> p));
+
+            //collect current params, if preset
+            Map<String, IoArgoprojWorkflowV1alpha1Parameter> parameters = Optional
+                .ofNullable(arguments.getParameters())
+                .map(params -> params.stream().collect(Collectors.toMap(p -> p.getName(), p -> p)))
+                .orElse(Collections.emptyMap());
+
             runnable
                 .getParameters()
                 .entrySet()
@@ -267,30 +276,62 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
                     if (p == null) {
                         p = new IoArgoprojWorkflowV1alpha1Parameter();
                         p.setName(e.getKey());
-                        workflow.getSpec().getArguments().addParametersItem(p);
+
+                        arguments.addParametersItem(p);
+                        p.setValue(e.getValue() != null ? e.getValue().toString() : null);
+                    } else {
+                        p.setValue(e.getValue() != null ? e.getValue().toString() : null);
                     }
-                    p.setValue(e.getValue() != null ? e.getValue().toString() : null);
                 });
+
+            //update args in workflow
+            workflow.getSpec().setArguments(arguments);
         }
     }
 
     private void sanitize(IoArgoprojWorkflowV1alpha1Workflow workflow) {
         // clean up envFrom from template defaults and templates
-        if (workflow.getSpec().getTemplateDefaults() != null) {
-            workflow.getSpec().getTemplateDefaults().setServiceAccountName(serviceAccountName);
-            V1Container container = workflow.getSpec().getTemplateDefaults().getContainer();
-            if (container != null) {
-                container.setEnvFrom(Collections.emptyList());
-            }
-        }
-        if (workflow.getSpec().getTemplates() != null) {
-            for (IoArgoprojWorkflowV1alpha1Template template : workflow.getSpec().getTemplates()) {
-                template.setServiceAccountName(serviceAccountName);
-                if (template.getContainer() != null) {
-                    template.getContainer().setEnvFrom(Collections.emptyList());
-                }
-            }
-        }
+        // if (workflow.getSpec().getTemplateDefaults() != null) {
+        //     workflow.getSpec().getTemplateDefaults().setServiceAccountName(serviceAccountName);
+        //     V1Container container = workflow.getSpec().getTemplateDefaults().getContainer();
+        //     if (container != null) {
+        //         container.setEnvFrom(Collections.emptyList());
+        //     }
+        // }
+        // if (workflow.getSpec().getTemplates() != null) {
+        //     for (IoArgoprojWorkflowV1alpha1Template template : workflow.getSpec().getTemplates()) {
+        //         template.setServiceAccountName(serviceAccountName);
+        //         if (template.getContainer() != null) {
+        //             template.getContainer().setEnvFrom(Collections.emptyList());
+        //         }
+        //     }
+        // }
+
+        Optional
+            .ofNullable(workflow.getSpec().getTemplateDefaults())
+            .ifPresent(templateDefaults -> {
+                templateDefaults.setServiceAccountName(serviceAccountName);
+
+                Optional
+                    .ofNullable(templateDefaults.getContainer())
+                    .ifPresent(container -> {
+                        container.setEnvFrom(Collections.emptyList());
+                    });
+            });
+
+        Optional
+            .ofNullable(workflow.getSpec().getTemplates())
+            .ifPresent(templates -> {
+                templates.forEach(template -> {
+                    template.setServiceAccountName(serviceAccountName);
+                    Optional
+                        .ofNullable(template.getContainer())
+                        .ifPresent(container -> {
+                            container.setEnvFrom(Collections.emptyList());
+                        });
+                });
+            });
+
         workflow.getSpec().setServiceAccountName(serviceAccountName);
     }
 
@@ -330,9 +371,11 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
 
         container.envFrom(envFrom).env(env).resources(buildResources(runnable));
 
+        V1PodSecurityContext securityContext = buildPodSecurityContext(runnable);
+
         templateDefaults
             // .automountServiceAccountToken(false)
-            .securityContext(buildPodSecurityContext(runnable))
+            .securityContext(securityContext)
             .container(container);
 
         if (templateDefaults.getExecutor() == null) {
@@ -340,13 +383,14 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
         }
         // templateDefaults.getExecutor().setServiceAccountName(serviceAccountName);
 
-        if (workflow.getSpec().getTemplates() != null) {
-            for (IoArgoprojWorkflowV1alpha1Template template : workflow.getSpec().getTemplates()) {
-                template
-                // .automountServiceAccountToken(false)
-                .securityContext(templateDefaults.getSecurityContext());
-            }
-        }
+        Optional
+            .ofNullable(workflow.getSpec().getTemplates())
+            .ifPresent(templates -> {
+                templates.forEach(template -> {
+                    template.securityContext(securityContext);
+                    // .automountServiceAccountToken(false)
+                });
+            });
     }
 
     public V1PodSecurityContext buildPodSecurityContext(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
@@ -358,7 +402,6 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
         if (runAsUser != null && runAsUser != 0) {
             context.setRunAsUser((long) runAsUser);
         }
-
 
         return context;
     }
