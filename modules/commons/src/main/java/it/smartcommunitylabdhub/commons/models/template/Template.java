@@ -1,26 +1,23 @@
 package it.smartcommunitylabdhub.commons.models.template;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.lang.Nullable;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.metadata.MetadataDTO;
 import it.smartcommunitylabdhub.commons.models.specs.SpecDTO;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.lang.Nullable;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,7 +26,7 @@ import lombok.ToString;
 @Builder
 @ToString
 @JsonPropertyOrder(alphabetic = true)
-public class Template implements  BaseDTO, MetadataDTO, SpecDTO  {
+public class Template implements BaseDTO, MetadataDTO, SpecDTO {
 
     @Nullable
     @Pattern(regexp = Keys.SLUG_PATTERN)
@@ -48,7 +45,7 @@ public class Template implements  BaseDTO, MetadataDTO, SpecDTO  {
     private String project;
 
     private String user;
-    
+
     private String type;
 
     @Builder.Default
@@ -57,7 +54,7 @@ public class Template implements  BaseDTO, MetadataDTO, SpecDTO  {
     @Builder.Default
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Map<String, Serializable> spec = new HashMap<>();
-    
+
     @Override
     public String getKey() {
         StringBuilder sb = new StringBuilder();

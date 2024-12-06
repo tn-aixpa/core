@@ -16,7 +16,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @Valid
 public class TemplateFilter {
-	@Nullable
+
+    @Nullable
     protected String q;
 
     @Nullable
