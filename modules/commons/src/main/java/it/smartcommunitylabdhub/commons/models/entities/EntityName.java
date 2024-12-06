@@ -7,7 +7,6 @@ import org.springframework.util.Assert;
 @Getter
 @ToString
 public enum EntityName {
-    NONE("none"),
     PROJECT("project"),
     WORKFLOW("workflow"),
     FUNCTION("function"),
