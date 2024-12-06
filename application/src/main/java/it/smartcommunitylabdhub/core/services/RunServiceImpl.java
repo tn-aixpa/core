@@ -15,12 +15,14 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.task.Task;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.KeyUtils;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
@@ -308,6 +310,14 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
             } else {
                 //spec is sealed, enforce
                 dto.setSpec(current.getSpec());
+            }
+
+            //state is modifiable *only* for local runs
+            RunSpecAccessor specAccessor = RunSpecAccessor.with(current.getSpec());
+            if (!specAccessor.isLocalExecution()) {
+                //keep base status from current
+                RunBaseStatus bs = RunBaseStatus.with(current.getSpec());
+                dto.setStatus(MapUtils.mergeMultipleMaps(dto.getStatus(), bs.toMap()));
             }
 
             //TODO: implement logic to update status only in some states
