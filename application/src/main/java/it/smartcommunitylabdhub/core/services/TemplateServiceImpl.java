@@ -68,7 +68,7 @@ public class TemplateServiceImpl implements SearchableTemplateService, Initializ
             new CacheLoader<String, List<Template>>() {
                 @Override
                 public List<Template> load(String key) throws Exception {
-                    log.debug("reload templates for {} from {}", key);
+                    log.debug("reload templates for {} from {}", key, templatesPath);
                     return readTemplates(templatesPath, key);
                 }
             }

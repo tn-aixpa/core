@@ -4,6 +4,7 @@ COPY application /tmp/application
 COPY frontend /tmp/frontend
 COPY modules /tmp/modules
 COPY pom.xml /tmp/pom.xml
+COPY templates /tmp/templates
 WORKDIR /tmp
 RUN --mount=type=cache,target=/root/.m2,source=/cache/.m2,from=ghcr.io/scc-digitalhub/digitalhub-core:cache \ 
     mvn -Drevision=${VER} install -pl modules/commons
