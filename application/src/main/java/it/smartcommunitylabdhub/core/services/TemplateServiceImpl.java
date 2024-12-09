@@ -100,7 +100,7 @@ public class TemplateServiceImpl implements SearchableTemplateService, Initializ
             for (Resource resource : resources) {
                 try {
                     //read via mapper
-                    Template template = mapper.readValue(resource.getFile(), Template.class);
+                    Template template = mapper.readValue(resource.getInputStream(), Template.class);
                     // force inject type
                     template.setType(key);
                     //generate id if missing
