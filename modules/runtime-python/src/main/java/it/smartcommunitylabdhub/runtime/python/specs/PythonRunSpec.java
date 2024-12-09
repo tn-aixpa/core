@@ -36,7 +36,8 @@ public class PythonRunSpec extends RunBaseSpec {
 
     private Map<String, String> inputs = new HashMap<>();
 
-    private Map<String, String> outputs = new HashMap<>();
+    //DISABLED: currently not supported by sdk
+    // private Map<String, String> outputs = new HashMap<>();
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
@@ -56,7 +57,7 @@ public class PythonRunSpec extends RunBaseSpec {
         this.taskBuildSpec = spec.getTaskBuildSpec();
 
         this.inputs = spec.getInputs();
-        this.outputs = spec.getOutputs();
+        // this.outputs = spec.getOutputs();
         this.parameters = spec.getParameters();
     }
 
