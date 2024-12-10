@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.container.specs;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sFunctionTaskBaseSpec;
@@ -22,8 +23,17 @@ public class ContainerDeployTaskSpec extends K8sFunctionTaskBaseSpec {
     @Min(1)
     private Integer replicas;
 
+    @JsonProperty("fs_group")
     @Min(1)
     private Integer fsGroup;
+
+    @JsonProperty("run_as_user")
+    @Min(1)
+    private Integer runAsUser;
+
+    @JsonProperty("run_as_group")
+    @Min(1)
+    private Integer runAsGroup;
 
     public ContainerDeployTaskSpec(Map<String, Serializable> data) {
         configure(data);
@@ -35,5 +45,8 @@ public class ContainerDeployTaskSpec extends K8sFunctionTaskBaseSpec {
 
         ContainerDeployTaskSpec spec = mapper.convertValue(data, ContainerDeployTaskSpec.class);
         this.replicas = spec.getReplicas();
+        this.fsGroup = spec.getFsGroup();
+        this.runAsGroup = spec.getRunAsUser();
+        this.runAsGroup = spec.getRunAsGroup();
     }
 }

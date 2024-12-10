@@ -35,6 +35,14 @@ public class ContainerJobTaskSpec extends K8sFunctionTaskBaseSpec {
     @Min(1)
     private Integer fsGroup;
 
+    @JsonProperty("run_as_user")
+    @Min(1)
+    private Integer runAsUser;
+
+    @JsonProperty("run_as_group")
+    @Min(1)
+    private Integer runAsGroup;
+
     public ContainerJobTaskSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -47,5 +55,7 @@ public class ContainerJobTaskSpec extends K8sFunctionTaskBaseSpec {
         this.backoffLimit = spec.getBackoffLimit();
         this.schedule = spec.getSchedule();
         this.fsGroup = spec.getFsGroup();
+        this.runAsGroup = spec.getRunAsUser();
+        this.runAsGroup = spec.getRunAsGroup();
     }
 }

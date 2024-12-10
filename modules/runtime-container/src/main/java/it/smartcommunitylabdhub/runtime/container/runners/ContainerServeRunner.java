@@ -111,6 +111,8 @@ public class ContainerServeRunner {
             .template(taskSpec.getProfile())
             //securityContext
             .fsGroup(taskSpec.getFsGroup())
+            .runAsGroup(taskSpec.getRunAsGroup())
+            .runAsUser(taskSpec.getRunAsUser())
             //specific
             .contextRefs(contextRefs)
             .contextSources(contextSources)
