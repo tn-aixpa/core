@@ -48,7 +48,6 @@ public class RunEntityBuilder implements Converter<Run, RunEntity> {
             .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
             .spec(converter.convertToDatabaseColumn(dto.getSpec()))
             .status(converter.convertToDatabaseColumn(dto.getStatus()))
-            .extra(converter.convertToDatabaseColumn(dto.getExtra()))
             //extract task
             .task(runSpec.getTask())
             .state(

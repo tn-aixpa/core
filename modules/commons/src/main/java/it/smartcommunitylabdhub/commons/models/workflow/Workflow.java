@@ -1,8 +1,5 @@
 package it.smartcommunitylabdhub.commons.models.workflow;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import it.smartcommunitylabdhub.commons.Keys;
@@ -57,23 +54,6 @@ public class Workflow implements Executable {
 
     @Builder.Default
     private Map<String, Serializable> status = new HashMap<>();
-
-    @Builder.Default
-    @JsonIgnore
-    @ToString.Exclude
-    private Map<String, Serializable> extra = new HashMap<>();
-
-    @JsonAnyGetter
-    public Map<String, Serializable> getExtra() {
-        return this.extra;
-    }
-
-    @JsonAnySetter
-    public void setExtra(String key, Serializable value) {
-        if (value != null) {
-            extra.put(key, value);
-        }
-    }
 
     @Override
     public String getKey() {

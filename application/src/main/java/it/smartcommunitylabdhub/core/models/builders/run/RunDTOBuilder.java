@@ -57,7 +57,6 @@ public class RunDTOBuilder implements Converter<RunEntity, Run> {
             .user(entity.getCreatedBy())
             .metadata(metadata)
             .spec(converter.convertToEntityAttribute(entity.getSpec()))
-            .extra(converter.convertToEntityAttribute(entity.getExtra()))
             .status(
                 MapUtils.mergeMultipleMaps(
                     converter.convertToEntityAttribute(entity.getStatus()),

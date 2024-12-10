@@ -1,8 +1,5 @@
 package it.smartcommunitylabdhub.commons.models.project;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import it.smartcommunitylabdhub.commons.Keys;
@@ -54,23 +51,6 @@ public class Project implements BaseDTO, MetadataDTO, SpecDTO, StatusDTO {
 
     @Builder.Default
     private Map<String, Serializable> metadata = new HashMap<>();
-
-    @Builder.Default
-    @JsonIgnore
-    @ToString.Exclude
-    private Map<String, Serializable> extra = new HashMap<>();
-
-    @JsonAnyGetter
-    public Map<String, Serializable> getExtra() {
-        return this.extra;
-    }
-
-    @JsonAnySetter
-    public void setExtra(String key, Serializable value) {
-        if (value != null) {
-            extra.put(key, value);
-        }
-    }
 
     @Override
     public String getProject() {

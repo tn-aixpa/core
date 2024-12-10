@@ -32,10 +32,6 @@ public class RunEntity extends AbstractEntity implements SpecEntity, StatusEntit
 
     @Lob
     @ToString.Exclude
-    private byte[] extra;
-
-    @Lob
-    @ToString.Exclude
     protected byte[] spec;
 
     @Lob

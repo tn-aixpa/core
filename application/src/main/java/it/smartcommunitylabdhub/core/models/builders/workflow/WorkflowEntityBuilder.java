@@ -46,7 +46,6 @@ public class WorkflowEntityBuilder implements Converter<Workflow, WorkflowEntity
             .metadata(converter.convertToDatabaseColumn(dto.getMetadata()))
             .spec(converter.convertToDatabaseColumn(dto.getSpec()))
             .status(converter.convertToDatabaseColumn(dto.getStatus()))
-            .extra(converter.convertToDatabaseColumn(dto.getExtra()))
             .state(
                 // Store status if not present
                 statusFieldAccessor.getState() == null ? State.CREATED : State.valueOf(statusFieldAccessor.getState())

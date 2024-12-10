@@ -27,10 +27,6 @@ public class WorkflowEntity extends AbstractEntity {
     @Column(nullable = false)
     private String name;
 
-    @Lob
-    @ToString.Exclude
-    private byte[] extra;
-
     private Boolean embedded;
 
     @Lob

@@ -62,10 +62,6 @@ public class ProjectEntity implements BaseEntity, SpecEntity, StatusEntity {
 
     @Lob
     @ToString.Exclude
-    private byte[] extra;
-
-    @Lob
-    @ToString.Exclude
     private byte[] status;
 
     @CreatedDate
