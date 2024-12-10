@@ -36,8 +36,10 @@ public class K8sWorkflowTaskBaseSpec extends WorkflowTaskBaseSpec {
 
     private List<CoreToleration> tolerations;
 
+    @JsonProperty("runtime_class")
     private String runtimeClass;
 
+    @JsonProperty("priority_class")
     private String priorityClass;
 
     private String profile;

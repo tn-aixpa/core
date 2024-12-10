@@ -31,6 +31,7 @@ public class ContainerJobTaskSpec extends K8sFunctionTaskBaseSpec {
     @Pattern(regexp = Keys.CRONTAB_PATTERN)
     private String schedule;
 
+    @JsonProperty("fs_group")
     @Min(1)
     private Integer fsGroup;
 
