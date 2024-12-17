@@ -5,8 +5,8 @@ import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
+import java.sql.Types;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -56,7 +57,7 @@ public abstract class AbstractEntity implements BaseEntity {
     @Column(name = "updated_by")
     protected String updatedBy;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
     protected byte[] metadata;
 

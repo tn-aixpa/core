@@ -3,8 +3,8 @@ package it.smartcommunitylabdhub.authorization.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
+import java.sql.Types;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @Builder
 @Getter
@@ -26,7 +27,7 @@ public class RefreshTokenEntity {
     @Id
     private String id;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARCHAR)
     @Column(columnDefinition = "text")
     private String token;
 

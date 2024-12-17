@@ -11,10 +11,10 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import java.sql.Types;
 import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -52,15 +53,15 @@ public class ProjectEntity implements BaseEntity, SpecEntity, StatusEntity {
 
     private String source;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
     private byte[] metadata;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
     private byte[] spec;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
     private byte[] status;
 

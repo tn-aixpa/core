@@ -4,15 +4,16 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.io.Serializable;
+import java.sql.Types;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,7 +38,7 @@ public class FilesInfoEntity implements Serializable {
     @Column(nullable = false)
     private String entityId;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
     private byte[] files;
 }

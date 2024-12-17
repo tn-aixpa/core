@@ -3,16 +3,17 @@ package it.smartcommunitylabdhub.core.models.entities;
 import it.smartcommunitylabdhub.core.models.base.SpecEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
+import java.sql.Types;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,7 +37,7 @@ public class TaskEntity extends AbstractEntity implements SpecEntity {
     @Column(nullable = true)
     private String workflow;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
     protected byte[] spec;
 

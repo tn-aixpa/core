@@ -7,15 +7,16 @@ import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttribut
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import java.sql.Types;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -30,11 +31,11 @@ public class RunEntity extends AbstractEntity implements SpecEntity, StatusEntit
     @Column(nullable = false)
     private String task;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
     protected byte[] spec;
 
-    @Lob
+    @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
     protected byte[] status;
 
