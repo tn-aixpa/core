@@ -1,3 +1,72 @@
+# [0.9.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.8.0...0.9.0) (2024-12-02)
+
+## What's Changed
+* Relationships by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/133
+* feat: Create ModelServe functions from model reference by @kazhamiakin in https://github.com/scc-digitalhub/digitalhub-core/pull/135
+* Schema exporting by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/136
+* Argoworkflows v2 by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/137
+* Argoworkflows by @kazhamiakin in https://github.com/scc-digitalhub/digitalhub-core/pull/134
+* workflow runs refactor by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/140
+* fix(huggingfaceserve): Correct translation of LLM task types by @kazhamiakin in https://github.com/scc-digitalhub/digitalhub-core/pull/139
+* refactor: fsm for states + transitions and new lifecycle manager by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/142
+* fix: runAsUser added to the argo workflow spec by @kazhamiakin in https://github.com/scc-digitalhub/digitalhub-core/pull/143
+* Argo disable serviceaccount by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/144
+* API for templates by @micnori in https://github.com/scc-digitalhub/digitalhub-core/pull/145
+* Update LICENSE by @Calcagiara in https://github.com/scc-digitalhub/digitalhub-core/pull/146
+
+### Features
+
+* container runtime expose runAs into task specs ([ad0a6d6](https://github.com/scc-digitalhub/digitalhub-core/commit/ad0a6d616f8fac17ef8cbb3268c5f4862d983687))
+* function templates ([7ab8653](https://github.com/scc-digitalhub/digitalhub-core/commit/7ab8653cc68776d079801d97cc474fe4b11a9f20))
+* add generated schemas to repo ([fcc5ecf](https://github.com/scc-digitalhub/digitalhub-core/commit/fcc5ecfa069e2bd999cc5d42701f1ef0474e0016))
+* add metadata.ref to exported resources ([3d0b90a](https://github.com/scc-digitalhub/digitalhub-core/commit/3d0b90a0d42b22a0aad1db63382e789fc0605567))
+* add run_of relationship to all runs ([6e2fb40](https://github.com/scc-digitalhub/digitalhub-core/commit/6e2fb40fc482a076e7fb1763e700d94a0cc122d6))
+* Create ModelServe functions from model reference ([93a4587](https://github.com/scc-digitalhub/digitalhub-core/commit/93a4587aaeb4593c470396d088f17599a4fcc890))
+* drop nefertem runtime from builds ([56fcf71](https://github.com/scc-digitalhub/digitalhub-core/commit/56fcf71821d0f6435069bec5edd0082b77ba94be))
+* implement keyGenerator for id generation ([aacce6f](https://github.com/scc-digitalhub/digitalhub-core/commit/aacce6f3fd56629a8c8ec7ab79a722af52ecd66b))
+* key utils + accessor ([62d343e](https://github.com/scc-digitalhub/digitalhub-core/commit/62d343e389149b7d9389594ffb5d20d562beba3b))
+* kfp workflow spec update to use source format for build ([0dc9759](https://github.com/scc-digitalhub/digitalhub-core/commit/0dc97595c04c314a30e3f0fd340dfc570ddce595))
+* openapi generator goal + export ([6c2b6f7](https://github.com/scc-digitalhub/digitalhub-core/commit/6c2b6f7dcba7c7ef65d7060c807c8217cef7df6a))
+* project expose relationships for all embedded entities ([22eaaec](https://github.com/scc-digitalhub/digitalhub-core/commit/22eaaec4a86a3aae0d4125e91f68bb663c36a2d6))
+* remove config_map volume type ([9f0c95b](https://github.com/scc-digitalhub/digitalhub-core/commit/9f0c95b5173b98d67bb80b71ac2abe9fcafcc2f5))
+* remove deprecated handler field from workflow spec ([dfdac79](https://github.com/scc-digitalhub/digitalhub-core/commit/dfdac79f7e92c97eb020370c7125bd6a743fbe84))
+* schema exporter runner (wip) ([e01790d](https://github.com/scc-digitalhub/digitalhub-core/commit/e01790da85432fc7a7d6877e3a72cb907e287570))
+* spec exported to file for all specs with custom profile ([b393c16](https://github.com/scc-digitalhub/digitalhub-core/commit/b393c16018e7eb6c3fc37d5b9bd1724d43ffd4ad))
+* Support for Build task and native Argo Workflow framework. ([ed6325a](https://github.com/scc-digitalhub/digitalhub-core/commit/ed6325a3ce9760020dc51a36ba476e6fe0fdf496))
+* support k8s jobs as suspended by default ([f0951e2](https://github.com/scc-digitalhub/digitalhub-core/commit/f0951e2a996c83e6032cf8d6ba5cad9c83474402))
+* update spring + spring boot and bump version ([8ddab95](https://github.com/scc-digitalhub/digitalhub-core/commit/8ddab95a1f1cafc255e7e41713fcaa66c8c431aa))
+
+
+### Bug Fixes
+* use varbinary instead of lob to avoid orhpaned oids in postgres ([ced0154](https://github.com/scc-digitalhub/digitalhub-core/commit/ced015453bea546c121e3f3354a447fee0c87972))
+* clear leftover extra fields ([63018c5](https://github.com/scc-digitalhub/digitalhub-core/commit/63018c58b8f099c2fc87f21b8780537593fa62b6))
+* snake_case for k8s fields ([ae97821](https://github.com/scc-digitalhub/digitalhub-core/commit/ae97821549322e33372597c2a8924d9258006d70))
+* add templates to dockerfile to include in images ([3ad4183](https://github.com/scc-digitalhub/digitalhub-core/commit/3ad41835655fc1e1843b90bb33f14709159a643c))
+* replace getFile with getInputStream to allow template service to read from classpath ([61f4ef2](https://github.com/scc-digitalhub/digitalhub-core/commit/61f4ef2d07dd87f1c159aae61e51946c51f0af3a))
+* lock jetty deps for solr ([6bf0bcd](https://github.com/scc-digitalhub/digitalhub-core/commit/6bf0bcd2f674315100f1ff008e159857efab4d34))
+* remove outputs from python run spec ([ceb5173](https://github.com/scc-digitalhub/digitalhub-core/commit/ceb51733d1d07f669c6cbcd54caaad5f4c79a9ef))
+* avoid external state modification for non-local runs ([ffd5faa](https://github.com/scc-digitalhub/digitalhub-core/commit/ffd5faaa5088d06eb16c3bfd6b16fd562f77e413))
+* fix nullpointer (+potential npes) in argo framework ([7b44208](https://github.com/scc-digitalhub/digitalhub-core/commit/7b44208411f8078377697ca60d70f8bbc3edeb43))
+* remove NONE entityType ([d1a9485](https://github.com/scc-digitalhub/digitalhub-core/commit/d1a9485c9f20fff036d46bcc96c88d91bcd0934b))
+* disable service account and token mont config ([e2149f2](https://github.com/scc-digitalhub/digitalhub-core/commit/e2149f2ef5869a986f322a9259a39277fff3ffb2))
+* cascade delete models on project delete ([b624260](https://github.com/scc-digitalhub/digitalhub-core/commit/b6242601cc76fcd11f56dde529b0a347a2cbd2ef))
+* enforce run spec readonly after created stage ([ff59564](https://github.com/scc-digitalhub/digitalhub-core/commit/ff59564ec1778e8b63b38b2f4403869db55846a2))
+* fix compile error for kfp build task ([fdc1f36](https://github.com/scc-digitalhub/digitalhub-core/commit/fdc1f36437956ecdab9170d6eae35c670d5cf705))
+* fix imports forargo workflow in kfp runtime ([f64ecde](https://github.com/scc-digitalhub/digitalhub-core/commit/f64ecdec743750b7811450aa1feae1429239545a))
+* fix kfp pipeline runner reading from base64 encoded spec ([3d15c2a](https://github.com/scc-digitalhub/digitalhub-core/commit/3d15c2a97e79be76c906012351edb9912d1a6d09))
+* fix relationships repo definition ([89524e3](https://github.com/scc-digitalhub/digitalhub-core/commit/89524e3f07c05f3f9b130f0f35e1b7d3cd217e80))
+* **huggingfaceserve:** Correct translation of LLM task types ([7f75530](https://github.com/scc-digitalhub/digitalhub-core/commit/7f75530364e0f835a253e30752ef28f9d4aebc7b))
+* keep snake_case for values in metadata ([6cc1832](https://github.com/scc-digitalhub/digitalhub-core/commit/6cc1832fb07ef72af0e4c6ff9a11f05483093ba2))
+* leftover check for functionId in task service + run rels ([238d233](https://github.com/scc-digitalhub/digitalhub-core/commit/238d233539513b57ac01d15a4edea72f7ebc120d))
+* reprase relationship find query to be more precise ([46457b1](https://github.com/scc-digitalhub/digitalhub-core/commit/46457b1f8651bd91e336912a4166bed088c982f5))
+* runAccessor task field ([f5fbb1c](https://github.com/scc-digitalhub/digitalhub-core/commit/f5fbb1c7f9c4f4bbb713786b962d51ac494244dc))
+* runAsUser added to the argo workflow spec ([e9414d0](https://github.com/scc-digitalhub/digitalhub-core/commit/e9414d007c6e2b2672fd23cb342eb6ef80cac16a))
+* runmanager loads workflows ([d96ee4f](https://github.com/scc-digitalhub/digitalhub-core/commit/d96ee4ff1349f35b39b9efb54fd699bb2483d3e3))
+
+**Full Changelog**: https://github.com/scc-digitalhub/digitalhub-core/compare/0.8.0...0.9.0
+
+
+
 # [0.8.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.8.0...0.7.0) (2024-10-24)
 
 ## What's Changed
