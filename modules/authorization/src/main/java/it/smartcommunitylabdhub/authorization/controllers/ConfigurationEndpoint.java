@@ -2,11 +2,13 @@ package it.smartcommunitylabdhub.authorization.controllers;
 
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -28,8 +30,9 @@ public class ConfigurationEndpoint {
     private String cacheControl;
 
     private Map<String, Object> config = null;
+    private Map<String, Object> clientConfig = null;
 
-    @GetMapping(value = { "/.well-known/openid-configuration", "/.well-known/oauth-authorization-server" })
+    @GetMapping(value = {"/.well-known/openid-configuration", "/.well-known/oauth-authorization-server"})
     public ResponseEntity<Map<String, Object>> getCOnfiguration() {
         if (!securityProperties.isRequired()) {
             throw new UnsupportedOperationException();
@@ -40,6 +43,36 @@ public class ConfigurationEndpoint {
         }
 
         return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, cacheControl).body(config);
+    }
+
+    @GetMapping(value = {"/.well-known/client-configuration"})
+    public ResponseEntity<Map<String, Object>> getClientConfiguration() {
+        if (!securityProperties.isRequired()) {
+            throw new UnsupportedOperationException();
+        }
+
+        if (clientConfig == null) {
+            clientConfig = generateClient();
+        }
+
+        return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, cacheControl).body(config);
+    }
+
+    private Map<String, Object> generateClient() {
+        Map<String, Object> m = new HashMap<>();
+
+        m.put("endpoint", applicationProperties.getEndpoint());
+
+        if (securityProperties.isOidcAuthEnabled()) {
+            m.put("issuer", securityProperties.getOidc().getIssuerUri());
+            m.put("authorization_endpoint", securityProperties.getOidc().getAuthorizationEndpoint());
+            m.put("client_id", securityProperties.getOidc().getClientId());
+            if (securityProperties.getOidc().getScope() != null) {
+                m.put("scope", String.join(" ", securityProperties.getOidc().getScope()));
+            }
+        }
+
+        return m;
     }
 
     private Map<String, Object> generate() {
@@ -56,9 +89,9 @@ public class ConfigurationEndpoint {
         m.put("response_types_supported", Collections.emptyList());
 
         List<String> grantTypes = Stream
-            .of(AuthorizationGrantType.CLIENT_CREDENTIALS, AuthorizationGrantType.REFRESH_TOKEN)
-            .map(t -> t.getValue())
-            .toList();
+                .of(AuthorizationGrantType.CLIENT_CREDENTIALS, AuthorizationGrantType.REFRESH_TOKEN)
+                .map(t -> t.getValue())
+                .toList();
         m.put("grant_types_supported", grantTypes);
 
         m.put("token_endpoint", baseUrl + TokenEndpoint.TOKEN_URL);

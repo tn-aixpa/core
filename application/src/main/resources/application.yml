@@ -177,10 +177,11 @@ security:
     audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
     username: ${DH_AUTH_JWT_USERNAME:preferred_username}    
-  oidc:    
+  oidc:
     issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
+    authorization-endpoint: ${DH_AUTH_OIDC_AUTHORIZATION_ENDPOINT:}
 
 
 

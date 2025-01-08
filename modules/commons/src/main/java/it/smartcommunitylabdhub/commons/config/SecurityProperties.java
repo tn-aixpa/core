@@ -69,6 +69,7 @@ public class SecurityProperties {
     public static class OidcAuthenticationProperties {
 
         private String issuerUri;
+        private String authorizationEndpoint;
         private String clientId;
         private List<String> scope;
 
