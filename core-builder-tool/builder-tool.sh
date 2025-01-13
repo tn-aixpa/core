@@ -252,7 +252,7 @@ if [ -f "$source_dir/context-refs.txt" ]; then
                 curl -o "$destination_dir/$destination" -L "$stripped_source"
                 unzip "$destination_dir/$destination" -d "$destination_dir"
                 ;;
-            "http")
+            "http" | "https")
                 echo "Protocol: $protocol"
                 echo "Downloading $source"
                 echo "to $destination_dir/$destination"
