@@ -186,6 +186,18 @@ if [ -f "$source_dir/context-refs.txt" ]; then
                 password=$GIT_PASSWORD
                 token=$GIT_TOKEN
 
+                # Extract branch if specified as a fragment (#branch)
+                branch="${rebuilt_url##*#}"
+                repo="${rebuilt_url%#*}"
+
+                # Check if a branch is specified
+                if [[ "$repo" != "$rebuilt_url" ]]; then
+                  echo "Branch specified: $branch"
+                else
+                  branch=""  # No branch specified
+                  repo="$rebuilt_url"
+                fi
+
                 # Construct Git clone URL based on available authentication credentials
                 if [ -n "$token" ]; then
                     if [[ $token == github_pat_* || $token == glpat* ]]; then
@@ -195,11 +207,18 @@ if [ -f "$source_dir/context-refs.txt" ]; then
                         username="$token"
                         password="x-oauth-basic"
                     fi
-                    git clone "https://$username:$password@$rebuilt_url" "$tmp_dir"
+                    clone_url="https://$username:$password@$repo"
                 elif [ -n "$username" ] && [ -n "$password" ]; then
-                    git clone "https://$username:$password@$rebuilt_url" "$tmp_dir"
+                    clone_url="https://$username:$password@$repo"
                 else
-                    git clone "https://$rebuilt_url" "$tmp_dir"
+                    clone_url="https://$repo"
+                fi
+
+                # Clone repository with or without branch
+                if [ -n "$branch" ]; then
+                    git clone --branch "$branch" "$clone_url" "$tmp_dir"
+                else
+                    git clone "$clone_url" "$tmp_dir"
                 fi
 
                 # copy temp in destination_dir
@@ -210,7 +229,7 @@ if [ -f "$source_dir/context-refs.txt" ]; then
                 echo "========= Files in shared dir ========="
                 ls -l "$destination_dir"
 
-                # remove temp
+                # Remove temp
                 echo "========= Removing $tmp_dir ========="
                 rm -rf "$tmp_dir"
 
@@ -226,10 +245,18 @@ if [ -f "$source_dir/context-refs.txt" ]; then
                 ;;
             "zip+http" | "zip+https") # for now accept only zip file - check if file is a zip. unpack zip
                 echo "Protocol: $protocol"
+                # strip zip+
+                stripped_source="${source#zip+}"
+                echo "Downloading $stripped_source"
+                echo "to $destination_dir/$destination"
+                curl -o "$destination_dir/$destination" -L "$stripped_source"
+                unzip "$destination_dir/$destination" -d "$destination_dir"
+                ;;
+            "http" | "https")
+                echo "Protocol: $protocol"
                 echo "Downloading $source"
                 echo "to $destination_dir/$destination"
                 curl -o "$destination_dir/$destination" -L "$source"
-                unzip "$destination_dir/$destination" -d "$destination_dir"
                 ;;
             "s3") # for now accept a folder/path
                 mc alias set $minio $S3_ENDPOINT_URL $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
