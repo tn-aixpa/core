@@ -23,8 +23,8 @@ public class MetricsDTOBuilder implements Converter<MetricsEntity, Metrics> {
     public Metrics build(MetricsEntity entity) {
     	Number[] values = null;
         try {
-            if ((entity.getValues() != null) && entity.getValues().length > 0) {
-                values = mapper.readValue(entity.getValues(), typeRef);
+            if ((entity.getData() != null) && entity.getData().length > 0) {
+                values = mapper.readValue(entity.getData(), typeRef);
             }
         } catch (IOException e) {
             log.error("Metrics build error: {}", e.getMessage());
@@ -36,7 +36,7 @@ public class MetricsDTOBuilder implements Converter<MetricsEntity, Metrics> {
         		.entityId(entity.getEntityId())
         		.entityName(entity.getEntityName())
         		.name(entity.getName())
-        		.values(values)
+        		.data(values)
         		.build();
     }
     

@@ -26,6 +26,6 @@ public class Metrics implements Serializable {
 	
 	private String name;
     
-	private  Number[] values;
+	private  Number[] data;
 
 }

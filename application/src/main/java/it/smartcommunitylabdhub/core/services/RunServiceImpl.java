@@ -1,5 +1,19 @@
 package it.smartcommunitylabdhub.core.services;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
+
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
@@ -10,6 +24,7 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.metrics.Metrics;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
@@ -19,6 +34,7 @@ import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.task.Task;
 import it.smartcommunitylabdhub.commons.services.LogService;
+import it.smartcommunitylabdhub.commons.services.MetricsService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.KeyUtils;
@@ -34,23 +50,12 @@ import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecifi
 import it.smartcommunitylabdhub.core.relationships.RunEntityRelationshipsManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 
 @Service
 @Transactional
 @Slf4j
-public class RunServiceImpl implements SearchableRunService, RelationshipsAwareEntityService<Run> {
+public class RunServiceImpl implements SearchableRunService, RelationshipsAwareEntityService<Run>, MetricsService<Run> {
 
     @Autowired
     private EntityService<Run, RunEntity> entityService;
@@ -75,6 +80,9 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
 
     @Autowired
     private RunEntityRelationshipsManager relationshipsManager;
+    
+    @Autowired
+    private MetricsManager metricsManager;
 
     @Override
     public Page<Run> listRuns(Pageable pageable) {
@@ -419,4 +427,26 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
             throw new SystemException(e.getMessage());
         }
     }
+
+	@Override
+	public Map<String, Number[]> getMetrics(@NotNull String entityId)
+			throws StoreException, SystemException {
+		return metricsManager.getMetrics(EntityName.RUN.getValue(), entityId);
+	}
+
+	@Override
+	public Number[] getMetrics(@NotNull String entityId, @NotNull String name)
+			throws StoreException, SystemException {
+		Number[] metrics = metricsManager.getMetrics(EntityName.RUN.getValue(), entityId, name);
+		if (metrics == null) {
+			throw new NoSuchEntityException("metric");
+		}
+		return metrics;
+	}
+
+	@Override
+	public Metrics saveMetrics(@NotNull String entityId, @NotNull String name,
+			Number[] data) throws StoreException, SystemException {
+		return metricsManager.saveMetrics(EntityName.RUN.getValue(), entityId, name, data);
+	}
 }

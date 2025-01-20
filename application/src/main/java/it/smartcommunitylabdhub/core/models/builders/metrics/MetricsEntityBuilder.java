@@ -20,8 +20,8 @@ public class MetricsEntityBuilder implements Converter<Metrics, MetricsEntity> {
 	public MetricsEntity build(Metrics dto) {
         byte[] value = null;
         try {
-            if (dto.getValues() != null) {
-                value = mapper.writeValueAsBytes(dto.getValues());
+            if (dto.getData() != null) {
+                value = mapper.writeValueAsBytes(dto.getData());
             }
         } catch (JsonProcessingException e) {
             log.error("MetricsEntity build error: {}", e.getMessage());
@@ -33,7 +33,7 @@ public class MetricsEntityBuilder implements Converter<Metrics, MetricsEntity> {
         		.entityId(dto.getEntityId())
         		.entityName(dto.getEntityName())
         		.name(dto.getName())
-        		.values(value)
+        		.data(value)
         		.build();
 	}
 	

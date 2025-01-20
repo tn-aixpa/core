@@ -26,7 +26,7 @@ import lombok.ToString;
 @Entity
 @Table(
     name = "metrics",
-    indexes = { @Index(name = "metrics_type_id_index", columnList = "entityName, entityId", unique = true) }
+    indexes = { @Index(name = "metrics_type_id_index", columnList = "entityName, entityId", unique = false) }
 )
 public class MetricsEntity implements Serializable {
 
@@ -45,5 +45,5 @@ public class MetricsEntity implements Serializable {
     
     @JdbcTypeCode(Types.LONGVARBINARY)
     @ToString.Exclude
-    private byte[] values;
+    private byte[] data;
 }
