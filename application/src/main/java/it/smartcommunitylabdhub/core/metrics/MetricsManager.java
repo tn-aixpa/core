@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.services;
+package it.smartcommunitylabdhub.core.metrics;
 
 import java.util.HashMap;
 import java.util.List;
