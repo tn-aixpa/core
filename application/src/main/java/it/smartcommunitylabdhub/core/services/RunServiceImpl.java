@@ -433,17 +433,41 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
 	@Override
 	public Map<String, NumberOrNumberArray> getMetrics(@NotNull String entityId)
 			throws StoreException, SystemException {
-		return metricsManager.getMetrics(EntityName.RUN.getValue(), entityId);
+		try {
+			Run entity = entityService.get(entityId);
+			StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+			Map<String,NumberOrNumberArray> metrics = statusFieldAccessor.getMetrics();
+			if(metrics != null) {
+				Map<String, NumberOrNumberArray> entityMetrics = metricsManager.getMetrics(EntityName.RUN.getValue(), entityId);
+				for (Map.Entry<String, NumberOrNumberArray> entry : entityMetrics.entrySet()) {
+					if(metrics.containsKey(entry.getKey()))
+						continue;
+					metrics.put(entry.getKey(), entry.getValue());
+				}
+				return metrics;
+			}
+			return metricsManager.getMetrics(EntityName.RUN.getValue(), entityId);
+		} catch (Exception e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+		}				
+		
 	}
 
 	@Override
 	public NumberOrNumberArray getMetrics(@NotNull String entityId, @NotNull String name)
 			throws StoreException, SystemException {
-		NumberOrNumberArray metrics = metricsManager.getMetrics(EntityName.RUN.getValue(), entityId, name);
-		if (metrics == null) {
-			throw new NoSuchEntityException("metric");
-		}
-		return metrics;
+		try {
+			Run entity = entityService.get(entityId);
+			StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+			Map<String,NumberOrNumberArray> metrics = statusFieldAccessor.getMetrics();
+			if((metrics != null) && metrics.containsKey(name)) 
+				return metrics.get(name);
+			return metricsManager.getMetrics(EntityName.RUN.getValue(), entityId, name);
+		} catch (Exception e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+		}		
 	}
 
 	@Override
