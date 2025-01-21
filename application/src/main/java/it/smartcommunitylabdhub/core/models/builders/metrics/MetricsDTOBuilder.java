@@ -10,21 +10,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.metrics.Metrics;
+import it.smartcommunitylabdhub.commons.models.metrics.NumberOrNumberArray;
 import it.smartcommunitylabdhub.core.models.entities.MetricsEntity;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
 public class MetricsDTOBuilder implements Converter<MetricsEntity, Metrics> {
-    private static final TypeReference<Number[]> typeRef = new TypeReference<>() {};
+    private static final TypeReference<NumberOrNumberArray> typeRef = new TypeReference<>() {};
 
     private static final ObjectMapper mapper = JacksonMapper.CBOR_OBJECT_MAPPER;
 
     public Metrics build(MetricsEntity entity) {
-    	Number[] values = null;
+    	NumberOrNumberArray data = null;
         try {
             if ((entity.getData() != null) && entity.getData().length > 0) {
-                values = mapper.readValue(entity.getData(), typeRef);
+                data = mapper.readValue(entity.getData(), typeRef);
             }
         } catch (IOException e) {
             log.error("Metrics build error: {}", e.getMessage());
@@ -36,7 +37,7 @@ public class MetricsDTOBuilder implements Converter<MetricsEntity, Metrics> {
         		.entityId(entity.getEntityId())
         		.entityName(entity.getEntityName())
         		.name(entity.getName())
-        		.data(values)
+        		.data(data)
         		.build();
     }
     

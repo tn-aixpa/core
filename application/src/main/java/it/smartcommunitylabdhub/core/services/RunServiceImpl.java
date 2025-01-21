@@ -25,6 +25,7 @@ import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.metrics.Metrics;
+import it.smartcommunitylabdhub.commons.models.metrics.NumberOrNumberArray;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
@@ -430,15 +431,15 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
     }
 
 	@Override
-	public Map<String, Number[]> getMetrics(@NotNull String entityId)
+	public Map<String, NumberOrNumberArray> getMetrics(@NotNull String entityId)
 			throws StoreException, SystemException {
 		return metricsManager.getMetrics(EntityName.RUN.getValue(), entityId);
 	}
 
 	@Override
-	public Number[] getMetrics(@NotNull String entityId, @NotNull String name)
+	public NumberOrNumberArray getMetrics(@NotNull String entityId, @NotNull String name)
 			throws StoreException, SystemException {
-		Number[] metrics = metricsManager.getMetrics(EntityName.RUN.getValue(), entityId, name);
+		NumberOrNumberArray metrics = metricsManager.getMetrics(EntityName.RUN.getValue(), entityId, name);
 		if (metrics == null) {
 			throw new NoSuchEntityException("metric");
 		}
@@ -447,7 +448,7 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
 
 	@Override
 	public Metrics saveMetrics(@NotNull String entityId, @NotNull String name,
-			Number[] data) throws StoreException, SystemException {
+			NumberOrNumberArray data) throws StoreException, SystemException {
 		return metricsManager.saveMetrics(EntityName.RUN.getValue(), entityId, name, data);
 	}
 }

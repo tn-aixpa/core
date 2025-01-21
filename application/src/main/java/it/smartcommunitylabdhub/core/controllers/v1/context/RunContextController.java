@@ -33,6 +33,7 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.log.Log;
+import it.smartcommunitylabdhub.commons.models.metrics.NumberOrNumberArray;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.run.Run;
@@ -302,7 +303,7 @@ public class RunContextController {
     
     @Operation(summary = "Get metrics info for a given entity, if available")
     @GetMapping(path = "/{id}/metrics", produces = "application/json; charset=UTF-8")
-    public Map<String, Number[]> getMetrics(
+    public Map<String, NumberOrNumberArray> getMetrics(
             @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
             @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws StoreException, SystemException {
@@ -318,7 +319,7 @@ public class RunContextController {
     
     @Operation(summary = "Get metrics info for a given entity and metric, if available")
     @GetMapping(path = "/{id}/metrics/{name}", produces = "application/json; charset=UTF-8")
-    public Number[] getMetricsByName(
+    public NumberOrNumberArray getMetricsByName(
             @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
             @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
             @PathVariable String name
@@ -339,7 +340,7 @@ public class RunContextController {
             @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
             @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
             @PathVariable String name,
-            @RequestBody Number[] data
+            @RequestBody NumberOrNumberArray data
     ) throws StoreException, SystemException {
         Run entity = runService.getRun(id);
 

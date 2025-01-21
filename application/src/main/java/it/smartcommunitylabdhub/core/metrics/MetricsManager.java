@@ -13,6 +13,7 @@ import org.springframework.util.Assert;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.metrics.Metrics;
+import it.smartcommunitylabdhub.commons.models.metrics.NumberOrNumberArray;
 import it.smartcommunitylabdhub.core.models.builders.metrics.MetricsDTOBuilder;
 import it.smartcommunitylabdhub.core.models.builders.metrics.MetricsEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.MetricsEntity;
@@ -44,7 +45,7 @@ public class MetricsManager {
         this.keyGenerator = keyGenerator;
     }
 
-	public Number[] getMetrics(@NotNull String entityName, @NotNull String entityId, @NotNull String name)
+	public NumberOrNumberArray getMetrics(@NotNull String entityName, @NotNull String entityId, @NotNull String name)
 			throws StoreException, SystemException {
 		 log.debug("get {} metrics info for entity {} id {}", name, entityName, entityId);
 		 MetricsEntity entity = repository.findByEntityNameAndEntityIdAndName(entityName, entityId, name);
@@ -55,11 +56,11 @@ public class MetricsManager {
 	        return null;
 	}
 
-	public Map<String, Number[]> getMetrics(@NotNull String entityName, @NotNull String entityId)
+	public Map<String, NumberOrNumberArray> getMetrics(@NotNull String entityName, @NotNull String entityId)
 			throws StoreException, SystemException {
 		 log.debug("get metrics info for entity {} id {}", entityName, entityId);
 		 List<MetricsEntity> list = repository.findByEntityNameAndEntityId(entityName, entityId);
-		 Map<String, Number[]>response = new HashMap<>();
+		 Map<String, NumberOrNumberArray>response = new HashMap<>();
 		 for(MetricsEntity entity: list) {
 			 Metrics dto = dtoBuilder.convert(entity);
 			 response.put(dto.getName(), dto.getData());			 
@@ -68,7 +69,7 @@ public class MetricsManager {
 	}
 	
 	public Metrics saveMetrics(@NotNull String entityName, @NotNull String entityId, @NotNull String name,
-			Number[] data) throws StoreException, SystemException {
+			NumberOrNumberArray data) throws StoreException, SystemException {
 		log.debug("save {} metrics info for entity {} id {}", name, entityName, entityId);
 		
 		Metrics dto = Metrics.builder().entityId(entityId).entityName(entityName).name(name).data(data).build();
