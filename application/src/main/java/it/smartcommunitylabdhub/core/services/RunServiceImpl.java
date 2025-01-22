@@ -450,8 +450,7 @@ public class RunServiceImpl implements SearchableRunService, RelationshipsAwareE
 		} catch (Exception e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
-		}				
-		
+		}						
 	}
 
 	@Override
