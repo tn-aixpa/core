@@ -849,7 +849,6 @@ public class ModelServiceImpl
 	@Override
 	public Metrics saveMetrics(@NotNull String entityId, @NotNull String name, NumberOrNumberArray data)
 			throws StoreException, SystemException {
-		// TODO Auto-generated method stub
-		return null;
+		return metricsManager.saveMetrics(EntityName.MODEL.getValue(), entityId, name, data);	
 	}
 }

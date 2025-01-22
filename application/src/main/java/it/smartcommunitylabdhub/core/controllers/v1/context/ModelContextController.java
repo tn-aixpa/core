@@ -380,4 +380,22 @@ public class ModelContextController {
     	return metricsService.getMetrics(id, name);
     }
 
+    @Operation(summary = "Store metrics info for a given entity")
+    @PutMapping(path = "/{id}/metrics/{name}", produces = "application/json; charset=UTF-8")
+    public void storeMetrics(
+            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+            @PathVariable String name,
+            @RequestBody NumberOrNumberArray data
+    ) throws StoreException, SystemException {
+        Model entity = modelService.getModel(id);
+
+        //check for project and name match
+        if ((entity != null) && !entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+    	
+        metricsService.saveMetrics(id, name, data);
+    }
+
 }
