@@ -22,16 +22,16 @@ public class NumberOrNumberArrayJacksonDeserializer extends StdDeserializer<Numb
 		
 		JsonNode node = jp.getCodec().readTree(jp);
 		if(node.isArray()) {
-			List<Number> values = new ArrayList<>();
+			List<Double> values = new ArrayList<>();
 			for (JsonNode valueNode : node) {
-				values.add(getValue(valueNode));
+				values.add(valueNode.asDouble());
 			}
 			return new NumberOrNumberArray(values);
 		}
-		return new NumberOrNumberArray(getValue(node));
+		return new NumberOrNumberArray(node.asDouble());
 	}
 	
-	private Number getValue(JsonNode valueNode) throws IOException {
+	/*private Number getValue(JsonNode valueNode) throws IOException {
 		 if(valueNode.isDouble() || valueNode.isFloat()) {
 				return Double.valueOf(valueNode.asDouble());
 		} else if(valueNode.isLong()) {
@@ -40,6 +40,6 @@ public class NumberOrNumberArrayJacksonDeserializer extends StdDeserializer<Numb
 			return Long.valueOf(valueNode.asLong());
 		} else
 			throw new IOException("type not supported");
-	}
+	}*/
 
 }

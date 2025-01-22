@@ -17,15 +17,15 @@ import lombok.Setter;
 @JsonDeserialize(using = NumberOrNumberArrayJacksonDeserializer.class)
 public class NumberOrNumberArray implements Serializable {
 	
-	private Number value;
+	private Double value;
 	
-	private List<Number> values;
+	private List<Double> values;
 	
-	public NumberOrNumberArray(List<Number> values) {
+	public NumberOrNumberArray(List<Double> values) {
 		this.values = values;
 	}
 	
-	public NumberOrNumberArray(Number value) {
+	public NumberOrNumberArray(Double value) {
 		this.value = value;
 	}
 	

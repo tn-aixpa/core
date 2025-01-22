@@ -16,20 +16,11 @@ public class NumberOrNumberArrayJacksonSerializer extends StdSerializer<NumberOr
 	public void serialize(NumberOrNumberArray obj, JsonGenerator gen, SerializerProvider provider)
 			throws IOException {
 		if(obj.getValue() != null) {
-			if((obj.getValue() instanceof Double) || (obj.getValue() instanceof Float)) {
-				gen.writeNumber(obj.getValue().doubleValue());
-			} else if((obj.getValue() instanceof Long) || (obj.getValue() instanceof Integer)) {
-				gen.writeNumber(obj.getValue().longValue());
-			}
+			gen.writeNumber(obj.getValue().doubleValue());
 		}
 		if((obj.getValues() != null) && (obj.getValues().size() > 0)) {
-			if((obj.getValues().get(0) instanceof Float) || (obj.getValues().get(0) instanceof Double)) {
-				double[] array = obj.getValues().stream().mapToDouble(n -> n.doubleValue()).toArray();
-				gen.writeArray(array, 0, array.length);
-			} else if((obj.getValues().get(0) instanceof Long) || (obj.getValues().get(0) instanceof Integer)) {
-					long[] array = obj.getValues().stream().mapToLong(n -> n.longValue()).toArray();
-					gen.writeArray(array, 0, array.length);
-				} 
+			double[] array = obj.getValues().stream().mapToDouble(n -> n.doubleValue()).toArray();
+			gen.writeArray(array, 0, array.length);
 		}
 	}
 	
