@@ -10,12 +10,11 @@
         <relativePath>../../</relativePath> <!-- lookup parent from repository -->
     </parent>
     <groupId>it.smartcommunitylabdhub</groupId>
-    <artifactId>dh-files</artifactId>
-    <name>files</name>
-    <description>DH Files</description>
+    <artifactId>credentials-provider-minio</artifactId>
+    <name>credentials-provider-minio</name>
+    <description>credentials-provider-minio</description>
 
     <properties>
-        <aws.version>2.25.70</aws.version>
     </properties>
 
     <dependencies>
@@ -28,7 +27,7 @@
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-authorization</artifactId>
             <version>${revision}</version>
-        </dependency>        
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -47,18 +46,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
             <version>${spring-boot.version}</version>
         </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>bom</artifactId>
-            <version>${aws.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3</artifactId>
-            <version>${aws.version}</version>
-        </dependency>
+
 
         <dependency>
             <groupId>org.slf4j</groupId>

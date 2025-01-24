@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class ConfigurationEndpoint {
+public class OAuth2ConfigurationEndpoint {
 
     @Autowired
     private ApplicationProperties applicationProperties;

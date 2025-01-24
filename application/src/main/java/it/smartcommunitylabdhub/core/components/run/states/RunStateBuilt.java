@@ -1,22 +1,21 @@
 package it.smartcommunitylabdhub.core.components.run.states;
 
-import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
+import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
+import it.smartcommunitylabdhub.authorization.services.CredentialsService;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
-import it.smartcommunitylabdhub.commons.config.SecurityProperties;
+import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.core.components.security.UserAuthenticationHelper;
 import it.smartcommunitylabdhub.core.fsm.RunContext;
 import it.smartcommunitylabdhub.core.fsm.RunEvent;
 import it.smartcommunitylabdhub.fsm.FsmState;
 import it.smartcommunitylabdhub.fsm.Transition;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -24,10 +23,7 @@ import org.springframework.stereotype.Component;
 public class RunStateBuilt implements FsmState.Builder<State, RunEvent, RunContext, RunRunnable> {
 
     @Autowired
-    JwtTokenService jwtTokenService;
-
-    @Autowired
-    SecurityProperties securityProperties;
+    CredentialsService credentialsService;
 
     public FsmState<State, RunEvent, RunContext, RunRunnable> build() {
         //define state
@@ -49,16 +45,14 @@ public class RunStateBuilt implements FsmState.Builder<State, RunEvent, RunConte
                     Optional<RunRunnable> runnable = Optional.ofNullable(context.runtime.run(context.run));
                     runnable.ifPresent(r -> {
                         //extract auth from security context to inflate secured credentials
-                        //TODO refactor properly
-                        if (r instanceof SecuredRunnable) {
-                            // check that auth is enabled via securityProperties
-                            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                            if (auth != null && securityProperties.isRequired()) {
-                                Serializable credentials = jwtTokenService.generateCredentials(auth);
-                                if (credentials != null) {
-                                    ((SecuredRunnable) r).setCredentials(credentials);
-                                }
-                            }
+                        UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+                        if (auth != null && r instanceof SecuredRunnable) {
+                            //get credentials from providers
+                            List<Credentials> credentials = credentialsService.getCredentials(
+                                (UserAuthentication<?>) auth
+                            );
+
+                            ((SecuredRunnable) r).setCredentials(credentials);
                         }
                     });
 

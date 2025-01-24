@@ -74,6 +74,10 @@ public class JwtTokenService implements InitializingBean {
     private JWSSigner signer;
     private JWSVerifier verifier;
 
+    public String getClientId() {
+        return clientId;
+    }
+
     @Autowired
     public void setAccessTokenDuration(@Value("${jwt.access-token.duration}") Integer accessTokenDuration) {
         if (accessTokenDuration != null) {

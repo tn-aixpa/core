@@ -1,5 +1,8 @@
 package it.smartcommunitylabdhub.commons.config;
 
+import it.smartcommunitylabdhub.commons.Keys;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -10,8 +13,13 @@ import org.springframework.util.StringUtils;
 @Getter
 public class ApplicationProperties {
 
+    @NotBlank
     private String endpoint;
+
+    @NotBlank
+    @Pattern(regexp = Keys.SLUG_PATTERN)
     private String name;
+
     private String description;
     private String version;
     private String level;

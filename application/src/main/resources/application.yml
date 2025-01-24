@@ -226,6 +226,8 @@ files:
       secret-key: ${AWS_SECRET_KEY:}
       endpoint: ${S3_ENDPOINT:}
       bucket: ${S3_BUCKET:}
+      signature-version: s3v4
+      region: ${S3_REGION:us-east-1}
   max-column-size: ${FILES_MAX_COLUMN_SIZE:2097152}      
 
 # JWT configuration
@@ -240,6 +242,22 @@ jwt:
   client-id: ${JWT_CLIENT_ID:${security.basic.username}}
   client-secret: ${JWT_CLIENT_SECRET:${security.basic.password}}
   cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}      
+
+
+# Credentials
+credentials:
+  provider:
+    s3:
+      enable: ${S3_CREDENTIALS_PROVIDER:false}
+    postgresql:
+      enable: ${POSTGRESQL_CREDENTIALS_PROVIDER:false}
+      database: ${POSTGRESQL_CREDENTIALS_DATABASE:}
+      sts:  ${POSTGRESQL_CREDENTIALS_STS:}
+      claim:  ${POSTGRESQL_CREDENTIALS_CLAIM:postgresql/role}
+    minio:
+      enable: ${MINIO_CREDENTIALS_PROVIDER:false}      
+      sts:  ${MINIO_CREDENTIALS_STS:}
+      claim:  ${MINIO_CREDENTIALS_CLAIM:minio/policy}
 
 
 # Templates
