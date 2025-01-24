@@ -270,6 +270,11 @@
             <artifactId>dh-authorization</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>credentials-provider-minio</artifactId>
+            <version>${revision}</version>
+        </dependency>
     </dependencies>
 
     <build>

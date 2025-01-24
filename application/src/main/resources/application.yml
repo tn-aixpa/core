@@ -256,8 +256,11 @@ credentials:
       claim:  ${POSTGRESQL_CREDENTIALS_CLAIM:postgresql/role}
     minio:
       enable: ${MINIO_CREDENTIALS_PROVIDER:false}      
-      sts:  ${MINIO_CREDENTIALS_STS:}
+      endpoint:  ${MINIO_CREDENTIALS_ENDPOINT:}
       claim:  ${MINIO_CREDENTIALS_CLAIM:minio/policy}
+      policy:  ${MINIO_CREDENTIALS_POLICY:readwrite}
+      access-key: ${MINIO_CREDENTIALS_ACCESS_KEY:${files.store.s3.access-key}}
+      secret-key: ${MINIO_CREDENTIALS_SECRET_KEY:${files.store.s3.secret-key}}      
 
 
 # Templates

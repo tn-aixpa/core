@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.files.provider;
+package it.smartcommunitylabdhub.credentials.minio;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,11 +33,14 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class S3Credentials extends AbstractCredentials {
+public class MinioSessionCredentials extends AbstractCredentials {
 
     @JsonProperty("aws_access_key_id")
     private String accessKey;
 
     @JsonProperty("aws_secret_access_key")
     private String secretKey;
+
+    @JsonProperty("aws_session_token")
+    private String sessionToken;
 }
