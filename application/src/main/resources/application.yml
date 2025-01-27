@@ -249,16 +249,22 @@ credentials:
   provider:
     s3:
       enable: ${S3_CREDENTIALS_PROVIDER:false}
-    postgresql:
-      enable: ${POSTGRESQL_CREDENTIALS_PROVIDER:false}
-      database: ${POSTGRESQL_CREDENTIALS_DATABASE:}
-      sts:  ${POSTGRESQL_CREDENTIALS_STS:}
-      claim:  ${POSTGRESQL_CREDENTIALS_CLAIM:postgresql/role}
+    db:
+      enable: ${DB_CREDENTIALS_PROVIDER:false}
+      database: ${DB_CREDENTIALS_DATABASE:}
+      endpoint:  ${DB_CREDENTIALS_ENDPOINT:}
+      claim:  ${DB_CREDENTIALS_CLAIM:db/role}
+      role:  ${DB_CREDENTIALS_ROLE:}
+      duration:  ${DB_CREDENTIALS_DURATION:86400}
+      user: ${DB_CREDENTIALS_USER:}
+      password: ${DB_CREDENTIALS_PASSWORD:}
     minio:
       enable: ${MINIO_CREDENTIALS_PROVIDER:false}      
-      endpoint:  ${MINIO_CREDENTIALS_ENDPOINT:}
+      endpoint:  ${MINIO_CREDENTIALS_ENDPOINT:${files.store.s3.endpoint}}
+      region: ${MINIO_CREDENTIALS_REGION:${files.store.s3.region}}
       claim:  ${MINIO_CREDENTIALS_CLAIM:minio/policy}
       policy:  ${MINIO_CREDENTIALS_POLICY:readwrite}
+      duration:  ${MINIO_CREDENTIALS_DURATION:86400}
       access-key: ${MINIO_CREDENTIALS_ACCESS_KEY:${files.store.s3.access-key}}
       secret-key: ${MINIO_CREDENTIALS_SECRET_KEY:${files.store.s3.secret-key}}      
 

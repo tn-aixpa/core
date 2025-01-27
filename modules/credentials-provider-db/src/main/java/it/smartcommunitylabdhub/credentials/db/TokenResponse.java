@@ -1,5 +1,5 @@
 /**
- * Copyright 2025 the original author or authors
+ * Copyright 2024 the original author or authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.credentials.minio;
+package it.smartcommunitylabdhub.credentials.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.authorization.model.AbstractCredentials;
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,23 +34,30 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MinioSessionCredentials extends AbstractCredentials {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class TokenResponse implements Serializable {
 
-    @JsonProperty("aws_access_key_id")
-    private String accessKey;
+    @JsonProperty("platform")
+    private String platform;
 
-    @JsonProperty("aws_secret_access_key")
-    private String secretKey;
+    @JsonProperty("host")
+    private String host;
 
-    @JsonProperty("aws_session_token")
-    private String sessionToken;
+    @JsonProperty("port")
+    private Integer port;
 
-    @JsonProperty("s3_endpoint")
-    private String endpoint;
+    @JsonProperty("database")
+    private String database;
 
-    @JsonProperty("s3_region")
-    private String region;
+    @JsonProperty("username")
+    private String username;
 
-    @JsonProperty("s3_signature_version")
-    private String signatureVersion;
+    @JsonProperty("password")
+    private String password;
+
+    @JsonProperty("expires_in")
+    private Long expiration;
+
+    @JsonProperty("issuer")
+    private String issuer;
 }

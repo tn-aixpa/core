@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.credentials.minio;
+package it.smartcommunitylabdhub.credentials.db;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,23 +33,23 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MinioSessionCredentials extends AbstractCredentials {
+public class DbCredentials extends AbstractCredentials {
 
-    @JsonProperty("aws_access_key_id")
-    private String accessKey;
+    @JsonProperty("db_platform")
+    private String platform;
 
-    @JsonProperty("aws_secret_access_key")
-    private String secretKey;
+    @JsonProperty("db_host")
+    private String host;
 
-    @JsonProperty("aws_session_token")
-    private String sessionToken;
+    @JsonProperty("db_port")
+    private Integer port;
 
-    @JsonProperty("s3_endpoint")
-    private String endpoint;
+    @JsonProperty("db_username")
+    private String username;
 
-    @JsonProperty("s3_region")
-    private String region;
+    @JsonProperty("db_password")
+    private String password;
 
-    @JsonProperty("s3_signature_version")
-    private String signatureVersion;
+    @JsonProperty("db_database")
+    private String database;
 }

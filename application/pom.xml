@@ -275,6 +275,11 @@
             <artifactId>credentials-provider-minio</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>credentials-provider-db</artifactId>
+            <version>${revision}</version>
+        </dependency>        
     </dependencies>
 
     <build>
