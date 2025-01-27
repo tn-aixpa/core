@@ -27,11 +27,12 @@ import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.CredentialsContainer;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
-public abstract class AbstractCredentials implements Credentials {
+public abstract class AbstractCredentials implements Credentials, CredentialsContainer {
 
     @JsonIgnore
     protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
@@ -40,6 +41,11 @@ public abstract class AbstractCredentials implements Credentials {
     protected static final TypeReference<HashMap<String, String>> typeRef = new TypeReference<
         HashMap<String, String>
     >() {};
+
+    @Override
+    public void eraseCredentials() {
+        //nothing to do by default
+    }
 
     @Override
     public Map<String, String> toMap() {

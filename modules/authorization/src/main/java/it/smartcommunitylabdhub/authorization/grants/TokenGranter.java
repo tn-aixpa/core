@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.authorization.providers;
+package it.smartcommunitylabdhub.authorization.grants;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import it.smartcommunitylabdhub.authorization.model.AbstractCredentials;
-import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import it.smartcommunitylabdhub.authorization.model.TokenResponse;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
+import java.util.Map;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 
-@Getter
-@Setter
-@ToString
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class CoreCredentials extends AbstractCredentials {
+public interface TokenGranter {
+    AuthorizationGrantType type();
 
-    private Set<String> projects;
+    @Nullable
+    TokenResponse grant(@NotNull Map<String, String> parameters, @Nullable Authentication authentication);
 }

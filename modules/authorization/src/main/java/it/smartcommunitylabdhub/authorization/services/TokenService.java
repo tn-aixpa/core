@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.authorization.providers;
+package it.smartcommunitylabdhub.authorization.services;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import it.smartcommunitylabdhub.authorization.model.AbstractCredentials;
-import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import it.smartcommunitylabdhub.authorization.model.TokenResponse;
+import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
+import jakarta.validation.constraints.NotNull;
 
-@Getter
-@Setter
-@ToString
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class CoreCredentials extends AbstractCredentials {
+public interface TokenService {
+    TokenResponse generateToken(@NotNull UserAuthentication<?> authentication);
 
-    private Set<String> projects;
+    TokenResponse generateToken(
+        @NotNull UserAuthentication<?> authentication,
+        boolean withRefresh,
+        boolean withCredentials
+    );
 }

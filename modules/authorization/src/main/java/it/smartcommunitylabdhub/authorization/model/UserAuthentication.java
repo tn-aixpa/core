@@ -39,8 +39,9 @@ public class UserAuthentication<T extends AbstractAuthenticationToken> extends A
         Assert.notNull(token, "token cannot be null");
         this.token = token;
         this.username = token.getName();
-
-        setAuthenticated(true);
+        if (token.isAuthenticated()) {
+            setAuthenticated(true);
+        }
     }
 
     public UserAuthentication(T token, Collection<? extends GrantedAuthority> authorities) {

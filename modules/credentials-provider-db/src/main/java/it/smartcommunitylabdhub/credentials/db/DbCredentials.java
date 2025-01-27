@@ -52,4 +52,11 @@ public class DbCredentials extends AbstractCredentials {
 
     @JsonProperty("db_database")
     private String database;
+
+    @Override
+    public void eraseCredentials() {
+        //clear credentials
+        this.username = null;
+        this.password = null;
+    }
 }

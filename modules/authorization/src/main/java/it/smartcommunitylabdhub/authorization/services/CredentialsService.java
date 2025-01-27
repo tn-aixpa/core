@@ -19,52 +19,8 @@ package it.smartcommunitylabdhub.authorization.services;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import jakarta.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
-@Service
-@Slf4j
-public class CredentialsService {
-
-    private final List<CredentialsProvider> providers;
-
-    public CredentialsService(Collection<CredentialsProvider> providers) {
-        log.debug("Initialize service with providers");
-
-        if (providers != null) {
-            if (log.isTraceEnabled()) {
-                log.trace("providers: {}", providers);
-            }
-
-            this.providers = Collections.unmodifiableList(new ArrayList<>(providers));
-        } else {
-            this.providers = Collections.emptyList();
-        }
-    }
-
-    public List<Credentials> getCredentials(@NotNull UserAuthentication<?> auth) {
-        return getCredentials(auth, false);
-    }
-
-    public List<Credentials> getCredentials(@NotNull UserAuthentication<?> auth, boolean refresh) {
-        if (refresh || auth.getCredentials() == null || auth.getCredentials().isEmpty()) {
-            log.debug("get credentials from providers for user {}", auth.getName());
-            List<Credentials> credentials = providers.stream().map(p -> p.get(auth)).toList();
-
-            //cache
-            auth.setCredentials(credentials);
-
-            return credentials;
-        }
-
-        //use cached values
-        //note: we don't evaluate duration because core is stateless, so max duration of cache is call duration
-        log.debug("use cached credentials for user {}", auth.getName());
-
-        return auth.getCredentials();
-    }
+public interface CredentialsService {
+    List<Credentials> getCredentials(@NotNull UserAuthentication<?> auth);
 }

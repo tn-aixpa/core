@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nimbusds.jwt.SignedJWT;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,7 +29,7 @@ public class TokenResponse extends AbstractCredentials {
     private String tokenType = "Bearer";
 
     @JsonProperty("refresh_token")
-    private SignedJWT refreshToken;
+    private String refreshToken;
 
     @JsonProperty("expires_in")
     private Integer expiration;
@@ -39,13 +40,12 @@ public class TokenResponse extends AbstractCredentials {
     @JsonProperty("issuer")
     private String issuer;
 
+    //TODO evaluate unwrap
+    @JsonProperty("credentials")
+    private Map<String, String> credentials;
+
     @JsonGetter
     public String getAccessToken() {
         return accessToken != null ? accessToken.serialize() : null;
-    }
-
-    @JsonGetter
-    public String getRefreshToken() {
-        return refreshToken != null ? refreshToken.serialize() : null;
     }
 }

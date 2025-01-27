@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties.JwtAuthenticationProperties;
 import it.smartcommunitylabdhub.commons.models.project.Project;
+import it.smartcommunitylabdhub.core.components.auth.AuthenticationManager;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,7 +27,9 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -36,6 +39,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -119,7 +123,7 @@ public class SecurityConfig {
 
         //authentication (when configured)
         if (properties.isRequired()) {
-            //always enable internal jwt auth provider
+            // always enable internal jwt auth provider
             JwtAuthenticationProvider coreJwtAuthProvider = new JwtAuthenticationProvider(
                 coreJwtDecoder(
                     applicationProperties.getEndpoint(),
@@ -130,29 +134,48 @@ public class SecurityConfig {
             coreJwtAuthProvider.setJwtAuthenticationConverter(
                 coreJwtAuthenticationConverter("authorities", projectAuthHelper)
             );
+            List<AuthenticationProvider> authProviders = new ArrayList<>();
+            authProviders.add(coreJwtAuthProvider);
 
+            //enable basic if required
+            if (properties.isBasicAuthEnabled()) {
+                DaoAuthenticationProvider daoProvider = new DaoAuthenticationProvider();
+                daoProvider.setUserDetailsService(
+                    userDetailsService(properties.getBasic().getUsername(), properties.getBasic().getPassword())
+                );
+                daoProvider.setPasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
+                authProviders.add(daoProvider);
+            }
             // Create authentication Manager
-            securityChain.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwt -> jwt.authenticationManager(new ProviderManager(coreJwtAuthProvider)))
+            AuthenticationManager authManager = new AuthenticationManager(authProviders);
+            securityChain.authenticationManager(authManager);
+
+            securityChain.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.authenticationManager(authManager))
+            // oauth2.jwt(jwt -> {
+            //     jwt.decoder(decoder);
+            //     jwt.jwtAuthenticationConverter(coreJwtAuthenticationConverter("authorities", projectAuthHelper));
+            // })
             );
 
-            if (properties.isJwtAuthEnabled()) {
-                JwtAuthenticationProperties jwtProps = properties.getJwt();
-                // rebuild auth manager to include external jwt provider
-                JwtAuthenticationProvider externalJwtAuthProvider = new JwtAuthenticationProvider(
-                    externalJwtDecoder(jwtProps.getIssuerUri(), jwtProps.getAudience())
-                );
+            //NOTE: API access via external token is DEPRECATED
+            //TODO remove
+            // if (properties.isJwtAuthEnabled()) {
+            //     JwtAuthenticationProperties jwtProps = properties.getJwt();
+            //     // rebuild auth manager to include external jwt provider
+            //     JwtAuthenticationProvider externalJwtAuthProvider = new JwtAuthenticationProvider(
+            //         externalJwtDecoder(jwtProps.getIssuerUri(), jwtProps.getAudience())
+            //     );
 
-                externalJwtAuthProvider.setJwtAuthenticationConverter(
-                    externalJwtAuthenticationConverter(jwtProps.getUsername(), jwtProps.getClaim(), projectAuthHelper)
-                );
+            //     externalJwtAuthProvider.setJwtAuthenticationConverter(
+            //         externalJwtAuthenticationConverter(jwtProps.getUsername(), jwtProps.getClaim(), projectAuthHelper)
+            //     );
 
-                securityChain.oauth2ResourceServer(oauth2 ->
-                    oauth2.jwt(jwt ->
-                        jwt.authenticationManager(new ProviderManager(coreJwtAuthProvider, externalJwtAuthProvider))
-                    )
-                );
-            }
+            //     securityChain.oauth2ResourceServer(oauth2 ->
+            //         oauth2.jwt(jwt ->
+            //             jwt.authenticationManager(new ProviderManager(coreJwtAuthProvider, externalJwtAuthProvider))
+            //         )
+            //     );
+            // }
 
             //enable basic if required
             if (properties.isBasicAuthEnabled()) {
@@ -205,7 +228,7 @@ public class SecurityConfig {
             }
         });
 
-        //authentication (when configured)
+        //basic authentication (when configured)
         if (StringUtils.hasText(clientId) && StringUtils.hasText(clientSecret)) {
             //enable basic
             securityChain
@@ -213,11 +236,11 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService(clientId, clientSecret));
         }
 
-        //assign both USER and ADMIN to anon user to bypass all scoped permission checks
-        securityChain.anonymous(anon -> {
-            anon.authorities("ROLE_USER", "ROLE_ADMIN");
-            anon.principal("anonymous");
-        });
+        // //assign both USER and ADMIN to anon user to bypass all scoped permission checks
+        // securityChain.anonymous(anon -> {
+        //     anon.authorities("ROLE_USER", "ROLE_ADMIN");
+        //     anon.principal("anonymous");
+        // });
 
         securityChain.exceptionHandling(handling -> {
             handling

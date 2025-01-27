@@ -52,4 +52,12 @@ public class MinioSessionCredentials extends AbstractCredentials {
 
     @JsonProperty("s3_signature_version")
     private String signatureVersion;
+
+    @Override
+    public void eraseCredentials() {
+        //clear credentials
+        this.accessKey = null;
+        this.secretKey = null;
+        this.sessionToken = null;
+    }
 }

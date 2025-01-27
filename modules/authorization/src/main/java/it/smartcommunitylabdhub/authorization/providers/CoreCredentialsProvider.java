@@ -16,8 +16,10 @@
 
 package it.smartcommunitylabdhub.authorization.providers;
 
+import com.nimbusds.jwt.SignedJWT;
 import it.smartcommunitylabdhub.authorization.controllers.JWKSEndpoint;
 import it.smartcommunitylabdhub.authorization.controllers.TokenEndpoint;
+import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.providers.CoreCredentialsConfig.CoreCredentialsConfigBuilder;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
@@ -115,7 +117,10 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
 
         log.debug("generate credentials for user authentication {} via jwtToken service", auth.getName());
         //TODO evaluate caching responses
-        return jwtTokenService.generateCredentials(auth);
+        SignedJWT accessToken = jwtTokenService.generateAccessToken(auth);
+        String refreshToken = jwtTokenService.generateRefreshToken(auth, accessToken);
+
+        return TokenResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
     }
 
     @Override
@@ -132,7 +137,6 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
             return null;
         }
 
-        Set<String> roles = new HashSet<>();
         Set<String> projects = new HashSet<>();
 
         //inject roles from ownership of projects
@@ -141,7 +145,6 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
             .findIdsByCreatedBy(username)
             .forEach(p -> {
                 projects.add(p);
-                roles.add(p + ":ROLE_ADMIN");
             });
 
         //inject roles from sharing of projects
@@ -151,10 +154,9 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
             .findIdsBySharedTo(username)
             .forEach(p -> {
                 projects.add(p);
-                roles.add(p + ":ROLE_USER");
             });
 
-        CoreCredentials cred = CoreCredentials.builder().projects(projects).roles(roles).build();
+        CoreCredentials cred = CoreCredentials.builder().projects(projects).build();
 
         return cred;
     }

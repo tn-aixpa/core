@@ -40,4 +40,11 @@ public class S3Credentials extends AbstractCredentials {
 
     @JsonProperty("aws_secret_access_key")
     private String secretKey;
+
+    @Override
+    public void eraseCredentials() {
+        //clear credentials
+        this.accessKey = null;
+        this.secretKey = null;
+    }
 }
