@@ -89,7 +89,7 @@ kaniko:
   image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
   image-registry: ${KANIKO_IMAGE_REGISTRY:${registry.name}}
   secret: ${KANIKO_SECRET:${registry.secret}}
-  args: ${KANIKO_ARGS:}    
+  args: ${KANIKO_ARGS:}
 
 # MLRun config
 mlrun:
@@ -98,7 +98,7 @@ mlrun:
   image-registry: ${MLRUN_IMAGE_REGISTRY:}
 
 # registry
-registry:  
+registry:
   name: ${DOCKER_REGISTRY:}
   secret: ${DOCKER_REGISTRY_SECRET:}
 
@@ -116,10 +116,10 @@ kubernetes:
   metrics: ${K8S_ENABLE_METRICS:true}
   # supported values for results: default,keep,disable
   results: ${K8S_ENABLE_RESULTS:default}
-  security: 
+  security:
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
   envs:
-    prefix: ${K8S_ENVS_PREFIX:${application.name}}    
+    prefix: ${K8S_ENVS_PREFIX:${application.name}}
   image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}
   init:
     image: ${K8S_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-builder-tool:latest}
@@ -138,7 +138,7 @@ kubernetes:
       limits: ${K8S_RESOURCE_CPU_LIMIT:}
     mem:
       requests: ${K8S_RESOURCE_MEM_DEFAULT:64m}
-      limits: ${K8S_RESOURCE_MEM_LIMIT:}      
+      limits: ${K8S_RESOURCE_MEM_LIMIT:}
     gpu:
       key: ${K8S_RESOURCE_GPU_KEY:nvidia.com/gpu}
   config:
@@ -176,11 +176,11 @@ security:
     issuer-uri: ${DH_AUTH_JWT_ISSUER_URI:${security.oidc.issuer-uri}}
     audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
-    username: ${DH_AUTH_JWT_USERNAME:preferred_username}    
-  oidc:    
-    issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
-    client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
-    scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
+    username: ${DH_AUTH_JWT_USERNAME:preferred_username}
+  oidc:
+    issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:https://aac.digitalhub-dev.smartcommunitylab.it}
+    client-id: ${DH_AUTH_OIDC_CLIENT_ID:ZzMzYVFzaDVTZEtxQnNKeDMyT0c1dVNK}
+    scope: ${DH_AUTH_OIDC_SCOPE:email,profile,openid,user.roles.me,tenant1-core,offline_access}
 
 
 
@@ -226,7 +226,7 @@ files:
       secret-key: ${AWS_SECRET_KEY:}
       endpoint: ${S3_ENDPOINT:}
       bucket: ${S3_BUCKET:}
-  max-column-size: ${FILES_MAX_COLUMN_SIZE:2097152}      
+  max-column-size: ${FILES_MAX_COLUMN_SIZE:2097152}
 
 # JWT configuration
 jwt:
@@ -236,10 +236,10 @@ jwt:
   access-token:
     duration: ${JWT_ACCESS_TOKEN_DURATION:}
   refresh-token:
-    duration: ${JWT_REFRESH_TOKEN_DURATION:}    
+    duration: ${JWT_REFRESH_TOKEN_DURATION:}
   client-id: ${JWT_CLIENT_ID:${security.basic.username}}
   client-secret: ${JWT_CLIENT_SECRET:${security.basic.password}}
-  cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}      
+  cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}
 
 
 # Templates

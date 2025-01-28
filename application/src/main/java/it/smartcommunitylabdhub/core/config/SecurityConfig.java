@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties.JwtAuthenticationProperties;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +29,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -36,6 +39,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -94,19 +99,22 @@ public class SecurityConfig {
     @Autowired
     AuthorizableAwareEntityService<Project> projectAuthHelper;
 
+//    @Autowired
+//    ClientRegistrationRepository clientRegistrationRepository;
+
     @Bean("apiSecurityFilterChain")
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         HttpSecurity securityChain = http
-            .securityMatcher(getApiRequestMatcher())
-            .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(getApiRequestMatcher()).hasRole("USER").anyRequest().authenticated();
-            })
-            // disable request cache
-            .requestCache(requestCache -> requestCache.disable())
-            //disable csrf
-            .csrf(csrf -> csrf.disable())
-            // we don't want a session for these endpoints, each request should be evaluated
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .securityMatcher(getApiRequestMatcher())
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(getApiRequestMatcher()).hasRole("USER").anyRequest().authenticated();
+                })
+                // disable request cache
+                .requestCache(requestCache -> requestCache.disable())
+                //disable csrf
+                .csrf(csrf -> csrf.disable())
+                // we don't want a session for these endpoints, each request should be evaluated
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // allow cors
         securityChain.cors(cors -> {
@@ -121,46 +129,46 @@ public class SecurityConfig {
         if (properties.isRequired()) {
             //always enable internal jwt auth provider
             JwtAuthenticationProvider coreJwtAuthProvider = new JwtAuthenticationProvider(
-                coreJwtDecoder(
-                    applicationProperties.getEndpoint(),
-                    applicationProperties.getName(),
-                    keyStoreConfig.getJWKSetKeyStore().getJwk()
-                )
+                    coreJwtDecoder(
+                            applicationProperties.getEndpoint(),
+                            applicationProperties.getName(),
+                            keyStoreConfig.getJWKSetKeyStore().getJwk()
+                    )
             );
             coreJwtAuthProvider.setJwtAuthenticationConverter(
-                coreJwtAuthenticationConverter("authorities", projectAuthHelper)
+                    coreJwtAuthenticationConverter("authorities", projectAuthHelper)
             );
 
             // Create authentication Manager
             securityChain.oauth2ResourceServer(oauth2 ->
-                oauth2.jwt(jwt -> jwt.authenticationManager(new ProviderManager(coreJwtAuthProvider)))
+                    oauth2.jwt(jwt -> jwt.authenticationManager(new ProviderManager(coreJwtAuthProvider)))
             );
 
             if (properties.isJwtAuthEnabled()) {
                 JwtAuthenticationProperties jwtProps = properties.getJwt();
                 // rebuild auth manager to include external jwt provider
                 JwtAuthenticationProvider externalJwtAuthProvider = new JwtAuthenticationProvider(
-                    externalJwtDecoder(jwtProps.getIssuerUri(), jwtProps.getAudience())
+                        externalJwtDecoder(jwtProps.getIssuerUri(), jwtProps.getAudience())
                 );
 
                 externalJwtAuthProvider.setJwtAuthenticationConverter(
-                    externalJwtAuthenticationConverter(jwtProps.getUsername(), jwtProps.getClaim(), projectAuthHelper)
+                        externalJwtAuthenticationConverter(jwtProps.getUsername(), jwtProps.getClaim(), projectAuthHelper)
                 );
 
                 securityChain.oauth2ResourceServer(oauth2 ->
-                    oauth2.jwt(jwt ->
-                        jwt.authenticationManager(new ProviderManager(coreJwtAuthProvider, externalJwtAuthProvider))
-                    )
+                        oauth2.jwt(jwt ->
+                                jwt.authenticationManager(new ProviderManager(coreJwtAuthProvider, externalJwtAuthProvider))
+                        )
                 );
             }
 
             //enable basic if required
             if (properties.isBasicAuthEnabled()) {
                 securityChain
-                    .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
-                    .userDetailsService(
-                        userDetailsService(properties.getBasic().getUsername(), properties.getBasic().getPassword())
-                    );
+                        .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+                        .userDetailsService(
+                                userDetailsService(properties.getBasic().getUsername(), properties.getBasic().getPassword())
+                        );
             }
 
             //disable anonymous
@@ -175,8 +183,8 @@ public class SecurityConfig {
 
         securityChain.exceptionHandling(handling -> {
             handling
-                .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
-                .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
+                    .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+                    .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
         });
 
         return securityChain.build();
@@ -185,16 +193,16 @@ public class SecurityConfig {
     @Bean("authSecurityFilterChain")
     public SecurityFilterChain authSecurityFilterChain(HttpSecurity http) throws Exception {
         HttpSecurity securityChain = http
-            .securityMatcher(getAuthRequestMatcher())
-            .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(getAuthRequestMatcher()).hasRole("USER").anyRequest().authenticated();
-            })
-            // disable request cache
-            .requestCache(requestCache -> requestCache.disable())
-            //disable csrf
-            .csrf(csrf -> csrf.disable())
-            // we don't want a session for these endpoints, each request should be evaluated
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .securityMatcher(getAuthRequestMatcher())
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(getAuthRequestMatcher()).hasRole("USER").anyRequest().authenticated();
+                })
+                // disable request cache
+                .requestCache(requestCache -> requestCache.disable())
+                //disable csrf
+                .csrf(csrf -> csrf.disable())
+                // we don't want a session for these endpoints, each request should be evaluated
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         // allow cors
         securityChain.cors(cors -> {
@@ -209,8 +217,8 @@ public class SecurityConfig {
         if (StringUtils.hasText(clientId) && StringUtils.hasText(clientSecret)) {
             //enable basic
             securityChain
-                .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
-                .userDetailsService(userDetailsService(clientId, clientSecret));
+                    .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+                    .userDetailsService(userDetailsService(clientId, clientSecret));
         }
 
         //assign both USER and ADMIN to anon user to bypass all scoped permission checks
@@ -221,8 +229,8 @@ public class SecurityConfig {
 
         securityChain.exceptionHandling(handling -> {
             handling
-                .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
-                .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
+                    .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+                    .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
         });
 
         return securityChain.build();
@@ -231,41 +239,59 @@ public class SecurityConfig {
     @Bean("h2SecurityFilterChain")
     public SecurityFilterChain h2SecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .securityMatcher(new AntPathRequestMatcher("/h2-console/**"))
-            .authorizeHttpRequests(auth -> {
-                auth.anyRequest().permitAll();
-            })
-            //disable csrf
-            .csrf(csrf -> csrf.disable())
-            // we don't want a session for these endpoints, each request should be evaluated
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // enable frame options
-            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-            .build();
+                .securityMatcher(new AntPathRequestMatcher("/h2-console/**"))
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest().permitAll();
+                })
+                //disable csrf
+                .csrf(csrf -> csrf.disable())
+                // we don't want a session for these endpoints, each request should be evaluated
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // enable frame options
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .build();
+    }
+
+
+    @Bean("cliSecurityFilterChain")
+    public SecurityFilterChain cliSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http.securityMatcher(getCliLoginRequestMatcher())
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest().permitAll();
+                })
+                .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl("/"))
+                .sessionManagement(management ->
+                        management.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+                .build();
     }
 
     @Bean("coreSecurityFilterChain")
     public SecurityFilterChain coreSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .authorizeHttpRequests(auth -> {
-                auth.anyRequest().permitAll();
-            })
-            // disable request cache
-            .requestCache(requestCache -> requestCache.disable())
-            .build();
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest().permitAll();
+                })
+                // disable request cache
+                .requestCache(requestCache -> requestCache.disable())
+                .build();
     }
 
     @Bean("monitoringSecurityFilterChain")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // match only actuator endpoints
         return http
-            .securityMatcher(getManagementRequestMatcher())
-            .authorizeHttpRequests(auth -> {
-                auth.anyRequest().permitAll();
-            })
-            .exceptionHandling(handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
-            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .build();
+                .securityMatcher(getManagementRequestMatcher())
+                .authorizeHttpRequests(auth -> {
+                    auth.anyRequest().permitAll();
+                })
+                .exceptionHandling(handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+                .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .build();
+    }
+
+
+    public RequestMatcher getCliLoginRequestMatcher() {
+        return new AntPathRequestMatcher("/oauth2/**");
     }
 
     public RequestMatcher getManagementRequestMatcher() {
@@ -302,12 +328,12 @@ public class SecurityConfig {
     public static UserDetailsService userDetailsService(String username, String password) {
         //create admin user with full permissions
         UserDetails admin = User
-            .withDefaultPasswordEncoder()
-            .username(username)
-            .password(password)
-            .roles("ADMIN", "USER")
-            // .roles("USER")
-            .build();
+                .withDefaultPasswordEncoder()
+                .username(username)
+                .password(password)
+                .roles("ADMIN", "USER")
+                // .roles("USER")
+                .build();
 
         return new InMemoryUserDetailsManager(admin);
     }
@@ -327,20 +353,20 @@ public class SecurityConfig {
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
-            JwtClaimNames.AUD,
-            (aud -> aud != null && aud.contains(audience))
+                JwtClaimNames.AUD,
+                (aud -> aud != null && aud.contains(audience))
         );
 
         //access tokens *do not contain* at_hash, those are refresh
         OAuth2TokenValidator<Jwt> accessTokenValidator = new JwtClaimValidator<String>(
-            IdTokenClaimNames.AT_HASH,
-            (Objects::isNull)
+                IdTokenClaimNames.AT_HASH,
+                (Objects::isNull)
         );
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
-            withIssuer,
-            audienceValidator,
-            accessTokenValidator
+                withIssuer,
+                audienceValidator,
+                accessTokenValidator
         );
         jwtDecoder.setJwtValidator(validator);
 
@@ -348,8 +374,8 @@ public class SecurityConfig {
     }
 
     public static JwtAuthenticationConverter coreJwtAuthenticationConverter(
-        String claim,
-        AuthorizableAwareEntityService<Project> projectAuthHelper
+            String claim,
+            AuthorizableAwareEntityService<Project> projectAuthHelper
     ) {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter((Jwt source) -> {
@@ -374,20 +400,20 @@ public class SecurityConfig {
 
                 //inject roles from ownership of projects
                 projectAuthHelper
-                    .findIdsByCreatedBy(username)
-                    .forEach(p -> {
-                        //derive a scoped ADMIN role
-                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
-                    });
+                        .findIdsByCreatedBy(username)
+                        .forEach(p -> {
+                            //derive a scoped ADMIN role
+                            authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN"));
+                        });
 
                 //inject roles from sharing of projects
                 projectAuthHelper
-                    .findIdsBySharedTo(username)
-                    .forEach(p -> {
-                        //derive a scoped USER role
-                        //TODO make configurable?
-                        authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER"));
-                    });
+                        .findIdsBySharedTo(username)
+                        .forEach(p -> {
+                            //derive a scoped USER role
+                            //TODO make configurable?
+                            authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER"));
+                        });
             }
 
             return authorities;
@@ -402,8 +428,8 @@ public class SecurityConfig {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuer).build();
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
-            JwtClaimNames.AUD,
-            (aud -> aud != null && aud.contains(audience))
+                JwtClaimNames.AUD,
+                (aud -> aud != null && aud.contains(audience))
         );
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
@@ -414,9 +440,9 @@ public class SecurityConfig {
     }
 
     public static Converter<Jwt, AbstractAuthenticationToken> externalJwtAuthenticationConverter(
-        String usernameClaimName,
-        String rolesClaimName,
-        AuthorizableAwareEntityService<Project> projectAuthHelper
+            String usernameClaimName,
+            String rolesClaimName,
+            AuthorizableAwareEntityService<Project> projectAuthHelper
     ) {
         return (Jwt jwt) -> {
             Set<GrantedAuthority> authorities = new HashSet<>();
@@ -450,15 +476,15 @@ public class SecurityConfig {
                 //inject roles from ownership of projects
                 //derive a scoped ADMIN role
                 projectAuthHelper
-                    .findIdsByCreatedBy(username)
-                    .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN")));
+                        .findIdsByCreatedBy(username)
+                        .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN")));
 
                 //inject roles from sharing of projects
                 //derive a scoped USER role
                 //TODO make configurable?
                 projectAuthHelper
-                    .findIdsBySharedTo(username)
-                    .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER")));
+                        .findIdsBySharedTo(username)
+                        .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER")));
             }
 
             return new JwtAuthenticationToken(jwt, authorities, username);
