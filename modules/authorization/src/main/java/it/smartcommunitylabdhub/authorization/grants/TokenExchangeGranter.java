@@ -204,7 +204,7 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             );
 
             //full credentials + refresh
-            return tokenService.generateToken(user, true, true);
+            return tokenService.generateToken(user, true);
         } catch (AuthenticationException ae1) {
             throw new IllegalArgumentException("invalid or missing subject_token");
         }

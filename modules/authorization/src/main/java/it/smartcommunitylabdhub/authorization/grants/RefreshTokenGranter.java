@@ -98,7 +98,7 @@ public class RefreshTokenGranter implements TokenGranter {
             }
 
             //generate full credentials + new refresh
-            return tokenService.generateToken(user, true, true);
+            return tokenService.generateToken(user, true);
         } catch (AuthenticationException ae) {
             throw new IllegalArgumentException("invalid or missing refresh_token");
         }

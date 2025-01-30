@@ -19,8 +19,8 @@ package it.smartcommunitylabdhub.authorization.providers;
 import com.nimbusds.jwt.SignedJWT;
 import it.smartcommunitylabdhub.authorization.controllers.JWKSEndpoint;
 import it.smartcommunitylabdhub.authorization.controllers.TokenEndpoint;
-import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
+import it.smartcommunitylabdhub.authorization.providers.CoreCredentials.CoreCredentialsBuilder;
 import it.smartcommunitylabdhub.authorization.providers.CoreCredentialsConfig.CoreCredentialsConfigBuilder;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.authorization.services.CredentialsProvider;
@@ -110,17 +110,28 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
     }
 
     @Override
-    public Credentials get(@NotNull UserAuthentication<?> auth) {
+    public CoreCredentials get(@NotNull UserAuthentication<?> auth) {
         if (jwtTokenService == null) {
             return null;
         }
 
         log.debug("generate credentials for user authentication {} via jwtToken service", auth.getName());
         //TODO evaluate caching responses
+        //NOTE: refresh token is bound to access and single use, we could cache only non-refreshable cred!
         SignedJWT accessToken = jwtTokenService.generateAccessToken(auth);
         String refreshToken = jwtTokenService.generateRefreshToken(auth, accessToken);
 
-        return TokenResponse.builder().accessToken(accessToken).refreshToken(refreshToken).build();
+        Integer exp = jwtTokenService.getAccessTokenDuration();
+        //response
+        CoreCredentialsBuilder response = CoreCredentials
+            .builder()
+            .accessToken(accessToken)
+            .refreshToken(refreshToken)
+            .expiration(exp)
+            .clientId(jwtTokenService.getClientId())
+            .issuer(jwtTokenService.getIssuer());
+
+        return response.build();
     }
 
     @Override

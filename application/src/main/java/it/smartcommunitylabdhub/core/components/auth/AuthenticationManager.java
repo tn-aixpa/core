@@ -90,6 +90,7 @@ public class AuthenticationManager extends ProviderManager {
             List<Credentials> credentials = providers
                 .stream()
                 .map(p -> p.process((AbstractAuthenticationToken) auth))
+                .filter(c -> c != null)
                 .collect(Collectors.toList());
 
             //create user auth with details

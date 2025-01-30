@@ -53,6 +53,7 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import org.springframework.util.SerializationUtils;
 import org.springframework.util.StringUtils;
 
@@ -74,14 +75,11 @@ public class JwtTokenService implements InitializingBean {
     @Autowired
     private JWKSetKeyStore keyStore;
 
-    @Autowired
-    private ApplicationProperties applicationProperties;
-
-    @Autowired
-    private SecurityProperties securityProperties;
-
     @Value("${jwt.client-id}")
     private String clientId;
+
+    private String audience;
+    private String issuer;
 
     private int accessTokenDuration = DEFAULT_ACCESS_TOKEN_DURATION;
     private int refreshTokenDuration = DEFAULT_REFRESH_TOKEN_DURATION;
@@ -116,9 +114,19 @@ public class JwtTokenService implements InitializingBean {
         }
     }
 
+    @Autowired
+    public void setApplicationProperties(ApplicationProperties applicationProperties) {
+        Assert.notNull(applicationProperties, "app properties are required");
+        this.issuer = applicationProperties.getEndpoint();
+        this.audience = applicationProperties.getName();
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
-        if (securityProperties.isRequired()) {
+        Assert.hasText(audience, "audience can not be null");
+        Assert.hasText(issuer, "issuer can not be null");
+
+        if (keyStore != null) {
             //build signer for the given keys
             this.jwk = keyStore.getJwk();
 
@@ -133,6 +141,26 @@ public class JwtTokenService implements InitializingBean {
                 }
             }
         }
+    }
+
+    /*
+     * Export config
+     */
+
+    public int getAccessTokenDuration() {
+        return accessTokenDuration;
+    }
+
+    public int getRefreshTokenDuration() {
+        return refreshTokenDuration;
+    }
+
+    public String getIssuer() {
+        return issuer;
+    }
+
+    public String getAudience() {
+        return audience;
     }
 
     public String getClientId() {
@@ -181,9 +209,9 @@ public class JwtTokenService implements InitializingBean {
             // build access token claims
             JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
                 .subject(authentication.getName())
-                .issuer(applicationProperties.getEndpoint())
+                .issuer(issuer)
                 .issueTime(Date.from(now))
-                .audience(applicationProperties.getName())
+                .audience(audience)
                 .jwtID(keyGenerator.generateKey())
                 .expirationTime(Date.from(now.plusSeconds(accessTokenDuration)));
 
@@ -207,6 +235,7 @@ public class JwtTokenService implements InitializingBean {
                 authentication
                     .getCredentials()
                     .stream()
+                    .filter(c -> c != null)
                     .map(c -> {
                         if (c instanceof CredentialsContainer) {
                             ((CredentialsContainer) c).eraseCredentials();
@@ -391,12 +420,10 @@ public class JwtTokenService implements InitializingBean {
         }
 
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(jwk.toRSAKey().toRSAPublicKey()).build();
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(
-            applicationProperties.getEndpoint()
-        );
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
             JwtClaimNames.AUD,
-            (aud -> aud != null && aud.contains(applicationProperties.getName()))
+            (aud -> aud != null && aud.contains(audience))
         );
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
@@ -427,133 +454,4 @@ public class JwtTokenService implements InitializingBean {
 
         return authConverter;
     }
-    // public SignedJWT generateRefreshToken(
-    //     @NotNull UserAuthentication<?> authentication,
-    //     @NotNull SignedJWT accessToken
-    // ) throws JwtTokenServiceException {
-    //     if (signer == null) {
-    //         throw new UnsupportedOperationException("signer not available");
-    //     }
-
-    //     log.debug("generate refresh token for {}", authentication.getName());
-    //     if (log.isTraceEnabled()) {
-    //         log.trace("access token: {}", accessToken.serialize());
-    //     }
-
-    //     try {
-    //         JWSAlgorithm jwsAlgorithm = JWSAlgorithm.parse(jwk.getAlgorithm().getName());
-
-    //         Instant now = Instant.now();
-    //         String jti = UUID.randomUUID().toString().replace("-", "");
-
-    //         // build refresh token claims
-    //         JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
-    //             .subject(authentication.getName())
-    //             .issuer(applicationProperties.getEndpoint())
-    //             .issueTime(Date.from(now))
-    //             .audience(applicationProperties.getName())
-    //             .jwtID(jti)
-    //             .expirationTime(Date.from(now.plusSeconds(refreshTokenDuration)));
-
-    //         //associate access token via hash binding
-    //         String hash = JWKUtils.getAccessTokenHash(jwsAlgorithm, accessToken);
-    //         claims.claim(IdTokenClaimNames.AT_HASH, hash);
-
-    //         //define authorities as claims
-    //         List<String> authorities = authentication
-    //             .getAuthorities()
-    //             .stream()
-    //             .map(GrantedAuthority::getAuthority)
-    //             .toList();
-
-    //         claims.claim("authorities", authorities);
-
-    //         //add client if set
-    //         if (StringUtils.hasText(clientId)) {
-    //             claims.claim("client_id", clientId);
-    //         }
-
-    //         // build and sign
-    //         JWTClaimsSet claimsSet = claims.build();
-    //         JWSHeader header = new JWSHeader.Builder(jwsAlgorithm).keyID(jwk.getKeyID()).build();
-    //         SignedJWT jwt = new SignedJWT(header, claimsSet);
-    //         jwt.sign(signer);
-
-    //         if (log.isTraceEnabled()) {
-    //             log.trace("token: {}", jwt.serialize());
-    //         }
-
-    //         log.debug("store refresh token for {} with id {}", authentication.getName(), jti);
-    //         // store Refresh Token into db
-    //         RefreshTokenEntity refreshToken = RefreshTokenEntity
-    //             .builder()
-    //             .id(jti)
-    //             .subject(authentication.getName())
-    //             .token(jwt.serialize())
-    //             .issuedTime(claimsSet.getIssueTime())
-    //             .expirationTime(claimsSet.getExpirationTime())
-    //             .build();
-    //         refreshTokenRepository.save(refreshToken);
-
-    //         return jwt;
-    //     } catch (JOSEException e) {
-    //         log.error("Error generating JWT token", e);
-    //         return null;
-    //     }
-    // }
-
-    // @Transactional(dontRollbackOn = { PessimisticLockingFailureException.class, SQLTimeoutException.class })
-    // public void consume(UserAuthentication<?> authentication, String refreshToken) {
-    //     try {
-    //         if (verifier == null) {
-    //             throw new UnsupportedOperationException("verifier not available");
-    //         }
-
-    //         log.debug("consume refresh token: {}", refreshToken);
-
-    //         //decode jwt
-    //         SignedJWT jwt = SignedJWT.parse(refreshToken);
-    //         String id = jwt.getJWTClaimsSet().getJWTID();
-
-    //         // Lock the token
-    //         Optional<RefreshTokenEntity> tokenEntity = refreshTokenRepository.findByIdForUpdate(id);
-    //         if (tokenEntity.isEmpty()) {
-    //             log.debug("refresh token does not exists: {} id {}", refreshToken, id);
-    //             throw new JwtTokenServiceException("Refresh token does not exist");
-    //         }
-
-    //         RefreshTokenEntity token = tokenEntity.get();
-
-    //         if (log.isTraceEnabled()) {
-    //             log.trace("token: {}", token);
-    //         }
-
-    //         // Parse the refresh token
-    //         SignedJWT signedJWT = SignedJWT.parse(refreshToken);
-
-    //         // Verify the token signature
-    //         if (!signedJWT.verify(verifier)) {
-    //             throw new JwtTokenServiceException("Invalid refresh token");
-    //         }
-
-    //         // Validate the token subject matches the current authentication
-    //         if (!token.getSubject().equals(authentication.getName())) {
-    //             throw new JwtTokenServiceException("Token subject does not match authentication subject");
-    //         }
-
-    //         // Delete the token after usage: it matches the subject and should not be reused
-    //         refreshTokenRepository.deleteById(token.getId());
-
-    //         // Check expiration
-    //         if (token.getExpirationTime().before(Date.from(Instant.now()))) {
-    //             throw new JwtTokenServiceException("Refresh token has expired");
-    //         }
-
-    //         log.debug("Refresh token successfully consumed and removed from repository");
-    //     } catch (ParseException e) {
-    //         throw new JwtTokenServiceException("error parsing token", e);
-    //     } catch (JOSEException e) {
-    //         throw new JwtTokenServiceException("Error verifying JWT token", e);
-    //     }
-    // }
 }

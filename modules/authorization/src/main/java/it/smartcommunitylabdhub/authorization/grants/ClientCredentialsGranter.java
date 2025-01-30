@@ -22,6 +22,8 @@ import it.smartcommunitylabdhub.authorization.services.TokenService;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,7 +83,21 @@ public class ClientCredentialsGranter implements TokenGranter {
         );
 
         //full credentials without refresh
-        return tokenService.generateToken(user, false, true);
+        //TODO skip generation, for now we exclude from response
+        TokenResponse token = tokenService.generateToken(user, true);
+        Optional
+            .ofNullable(token.getCredentials())
+            .ifPresent(cred -> {
+                token.setCredentials(
+                    cred
+                        .entrySet()
+                        .stream()
+                        .filter(e -> !"refresh_token".equals(e.getKey()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                );
+            });
+
+        return token;
     }
 
     @Override
