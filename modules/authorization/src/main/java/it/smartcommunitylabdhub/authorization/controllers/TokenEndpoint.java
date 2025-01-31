@@ -3,9 +3,7 @@ package it.smartcommunitylabdhub.authorization.controllers;
 import it.smartcommunitylabdhub.authorization.exceptions.JwtTokenServiceException;
 import it.smartcommunitylabdhub.authorization.grants.TokenGranter;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
-import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
-import it.smartcommunitylabdhub.commons.models.project.Project;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +49,8 @@ public class TokenEndpoint implements InitializingBean {
     @Autowired
     private SecurityProperties securityProperties;
 
-    @Autowired
-    AuthorizableAwareEntityService<Project> projectAuthHelper;
+    // @Autowired
+    // AuthorizableAwareEntityService<Project> projectAuthHelper;
 
     //TODO move to dedicated filter initalized via securityConfig!
     // private JwtAuthenticationProvider accessTokenAuthProvider;

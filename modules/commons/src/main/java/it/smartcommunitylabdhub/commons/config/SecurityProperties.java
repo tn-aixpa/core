@@ -58,6 +58,7 @@ public class SecurityProperties {
         private String audience;
         private String claim;
         private String username;
+        private String redirectUris;
 
         public boolean isEnabled() {
             return StringUtils.hasText(issuerUri) && StringUtils.hasText(audience);

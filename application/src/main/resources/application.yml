@@ -177,6 +177,7 @@ security:
     audience: ${DH_AUTH_JWT_AUDIENCE:${security.oidc.client-id}}
     claim: ${DH_AUTH_JWT_CLAIM:roles}
     username: ${DH_AUTH_JWT_USERNAME:preferred_username}    
+    redirect-uris: ${DH_AUTH_JWT_REDIRECT_URIS:http://localhost:*,${application.endpoint}}
   oidc:    
     issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
