@@ -110,10 +110,12 @@ public class MinioProvider implements CredentialsProvider, InitializingBean {
     }
 
     private MinioSessionCredentials generate(@NotNull String username, @NotNull String policy) throws StoreException {
-        //TODO cache on username+policy for EXPIRE-skew
         log.debug("generate credentials for user authentication {} policy {} via STS service", username, policy);
 
         try {
+            //assume role as user
+            //NOTE: roleArn or policy scoping does NOT work via assumeRole, only with external OIDC provider
+            //credentials will receive the same set of privileges as the accessKey used to sign the request!
             AssumeRoleProvider provider = new AssumeRoleProvider(
                 endpointUrl,
                 accessKey,
@@ -121,7 +123,7 @@ public class MinioProvider implements CredentialsProvider, InitializingBean {
                 duration,
                 null,
                 region,
-                "arn:aws:iam::account:user/" + policy,
+                null,
                 null,
                 null,
                 null
