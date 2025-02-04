@@ -84,6 +84,7 @@ public class TokenEndpoint implements InitializingBean {
         // }
     }
 
+    //TODO add errorHandling
     @RequestMapping(value = TOKEN_URL, method = { RequestMethod.POST, RequestMethod.GET })
     public TokenResponse token(
         @RequestParam Map<String, String> parameters,

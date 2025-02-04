@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,6 +42,7 @@ import org.springframework.util.Assert;
 public class ClientCredentialsGranter implements TokenGranter {
 
     private String clientId;
+    private String clientSecret;
 
     private final TokenService tokenService;
 
@@ -54,16 +56,39 @@ public class ClientCredentialsGranter implements TokenGranter {
         this.clientId = clientId;
     }
 
+    @Autowired
+    public void setClientSecret(@Value("${jwt.client-secret}") String clientSecret) {
+        this.clientSecret = clientSecret;
+    }
+
     @Override
     public TokenResponse grant(@NotNull Map<String, String> parameters, Authentication authentication) {
-        //client credentials *requires* basic auth
-        if (authentication == null || !(authentication instanceof UsernamePasswordAuthenticationToken)) {
+        //client credentials *requires* basic auth or form auth
+        if (
+            authentication == null ||
+            (!(authentication instanceof UsernamePasswordAuthenticationToken) &&
+                !(authentication instanceof AnonymousAuthenticationToken))
+        ) {
             throw new InsufficientAuthenticationException("Invalid or missing authentication");
         }
 
         //for client credentials to mimic admin user client *must* match authenticated user
-        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) authentication;
-        if (clientId != null && !clientId.equals(auth.getName())) {
+        String cId = null;
+        if (authentication instanceof UsernamePasswordAuthenticationToken) {
+            UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) authentication;
+            //validate only name
+            cId = auth.getName();
+        } else if (authentication instanceof AnonymousAuthenticationToken) {
+            //validate client and secret
+            cId = parameters.get(OAuth2ParameterNames.CLIENT_ID);
+            String cSecret = parameters.get(OAuth2ParameterNames.CLIENT_SECRET);
+
+            if (clientSecret == null || !clientSecret.equals(cSecret)) {
+                throw new InsufficientAuthenticationException("Invalid client authentication");
+            }
+        }
+
+        if (clientId != null && !clientId.equals(cId)) {
             throw new InsufficientAuthenticationException("Invalid client authentication");
         }
 
@@ -73,11 +98,11 @@ public class ClientCredentialsGranter implements TokenGranter {
             throw new IllegalArgumentException("invalid grant type");
         }
 
-        log.debug("client token request for {}", auth.getName());
+        log.debug("client token request for {}", authentication.getName());
 
-        //generate as admin user
+        //generate as admin user == client
         UserAuthentication<UsernamePasswordAuthenticationToken> user = new UserAuthentication<>(
-            auth,
+            new UsernamePasswordAuthenticationToken(clientId, null, authentication.getAuthorities()),
             clientId,
             Collections.singleton(new SimpleGrantedAuthority("ROLE_ADMIN"))
         );

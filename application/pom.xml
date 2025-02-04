@@ -73,6 +73,11 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-oauth2-client</artifactId>
+            <version>${spring-security.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-oauth2-jose</artifactId>
             <version>${spring-security.version}</version>
         </dependency>
@@ -279,7 +284,7 @@
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>credentials-provider-db</artifactId>
             <version>${revision}</version>
-        </dependency>        
+        </dependency>
     </dependencies>
 
     <build>

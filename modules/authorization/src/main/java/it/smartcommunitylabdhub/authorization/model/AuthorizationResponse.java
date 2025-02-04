@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @ToString
 @Builder
@@ -32,4 +33,18 @@ public class AuthorizationResponse {
     private String issuer;
     private String code;
     private String state;
+    private String redirectUrl;
+
+    public String buildRedirectUri() {
+        if (redirectUrl == null) {
+            return null;
+        }
+
+        return UriComponentsBuilder
+            .fromUriString(redirectUrl)
+            .queryParam("code", code)
+            .queryParam("state", state)
+            .queryParam("issuer", issuer)
+            .toUriString();
+    }
 }

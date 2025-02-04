@@ -24,9 +24,9 @@ import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.repositories.RefreshTokenRepository;
 import it.smartcommunitylabdhub.authorization.utils.SecureKeyGenerator;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
-import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
 import java.sql.SQLTimeoutException;
 import java.time.Instant;
 import java.util.Date;
@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.serializer.support.SerializationDelegate;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
@@ -54,7 +55,6 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import org.springframework.util.SerializationUtils;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -90,10 +90,14 @@ public class JwtTokenService implements InitializingBean {
     private JWSVerifier verifier;
 
     private JwtDecoder decoder;
+
     private JwtAuthenticationConverter authenticationConverter;
 
     //keygen
     private StringKeyGenerator keyGenerator;
+
+    //custom serialization
+    SerializationDelegate serializer = new SerializationDelegate(this.getClass().getClassLoader());
 
     public JwtTokenService() {
         log.debug("create jwks service");
@@ -171,7 +175,7 @@ public class JwtTokenService implements InitializingBean {
         return verifier;
     }
 
-    public JwtDecoder getJwtDecoder() {
+    public JwtDecoder getDecoder() {
         return decoder;
     }
 
@@ -285,25 +289,30 @@ public class JwtTokenService implements InitializingBean {
         // jwt.sign(signer);
 
         //store auth object serialized
-        byte[] auth = SerializationUtils.serialize(authentication);
+        // byte[] auth = SerializationUtils.serialize(authentication);
+        try {
+            byte[] auth = serializer.serializeToByteArray(authentication);
 
-        log.debug("store refresh token for {} with id {}", authentication.getName(), jti);
+            log.debug("store refresh token for {} with id {}", authentication.getName(), jti);
 
-        // store Refresh Token into db
-        RefreshTokenEntity refreshToken = RefreshTokenEntity
-            .builder()
-            .id(jti)
-            .subject(authentication.getName())
-            .authentication(auth)
-            .issuedTime(Date.from(now))
-            .expirationTime(Date.from(now.plusSeconds(refreshTokenDuration)))
-            .build();
+            // store Refresh Token into db
+            RefreshTokenEntity refreshToken = RefreshTokenEntity
+                .builder()
+                .id(jti)
+                .subject(authentication.getName())
+                .authentication(auth)
+                .issuedTime(Date.from(now))
+                .expirationTime(Date.from(now.plusSeconds(refreshTokenDuration)))
+                .build();
 
-        //save
-        refreshToken = refreshTokenRepository.saveAndFlush(refreshToken);
+            //save
+            refreshToken = refreshTokenRepository.saveAndFlush(refreshToken);
 
-        //id is the token value
-        return refreshToken.getId();
+            //id is the token value
+            return refreshToken.getId();
+        } catch (IOException e) {
+            throw new JwtTokenServiceException(e.getMessage());
+        }
     }
 
     @Transactional(dontRollbackOn = { PessimisticLockingFailureException.class, SQLTimeoutException.class })
@@ -352,23 +361,29 @@ public class JwtTokenService implements InitializingBean {
         if (token.getExpirationTime().before(Date.from(Instant.now()))) {
             throw new JwtTokenServiceException("Refresh token has expired");
         }
+        try {
+            //deserialize authentication
+            byte[] bytes = token.getAuthentication();
+            if (bytes == null || bytes.length == 0) {
+                throw new JwtTokenServiceException("Missing authentication for token");
+            }
 
-        //deserialize authentication
-        byte[] bytes = token.getAuthentication();
-        if (bytes == null || bytes.length == 0) {
-            throw new JwtTokenServiceException("Missing authentication for token");
+            // @SuppressWarnings("deprecation")
+            // UserAuthentication<?> user = (UserAuthentication<?>) SerializationUtils.deserialize(bytes);
+
+            UserAuthentication<?> user = (UserAuthentication<?>) serializer.deserializeFromByteArray(bytes);
+
+            log.debug("Refresh token successfully consumed and removed from repository");
+            return user;
+            // } catch (ParseException e) {
+            //     throw new JwtTokenServiceException("error parsing token", e);
+            // } catch (JOSEException e) {
+            //     throw new JwtTokenServiceException("Error verifying JWT token", e);
+            // }
+
+        } catch (IOException e) {
+            throw new JwtTokenServiceException(e.getMessage());
         }
-
-        @SuppressWarnings("deprecation")
-        UserAuthentication<?> user = (UserAuthentication<?>) SerializationUtils.deserialize(bytes);
-
-        log.debug("Refresh token successfully consumed and removed from repository");
-        return user;
-        // } catch (ParseException e) {
-        //     throw new JwtTokenServiceException("error parsing token", e);
-        // } catch (JOSEException e) {
-        //     throw new JwtTokenServiceException("Error verifying JWT token", e);
-        // }
     }
 
     private JWSSigner buildSigner(@NotNull JWK jwk) throws JOSEException {

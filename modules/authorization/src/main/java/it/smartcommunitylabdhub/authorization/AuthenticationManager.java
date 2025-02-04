@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.core.components.auth;
+package it.smartcommunitylabdhub.authorization;
 
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;

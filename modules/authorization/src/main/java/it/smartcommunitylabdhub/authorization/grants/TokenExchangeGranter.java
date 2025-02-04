@@ -16,6 +16,7 @@
 
 package it.smartcommunitylabdhub.authorization.grants;
 
+import it.smartcommunitylabdhub.authorization.AuthenticationManager;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.services.TokenService;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -63,6 +63,7 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
     private String clientId;
     private SecurityProperties securityProperties;
     private JwtAuthenticationProvider jwtAuthProvider;
+    private AuthenticationManager authenticationManager;
 
     private final TokenService tokenService;
 
@@ -122,6 +123,9 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             });
 
             this.jwtAuthProvider = provider;
+
+            //build manager
+            this.authenticationManager = new AuthenticationManager(jwtAuthProvider);
         }
     }
 
@@ -151,7 +155,7 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             throw new InsufficientAuthenticationException("Invalid or missing authentication");
         }
 
-        //for client credentials to mimic admin user client *must* match authenticated user
+        //client *must* match authenticated user
         UsernamePasswordAuthenticationToken clientAuth = (UsernamePasswordAuthenticationToken) authentication;
         if (clientId != null && !clientId.equals(clientAuth.getName())) {
             throw new InsufficientAuthenticationException("Invalid client authentication");
@@ -174,7 +178,7 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             throw new IllegalArgumentException("invalid or missing subject_token");
         }
 
-        String tokenType = parameters.get("subject_token_type");
+        String tokenType = parameters.getOrDefault("subject_token_type", ACCESS_TOKEN_TYPE);
         if (!ACCESS_TOKEN_TYPE.equals(tokenType)) {
             throw new IllegalArgumentException("invalid or missing subject_token_type");
         }
@@ -184,10 +188,10 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             log.trace("subject token {}", token);
         }
 
-        //validate external provider
         try {
             BearerTokenAuthenticationToken request = new BearerTokenAuthenticationToken(token);
-            Authentication auth = jwtAuthProvider.authenticate(request);
+
+            Authentication auth = authenticationManager.authenticate(request);
             if (!auth.isAuthenticated()) {
                 throw new IllegalArgumentException("invalid or missing subject_token");
             }
@@ -199,9 +203,8 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             );
 
             //token is valid, use as context for generation
-            UserAuthentication<?> user = new UserAuthentication<AbstractAuthenticationToken>(
-                (AbstractAuthenticationToken) auth
-            );
+            //we expect a UserAuth
+            UserAuthentication<?> user = (UserAuthentication<?>) auth;
 
             //full credentials + refresh
             return tokenService.generateToken(user, true);

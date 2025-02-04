@@ -58,7 +58,6 @@ public class SecurityProperties {
         private String audience;
         private String claim;
         private String username;
-        private String redirectUris;
 
         public boolean isEnabled() {
             return StringUtils.hasText(issuerUri) && StringUtils.hasText(audience);
@@ -70,8 +69,11 @@ public class SecurityProperties {
     public static class OidcAuthenticationProperties {
 
         private String issuerUri;
+        private String clientName;
         private String clientId;
+        private String clientSecret;
         private List<String> scope;
+        private String usernameAttributeName;
 
         public boolean isEnabled() {
             return StringUtils.hasText(issuerUri) && StringUtils.hasText(clientId);

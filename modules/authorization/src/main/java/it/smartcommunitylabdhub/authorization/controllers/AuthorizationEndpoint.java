@@ -22,6 +22,9 @@ import it.smartcommunitylabdhub.authorization.repositories.AuthorizationRequestS
 import it.smartcommunitylabdhub.authorization.utils.SecureKeyGenerator;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -31,14 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
+import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,7 +56,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class AuthorizationEndpoint implements InitializingBean {
 
-    public static final String TOKEN_URL = "/auth/authorize";
+    public static final String AUTHORIZE_URL = "/auth/authorize";
     private static final int CODE_LENGTH = 12;
     private static final int MIN_STATE_LENGTH = 5;
 
@@ -74,6 +79,8 @@ public class AuthorizationEndpoint implements InitializingBean {
     private StringKeyGenerator keyGenerator = new SecureKeyGenerator(CODE_LENGTH);
     private String issuer;
 
+    private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(keyGenerator, "code generator can not be null");
@@ -85,11 +92,22 @@ public class AuthorizationEndpoint implements InitializingBean {
         this.issuer = applicationProperties.getEndpoint();
     }
 
-    @RequestMapping(value = TOKEN_URL, method = { RequestMethod.POST, RequestMethod.GET })
-    public AuthorizationResponse authorize(
+    @RequestMapping(value = "auth/test", method = { RequestMethod.POST, RequestMethod.GET })
+    public AbstractAuthenticationToken debug(@RequestParam Map<String, String> parameters, Authentication auth) {
+        if (auth instanceof AbstractAuthenticationToken) {
+            return (AbstractAuthenticationToken) auth;
+        }
+
+        return null;
+    }
+
+    @RequestMapping(value = AUTHORIZE_URL, method = { RequestMethod.POST, RequestMethod.GET })
+    public void authorize(
         @RequestParam Map<String, String> parameters,
-        @CurrentSecurityContext SecurityContext securityContext
-    ) {
+        @CurrentSecurityContext SecurityContext securityContext,
+        HttpServletRequest httpRequest,
+        HttpServletResponse httpResponse
+    ) throws IOException {
         if (!securityProperties.isOidcAuthEnabled()) {
             throw new UnsupportedOperationException();
         }
@@ -102,9 +120,9 @@ public class AuthorizationEndpoint implements InitializingBean {
         }
 
         //sanity check
-        String grantType = parameters.get(OAuth2ParameterNames.GRANT_TYPE);
-        if (!AuthorizationGrantType.AUTHORIZATION_CODE.getValue().equals(grantType)) {
-            throw new IllegalArgumentException("invalid grant type");
+        String responseType = parameters.get(OAuth2ParameterNames.RESPONSE_TYPE);
+        if (!"code".equals(responseType)) {
+            throw new IllegalArgumentException("invalid response type");
         }
 
         log.debug("authorize request for {}", authentication.getName());
@@ -162,12 +180,19 @@ public class AuthorizationEndpoint implements InitializingBean {
         log.debug("stored auth request for {} with key {}", authentication.getName(), key);
 
         //build response
-        AuthorizationResponse response = AuthorizationResponse.builder().code(code).state(state).issuer(issuer).build();
+        AuthorizationResponse response = AuthorizationResponse
+            .builder()
+            .code(code)
+            .state(state)
+            .issuer(issuer)
+            .redirectUrl(redirectUrl)
+            .build();
         if (log.isTraceEnabled()) {
             log.trace("response: {}", response);
         }
 
-        return response;
+        //redirect
+        redirectStrategy.sendRedirect(httpRequest, httpResponse, response.buildRedirectUri());
     }
 
     private boolean matches(String redirectUri) {
