@@ -86,8 +86,9 @@ public class SolrIndexManager {
             HttpHeaders headers = new HttpHeaders();
             if(StringUtils.hasLength(props.getAdminUser()) && StringUtils.hasLength(props.getAdminPassword())) {
             	String auth = props.getAdminUser() + ":" + props.getAdminPassword();
-                String authHeader  = "Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
+                String authHeader  = Base64.getEncoder().encodeToString(auth.getBytes());
                 headers.setBasicAuth(authHeader);
+                log.debug("init solr collection auth {}", authHeader);
             }
             
             try {
@@ -95,7 +96,7 @@ public class SolrIndexManager {
                 ResponseEntity<String> listResponse = restTemplate.exchange(listUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
 
                 if (listResponse.getStatusCode().isError()) {
-                	 log.warn("can not talk to solr {%s}: {%s}",
+                	 log.warn("can not talk to solr {}: {}",
                              listResponse.getStatusCode().toString(),
                              listResponse.getBody());
                 }
@@ -108,7 +109,7 @@ public class SolrIndexManager {
                 ResponseEntity<String> listResponse = restTemplate.exchange(listUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
 
                 if (listResponse.getStatusCode().isError()) {
-                	log.warn("can not talk to solr {%s}: {%s}",
+                	log.warn("can not talk to solr {}: {}",
                          listResponse.getStatusCode().toString(),
                          listResponse.getBody());
                 }
@@ -120,7 +121,7 @@ public class SolrIndexManager {
                 }
             }
         } catch (SolrException | RestClientException | JsonProcessingException e) {
-        	log.warn("can not initialize solr: {%s}", e.getMessage());
+        	log.warn("can not initialize solr: {}", e.getMessage());
         }
     }
 
@@ -146,8 +147,9 @@ public class SolrIndexManager {
         HttpHeaders headers = new HttpHeaders();
         if(StringUtils.hasLength(props.getUser()) && StringUtils.hasLength(props.getPassword())) {
         	String auth = props.getUser() + ":" + props.getPassword();
-            String authHeader  = "Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
+            String authHeader  = Base64.getEncoder().encodeToString(auth.getBytes());
             headers.setBasicAuth(authHeader);
+            log.debug("init solr fields auth {}", authHeader);
         }
 
         String solrUrl = props.getUrl();
@@ -176,7 +178,8 @@ public class SolrIndexManager {
                                 field.isMultiValued(),
                                 field.isStored(),
                                 field.isUninvertible(),
-                                schemaUri
+                                schemaUri,
+                                headers
                             );
                         }
                     }
@@ -329,7 +332,8 @@ public class SolrIndexManager {
         boolean multiValued,
         boolean stored,
         boolean uninvertible,
-        String uri
+        String uri,
+        HttpHeaders headers
     ) throws SolrIndexerException {
         ObjectNode rootNode = mapper.createObjectNode();
         ObjectNode addNode = rootNode.putObject("add-field");
@@ -340,7 +344,7 @@ public class SolrIndexManager {
             .put("indexed", indexed)
             .put("stored", stored)
             .put("uninvertible", uninvertible);
-        HttpEntity<ObjectNode> request = new HttpEntity<>(rootNode);
+        HttpEntity<ObjectNode> request = new HttpEntity<>(rootNode, headers);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
         if (response.getStatusCode().isError()) {
             throw new SolrIndexerException(
@@ -421,7 +425,7 @@ public class SolrIndexManager {
             String listUrl = baseUri + "admin/collections?action=LIST";
             ResponseEntity<String> listResponse = restTemplate.exchange(listUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
             if (listResponse.getStatusCode().isError()) {
-            	log.warn("can not talk to solr {%s}: {%s}",
+            	log.warn("can not talk to solr {}: {}",
                      listResponse.getStatusCode().toString(),
                      listResponse.getBody());
            	 	return;
@@ -443,13 +447,13 @@ public class SolrIndexManager {
                 );
                 
                 if (createResponse.getStatusCode().isError()) {
-                	log.warn("can not talk to solr {%s}: {%s}",
+                	log.warn("can not talk to solr {}: {}",
                             listResponse.getStatusCode().toString(),
                             listResponse.getBody());
                 }
             }
         } catch (SolrException | IOException e) {
-        	log.warn("can not initialize solr: {%s}", e.getMessage());
+        	log.warn("can not initialize solr: {}", e.getMessage());
         }
     }
 }
