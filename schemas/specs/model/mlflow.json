@@ -47,12 +47,6 @@
         }
       }
     },
-    "Map_String.Number_" : {
-      "type" : "object",
-      "additionalProperties" : {
-        "type" : "number"
-      }
-    },
     "Map_String.Serializable_" : {
       "type" : "object",
       "additionalProperties" : {
@@ -119,11 +113,6 @@
       "title" : "fields.algorithm.title",
       "description" : "fields.algorithm.description"
     },
-    "base_model" : {
-      "type" : "string",
-      "title" : "fields.baseModel.title",
-      "description" : "fields.baseModel.description"
-    },
     "flavor" : {
       "type" : "string",
       "title" : "fields.mlflow.flavor.title",
@@ -142,16 +131,6 @@
         "$ref" : "#/$defs/Dataset",
         "title" : "fields.inputDatasets.item.title",
         "description" : "fields.inputDatasets.item.description"
-      }
-    },
-    "metrics" : {
-      "$ref" : "#/$defs/Map_String.Number_",
-      "title" : "fields.metrics.title",
-      "description" : "fields.metrics.description",
-      "additionalProperties" : {
-        "type" : "number",
-        "title" : "fields.metrics.item.title",
-        "description" : "fields.metrics.item.description"
       }
     },
     "model_config" : {

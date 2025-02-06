@@ -12,12 +12,6 @@
       "type" : "boolean",
       "title" : "boolean"
     },
-    "Map_String.Number_" : {
-      "type" : "object",
-      "additionalProperties" : {
-        "type" : "number"
-      }
-    },
     "Map_String.Serializable_" : {
       "type" : "object",
       "additionalProperties" : {
@@ -58,25 +52,10 @@
       "title" : "fields.algorithm.title",
       "description" : "fields.algorithm.description"
     },
-    "base_model" : {
-      "type" : "string",
-      "title" : "fields.baseModel.title",
-      "description" : "fields.baseModel.description"
-    },
     "framework" : {
       "type" : "string",
       "title" : "fields.framework.title",
       "description" : "fields.framework.description"
-    },
-    "metrics" : {
-      "$ref" : "#/$defs/Map_String.Number_",
-      "title" : "fields.metrics.title",
-      "description" : "fields.metrics.description",
-      "additionalProperties" : {
-        "type" : "number",
-        "title" : "fields.metrics.item.title",
-        "description" : "fields.metrics.item.description"
-      }
     },
     "parameters" : {
       "$ref" : "#/$defs/Map_String.Serializable_",

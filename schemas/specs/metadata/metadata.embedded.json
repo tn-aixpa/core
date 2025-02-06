@@ -6,6 +6,11 @@
       "type" : "boolean",
       "title" : "fields.embedded.title",
       "description" : "fields.embedded.description"
+    },
+    "ref" : {
+      "type" : "string",
+      "title" : "fields.ref.title",
+      "description" : "fields.ref.description"
     }
   },
   "title" : "specs.metadata.embedded.title",

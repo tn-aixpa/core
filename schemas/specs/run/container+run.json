@@ -490,7 +490,7 @@
           "description" : "fields.envs.item.description"
         }
       },
-      "fsGroup" : {
+      "fs_group" : {
         "type" : "integer",
         "title" : "fields.fsGroup.title",
         "description" : "fields.fsGroup.description",
@@ -512,7 +512,7 @@
           "description" : "fields.nodeSelector.item.description"
         }
       },
-      "priorityClass" : {
+      "priority_class" : {
         "type" : "string",
         "title" : "fields.priorityClass.title",
         "description" : "fields.priorityClass.description"
@@ -527,7 +527,19 @@
         "title" : "fields.resources.title",
         "description" : "fields.resources.description"
       },
-      "runtimeClass" : {
+      "run_as_group" : {
+        "type" : "integer",
+        "title" : "fields.runAsGroup.title",
+        "description" : "fields.runAsGroup.description",
+        "minimum" : 1
+      },
+      "run_as_user" : {
+        "type" : "integer",
+        "title" : "fields.runAsUser.title",
+        "description" : "fields.runAsUser.description",
+        "minimum" : 1
+      },
+      "runtime_class" : {
         "type" : "string",
         "title" : "fields.runtimeClass.title",
         "description" : "fields.runtimeClass.description"
@@ -590,7 +602,7 @@
           "description" : "fields.envs.item.description"
         }
       },
-      "fsGroup" : {
+      "fs_group" : {
         "type" : "integer",
         "title" : "fields.fsGroup.title",
         "description" : "fields.fsGroup.description",
@@ -612,7 +624,7 @@
           "description" : "fields.nodeSelector.item.description"
         }
       },
-      "priorityClass" : {
+      "priority_class" : {
         "type" : "string",
         "title" : "fields.priorityClass.title",
         "description" : "fields.priorityClass.description"
@@ -633,7 +645,19 @@
         "title" : "fields.resources.title",
         "description" : "fields.resources.description"
       },
-      "runtimeClass" : {
+      "run_as_group" : {
+        "type" : "integer",
+        "title" : "fields.runAsGroup.title",
+        "description" : "fields.runAsGroup.description",
+        "minimum" : 1
+      },
+      "run_as_user" : {
+        "type" : "integer",
+        "title" : "fields.runAsUser.title",
+        "description" : "fields.runAsUser.description",
+        "minimum" : 1
+      },
+      "runtime_class" : {
         "type" : "string",
         "title" : "fields.runtimeClass.title",
         "description" : "fields.runtimeClass.description"
@@ -690,7 +714,7 @@
           "description" : "fields.envs.item.description"
         }
       },
-      "fsGroup" : {
+      "fs_group" : {
         "type" : "integer",
         "title" : "fields.fsGroup.title",
         "description" : "fields.fsGroup.description",
@@ -712,7 +736,7 @@
           "description" : "fields.nodeSelector.item.description"
         }
       },
-      "priorityClass" : {
+      "priority_class" : {
         "type" : "string",
         "title" : "fields.priorityClass.title",
         "description" : "fields.priorityClass.description"
@@ -733,7 +757,19 @@
         "title" : "fields.resources.title",
         "description" : "fields.resources.description"
       },
-      "runtimeClass" : {
+      "run_as_group" : {
+        "type" : "integer",
+        "title" : "fields.runAsGroup.title",
+        "description" : "fields.runAsGroup.description",
+        "minimum" : 1
+      },
+      "run_as_user" : {
+        "type" : "integer",
+        "title" : "fields.runAsUser.title",
+        "description" : "fields.runAsUser.description",
+        "minimum" : 1
+      },
+      "runtime_class" : {
         "type" : "string",
         "title" : "fields.runtimeClass.title",
         "description" : "fields.runtimeClass.description"
@@ -831,7 +867,7 @@
           "description" : "fields.nodeSelector.item.description"
         }
       },
-      "priorityClass" : {
+      "priority_class" : {
         "type" : "string",
         "title" : "fields.priorityClass.title",
         "description" : "fields.priorityClass.description"
@@ -846,7 +882,7 @@
         "title" : "fields.resources.title",
         "description" : "fields.resources.description"
       },
-      "runtimeClass" : {
+      "runtime_class" : {
         "type" : "string",
         "title" : "fields.runtimeClass.title",
         "description" : "fields.runtimeClass.description"
