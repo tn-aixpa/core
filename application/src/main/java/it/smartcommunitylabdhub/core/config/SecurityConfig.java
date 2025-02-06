@@ -1,12 +1,12 @@
 package it.smartcommunitylabdhub.core.config;
 
-import it.smartcommunitylabdhub.authorization.AuthenticationManager;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManager;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManagerBuilder;
 import it.smartcommunitylabdhub.authorization.config.KeyStoreConfig;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
-import it.smartcommunitylabdhub.commons.config.SecurityProperties.JwtAuthenticationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties.OidcAuthenticationProperties;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import jakarta.servlet.http.HttpServletRequest;
@@ -58,11 +58,9 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -103,8 +101,14 @@ public class SecurityConfig {
     @Autowired(required = false)
     JwtTokenService jwtTokenService;
 
+    // @Autowired
+    // AuthorizableAwareEntityService<Project> projectAuthHelper;
+
+    // @Autowired
+    // List<CredentialsProvider> providers;
+
     @Autowired
-    AuthorizableAwareEntityService<Project> projectAuthHelper;
+    UserAuthenticationManagerBuilder authenticationManagerBuilder;
 
     @Bean("apiSecurityFilterChain")
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -149,7 +153,8 @@ public class SecurityConfig {
             }
 
             // Create authentication Manager
-            AuthenticationManager authManager = new AuthenticationManager(authProviders);
+            UserAuthenticationManager authManager = authenticationManagerBuilder.build(authProviders);
+
             securityChain.authenticationManager(authManager);
             securityChain.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.authenticationManager(authManager)));
 

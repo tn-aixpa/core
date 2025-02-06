@@ -16,8 +16,12 @@
 
 package it.smartcommunitylabdhub.authorization.controllers;
 
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManager;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManagerBuilder;
 import it.smartcommunitylabdhub.authorization.model.AuthorizationRequest;
 import it.smartcommunitylabdhub.authorization.model.AuthorizationResponse;
+import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
+import it.smartcommunitylabdhub.authorization.providers.NoOpAuthenticationProvider;
 import it.smartcommunitylabdhub.authorization.repositories.AuthorizationRequestStore;
 import it.smartcommunitylabdhub.authorization.utils.SecureKeyGenerator;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
@@ -27,6 +31,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,6 +65,7 @@ public class AuthorizationEndpoint implements InitializingBean {
     public static final String AUTHORIZE_URL = "/auth/authorize";
     private static final int CODE_LENGTH = 12;
     private static final int MIN_STATE_LENGTH = 5;
+    private static final int AUTH_REQUEST_DURATION = 300;
 
     @Value("${jwt.client-id}")
     private String jwtClientId;
@@ -75,6 +82,11 @@ public class AuthorizationEndpoint implements InitializingBean {
     @Autowired
     private AuthorizationRequestStore requestStore;
 
+    @Autowired
+    private UserAuthenticationManagerBuilder authenticationManagerBuilder;
+
+    private UserAuthenticationManager authenticationManager;
+
     //keygen
     private StringKeyGenerator keyGenerator = new SecureKeyGenerator(CODE_LENGTH);
     private String issuer;
@@ -84,12 +96,14 @@ public class AuthorizationEndpoint implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(keyGenerator, "code generator can not be null");
-
+        Assert.notNull(applicationProperties, AUTHORIZE_URL);
+        Assert.notNull(authenticationManagerBuilder, "auth manager builder is required");
         if (securityProperties.isOidcAuthEnabled()) {
             Assert.notNull(requestStore, "request store can not be null");
         }
 
         this.issuer = applicationProperties.getEndpoint();
+        this.authenticationManager = this.authenticationManagerBuilder.build(new NoOpAuthenticationProvider());
     }
 
     @RequestMapping(value = "auth/test", method = { RequestMethod.POST, RequestMethod.GET })
@@ -115,9 +129,15 @@ public class AuthorizationEndpoint implements InitializingBean {
         Authentication authentication = securityContext.getAuthentication();
 
         //resolve user authentication
-        if (authentication == null || !(authentication.isAuthenticated())) {
+        if (
+            authentication == null ||
+            !(authentication.isAuthenticated()) ||
+            !(authentication instanceof AbstractAuthenticationToken)
+        ) {
             throw new InsufficientAuthenticationException("Invalid or missing authentication");
         }
+
+        UserAuthentication<?> user = authenticationManager.authenticate(authentication);
 
         //sanity check
         String responseType = parameters.get(OAuth2ParameterNames.RESPONSE_TYPE);
@@ -138,13 +158,13 @@ public class AuthorizationEndpoint implements InitializingBean {
             throw new IllegalArgumentException("invalid state");
         }
 
-        String redirectUrl = parameters.get(OAuth2ParameterNames.REDIRECT_URI);
-        if (!StringUtils.hasText(redirectUrl)) {
+        String redirectUri = parameters.get(OAuth2ParameterNames.REDIRECT_URI);
+        if (!StringUtils.hasText(redirectUri)) {
             throw new IllegalArgumentException("missing redirect_uri");
         }
 
         //redirect must match allowed
-        boolean matches = matches(redirectUrl);
+        boolean matches = matches(redirectUri);
         if (!matches) {
             throw new IllegalArgumentException("invalid redirect_uri");
         }
@@ -159,23 +179,26 @@ public class AuthorizationEndpoint implements InitializingBean {
 
         //generate code and store request
         String code = keyGenerator.generateKey();
+        Instant now = Instant.now();
 
         AuthorizationRequest request = AuthorizationRequest
             .builder()
             .clientId(clientId)
-            .redirectUrl(redirectUrl)
+            .redirectUri(redirectUri)
             .code(code)
             .state(state)
             .codeChallenge(codeChallenge)
             .codeChallengeMethod(codeChallengeMethod)
-            .redirectUrl(code)
+            .username(user.getUsername())
+            .issuedTime(Date.from(now))
+            .expirationTime(Date.from(now.plusSeconds(AUTH_REQUEST_DURATION)))
             .build();
 
         if (log.isTraceEnabled()) {
             log.trace("request: {}", request);
         }
 
-        String key = requestStore.store(request);
+        String key = requestStore.store(request, user);
 
         log.debug("stored auth request for {} with key {}", authentication.getName(), key);
 
@@ -185,7 +208,7 @@ public class AuthorizationEndpoint implements InitializingBean {
             .code(code)
             .state(state)
             .issuer(issuer)
-            .redirectUrl(redirectUrl)
+            .redirectUrl(redirectUri)
             .build();
         if (log.isTraceEnabled()) {
             log.trace("response: {}", response);

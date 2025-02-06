@@ -16,7 +16,8 @@
 
 package it.smartcommunitylabdhub.authorization.grants;
 
-import it.smartcommunitylabdhub.authorization.AuthenticationManager;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManager;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManagerBuilder;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.services.TokenService;
@@ -63,7 +64,8 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
     private String clientId;
     private SecurityProperties securityProperties;
     private JwtAuthenticationProvider jwtAuthProvider;
-    private AuthenticationManager authenticationManager;
+    private UserAuthenticationManager authenticationManager;
+    private UserAuthenticationManagerBuilder authenticationManagerBuilder;
 
     private final TokenService tokenService;
 
@@ -82,9 +84,16 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
         this.clientId = clientId;
     }
 
+    @Autowired
+    public void setAuthenticationManagerBuilder(UserAuthenticationManagerBuilder authenticationManagerBuilder) {
+        this.authenticationManagerBuilder = authenticationManagerBuilder;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(securityProperties, "security properties are required");
+        Assert.notNull(authenticationManagerBuilder, "auth manager builder is required");
+        
         //build provider when supported
         if (securityProperties.isJwtAuthEnabled()) {
             JwtAuthenticationProperties props = securityProperties.getJwt();
@@ -125,7 +134,7 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             this.jwtAuthProvider = provider;
 
             //build manager
-            this.authenticationManager = new AuthenticationManager(jwtAuthProvider);
+            this.authenticationManager = authenticationManagerBuilder.build(jwtAuthProvider);
         }
     }
 

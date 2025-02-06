@@ -18,7 +18,6 @@ package it.smartcommunitylabdhub.authorization.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,7 +32,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthorizationRequest {
+public class TokenRequest {
 
     @JsonProperty("client_id")
     private String clientId;
@@ -41,19 +40,12 @@ public class AuthorizationRequest {
     @JsonProperty("redirect_uri")
     private String redirectUri;
 
-    @JsonProperty("code_challenge")
-    private String codeChallenge;
-
-    @JsonProperty("code_challenge_method")
-    private String codeChallengeMethod;
+    @JsonProperty("code_verifier")
+    private String codeVerifier;
 
     @JsonProperty("state")
     private String state;
 
     @JsonProperty("code")
     private String code;
-
-    private String username;
-    private Date issuedTime;
-    private Date expirationTime;
 }

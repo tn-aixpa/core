@@ -37,16 +37,16 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-public class AuthenticationManager extends ProviderManager {
+public class UserAuthenticationManager extends ProviderManager {
 
     private List<CredentialsProvider> providers = Collections.emptyList();
     private AuthorizableAwareEntityService<Project> projectAuthHelper;
 
-    public AuthenticationManager(AuthenticationProvider... providers) {
+    public UserAuthenticationManager(AuthenticationProvider... providers) {
         this(Arrays.asList(providers));
     }
 
-    public AuthenticationManager(List<AuthenticationProvider> providers) {
+    public UserAuthenticationManager(List<AuthenticationProvider> providers) {
         super(providers, null);
     }
 
@@ -57,11 +57,20 @@ public class AuthenticationManager extends ProviderManager {
         }
     }
 
+    @Autowired
+    public void setProjectAuthHelper(AuthorizableAwareEntityService<Project> projectAuthHelper) {
+        this.projectAuthHelper = projectAuthHelper;
+    }
+
     @Override
-    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+    public UserAuthentication<?> authenticate(Authentication authentication) throws AuthenticationException {
         //let providers resolve auth
         Authentication auth = super.authenticate(authentication);
 
+        return process(auth);
+    }
+
+    public UserAuthentication<?> process(Authentication auth) throws AuthenticationException {
         if (auth != null && auth.isAuthenticated() && auth instanceof AbstractAuthenticationToken) {
             Set<GrantedAuthority> authorities = new HashSet<>(auth.getAuthorities());
             String username = auth.getName();

@@ -27,9 +27,9 @@ import org.springframework.web.context.WebApplicationContext;
 public class OAuth2Config {
 
     @Bean
-    @Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+    @Scope(value = WebApplicationContext.SCOPE_APPLICATION, proxyMode = ScopedProxyMode.TARGET_CLASS)
     public AuthorizationRequestStore authorizationRequestRepository() {
-        // used as session scoped proxy for auth requests
+        // used an app scoped proxy for auth requests
         return new AuthorizationRequestStore();
     }
 }

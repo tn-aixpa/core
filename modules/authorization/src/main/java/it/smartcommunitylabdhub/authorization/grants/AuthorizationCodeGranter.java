@@ -17,6 +17,7 @@
 package it.smartcommunitylabdhub.authorization.grants;
 
 import it.smartcommunitylabdhub.authorization.model.AuthorizationRequest;
+import it.smartcommunitylabdhub.authorization.model.TokenRequest;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.repositories.AuthorizationRequestStore;
@@ -31,7 +32,9 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -76,20 +79,37 @@ public class AuthorizationCodeGranter implements TokenGranter {
     @Override
     public TokenResponse grant(@NotNull Map<String, String> parameters, Authentication authentication) {
         //auth token requires client authentication either basic or pkce
-        //we should already have a user auth here
-        //TODO support client basic auth + form auth
-
-        if (authentication == null || !(authentication instanceof UserAuthentication)) {
-            throw new InsufficientAuthenticationException("Invalid user authentication");
+        if (
+            authentication == null ||
+            (!(authentication instanceof UsernamePasswordAuthenticationToken) &&
+                !(authentication instanceof AnonymousAuthenticationToken))
+        ) {
+            throw new InsufficientAuthenticationException("Invalid or missing authentication");
         }
 
-        UserAuthentication<?> user = (UserAuthentication<?>) authentication;
+        String cId = null;
+        if (authentication instanceof UsernamePasswordAuthenticationToken) {
+            UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) authentication;
+            //validate only name
+            cId = auth.getName();
+        } else if (authentication instanceof AnonymousAuthenticationToken) {
+            //validate client and secret
+            cId = parameters.get(OAuth2ParameterNames.CLIENT_ID);
 
-        //require PKCE or client secret, we validate later
-        if (
-            !StringUtils.hasText(parameters.get(PkceParameterNames.CODE_VERIFIER)) &&
-            !StringUtils.hasText(parameters.get(OAuth2ParameterNames.CLIENT_SECRET))
-        ) {
+            //require PKCE or client secret, we validate later
+            String pkce = parameters.get(PkceParameterNames.CODE_VERIFIER);
+            String cSecret = parameters.get(OAuth2ParameterNames.CLIENT_SECRET);
+
+            if (clientSecret != null && StringUtils.hasText(cSecret) && !clientSecret.equals(cSecret)) {
+                throw new InsufficientAuthenticationException("Invalid client authentication");
+            }
+
+            if (!StringUtils.hasText(cSecret) && !StringUtils.hasText(pkce)) {
+                throw new InsufficientAuthenticationException("Invalid client authentication");
+            }
+        }
+
+        if (clientId != null && !clientId.equals(cId)) {
             throw new InsufficientAuthenticationException("Invalid client authentication");
         }
 
@@ -97,6 +117,11 @@ public class AuthorizationCodeGranter implements TokenGranter {
         String grantType = parameters.get(OAuth2ParameterNames.GRANT_TYPE);
         if (!type().getValue().equals(grantType)) {
             throw new IllegalArgumentException("invalid grant type");
+        }
+
+        String code = parameters.get(OAuth2ParameterNames.CODE);
+        if (!StringUtils.hasText(code)) {
+            throw new IllegalArgumentException("Invalid or missing code");
         }
 
         String state = parameters.get(OAuth2ParameterNames.STATE);
@@ -115,24 +140,43 @@ public class AuthorizationCodeGranter implements TokenGranter {
             throw new InsufficientAuthenticationException("Invalid client authentication");
         }
 
-        String redirectUrl = parameters.get(OAuth2ParameterNames.REDIRECT_URI);
-        if (redirectUrl == null) {
+        String redirectUri = parameters.get(OAuth2ParameterNames.REDIRECT_URI);
+        if (redirectUri == null) {
             throw new IllegalArgumentException("invalid or missing redirect_uri");
         }
 
+        String codeVerifier = parameters.get(PkceParameterNames.CODE_VERIFIER);
+
+        TokenRequest tokenRequest = TokenRequest
+            .builder()
+            .clientId(cid)
+            .code(code)
+            .redirectUri(redirectUri)
+            .codeVerifier(codeVerifier)
+            .state(state)
+            .build();
+
+        if (log.isTraceEnabled()) {
+            log.trace("token request: {}", tokenRequest);
+        }
+
         //recover request from key
-        AuthorizationRequest request = requestStore.find(state);
+        AuthorizationRequest request = requestStore.find(tokenRequest);
         if (request == null) {
             throw new IllegalArgumentException("invalid request");
         }
 
-        if (!request.getClientId().equals(cid) || !request.getRedirectUrl().equals(redirectUrl)) {
+        if (!request.getClientId().equals(cid) || !request.getRedirectUri().equals(redirectUri)) {
             //mismatch
             throw new IllegalArgumentException("invalid request");
         }
 
+        //check code
+        if (!code.equals(request.getCode())) {
+            throw new IllegalArgumentException("invalid request");
+        }
+
         //check PKCE
-        String codeVerifier = parameters.get(PkceParameterNames.CODE_VERIFIER);
         String codeChallenge = request.getCodeChallenge();
         String codeChallengeMethod = request.getCodeChallengeMethod();
 
@@ -147,25 +191,20 @@ public class AuthorizationCodeGranter implements TokenGranter {
         if (
             StringUtils.hasText(codeVerifier) &&
             StringUtils.hasText(codeChallenge) &&
-            !createS256Hash(codeChallenge).equals(codeVerifier)
+            !createS256Hash(codeVerifier).equals(codeChallenge)
         ) {
-            //invalid code
+            //invalid verifier
             throw new IllegalArgumentException("invalid code verifier");
         }
 
         //valid request, consume
-        request = requestStore.consume(state);
-        if (request == null) {
+        UserAuthentication<?> user = requestStore.consume(tokenRequest);
+        if (user == null) {
             //concurrently consumed?
             throw new IllegalArgumentException("invalid request");
         }
 
-        String code = request.getCode();
-
         log.debug("auth code token request for {}", cid);
-        if (log.isTraceEnabled()) {
-            log.trace("code {}", code);
-        }
 
         try {
             if (!user.isAuthenticated()) {
