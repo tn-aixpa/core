@@ -47,7 +47,16 @@ public class BaseEntitySearchCriteria<T> implements SearchCriteria<T> {
             case Operation.equal:
                 return builder.equal(root.get(field), value);
             case Operation.like:
-                if (root.get(field).getJavaType() == String.class) {
+                if (root.get(field).getJavaType() == String.class && value instanceof String) {
+                    if (value instanceof String) {
+                        //case insensitive by lowering both strings
+                        return builder.like(
+                            builder.lower(root.<String>get(field)),
+                            "%" + ((String) value).toLowerCase() + "%"
+                        );
+                    }
+
+                    //base like comparison
                     return builder.like(root.<String>get(field), "%" + value + "%");
                 }
                 break;
