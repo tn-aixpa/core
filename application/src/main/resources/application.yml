@@ -179,7 +179,10 @@ security:
     username: ${DH_AUTH_JWT_USERNAME:preferred_username}    
   oidc:    
     issuer-uri: ${DH_AUTH_OIDC_ISSUER_URI:}
+    client-name: ${DH_AUTH_OIDC_CLIENT_NAME:${application.name}}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
+    client-secret: ${DH_AUTH_OIDC_CLIENT_SECRET:}    
+    username-attribute-name: ${DH_AUTH_OIDC_USERNAME:preferred_username} 
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
 
 
@@ -226,6 +229,8 @@ files:
       secret-key: ${AWS_SECRET_KEY:}
       endpoint: ${S3_ENDPOINT:}
       bucket: ${S3_BUCKET:}
+      signature-version: s3v4
+      region: ${S3_REGION:us-east-1}
   max-column-size: ${FILES_MAX_COLUMN_SIZE:2097152}      
 
 # JWT configuration
@@ -239,7 +244,33 @@ jwt:
     duration: ${JWT_REFRESH_TOKEN_DURATION:}    
   client-id: ${JWT_CLIENT_ID:${security.basic.username}}
   client-secret: ${JWT_CLIENT_SECRET:${security.basic.password}}
+  redirect-uris: ${JWT_REDIRECT_URIS:http://localhost:*,${application.endpoint}/console/auth-callback}
   cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}      
+
+
+# Credentials
+credentials:
+  provider:
+    s3:
+      enable: ${S3_CREDENTIALS_PROVIDER:false}
+    db:
+      enable: ${DB_CREDENTIALS_PROVIDER:false}
+      database: ${DB_CREDENTIALS_DATABASE:}
+      endpoint:  ${DB_CREDENTIALS_ENDPOINT:}
+      claim:  ${DB_CREDENTIALS_CLAIM:db/role}
+      role:  ${DB_CREDENTIALS_ROLE:}
+      duration:  ${DB_CREDENTIALS_DURATION:86400}
+      user: ${DB_CREDENTIALS_USER:}
+      password: ${DB_CREDENTIALS_PASSWORD:}
+    minio:
+      enable: ${MINIO_CREDENTIALS_PROVIDER:false}      
+      endpoint:  ${MINIO_CREDENTIALS_ENDPOINT:${files.store.s3.endpoint}}
+      region: ${MINIO_CREDENTIALS_REGION:${files.store.s3.region}}
+      claim:  ${MINIO_CREDENTIALS_CLAIM:minio/policy}
+      policy:  ${MINIO_CREDENTIALS_POLICY:readwrite}
+      duration:  ${MINIO_CREDENTIALS_DURATION:86400}
+      access-key: ${MINIO_CREDENTIALS_ACCESS_KEY:${files.store.s3.access-key}}
+      secret-key: ${MINIO_CREDENTIALS_SECRET_KEY:${files.store.s3.secret-key}}      
 
 
 # Templates

@@ -1,0 +1,248 @@
+/**
+ * Copyright 2025 the original author or authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package it.smartcommunitylabdhub.credentials.db;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
+import it.smartcommunitylabdhub.authorization.services.CredentialsProvider;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
+import jakarta.validation.constraints.NotNull;
+import java.nio.charset.Charset;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.util.Pair;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+@Service
+@Slf4j
+public class DbCredentialsProvider implements CredentialsProvider, InitializingBean {
+
+    private static final Integer DEFAULT_DURATION = 24 * 3600; //24 hour
+    private static final Integer MIN_DURATION = 300; //5 min
+
+    @Value("${credentials.provider.db.user}")
+    private String user;
+
+    @Value("${credentials.provider.db.password}")
+    private String secret;
+
+    @Value("${credentials.provider.db.database}")
+    private String database;
+
+    @Value("${credentials.provider.db.claim}")
+    private String claim;
+
+    @Value("${credentials.provider.db.role}")
+    private String defaultRole;
+
+    @Value("${credentials.provider.db.duration}")
+    private Integer duration = DEFAULT_DURATION;
+
+    @Value("${credentials.provider.db.endpoint}")
+    private String endpointUrl;
+
+    @Value("${credentials.provider.db.enable}")
+    private Boolean enabled;
+
+    private final RestTemplate restTemplate;
+
+    // cache credentials for up to DURATION
+    LoadingCache<Pair<String, String>, DbCredentials> cache;
+
+    public DbCredentialsProvider() {
+        //TODO define a property bean
+        restTemplate = new RestTemplate();
+
+        //register message converter for form-encoded requests
+        List<HttpMessageConverter<?>> converters = List.of(
+            new MappingJackson2HttpMessageConverter(),
+            new FormHttpMessageConverter()
+        );
+        restTemplate.setMessageConverters(converters);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if (Boolean.TRUE.equals(enabled)) {
+            //check config
+            enabled = StringUtils.hasText(endpointUrl);
+        }
+
+        //keep cache shorter than token duration to avoid releasing soon to be expired keys
+        int cacheDuration = Math.max((duration - MIN_DURATION), MIN_DURATION);
+
+        //initialize cache
+        cache =
+            CacheBuilder
+                .newBuilder()
+                .expireAfterWrite(cacheDuration, TimeUnit.SECONDS)
+                .build(
+                    new CacheLoader<Pair<String, String>, DbCredentials>() {
+                        @Override
+                        public DbCredentials load(@Nonnull Pair<String, String> key) throws Exception {
+                            log.debug("load credentials for {} role {}", key.getFirst(), key.getSecond());
+                            return generate(key.getFirst(), key.getSecond());
+                        }
+                    }
+                );
+    }
+
+    public DbCredentials generate(@NotNull String username, @NotNull String role) throws StoreException {
+        log.debug("generate credentials for user authentication {} via STS service", username);
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            if (StringUtils.hasText(user) && StringUtils.hasText(secret)) {
+                //basic auth is required
+                byte[] basicAuth = Base64
+                    .getEncoder()
+                    .encode((user + ":" + secret).getBytes(Charset.forName("US-ASCII")));
+                headers.add("Authorization", "Basic " + new String(basicAuth));
+            }
+
+            //we need to convert request to MultiValueMap otherwise restTemplate won't handle a form-urlrequest...
+            // TokenRequest request = TokenRequest
+            // .builder()
+            // .username(username)
+            // .database(database)
+            // .roles(Collections.singleton(role))
+            // .duration(duration)
+            // .build();
+            MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+            map.add("username", username);
+            map.add("database", database);
+            map.add("roles", role);
+            map.add("duration", String.valueOf(duration));
+
+            if (log.isTraceEnabled()) {
+                log.trace("request: {}", map);
+            }
+
+            //call web sts
+            String url = endpointUrl + "/sts/web";
+
+            log.debug("call STS endpoint for exchange {}", url);
+            ResponseEntity<TokenResponse> response = restTemplate.postForEntity(
+                url,
+                new HttpEntity<>(map, headers),
+                TokenResponse.class
+            );
+
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                //error, no recovery
+                log.error("Error with provider, status code {}", response.getStatusCode().toString());
+                return null;
+            }
+
+            TokenResponse token = response.getBody();
+            if (log.isTraceEnabled()) {
+                log.trace("response: {}", token);
+            }
+
+            return DbCredentials
+                .builder()
+                .platform(token.getPlatform())
+                .host(token.getHost())
+                .port(token.getPort())
+                .username(token.getUsername())
+                .password(token.getPassword())
+                .database(token.getDatabase())
+                .build();
+        } catch (RestClientException e) {
+            //error, no recovery
+            log.error("Error with provider {}", e);
+            throw new StoreException(e.getMessage());
+        }
+    }
+
+    @Override
+    public Credentials get(@NotNull UserAuthentication<?> auth) {
+        if (Boolean.TRUE.equals(enabled) && cache != null) {
+            //we expect a role credentials in context
+            DbRole role = Optional
+                .ofNullable(auth.getCredentials())
+                .map(creds ->
+                    creds.stream().filter(DbRole.class::isInstance).map(c -> (DbRole) c).findFirst().orElse(null)
+                )
+                .orElse(null);
+
+            if (role != null && StringUtils.hasText(role.getRole())) {
+                //get from cache
+                String username = auth.getName();
+                log.debug("get credentials for user authentication {} via STS service", username);
+
+                try {
+                    return cache.get(Pair.of(username, role.getRole()));
+                } catch (ExecutionException e) {
+                    //error, no recovery
+                    log.error("Error with provider {}", e);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public <T extends AbstractAuthenticationToken> Credentials process(@NotNull T token) {
+        if (Boolean.TRUE.equals(enabled)) {
+            //extract a role from jwt tokens
+            if (token instanceof JwtAuthenticationToken && StringUtils.hasText(claim)) {
+                String role = ((JwtAuthenticationToken) token).getToken().getClaimAsString(claim);
+                if (StringUtils.hasText(role)) {
+                    return DbRole.builder().claim(claim).role(role).build();
+                }
+            }
+
+            //fallback to default
+            if (StringUtils.hasText(defaultRole)) {
+                return DbRole.builder().claim(claim).role(defaultRole).build();
+            }
+        }
+
+        return null;
+    }
+}
