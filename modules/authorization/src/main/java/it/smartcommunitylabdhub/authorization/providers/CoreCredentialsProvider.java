@@ -32,7 +32,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.stereotype.Service;
@@ -40,7 +39,7 @@ import org.springframework.util.Assert;
 
 @Service
 @Slf4j
-public class CoreCredentialsProvider implements ConfigurationProvider, CredentialsProvider, InitializingBean {
+public class CoreCredentialsProvider implements ConfigurationProvider, CredentialsProvider {
 
     private JwtTokenService jwtTokenService;
     private CoreCredentialsConfig config;
@@ -94,11 +93,6 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
     @Autowired(required = false)
     public void setProjectAuthHelper(AuthorizableAwareEntityService<Project> projectAuthHelper) {
         this.projectAuthHelper = projectAuthHelper;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        Assert.notNull(config, "config not initialized");
     }
 
     @Override
