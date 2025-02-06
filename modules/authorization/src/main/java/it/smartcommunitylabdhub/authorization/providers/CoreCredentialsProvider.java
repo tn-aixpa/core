@@ -17,8 +17,6 @@
 package it.smartcommunitylabdhub.authorization.providers;
 
 import com.nimbusds.jwt.SignedJWT;
-import it.smartcommunitylabdhub.authorization.controllers.JWKSEndpoint;
-import it.smartcommunitylabdhub.authorization.controllers.TokenEndpoint;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.providers.CoreCredentials.CoreCredentialsBuilder;
 import it.smartcommunitylabdhub.authorization.providers.CoreCredentialsConfig.CoreCredentialsConfigBuilder;
@@ -71,18 +69,12 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
             //basic
             if (security.isBasicAuthEnabled()) {
                 authMethods.add("basic");
-
                 builder.realm(baseUrl);
             }
 
             //oauth2
             if (security.isJwtAuthEnabled()) {
                 authMethods.add("jwt");
-
-                builder.issuer(properties.getEndpoint());
-                builder.clientId(jwtTokenService.getClientId());
-                builder.jwksUri(baseUrl + JWKSEndpoint.JWKS_URL);
-                builder.tokenEndpoint(baseUrl + TokenEndpoint.TOKEN_URL);
             }
 
             if (security.isOidcAuthEnabled()) {
@@ -127,6 +119,7 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
             .builder()
             .accessToken(accessToken)
             .refreshToken(refreshToken)
+            .idToken(accessToken)
             .expiration(exp)
             .clientId(jwtTokenService.getClientId())
             .issuer(jwtTokenService.getIssuer());

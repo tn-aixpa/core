@@ -124,11 +124,6 @@ public class AuthorizationCodeGranter implements TokenGranter {
             throw new IllegalArgumentException("Invalid or missing code");
         }
 
-        String state = parameters.get(OAuth2ParameterNames.STATE);
-        if (state == null) {
-            throw new IllegalArgumentException("invalid or missing state");
-        }
-
         //secret auth
         String cid = parameters.get(OAuth2ParameterNames.CLIENT_ID);
         if (cid == null || !clientId.equals(cid)) {
@@ -153,7 +148,6 @@ public class AuthorizationCodeGranter implements TokenGranter {
             .code(code)
             .redirectUri(redirectUri)
             .codeVerifier(codeVerifier)
-            .state(state)
             .build();
 
         if (log.isTraceEnabled()) {

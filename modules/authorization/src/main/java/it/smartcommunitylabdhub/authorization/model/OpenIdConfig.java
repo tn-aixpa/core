@@ -18,6 +18,8 @@ package it.smartcommunitylabdhub.authorization.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import it.smartcommunitylabdhub.commons.infrastructure.AbstractConfiguration;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,17 +34,29 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TokenRequest {
+public class OpenIdConfig extends AbstractConfiguration {
 
-    @JsonProperty("client_id")
-    private String clientId;
+    @JsonProperty("issuer")
+    private String issuer;
 
-    @JsonProperty("redirect_uri")
-    private String redirectUri;
+    @JsonProperty("jwks_uri")
+    private String jwksUri;
 
-    @JsonProperty("code_verifier")
-    private String codeVerifier;
+    @JsonProperty("authorization_endpoint")
+    private String authorizationEndpoint;
 
-    @JsonProperty("code")
-    private String code;
+    @JsonProperty("userinfo_endpoint")
+    private String userinfoEndpoint;
+
+    @JsonProperty("token_endpoint")
+    private String tokenEndpoint;
+
+    @JsonProperty("token_endpoint_auth_methods_supported")
+    private Set<String> tokenEndpointAuthMethodsSupported;
+
+    @JsonProperty("response_types_supported")
+    private Set<String> responseTypesSupported;
+
+    @JsonProperty("grant_types_supported")
+    private Set<String> grantTypesSupported;
 }

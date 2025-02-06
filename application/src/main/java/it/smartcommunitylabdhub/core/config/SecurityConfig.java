@@ -187,8 +187,8 @@ public class SecurityConfig {
         return securityChain.build();
     }
 
-    @Bean("authSecurityFilterChain")
-    public SecurityFilterChain authSecurityFilterChain(HttpSecurity http) throws Exception {
+    @Bean("tokenSecurityFilterChain")
+    public SecurityFilterChain tokenSecurityFilterChain(HttpSecurity http) throws Exception {
         //token chain
         HttpSecurity securityChain = http
             .securityMatcher(new AntPathRequestMatcher("/auth/token"))
@@ -202,13 +202,9 @@ public class SecurityConfig {
             // disable session for token requests
             .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // allow cors
+        // always allow cors
         securityChain.cors(cors -> {
-            if (StringUtils.hasText(corsOrigins)) {
-                cors.configurationSource(corsConfigurationSource(corsOrigins));
-            } else {
-                cors.disable();
-            }
+            cors.configurationSource(corsConfigurationSource("*"));
         });
 
         //enable anonymous auth, we'll double check auth in granters
@@ -221,6 +217,49 @@ public class SecurityConfig {
             securityChain
                 .httpBasic(basic -> basic.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
                 .userDetailsService(userDetailsService(clientId, clientSecret));
+        }
+
+        securityChain.exceptionHandling(handling -> {
+            handling
+                .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+                .accessDeniedHandler(new AccessDeniedHandlerImpl()); // use 403
+        });
+
+        return securityChain.build();
+    }
+
+    @Bean("userinfoSecurityFilterChain")
+    public SecurityFilterChain userinfoSecurityFilterChain(HttpSecurity http) throws Exception {
+        //userinfo chain
+        HttpSecurity securityChain = http
+            .securityMatcher(new AntPathRequestMatcher("/auth/userinfo"))
+            .authorizeHttpRequests(auth -> {
+                auth.requestMatchers(getAuthRequestMatcher()).hasRole("USER").anyRequest().authenticated();
+            })
+            // disable request cache
+            .requestCache(requestCache -> requestCache.disable())
+            //disable csrf
+            .csrf(csrf -> csrf.disable())
+            // disable session
+            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        // always allow cors
+        securityChain.cors(cors -> {
+            cors.configurationSource(corsConfigurationSource("*"));
+        });
+
+        //disable anonymous auth
+        securityChain.anonymous(anon -> anon.disable());
+
+        //authentication (when configured)
+        if (properties.isOidcAuthEnabled() && jwtTokenService != null) {
+            // enable internal jwt auth provider
+            JwtAuthenticationProvider coreJwtAuthProvider = new JwtAuthenticationProvider(jwtTokenService.getDecoder());
+            coreJwtAuthProvider.setJwtAuthenticationConverter(jwtTokenService.getAuthenticationConverter());
+            UserAuthenticationManager authManager = authenticationManagerBuilder.build(coreJwtAuthProvider);
+
+            securityChain.authenticationManager(authManager);
+            securityChain.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.authenticationManager(authManager)));
         }
 
         securityChain.exceptionHandling(handling -> {
@@ -312,6 +351,28 @@ public class SecurityConfig {
         }
 
         return securityChain.build();
+    }
+
+    @Bean("wellKnownSecurityFilterChain")
+    public SecurityFilterChain wellKnownSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .securityMatcher(new AntPathRequestMatcher("/.well-known/**"))
+            .authorizeHttpRequests(auth -> {
+                auth.anyRequest().permitAll();
+            })
+            // disable request cache
+            .requestCache(requestCache -> requestCache.disable())
+            //disable csrf
+            .csrf(csrf -> csrf.disable())
+            // we don't want a session for these endpoints, each request should be evaluated
+            .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // enable frame options
+            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+            // always allow cors
+            .cors(cors -> {
+                cors.configurationSource(corsConfigurationSource("*"));
+            })
+            .build();
     }
 
     @Bean("h2SecurityFilterChain")

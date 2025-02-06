@@ -46,6 +46,9 @@ public class CoreCredentials extends AbstractCredentials {
     @JsonProperty("access_token")
     private SignedJWT accessToken;
 
+    @JsonProperty("id_token")
+    private SignedJWT idToken;
+
     @JsonProperty("refresh_token")
     private String refreshToken;
 
@@ -69,5 +72,10 @@ public class CoreCredentials extends AbstractCredentials {
     @JsonGetter("access_token")
     public String getAccessToken() {
         return accessToken != null ? accessToken.serialize() : null;
+    }
+
+    @JsonGetter("id_token")
+    public String getIdToken() {
+        return idToken != null ? idToken.serialize() : null;
     }
 }

@@ -244,7 +244,7 @@ jwt:
     duration: ${JWT_REFRESH_TOKEN_DURATION:}    
   client-id: ${JWT_CLIENT_ID:${security.basic.username}}
   client-secret: ${JWT_CLIENT_SECRET:${security.basic.password}}
-  redirect-uris: ${JWT_REDIRECT_URIS:http://localhost:*,${application.endpoint}}
+  redirect-uris: ${JWT_REDIRECT_URIS:http://localhost:*,${application.endpoint}/console/auth-callback}
   cache-control: ${JWKS_CACHE_CONTROL:public, max-age=900, must-revalidate, no-transform}      
 
 

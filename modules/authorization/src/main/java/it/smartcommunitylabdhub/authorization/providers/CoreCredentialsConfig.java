@@ -42,30 +42,4 @@ public class CoreCredentialsConfig extends AbstractConfiguration {
     //basic auth
     @JsonProperty("realm")
     private String realm;
-
-    // oauth2
-
-    @JsonProperty("issuer")
-    private String issuer;
-
-    @JsonProperty("client_id")
-    private String clientId;
-
-    @JsonProperty("jwks_uri")
-    private String jwksUri;
-
-    @JsonProperty("authorization_endpoint")
-    private String authorizationEndpoint;
-
-    @JsonProperty("token_endpoint")
-    private String tokenEndpoint;
-
-    @JsonProperty("token_endpoint_auth_methods_supported")
-    private Set<String> tokenEndpointAuthMethodsSupported;
-
-    @JsonProperty("response_types_supported")
-    private Set<String> responseTypesSupported;
-
-    @JsonProperty("grant_types_supported")
-    private Set<String> grantTypesSupported;
 }

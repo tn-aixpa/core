@@ -83,12 +83,12 @@ public class AuthorizationRequestStore implements Serializable {
     }
 
     private String extractKey(AuthorizationRequest request) {
-        //we use state+clientId+redirect as key because we receive those from token request as well
-        return request.getState() + "|" + request.getClientId() + "|" + request.getRedirectUri();
+        //we use clientId+redirect as key because we receive those from token request as well
+        return request.getClientId() + "|" + request.getRedirectUri();
     }
 
     private String extractKey(TokenRequest request) {
-        //we use state+clientId+redirect as key because we receive those from token request as well
-        return request.getState() + "|" + request.getClientId() + "|" + request.getRedirectUri();
+        //we use clientId+redirect as key because we receive those from token request as well
+        return request.getClientId() + "|" + request.getRedirectUri();
     }
 }
