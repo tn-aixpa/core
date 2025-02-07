@@ -53,6 +53,9 @@ public class AuthorizationRequest {
     @JsonProperty("code")
     private String code;
 
+    @JsonProperty("scope")
+    private String scope;
+
     private String username;
     private Date issuedTime;
     private Date expirationTime;

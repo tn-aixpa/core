@@ -93,7 +93,7 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(securityProperties, "security properties are required");
         Assert.notNull(authenticationManagerBuilder, "auth manager builder is required");
-        
+
         //build provider when supported
         if (securityProperties.isJwtAuthEnabled()) {
             JwtAuthenticationProperties props = securityProperties.getJwt();
@@ -181,6 +181,16 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             throw new IllegalArgumentException("invalid or missing client_id");
         }
 
+        Set<String> scopes = Set.of(
+            StringUtils.delimitedListToStringArray(
+                parameters.getOrDefault(OAuth2ParameterNames.SCOPE, "openid profile"),
+                " "
+            )
+        );
+
+        boolean withCredentials = scopes != null && scopes.contains("credentials");
+        boolean withRefresh = scopes != null && scopes.contains("offline_access");
+
         //validate token
         String token = parameters.get("subject_token");
         if (token == null) {
@@ -216,7 +226,7 @@ public class TokenExchangeGranter implements TokenGranter, InitializingBean {
             UserAuthentication<?> user = (UserAuthentication<?>) auth;
 
             //full credentials + refresh
-            return tokenService.generateToken(user, true);
+            return tokenService.generateToken(user, withCredentials, withRefresh);
         } catch (AuthenticationException ae1) {
             throw new IllegalArgumentException("invalid or missing subject_token");
         }

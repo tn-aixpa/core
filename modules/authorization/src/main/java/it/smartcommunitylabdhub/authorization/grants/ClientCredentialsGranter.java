@@ -22,8 +22,7 @@ import it.smartcommunitylabdhub.authorization.services.TokenService;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +35,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Component
 @Slf4j
@@ -98,6 +98,15 @@ public class ClientCredentialsGranter implements TokenGranter {
             throw new IllegalArgumentException("invalid grant type");
         }
 
+        Set<String> scopes = Set.of(
+            StringUtils.delimitedListToStringArray(
+                parameters.getOrDefault(OAuth2ParameterNames.SCOPE, "openid profile"),
+                " "
+            )
+        );
+
+        boolean withCredentials = scopes != null && scopes.contains("credentials");
+
         log.debug("client token request for {}", authentication.getName());
 
         //generate as admin user == client
@@ -108,21 +117,7 @@ public class ClientCredentialsGranter implements TokenGranter {
         );
 
         //full credentials without refresh
-        //TODO skip generation, for now we exclude from response
-        TokenResponse token = tokenService.generateToken(user, true);
-        Optional
-            .ofNullable(token.getCredentials())
-            .ifPresent(cred -> {
-                token.setCredentials(
-                    cred
-                        .entrySet()
-                        .stream()
-                        .filter(e -> !"refresh_token".equals(e.getKey()))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                );
-            });
-
-        return token;
+        return tokenService.generateToken(user, withCredentials, false);
     }
 
     @Override

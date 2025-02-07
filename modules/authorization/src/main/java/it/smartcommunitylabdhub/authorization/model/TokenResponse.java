@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,28 @@ import lombok.ToString;
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TokenResponse {
+
+    @JsonProperty("token_type")
+    @Builder.Default
+    private String tokenType = "Bearer";
+
+    @JsonProperty("access_token")
+    private String accessToken;
+
+    @JsonProperty("id_token")
+    private String idToken;
+
+    @JsonProperty("refresh_token")
+    private String refreshToken;
+
+    @JsonProperty("expires_in")
+    private Integer expiration;
+
+    @JsonProperty("client_id")
+    private String clientId;
+
+    @JsonProperty("issuer")
+    private String issuer;
 
     @JsonIgnore
     private Map<String, String> credentials;

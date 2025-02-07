@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.authorization.model;
+package it.smartcommunitylabdhub.authorization.providers;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.smartcommunitylabdhub.commons.infrastructure.AbstractConfiguration;
-import java.util.Set;
+import com.nimbusds.jwt.SignedJWT;
+import it.smartcommunitylabdhub.authorization.model.AbstractCredentials;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,32 +35,33 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class OpenIdConfig extends AbstractConfiguration {
+public class AccessCredentials extends AbstractCredentials {
+
+    @JsonProperty("access_token")
+    private SignedJWT accessToken;
+
+    @JsonProperty("id_token")
+    private SignedJWT idToken;
+
+    @JsonProperty("refresh_token")
+    private String refreshToken;
+
+    @JsonProperty("expires_in")
+    private Integer expiration;
+
+    @JsonProperty("client_id")
+    private String clientId;
 
     @JsonProperty("issuer")
     private String issuer;
 
-    @JsonProperty("jwks_uri")
-    private String jwksUri;
+    @JsonGetter("access_token")
+    public String getAccessTokenAsString() {
+        return accessToken != null ? accessToken.serialize() : null;
+    }
 
-    @JsonProperty("authorization_endpoint")
-    private String authorizationEndpoint;
-
-    @JsonProperty("userinfo_endpoint")
-    private String userinfoEndpoint;
-
-    @JsonProperty("token_endpoint")
-    private String tokenEndpoint;
-
-    @JsonProperty("token_endpoint_auth_methods_supported")
-    private Set<String> tokenEndpointAuthMethodsSupported;
-
-    @JsonProperty("response_types_supported")
-    private Set<String> responseTypesSupported;
-
-    @JsonProperty("grant_types_supported")
-    private Set<String> grantTypesSupported;
-
-    @JsonProperty("scopes_supported")
-    private Set<String> scopesSupported;
+    @JsonGetter("id_token")
+    public String getIdTokenAsString() {
+        return idToken != null ? idToken.serialize() : null;
+    }
 }

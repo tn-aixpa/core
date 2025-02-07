@@ -22,6 +22,7 @@ import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.authorization.services.TokenService;
 import jakarta.validation.constraints.NotNull;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +34,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Component
 @Slf4j
@@ -72,15 +74,25 @@ public class RefreshTokenGranter implements TokenGranter {
             throw new IllegalArgumentException("invalid grant type");
         }
 
-        String token = parameters.get("refresh_token");
+        String token = parameters.get(OAuth2ParameterNames.REFRESH_TOKEN);
         if (token == null) {
             throw new IllegalArgumentException("invalid or missing refresh_token");
         }
 
-        String cid = parameters.get("client_id");
+        String cid = parameters.get(OAuth2ParameterNames.CLIENT_ID);
         if (cid == null || !clientId.equals(cid)) {
             throw new IllegalArgumentException("invalid or missing client_id");
         }
+
+        //TODO evaluate if scopes are valid against originally requested
+        Set<String> scopes = Set.of(
+            StringUtils.delimitedListToStringArray(
+                parameters.getOrDefault(OAuth2ParameterNames.SCOPE, "openid profile"),
+                " "
+            )
+        );
+
+        boolean withCredentials = scopes != null && scopes.contains("credentials");
 
         log.debug("refresh token request for {}", cid);
         if (log.isTraceEnabled()) {
@@ -98,7 +110,7 @@ public class RefreshTokenGranter implements TokenGranter {
             }
 
             //generate full credentials + new refresh
-            return tokenService.generateToken(user, true);
+            return tokenService.generateToken(user, withCredentials, true);
         } catch (AuthenticationException ae) {
             throw new IllegalArgumentException("invalid or missing refresh_token");
         }

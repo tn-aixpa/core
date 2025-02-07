@@ -86,6 +86,7 @@ public class OAuth2ConfigurationEndpoint implements ConfigurationProvider {
         }
 
         builder.grantTypesSupported(new HashSet<>(grantTypes));
+        builder.scopesSupported(Set.of("openid", "profile", "credentials", "offline_access"));
 
         builder.tokenEndpoint(baseUrl + TokenEndpoint.TOKEN_URL);
         Set<String> authMethods = Set.of("client_secret_basic", "client_secret_post", "none");

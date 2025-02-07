@@ -19,7 +19,6 @@ package it.smartcommunitylabdhub.authorization.providers;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.nimbusds.jwt.SignedJWT;
 import it.smartcommunitylabdhub.authorization.model.AbstractCredentials;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -39,43 +38,11 @@ import org.springframework.util.StringUtils;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CoreCredentials extends AbstractCredentials {
 
-    @JsonProperty("token_type")
-    @Builder.Default
-    private String tokenType = "Bearer";
-
-    @JsonProperty("access_token")
-    private SignedJWT accessToken;
-
-    @JsonProperty("id_token")
-    private SignedJWT idToken;
-
-    @JsonProperty("refresh_token")
-    private String refreshToken;
-
-    @JsonProperty("expires_in")
-    private Integer expiration;
-
-    @JsonProperty("client_id")
-    private String clientId;
-
-    @JsonProperty("issuer")
-    private String issuer;
-
     @JsonProperty("projects")
     private Set<String> projects;
 
     @JsonGetter("projects")
     private String getProjectsAsString() {
         return projects == null ? null : StringUtils.collectionToCommaDelimitedString(projects);
-    }
-
-    @JsonGetter("access_token")
-    public String getAccessToken() {
-        return accessToken != null ? accessToken.serialize() : null;
-    }
-
-    @JsonGetter("id_token")
-    public String getIdToken() {
-        return idToken != null ? idToken.serialize() : null;
     }
 }

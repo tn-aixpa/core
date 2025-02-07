@@ -19,7 +19,8 @@ package it.smartcommunitylabdhub.authorization.services;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse.TokenResponseBuilder;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
-import it.smartcommunitylabdhub.authorization.providers.CoreCredentialsProvider;
+import it.smartcommunitylabdhub.authorization.providers.AccessCredentials;
+import it.smartcommunitylabdhub.authorization.providers.AccessCredentialsProvider;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -35,6 +37,7 @@ import org.springframework.stereotype.Service;
 public class CredentialsServiceImpl implements CredentialsService, TokenService {
 
     private final List<CredentialsProvider> providers;
+    private AccessCredentialsProvider accessProvider;
 
     public CredentialsServiceImpl(Collection<CredentialsProvider> providers) {
         log.debug("Initialize service with providers");
@@ -48,6 +51,11 @@ public class CredentialsServiceImpl implements CredentialsService, TokenService 
         } else {
             this.providers = Collections.emptyList();
         }
+    }
+
+    @Autowired
+    public void setAccessProvider(AccessCredentialsProvider credentialsProvider) {
+        this.accessProvider = credentialsProvider;
     }
 
     public List<Credentials> getCredentials(@NotNull UserAuthentication<?> auth) {
@@ -80,10 +88,19 @@ public class CredentialsServiceImpl implements CredentialsService, TokenService 
     //     return auth.getCredentials();
     // }
 
-    public TokenResponse generateToken(@NotNull UserAuthentication<?> authentication, boolean withCredentials) {
+    public TokenResponse generateToken(
+        @NotNull UserAuthentication<?> authentication,
+        boolean withCredentials,
+        boolean withRefresh
+    ) {
+        List<CredentialsProvider> credentialsProviders = providers
+            .stream()
+            .filter(p -> !(p instanceof AccessCredentialsProvider))
+            .toList();
+
         if (withCredentials) {
             //refresh credentials before token generation
-            List<Credentials> credentials = providers
+            List<Credentials> credentials = credentialsProviders
                 .stream()
                 .map(p -> p.process(authentication))
                 .filter(c -> c != null)
@@ -94,22 +111,27 @@ public class CredentialsServiceImpl implements CredentialsService, TokenService 
         //response
         TokenResponseBuilder response = TokenResponse.builder();
 
+        if (accessProvider != null) {
+            AccessCredentials c = accessProvider.get(authentication);
+            if (c != null) {
+                //copy credential as token response
+                response.accessToken(c.getAccessTokenAsString());
+                response.idToken(c.getIdTokenAsString());
+                response.clientId(c.getClientId());
+                response.expiration(c.getExpiration());
+                response.issuer(c.getIssuer());
+
+                if (withRefresh) {
+                    response.refreshToken(c.getRefreshToken());
+                }
+            }
+        }
+
         if (withCredentials) {
             //derive full credentials as map
             response.credentials(
-                providers
+                credentialsProviders
                     .stream()
-                    .map(p -> p.get(authentication))
-                    .filter(c -> c != null)
-                    .flatMap(c -> c.toMap().entrySet().stream())
-                    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()))
-            );
-        } else {
-            //keep only core response, skip rest
-            response.credentials(
-                providers
-                    .stream()
-                    .filter(p -> p instanceof CoreCredentialsProvider)
                     .map(p -> p.get(authentication))
                     .filter(c -> c != null)
                     .flatMap(c -> c.toMap().entrySet().stream())
@@ -121,6 +143,6 @@ public class CredentialsServiceImpl implements CredentialsService, TokenService 
     }
 
     public TokenResponse generateToken(@NotNull UserAuthentication<?> authentication) {
-        return generateToken(authentication, true);
+        return generateToken(authentication, true, true);
     }
 }

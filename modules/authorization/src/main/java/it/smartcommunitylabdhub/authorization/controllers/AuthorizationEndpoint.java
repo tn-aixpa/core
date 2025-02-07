@@ -158,6 +158,8 @@ public class AuthorizationEndpoint implements InitializingBean {
             throw new IllegalArgumentException("invalid state");
         }
 
+        String scope = parameters.get(OAuth2ParameterNames.SCOPE);
+
         String redirectUri = parameters.get(OAuth2ParameterNames.REDIRECT_URI);
         if (!StringUtils.hasText(redirectUri)) {
             throw new IllegalArgumentException("missing redirect_uri");
@@ -186,6 +188,7 @@ public class AuthorizationEndpoint implements InitializingBean {
             .clientId(clientId)
             .redirectUri(redirectUri)
             .code(code)
+            .scope(scope)
             .state(state)
             .codeChallenge(codeChallenge)
             .codeChallengeMethod(codeChallengeMethod)

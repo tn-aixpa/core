@@ -23,5 +23,9 @@ import jakarta.validation.constraints.NotNull;
 public interface TokenService {
     TokenResponse generateToken(@NotNull UserAuthentication<?> authentication);
 
-    TokenResponse generateToken(@NotNull UserAuthentication<?> authentication, boolean withCredentials);
+    TokenResponse generateToken(
+        @NotNull UserAuthentication<?> authentication,
+        boolean withCredentials,
+        boolean withRefresh
+    );
 }

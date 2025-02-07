@@ -29,6 +29,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -191,6 +193,16 @@ public class AuthorizationCodeGranter implements TokenGranter {
             throw new IllegalArgumentException("invalid code verifier");
         }
 
+        Set<String> scopes = Set.of(
+            StringUtils.delimitedListToStringArray(
+                Optional.ofNullable(request.getScope()).orElse("openid profile"),
+                " "
+            )
+        );
+
+        boolean withCredentials = scopes != null && scopes.contains("credentials");
+        boolean withRefresh = scopes != null && scopes.contains("offline_access");
+
         //valid request, consume
         UserAuthentication<?> user = requestStore.consume(tokenRequest);
         if (user == null) {
@@ -206,7 +218,7 @@ public class AuthorizationCodeGranter implements TokenGranter {
             }
 
             //generate full credentials + new refresh
-            return tokenService.generateToken(user, true);
+            return tokenService.generateToken(user, withCredentials, withRefresh);
         } catch (AuthenticationException ae) {
             throw new IllegalArgumentException("invalid request");
         }

@@ -16,17 +16,9 @@
 
 package it.smartcommunitylabdhub.authorization.providers;
 
-import com.nimbusds.jwt.SignedJWT;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
-import it.smartcommunitylabdhub.authorization.providers.CoreCredentials.CoreCredentialsBuilder;
-import it.smartcommunitylabdhub.authorization.providers.CoreCredentialsConfig.CoreCredentialsConfigBuilder;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.authorization.services.CredentialsProvider;
-import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
-import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
-import it.smartcommunitylabdhub.commons.config.SecurityProperties;
-import it.smartcommunitylabdhub.commons.infrastructure.ConfigurationProvider;
-import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
@@ -35,60 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 @Service
 @Slf4j
-public class CoreCredentialsProvider implements ConfigurationProvider, CredentialsProvider {
-
-    private JwtTokenService jwtTokenService;
-    private CoreCredentialsConfig config;
+public class CoreCredentialsProvider implements CredentialsProvider {
 
     AuthorizableAwareEntityService<Project> projectAuthHelper;
-
-    public CoreCredentialsProvider(
-        JwtTokenService jwtTokenService,
-        ApplicationProperties properties,
-        SecurityProperties security
-    ) {
-        Assert.notNull(jwtTokenService, "token service is required");
-        Assert.notNull(properties, "properties can not be null");
-        Assert.notNull(security, "properties can not be null");
-
-        log.debug("Build configuration for provider...");
-        if (security.isRequired()) {
-            this.jwtTokenService = jwtTokenService;
-
-            String baseUrl = properties.getEndpoint();
-
-            //build config
-            CoreCredentialsConfigBuilder builder = CoreCredentialsConfig.builder();
-            Set<String> authMethods = new HashSet<>();
-
-            //basic
-            if (security.isBasicAuthEnabled()) {
-                authMethods.add("basic");
-                builder.realm(baseUrl);
-            }
-
-            //oauth2
-            if (security.isJwtAuthEnabled()) {
-                authMethods.add("jwt");
-            }
-
-            if (security.isOidcAuthEnabled()) {
-                authMethods.add("oidc");
-            }
-
-            builder.authenticationMethods(authMethods);
-
-            this.config = builder.build();
-
-            if (log.isTraceEnabled()) {
-                log.trace("config: {}", config.toJson());
-            }
-        }
-    }
 
     @Autowired(required = false)
     public void setProjectAuthHelper(AuthorizableAwareEntityService<Project> projectAuthHelper) {
@@ -97,37 +41,11 @@ public class CoreCredentialsProvider implements ConfigurationProvider, Credentia
 
     @Override
     public CoreCredentials get(@NotNull UserAuthentication<?> auth) {
-        if (jwtTokenService == null) {
-            return null;
-        }
-
-        log.debug("generate credentials for user authentication {} via jwtToken service", auth.getName());
-        //TODO evaluate caching responses
-        //NOTE: refresh token is bound to access and single use, we could cache only non-refreshable cred!
-        SignedJWT accessToken = jwtTokenService.generateAccessToken(auth);
-        String refreshToken = jwtTokenService.generateRefreshToken(auth, accessToken);
-
-        Integer exp = jwtTokenService.getAccessTokenDuration();
-        //response
-        CoreCredentialsBuilder response = CoreCredentials
-            .builder()
-            .accessToken(accessToken)
-            .refreshToken(refreshToken)
-            .idToken(accessToken)
-            .expiration(exp)
-            .clientId(jwtTokenService.getClientId())
-            .issuer(jwtTokenService.getIssuer());
-
-        return response.build();
+        return process(auth);
     }
 
     @Override
-    public CoreCredentialsConfig getConfig() {
-        return config;
-    }
-
-    @Override
-    public <T extends AbstractAuthenticationToken> Credentials process(@NotNull T token) {
+    public <T extends AbstractAuthenticationToken> CoreCredentials process(@NotNull T token) {
         //inflate token by adding project authorizations
         String username = token.getName();
 

@@ -84,9 +84,7 @@ public class ConsoleController {
             config.put("REACT_APP_LOGIN_URL", "/auth");
             config.put("REACT_APP_ISSUER_URI", applicationUrl);
             config.put("REACT_APP_CLIENT_ID", clientId);
-            // if (securityProperties.getOidc().getScope() != null) {
-            //     config.put("REACT_APP_SCOPE", String.join(" ", securityProperties.getOidc().getScope()));
-            // }
+            config.put("REACT_APP_SCOPE", "openid profile offline_access");
         }
 
         config.put("REACT_APP_ENABLE_SOLR", String.valueOf(StringUtils.hasText(solrUrl)));

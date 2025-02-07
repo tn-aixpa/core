@@ -34,7 +34,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CoreCredentialsConfig extends AbstractConfiguration {
+public class AccessCredentialsConfig extends AbstractConfiguration {
 
     @JsonProperty("authentication_methods")
     private Set<String> authenticationMethods;
