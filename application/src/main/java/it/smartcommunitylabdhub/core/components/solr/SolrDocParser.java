@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.List;
 import org.apache.solr.common.SolrDocument;
 
+import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+
 public class SolrDocParser {
 
     @SuppressWarnings("unchecked")

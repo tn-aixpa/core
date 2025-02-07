@@ -5,6 +5,8 @@ import java.util.Map;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+
 public class SolrPageImpl<T> extends PageImpl<T> implements SolrPage<T> {
 
     private static final long serialVersionUID = 8269910872034647723L;

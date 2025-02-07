@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.components.solr;
+package it.smartcommunitylabdhub.core.models.indexers;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

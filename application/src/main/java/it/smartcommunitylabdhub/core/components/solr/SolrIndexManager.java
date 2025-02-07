@@ -7,6 +7,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
+import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -73,7 +79,7 @@ public class SolrIndexManager {
         restTemplate = new RestTemplate();
     }
 
-    public void init() throws SolrIndexerException {
+    public void init() throws IndexerException {
         log.debug("init solr collection {}", props.getCollection());
         try {
             //check if collection exists
@@ -85,7 +91,7 @@ public class SolrIndexManager {
                 ResponseEntity<String> listResponse = restTemplate.getForEntity(listUrl, String.class);
 
                 if (listResponse.getStatusCode().isError()) {
-                    throw new SolrIndexerException(
+                    throw new IndexerException(
                         String.format(
                             "can not talk to solr {%s}: {%s}",
                             listResponse.getStatusCode().toString(),
@@ -102,7 +108,7 @@ public class SolrIndexManager {
                 ResponseEntity<String> listResponse = restTemplate.getForEntity(listUrl, String.class);
 
                 if (listResponse.getStatusCode().isError()) {
-                    throw new SolrIndexerException(
+                    throw new IndexerException(
                         String.format(
                             "can not talk to solr {%s}: {%s}",
                             listResponse.getStatusCode().toString(),
@@ -114,11 +120,11 @@ public class SolrIndexManager {
                 Map<String, Serializable> map = JacksonMapper.OBJECT_MAPPER.readValue(listResponse.getBody(), typeRef);
                 Map<String, Serializable> collections = (Map<String, Serializable>) map.get("status");
                 if (collections == null || !collections.containsKey(props.getCollection())) {
-                    throw new SolrIndexerException("core not available " + props.getCollection());
+                    throw new IndexerException("core not available " + props.getCollection());
                 }
             }
         } catch (SolrException | RestClientException | JsonProcessingException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
@@ -126,16 +132,16 @@ public class SolrIndexManager {
      * Public API
      */
 
-    public void ping() throws SolrIndexerException {
+    public void ping() throws IndexerException {
         log.debug("ping solr collection {}", props.getCollection());
         try {
             solrClient.ping(props.getCollection());
         } catch (SolrServerException | SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
-    public synchronized void initFields(Iterable<IndexField> fields) throws SolrIndexerException {
+    public synchronized void initFields(Iterable<IndexField> fields) throws IndexerException {
         log.debug("init fields");
         if (log.isTraceEnabled()) {
             log.trace("fields: {}", fields);
@@ -177,14 +183,14 @@ public class SolrIndexManager {
         }
     }
 
-    public void close() throws SolrIndexerException {
+    public void close() throws IndexerException {
         if (solrClient != null) {
             solrClient.close();
         }
     }
 
     public SolrPage<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest)
-        throws SolrIndexerException {
+        throws IndexerException {
         log.debug("group search for {} {}", q, fq);
 
         try {
@@ -220,12 +226,12 @@ public class SolrIndexManager {
 
             return new SolrPageImpl<>(result, pageRequest, total, filters);
         } catch (SolrServerException | SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
     public SolrPage<ItemResult> itemSearch(String q, List<String> fq, Pageable pageRequest)
-        throws SolrIndexerException {
+        throws IndexerException {
         log.debug("item search for {} {}", q, fq);
 
         try {
@@ -248,11 +254,11 @@ public class SolrIndexManager {
 
             return new SolrPageImpl<>(result, pageRequest, documents.getNumFound(), filters);
         } catch (SolrServerException | SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
-    public void indexDoc(SolrInputDocument doc) throws SolrIndexerException {
+    public void indexDoc(SolrInputDocument doc) throws IndexerException {
         log.debug("index doc");
         if (log.isTraceEnabled()) {
             log.trace("doc: {}", doc);
@@ -262,41 +268,41 @@ public class SolrIndexManager {
             solrClient.add(props.getCollection(), doc);
             solrClient.commit(props.getCollection());
         } catch (SolrServerException | SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
-    public void removeDoc(String id) throws SolrIndexerException {
+    public void removeDoc(String id) throws IndexerException {
         log.debug("remove doc {}", String.valueOf(id));
         try {
             solrClient.deleteById(props.getCollection(), id);
             solrClient.commit(props.getCollection());
         } catch (SolrServerException | SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
-    public void clearIndex() throws SolrIndexerException {
+    public void clearIndex() throws IndexerException {
         log.debug("clear index");
         try {
             solrClient.deleteByQuery(props.getCollection(), "*:*");
             solrClient.commit(props.getCollection());
         } catch (SolrServerException | SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
-    public void clearIndexByType(String type) throws SolrIndexerException {
+    public void clearIndexByType(String type) throws IndexerException {
         log.debug("clear index for type {}", String.valueOf(type));
         try {
             solrClient.deleteByQuery(props.getCollection(), "type:" + type.trim());
             solrClient.commit(props.getCollection());
         } catch (SolrServerException | SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
-    public void indexBounce(Iterable<SolrInputDocument> docs) throws SolrIndexerException {
+    public void indexBounce(Iterable<SolrInputDocument> docs) throws IndexerException {
         log.debug("index bounce docs");
         try {
             for (SolrInputDocument doc : docs) {
@@ -304,7 +310,7 @@ public class SolrIndexManager {
             }
             solrClient.commit(props.getCollection());
         } catch (SolrServerException | SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 
@@ -320,7 +326,7 @@ public class SolrIndexManager {
         boolean stored,
         boolean uninvertible,
         String uri
-    ) throws SolrIndexerException {
+    ) throws IndexerException {
         ObjectNode rootNode = mapper.createObjectNode();
         ObjectNode addNode = rootNode.putObject("add-field");
         addNode
@@ -333,7 +339,7 @@ public class SolrIndexManager {
         HttpEntity<ObjectNode> request = new HttpEntity<>(rootNode);
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, request, String.class);
         if (response.getStatusCode().isError()) {
-            throw new SolrIndexerException(
+            throw new IndexerException(
                 "SolrIndexManager schema error: " + String.valueOf(response.getStatusCode().value())
             );
         }
@@ -403,7 +409,7 @@ public class SolrIndexManager {
         return new MultiMapSolrParams(queryParamMap);
     }
 
-    private void initCollection() throws SolrIndexerException {
+    private void initCollection() throws IndexerException {
         try {
             //check if collection exists
             String solrUrl = props.getUrl();
@@ -411,7 +417,7 @@ public class SolrIndexManager {
             String listUrl = baseUri + "admin/collections?action=LIST";
             ResponseEntity<String> listResponse = restTemplate.getForEntity(listUrl, String.class);
             if (listResponse.getStatusCode().isError()) {
-                throw new SolrIndexerException(
+                throw new IndexerException(
                     String.format(
                         "can not talk to solr {%s}: {%s}",
                         listResponse.getStatusCode().toString(),
@@ -438,7 +444,7 @@ public class SolrIndexManager {
                 );
 
                 if (createResponse.getStatusCode().isError()) {
-                    throw new SolrIndexerException(
+                    throw new IndexerException(
                         String.format(
                             "can not talk to solr {%s}: {%s}",
                             createResponse.getStatusCode().toString(),
@@ -448,7 +454,7 @@ public class SolrIndexManager {
                 }
             }
         } catch (SolrException | IOException e) {
-            throw new SolrIndexerException(e.getMessage());
+            throw new IndexerException(e.getMessage());
         }
     }
 }
