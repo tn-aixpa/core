@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.core.config;
 
-import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManager;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManagerBuilder;
+import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
-import it.smartcommunitylabdhub.commons.config.SecurityProperties.JwtAuthenticationProperties;
-import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.core.websocket.UserNotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.jetty.http.HttpHeader;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +28,6 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken;
@@ -62,8 +60,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Autowired
     SecurityProperties securityProperties;
 
+    @Autowired(required = false)
+    JwtTokenService jwtTokenService;
+
     @Autowired
-    AuthorizableAwareEntityService<Project> projectAuthHelper;
+    UserAuthenticationManagerBuilder authenticationManagerBuilder;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -94,9 +95,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             List<AuthenticationProvider> providers = new ArrayList<>();
 
             if (securityProperties.isBasicAuthEnabled()) {
-                BasicAuthenticationConverter basicAuthenticationConverter = new BasicAuthenticationConverter();
-                converters.add(basicAuthenticationConverter);
+                //basic auth converter
+                converters.add(new BasicAuthenticationConverter());
 
+                //basic auth provider
                 DaoAuthenticationProvider basicAuthProvider = new DaoAuthenticationProvider();
                 basicAuthProvider.setUserDetailsService(
                     SecurityConfig.userDetailsService(
@@ -107,8 +109,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 providers.add(basicAuthProvider);
             }
 
-            if (securityProperties.isJwtAuthEnabled()) {
-                JwtAuthenticationProperties jwtProps = securityProperties.getJwt();
+            if (securityProperties.isOidcAuthEnabled() && jwtTokenService != null) {
+                // bearer auth converter
                 AuthenticationConverter converter = new AuthenticationConverter() {
                     private final BearerTokenResolver resolver = new DefaultBearerTokenResolver();
 
@@ -124,25 +126,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 };
                 converters.add(converter);
 
-                JwtAuthenticationProvider provider = new JwtAuthenticationProvider(
-                    SecurityConfig.externalJwtDecoder(jwtProps.getIssuerUri(), jwtProps.getAudience())
-                );
-                provider.setJwtAuthenticationConverter(
-                    SecurityConfig.externalJwtAuthenticationConverter(
-                        jwtProps.getUsername(),
-                        jwtProps.getClaim(),
-                        projectAuthHelper
-                    )
-                );
-
+                //jwt auth provider
+                JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtTokenService.getDecoder());
+                provider.setJwtAuthenticationConverter(jwtTokenService.getAuthenticationConverter());
                 providers.add(provider);
             }
 
-            //TODO evaluate adding core token support
-
-            AuthInterceptor authInterceptor = new AuthInterceptor(new ProviderManager(providers));
+            UserAuthenticationManager authManager = authenticationManagerBuilder.build(providers);
+            AuthInterceptor authInterceptor = new AuthInterceptor(authManager);
             authInterceptor.setConverters(converters);
-
             registration.interceptors(authInterceptor);
         }
     }
