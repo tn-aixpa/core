@@ -3,6 +3,7 @@ package it.smartcommunitylabdhub.core.components.lucene;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -17,19 +18,16 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BooleanQuery.Builder;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.solr.common.params.MultiMapSolrParams;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -38,6 +36,7 @@ import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
 import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
 import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
 import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPageImpl;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -142,13 +141,16 @@ public class LuceneManager {
 		try {
 			Map<String, List<String>> filters = new HashMap<>();
 			BooleanQuery query = prepareQuery(q, fq, pageRequest, filters, false);
+			log.info("query {}", query.toString());
 			TopDocs topDocs = isearcher.search(query, pageRequest.getPageSize());
 			StoredFields storedFields = ireader.storedFields();
+			List<ItemResult> result = new ArrayList<>();
 			for(ScoreDoc hit : topDocs.scoreDocs) {
 				Document doc = storedFields.document(hit.doc);
-				
+				ItemResult itemResult = LuceneDocParser.parse(doc);
+				result.add(itemResult);
 			}
-			return null;
+			return new SolrPageImpl<ItemResult>(result, pageRequest, topDocs.totalHits.value, filters);
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
@@ -164,7 +166,7 @@ public class LuceneManager {
         List<String> fq,
         Pageable pageRequest,
         Map<String, List<String>> filters,
-        boolean grouped) throws ParseException {
+        boolean grouped) throws Exception {
 		Builder builder = new BooleanQuery.Builder();
 		if (StringUtils.hasText(q)) {
 			filters.put("q", Arrays.asList(q));
@@ -175,14 +177,32 @@ public class LuceneManager {
 		}
 		 if (fq != null) {
 			 filters.put("fq", fq);
-	            fq.forEach(filter -> {
-	                if (StringUtils.hasText(filter)) {
+			 StandardQueryParser standardQueryParser = new StandardQueryParser(analyzer);
+			 for(String filter : fq) {
+				 if (StringUtils.hasText(filter)) {
 	                    String field = filter.substring(0, filter.indexOf(':'));
-	                    String value = filter.substring(filter.indexOf(':'));
-	                    TermQuery tq = new TermQuery(new Term(field, value));
-	                    builder.add(tq, BooleanClause.Occur.MUST);
-	                }
-	            });
+	                    String value = filter.substring(filter.indexOf(':') + 1);
+	                    if(field.equals("metadata.updated")) {
+	                    	String s = StringUtils.deleteAny(StringUtils.deleteAny(value, "]"), "[");
+	                    	String[] split = s.split(" TO ");
+	                    	if(split.length == 2) {
+	                    		if(!split[0].equals("*")) {
+	                    			String from = StringUtils.deleteAny(split[0], "\"");
+	                    			split[0] = String.valueOf(LuceneDocParser.sdf.parse(from).getTime());  
+	                    		}
+	                    		if(!split[1].equals("*")) {
+	                    			String from = StringUtils.deleteAny(split[1], "\"");
+	                    			split[1] = String.valueOf(LuceneDocParser.sdf.parse(from).getTime());  
+	                    		}
+	                    	}
+	                    	Query query = standardQueryParser.parse(String.format("[%s TO %s]", split[0], split[1]), "metadata.updatedLong");
+	                		builder.add(query, BooleanClause.Occur.MUST);	                    	
+	                    } else { 
+	                		Query query = standardQueryParser.parse(value, field);
+	                		builder.add(query, BooleanClause.Occur.MUST);	                    	
+	                    }
+	             }
+			 }
 		 }
 		 return builder.build();
 	}

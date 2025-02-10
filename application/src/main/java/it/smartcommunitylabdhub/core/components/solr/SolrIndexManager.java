@@ -12,6 +12,7 @@ import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
 import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
 import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
 import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPageImpl;
 
 import java.io.IOException;
 import java.io.Serializable;

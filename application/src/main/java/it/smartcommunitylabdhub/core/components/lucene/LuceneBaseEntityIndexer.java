@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,8 +27,6 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
 
     public static final int PAGE_MAX_SIZE = 100;
 
-    protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"); 
-    
     protected LuceneComponent lucene;
 
     @Autowired(required = false)
@@ -83,8 +80,9 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
             		doc.add(new StringField("metadata.labels", label, Field.Store.YES));
             	}
             }
-            doc.add(new StringField("metadata.created", sdf.format(Date.from(metadata.getCreated().toInstant())), Field.Store.YES));
-            doc.add(new StringField("metadata.updated", sdf.format(Date.from(metadata.getUpdated().toInstant())), Field.Store.YES));
+            doc.add(new StringField("metadata.created", LuceneDocParser.sdf.format(Date.from(metadata.getCreated().toInstant())), Field.Store.YES));
+            doc.add(new StringField("metadata.updated", LuceneDocParser.sdf.format(Date.from(metadata.getUpdated().toInstant())), Field.Store.YES));
+            doc.add(new StringField("metadata.updatedLong", String.valueOf(Date.from(metadata.getUpdated().toInstant()).getTime()), Field.Store.YES));
 
             AuditMetadata auditing = AuditMetadata.from(((MetadataDTO) item).getMetadata());
             doc.add(new StringField("metadata.createdBy", auditing.getCreatedBy(), Field.Store.YES));

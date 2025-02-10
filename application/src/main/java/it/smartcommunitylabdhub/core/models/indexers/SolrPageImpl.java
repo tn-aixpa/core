@@ -1,11 +1,9 @@
-package it.smartcommunitylabdhub.core.components.solr;
+package it.smartcommunitylabdhub.core.models.indexers;
 
 import java.util.List;
 import java.util.Map;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
 
 public class SolrPageImpl<T> extends PageImpl<T> implements SolrPage<T> {
 
