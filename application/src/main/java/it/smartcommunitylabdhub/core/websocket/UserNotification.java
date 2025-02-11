@@ -31,7 +31,6 @@ public class UserNotification<T extends BaseDTO> implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     protected OffsetDateTime timestamp = OffsetDateTime.now();
 
-    @NotNull
     private String user;
 
     @NotNull

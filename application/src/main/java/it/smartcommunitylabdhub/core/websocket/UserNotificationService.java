@@ -22,6 +22,36 @@ public class UserNotificationService {
         this.messagingTemplate = messagingTemplate;
     }
 
+    public void broadcast(@NotNull UserNotification<? extends BaseDTO> notification) {
+        if (notification.getUser() != null) {
+            log.warn("notification has a user");
+            return;
+        }
+
+        log.debug("notify {} {} change", notification.getEntity(), notification.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("dto: {}", notification.getDto());
+        }
+
+        //send whole event as payload
+        broadcast(buildDestination(notification.getEntity(), notification.getDto().getId()), notification);
+    }
+
+    public void broadcast(String destination, Serializable payload) {
+        log.debug("broadcast to {}", destination);
+
+        if (log.isTraceEnabled()) {
+            log.trace("payload: {}", payload);
+        }
+
+        try {
+            //send to user via webSocket
+            messagingTemplate.convertAndSend(destination, payload);
+        } catch (MessagingException e) {
+            log.error("Error sending message", e);
+        }
+    }
+
     public void notifyUser(@NotNull UserNotification<? extends BaseDTO> notification) {
         if (notification.getUser() == null) {
             log.warn("notification has no user");
@@ -79,6 +109,11 @@ public class UserNotificationService {
     private String buildDestination(EntityName name) {
         //use simple name  (pluralized) as dest
         return PREFIX + "/" + name.getValue().toLowerCase() + "s";
+    }
+
+    private String buildDestination(EntityName name, String id) {
+        //use simple name  (pluralized) as dest
+        return PREFIX + "/" + name.getValue().toLowerCase() + "s" + "/" + id;
     }
 
     private String buildDestination(Class<?> clazz) {
