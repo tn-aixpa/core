@@ -42,4 +42,8 @@ public class AccessCredentialsConfig extends AbstractConfiguration {
     //basic auth
     @JsonProperty("realm")
     private String realm;
+
+    //oauth2
+    @JsonProperty("client_id")
+    private String clientId;
 }

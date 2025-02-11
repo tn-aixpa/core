@@ -73,6 +73,7 @@ public class AccessCredentialsProvider implements ConfigurationProvider, Credent
 
             if (security.isOidcAuthEnabled()) {
                 authMethods.add("oidc");
+                builder.clientId(jwtTokenService.getClientId());
             }
 
             builder.authenticationMethods(authMethods);
