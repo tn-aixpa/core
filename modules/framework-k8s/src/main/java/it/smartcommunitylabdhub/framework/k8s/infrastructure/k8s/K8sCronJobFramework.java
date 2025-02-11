@@ -289,6 +289,11 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
         List<String> command = buildCommand(runnable);
         List<String> args = buildArgs(runnable);
 
+        //image policy
+        String imagePullPolicy = runnable.getImagePullPolicy() != null
+            ? runnable.getImagePullPolicy().name()
+            : defaultImagePullPolicy;
+
         // Build Container
         V1Container container = new V1Container()
             .name(containerName)

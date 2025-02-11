@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.function.FunctionBaseSpec;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreImagePullPolicy;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import java.io.Serializable;
 import java.util.List;
@@ -26,6 +27,13 @@ public class ContainerFunctionSpec extends FunctionBaseSpec {
     @Schema(title = "fields.container.baseImage.title", description = "fields.container.baseImage.description")
     @JsonProperty("base_image")
     private String baseImage;
+
+    @Schema(
+        title = "fields.container.imagePullPolicy.title",
+        description = "fields.container.imagePullPolicy.description"
+    )
+    @JsonProperty("image_pull_policy")
+    private CoreImagePullPolicy imagePullPolicy;
 
     @Schema(title = "fields.container.command.title", description = "fields.container.command.description")
     private String command;

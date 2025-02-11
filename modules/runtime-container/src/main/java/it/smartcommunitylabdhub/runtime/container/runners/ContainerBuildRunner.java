@@ -34,6 +34,8 @@ public class ContainerBuildRunner {
     private static final String RUN_DEBUG =
         "PWD=`pwd`;echo \"DEBUG: dir ${PWD}\";LS=`ls -R`;echo \"DEBUG: dir content:\" && echo \"${LS}\";";
 
+    private static final int MIN_NAME_LENGTH = 3;
+
     private final ContainerFunctionSpec functionSpec;
     private final Map<String, String> secretData;
 
@@ -133,7 +135,7 @@ public class ContainerBuildRunner {
         //evaluate user provided image name
         if (StringUtils.hasText(functionSpec.getImage())) {
             String name = functionSpec.getImage().split(":")[0]; //remove tag if present
-            if (StringUtils.hasText(name) && name.length() > 3) {
+            if (StringUtils.hasText(name) && name.length() > MIN_NAME_LENGTH) {
                 imageName = name;
             }
         }
@@ -153,6 +155,7 @@ public class ContainerBuildRunner {
             )
             // Base
             .image(imageName)
+            .imagePullPolicy(functionSpec.getImagePullPolicy())
             .envs(coreEnvList)
             .secrets(coreSecrets)
             .resources(taskSpec.getResources())

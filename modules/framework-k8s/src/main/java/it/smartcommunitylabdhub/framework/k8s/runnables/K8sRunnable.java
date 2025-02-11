@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreImagePullPolicy;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
@@ -68,6 +69,8 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     private String runtimeClass;
 
     private String priorityClass;
+
+    private CoreImagePullPolicy imagePullPolicy;
 
     //securityContext
     private Integer runAsUser;

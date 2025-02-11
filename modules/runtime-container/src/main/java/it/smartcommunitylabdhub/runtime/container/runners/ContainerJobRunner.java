@@ -99,6 +99,7 @@ public class ContainerJobRunner {
             )
             //base
             .image(functionSpec.getImage())
+            .imagePullPolicy(functionSpec.getImagePullPolicy())
             .command(functionSpec.getCommand())
             .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
             .envs(coreEnvList)
