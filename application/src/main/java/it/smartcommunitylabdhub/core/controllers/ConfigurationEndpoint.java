@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.controllers;
 
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
-import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.infrastructure.ConfigurationProvider;
 import java.io.Serializable;
 import java.util.Collections;
@@ -23,9 +22,6 @@ public class ConfigurationEndpoint {
 
     @Autowired
     private ApplicationProperties applicationProperties;
-
-    @Autowired
-    private SecurityProperties securityProperties;
 
     @Value("${jwt.cache-control}")
     private String cacheControl;

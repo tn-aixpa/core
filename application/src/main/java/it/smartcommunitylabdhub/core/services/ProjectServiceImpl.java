@@ -28,7 +28,6 @@ import it.smartcommunitylabdhub.commons.services.LabelService;
 import it.smartcommunitylabdhub.commons.services.ModelService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SecretService;
-import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.services.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
@@ -66,7 +65,7 @@ public class ProjectServiceImpl
     implements
         SearchableProjectService,
         AuthorizableAwareEntityService<Project>,
-        ShareableAwareEntityService,
+        ShareableAwareEntityService<Project>,
         RelationshipsAwareEntityService<Project> {
 
     @Autowired
@@ -102,9 +101,6 @@ public class ProjectServiceImpl
 
     @Autowired
     private EntityRelationshipsService relationshipsService;
-
-    @Autowired
-    private SpecRegistry specRegistry;
 
     @Autowired
     private SpecValidator validator;

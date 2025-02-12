@@ -1,9 +1,7 @@
 package it.smartcommunitylabdhub.runtime.python.runners;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
@@ -40,7 +38,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class PythonServeRunner {
 
-    private static ObjectMapper jsonMapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
+    private static final int DEFAULT_GROUP_ID = 1000;
     private static final int HTTP_PORT = 8080;
 
     private final String image;
@@ -219,7 +217,7 @@ public class PythonServeRunner {
             .priorityClass(taskSpec.getPriorityClass())
             .template(taskSpec.getProfile())
             //securityContext
-            .fsGroup(1000)
+            .fsGroup(DEFAULT_GROUP_ID)
             //specific
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort))

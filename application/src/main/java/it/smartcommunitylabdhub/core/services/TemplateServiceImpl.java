@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +68,7 @@ public class TemplateServiceImpl implements SearchableTemplateService, Initializ
         .build(
             new CacheLoader<String, List<Template>>() {
                 @Override
-                public List<Template> load(String key) throws Exception {
+                public List<Template> load(@Nonnull String key) throws Exception {
                     log.debug("reload templates for {} from {}", key, templatesPath);
                     return readTemplates(templatesPath, key);
                 }

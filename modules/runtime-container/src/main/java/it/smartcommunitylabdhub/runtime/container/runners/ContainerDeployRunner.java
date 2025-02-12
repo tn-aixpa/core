@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.runtime.container.runners;
 
-import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
@@ -45,7 +44,6 @@ public class ContainerDeployRunner {
     public K8sDeploymentRunnable produce(Run run) {
         ContainerRunSpec runSpec = new ContainerRunSpec(run.getSpec());
         ContainerDeployTaskSpec taskSpec = runSpec.getTaskDeploySpec();
-        StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(run.getStatus());
         TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
