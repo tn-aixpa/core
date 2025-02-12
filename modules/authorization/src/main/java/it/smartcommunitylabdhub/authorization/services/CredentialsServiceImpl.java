@@ -60,7 +60,7 @@ public class CredentialsServiceImpl implements CredentialsService, TokenService 
 
     public List<Credentials> getCredentials(@NotNull UserAuthentication<?> auth) {
         log.debug("get credentials from providers for user {}", auth.getName());
-        List<Credentials> credentials = providers.stream().map(p -> p.get(auth)).toList();
+        List<Credentials> credentials = providers.stream().map(p -> p.get(auth)).filter(c -> c != null).toList();
 
         if (log.isTraceEnabled()) {
             log.trace("credentials: {}", credentials);
