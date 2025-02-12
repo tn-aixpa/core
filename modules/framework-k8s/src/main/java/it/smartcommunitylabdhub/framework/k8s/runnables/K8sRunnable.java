@@ -100,7 +100,7 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     private List<CoreMetric> metrics;
 
     @ToString.Exclude
-    private Map<String, String> credentials;
+    private Map<String, String> credentialsMap;
 
     @JsonProperty("context_refs")
     private List<ContextRef> contextRefs;
@@ -115,14 +115,14 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     @Override
     public void eraseCredentials() {
-        this.credentials = null;
+        this.credentialsMap = null;
     }
 
     @Override
     public void setCredentials(Collection<Credentials> credentials) {
         if (credentials != null) {
             //export to map
-            this.credentials =
+            this.credentialsMap =
                 credentials
                     .stream()
                     .flatMap(c -> c.toMap().entrySet().stream())

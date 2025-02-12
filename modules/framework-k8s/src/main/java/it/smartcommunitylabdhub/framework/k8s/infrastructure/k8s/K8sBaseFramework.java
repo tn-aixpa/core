@@ -917,10 +917,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         }
 
         //set core credentials as env with prefix (when required)
-        if (runnable.getCredentials() != null) {
+        if (runnable.getCredentialsMap() != null) {
             String envsPrefix = k8sSecretHelper.getEnvsPrefix();
             runnable
-                .getCredentials()
+                .getCredentialsMap()
                 .entrySet()
                 .forEach(e -> {
                     if (envsPrefix != null) {
