@@ -479,6 +479,16 @@
   },
   "type" : "object",
   "properties" : {
+    "init_parameters" : {
+      "$ref" : "#/$defs/Map_String.Serializable_",
+      "title" : "fields.initParameters.title",
+      "description" : "fields.initParameters.description",
+      "additionalProperties" : {
+        "$ref" : "#/$defs/Serializable",
+        "title" : "fields.initParameters.item.title",
+        "description" : "fields.initParameters.item.description"
+      }
+    },
     "inputs" : {
       "$ref" : "#/$defs/Map_String.String_",
       "title" : "fields.inputs.title",
