@@ -400,16 +400,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         // Add Kaniko args
         kanikoArgsAll.addAll(kanikoArgs);
 
-        //image policy
-        String imagePullPolicy = runnable.getImagePullPolicy() != null
-            ? runnable.getImagePullPolicy().name()
-            : defaultImagePullPolicy;
-
         // Build Container
         V1Container container = new V1Container()
             .name(containerName)
             .image(kanikoImage)
-            .imagePullPolicy(imagePullPolicy)
+            .imagePullPolicy("IfNotPresent")
             .args(kanikoArgsAll)
             .resources(resources)
             .volumeMounts(volumeMounts)
