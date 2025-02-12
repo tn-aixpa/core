@@ -178,6 +178,7 @@ security:
     client-name: ${DH_AUTH_OIDC_CLIENT_NAME:${application.name}}
     client-id: ${DH_AUTH_OIDC_CLIENT_ID:}
     client-secret: ${DH_AUTH_OIDC_CLIENT_SECRET:}    
+    claim: ${DH_AUTH_OIDC_CLAIM:${security.jwt.claim}}
     username-attribute-name: ${DH_AUTH_OIDC_USERNAME:preferred_username} 
     scope: ${DH_AUTH_OIDC_SCOPE:openid,email,profile}
 

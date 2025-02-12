@@ -3,17 +3,14 @@ package it.smartcommunitylabdhub.core.config;
 import it.smartcommunitylabdhub.authorization.UserAuthenticationManager;
 import it.smartcommunitylabdhub.authorization.UserAuthenticationManagerBuilder;
 import it.smartcommunitylabdhub.authorization.config.KeyStoreConfig;
-import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
 import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties.OidcAuthenticationProperties;
-import it.smartcommunitylabdhub.commons.models.project.Project;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -23,15 +20,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.AuditorAware;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -43,17 +37,9 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimNames;
-import org.springframework.security.oauth2.jwt.JwtClaimValidator;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
@@ -335,9 +321,44 @@ public class SecurityConfig {
                 oauth2.authorizationEndpoint(endpoint -> endpoint.baseUri("/auth/authorization"));
                 oauth2.redirectionEndpoint(endpoint -> endpoint.baseUri("/auth/code/*"));
                 oauth2.userInfoEndpoint(userInfo ->
-                    userInfo.userAuthoritiesMapper(authorities ->
-                        Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
-                    )
+                    userInfo.userAuthoritiesMapper(oidc -> {
+                        Set<SimpleGrantedAuthority> authorities = new LinkedHashSet<>();
+                        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+                        //extract additional authorities from claim when set
+                        OidcUserAuthority oidcAuthority = oidc != null
+                            ? oidc
+                                .stream()
+                                .filter(a -> a instanceof OidcUserAuthority)
+                                .map(a -> (OidcUserAuthority) a)
+                                .findFirst()
+                                .orElse(null)
+                            : null;
+                        if (StringUtils.hasText(props.getClaim()) && oidcAuthority != null) {
+                            List<String> roles = null;
+                            if (oidcAuthority.getIdToken() != null) {
+                                roles = oidcAuthority.getIdToken().getClaimAsStringList(props.getClaim());
+                            }
+
+                            if (oidcAuthority.getUserInfo() != null) {
+                                roles = oidcAuthority.getUserInfo().getClaimAsStringList(props.getClaim());
+                            }
+
+                            if (roles != null) {
+                                roles.forEach(r -> {
+                                    if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
+                                        //use as is
+                                        authorities.add(new SimpleGrantedAuthority(r));
+                                    } else {
+                                        //derive a scoped USER role
+                                        authorities.add(new SimpleGrantedAuthority(r + ":ROLE_USER"));
+                                    }
+                                });
+                            }
+                        }
+
+                        return authorities;
+                    })
                 );
             });
             // //add entryPoint towards provider
@@ -458,7 +479,6 @@ public class SecurityConfig {
 
         return new InMemoryUserDetailsManager(admin);
     }
-
     /**
      * Internal auth via JWT
      */
@@ -546,70 +566,70 @@ public class SecurityConfig {
      * External auth via JWT
      * TODO move config to service
      */
-    public static JwtDecoder externalJwtDecoder(String issuer, String audience) {
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuer).build();
+    // private static JwtDecoder externalJwtDecoder(String issuer, String audience) {
+    //     NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withIssuerLocation(issuer).build();
 
-        OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
-            JwtClaimNames.AUD,
-            (aud -> aud != null && aud.contains(audience))
-        );
+    //     OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<List<String>>(
+    //         JwtClaimNames.AUD,
+    //         (aud -> aud != null && aud.contains(audience))
+    //     );
 
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
-        OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
-        jwtDecoder.setJwtValidator(withAudience);
+    //     OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
+    //     OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
+    //     jwtDecoder.setJwtValidator(withAudience);
 
-        return jwtDecoder;
-    }
+    //     return jwtDecoder;
+    // }
 
-    public static Converter<Jwt, AbstractAuthenticationToken> externalJwtAuthenticationConverter(
-        String usernameClaimName,
-        String rolesClaimName,
-        AuthorizableAwareEntityService<Project> projectAuthHelper
-    ) {
-        return (Jwt jwt) -> {
-            Set<GrantedAuthority> authorities = new HashSet<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+    // private static Converter<Jwt, AbstractAuthenticationToken> externalJwtAuthenticationConverter(
+    //     String usernameClaimName,
+    //     String rolesClaimName,
+    //     AuthorizableAwareEntityService<Project> projectAuthHelper
+    // ) {
+    //     return (Jwt jwt) -> {
+    //         Set<GrantedAuthority> authorities = new HashSet<>();
+    //         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-            //read roles from token
-            if (StringUtils.hasText(rolesClaimName) && jwt.hasClaim(rolesClaimName)) {
-                List<String> roles = jwt.getClaimAsStringList(rolesClaimName);
-                if (roles != null) {
-                    roles.forEach(r -> {
-                        if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
-                            //use as is
-                            authorities.add(new SimpleGrantedAuthority(r));
-                        } else {
-                            //derive a scoped USER role
-                            authorities.add(new SimpleGrantedAuthority(r + ":ROLE_USER"));
-                        }
-                    });
-                }
-            }
+    //         //read roles from token
+    //         if (StringUtils.hasText(rolesClaimName) && jwt.hasClaim(rolesClaimName)) {
+    //             List<String> roles = jwt.getClaimAsStringList(rolesClaimName);
+    //             if (roles != null) {
+    //                 roles.forEach(r -> {
+    //                     if ("ROLE_ADMIN".equals(r) || r.contains(":")) {
+    //                         //use as is
+    //                         authorities.add(new SimpleGrantedAuthority(r));
+    //                     } else {
+    //                         //derive a scoped USER role
+    //                         authorities.add(new SimpleGrantedAuthority(r + ":ROLE_USER"));
+    //                     }
+    //                 });
+    //             }
+    //         }
 
-            //principalName
-            String username = jwt.getClaimAsString(usernameClaimName);
+    //         //principalName
+    //         String username = jwt.getClaimAsString(usernameClaimName);
 
-            //fallback to SUB if missing
-            if (!StringUtils.hasText(username)) {
-                username = jwt.getSubject();
-            }
+    //         //fallback to SUB if missing
+    //         if (!StringUtils.hasText(username)) {
+    //             username = jwt.getSubject();
+    //         }
 
-            if (projectAuthHelper != null) {
-                //inject roles from ownership of projects
-                //derive a scoped ADMIN role
-                projectAuthHelper
-                    .findIdsByCreatedBy(username)
-                    .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN")));
+    //         if (projectAuthHelper != null) {
+    //             //inject roles from ownership of projects
+    //             //derive a scoped ADMIN role
+    //             projectAuthHelper
+    //                 .findIdsByCreatedBy(username)
+    //                 .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_ADMIN")));
 
-                //inject roles from sharing of projects
-                //derive a scoped USER role
-                //TODO make configurable?
-                projectAuthHelper
-                    .findIdsBySharedTo(username)
-                    .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER")));
-            }
+    //             //inject roles from sharing of projects
+    //             //derive a scoped USER role
+    //             //TODO make configurable?
+    //             projectAuthHelper
+    //                 .findIdsBySharedTo(username)
+    //                 .forEach(p -> authorities.add(new SimpleGrantedAuthority(p + ":ROLE_USER")));
+    //         }
 
-            return new JwtAuthenticationToken(jwt, authorities, username);
-        };
-    }
+    //         return new JwtAuthenticationToken(jwt, authorities, username);
+    //     };
+    // }
 }

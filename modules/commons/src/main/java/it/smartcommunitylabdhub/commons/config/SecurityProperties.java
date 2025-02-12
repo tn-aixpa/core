@@ -73,6 +73,7 @@ public class SecurityProperties {
         private String clientId;
         private String clientSecret;
         private List<String> scope;
+        private String claim;
         private String usernameAttributeName;
 
         public boolean isEnabled() {
