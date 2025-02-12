@@ -921,8 +921,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             String envsPrefix = k8sSecretHelper.getEnvsPrefix();
             runnable
                 .getCredentials()
-                .stream()
-                .flatMap(c -> c.toMap().entrySet().stream())
+                .entrySet()
                 .forEach(e -> {
                     if (envsPrefix != null) {
                         data.put(envsPrefix.toUpperCase() + "_" + e.getKey().toUpperCase(), e.getValue());

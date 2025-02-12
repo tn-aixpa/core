@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.CredentialsContainer;
+import org.springframework.util.StringUtils;
 
 @SuperBuilder(toBuilder = true)
 @Getter
@@ -98,7 +100,7 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     private List<CoreMetric> metrics;
 
     @ToString.Exclude
-    private Collection<Credentials> credentials;
+    private Map<String, String> credentials;
 
     @JsonProperty("context_refs")
     private List<ContextRef> contextRefs;
@@ -114,6 +116,20 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     @Override
     public void eraseCredentials() {
         this.credentials = null;
+    }
+
+    @Override
+    public void setCredentials(Collection<Credentials> credentials) {
+        if (credentials != null) {
+            //export to map
+            this.credentials =
+                credentials
+                    .stream()
+                    .flatMap(c -> c.toMap().entrySet().stream())
+                    //filter empty
+                    .filter(e -> StringUtils.hasText(e.getValue()))
+                    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+        }
     }
     // @Override
     // public void setCredentials(Collection<Credentials> credentials) {
