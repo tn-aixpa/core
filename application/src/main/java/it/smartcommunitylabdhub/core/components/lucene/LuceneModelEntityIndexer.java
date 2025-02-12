@@ -39,8 +39,7 @@ public class LuceneModelEntityIndexer extends LuceneBaseEntityIndexer<Model> imp
     @Override
     public List<IndexField> fields() {
         List<IndexField> fields = super.fields();
-
-        fields.add(new IndexField("metadata.version", "text_en", true, false, true, true));
+        //fields.add(new IndexField("metadata.version", "text_en", true, false, true, true));
         return fields;
     }
 

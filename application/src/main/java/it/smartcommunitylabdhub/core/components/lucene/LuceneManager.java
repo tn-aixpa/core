@@ -3,11 +3,13 @@ package it.smartcommunitylabdhub.core.components.lucene;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -25,6 +27,8 @@ import org.apache.lucene.search.BooleanQuery.Builder;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -55,7 +59,7 @@ public class LuceneManager {
     	this.properties = properties;
     }
     
-    public void init() throws IndexerException {
+    public synchronized void init() throws IndexerException {
     	try {
     		analyzer = new StandardAnalyzer();
     		Path path = Paths.get(properties.getIndexPath());
@@ -68,23 +72,25 @@ public class LuceneManager {
 	        iwriter = new IndexWriter(directory, config);
 	        iwriter.commit();
 	        ireader = DirectoryReader.open(directory);
-	        isearcher = new IndexSearcher(ireader);			
+	        isearcher = new IndexSearcher(ireader);
+	        log.info("Lucene index initialized");
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}    	
     }
     
-	public void close() throws IndexerException {
+	public synchronized void close() throws IndexerException {
 		try {
 			iwriter.close();
 			ireader.close();
-			directory.close();			
+			directory.close();
+			log.info("Lucene index closed");
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
 	}
 	
-	public void indexDoc(Document doc) throws IndexerException {
+	public synchronized void indexDoc(Document doc) throws IndexerException {
 		log.debug("index doc");
 		try {
 			iwriter.addDocument(doc);
@@ -94,17 +100,18 @@ public class LuceneManager {
 		}
 	}
 	
-	public void removeDoc(String id) throws IndexerException {
+	public synchronized void removeDoc(String id) throws IndexerException {
 		 log.debug("remove doc {}", String.valueOf(id));
 		 try {
 			 Term term = new Term("id", id);
 			 iwriter.deleteDocuments(term);
+			 iwriter.commit();
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
 	}
 
-	public void indexBounce(Iterable<Document> docs) throws IndexerException {
+	public synchronized void indexBounce(Iterable<Document> docs) throws IndexerException {
 		log.debug("index bounce docs");
 		try {
 			for(Document doc :  docs) {
@@ -116,20 +123,22 @@ public class LuceneManager {
 		}
 	}
 
-	public void clearIndex() throws IndexerException {
+	public synchronized void clearIndex() throws IndexerException {
 		 log.debug("clear index");
 		 try {
 			 iwriter.deleteAll();
+			 iwriter.commit();
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
 	}
 
-	public void clearIndexByType(String type) throws IndexerException {
-		 log.debug("clear index");
+	public synchronized void clearIndexByType(String type) throws IndexerException {
+		 log.debug("clear index {}", type);
 		 try {
 			 Term term = new Term("type", type);
 			 iwriter.deleteDocuments(term);
+			 iwriter.commit();
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
@@ -142,11 +151,21 @@ public class LuceneManager {
 			Map<String, List<String>> filters = new HashMap<>();
 			BooleanQuery query = prepareQuery(q, fq, pageRequest, filters, false);
 			log.info("query {}", query.toString());
-			TopDocs topDocs = isearcher.search(query, pageRequest.getPageSize());
+			
+			TopDocs topDocs = null;
+			
+			if (pageRequest.getSort().isSorted()) {
+				Sort sort = prepareSorting(pageRequest);
+				topDocs = isearcher.search(query, pageRequest.getPageSize(), sort);
+			} else {
+				topDocs = isearcher.search(query, pageRequest.getPageSize());
+			}
+			
 			StoredFields storedFields = ireader.storedFields();
 			List<ItemResult> result = new ArrayList<>();
 			for(ScoreDoc hit : topDocs.scoreDocs) {
 				Document doc = storedFields.document(hit.doc);
+				log.info("doc {} updateLong {}", doc.get("keyGroup"), doc.get("metadata.updatedLong"));
 				ItemResult itemResult = LuceneDocParser.parse(doc);
 				result.add(itemResult);
 			}
@@ -183,16 +202,18 @@ public class LuceneManager {
 	                    String field = filter.substring(0, filter.indexOf(':'));
 	                    String value = filter.substring(filter.indexOf(':') + 1);
 	                    if(field.equals("metadata.updated")) {
+	                        SimpleDateFormat sdf = new SimpleDateFormat(LuceneDocParser.dateFormat);
+	                        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 	                    	String s = StringUtils.deleteAny(StringUtils.deleteAny(value, "]"), "[");
 	                    	String[] split = s.split(" TO ");
 	                    	if(split.length == 2) {
 	                    		if(!split[0].equals("*")) {
 	                    			String from = StringUtils.deleteAny(split[0], "\"");
-	                    			split[0] = String.valueOf(LuceneDocParser.sdf.parse(from).getTime());  
+	                    			split[0] = String.valueOf(sdf.parse(from).getTime());  
 	                    		}
 	                    		if(!split[1].equals("*")) {
-	                    			String from = StringUtils.deleteAny(split[1], "\"");
-	                    			split[1] = String.valueOf(LuceneDocParser.sdf.parse(from).getTime());  
+	                    			String to = StringUtils.deleteAny(split[1], "\"");
+	                    			split[1] = String.valueOf(sdf.parse(to).getTime());  
 	                    		}
 	                    	}
 	                    	Query query = standardQueryParser.parse(String.format("[%s TO %s]", split[0], split[1]), "metadata.updatedLong");
@@ -205,5 +226,15 @@ public class LuceneManager {
 			 }
 		 }
 		 return builder.build();
+	}
+	
+	private Sort prepareSorting(Pageable pageRequest) {
+		List<SortField> sortFields = new ArrayList<>();
+		pageRequest.getSort().forEach(order -> {
+			String field = order.getProperty().equals("metadata.updated") ? "metadata.updatedLong" : order.getProperty();
+			SortField sf = new SortField(field, SortField.Type.STRING, order.getDirection().isDescending()) ;
+			sortFields.add(sf);
+		});
+		return new Sort(sortFields.toArray(new SortField[0]));
 	}
 }
