@@ -33,7 +33,7 @@
         <!-- note: jetty locked to 10 due to solr 9.x incompatibility -->
         <!-- note: do NOT set jetty.version because spring bom defines it for jetty 12 -->
         <jetty4solr.version>10.0.24</jetty4solr.version>
-        <solr.version>9.8.0</solr.version>
+        <solr.version>9.7.0</solr.version>
         <checkstyle.config.location>../checkstyle/checkstyle.xml</checkstyle.config.location>
         <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
     </properties>
