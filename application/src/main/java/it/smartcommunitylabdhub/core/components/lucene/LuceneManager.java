@@ -1,5 +1,7 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,6 +32,11 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.highlight.Fragmenter;
+import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
+import org.apache.lucene.search.highlight.SimpleSpanFragmenter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.springframework.data.domain.Pageable;
@@ -149,24 +156,33 @@ public class LuceneManager {
 		
 		try {
 			Map<String, List<String>> filters = new HashMap<>();
-			BooleanQuery query = prepareQuery(q, fq, pageRequest, filters, false);
-			log.info("query {}", query.toString());
+			QueryMapper queryMapper = prepareQuery(q, fq, pageRequest, filters, false);
+			log.debug("query {}", queryMapper.getCompleteQuery().toString());
 			
 			TopDocs topDocs = null;
 			
 			if (pageRequest.getSort().isSorted()) {
 				Sort sort = prepareSorting(pageRequest);
-				topDocs = isearcher.search(query, pageRequest.getPageSize(), sort);
+				topDocs = isearcher.search(queryMapper.getCompleteQuery(), pageRequest.getPageSize(), sort);
 			} else {
-				topDocs = isearcher.search(query, pageRequest.getPageSize());
+				topDocs = isearcher.search(queryMapper.getCompleteQuery(), pageRequest.getPageSize());
 			}
 			
+			// Highlighter
+			SimpleHTMLFormatter htmlFormatter = new SimpleHTMLFormatter("<em>", "</em>");
+			QueryScorer queryScorer = new QueryScorer(queryMapper.getHighlightQuery());
+			Highlighter highlighter = new Highlighter(htmlFormatter, queryScorer);
+			Fragmenter fragmenter = new SimpleSpanFragmenter(queryScorer, 250);
+			highlighter.setTextFragmenter(fragmenter);
 			StoredFields storedFields = ireader.storedFields();
 			List<ItemResult> result = new ArrayList<>();
 			for(ScoreDoc hit : topDocs.scoreDocs) {
 				Document doc = storedFields.document(hit.doc);
-				log.info("doc {} updateLong {}", doc.get("keyGroup"), doc.get("metadata.updatedLong"));
+				log.debug("doc {} updateLong {}", doc.get("keyGroup"), doc.get("metadata.updatedLong"));
 				ItemResult itemResult = LuceneDocParser.parse(doc);
+				if (StringUtils.hasText(q)) {
+					highlightResult(doc, itemResult, highlighter);
+				}
 				result.add(itemResult);
 			}
 			return new SolrPageImpl<ItemResult>(result, pageRequest, topDocs.totalHits.value, filters);
@@ -180,12 +196,32 @@ public class LuceneManager {
 		return null;
 	}
 	
-	private BooleanQuery prepareQuery(
+	private void highlightResult(Document doc, ItemResult itemResult, Highlighter highlighter) throws Exception {
+		String[] fields = new String[] {"metadata.name","metadata.description","metadata.project","metadata.version"};
+		for(String field : fields) {
+			String[] bestFragments = highlighter.getBestFragments(analyzer, field, doc.get(field), 5);
+			if(bestFragments.length > 0) {
+				List<String> list = Arrays.asList(bestFragments);
+				itemResult.getHighlights().put(field, list);
+			}
+		}
+		String[] labels = doc.getValues("metadata.labels");
+		if((labels != null) && (labels.length > 0)) {
+			String[] bestFragments = highlighter.getBestFragments(analyzer, "metadata.labels", String.join(" ", labels), 5);
+			if(bestFragments.length > 0) {
+				List<String> list = Arrays.asList(bestFragments);
+				itemResult.getHighlights().put("metadata.labels", list);
+			}
+		}
+	}
+	
+	private QueryMapper prepareQuery(
 		String q,
         List<String> fq,
         Pageable pageRequest,
         Map<String, List<String>> filters,
         boolean grouped) throws Exception {
+		QueryMapper result = new QueryMapper(); 
 		Builder builder = new BooleanQuery.Builder();
 		if (StringUtils.hasText(q)) {
 			filters.put("q", Arrays.asList(q));
@@ -193,6 +229,7 @@ public class LuceneManager {
 			MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer);
 			Query query = parser.parse(q.trim());
 			builder.add(query, BooleanClause.Occur.MUST);
+			result.setHighlightQuery(query);
 		}
 		 if (fq != null) {
 			 filters.put("fq", fq);
@@ -225,7 +262,8 @@ public class LuceneManager {
 	             }
 			 }
 		 }
-		 return builder.build();
+		 result.setCompleteQuery(builder.build());
+		 return result;
 	}
 	
 	private Sort prepareSorting(Pageable pageRequest) {
