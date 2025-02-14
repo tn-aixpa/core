@@ -30,7 +30,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.grouping.GroupDocs;
 import org.apache.lucene.search.grouping.GroupingSearch;
 import org.apache.lucene.search.grouping.TopGroups;
@@ -170,7 +169,7 @@ public class LuceneManager {
 			throw new IndexerException(e.getMessage());
 		}
 	}
-
+	
 	public SolrPage<ItemResult> itemSearch(String q, List<String> fq, Pageable pageRequest) throws IndexerException {
 		log.debug("item search for {} {}", q, fq);
 		
@@ -181,12 +180,14 @@ public class LuceneManager {
 			QueryMapper queryMapper = prepareQuery(q, fq, pageRequest, filters, false);
 			log.debug("query {}", queryMapper.getCompleteQuery().toString());
 			
-			TopDocs topDocs = null;			
+			GroupingSearch groupingSearch = new GroupingSearch("project");
+			groupingSearch.setAllGroups(false);
+			groupingSearch.setGroupDocsLimit(pageRequest.getPageSize());
+			groupingSearch.setGroupDocsOffset((int) pageRequest.getOffset());
+			
 			if (pageRequest.getSort().isSorted()) {
 				Sort sort = prepareSorting(pageRequest);
-				topDocs = isearcher.search(queryMapper.getCompleteQuery(), pageRequest.getPageSize(), sort);
-			} else {
-				topDocs = isearcher.search(queryMapper.getCompleteQuery(), pageRequest.getPageSize());
+				groupingSearch.setSortWithinGroup(sort);
 			}
 			
 			// Highlighter
@@ -196,17 +197,22 @@ public class LuceneManager {
 			Fragmenter fragmenter = new SimpleSpanFragmenter(queryScorer, 250);
 			highlighter.setTextFragmenter(fragmenter);
 			
-			StoredFields storedFields = ireader.storedFields();
+			TopGroups<BytesRef> topGroups = groupingSearch.search(isearcher, queryMapper.getCompleteQuery(), 0, 1);
+			StoredFields storedFields = getReader().storedFields();
 			List<ItemResult> result = new ArrayList<>();
-			for(ScoreDoc hit : topDocs.scoreDocs) {
-				Document doc = storedFields.document(hit.doc);
-				ItemResult itemResult = LuceneDocParser.parse(doc);
-				if (StringUtils.hasText(q)) {
-					highlightResult(doc, itemResult, highlighter);
+			long total = 0;
+			for(GroupDocs<BytesRef> groupDocs : topGroups.groups) {
+				total = groupDocs.totalHits.value;
+				for(ScoreDoc hit : groupDocs.scoreDocs) {
+					Document doc = storedFields.document(hit.doc);
+					ItemResult itemResult = LuceneDocParser.parse(doc);
+					if (StringUtils.hasText(q)) {
+						highlightResult(doc, itemResult, highlighter);
+					}
+					result.add(itemResult);
 				}
-				result.add(itemResult);
 			}
-			return new SolrPageImpl<ItemResult>(result, pageRequest, topDocs.totalHits.value, filters);
+			return new SolrPageImpl<ItemResult>(result, pageRequest, total, filters);
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
@@ -239,7 +245,7 @@ public class LuceneManager {
 			highlighter.setTextFragmenter(fragmenter);
 			
 			TopGroups<BytesRef> topGroups = groupingSearch.search(isearcher, queryMapper.getCompleteQuery(), (int)pageRequest.getOffset(), pageRequest.getPageSize());
-			StoredFields storedFields = ireader.storedFields();
+			StoredFields storedFields = getReader().storedFields();
 			List<SearchGroupResult> result = new ArrayList<>();			
 			for(GroupDocs<BytesRef> groupDocs : topGroups.groups) {
 				SearchGroupResult groupResult = new SearchGroupResult();
@@ -258,7 +264,6 @@ public class LuceneManager {
 				groupResult.setDocs(docs);
 				result.add(groupResult);
 			}
-			
 			return new SolrPageImpl<SearchGroupResult>(result, pageRequest, topGroups.totalGroupCount, filters);
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());

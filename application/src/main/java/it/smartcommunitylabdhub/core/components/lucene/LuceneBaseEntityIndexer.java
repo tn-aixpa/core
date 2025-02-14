@@ -68,7 +68,10 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
         doc.add(new SortedDocValuesField("kind", new BytesRef(doc.get("kind"))));
         
         doc.add(new StringField("project", item.getProject(), Field.Store.YES));
+        doc.add(new SortedDocValuesField("project", new BytesRef(doc.get("project"))));
+        
         doc.add(new StringField("name", item.getName(), Field.Store.YES));
+        
         doc.add(new StringField("user", getStringValue(item.getUser()), Field.Store.YES));
         
         //status
