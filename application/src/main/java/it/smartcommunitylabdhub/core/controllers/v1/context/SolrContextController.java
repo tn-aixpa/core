@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,6 +82,8 @@ public class SolrContextController {
     }
 
     private List<String> setProject(List<String> fq, String project) {
+    	if(fq == null)
+    		fq = new ArrayList<>();
         List<String> result = fq.stream().filter(e -> !e.startsWith("project:")).collect(Collectors.toList());
         result.add("project:" + project);
         return result;

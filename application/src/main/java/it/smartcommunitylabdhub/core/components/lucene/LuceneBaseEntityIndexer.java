@@ -56,6 +56,7 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
     	
         String keyGroup = buildKeyGroup(item.getKind(), item.getProject(), item.getName());
         doc.add(new StringField("keyGroup", keyGroup, Field.Store.YES));
+        doc.add(new SortedDocValuesField("keyGroup", new BytesRef(doc.get("keyGroup"))));
         
         doc.add(new StringField("type", type, Field.Store.YES));
         doc.add(new SortedDocValuesField("type", new BytesRef(doc.get("type"))));

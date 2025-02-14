@@ -1,7 +1,6 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
-
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,6 +31,9 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.grouping.GroupDocs;
+import org.apache.lucene.search.grouping.GroupingSearch;
+import org.apache.lucene.search.grouping.TopGroups;
 import org.apache.lucene.search.highlight.Fragmenter;
 import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.QueryScorer;
@@ -39,6 +41,7 @@ import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.search.highlight.SimpleSpanFragmenter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -58,7 +61,6 @@ public class LuceneManager {
 	private Directory directory;
 	private IndexWriterConfig config;
 	private DirectoryReader ireader;
-	private IndexSearcher isearcher;
 	private IndexWriter iwriter;
 
     public LuceneManager(LuceneProperties properties) {
@@ -79,7 +81,6 @@ public class LuceneManager {
 	        iwriter = new IndexWriter(directory, config);
 	        iwriter.commit();
 	        ireader = DirectoryReader.open(directory);
-	        isearcher = new IndexSearcher(ireader);
 	        log.info("Lucene index initialized");
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
@@ -97,55 +98,74 @@ public class LuceneManager {
 		}
 	}
 	
-	public synchronized void indexDoc(Document doc) throws IndexerException {
+	public synchronized DirectoryReader getReader() throws IOException {
+		DirectoryReader newReader = DirectoryReader.openIfChanged(ireader);
+		if(newReader != null) 
+			ireader = newReader;
+		return ireader;
+	}
+	
+	public void indexDoc(Document doc) throws IndexerException {
 		log.debug("index doc");
 		try {
-			iwriter.addDocument(doc);
-			iwriter.commit();
+			synchronized (iwriter) {
+				Term term = new Term("id", doc.get("id"));
+				iwriter.deleteDocuments(term);
+				iwriter.addDocument(doc);
+				iwriter.commit();				
+			}
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
 	}
 	
-	public synchronized void removeDoc(String id) throws IndexerException {
+	public void removeDoc(String id) throws IndexerException {
 		 log.debug("remove doc {}", String.valueOf(id));
 		 try {
-			 Term term = new Term("id", id);
-			 iwriter.deleteDocuments(term);
-			 iwriter.commit();
+			 synchronized (iwriter) {
+				 Term term = new Term("id", id);
+				 iwriter.deleteDocuments(term);
+				 iwriter.commit();				 
+			 }
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
 	}
 
-	public synchronized void indexBounce(Iterable<Document> docs) throws IndexerException {
+	public void indexBounce(Iterable<Document> docs) throws IndexerException {
 		log.debug("index bounce docs");
 		try {
-			for(Document doc :  docs) {
-				iwriter.addDocument(doc);
+			synchronized (iwriter) {
+				for(Document doc :  docs) {
+					iwriter.addDocument(doc);
+				}
+				iwriter.commit();							
 			}
-			iwriter.commit();			
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
 	}
 
-	public synchronized void clearIndex() throws IndexerException {
+	public void clearIndex() throws IndexerException {
 		 log.debug("clear index");
 		 try {
-			 iwriter.deleteAll();
-			 iwriter.commit();
+			 synchronized (iwriter) {
+				 iwriter.deleteAll();
+				 iwriter.commit();				 
+			 }
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
 	}
 
-	public synchronized void clearIndexByType(String type) throws IndexerException {
+	public void clearIndexByType(String type) throws IndexerException {
 		 log.debug("clear index {}", type);
 		 try {
-			 Term term = new Term("type", type);
-			 iwriter.deleteDocuments(term);
-			 iwriter.commit();
+			 synchronized (iwriter) {
+				 Term term = new Term("type", type);
+				 iwriter.deleteDocuments(term);
+				 iwriter.commit();				 
+			 }
 		} catch (Exception e) {
 			throw new IndexerException(e.getMessage());
 		}
@@ -155,12 +175,13 @@ public class LuceneManager {
 		log.debug("item search for {} {}", q, fq);
 		
 		try {
+			IndexSearcher isearcher = new IndexSearcher(getReader());
+			
 			Map<String, List<String>> filters = new HashMap<>();
 			QueryMapper queryMapper = prepareQuery(q, fq, pageRequest, filters, false);
 			log.debug("query {}", queryMapper.getCompleteQuery().toString());
 			
-			TopDocs topDocs = null;
-			
+			TopDocs topDocs = null;			
 			if (pageRequest.getSort().isSorted()) {
 				Sort sort = prepareSorting(pageRequest);
 				topDocs = isearcher.search(queryMapper.getCompleteQuery(), pageRequest.getPageSize(), sort);
@@ -174,11 +195,11 @@ public class LuceneManager {
 			Highlighter highlighter = new Highlighter(htmlFormatter, queryScorer);
 			Fragmenter fragmenter = new SimpleSpanFragmenter(queryScorer, 250);
 			highlighter.setTextFragmenter(fragmenter);
+			
 			StoredFields storedFields = ireader.storedFields();
 			List<ItemResult> result = new ArrayList<>();
 			for(ScoreDoc hit : topDocs.scoreDocs) {
 				Document doc = storedFields.document(hit.doc);
-				log.debug("doc {} updateLong {}", doc.get("keyGroup"), doc.get("metadata.updatedLong"));
 				ItemResult itemResult = LuceneDocParser.parse(doc);
 				if (StringUtils.hasText(q)) {
 					highlightResult(doc, itemResult, highlighter);
@@ -192,8 +213,56 @@ public class LuceneManager {
 	}
 
 	public SolrPage<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws IndexerException {
-		// TODO Auto-generated method stub
-		return null;
+		log.debug("group search for {} {}", q, fq);
+		
+		try {
+			IndexSearcher isearcher = new IndexSearcher(getReader());
+			
+			Map<String, List<String>> filters = new HashMap<>();
+			QueryMapper queryMapper = prepareQuery(q, fq, pageRequest, filters, true);
+			log.debug("group query {}", queryMapper.getCompleteQuery().toString());
+			
+			GroupingSearch groupingSearch = new GroupingSearch("keyGroup");
+			groupingSearch.setAllGroups(true);
+			groupingSearch.setGroupDocsLimit(10);
+			
+			if (pageRequest.getSort().isSorted()) {
+				Sort sort = prepareSorting(pageRequest);
+				groupingSearch.setSortWithinGroup(sort);
+			}
+			
+			// Highlighter
+			SimpleHTMLFormatter htmlFormatter = new SimpleHTMLFormatter("<em>", "</em>");
+			QueryScorer queryScorer = new QueryScorer(queryMapper.getHighlightQuery());
+			Highlighter highlighter = new Highlighter(htmlFormatter, queryScorer);
+			Fragmenter fragmenter = new SimpleSpanFragmenter(queryScorer, 250);
+			highlighter.setTextFragmenter(fragmenter);
+			
+			TopGroups<BytesRef> topGroups = groupingSearch.search(isearcher, queryMapper.getCompleteQuery(), (int)pageRequest.getOffset(), pageRequest.getPageSize());
+			StoredFields storedFields = ireader.storedFields();
+			List<SearchGroupResult> result = new ArrayList<>();			
+			for(GroupDocs<BytesRef> groupDocs : topGroups.groups) {
+				SearchGroupResult groupResult = new SearchGroupResult();
+                groupResult.setId(groupDocs.groupValue.utf8ToString());
+                groupResult.setKeyGroup(groupDocs.groupValue.utf8ToString());
+                groupResult.setNumFound(groupDocs.totalHits.value);				
+				List<ItemResult> docs = new ArrayList<>();
+				for(ScoreDoc hit : groupDocs.scoreDocs) {
+					Document doc = storedFields.document(hit.doc);
+					ItemResult itemResult = LuceneDocParser.parse(doc);
+					if (StringUtils.hasText(q)) {
+						highlightResult(doc, itemResult, highlighter);
+					}
+					docs.add(itemResult);
+				}
+				groupResult.setDocs(docs);
+				result.add(groupResult);
+			}
+			
+			return new SolrPageImpl<SearchGroupResult>(result, pageRequest, topGroups.totalGroupCount, filters);
+		} catch (Exception e) {
+			throw new IndexerException(e.getMessage());
+		}
 	}
 	
 	private void highlightResult(Document doc, ItemResult itemResult, Highlighter highlighter) throws Exception {
