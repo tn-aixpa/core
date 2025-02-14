@@ -148,7 +148,7 @@ kubernetes:
 # Application endpoint
 application:
   endpoint: ${DH_ENDPOINT:http://localhost:8080}
-  name: @project.name@
+  name: ${DH_NAME:@project.name@}
   description: @project.description@
   version: @project.version@
   level: ${DH_API_LEVEL:}
