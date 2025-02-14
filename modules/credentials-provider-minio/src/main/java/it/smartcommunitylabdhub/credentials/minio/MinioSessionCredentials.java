@@ -44,7 +44,7 @@ public class MinioSessionCredentials extends AbstractCredentials {
     @JsonProperty("aws_session_token")
     private String sessionToken;
 
-    @JsonProperty("s3_endpoint")
+    @JsonProperty("s3_endpoint_url")
     private String endpoint;
 
     @JsonProperty("s3_region")
@@ -52,6 +52,9 @@ public class MinioSessionCredentials extends AbstractCredentials {
 
     @JsonProperty("s3_signature_version")
     private String signatureVersion;
+
+    @JsonProperty("s3_bucket")
+    private String bucket;
 
     @Override
     public void eraseCredentials() {

@@ -68,6 +68,9 @@ public class MinioProvider implements CredentialsProvider, InitializingBean {
     @Value("${credentials.provider.minio.region}")
     private String region;
 
+    @Value("${credentials.provider.minio.bucket}")
+    private String bucket;
+
     @Value("${credentials.provider.minio.enable}")
     private Boolean enabled;
 
@@ -138,6 +141,7 @@ public class MinioProvider implements CredentialsProvider, InitializingBean {
                 .sessionToken(response.sessionToken())
                 .endpoint(endpointUrl)
                 .region(region)
+                .bucket(bucket)
                 .signatureVersion("s3v4")
                 .build();
         } catch (NoSuchAlgorithmException | ProviderException e) {

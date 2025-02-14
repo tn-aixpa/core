@@ -224,7 +224,7 @@ files:
     s3:
       access-key: ${AWS_ACCESS_KEY:}
       secret-key: ${AWS_SECRET_KEY:}
-      endpoint: ${S3_ENDPOINT:}
+      endpoint: ${S3_ENDPOINT_URL:}
       bucket: ${S3_BUCKET:}
       signature-version: s3v4
       region: ${S3_REGION:us-east-1}
@@ -263,6 +263,7 @@ credentials:
       enable: ${MINIO_CREDENTIALS_PROVIDER:false}      
       endpoint:  ${MINIO_CREDENTIALS_ENDPOINT:${files.store.s3.endpoint}}
       region: ${MINIO_CREDENTIALS_REGION:${files.store.s3.region}}
+      bucket: ${MINIO_CREDENTIALS_REGION:${files.store.s3.bucket}}
       claim:  ${MINIO_CREDENTIALS_CLAIM:minio/policy}
       policy:  ${MINIO_CREDENTIALS_POLICY:readwrite}
       duration:  ${MINIO_CREDENTIALS_DURATION:86400}
