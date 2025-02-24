@@ -14,6 +14,7 @@ import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
 import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.relationships.BaseEntityRelationshipsManager;
+import it.smartcommunitylabdhub.core.websocket.UserNotificationEntityEvent;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
