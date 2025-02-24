@@ -84,6 +84,7 @@ public abstract class BaseEntityIndexer<T extends BaseEntity, D extends BaseDTO>
     public List<IndexField> fields() {
         List<IndexField> fields = new LinkedList<>();
 
+        fields.add(new IndexField("id", "string", true, false, true, true));
         fields.add(new IndexField("keyGroup", "string", true, false, true, true));
         fields.add(new IndexField("type", "string", true, false, true, true));
 
