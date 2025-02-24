@@ -72,12 +72,12 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
         
         doc.add(new StringField("name", item.getName().toLowerCase(), Field.Store.YES));
         
-        doc.add(new StringField("user", getStringValue(item.getUser().toLowerCase()), Field.Store.YES));
+        doc.add(new StringField("user", getStringValue(item.getUser()), Field.Store.YES));
         
         //status
         if (item instanceof StatusDTO) {
             StatusFieldAccessor status = StatusFieldAccessor.with(((StatusDTO) item).getStatus());
-            doc.add(new StringField("status", status.getState().toLowerCase(), Field.Store.YES));            
+            doc.add(new StringField("status", getStringValue(status.getState()), Field.Store.YES));            
         }
         
         //extract meta to index
@@ -108,8 +108,8 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
             doc.add(new SortedDocValuesField("metadata.updatedLong", new BytesRef(doc.get("metadata.updatedLong"))));
 
             AuditMetadata auditing = AuditMetadata.from(((MetadataDTO) item).getMetadata());
-            doc.add(new StringField("metadata.createdBy", auditing.getCreatedBy().toLowerCase(), Field.Store.YES));
-            doc.add(new StringField("metadata.updatedBy", auditing.getUpdatedBy().toLowerCase(), Field.Store.YES));
+            doc.add(new StringField("metadata.createdBy", getStringValue(auditing.getCreatedBy()), Field.Store.YES));
+            doc.add(new StringField("metadata.updatedBy", getStringValue(auditing.getUpdatedBy()), Field.Store.YES));
         }
         
         return doc;
