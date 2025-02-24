@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.python.specs;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
@@ -41,6 +42,9 @@ public class PythonRunSpec extends RunBaseSpec {
 
     private Map<String, Serializable> parameters = new HashMap<>();
 
+    @JsonProperty("init_parameters")
+    private Map<String, Serializable> initParameters = new HashMap<>();
+
     public PythonRunSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -59,6 +63,7 @@ public class PythonRunSpec extends RunBaseSpec {
         this.inputs = spec.getInputs();
         // this.outputs = spec.getOutputs();
         this.parameters = spec.getParameters();
+        this.initParameters = spec.getInitParameters();
     }
 
     public void setTaskJobSpec(PythonJobTaskSpec taskJobSpec) {

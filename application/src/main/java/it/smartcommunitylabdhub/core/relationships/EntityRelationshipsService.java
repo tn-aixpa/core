@@ -78,7 +78,11 @@ public class EntityRelationshipsService {
         List<RelationshipEntity> result = new ArrayList<>();
 
         //update if needed
-        List<RelationshipEntity> current = repository.findByProjectAndEntityId(project, entityName.getValue(), id);
+        List<RelationshipEntity> current = repository.findByProjectAndSourceEntityId(
+            project,
+            entityName.getValue(),
+            id
+        );
         List<RelationshipEntity> toKeep = current
             .stream()
             .filter(r ->

@@ -23,6 +23,10 @@ public class RunEntityListener extends AbstractEntityListener<RunEntity, Run> {
     @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void receive(EntityEvent<RunEntity> event) {
+        if (event.getEntity() == null) {
+            return;
+        }
+
         log.debug("receive event for {} {}", clazz.getSimpleName(), event.getAction());
 
         RunEntity entity = event.getEntity();
@@ -31,11 +35,25 @@ public class RunEntityListener extends AbstractEntityListener<RunEntity, Run> {
             log.trace("{}: {}", clazz.getSimpleName(), String.valueOf(entity));
         }
 
-        //handle event if either: prev == null (for create/delete), prev != null and state has changed (update)
-        if (prev == null || (prev != null && prev.getState() != entity.getState())) {
-            //handle
-            super.handle(event);
-        }
+        //handle
+        super.handle(event);
+
+        //always broadcast updates
+        super.broadcast(event);
+
         //TODO update project?
+
+        if (entity.getUpdatedBy() != null) {
+            //notify user event if either: prev == null (for create/delete), prev != null and state has changed (update)
+            if (prev == null || (prev != null && prev.getState() != entity.getState())) {
+                //notify user
+                super.notify(entity.getUpdatedBy(), event);
+
+                if (!entity.getUpdatedBy().equals(entity.getCreatedBy())) {
+                    //notify owner
+                    super.notify(entity.getCreatedBy(), event);
+                }
+            }
+        }
     }
 }

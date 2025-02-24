@@ -86,6 +86,7 @@ public abstract class SolrBaseEntityIndexer<D extends BaseDTO> implements Initia
     public List<IndexField> fields() {
         List<IndexField> fields = new LinkedList<>();
 
+        fields.add(new IndexField("id", "string", true, false, true, true));
         fields.add(new IndexField("keyGroup", "string", true, false, true, true));
         fields.add(new IndexField("type", "string", true, false, true, true));
 

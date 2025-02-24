@@ -36,6 +36,9 @@ public class ConsoleController {
     @Value("${solr.url}")
     private String solrUrl;
 
+    @Value("${jwt.client-id}")
+    private String clientId;
+
     public static final String CONSOLE_CONTEXT = Keys.CONSOLE_CONTEXT;
 
     @GetMapping(value = { "/", CONSOLE_CONTEXT })
@@ -79,11 +82,9 @@ public class ConsoleController {
         if (securityProperties.isOidcAuthEnabled()) {
             config.put("REACT_APP_AUTH_URL", "/api");
             config.put("REACT_APP_LOGIN_URL", "/auth");
-            config.put("REACT_APP_ISSUER_URI", securityProperties.getOidc().getIssuerUri());
-            config.put("REACT_APP_CLIENT_ID", securityProperties.getOidc().getClientId());
-            if (securityProperties.getOidc().getScope() != null) {
-                config.put("REACT_APP_SCOPE", String.join(" ", securityProperties.getOidc().getScope()));
-            }
+            config.put("REACT_APP_ISSUER_URI", applicationUrl);
+            config.put("REACT_APP_CLIENT_ID", clientId);
+            config.put("REACT_APP_SCOPE", "openid profile offline_access");
         }
 
         config.put("REACT_APP_ENABLE_SOLR", String.valueOf(StringUtils.hasText(solrUrl)));

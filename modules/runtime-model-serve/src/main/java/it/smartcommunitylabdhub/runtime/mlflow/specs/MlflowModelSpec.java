@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-import it.smartcommunitylabdhub.commons.models.model.ModelSpec;
+import it.smartcommunitylabdhub.commons.models.model.ModelBaseSpec;
 import it.smartcommunitylabdhub.runtime.mlflow.models.Dataset;
 import it.smartcommunitylabdhub.runtime.mlflow.models.Signature;
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -16,7 +17,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @SpecType(kind = "mlflow", entity = EntityName.MODEL)
-public class MlflowModelSpec extends ModelSpec {
+public class MlflowModelSpec extends ModelBaseSpec {
+
+    @JsonProperty("parameters")
+    private Map<String, Serializable> parameters = new LinkedHashMap<>();
 
     @Schema(title = "fields.mlflow.flavor.title", description = "fields.mlflow.flavor.description")
     private String flavor;
@@ -37,6 +41,8 @@ public class MlflowModelSpec extends ModelSpec {
         super.configure(data);
 
         MlflowModelSpec spec = mapper.convertValue(data, MlflowModelSpec.class);
+
+        this.parameters = spec.getParameters();
         this.flavor = spec.getFlavor();
         this.signature = spec.getSignature();
         this.inputDatasets = spec.getInputDatasets();

@@ -354,6 +354,11 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
         List<String> command = buildCommand(runnable);
         List<String> args = buildArgs(runnable);
 
+        //image policy
+        String imagePullPolicy = runnable.getImagePullPolicy() != null
+            ? runnable.getImagePullPolicy().name()
+            : defaultImagePullPolicy;
+
         // Build Container
         V1Container container = new V1Container()
             .name(containerName)

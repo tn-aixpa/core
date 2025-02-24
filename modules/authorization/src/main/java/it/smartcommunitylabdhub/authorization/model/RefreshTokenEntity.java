@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.authorization.model;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -27,9 +26,9 @@ public class RefreshTokenEntity {
     @Id
     private String id;
 
-    @JdbcTypeCode(Types.LONGVARCHAR)
-    @Column(columnDefinition = "text")
-    private String token;
+    @JdbcTypeCode(Types.LONGVARBINARY)
+    @ToString.Exclude
+    protected byte[] authentication;
 
     private String subject;
     private Date issuedTime;

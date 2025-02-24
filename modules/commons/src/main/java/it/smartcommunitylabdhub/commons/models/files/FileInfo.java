@@ -37,6 +37,8 @@ public class FileInfo implements Serializable {
     private Date lastModified;
 
     private String hash;
+
+    @Builder.Default
     private Map<String, Serializable> metadata = new HashMap<>();
 
     @JsonAnyGetter

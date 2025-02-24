@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.commons;
 
 public class Keys {
 
+    public static final long SERIAL_VERSION_UID = 100L;
     public static final String SLUG_PATTERN = "^[a-zA-Z0-9._+-]+$";
     public static final String FUNCTION_PATTERN = "([^:/]+)://([^/]+)/([^:]+):(.+)";
     public static final String WORKFLOW_PATTERN = "([^:/]+)://([^/]+)/([^:]+):(.+)";

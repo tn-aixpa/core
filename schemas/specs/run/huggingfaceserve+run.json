@@ -537,7 +537,7 @@
           "description" : "fields.nodeSelector.item.description"
         }
       },
-      "priorityClass" : {
+      "priority_class" : {
         "type" : "string",
         "title" : "fields.priorityClass.title",
         "description" : "fields.priorityClass.description"
@@ -568,7 +568,7 @@
         "title" : "fields.huggingface.returntokentypeids.title",
         "description" : "fields.huggingface.returntokentypeids.description"
       },
-      "runtimeClass" : {
+      "runtime_class" : {
         "type" : "string",
         "title" : "fields.runtimeClass.title",
         "description" : "fields.runtimeClass.description"

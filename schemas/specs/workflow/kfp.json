@@ -34,11 +34,6 @@
   },
   "type" : "object",
   "properties" : {
-    "handler" : {
-      "type" : "string",
-      "title" : "fields.sourceCode.handler.title",
-      "description" : "fields.sourceCode.handler.description"
-    },
     "image" : {
       "type" : "string",
       "title" : "fields.container.image.title",

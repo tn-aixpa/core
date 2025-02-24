@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-import it.smartcommunitylabdhub.commons.models.model.ModelSpec;
+import it.smartcommunitylabdhub.commons.models.model.ModelBaseSpec;
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,13 @@ import lombok.Setter;
 @Getter
 @Setter
 @SpecType(kind = "huggingface", entity = EntityName.MODEL)
-public class HuggingFaceModelSpec extends ModelSpec {
+public class HuggingFaceModelSpec extends ModelBaseSpec {
+
+    @JsonProperty("base_model")
+    private String baseModel;
+
+    @JsonProperty("parameters")
+    private Map<String, Serializable> parameters = new LinkedHashMap<>();
 
     //Huggingface model id
     @JsonProperty("model_id")
@@ -34,6 +41,8 @@ public class HuggingFaceModelSpec extends ModelSpec {
 
         HuggingFaceModelSpec spec = mapper.convertValue(data, HuggingFaceModelSpec.class);
 
+        this.baseModel = spec.getBaseModel();
+        this.parameters = spec.getParameters();
         this.modelId = spec.getModelId();
         this.modelRevision = spec.getModelRevision();
     }

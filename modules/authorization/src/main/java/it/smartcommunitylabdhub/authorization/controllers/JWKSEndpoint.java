@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class JWKSEndpoint {
 
-    public static final String JWKS_URL = "/.well-known/jwks.json";
+    public static final String JWKS_URL = "/auth/jwks.json";
 
     @Autowired
     private JWKSetKeyStore jwkSetKeyStore;

@@ -2,14 +2,14 @@ package it.smartcommunitylabdhub.framework.k8s.runnables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreAffinity;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreImagePullPolicy;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
@@ -18,10 +18,9 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreToleration;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +29,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.CredentialsContainer;
+import org.springframework.util.StringUtils;
 
 @SuperBuilder(toBuilder = true)
 @Getter
@@ -72,6 +72,8 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private String priorityClass;
 
+    private CoreImagePullPolicy imagePullPolicy;
+
     //securityContext
     private Integer runAsUser;
     private Integer runAsGroup;
@@ -98,7 +100,7 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
     private List<CoreMetric> metrics;
 
     @ToString.Exclude
-    private HashMap<String, String> credentials;
+    private Map<String, String> credentialsMap;
 
     @JsonProperty("context_refs")
     private List<ContextRef> contextRefs;
@@ -113,37 +115,50 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     @Override
     public void eraseCredentials() {
-        this.credentials = null;
+        this.credentialsMap = null;
     }
 
     @Override
-    public void setCredentials(Serializable credentials) {
+    public void setCredentials(Collection<Credentials> credentials) {
         if (credentials != null) {
-            //try to coerce into map
-            HashMap<String, Object> map = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
-                credentials,
-                JacksonMapper.typeRef
-            );
-
-            this.credentials =
-                map
-                    .entrySet()
+            //export to map
+            this.credentialsMap =
+                credentials
                     .stream()
-                    .filter(e -> e.getValue() != null)
-                    .map(e -> {
-                        if (e.getValue() instanceof String) {
-                            return Map.entry(e.getKey(), (String) e.getValue());
-                        }
-
-                        try {
-                            String value = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(e.getValue());
-                            return Map.entry(e.getKey(), value);
-                        } catch (JsonProcessingException je) {
-                            return null;
-                        }
-                    })
-                    .filter(e -> e.getValue() != null)
-                    .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (o1, o2) -> o1, HashMap::new));
+                    .flatMap(c -> c.toMap().entrySet().stream())
+                    //filter empty
+                    .filter(e -> StringUtils.hasText(e.getValue()))
+                    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
         }
     }
+    // @Override
+    // public void setCredentials(Collection<Credentials> credentials) {
+    //     if (credentials != null) {
+    //         //try to coerce into map
+    //         HashMap<String, Object> map = JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(
+    //             credentials,
+    //             JacksonMapper.typeRef
+    //         );
+
+    //         this.credentials =
+    //             map
+    //                 .entrySet()
+    //                 .stream()
+    //                 .filter(e -> e.getValue() != null)
+    //                 .map(e -> {
+    //                     if (e.getValue() instanceof String) {
+    //                         return Map.entry(e.getKey(), (String) e.getValue());
+    //                     }
+
+    //                     try {
+    //                         String value = JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(e.getValue());
+    //                         return Map.entry(e.getKey(), value);
+    //                     } catch (JsonProcessingException je) {
+    //                         return null;
+    //                     }
+    //                 })
+    //                 .filter(e -> e.getValue() != null)
+    //                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (o1, o2) -> o1, HashMap::new));
+    //     }
+    // }
 }

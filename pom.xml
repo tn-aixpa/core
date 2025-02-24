@@ -20,6 +20,7 @@
         <kubernetes.version>21.0.0-legacy</kubernetes.version>
         <maven.compiler.release>21</maven.compiler.release>
         <lombok.version>1.18.34</lombok.version>
+        <guava.version>33.3.1-jre</guava.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <checkstyle.config.location>checkstyle/checkstyle.xml</checkstyle.config.location>
         <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
@@ -40,6 +41,8 @@
         <module>modules/runtime-model-serve</module>
         <module>modules/openmetadata-integration</module>
         <module>modules/files</module>
+        <module>modules/credentials-provider-db</module>
+        <module>modules/credentials-provider-minio</module>
         <module>frontend</module>
         <module>application</module>
     </modules>
@@ -89,4 +92,16 @@
             </plugin>
         </plugins>
     </reporting>
+
+    <!-- TODO remove when sonata repo is sync
+    https://github.com/netplex/json-smart-v2/issues/240 -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>2.5.2</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

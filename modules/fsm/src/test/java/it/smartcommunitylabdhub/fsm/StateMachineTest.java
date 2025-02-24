@@ -1,14 +1,7 @@
 package it.smartcommunitylabdhub.fsm;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
 // @SpringBootTest(classes = { StateMachineTest.class })
 public class StateMachineTest {
-
     // // some method definition
 
     // // @Test

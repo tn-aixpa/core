@@ -1,0 +1,3 @@
+<root>
+	<field th:each="item : ${fields}" th:name="${item.name}" th:type="${item.type}" th:indexed="${item.indexed}" th:multiValued="${item.multiValued}" th:stored="${item.stored}" th:uninvertible="${item.uninvertible}"/>
+</root>

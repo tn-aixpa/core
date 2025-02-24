@@ -85,7 +85,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     //TODO move all props to bean
     protected String namespace;
     protected String registrySecret;
-    protected String imagePullPolicy = "IfNotPresent";
+
+    //default  value
+    protected String defaultImagePullPolicy = "IfNotPresent";
 
     protected boolean disableRoot = false;
 
@@ -171,7 +173,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     @Autowired
     public void setImagePullPolicy(@Value("${kubernetes.image-pull-policy}") String imagePullPolicy) {
-        this.imagePullPolicy = imagePullPolicy;
+        this.defaultImagePullPolicy = imagePullPolicy;
     }
 
     public void setMemResourceDefinition(CoreResourceDefinition memResourceDefinition) {
@@ -915,10 +917,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         }
 
         //set core credentials as env with prefix (when required)
-        if (runnable.getCredentials() != null) {
+        if (runnable.getCredentialsMap() != null) {
             String envsPrefix = k8sSecretHelper.getEnvsPrefix();
             runnable
-                .getCredentials()
+                .getCredentialsMap()
                 .entrySet()
                 .forEach(e -> {
                     if (envsPrefix != null) {

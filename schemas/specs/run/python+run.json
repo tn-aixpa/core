@@ -479,6 +479,16 @@
   },
   "type" : "object",
   "properties" : {
+    "init_parameters" : {
+      "$ref" : "#/$defs/Map_String.Serializable_",
+      "title" : "fields.initParameters.title",
+      "description" : "fields.initParameters.description",
+      "additionalProperties" : {
+        "$ref" : "#/$defs/Serializable",
+        "title" : "fields.initParameters.item.title",
+        "description" : "fields.initParameters.item.description"
+      }
+    },
     "inputs" : {
       "$ref" : "#/$defs/Map_String.String_",
       "title" : "fields.inputs.title",
@@ -493,16 +503,6 @@
       "type" : "boolean",
       "title" : "fields.localExecution.title",
       "description" : "fields.localExecution.description"
-    },
-    "outputs" : {
-      "$ref" : "#/$defs/Map_String.String_",
-      "title" : "fields.outputs.title",
-      "description" : "fields.outputs.description",
-      "additionalProperties" : {
-        "type" : "string",
-        "title" : "fields.outputs.item.title",
-        "description" : "fields.outputs.item.description"
-      }
     },
     "parameters" : {
       "$ref" : "#/$defs/Map_String.Serializable_",
@@ -564,7 +564,7 @@
           "description" : "fields.nodeSelector.item.description"
         }
       },
-      "priorityClass" : {
+      "priority_class" : {
         "type" : "string",
         "title" : "fields.priorityClass.title",
         "description" : "fields.priorityClass.description"
@@ -579,7 +579,7 @@
         "title" : "fields.resources.title",
         "description" : "fields.resources.description"
       },
-      "runtimeClass" : {
+      "runtime_class" : {
         "type" : "string",
         "title" : "fields.runtimeClass.title",
         "description" : "fields.runtimeClass.description"
@@ -658,7 +658,7 @@
           "description" : "fields.nodeSelector.item.description"
         }
       },
-      "priorityClass" : {
+      "priority_class" : {
         "type" : "string",
         "title" : "fields.priorityClass.title",
         "description" : "fields.priorityClass.description"
@@ -679,7 +679,7 @@
         "title" : "fields.resources.title",
         "description" : "fields.resources.description"
       },
-      "runtimeClass" : {
+      "runtime_class" : {
         "type" : "string",
         "title" : "fields.runtimeClass.title",
         "description" : "fields.runtimeClass.description"
@@ -768,7 +768,7 @@
           "description" : "fields.nodeSelector.item.description"
         }
       },
-      "priorityClass" : {
+      "priority_class" : {
         "type" : "string",
         "title" : "fields.priorityClass.title",
         "description" : "fields.priorityClass.description"
@@ -783,7 +783,7 @@
         "title" : "fields.resources.title",
         "description" : "fields.resources.description"
       },
-      "runtimeClass" : {
+      "runtime_class" : {
         "type" : "string",
         "title" : "fields.runtimeClass.title",
         "description" : "fields.runtimeClass.description"
