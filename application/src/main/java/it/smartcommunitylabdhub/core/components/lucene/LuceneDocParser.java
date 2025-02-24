@@ -15,6 +15,7 @@ public class LuceneDocParser {
         item.setKind(doc.getField("kind").stringValue());
         item.setProject(doc.getField("project").stringValue());
         item.setName(doc.getField("name").stringValue());
+        item.setStatus(doc.getField("status").stringValue());
         item.getMetadata().put("name", doc.getField("metadata.name").stringValue());
         item.getMetadata().put("description", doc.getField("metadata.description").stringValue());
         item.getMetadata().put("project", doc.getField("metadata.project").stringValue());

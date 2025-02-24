@@ -16,6 +16,7 @@ public class SolrDocParser {
         item.setKind((String) doc.getFieldValue("kind"));
         item.setProject((String) doc.getFieldValue("project"));
         item.setName((String) doc.getFieldValue("name"));
+        item.setStatus((String) doc.getFieldValue("status"));
         item.getMetadata().put("name", (String) doc.getFieldValue("metadata.name"));
         item.getMetadata().put("description", (String) doc.getFieldValue("metadata.description"));
         item.getMetadata().put("project", (String) doc.getFieldValue("metadata.project"));

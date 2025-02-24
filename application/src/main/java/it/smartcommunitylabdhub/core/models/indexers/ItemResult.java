@@ -11,6 +11,7 @@ public class ItemResult {
     String project;
     String name;
     String type;
+    String status;
     Map<String, Object> metadata = new HashMap<>();
     Map<String, List<String>> highlights = new HashMap<>();
 
@@ -69,4 +70,12 @@ public class ItemResult {
     public void setHighlights(Map<String, List<String>> highlights) {
         this.highlights = highlights;
     }
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
 }
