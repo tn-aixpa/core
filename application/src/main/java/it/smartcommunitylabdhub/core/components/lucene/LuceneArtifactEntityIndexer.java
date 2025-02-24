@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -102,7 +103,7 @@ public class LuceneArtifactEntityIndexer extends LuceneBaseEntityIndexer<Artifac
         
         //add versioning
         VersioningMetadata versioning = VersioningMetadata.from(item.getMetadata());
-        Field field = new StringField("metadata.version", versioning.getVersion(), Field.Store.YES);
+        Field field = new TextField("metadata.version", getStringValue(versioning.getVersion()), Field.Store.YES);
         doc.add(field);
         
         return doc;

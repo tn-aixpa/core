@@ -47,7 +47,7 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
     }
     
     protected String getStringValue(String field) {
-    	return StringUtils.hasLength(field) ? field : "";
+    	return StringUtils.hasLength(field) ? field.toLowerCase() : "";
     }
 
     protected Document parse(D item, String type) {
@@ -55,29 +55,29 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
     	Document doc = new Document();
     	
         String keyGroup = buildKeyGroup(item.getKind(), item.getProject(), item.getName());
-        doc.add(new StringField("keyGroup", keyGroup, Field.Store.YES));
+        doc.add(new StringField("keyGroup", keyGroup.toLowerCase(), Field.Store.YES));
         doc.add(new SortedDocValuesField("keyGroup", new BytesRef(doc.get("keyGroup"))));
         
-        doc.add(new StringField("type", type, Field.Store.YES));
+        doc.add(new StringField("type", type.toLowerCase(), Field.Store.YES));
         doc.add(new SortedDocValuesField("type", new BytesRef(doc.get("type"))));
         
         //base doc
-        doc.add(new StringField("id", item.getId(), Field.Store.YES));
+        doc.add(new StringField("id", item.getId().toLowerCase(), Field.Store.YES));
         
-        doc.add(new StringField("kind", item.getKind(), Field.Store.YES));
+        doc.add(new StringField("kind", item.getKind().toLowerCase(), Field.Store.YES));
         doc.add(new SortedDocValuesField("kind", new BytesRef(doc.get("kind"))));
         
-        doc.add(new StringField("project", item.getProject(), Field.Store.YES));
+        doc.add(new StringField("project", item.getProject().toLowerCase(), Field.Store.YES));
         doc.add(new SortedDocValuesField("project", new BytesRef(doc.get("project"))));
         
-        doc.add(new StringField("name", item.getName(), Field.Store.YES));
+        doc.add(new StringField("name", item.getName().toLowerCase(), Field.Store.YES));
         
-        doc.add(new StringField("user", getStringValue(item.getUser()), Field.Store.YES));
+        doc.add(new StringField("user", getStringValue(item.getUser().toLowerCase()), Field.Store.YES));
         
         //status
         if (item instanceof StatusDTO) {
             StatusFieldAccessor status = StatusFieldAccessor.with(((StatusDTO) item).getStatus());
-            doc.add(new StringField("status", status.getState(), Field.Store.YES));            
+            doc.add(new StringField("status", status.getState().toLowerCase(), Field.Store.YES));            
         }
         
         //extract meta to index
@@ -95,7 +95,7 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
             
             if(metadata.getLabels() != null) {
             	for(String label : metadata.getLabels()) {
-            		doc.add(new StringField("metadata.labels", label, Field.Store.YES));
+            		doc.add(new StringField("metadata.labels", label.toLowerCase(), Field.Store.YES));
             	}
             }
             
@@ -108,8 +108,8 @@ public abstract class LuceneBaseEntityIndexer<D extends BaseDTO> implements Init
             doc.add(new SortedDocValuesField("metadata.updatedLong", new BytesRef(doc.get("metadata.updatedLong"))));
 
             AuditMetadata auditing = AuditMetadata.from(((MetadataDTO) item).getMetadata());
-            doc.add(new StringField("metadata.createdBy", auditing.getCreatedBy(), Field.Store.YES));
-            doc.add(new StringField("metadata.updatedBy", auditing.getUpdatedBy(), Field.Store.YES));
+            doc.add(new StringField("metadata.createdBy", auditing.getCreatedBy().toLowerCase(), Field.Store.YES));
+            doc.add(new StringField("metadata.updatedBy", auditing.getUpdatedBy().toLowerCase(), Field.Store.YES));
         }
         
         return doc;
