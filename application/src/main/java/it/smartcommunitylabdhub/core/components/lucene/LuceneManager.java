@@ -319,11 +319,11 @@ public class LuceneManager {
 	                    	String[] split = s.split(" TO ");
 	                    	if(split.length == 2) {
 	                    		if(!split[0].equals("*")) {
-	                    			String from = StringUtils.deleteAny(split[0], "\"");
+	                    			String from = StringUtils.replace(StringUtils.deleteAny(split[0], "\""), "Z", "+0000");
 	                    			split[0] = String.valueOf(sdf.parse(from).getTime());  
 	                    		}
 	                    		if(!split[1].equals("*")) {
-	                    			String to = StringUtils.deleteAny(split[1], "\"");
+	                    			String to = StringUtils.replace(StringUtils.deleteAny(split[1], "\""), "Z", "+0000");
 	                    			split[1] = String.valueOf(sdf.parse(to).getTime());  
 	                    		}
 	                    	}

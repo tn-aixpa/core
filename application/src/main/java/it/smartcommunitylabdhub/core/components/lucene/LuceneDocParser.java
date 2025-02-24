@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
 
 public class LuceneDocParser {
 	
-	public static final String dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"; 
+	public static final String dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; 
 	
     public static ItemResult parse(Document doc) {
         ItemResult item = new ItemResult();
