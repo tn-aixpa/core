@@ -42,6 +42,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
+import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPageImpl;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -334,7 +340,7 @@ public class SolrIndexManager {
         boolean uninvertible,
         String uri,
         HttpHeaders headers
-    ) throws SolrIndexerException {
+    ) throws IndexerException {
         ObjectNode rootNode = mapper.createObjectNode();
         ObjectNode addNode = rootNode.putObject("add-field");
         addNode
@@ -417,7 +423,7 @@ public class SolrIndexManager {
         return new MultiMapSolrParams(queryParamMap);
     }
 
-    private void initCollection(HttpHeaders headers) throws SolrIndexerException {
+    private void initCollection(HttpHeaders headers) throws IndexerException {
         try {
             //check if collection exists
             String solrUrl = props.getUrl();
