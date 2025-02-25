@@ -30,6 +30,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.grouping.GroupDocs;
 import org.apache.lucene.search.grouping.GroupingSearch;
 import org.apache.lucene.search.grouping.TopGroups;
@@ -329,9 +330,12 @@ public class LuceneManager {
 	                    	}
 	                    	Query query = standardQueryParser.parse(String.format("[%s TO %s]", split[0], split[1]), "metadata.updatedLong");
 	                		builder.add(query, BooleanClause.Occur.MUST);	                    	
-	                    } else { 
-	                		Query query = standardQueryParser.parse(value, field);
+	                    } else  if(field.equals("project") || field.equals("status")) {
+	                    	Query query = new TermQuery(new Term(field, value));
 	                		builder.add(query, BooleanClause.Occur.MUST);	                    	
+	                    } else {
+	                		Query query = standardQueryParser.parse(value, field);
+	                		builder.add(query, BooleanClause.Occur.MUST);	                    		                    	
 	                    }
 	             }
 			 }
