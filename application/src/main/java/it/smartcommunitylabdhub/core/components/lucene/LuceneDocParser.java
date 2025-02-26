@@ -2,6 +2,7 @@ package it.smartcommunitylabdhub.core.components.lucene;
 
 import org.apache.lucene.document.Document;
 
+import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
 
 public class LuceneDocParser {
@@ -23,6 +24,7 @@ public class LuceneDocParser {
         item.getMetadata().put("created", doc.getField("metadata.created").stringValue());
         item.getMetadata().put("updated", doc.getField("metadata.updated").stringValue());
         item.getMetadata().put("labels", doc.getValues("metadata.labels"));
+        item.setKey(KeyUtils.buildKey(item.getProject(), item.getType(), item.getKind(), item.getName(), item.getId()));
         return item;
     }
 }

@@ -12,6 +12,7 @@ public class ItemResult {
     String name;
     String type;
     String status;
+    String key;
     Map<String, Object> metadata = new HashMap<>();
     Map<String, List<String>> highlights = new HashMap<>();
 
@@ -77,5 +78,13 @@ public class ItemResult {
 
 	public void setStatus(String status) {
 		this.status = status;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 }

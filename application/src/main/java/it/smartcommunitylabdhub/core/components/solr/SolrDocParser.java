@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import org.apache.solr.common.SolrDocument;
 
+import it.smartcommunitylabdhub.commons.utils.KeyUtils;
 import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
 
 public class SolrDocParser {
@@ -24,6 +25,7 @@ public class SolrDocParser {
         item.getMetadata().put("created", (Date) doc.getFieldValue("metadata.created"));
         item.getMetadata().put("updated", (Date) doc.getFieldValue("metadata.updated"));
         item.getMetadata().put("labels", (List<String>) doc.getFieldValue("metadata.labels"));
+        item.setKey(KeyUtils.buildKey(item.getProject(), item.getType(), item.getKind(), item.getName(), item.getId()));
         return item;
     }
 }
