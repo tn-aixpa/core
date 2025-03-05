@@ -85,18 +85,21 @@ public class NodeStatusMapper {
             if (nodeStatus.getInputs() != null && nodeStatus.getInputs().getParameters() != null) {
                 List<Map<String, String>> inputsParams = nodeStatus.getInputs().getParameters().stream()
                         .filter(param -> param.getValue() != null)
-                        .map(param -> Map.of(param.getName(), param.getValue()))
+                        .map(param -> Map.of("name", param.getName(), "value", param.getValue()))
                         .collect(Collectors.toList());
+
                 dto.setInputs(inputsParams);
             }
 
             if (nodeStatus.getOutputs() != null && nodeStatus.getOutputs().getParameters() != null) {
                 List<Map<String, String>> outputsParams = nodeStatus.getOutputs().getParameters().stream()
                         .filter(param -> param.getValue() != null)
-                        .map(param -> Map.of(param.getName(), param.getValue()))
+                        .map(param -> Map.of("name", param.getName(), "value", param.getValue()))
                         .collect(Collectors.toList());
+
                 dto.setOutputs(outputsParams);
             }
+
 
             // Process labels from workflow metadata
             Optional.ofNullable(workflow.getWorkflow().getSpec().getTemplates())

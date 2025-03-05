@@ -14,7 +14,6 @@ import it.smartcommunitylabdhub.commons.models.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.services.SecretService;
 import it.smartcommunitylabdhub.commons.services.WorkflowService;
-import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
@@ -164,6 +163,30 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
             }
         }
 
+        // Retrieve status when node workflow is completed
+        if (KFPPipelineTaskSpec.KIND.equals(runAccessor.getTask()) &&
+                runnable instanceof K8sArgoWorkflowRunnable k8sArgoWorkflowRunnable) {
+
+            if (k8sArgoWorkflowRunnable.getResults().get("nodes") != null) {
+
+                KFPRunStatus kfpRunStatus = new KFPRunStatus();
+                kfpRunStatus.configure(run.getStatus());
+
+
+                List<NodeStatusDTO> nodes = nodeStatusMapper.argoNodeToNodeStatusDTO(
+                        (Map<String, Serializable>) k8sArgoWorkflowRunnable.getResults().get("nodes"),
+                        (Map<String, Serializable>) k8sArgoWorkflowRunnable.getResults().get("workflow"),
+                        run
+                );
+
+                kfpRunStatus.setNodes(nodes);
+                //TODO remove this...is just for test purposes nodes should be stored directly on status
+                kfpRunStatus.setResults(Map.of("status", (Serializable) Map.of("graph", nodes)));
+
+                return kfpRunStatus;
+            }
+        }
+
         return null;
     }
 
@@ -187,6 +210,8 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
                 );
 
                 kfpRunStatus.setNodes(nodes);
+                //TODO remove this...is just for test purposes nodes should be stored directly on status
+                kfpRunStatus.setResults(Map.of("status", (Serializable) Map.of("graph", nodes)));
 
                 return kfpRunStatus;
             }
