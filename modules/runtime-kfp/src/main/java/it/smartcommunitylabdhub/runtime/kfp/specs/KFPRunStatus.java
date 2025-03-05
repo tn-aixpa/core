@@ -19,6 +19,5 @@ import java.util.Map;
 public class KFPRunStatus extends RunBaseStatus {
 
     private List<NodeStatusDTO> nodes;
-    //TODO remove this is just for test purposes nodes should be stored directly on the property above
-    private Map<String, Serializable> results = new HashMap<>();
+
 }

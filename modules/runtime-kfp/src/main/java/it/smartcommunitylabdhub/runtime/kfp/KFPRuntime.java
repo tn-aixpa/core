@@ -180,8 +180,6 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
                 );
 
                 kfpRunStatus.setNodes(nodes);
-                //TODO remove this...is just for test purposes nodes should be stored directly on status
-                kfpRunStatus.setResults(Map.of("status", (Serializable) Map.of("graph", nodes)));
 
                 return kfpRunStatus;
             }
@@ -210,8 +208,6 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
                 );
 
                 kfpRunStatus.setNodes(nodes);
-                //TODO remove this...is just for test purposes nodes should be stored directly on status
-                kfpRunStatus.setResults(Map.of("status", (Serializable) Map.of("graph", nodes)));
 
                 return kfpRunStatus;
             }
