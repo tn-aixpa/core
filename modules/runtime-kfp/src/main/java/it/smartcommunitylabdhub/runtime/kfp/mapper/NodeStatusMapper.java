@@ -1,64 +1,30 @@
 package it.smartcommunitylabdhub.runtime.kfp.mapper;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1NodeStatus;
 import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1Template;
 import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1Workflow;
-import io.kubernetes.client.custom.IntOrString;
-import io.kubernetes.client.custom.Quantity;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
-import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
-import it.smartcommunitylabdhub.framework.k8s.jackson.QuantityMixin;
 import it.smartcommunitylabdhub.runtime.kfp.dtos.NodeStatusDTO;
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.stereotype.Component;
 
-@Component
 public class NodeStatusMapper {
-
-    //custom object mapper with mixIn for IntOrString
-    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER
-        .addMixIn(IntOrString.class, IntOrStringMixin.class)
-        .addMixIn(Quantity.class, QuantityMixin.class);
-
-    protected static final TypeReference<HashMap<String, IoArgoprojWorkflowV1alpha1NodeStatus>> nodeTypeRef =
-        new TypeReference<HashMap<String, IoArgoprojWorkflowV1alpha1NodeStatus>>() {};
-
-    protected static final TypeReference<IoArgoprojWorkflowV1alpha1Workflow> workflowTypeRef = new TypeReference<
-        IoArgoprojWorkflowV1alpha1Workflow
-    >() {};
-
-    protected static final TypeReference<List<Serializable>> typeRef = new TypeReference<List<Serializable>>() {};
-
-    protected static final TypeReference<NodeStatusDTO> nodeStatusDTOTypeRef = new TypeReference<NodeStatusDTO>() {};
 
     private static final String LABEL_PREFIX = "kfp-digitalhub-runtime-"; // Replace this with the actual prefix
 
-    public List<NodeStatusDTO> argoNodeToNodeStatusDTO(
-        Map<String, Serializable> nodeStatusList,
-        Map<String, Serializable> workflowObject,
-        Run run
-    ) {
-        if (nodeStatusList == null) {
+    public List<NodeStatusDTO> extractNodesFromWorkflow(K8sWorkflowObject workflowObject) {
+        if (
+            workflowObject == null ||
+            workflowObject.getWorkflow() == null ||
+            workflowObject.getWorkflow().getStatus() == null
+        ) {
             return null;
         }
-        Map<String, IoArgoprojWorkflowV1alpha1NodeStatus> nodes = mapper.convertValue(nodeStatusList, nodeTypeRef);
 
-        IoArgoprojWorkflowV1alpha1Workflow ioArgoprojWorkflowV1alpha1Workflow = mapper.convertValue(
-            workflowObject.get("workflow"),
-            workflowTypeRef
-        );
-
-        K8sWorkflowObject workflow = new K8sWorkflowObject(ioArgoprojWorkflowV1alpha1Workflow);
+        IoArgoprojWorkflowV1alpha1Workflow workflow = workflowObject.getWorkflow();
+        Map<String, IoArgoprojWorkflowV1alpha1NodeStatus> nodes = workflow.getStatus().getNodes();
 
         return nodes
             .values()
@@ -103,7 +69,7 @@ public class NodeStatusMapper {
 
                 // Process labels from workflow metadata
                 Optional
-                    .ofNullable(workflow.getWorkflow().getSpec().getTemplates())
+                    .ofNullable(workflow.getSpec().getTemplates())
                     .ifPresent(templates ->
                         templates
                             .stream()
@@ -124,34 +90,19 @@ public class NodeStatusMapper {
                                     case LABEL_PREFIX + "project":
                                         dto.setAction(value);
                                         break;
+                                    default:
+                                        break;
                                 }
                             })
                     );
 
                 if (nodeStatus.getType().equals("Pod") && nodeStatus.getOutputs() != null) {
-                    dto.setRunId(run.getId());
+                    //TODO get correct runId
+                    // dto.setRunId(runId);
                 }
 
                 return dto;
             })
-            .collect(Collectors.toList());
-    }
-
-    public List<Serializable> toMap(List<NodeStatusDTO> nodeStatusDTOList) {
-        if (nodeStatusDTOList == null) {
-            return null;
-        }
-        return mapper.convertValue(nodeStatusDTOList, typeRef);
-    }
-
-    public List<NodeStatusDTO> fromMap(List<Map<String, Serializable>> map) {
-        if (map == null) {
-            return null;
-        }
-        return map
-            .stream()
-            .filter(Objects::nonNull)
-            .map(node -> mapper.convertValue(node, nodeStatusDTOTypeRef))
             .collect(Collectors.toList());
     }
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
 import java.io.IOException;
 import java.util.Map;
@@ -16,7 +15,7 @@ public class QuantityJacksonDeserializer extends StdDeserializer<Quantity> {
     }
 
     public QuantityJacksonDeserializer(Class<Quantity> t) {
-        super(IntOrString.class);
+        super(Quantity.class);
     }
 
     @Override
@@ -24,7 +23,7 @@ public class QuantityJacksonDeserializer extends StdDeserializer<Quantity> {
         Object value = p.readValueAs(Object.class); // Read the value as an Object (can be String or Map)
 
         if (value instanceof String) {
-            return new Quantity((String) value);
+            return Quantity.fromString((String) value);
         } else if (value instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) value;
             Object number = map.get("number");

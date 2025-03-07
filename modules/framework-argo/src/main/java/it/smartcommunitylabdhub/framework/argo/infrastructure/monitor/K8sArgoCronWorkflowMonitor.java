@@ -1,20 +1,20 @@
 package it.smartcommunitylabdhub.framework.argo.infrastructure.monitor;
 
+import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1CronWorkflowStatus;
 import io.kubernetes.client.openapi.models.V1Pod;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoCronWorkflowFramework;
 import it.smartcommunitylabdhub.framework.argo.objects.K8sCronWorkflowObject;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoCronWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
-import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -47,9 +47,21 @@ public class K8sArgoCronWorkflowMonitor extends K8sBaseMonitor<K8sArgoCronWorkfl
                 log.error("Missing or invalid Argo Workflow for {}", runnable.getId());
                 runnable.setState(State.ERROR.name());
                 runnable.setError("Argo Workflow missing or invalid");
+
+                return runnable;
             }
 
-            log.info("Argo Workflow status: {}", workflow.getWorkflow().getStatus().toString());
+            IoArgoprojWorkflowV1alpha1CronWorkflowStatus status = workflow.getWorkflow().getStatus();
+            if (status == null) {
+                // something is missing, no recovery
+                log.error("Missing or invalid Argo Workflow for {}", runnable.getId());
+                runnable.setState(State.ERROR.name());
+                runnable.setError("Argo Workflow missing or invalid");
+
+                return runnable;
+            }
+
+            log.info("Argo Workflow status: {}", status.toString());
 
             //try to fetch pods
             List<V1Pod> pods = null;
@@ -62,15 +74,15 @@ public class K8sArgoCronWorkflowMonitor extends K8sBaseMonitor<K8sArgoCronWorkfl
             //update results
             try {
                 runnable.setResults(
-                    Stream
-                        .of(
-                            new AbstractMap.SimpleEntry<>("workflow", mapper.convertValue(workflow, typeRef)),
-                            new AbstractMap.SimpleEntry<>(
-                                "pods",
-                                pods != null ? mapper.convertValue(pods, arrayRef) : null
-                            )
+                    MapUtils.mergeMultipleMaps(
+                        runnable.getResults(),
+                        Map.of(
+                            "workflow",
+                            mapper.convertValue(workflow, typeRef),
+                            "pods",
+                            pods != null ? mapper.convertValue(pods, arrayRef) : new ArrayList<>()
                         )
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                    )
                 );
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());

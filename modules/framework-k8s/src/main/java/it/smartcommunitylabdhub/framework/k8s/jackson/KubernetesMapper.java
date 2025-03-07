@@ -10,6 +10,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLParser;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.kubernetes.client.custom.IntOrString;
+import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.models.V1CronJob;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1Job;
@@ -27,6 +28,7 @@ public class KubernetesMapper {
     //custom object mapper with mixIn for IntOrString
     public static final ObjectMapper OBJECT_MAPPER = JacksonMapper.CUSTOM_OBJECT_MAPPER
         .addMixIn(IntOrString.class, IntOrStringMixin.class)
+        .addMixIn(Quantity.class, QuantityMixin.class)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public static final YAMLFactory YAML_FACTORY = YamlMapperFactory.yamlFactory();
