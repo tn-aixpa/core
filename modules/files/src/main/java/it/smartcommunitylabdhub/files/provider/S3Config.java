@@ -38,7 +38,7 @@ public class S3Config extends AbstractConfiguration {
     @JsonProperty("s3_bucket")
     private String bucket;
 
-    @JsonProperty("s3_endpoint")
+    @JsonProperty("s3_endpoint_url")
     private String endpoint;
 
     @JsonProperty("s3_region")
