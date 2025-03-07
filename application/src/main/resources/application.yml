@@ -115,7 +115,7 @@ kubernetes:
   security: 
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
   envs:
-    prefix: ${K8S_ENVS_PREFIX:${application.name}}    
+    prefix: ${K8S_ENVS_PREFIX:DHCORE}    
   image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}
   init:
     image: ${K8S_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-builder-tool:latest}
