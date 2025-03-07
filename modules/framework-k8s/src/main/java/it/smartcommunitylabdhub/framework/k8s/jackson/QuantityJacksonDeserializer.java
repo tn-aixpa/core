@@ -11,7 +11,6 @@ import java.util.Map;
 
 public class QuantityJacksonDeserializer extends StdDeserializer<Quantity> {
 
-
     public QuantityJacksonDeserializer() {
         this(null);
     }
@@ -22,7 +21,7 @@ public class QuantityJacksonDeserializer extends StdDeserializer<Quantity> {
 
     @Override
     public Quantity deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-        Object value = p.readValueAs(Object.class);  // Read the value as an Object (can be String or Map)
+        Object value = p.readValueAs(Object.class); // Read the value as an Object (can be String or Map)
 
         if (value instanceof String) {
             return new Quantity((String) value);
@@ -42,4 +41,3 @@ public class QuantityJacksonDeserializer extends StdDeserializer<Quantity> {
         throw new IOException("Invalid Quantity format: " + value);
     }
 }
-

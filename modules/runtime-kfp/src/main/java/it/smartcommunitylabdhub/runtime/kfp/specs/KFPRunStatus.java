@@ -3,14 +3,10 @@ package it.smartcommunitylabdhub.runtime.kfp.specs;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;
 import it.smartcommunitylabdhub.runtime.kfp.dtos.NodeStatusDTO;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -19,5 +15,4 @@ import java.util.Map;
 public class KFPRunStatus extends RunBaseStatus {
 
     private List<NodeStatusDTO> nodes;
-
 }

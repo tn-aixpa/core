@@ -10,13 +10,11 @@ import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoCronWorkflowRunn
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
-
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -64,12 +62,15 @@ public class K8sArgoCronWorkflowMonitor extends K8sBaseMonitor<K8sArgoCronWorkfl
             //update results
             try {
                 runnable.setResults(
-                        Stream.of(new AbstractMap.SimpleEntry<>("workflow", mapper.convertValue(workflow, typeRef)),
-                                        new AbstractMap.SimpleEntry<>(
-                                                "pods",
-                                                pods != null ? mapper.convertValue(pods, arrayRef) : null)
-                                )
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                    Stream
+                        .of(
+                            new AbstractMap.SimpleEntry<>("workflow", mapper.convertValue(workflow, typeRef)),
+                            new AbstractMap.SimpleEntry<>(
+                                "pods",
+                                pods != null ? mapper.convertValue(pods, arrayRef) : null
+                            )
+                        )
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                 );
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());

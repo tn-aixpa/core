@@ -11,12 +11,11 @@ import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
-
-
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -27,13 +26,11 @@ import org.springframework.util.Assert;
 @MonitorComponent(framework = "build")
 public class K8sArgoWorkflowMonitor extends K8sBaseMonitor<K8sArgoWorkflowRunnable> {
 
-    private static final String LABEL_PREFIX = "kfp-digitalhub-runtime-";
-
     private final K8sArgoWorkflowFramework framework;
 
     public K8sArgoWorkflowMonitor(
-            RunnableStore<K8sArgoWorkflowRunnable> runnableStore,
-            K8sArgoWorkflowFramework argoFramework
+        RunnableStore<K8sArgoWorkflowRunnable> runnableStore,
+        K8sArgoWorkflowFramework argoFramework
     ) {
         super(runnableStore);
         Assert.notNull(argoFramework, "argo framework is required");
@@ -74,27 +71,26 @@ public class K8sArgoWorkflowMonitor extends K8sBaseMonitor<K8sArgoWorkflowRunnab
                 log.error("error collecting pods for job {}: {}", runnable.getId(), e1.getMessage());
             }
 
-
             //update results
             try {
                 // Collect nodes from workflow
-                Map<String, IoArgoprojWorkflowV1alpha1NodeStatus> nodes =
-                        workflow.getWorkflow().getStatus().getNodes();
+                Map<String, IoArgoprojWorkflowV1alpha1NodeStatus> nodes = workflow.getWorkflow().getStatus().getNodes();
 
                 runnable.setResults(
-                        Stream.of(new AbstractMap.SimpleEntry<>(
-                                                "workflow", mapper.convertValue(workflow, typeRef)),
-                                        new AbstractMap.SimpleEntry<>(
-                                                "pods",
-                                                pods != null ? mapper.convertValue(pods, arrayRef) : null),
-                                        new AbstractMap.SimpleEntry<>(
-                                                "nodes",
-                                                nodes != null ? mapper.convertValue(nodes, typeRef) : null)
-                                )
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                    Stream
+                        .of(
+                            new AbstractMap.SimpleEntry<>("workflow", mapper.convertValue(workflow, typeRef)),
+                            new AbstractMap.SimpleEntry<>(
+                                "pods",
+                                pods != null ? mapper.convertValue(pods, arrayRef) : null
+                            ),
+                            new AbstractMap.SimpleEntry<>(
+                                "nodes",
+                                nodes != null ? mapper.convertValue(nodes, typeRef) : null
+                            )
+                        )
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                 );
-
-
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());
             }
