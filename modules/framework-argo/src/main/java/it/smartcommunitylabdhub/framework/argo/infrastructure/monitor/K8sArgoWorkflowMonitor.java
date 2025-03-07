@@ -1,15 +1,18 @@
 package it.smartcommunitylabdhub.framework.argo.infrastructure.monitor;
 
+import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1WorkflowStatus;
 import io.kubernetes.client.openapi.models.V1Pod;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.argo.infrastructure.k8s.K8sArgoWorkflowFramework;
 import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +22,7 @@ import org.springframework.util.Assert;
 @Slf4j
 @ConditionalOnKubernetes
 @Component
-@MonitorComponent(framework = "build")
+@MonitorComponent(framework = K8sArgoWorkflowFramework.FRAMEWORK)
 public class K8sArgoWorkflowMonitor extends K8sBaseMonitor<K8sArgoWorkflowRunnable> {
 
     private final K8sArgoWorkflowFramework framework;
@@ -39,24 +42,36 @@ public class K8sArgoWorkflowMonitor extends K8sBaseMonitor<K8sArgoWorkflowRunnab
         try {
             K8sWorkflowObject workflow = framework.get(framework.build(runnable));
 
-            if (workflow == null || workflow.getWorkflow().getStatus() == null) {
+            if (workflow == null || workflow.getWorkflow() == null) {
                 // something is missing, no recovery
                 log.error("Missing or invalid Argo Workflow for {}", runnable.getId());
                 runnable.setState(State.ERROR.name());
                 runnable.setError("Argo Workflow missing or invalid");
+
+                return runnable;
             }
 
-            log.info("Argo Workflow status: {}", workflow.getWorkflow().getStatus().toString());
+            IoArgoprojWorkflowV1alpha1WorkflowStatus status = workflow.getWorkflow().getStatus();
+            if (status == null) {
+                // something is missing, no recovery
+                log.error("Missing or invalid Argo Workflow for {}", runnable.getId());
+                runnable.setState(State.ERROR.name());
+                runnable.setError("Argo Workflow missing or invalid");
+
+                return runnable;
+            }
+
+            log.info("Argo Workflow status: {}", status.toString());
 
             //target for succeded/failed is 1
-            String phase = workflow.getWorkflow().getStatus().getPhase();
+            String phase = status.getPhase();
             if (phase != null && "Succeeded".equals(phase)) {
                 // Job has succeeded
                 runnable.setState(State.COMPLETED.name());
             } else if (phase != null && ("Failed".equals(phase) || "Error".equals(phase))) {
                 // Job has failed delete job and pod
                 runnable.setState(State.ERROR.name());
-                runnable.setError("Job failed: " + workflow.getWorkflow().getStatus().getMessage());
+                runnable.setError("Job failed: " + status.getMessage());
             }
 
             //try to fetch pods
@@ -70,11 +85,14 @@ public class K8sArgoWorkflowMonitor extends K8sBaseMonitor<K8sArgoWorkflowRunnab
             //update results
             try {
                 runnable.setResults(
-                    Map.of(
-                        "workflow",
-                        mapper.convertValue(workflow, typeRef),
-                        "pods",
-                        pods != null ? mapper.convertValue(pods, arrayRef) : null
+                    MapUtils.mergeMultipleMaps(
+                        runnable.getResults(),
+                        Map.of(
+                            "workflow",
+                            mapper.convertValue(workflow, typeRef),
+                            "pods",
+                            pods != null ? mapper.convertValue(pods, arrayRef) : new ArrayList<>()
+                        )
                     )
                 );
             } catch (IllegalArgumentException e) {

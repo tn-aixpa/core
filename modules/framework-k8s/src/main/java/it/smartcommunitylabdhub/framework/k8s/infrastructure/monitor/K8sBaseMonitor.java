@@ -2,11 +2,9 @@ package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.kubernetes.client.custom.IntOrString;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.services.RunnableStore;
-import it.smartcommunitylabdhub.framework.k8s.jackson.IntOrStringMixin;
+import it.smartcommunitylabdhub.framework.k8s.jackson.KubernetesMapper;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtimes.events.RunnableChangedEvent;
 import java.io.Serializable;
@@ -23,10 +21,7 @@ import org.springframework.util.Assert;
 public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable {
 
     //custom object mapper with mixIn for IntOrString
-    protected static final ObjectMapper mapper = JacksonMapper.CUSTOM_OBJECT_MAPPER.addMixIn(
-        IntOrString.class,
-        IntOrStringMixin.class
-    );
+    protected static final ObjectMapper mapper = KubernetesMapper.OBJECT_MAPPER;
     protected static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
         HashMap<String, Serializable>
     >() {};

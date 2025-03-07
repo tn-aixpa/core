@@ -14,8 +14,13 @@ import it.smartcommunitylabdhub.commons.models.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.workflow.Workflow;
 import it.smartcommunitylabdhub.commons.services.SecretService;
 import it.smartcommunitylabdhub.commons.services.WorkflowService;
+import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
+import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
+import it.smartcommunitylabdhub.framework.k8s.jackson.KubernetesMapper;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
+import it.smartcommunitylabdhub.runtime.kfp.dtos.NodeStatusDTO;
+import it.smartcommunitylabdhub.runtime.kfp.mapper.NodeStatusMapper;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPBuildRunner;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPPipelineRunner;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPBuildTaskSpec;
@@ -29,6 +34,7 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +51,8 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
 
     @Autowired
     private WorkflowService workflowService;
+
+    private NodeStatusMapper nodeStatusMapper = new NodeStatusMapper();
 
     @Value("${runtime.kfp.image}")
     private String image;
@@ -157,6 +165,71 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
             }
         }
 
+        // Retrieve status when node workflow is completed
+        if (
+            KFPPipelineTaskSpec.KIND.equals(runAccessor.getTask()) &&
+            runnable instanceof K8sArgoWorkflowRunnable k8sArgoWorkflowRunnable
+        ) {
+            if (
+                k8sArgoWorkflowRunnable.getResults() != null &&
+                k8sArgoWorkflowRunnable.getResults().get("workflow") != null
+            ) {
+                KFPRunStatus kfpRunStatus = new KFPRunStatus();
+                kfpRunStatus.configure(run.getStatus());
+
+                try {
+                    //deserialize workflow
+                    K8sWorkflowObject workflowObject = KubernetesMapper.OBJECT_MAPPER.convertValue(
+                        k8sArgoWorkflowRunnable.getResults().get("workflow"),
+                        K8sWorkflowObject.class
+                    );
+
+                    //extract nodes
+                    List<NodeStatusDTO> nodes = nodeStatusMapper.extractNodesFromWorkflow(workflowObject);
+                    kfpRunStatus.setNodes(nodes);
+                } catch (IllegalArgumentException e) {
+                    log.error("Error reading Workflow specification", e);
+                }
+
+                return kfpRunStatus;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public KFPRunStatus onRunning(Run run, RunRunnable runnable) {
+        RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
+
+        if (
+            KFPPipelineTaskSpec.KIND.equals(runAccessor.getTask()) &&
+            runnable instanceof K8sArgoWorkflowRunnable k8sArgoWorkflowRunnable
+        ) {
+            if (
+                k8sArgoWorkflowRunnable.getResults() != null &&
+                k8sArgoWorkflowRunnable.getResults().get("workflow") != null
+            ) {
+                KFPRunStatus kfpRunStatus = new KFPRunStatus();
+                kfpRunStatus.configure(run.getStatus());
+
+                try {
+                    //deserialize workflow
+                    K8sWorkflowObject workflowObject = KubernetesMapper.OBJECT_MAPPER.convertValue(
+                        k8sArgoWorkflowRunnable.getResults().get("workflow"),
+                        K8sWorkflowObject.class
+                    );
+
+                    //extract nodes
+                    List<NodeStatusDTO> nodes = nodeStatusMapper.extractNodesFromWorkflow(workflowObject);
+                    kfpRunStatus.setNodes(nodes);
+                } catch (IllegalArgumentException e) {
+                    log.error("Error reading Workflow specification", e);
+                }
+
+                return kfpRunStatus;
+            }
+        }
         return null;
     }
 }
