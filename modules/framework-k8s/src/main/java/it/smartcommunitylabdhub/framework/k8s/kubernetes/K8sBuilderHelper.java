@@ -2,8 +2,6 @@ package it.smartcommunitylabdhub.framework.k8s.kubernetes;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
 import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
@@ -30,6 +28,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -68,54 +67,7 @@ public class K8sBuilderHelper implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        // Retrieve CoreV1Api
-        CoreV1Api coreV1Api = new CoreV1Api(apiClient);
-
-        // Remove all not present secrets
-        sharedSecrets =
-            sharedSecrets
-                .stream()
-                .flatMap(secret -> {
-                    try {
-                        coreV1Api.readNamespacedSecret(secret, namespace, null);
-                        return Stream.of(secret);
-                    } catch (ApiException e) {
-                        log.error("Error reading secret: " + secret, e);
-                        return Stream.empty();
-                    }
-                })
-                .toList();
-
-        // Remove all not present config maps
-        sharedConfigMaps =
-            sharedConfigMaps
-                .stream()
-                .flatMap(configMap -> {
-                    try {
-                        coreV1Api.readNamespacedConfigMap(configMap, namespace, null);
-                        return Stream.of(configMap);
-                    } catch (ApiException e) {
-                        log.error("Error reading configmap: " + configMap, e);
-                        return Stream.empty();
-                    }
-                })
-                .toList();
-    }
-
-    /**
-     * A helper method to get an environment variable with a default value if not present.
-     *
-     * @param variableName The name of the environment variable.
-     * @param defaultValue The default value to use if the environment variable is not present.
-     * @return The value of the environment variable if present, otherwise the defaultValue.
-     */
-    private String getEnvVariable(String variableName, String defaultValue) {
-        // Access the environment variable using System.getenv()
-        String value = System.getenv(variableName);
-
-        System.getenv();
-        // Use the value from the system environment if available, otherwise use the defaultValue
-        return (value != null && !value.isEmpty()) ? value : defaultValue;
+        Assert.hasText(coreEndpoint, "core endpoint must be set");
     }
 
     /**
