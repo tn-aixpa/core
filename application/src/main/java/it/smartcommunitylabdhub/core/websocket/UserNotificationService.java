@@ -35,6 +35,7 @@ public class UserNotificationService {
 
         //send whole event as payload
         broadcast(buildDestination(notification.getEntity(), notification.getDto().getId()), notification);
+        broadcast(buildDestination(notification.getEntity()), notification);
     }
 
     public void broadcast(String destination, Serializable payload) {
