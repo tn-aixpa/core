@@ -12,14 +12,9 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
-
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -119,23 +114,17 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                 //update results
                 try {
                     runnable.setResults(
-                            MapUtils.mergeMultipleMaps(
-                                    runnable.getResults(),
-                                    Stream.of(new AbstractMap.SimpleEntry<>(
-                                                            "deployment",
-                                                            mapper.convertValue(deployment, typeRef)
-                                                    ),
-                                                    new AbstractMap.SimpleEntry<>(
-                                                            "service",
-                                                            mapper.convertValue(service, typeRef)
-                                                    ),
-                                                    new AbstractMap.SimpleEntry<>(
-                                                            "pods",
-                                                            pods != null ? mapper.convertValue(pods, arrayRef) : null
-                                                    )
-                                            )
-                                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                        MapUtils.mergeMultipleMaps(
+                            runnable.getResults(),
+                            Map.of(
+                                "deployment",
+                                mapper.convertValue(deployment, typeRef),
+                                "service",
+                                mapper.convertValue(service, typeRef),
+                                "pods",
+                                pods != null ? mapper.convertValue(pods, arrayRef) : null
                             )
+                        )
                     );
                 } catch (IllegalArgumentException e) {
                     log.error("error reading k8s results: {}", e.getMessage());
