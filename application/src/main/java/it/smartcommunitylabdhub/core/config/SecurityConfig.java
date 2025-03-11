@@ -46,6 +46,7 @@ import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
@@ -98,10 +99,12 @@ public class SecurityConfig {
 
     @Bean("apiSecurityFilterChain")
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
+        //api chain
+        RequestMatcher reqMatcher = new AntPathRequestMatcher(API_PREFIX + "/**");
         HttpSecurity securityChain = http
-            .securityMatcher(getApiRequestMatcher())
+            .securityMatcher(reqMatcher)
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(getApiRequestMatcher()).hasRole("USER").anyRequest().authenticated();
+                auth.requestMatchers(reqMatcher).hasRole("USER").anyRequest().authenticated();
             })
             // disable request cache
             .requestCache(requestCache -> requestCache.disable())
@@ -176,10 +179,11 @@ public class SecurityConfig {
     @Bean("tokenSecurityFilterChain")
     public SecurityFilterChain tokenSecurityFilterChain(HttpSecurity http) throws Exception {
         //token chain
+        RequestMatcher reqMatcher = new AntPathRequestMatcher("/auth/token");
         HttpSecurity securityChain = http
-            .securityMatcher(new AntPathRequestMatcher("/auth/token"))
+            .securityMatcher(reqMatcher)
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(getAuthRequestMatcher()).hasRole("USER").anyRequest().authenticated();
+                auth.requestMatchers(reqMatcher).hasRole("USER").anyRequest().authenticated();
             })
             // disable request cache
             .requestCache(requestCache -> requestCache.disable())
@@ -217,10 +221,11 @@ public class SecurityConfig {
     @Bean("userinfoSecurityFilterChain")
     public SecurityFilterChain userinfoSecurityFilterChain(HttpSecurity http) throws Exception {
         //userinfo chain
+        RequestMatcher reqMatcher = new AntPathRequestMatcher("/auth/userinfo");
         HttpSecurity securityChain = http
-            .securityMatcher(new AntPathRequestMatcher("/auth/userinfo"))
+            .securityMatcher(reqMatcher)
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(getAuthRequestMatcher()).hasRole("USER").anyRequest().authenticated();
+                auth.requestMatchers(reqMatcher).hasRole("USER").anyRequest().authenticated();
             })
             // disable request cache
             .requestCache(requestCache -> requestCache.disable())
@@ -259,11 +264,16 @@ public class SecurityConfig {
 
     @Bean("authorizeSecurityFilterChain")
     public SecurityFilterChain authorizeSecurityFilterChain(HttpSecurity http) throws Exception {
-        //token chain
+        //authorize chain
+        RequestMatcher reqMatcher = new OrRequestMatcher(
+            new AntPathRequestMatcher("/auth/authorize"),
+            new AntPathRequestMatcher("/auth/authorization"),
+            new AntPathRequestMatcher("/auth/code/**")
+        );
         HttpSecurity securityChain = http
-            .securityMatcher(getAuthRequestMatcher())
+            .securityMatcher(reqMatcher)
             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(getAuthRequestMatcher()).hasRole("USER").anyRequest().authenticated();
+                auth.requestMatchers(reqMatcher).hasRole("USER").anyRequest().authenticated();
             })
             // enable request cache IN SESSION
             .requestCache(requestCache -> requestCache.requestCache(new HttpSessionRequestCache()))
@@ -376,8 +386,13 @@ public class SecurityConfig {
 
     @Bean("wellKnownSecurityFilterChain")
     public SecurityFilterChain wellKnownSecurityFilterChain(HttpSecurity http) throws Exception {
+        RequestMatcher reqMatcher = new OrRequestMatcher(
+            new AntPathRequestMatcher("/.well-known/**"),
+            new AntPathRequestMatcher("/auth/jwks")
+        );
+
         return http
-            .securityMatcher(new AntPathRequestMatcher("/.well-known/**"))
+            .securityMatcher(reqMatcher)
             .authorizeHttpRequests(auth -> {
                 auth.anyRequest().permitAll();
             })
@@ -426,26 +441,16 @@ public class SecurityConfig {
     @Bean("monitoringSecurityFilterChain")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // match only actuator endpoints
+        RequestMatcher reqMatcher = (HttpServletRequest request) -> managementPort == request.getLocalPort();
+
         return http
-            .securityMatcher(getManagementRequestMatcher())
+            .securityMatcher(reqMatcher)
             .authorizeHttpRequests(auth -> {
                 auth.anyRequest().permitAll();
             })
             .exceptionHandling(handling -> handling.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
             .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .build();
-    }
-
-    public RequestMatcher getManagementRequestMatcher() {
-        return (HttpServletRequest request) -> managementPort == request.getLocalPort();
-    }
-
-    public RequestMatcher getApiRequestMatcher() {
-        return new AntPathRequestMatcher(API_PREFIX + "/**");
-    }
-
-    public RequestMatcher getAuthRequestMatcher() {
-        return new AntPathRequestMatcher("/auth/**");
     }
 
     private CorsConfigurationSource corsConfigurationSource(String origins) {
