@@ -237,7 +237,6 @@ public class PythonBuildRunner {
             // Task Specific
             .dockerFile(dockerfile)
             //specific
-            .backoffLimit(0)
             .build();
     }
 }

@@ -437,12 +437,6 @@
       "title" : "fields.affinity.title",
       "description" : "fields.affinity.description"
     },
-    "backoff_limit" : {
-      "type" : "integer",
-      "title" : "fields.backoffLimit.title",
-      "description" : "fields.backoffLimit.description",
-      "minimum" : 0
-    },
     "envs" : {
       "title" : "fields.envs.title",
       "description" : "fields.envs.description",

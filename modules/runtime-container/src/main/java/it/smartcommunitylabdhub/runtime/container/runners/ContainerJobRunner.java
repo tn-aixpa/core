@@ -119,7 +119,6 @@ public class ContainerJobRunner {
             //specific
             .contextRefs(contextRefs)
             .contextSources(contextSources)
-            .backoffLimit(taskSpec.getBackoffLimit())
             .build();
 
         if (StringUtils.hasText(taskSpec.getSchedule())) {
@@ -151,7 +150,6 @@ public class ContainerJobRunner {
                     //specific
                     .contextRefs(contextRefs)
                     .contextSources(contextSources)
-                    .backoffLimit(taskSpec.getBackoffLimit())
                     .schedule(taskSpec.getSchedule())
                     .build();
         }

@@ -1,12 +1,10 @@
 package it.smartcommunitylabdhub.runtime.python.specs;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sFunctionTaskBaseSpec;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.Map;
@@ -24,10 +22,6 @@ public class PythonJobTaskSpec extends K8sFunctionTaskBaseSpec {
 
     public static final String KIND = "python+job";
 
-    @JsonProperty("backoff_limit")
-    @Min(0)
-    private Integer backoffLimit;
-
     @Pattern(regexp = Keys.CRONTAB_PATTERN)
     private String schedule;
 
@@ -40,7 +34,6 @@ public class PythonJobTaskSpec extends K8sFunctionTaskBaseSpec {
         super.configure(data);
 
         PythonJobTaskSpec spec = mapper.convertValue(data, PythonJobTaskSpec.class);
-        this.backoffLimit = spec.getBackoffLimit();
         this.schedule = spec.getSchedule();
     }
 }

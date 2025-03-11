@@ -52,7 +52,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
     public static final int DEADLINE_SECONDS = 3600 * 24 * 3; //3 days
     public static final int DEADLINE_MIN = 120;
 
-    public static final int DEFAULT_BACKOFF_LIMIT = 3;
+    public static final int DEFAULT_BACKOFF_LIMIT = 0;
 
     private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
         HashMap<String, Serializable>

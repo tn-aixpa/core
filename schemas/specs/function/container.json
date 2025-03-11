@@ -1,6 +1,10 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "$defs" : {
+    "CoreImagePullPolicy" : {
+      "type" : "string",
+      "enum" : [ "IfNotPresent", "Always", "Never" ]
+    },
     "SourceCodeLanguages" : {
       "type" : "string",
       "enum" : [ "python", "java", "javascript", "typescript", "markdown", "html", "json", "sql", "css", "yaml", "text" ]
@@ -57,6 +61,11 @@
       "type" : "string",
       "title" : "fields.container.image.title",
       "description" : "fields.container.image.description"
+    },
+    "image_pull_policy" : {
+      "$ref" : "#/$defs/CoreImagePullPolicy",
+      "title" : "fields.container.imagePullPolicy.title",
+      "description" : "fields.container.imagePullPolicy.description"
     },
     "source" : {
       "$ref" : "#/$defs/SourceCode_SourceCodeLanguages_",

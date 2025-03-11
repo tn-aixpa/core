@@ -210,8 +210,6 @@ public class PythonJobRunner {
                 .template(taskSpec.getProfile())
                 //securityContext
                 .fsGroup(1000)
-                //specific
-                .backoffLimit(0)
                 .build();
 
             if (StringUtils.hasText(taskSpec.getSchedule())) {
@@ -246,7 +244,6 @@ public class PythonJobRunner {
                         .priorityClass(taskSpec.getPriorityClass())
                         .template(taskSpec.getProfile())
                         //specific
-                        .backoffLimit(0)
                         .schedule(taskSpec.getSchedule())
                         .build();
             }

@@ -24,10 +24,6 @@ public class ContainerJobTaskSpec extends K8sFunctionTaskBaseSpec {
 
     public static final String KIND = "container+job";
 
-    @JsonProperty("backoff_limit")
-    @Min(0)
-    private Integer backoffLimit;
-
     @Pattern(regexp = Keys.CRONTAB_PATTERN)
     private String schedule;
 
@@ -52,7 +48,6 @@ public class ContainerJobTaskSpec extends K8sFunctionTaskBaseSpec {
         super.configure(data);
 
         ContainerJobTaskSpec spec = mapper.convertValue(data, ContainerJobTaskSpec.class);
-        this.backoffLimit = spec.getBackoffLimit();
         this.schedule = spec.getSchedule();
         this.fsGroup = spec.getFsGroup();
         this.runAsGroup = spec.getRunAsUser();

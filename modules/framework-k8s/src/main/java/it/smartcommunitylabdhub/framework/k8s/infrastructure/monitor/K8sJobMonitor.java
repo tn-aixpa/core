@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor;
 
 import io.kubernetes.client.openapi.models.V1Job;
+import io.kubernetes.client.openapi.models.V1JobCondition;
 import io.kubernetes.client.openapi.models.V1Pod;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.MonitorComponent;
 import it.smartcommunitylabdhub.commons.models.enums.State;
@@ -58,6 +59,18 @@ public class K8sJobMonitor extends K8sBaseMonitor<K8sJobRunnable> {
                 log.debug("Job status failed for {}", runnable.getId());
                 runnable.setState(State.ERROR.name());
                 runnable.setError("Job failed: " + job.getStatus().getFailed());
+            }
+
+            //also evaluate condition for failure
+            if (job.getStatus().getConditions() != null) {
+                for (V1JobCondition condition : job.getStatus().getConditions()) {
+                    if (condition.getType().equals("Failed")) {
+                        log.debug("Job condition failed for {}", runnable.getId());
+                        runnable.setState(State.ERROR.name());
+                        runnable.setError("Job condition failed: " + condition.getMessage());
+                        break;
+                    }
+                }
             }
 
             //try to fetch pods
