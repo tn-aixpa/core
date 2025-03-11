@@ -1,29 +1,34 @@
-package it.smartcommunitylabdhub.core.models.indexers;
+package it.smartcommunitylabdhub.core.components.solr;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.metadata.VersioningMetadata;
-import it.smartcommunitylabdhub.core.components.solr.IndexField;
-import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder;
-import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
+import it.smartcommunitylabdhub.commons.models.workflow.Workflow;
+import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
+import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexField;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.common.SolrInputDocument;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 @Component
 @Slf4j
-public class ArtifactEntityIndexer extends BaseEntityIndexer<ArtifactEntity, Artifact> {
+@ConditionalOnProperty(prefix = "solr", name = "url")
+@Primary
+public class WorkflowEntityIndexer extends SolrBaseEntityIndexer<Workflow> implements EntityIndexer<WorkflowEntity> {
 
-    private static final String TYPE = EntityName.ARTIFACT.getValue();
+    private static final String TYPE = EntityName.WORKFLOW.getValue();
 
-    private final ArtifactDTOBuilder builder;
+    private final WorkflowDTOBuilder builder;
 
-    public ArtifactEntityIndexer(ArtifactDTOBuilder builder) {
+    public WorkflowEntityIndexer(WorkflowDTOBuilder builder) {
         Assert.notNull(builder, "builder can not be null");
 
         this.builder = builder;
@@ -38,12 +43,12 @@ public class ArtifactEntityIndexer extends BaseEntityIndexer<ArtifactEntity, Art
     }
 
     @Override
-    public void index(ArtifactEntity entity) {
+    public void index(WorkflowEntity entity) {
         Assert.notNull(entity, "entity can not be null");
 
         if (solr != null) {
             try {
-                log.debug("index artifact {}", entity.getId());
+                log.debug("index workflow {}", entity.getId());
 
                 SolrInputDocument doc = parse(entity);
                 solr.indexDoc(doc);
@@ -54,9 +59,9 @@ public class ArtifactEntityIndexer extends BaseEntityIndexer<ArtifactEntity, Art
     }
 
     @Override
-    public void indexAll(Collection<ArtifactEntity> entities) {
+    public void indexAll(Collection<WorkflowEntity> entities) {
         Assert.notNull(entities, "entities can not be null");
-        log.debug("index {} artifacts", entities.size());
+        log.debug("index {} workflows", entities.size());
 
         if (solr != null) {
             try {
@@ -78,15 +83,15 @@ public class ArtifactEntityIndexer extends BaseEntityIndexer<ArtifactEntity, Art
         }
     }
 
-    private SolrInputDocument parse(ArtifactEntity entity) {
+    private SolrInputDocument parse(WorkflowEntity entity) {
         Assert.notNull(entity, "entity can not be null");
 
-        Artifact item = builder.convert(entity);
+        Workflow item = builder.convert(entity);
         if (item == null) {
             throw new IllegalArgumentException("invalid or null entity");
         }
 
-        log.debug("parse artifact {}", item.getId());
+        log.debug("index workflow {}", item.getId());
         if (log.isTraceEnabled()) {
             log.trace("item: {}", item);
         }

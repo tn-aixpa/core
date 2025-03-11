@@ -1,29 +1,35 @@
-package it.smartcommunitylabdhub.core.models.indexers;
+package it.smartcommunitylabdhub.core.components.lucene;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-import it.smartcommunitylabdhub.commons.models.function.Function;
 import it.smartcommunitylabdhub.commons.models.metadata.VersioningMetadata;
-import it.smartcommunitylabdhub.core.components.solr.IndexField;
-import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder;
-import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
+import it.smartcommunitylabdhub.commons.models.workflow.Workflow;
+import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder;
+import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
+import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexField;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.solr.common.SolrInputDocument;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 @Component
 @Slf4j
-public class FunctionEntityIndexer extends BaseEntityIndexer<FunctionEntity, Function> {
+public class LuceneWorkflowEntityIndexer
+    extends LuceneBaseEntityIndexer<Workflow>
+    implements EntityIndexer<WorkflowEntity> {
 
-    private static final String TYPE = EntityName.FUNCTION.getValue();
+    private static final String TYPE = EntityName.WORKFLOW.getValue();
 
-    private final FunctionDTOBuilder builder;
+    private final WorkflowDTOBuilder builder;
 
-    public FunctionEntityIndexer(FunctionDTOBuilder builder) {
+    public LuceneWorkflowEntityIndexer(WorkflowDTOBuilder builder) {
         Assert.notNull(builder, "builder can not be null");
 
         this.builder = builder;
@@ -32,21 +38,20 @@ public class FunctionEntityIndexer extends BaseEntityIndexer<FunctionEntity, Fun
     @Override
     public List<IndexField> fields() {
         List<IndexField> fields = super.fields();
-
-        fields.add(new IndexField("metadata.version", "text_en", true, false, true, true));
+        //fields.add(new IndexField("metadata.version", "text_en", true, false, true, true));
         return fields;
     }
 
     @Override
-    public void index(FunctionEntity entity) {
+    public void index(WorkflowEntity entity) {
         Assert.notNull(entity, "entity can not be null");
 
-        if (solr != null) {
+        if (lucene != null) {
             try {
-                log.debug("index function {}", entity.getId());
+                log.debug("index workflow {}", entity.getId());
 
-                SolrInputDocument doc = parse(entity);
-                solr.indexDoc(doc);
+                Document doc = parse(entity);
+                lucene.indexDoc(doc);
             } catch (StoreException e) {
                 log.error("error with solr: {}", e.getMessage());
             }
@@ -54,14 +59,14 @@ public class FunctionEntityIndexer extends BaseEntityIndexer<FunctionEntity, Fun
     }
 
     @Override
-    public void indexAll(Collection<FunctionEntity> entities) {
+    public void indexAll(Collection<WorkflowEntity> entities) {
         Assert.notNull(entities, "entities can not be null");
-        log.debug("index {} functions", entities.size());
+        log.debug("index {} workflows", entities.size());
 
-        if (solr != null) {
+        if (lucene != null) {
             try {
-                List<SolrInputDocument> docs = entities.stream().map(e -> parse(e)).collect(Collectors.toList());
-                solr.indexBounce(docs);
+                List<Document> docs = entities.stream().map(e -> parse(e)).collect(Collectors.toList());
+                lucene.indexBounce(docs);
             } catch (StoreException e) {
                 log.error("error with solr: {}", e.getMessage());
             }
@@ -72,31 +77,32 @@ public class FunctionEntityIndexer extends BaseEntityIndexer<FunctionEntity, Fun
     public void clearIndex() {
         log.debug("clear index for {}", TYPE);
         try {
-            solr.clearIndexByType(TYPE);
+            lucene.clearIndexByType(TYPE);
         } catch (StoreException e) {
             log.error("error with solr: {}", e.getMessage());
         }
     }
 
-    private SolrInputDocument parse(FunctionEntity entity) {
+    private Document parse(WorkflowEntity entity) {
         Assert.notNull(entity, "entity can not be null");
 
-        Function item = builder.convert(entity);
+        Workflow item = builder.convert(entity);
         if (item == null) {
             throw new IllegalArgumentException("invalid or null entity");
         }
 
-        log.debug("index function {}", item.getId());
+        log.debug("index workflow {}", item.getId());
         if (log.isTraceEnabled()) {
             log.trace("item: {}", item);
         }
 
         //base
-        SolrInputDocument doc = parse(item, TYPE);
+        Document doc = parse(item, TYPE);
 
         //add versioning
         VersioningMetadata versioning = VersioningMetadata.from(item.getMetadata());
-        doc.addField("metadata.version", versioning.getVersion());
+        Field field = new TextField("metadata.version", getStringValue(versioning.getVersion()), Field.Store.YES);
+        doc.add(field);
 
         //TODO evaluate adding spec
 

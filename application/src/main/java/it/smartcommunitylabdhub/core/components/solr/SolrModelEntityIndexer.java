@@ -1,29 +1,34 @@
-package it.smartcommunitylabdhub.core.models.indexers;
+package it.smartcommunitylabdhub.core.components.solr;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.metadata.VersioningMetadata;
 import it.smartcommunitylabdhub.commons.models.model.Model;
-import it.smartcommunitylabdhub.core.components.solr.IndexField;
 import it.smartcommunitylabdhub.core.models.builders.model.ModelDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
+import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexField;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.common.SolrInputDocument;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 @Component
 @Slf4j
-public class ModelEntityIndexer extends BaseEntityIndexer<ModelEntity, Model> {
+@ConditionalOnProperty(prefix = "solr", name = "url")
+@Primary
+public class SolrModelEntityIndexer extends SolrBaseEntityIndexer<Model> implements EntityIndexer<ModelEntity> {
 
     private static final String TYPE = EntityName.MODEL.getValue();
 
     private final ModelDTOBuilder builder;
 
-    public ModelEntityIndexer(ModelDTOBuilder builder) {
+    public SolrModelEntityIndexer(ModelDTOBuilder builder) {
         Assert.notNull(builder, "builder can not be null");
 
         this.builder = builder;

@@ -1,21 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
-
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
@@ -42,9 +26,8 @@ import it.smartcommunitylabdhub.core.models.builders.model.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
-import it.smartcommunitylabdhub.core.models.indexers.ModelEntityIndexer;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableModelService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.relationships.ModelEntityRelationshipsManager;
@@ -54,7 +37,21 @@ import it.smartcommunitylabdhub.files.service.EntityFilesService;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -74,7 +71,7 @@ public class ModelServiceImpl
     private EntityService<Project, ProjectEntity> projectService;
 
     @Autowired
-    private ModelEntityIndexer indexer;
+    private EntityIndexer<ModelEntity> indexer;
 
     @Autowired
     private ModelEntityBuilder entityBuilder;
@@ -93,7 +90,7 @@ public class ModelServiceImpl
 
     @Autowired
     private ModelEntityRelationshipsManager relationshipsManager;
-    
+
     @Autowired
     private MetricsManager metricsManager;
 
@@ -480,7 +477,7 @@ public class ModelServiceImpl
             hasMore = false;
 
             try {
-                Page<Model> page = entityService.list(PageRequest.of(pageNumber, BaseEntityIndexer.PAGE_MAX_SIZE));
+                Page<Model> page = entityService.list(PageRequest.of(pageNumber, EntityIndexer.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
@@ -807,48 +804,49 @@ public class ModelServiceImpl
         }
     }
 
-	@Override
-	public Map<String, NumberOrNumberArray> getMetrics(@NotNull String entityId)
-			throws StoreException, SystemException {
-		try {
-			Model entity = entityService.get(entityId);
-			StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
-			Map<String,NumberOrNumberArray> metrics = statusFieldAccessor.getMetrics();
-			if(metrics != null) {
-				Map<String, NumberOrNumberArray> entityMetrics = metricsManager.getMetrics(EntityName.MODEL.getValue(), entityId);
-				for (Map.Entry<String, NumberOrNumberArray> entry : entityMetrics.entrySet()) {
-					if(metrics.containsKey(entry.getKey()))
-						continue;
-					metrics.put(entry.getKey(), entry.getValue());
-				}
-				return metrics;
-			}
-			return metricsManager.getMetrics(EntityName.MODEL.getValue(), entityId);
-		} catch (Exception e) {
+    @Override
+    public Map<String, NumberOrNumberArray> getMetrics(@NotNull String entityId)
+        throws StoreException, SystemException {
+        try {
+            Model entity = entityService.get(entityId);
+            StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+            Map<String, NumberOrNumberArray> metrics = statusFieldAccessor.getMetrics();
+            if (metrics != null) {
+                Map<String, NumberOrNumberArray> entityMetrics = metricsManager.getMetrics(
+                    EntityName.MODEL.getValue(),
+                    entityId
+                );
+                for (Map.Entry<String, NumberOrNumberArray> entry : entityMetrics.entrySet()) {
+                    if (metrics.containsKey(entry.getKey())) continue;
+                    metrics.put(entry.getKey(), entry.getValue());
+                }
+                return metrics;
+            }
+            return metricsManager.getMetrics(EntityName.MODEL.getValue(), entityId);
+        } catch (Exception e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
-		}				
-	}
+        }
+    }
 
-	@Override
-	public NumberOrNumberArray getMetrics(@NotNull String entityId, @NotNull String name)
-			throws StoreException, SystemException {
-		try {
-			Model entity = entityService.get(entityId);
-			StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
-			Map<String,NumberOrNumberArray> metrics = statusFieldAccessor.getMetrics();
-			if((metrics != null) && metrics.containsKey(name)) 
-				return metrics.get(name);
-			return metricsManager.getMetrics(EntityName.MODEL.getValue(), entityId, name);
-		} catch (Exception e) {
+    @Override
+    public NumberOrNumberArray getMetrics(@NotNull String entityId, @NotNull String name)
+        throws StoreException, SystemException {
+        try {
+            Model entity = entityService.get(entityId);
+            StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
+            Map<String, NumberOrNumberArray> metrics = statusFieldAccessor.getMetrics();
+            if ((metrics != null) && metrics.containsKey(name)) return metrics.get(name);
+            return metricsManager.getMetrics(EntityName.MODEL.getValue(), entityId, name);
+        } catch (Exception e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
-		}		
-	}
+        }
+    }
 
-	@Override
-	public Metrics saveMetrics(@NotNull String entityId, @NotNull String name, NumberOrNumberArray data)
-			throws StoreException, SystemException {
-		return metricsManager.saveMetrics(EntityName.MODEL.getValue(), entityId, name, data);	
-	}
+    @Override
+    public Metrics saveMetrics(@NotNull String entityId, @NotNull String name, NumberOrNumberArray data)
+        throws StoreException, SystemException {
+        return metricsManager.saveMetrics(EntityName.MODEL.getValue(), entityId, name, data);
+    }
 }

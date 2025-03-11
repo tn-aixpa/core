@@ -1,5 +1,7 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
+import it.smartcommunitylabdhub.commons.utils.KeyUtils;
+import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
 import java.util.Date;
 import java.util.List;
 import org.apache.solr.common.SolrDocument;
@@ -14,6 +16,7 @@ public class SolrDocParser {
         item.setKind((String) doc.getFieldValue("kind"));
         item.setProject((String) doc.getFieldValue("project"));
         item.setName((String) doc.getFieldValue("name"));
+        item.setStatus((String) doc.getFieldValue("status"));
         item.getMetadata().put("name", (String) doc.getFieldValue("metadata.name"));
         item.getMetadata().put("description", (String) doc.getFieldValue("metadata.description"));
         item.getMetadata().put("project", (String) doc.getFieldValue("metadata.project"));
@@ -21,6 +24,7 @@ public class SolrDocParser {
         item.getMetadata().put("created", (Date) doc.getFieldValue("metadata.created"));
         item.getMetadata().put("updated", (Date) doc.getFieldValue("metadata.updated"));
         item.getMetadata().put("labels", (List<String>) doc.getFieldValue("metadata.labels"));
+        item.setKey(KeyUtils.buildKey(item.getProject(), item.getType(), item.getKind(), item.getName(), item.getId()));
         return item;
     }
 }

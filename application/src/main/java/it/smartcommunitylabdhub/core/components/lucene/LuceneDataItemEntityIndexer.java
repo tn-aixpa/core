@@ -1,29 +1,37 @@
-package it.smartcommunitylabdhub.core.models.indexers;
+package it.smartcommunitylabdhub.core.components.lucene;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.metadata.VersioningMetadata;
-import it.smartcommunitylabdhub.core.components.solr.IndexField;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
+import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.IndexField;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.solr.common.SolrInputDocument;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 @Component
 @Slf4j
-public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, DataItem> {
+@ConditionalOnProperty(prefix = "lucene", name = "index-path")
+public class LuceneDataItemEntityIndexer
+    extends LuceneBaseEntityIndexer<DataItem>
+    implements EntityIndexer<DataItemEntity> {
 
     private static final String TYPE = EntityName.DATAITEM.getValue();
 
     private final DataItemDTOBuilder builder;
 
-    public DataItemEntityIndexer(DataItemDTOBuilder builder) {
+    public LuceneDataItemEntityIndexer(DataItemDTOBuilder builder) {
         Assert.notNull(builder, "builder can not be null");
 
         this.builder = builder;
@@ -32,8 +40,7 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
     @Override
     public List<IndexField> fields() {
         List<IndexField> fields = super.fields();
-
-        fields.add(new IndexField("metadata.version", "text_en", true, false, true, true));
+        //fields.add(new IndexField("metadata.version", "text_en", true, false, true, true));
         return fields;
     }
 
@@ -41,12 +48,12 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
     public void index(DataItemEntity entity) {
         Assert.notNull(entity, "entity can not be null");
 
-        if (solr != null) {
+        if (lucene != null) {
             try {
                 log.debug("index dataItem {}", entity.getId());
 
-                SolrInputDocument doc = parse(entity);
-                solr.indexDoc(doc);
+                Document doc = parse(entity);
+                lucene.indexDoc(doc);
             } catch (StoreException e) {
                 log.error("error with solr: {}", e.getMessage());
             }
@@ -58,10 +65,10 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
         Assert.notNull(entities, "entities can not be null");
         log.debug("index {} dataItems", entities.size());
 
-        if (solr != null) {
+        if (lucene != null) {
             try {
-                List<SolrInputDocument> docs = entities.stream().map(e -> parse(e)).collect(Collectors.toList());
-                solr.indexBounce(docs);
+                List<Document> docs = entities.stream().map(e -> parse(e)).collect(Collectors.toList());
+                lucene.indexBounce(docs);
             } catch (StoreException e) {
                 log.error("error with solr: {}", e.getMessage());
             }
@@ -72,13 +79,13 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
     public void clearIndex() {
         log.debug("clear index for {}", TYPE);
         try {
-            solr.clearIndexByType(TYPE);
+            lucene.clearIndexByType(TYPE);
         } catch (StoreException e) {
             log.error("error with solr: {}", e.getMessage());
         }
     }
 
-    private SolrInputDocument parse(DataItemEntity entity) {
+    private Document parse(DataItemEntity entity) {
         Assert.notNull(entity, "entity can not be null");
 
         DataItem item = builder.convert(entity);
@@ -92,11 +99,12 @@ public class DataItemEntityIndexer extends BaseEntityIndexer<DataItemEntity, Dat
         }
 
         //base
-        SolrInputDocument doc = parse(item, TYPE);
+        Document doc = parse(item, TYPE);
 
         //add versioning
         VersioningMetadata versioning = VersioningMetadata.from(item.getMetadata());
-        doc.addField("metadata.version", versioning.getVersion());
+        Field field = new TextField("metadata.version", getStringValue(versioning.getVersion()), Field.Store.YES);
+        doc.add(field);
 
         //TODO evaluate adding spec
 

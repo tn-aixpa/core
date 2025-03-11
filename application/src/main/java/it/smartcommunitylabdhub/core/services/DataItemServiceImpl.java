@@ -22,8 +22,7 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuil
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
-import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.DataItemEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableDataItemService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
@@ -66,7 +65,7 @@ public class DataItemServiceImpl
     private EntityService<Project, ProjectEntity> projectService;
 
     @Autowired
-    private DataItemEntityIndexer indexer;
+    private EntityIndexer<DataItemEntity> indexer;
 
     @Autowired
     private DataItemEntityBuilder entityBuilder;
@@ -468,7 +467,7 @@ public class DataItemServiceImpl
             hasMore = false;
 
             try {
-                Page<DataItem> page = entityService.list(PageRequest.of(pageNumber, BaseEntityIndexer.PAGE_MAX_SIZE));
+                Page<DataItem> page = entityService.list(PageRequest.of(pageNumber, EntityIndexer.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );

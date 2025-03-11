@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.core.components.cloud.CloudEntityEvent;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
-import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.relationships.BaseEntityRelationshipsManager;
 import it.smartcommunitylabdhub.core.websocket.UserNotificationEntityEvent;
 import java.lang.reflect.ParameterizedType;
@@ -22,7 +22,7 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
     protected ApplicationEventPublisher eventPublisher;
     protected final Class<T> clazz;
 
-    protected BaseEntityIndexer<E, T> indexer;
+    protected EntityIndexer<E> indexer;
 
     protected BaseEntityRelationshipsManager<E> relationshipsManager;
 
@@ -37,7 +37,7 @@ public abstract class AbstractEntityListener<E extends BaseEntity, T extends Bas
     }
 
     @Autowired(required = false)
-    public void setIndexer(BaseEntityIndexer<E, T> indexer) {
+    public void setIndexer(EntityIndexer<E> indexer) {
         this.indexer = indexer;
     }
 

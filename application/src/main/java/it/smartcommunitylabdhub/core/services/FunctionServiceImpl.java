@@ -21,8 +21,7 @@ import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
-import it.smartcommunitylabdhub.core.models.indexers.BaseEntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.FunctionEntityIndexer;
+import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableFunctionService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
@@ -63,7 +62,7 @@ public class FunctionServiceImpl
     private EntityService<Task, TaskEntity> taskEntityService;
 
     @Autowired
-    private FunctionEntityIndexer indexer;
+    private EntityIndexer<FunctionEntity> indexer;
 
     @Autowired
     private FunctionEntityBuilder entityBuilder;
@@ -478,7 +477,7 @@ public class FunctionServiceImpl
             hasMore = false;
 
             try {
-                Page<Function> page = entityService.list(PageRequest.of(pageNumber, BaseEntityIndexer.PAGE_MAX_SIZE));
+                Page<Function> page = entityService.list(PageRequest.of(pageNumber, EntityIndexer.PAGE_MAX_SIZE));
                 indexer.indexAll(
                     page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
                 );
