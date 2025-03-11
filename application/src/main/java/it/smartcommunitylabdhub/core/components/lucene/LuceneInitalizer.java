@@ -1,7 +1,8 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
+import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
@@ -9,16 +10,13 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
-import lombok.extern.slf4j.Slf4j;
-
 @Component
 @Slf4j
-@ConditionalOnProperty(prefix = "lucene",  name = "index-path")
+@ConditionalOnProperty(prefix = "lucene", name = "index-path")
 public class LuceneInitalizer implements ApplicationListener<ApplicationStartedEvent> {
 
     private final LuceneProperties properties;
-	private List<IndexableEntityService<?>> services;
+    private List<IndexableEntityService<?>> services;
 
     public LuceneInitalizer(LuceneProperties properties) {
         Assert.notNull(properties, "lucene properties are required");

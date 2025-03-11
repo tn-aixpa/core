@@ -1,22 +1,19 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
+import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
+import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.models.indexers.SolrSearchService;
 import java.util.List;
-
 import javax.annotation.PreDestroy;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.document.Document;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-
-import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
-import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
-import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
-import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
-import it.smartcommunitylabdhub.core.models.indexers.SolrSearchService;
-import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
@@ -83,15 +80,16 @@ public class LuceneComponent implements SolrSearchService, InitializingBean {
         }
     }
 
-//    public void registerFields(Iterable<IndexField> fields) throws LuceneIndexerException {
-//        Assert.notNull(fields, "fields can not be null");
-//        if (indexManager != null) {
-//            indexManager.initFields(fields);
-//        }
-//    }
+    //    public void registerFields(Iterable<IndexField> fields) throws LuceneIndexerException {
+    //        Assert.notNull(fields, "fields can not be null");
+    //        if (indexManager != null) {
+    //            indexManager.initFields(fields);
+    //        }
+    //    }
 
     @Override
-    public SolrPage<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest) throws IndexerException {
+    public SolrPage<SearchGroupResult> groupSearch(String q, List<String> fq, Pageable pageRequest)
+        throws IndexerException {
         if (indexManager == null) {
             throw new IndexerException("solr not available");
         }

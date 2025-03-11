@@ -1,5 +1,18 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
+import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPageImpl;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -9,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.Http2SolrClient;
 import org.apache.solr.client.solrj.impl.Http2SolrClient.Builder;
@@ -34,26 +47,12 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.core.models.indexers.IndexField;
-import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
-import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
-import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
-import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
-import it.smartcommunitylabdhub.core.models.indexers.SolrPageImpl;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 public class SolrIndexManager {
 
-    private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<HashMap<String, Serializable>>() {};
+    private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
+        HashMap<String, Serializable>
+    >() {};
 
     private final SolrProperties props;
     private final Http2SolrClient solrClient;
@@ -88,23 +87,30 @@ public class SolrIndexManager {
             //check if collection exists
             String solrUrl = props.getUrl();
             String baseUri = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
-            
+
             HttpHeaders headers = new HttpHeaders();
-            if(StringUtils.hasLength(props.getAdminUser()) && StringUtils.hasLength(props.getAdminPassword())) {
-            	String auth = props.getAdminUser() + ":" + props.getAdminPassword();
-                String authHeader  = Base64.getEncoder().encodeToString(auth.getBytes());
+            if (StringUtils.hasLength(props.getAdminUser()) && StringUtils.hasLength(props.getAdminPassword())) {
+                String auth = props.getAdminUser() + ":" + props.getAdminPassword();
+                String authHeader = Base64.getEncoder().encodeToString(auth.getBytes());
                 headers.setBasicAuth(authHeader);
                 log.debug("init solr collection auth {}", authHeader);
             }
-            
+
             try {
                 String listUrl = baseUri + "admin/collections?action=LIST";
-                ResponseEntity<String> listResponse = restTemplate.exchange(listUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
+                ResponseEntity<String> listResponse = restTemplate.exchange(
+                    listUrl,
+                    HttpMethod.GET,
+                    new HttpEntity<String>(headers),
+                    String.class
+                );
 
                 if (listResponse.getStatusCode().isError()) {
-                	 log.warn("can not talk to solr {}: {}",
-                             listResponse.getStatusCode().toString(),
-                             listResponse.getBody());
+                    log.warn(
+                        "can not talk to solr {}: {}",
+                        listResponse.getStatusCode().toString(),
+                        listResponse.getBody()
+                    );
                 }
 
                 initCollection(headers);
@@ -112,12 +118,19 @@ public class SolrIndexManager {
                 //fallback to core if 400
                 //creation is NOT supported
                 String listUrl = baseUri + "admin/cores?action=STATUS";
-                ResponseEntity<String> listResponse = restTemplate.exchange(listUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
+                ResponseEntity<String> listResponse = restTemplate.exchange(
+                    listUrl,
+                    HttpMethod.GET,
+                    new HttpEntity<String>(headers),
+                    String.class
+                );
 
                 if (listResponse.getStatusCode().isError()) {
-                	log.warn("can not talk to solr {}: {}",
-                         listResponse.getStatusCode().toString(),
-                         listResponse.getBody());
+                    log.warn(
+                        "can not talk to solr {}: {}",
+                        listResponse.getStatusCode().toString(),
+                        listResponse.getBody()
+                    );
                 }
 
                 Map<String, Serializable> map = JacksonMapper.OBJECT_MAPPER.readValue(listResponse.getBody(), typeRef);
@@ -127,7 +140,7 @@ public class SolrIndexManager {
                 }
             }
         } catch (SolrException | RestClientException | JsonProcessingException e) {
-        	log.warn("can not initialize solr: {}", e.getMessage());
+            log.warn("can not initialize solr: {}", e.getMessage());
         }
     }
 
@@ -149,11 +162,11 @@ public class SolrIndexManager {
         if (log.isTraceEnabled()) {
             log.trace("fields: {}", fields);
         }
-        
+
         HttpHeaders headers = new HttpHeaders();
-        if(StringUtils.hasLength(props.getUser()) && StringUtils.hasLength(props.getPassword())) {
-        	String auth = props.getUser() + ":" + props.getPassword();
-            String authHeader  = Base64.getEncoder().encodeToString(auth.getBytes());
+        if (StringUtils.hasLength(props.getUser()) && StringUtils.hasLength(props.getPassword())) {
+            String auth = props.getUser() + ":" + props.getPassword();
+            String authHeader = Base64.getEncoder().encodeToString(auth.getBytes());
             headers.setBasicAuth(authHeader);
             log.debug("init solr fields auth {}", authHeader);
         }
@@ -162,7 +175,12 @@ public class SolrIndexManager {
         String baseUri = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
         String fieldsUri = baseUri + props.getCollection() + "/schema/fields";
         //check existing fields
-        ResponseEntity<String> responseEntity =restTemplate.exchange(fieldsUri, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+            fieldsUri,
+            HttpMethod.GET,
+            new HttpEntity<String>(headers),
+            String.class
+        );
         //ResponseEntity<String> responseEntity = restTemplate.getForEntity(fieldsUri, String.class);
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             String schemaUri = baseUri + props.getCollection() + "/schema";
@@ -243,8 +261,7 @@ public class SolrIndexManager {
         }
     }
 
-    public SolrPage<ItemResult> itemSearch(String q, List<String> fq, Pageable pageRequest)
-        throws IndexerException {
+    public SolrPage<ItemResult> itemSearch(String q, List<String> fq, Pageable pageRequest) throws IndexerException {
         log.debug("item search for {} {}", q, fq);
 
         try {
@@ -429,12 +446,19 @@ public class SolrIndexManager {
             String solrUrl = props.getUrl();
             String baseUri = solrUrl.endsWith("/") ? solrUrl : solrUrl + "/";
             String listUrl = baseUri + "admin/collections?action=LIST";
-            ResponseEntity<String> listResponse = restTemplate.exchange(listUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
+            ResponseEntity<String> listResponse = restTemplate.exchange(
+                listUrl,
+                HttpMethod.GET,
+                new HttpEntity<String>(headers),
+                String.class
+            );
             if (listResponse.getStatusCode().isError()) {
-            	log.warn("can not talk to solr {}: {}",
-                     listResponse.getStatusCode().toString(),
-                     listResponse.getBody());
-           	 	return;
+                log.warn(
+                    "can not talk to solr {}: {}",
+                    listResponse.getStatusCode().toString(),
+                    listResponse.getBody()
+                );
+                return;
             }
 
             Map<String, Serializable> map = JacksonMapper.OBJECT_MAPPER.readValue(listResponse.getBody(), typeRef);
@@ -446,20 +470,26 @@ public class SolrIndexManager {
                 String createUrl =
                     baseUri +
                     "admin/collections?action=CREATE&name={collection}&numShards={numShards}&replicationFactor={replicationFactor}&maxShardsPerNode=1";
-                ResponseEntity<String> createResponse = restTemplate.exchange(createUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class, 
-                		props.getCollection(),
-                		props.getShards(),
-                		props.getReplicas()
+                ResponseEntity<String> createResponse = restTemplate.exchange(
+                    createUrl,
+                    HttpMethod.GET,
+                    new HttpEntity<String>(headers),
+                    String.class,
+                    props.getCollection(),
+                    props.getShards(),
+                    props.getReplicas()
                 );
-                
+
                 if (createResponse.getStatusCode().isError()) {
-                	log.warn("can not talk to solr {}: {}",
-                            listResponse.getStatusCode().toString(),
-                            listResponse.getBody());
+                    log.warn(
+                        "can not talk to solr {}: {}",
+                        listResponse.getStatusCode().toString(),
+                        listResponse.getBody()
+                    );
                 }
             }
         } catch (SolrException | IOException e) {
-        	log.warn("can not initialize solr: {}", e.getMessage());
+            log.warn("can not initialize solr: {}", e.getMessage());
         }
     }
 }

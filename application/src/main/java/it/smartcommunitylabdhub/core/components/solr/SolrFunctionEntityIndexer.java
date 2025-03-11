@@ -1,15 +1,5 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.solr.common.SolrInputDocument;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.function.Function;
@@ -18,13 +8,23 @@ import it.smartcommunitylabdhub.core.models.builders.function.FunctionDTOBuilder
 import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.solr.common.SolrInputDocument;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 @Component
 @Slf4j
 @ConditionalOnProperty(prefix = "solr", name = "url")
 @Primary
-public class SolrFunctionEntityIndexer extends SolrBaseEntityIndexer<Function> implements EntityIndexer<FunctionEntity> {
+public class SolrFunctionEntityIndexer
+    extends SolrBaseEntityIndexer<Function>
+    implements EntityIndexer<FunctionEntity> {
 
     private static final String TYPE = EntityName.FUNCTION.getValue();
 

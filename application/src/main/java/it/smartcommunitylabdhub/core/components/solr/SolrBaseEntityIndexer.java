@@ -1,14 +1,5 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.solr.common.SolrInputDocument;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
-
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.metadata.AuditMetadata;
@@ -16,7 +7,14 @@ import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.commons.models.metadata.MetadataDTO;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
 import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.solr.common.SolrInputDocument;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 
 @Slf4j
 public abstract class SolrBaseEntityIndexer<D extends BaseDTO> implements InitializingBean {
@@ -24,12 +22,12 @@ public abstract class SolrBaseEntityIndexer<D extends BaseDTO> implements Initia
     public static final int PAGE_MAX_SIZE = 100;
 
     protected SolrComponent solr;
-    
+
     @Autowired(required = false)
     public void setSolr(SolrComponent solr) {
         this.solr = solr;
     }
-    
+
     @Override
     public void afterPropertiesSet() throws Exception {
         if (solr != null) {
@@ -82,7 +80,7 @@ public abstract class SolrBaseEntityIndexer<D extends BaseDTO> implements Initia
 
         return doc;
     }
-    
+
     public List<IndexField> fields() {
         List<IndexField> fields = new LinkedList<>();
 

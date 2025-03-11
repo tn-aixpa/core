@@ -3,7 +3,6 @@ package it.smartcommunitylabdhub.core.models.indexers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,5 +25,4 @@ public class ItemResult {
     String key;
     Map<String, Object> metadata = new HashMap<>();
     Map<String, List<String>> highlights = new HashMap<>();
-
 }

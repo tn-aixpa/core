@@ -1,17 +1,5 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
@@ -20,12 +8,24 @@ import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactDTOBuilder
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 @Component
 @Slf4j
 @ConditionalOnProperty(prefix = "lucene", name = "index-path")
-public class LuceneArtifactEntityIndexer extends LuceneBaseEntityIndexer<Artifact> implements EntityIndexer<ArtifactEntity> {
+public class LuceneArtifactEntityIndexer
+    extends LuceneBaseEntityIndexer<Artifact>
+    implements EntityIndexer<ArtifactEntity> {
 
     private static final String TYPE = EntityName.ARTIFACT.getValue();
 
@@ -58,7 +58,6 @@ public class LuceneArtifactEntityIndexer extends LuceneBaseEntityIndexer<Artifac
                 log.error("error with lucene: {}", e.getMessage());
             }
         }
-        
     }
 
     @Override
@@ -87,9 +86,9 @@ public class LuceneArtifactEntityIndexer extends LuceneBaseEntityIndexer<Artifac
     }
 
     private Document parse(ArtifactEntity entity) {
-    	Assert.notNull(entity, "entity can not be null");
-        
-    	Artifact item = builder.convert(entity);
+        Assert.notNull(entity, "entity can not be null");
+
+        Artifact item = builder.convert(entity);
         if (item == null) {
             throw new IllegalArgumentException("invalid or null entity");
         }
@@ -98,14 +97,14 @@ public class LuceneArtifactEntityIndexer extends LuceneBaseEntityIndexer<Artifac
         if (log.isTraceEnabled()) {
             log.trace("item: {}", item);
         }
-        
+
         Document doc = parse(item, TYPE);
-        
+
         //add versioning
         VersioningMetadata versioning = VersioningMetadata.from(item.getMetadata());
         Field field = new TextField("metadata.version", getStringValue(versioning.getVersion()), Field.Store.YES);
         doc.add(field);
-        
+
         return doc;
     }
 }

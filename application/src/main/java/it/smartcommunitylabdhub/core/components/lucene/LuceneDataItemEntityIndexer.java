@@ -1,17 +1,5 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
@@ -20,12 +8,24 @@ import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemDTOBuilder
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 @Component
 @Slf4j
 @ConditionalOnProperty(prefix = "lucene", name = "index-path")
-public class LuceneDataItemEntityIndexer extends LuceneBaseEntityIndexer<DataItem> implements EntityIndexer<DataItemEntity> {
+public class LuceneDataItemEntityIndexer
+    extends LuceneBaseEntityIndexer<DataItem>
+    implements EntityIndexer<DataItemEntity> {
 
     private static final String TYPE = EntityName.DATAITEM.getValue();
 

@@ -1,5 +1,11 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
+import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
+import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.models.indexers.SolrSearchService;
 import java.util.List;
 import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -10,13 +16,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-
-import it.smartcommunitylabdhub.core.models.indexers.IndexField;
-import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
-import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
-import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
-import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
-import it.smartcommunitylabdhub.core.models.indexers.SolrSearchService;
 
 @Component
 @Slf4j
@@ -101,8 +100,7 @@ public class SolrComponent implements SolrSearchService, InitializingBean {
     }
 
     @Override
-    public SolrPage<ItemResult> itemSearch(String q, List<String> fq, Pageable pageRequest)
-        throws IndexerException {
+    public SolrPage<ItemResult> itemSearch(String q, List<String> fq, Pageable pageRequest) throws IndexerException {
         if (indexManager == null) {
             throw new IndexerException("solr not available");
         }

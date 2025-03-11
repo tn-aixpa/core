@@ -1,9 +1,19 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
+import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.models.indexers.SolrSearchService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,18 +25,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.Keys;
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
-import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
-import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
-import it.smartcommunitylabdhub.core.models.indexers.SolrSearchService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @ApiVersion("v1")
@@ -82,8 +80,7 @@ public class SolrContextController {
     }
 
     private List<String> setProject(List<String> fq, String project) {
-    	if(fq == null)
-    		fq = new ArrayList<>();
+        if (fq == null) fq = new ArrayList<>();
         List<String> result = fq.stream().filter(e -> !e.startsWith("project:")).collect(Collectors.toList());
         result.add("project:" + project);
         return result;

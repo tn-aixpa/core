@@ -1,16 +1,5 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
-import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.metadata.VersioningMetadata;
@@ -19,11 +8,22 @@ import it.smartcommunitylabdhub.core.models.builders.workflow.WorkflowDTOBuilder
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 @Component
 @Slf4j
-public class LuceneWorkflowEntityIndexer extends LuceneBaseEntityIndexer<Workflow> implements EntityIndexer<WorkflowEntity>{
+public class LuceneWorkflowEntityIndexer
+    extends LuceneBaseEntityIndexer<Workflow>
+    implements EntityIndexer<WorkflowEntity> {
 
     private static final String TYPE = EntityName.WORKFLOW.getValue();
 

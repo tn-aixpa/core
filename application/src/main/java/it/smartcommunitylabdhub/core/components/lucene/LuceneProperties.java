@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ToString
 @ConfigurationProperties(prefix = "lucene", ignoreUnknownFields = true)
 public class LuceneProperties {
+
     private String indexPath;
     private String reindex;
 }
