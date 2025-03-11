@@ -12,6 +12,7 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -122,7 +123,7 @@ public class K8sServeMonitor extends K8sBaseMonitor<K8sServeRunnable> {
                                 "service",
                                 mapper.convertValue(service, typeRef),
                                 "pods",
-                                pods != null ? mapper.convertValue(pods, arrayRef) : null
+                                pods != null ? mapper.convertValue(pods, arrayRef) : new ArrayList<>()
                             )
                         )
                     );

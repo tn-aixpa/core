@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernete
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sDeploymentRunnable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -109,7 +110,7 @@ public class K8sDeploymentMonitor extends K8sBaseMonitor<K8sDeploymentRunnable> 
                                 "deployment",
                                 mapper.convertValue(deployment, typeRef),
                                 "pods",
-                                pods != null ? mapper.convertValue(pods, arrayRef) : null
+                                pods != null ? mapper.convertValue(pods, arrayRef) : new ArrayList<>()
                             )
                         )
                     );

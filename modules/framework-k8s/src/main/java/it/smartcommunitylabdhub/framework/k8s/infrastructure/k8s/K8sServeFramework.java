@@ -278,16 +278,18 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         if (!"disable".equals(collectResults)) {
             //update results
             try {
-                Map<String, Serializable> results = MapUtils.mergeMultipleMaps(
-                    runnable.getResults(),
-                    Map.of("deployment", deployment != null ? mapper.convertValue(deployment, typeRef) : null)
-                );
+                if (deployment != null) {
+                    Map<String, Serializable> results = MapUtils.mergeMultipleMaps(
+                        runnable.getResults(),
+                        Map.of("deployment", mapper.convertValue(deployment, typeRef))
+                    );
 
-                //clear pods if present
-                results.remove("pods");
+                    //clear pods if present
+                    results.remove("pods");
 
-                //store
-                runnable.setResults(results);
+                    //store
+                    runnable.setResults(results);
+                }
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());
             }
@@ -327,16 +329,18 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         if (!"disable".equals(collectResults)) {
             //update results
             try {
-                Map<String, Serializable> results = MapUtils.mergeMultipleMaps(
-                    runnable.getResults(),
-                    Map.of("deployment", deployment != null ? mapper.convertValue(deployment, typeRef) : null)
-                );
+                if (deployment != null) {
+                    Map<String, Serializable> results = MapUtils.mergeMultipleMaps(
+                        runnable.getResults(),
+                        Map.of("deployment", mapper.convertValue(deployment, typeRef))
+                    );
 
-                //clear pods if present
-                results.remove("pods");
+                    //clear pods if present
+                    results.remove("pods");
 
-                //store
-                runnable.setResults(results);
+                    //store
+                    runnable.setResults(results);
+                }
             } catch (IllegalArgumentException e) {
                 log.error("error reading k8s results: {}", e.getMessage());
             }

@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernete
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sCronJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCronJobRunnable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +62,7 @@ public class K8sCronJobMonitor extends K8sBaseMonitor<K8sCronJobRunnable> {
                             "cronJob",
                             mapper.convertValue(job, typeRef),
                             "pods",
-                            pods != null ? mapper.convertValue(pods, arrayRef) : null
+                            pods != null ? mapper.convertValue(pods, arrayRef) : new ArrayList<>()
                         )
                     );
                 } catch (IllegalArgumentException e) {

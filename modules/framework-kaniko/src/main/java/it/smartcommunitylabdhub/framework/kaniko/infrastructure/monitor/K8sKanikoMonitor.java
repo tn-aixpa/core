@@ -10,6 +10,7 @@ import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.monitor.K8sBaseMonitor;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.k8s.K8sKanikoFramework;
 import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +71,7 @@ public class K8sKanikoMonitor extends K8sBaseMonitor<K8sKanikoRunnable> {
                         "job",
                         mapper.convertValue(job, typeRef),
                         "pods",
-                        pods != null ? mapper.convertValue(pods, arrayRef) : null
+                        pods != null ? mapper.convertValue(pods, arrayRef) : new ArrayList<>()
                     )
                 );
             } catch (IllegalArgumentException e) {
