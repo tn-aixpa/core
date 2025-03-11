@@ -4,7 +4,6 @@ import it.smartcommunitylabdhub.authorization.model.OpenIdConfig;
 import it.smartcommunitylabdhub.authorization.model.OpenIdConfig.OpenIdConfigBuilder;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.config.SecurityProperties;
-import it.smartcommunitylabdhub.commons.infrastructure.ConfigurationProvider;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
@@ -15,13 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class OAuth2ConfigurationEndpoint implements ConfigurationProvider {
+public class OAuth2ConfigurationEndpoint {
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -93,15 +91,5 @@ public class OAuth2ConfigurationEndpoint implements ConfigurationProvider {
         builder.tokenEndpointAuthMethodsSupported(authMethods);
 
         return builder.build();
-    }
-
-    @Override
-    @Nullable
-    public OpenIdConfig getConfig() {
-        if (config == null) {
-            config = generate();
-        }
-
-        return config;
     }
 }

@@ -45,7 +45,7 @@ public class ConfigurationEndpoint {
         }
 
         //always override core props
-        map.put("endpoint", applicationProperties.getEndpoint());
+        map.put("dhcore_endpoint", applicationProperties.getEndpoint());
 
         return Collections.unmodifiableMap(map);
     }

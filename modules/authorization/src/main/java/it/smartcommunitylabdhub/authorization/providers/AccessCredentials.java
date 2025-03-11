@@ -37,30 +37,30 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AccessCredentials extends AbstractCredentials {
 
-    @JsonProperty("access_token")
+    @JsonProperty("dhcore_access_token")
     private SignedJWT accessToken;
 
-    @JsonProperty("id_token")
+    @JsonProperty("dhcore_id_token")
     private SignedJWT idToken;
 
-    @JsonProperty("refresh_token")
+    @JsonProperty("dhcore_refresh_token")
     private String refreshToken;
 
-    @JsonProperty("expires_in")
+    @JsonProperty("dhcore_expires_in")
     private Integer expiration;
 
-    @JsonProperty("client_id")
+    @JsonProperty("dhcore_client_id")
     private String clientId;
 
-    @JsonProperty("issuer")
+    @JsonProperty("dhcore_issuer")
     private String issuer;
 
-    @JsonGetter("access_token")
+    @JsonGetter("dhcore_access_token")
     public String getAccessTokenAsString() {
         return accessToken != null ? accessToken.serialize() : null;
     }
 
-    @JsonGetter("id_token")
+    @JsonGetter("dhcore_id_token")
     public String getIdTokenAsString() {
         return idToken != null ? idToken.serialize() : null;
     }

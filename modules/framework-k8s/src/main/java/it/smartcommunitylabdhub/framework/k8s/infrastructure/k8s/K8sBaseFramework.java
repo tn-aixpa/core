@@ -923,7 +923,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 .getCredentialsMap()
                 .entrySet()
                 .forEach(e -> {
-                    if (envsPrefix != null) {
+                    if (StringUtils.hasText(envsPrefix)) {
                         data.put(envsPrefix.toUpperCase() + "_" + e.getKey().toUpperCase(), e.getValue());
                     } else {
                         data.put(e.getKey().toUpperCase(), e.getValue());

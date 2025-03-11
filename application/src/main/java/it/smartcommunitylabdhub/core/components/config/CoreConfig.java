@@ -35,18 +35,18 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CoreConfig extends AbstractConfiguration {
 
-    @JsonProperty("endpoint")
+    @JsonProperty("dhcore_endpoint")
     private String endpoint;
 
-    @JsonProperty("name")
+    @JsonProperty("dhcore_name")
     private String name;
 
-    @JsonProperty("version")
+    @JsonProperty("dhcore_version")
     private String version;
 
-    @JsonProperty("api_level")
+    @JsonProperty("dhcore_api_level")
     private String level;
 
-    @JsonProperty("api_version")
+    @JsonProperty("dhcore_api_version")
     private String api;
 }

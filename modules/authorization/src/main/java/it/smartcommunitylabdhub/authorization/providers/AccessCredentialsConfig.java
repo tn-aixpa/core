@@ -36,14 +36,17 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AccessCredentialsConfig extends AbstractConfiguration {
 
-    @JsonProperty("authentication_methods")
+    @JsonProperty("dhcore_authentication_methods")
     private Set<String> authenticationMethods;
 
     //basic auth
-    @JsonProperty("realm")
+    @JsonProperty("dhcore_realm")
     private String realm;
 
     //oauth2
-    @JsonProperty("client_id")
+    @JsonProperty("dhcore_client_id")
     private String clientId;
+
+    @JsonProperty("dhcore_issuer")
+    private String issuer;
 }

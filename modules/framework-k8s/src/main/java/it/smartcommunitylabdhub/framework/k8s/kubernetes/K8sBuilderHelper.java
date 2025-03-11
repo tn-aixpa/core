@@ -79,7 +79,10 @@ public class K8sBuilderHelper implements InitializingBean {
         List<V1EnvVar> vars = new ArrayList<>();
         //if no configMap build a minimal config
         if (sharedConfigMaps == null || sharedConfigMaps.isEmpty()) {
-            vars.add(new V1EnvVar().name(sanitizeNames(envsPrefix).toUpperCase() + "_ENDPOINT").value(coreEndpoint));
+            String name = StringUtils.hasText(envsPrefix)
+                ? sanitizeNames(envsPrefix.toUpperCase()) + "_DHCORE_ENDPOINT"
+                : "DHCORE_ENDPOINT";
+            vars.add(new V1EnvVar().name(name).value(coreEndpoint));
         }
 
         return vars;
