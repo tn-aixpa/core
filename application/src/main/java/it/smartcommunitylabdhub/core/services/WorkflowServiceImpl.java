@@ -61,7 +61,7 @@ public class WorkflowServiceImpl
     @Autowired
     private EntityService<Task, TaskEntity> taskEntityService;
 
-    @Autowired
+    @Autowired(required = false)
     private EntityIndexer<WorkflowEntity> indexer;
 
     @Autowired
@@ -454,39 +454,43 @@ public class WorkflowServiceImpl
 
     @Override
     public void indexOne(@NotNull String id) {
-        log.debug("index workflow with id {}", String.valueOf(id));
-        try {
-            Workflow workflow = entityService.get(id);
-            indexer.index(entityBuilder.convert(workflow));
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
+        if (indexer != null) {
+            log.debug("index workflow with id {}", String.valueOf(id));
+            try {
+                Workflow workflow = entityService.get(id);
+                indexer.index(entityBuilder.convert(workflow));
+            } catch (StoreException e) {
+                log.error("store error: {}", e.getMessage());
+                throw new SystemException(e.getMessage());
+            }
         }
     }
 
     @Override
     public void reindexAll() {
-        log.debug("reindex all workflows");
+        if (indexer != null) {
+            log.debug("reindex all workflows");
 
-        //clear index
-        indexer.clearIndex();
+            //clear index
+            indexer.clearIndex();
 
-        //use pagination and batch
-        boolean hasMore = true;
-        int pageNumber = 0;
-        while (hasMore) {
-            hasMore = false;
-
-            try {
-                Page<Workflow> page = entityService.list(PageRequest.of(pageNumber, EntityIndexer.PAGE_MAX_SIZE));
-                indexer.indexAll(
-                    page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
-                );
-                hasMore = page.hasNext();
-            } catch (IllegalArgumentException | StoreException | SystemException e) {
+            //use pagination and batch
+            boolean hasMore = true;
+            int pageNumber = 0;
+            while (hasMore) {
                 hasMore = false;
 
-                log.error("error with indexing: {}", e.getMessage());
+                try {
+                    Page<Workflow> page = entityService.list(PageRequest.of(pageNumber, EntityIndexer.PAGE_MAX_SIZE));
+                    indexer.indexAll(
+                        page.getContent().stream().map(e -> entityBuilder.convert(e)).collect(Collectors.toList())
+                    );
+                    hasMore = page.hasNext();
+                } catch (IllegalArgumentException | StoreException | SystemException e) {
+                    hasMore = false;
+
+                    log.error("error with indexing: {}", e.getMessage());
+                }
             }
         }
     }
