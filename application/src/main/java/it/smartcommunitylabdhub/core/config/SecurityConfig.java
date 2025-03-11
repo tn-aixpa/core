@@ -267,7 +267,7 @@ public class SecurityConfig {
         //authorize chain
         RequestMatcher reqMatcher = new OrRequestMatcher(
             new AntPathRequestMatcher("/auth/authorize"),
-            new AntPathRequestMatcher("/auth/authorization"),
+            new AntPathRequestMatcher("/auth/authorization/**"),
             new AntPathRequestMatcher("/auth/code/**")
         );
         HttpSecurity securityChain = http
