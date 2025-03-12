@@ -89,8 +89,8 @@ public abstract class SolrBaseEntityIndexer<D extends BaseDTO> implements Initia
         fields.add(new IndexField("type", "string", true, false, true, true));
 
         fields.add(new IndexField("kind", "string", true, false, true, true));
-        fields.add(new IndexField("project", "text_en", true, false, true, true));
-        fields.add(new IndexField("name", "text_en", true, false, true, true));
+        fields.add(new IndexField("project", "string", true, false, true, true));
+        fields.add(new IndexField("name", "string", true, false, true, true));
         fields.add(new IndexField("user", "string", true, false, true, true));
 
         fields.add(new IndexField("status", "string", true, false, true, true));
