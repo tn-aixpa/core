@@ -93,6 +93,8 @@ public class CredentialsServiceImpl implements CredentialsService, TokenService 
         boolean withCredentials,
         boolean withRefresh
     ) {
+        log.info("generate credentials for user {}", authentication.getName());
+
         List<CredentialsProvider> credentialsProviders = providers
             .stream()
             .filter(p -> !(p instanceof AccessCredentialsProvider))
