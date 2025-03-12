@@ -13,6 +13,11 @@ public class K8sWorkflowObject implements KubernetesObject, Serializable {
         this.workflow = workflow;
     }
 
+    //private to allow deserialization via jackson
+    protected K8sWorkflowObject() {
+        this(null);
+    }
+
     @Override
     public String getApiVersion() {
         return workflow.getApiVersion();
