@@ -101,7 +101,7 @@ public class ContainerJobRunner {
             .image(functionSpec.getImage())
             .imagePullPolicy(functionSpec.getImagePullPolicy())
             .command(functionSpec.getCommand())
-            .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
+            .args(runSpec.getArgs() != null ? runSpec.getArgs().toArray(new String[0]) : null)
             .envs(coreEnvList)
             .secrets(coreSecrets)
             .resources(taskSpec.getResources())
@@ -132,7 +132,7 @@ public class ContainerJobRunner {
                     //base
                     .image(functionSpec.getImage())
                     .command(functionSpec.getCommand())
-                    .args(functionSpec.getArgs() != null ? functionSpec.getArgs().toArray(new String[0]) : null)
+                    .args(runSpec.getArgs() != null ? runSpec.getArgs().toArray(new String[0]) : null)
                     .envs(coreEnvList)
                     .secrets(coreSecrets)
                     .resources(taskSpec.getResources())

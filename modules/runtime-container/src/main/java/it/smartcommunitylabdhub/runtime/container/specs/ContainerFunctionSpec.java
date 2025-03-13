@@ -9,7 +9,6 @@ import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreImagePullPolicy;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,9 +37,6 @@ public class ContainerFunctionSpec extends FunctionBaseSpec {
     @Schema(title = "fields.container.command.title", description = "fields.container.command.description")
     private String command;
 
-    @Schema(title = "fields.container.args.title", description = "fields.container.args.description")
-    private List<String> args;
-
     @Schema(title = "fields.sourceCode.title", description = "fields.sourceCode.description")
     private SourceCode<SourceCodeLanguages> source;
 
@@ -57,7 +53,6 @@ public class ContainerFunctionSpec extends FunctionBaseSpec {
         this.command = spec.getCommand();
         this.image = spec.getImage();
         this.baseImage = spec.getBaseImage();
-        this.args = spec.getArgs();
         this.source = spec.getSource();
     }
 

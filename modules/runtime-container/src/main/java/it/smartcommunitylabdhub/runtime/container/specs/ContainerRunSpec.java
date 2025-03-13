@@ -1,12 +1,14 @@
 package it.smartcommunitylabdhub.runtime.container.specs;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
 import it.smartcommunitylabdhub.runtime.container.ContainerRuntime;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,6 +42,9 @@ public class ContainerRunSpec extends RunBaseSpec {
     @JsonUnwrapped
     private ContainerFunctionSpec functionSpec;
 
+    @Schema(title = "fields.container.args.title", description = "fields.container.args.description")
+    private List<String> args;
+
     public ContainerRunSpec(Map<String, Serializable> data) {
         configure(data);
     }
@@ -55,6 +60,8 @@ public class ContainerRunSpec extends RunBaseSpec {
         this.taskServeSpec = spec.getTaskServeSpec();
         this.functionSpec = spec.getFunctionSpec();
         this.taskBuildSpec = spec.getTaskBuildSpec();
+
+        this.args = spec.getArgs();
     }
 
     public void setFunctionSpec(ContainerFunctionSpec functionSpec) {

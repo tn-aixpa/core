@@ -37,16 +37,6 @@
   },
   "type" : "object",
   "properties" : {
-    "args" : {
-      "title" : "fields.container.args.title",
-      "description" : "fields.container.args.description",
-      "type" : "array",
-      "items" : {
-        "type" : "string",
-        "title" : "fields.args.item.title",
-        "description" : "fields.args.item.description"
-      }
-    },
     "base_image" : {
       "type" : "string",
       "title" : "fields.container.baseImage.title",

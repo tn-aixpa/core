@@ -451,6 +451,16 @@
   },
   "type" : "object",
   "properties" : {
+    "args" : {
+      "title" : "fields.container.args.title",
+      "description" : "fields.container.args.description",
+      "type" : "array",
+      "items" : {
+        "type" : "string",
+        "title" : "fields.args.item.title",
+        "description" : "fields.args.item.description"
+      }
+    },
     "local_execution" : {
       "type" : "boolean",
       "title" : "fields.localExecution.title",
