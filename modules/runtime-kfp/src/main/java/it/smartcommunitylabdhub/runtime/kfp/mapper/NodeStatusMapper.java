@@ -24,9 +24,10 @@ public class NodeStatusMapper {
         }
 
         IoArgoprojWorkflowV1alpha1Workflow workflow = workflowObject.getWorkflow();
-        Map<String, IoArgoprojWorkflowV1alpha1NodeStatus> nodes = workflow.getStatus().getNodes();
 
-        return nodes
+        List<NodeStatusDTO> nodes = workflow
+            .getStatus()
+            .getNodes()
             .values()
             .stream()
             .map(nodeStatus -> {
@@ -87,7 +88,7 @@ public class NodeStatusMapper {
                                     case LABEL_PREFIX + "function_id":
                                         dto.setFunctionId(value);
                                         break;
-                                    case LABEL_PREFIX + "project":
+                                    case LABEL_PREFIX + "action":
                                         dto.setAction(value);
                                         break;
                                     default:
@@ -104,5 +105,22 @@ public class NodeStatusMapper {
                 return dto;
             })
             .collect(Collectors.toList());
+
+        //integrate list of nodes with missing by picking from DAG
+        IoArgoprojWorkflowV1alpha1NodeStatus dag = workflow
+            .getStatus()
+            .getNodes()
+            .entrySet()
+            .stream()
+            .filter(e -> e.getValue().getType().equals("DAG"))
+            .findFirst()
+            .map(Map.Entry::getValue)
+            .orElse(null);
+
+        if (dag != null) {
+            //TODO parse
+        }
+
+        return nodes;
     }
 }

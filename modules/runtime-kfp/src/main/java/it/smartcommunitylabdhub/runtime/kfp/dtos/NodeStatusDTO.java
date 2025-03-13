@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.kfp.dtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -23,9 +24,11 @@ public class NodeStatusDTO implements Serializable {
     private String state;
 
     @JsonProperty("start_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private OffsetDateTime startTime;
 
     @JsonProperty("end_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private OffsetDateTime endTime;
 
     @JsonProperty("exit_code")
