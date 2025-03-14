@@ -86,7 +86,6 @@ source_dir="/init-config-map"
 destination_dir="/shared"
 tmp_dir="/tmp/shared"
 
-minio="minio"
 # set minio alias for mc
 if [[ -z "${AWS_SESSION_TOKEN}" && -z "${S3_ENDPOINT_URL}"  ]]; then
     PARTS=($(urlparse $S3_ENDPOINT_URL))
@@ -249,9 +248,9 @@ if [ -f "$source_dir/context-refs.txt" ]; then
             ;;
             "zip+s3") # for now accept a zip file - check if file is a zip, unpack zip
                 echo "Protocol: $protocol"
-                echo "Downloading $minio/$rebuilt_url"
+                echo "Downloading s3/$rebuilt_url"
                 echo "to $destination_dir/$destination"
-                env MC_HOST_minio="$MC_HOST" mc cp "$minio/$rebuilt_url" "$destination_dir/$destination"
+                env MC_HOST_s3="$MC_HOST" mc cp "s3/$rebuilt_url" "$destination_dir/$destination"
                 unzip "$destination_dir/$destination" -d "$destination_dir"
                 ;;
             "zip+http" | "zip+https") # for now accept only zip file - check if file is a zip. unpack zip
@@ -271,9 +270,9 @@ if [ -f "$source_dir/context-refs.txt" ]; then
                 ;;
             "s3") # for now accept a folder/path
                 echo "Protocol: $protocol"
-                echo "Downloading $minio/$rebuilt_url"
+                echo "Downloading s3/$rebuilt_url"
                 echo "to $destination_dir/$destination"
-                env MC_HOST_minio="$MC_HOST" mc cp --recursive "$minio/$rebuilt_url" "$destination_dir/$destination"
+                env MC_HOST_s3="$MC_HOST" mc cp --recursive "s3/$rebuilt_url" "$destination_dir/$destination"
                 ;;
             # Add more cases for other protocols as needed
             *)
