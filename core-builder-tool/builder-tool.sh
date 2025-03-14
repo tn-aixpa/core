@@ -87,6 +87,18 @@ destination_dir="/shared"
 tmp_dir="/tmp/shared"
 
 minio="minio"
+# set minio alias for mc
+if [[ -z "${AWS_SESSION_TOKEN}" && -z "${S3_ENDPOINT_URL}"  ]]; then
+    PARTS=$(urlparse($S3_ENDPOINT_URL))
+    S3_ENDPOINT="${PARTS[1]}"
+    S3_SCHEME="${PARTS[0]}"
+    MC_HOST="${S3_SCHEME}://${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}:${AWS_SESSION_TOKEN}@${S3_ENDPOINT}"
+else
+    PARTS=urlparse($S3_ENDPOINT_URL)
+    S3_ENDPOINT="${PARTS[1]}"
+    S3_SCHEME="${PARTS[0]}"
+    MC_HOST="${S3_SCHEME}://${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${S3_ENDPOINT}"
+fi
 
 # Error handling function
 handle_error() {
@@ -236,11 +248,10 @@ if [ -f "$source_dir/context-refs.txt" ]; then
             # if fragment do checkout of tag version.
             ;;
             "zip+s3") # for now accept a zip file - check if file is a zip, unpack zip
-                mc alias set $minio $S3_ENDPOINT_URL $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
                 echo "Protocol: $protocol"
                 echo "Downloading $minio/$rebuilt_url"
                 echo "to $destination_dir/$destination"
-                mc cp "$minio/$rebuilt_url" "$destination_dir/$destination"
+                env MC_HOST_minio="$MC_HOST" mc cp "$minio/$rebuilt_url" "$destination_dir/$destination"
                 unzip "$destination_dir/$destination" -d "$destination_dir"
                 ;;
             "zip+http" | "zip+https") # for now accept only zip file - check if file is a zip. unpack zip
@@ -259,11 +270,10 @@ if [ -f "$source_dir/context-refs.txt" ]; then
                 curl -o "$destination_dir/$destination" -L "$source"
                 ;;
             "s3") # for now accept a folder/path
-                mc alias set $minio $S3_ENDPOINT_URL $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
                 echo "Protocol: $protocol"
                 echo "Downloading $minio/$rebuilt_url"
                 echo "to $destination_dir/$destination"
-                mc cp --recursive "$minio/$rebuilt_url" "$destination_dir/$destination"
+                env MC_HOST_minio="$MC_HOST" mc cp --recursive "$minio/$rebuilt_url" "$destination_dir/$destination"
                 ;;
             # Add more cases for other protocols as needed
             *)
