@@ -33,6 +33,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -164,27 +166,29 @@ public class RunLifecycleManager extends LifecycleManager<Run, RunEntity> {
     /*
      * Events: react to a change
      */
-    public Run onRunning(Run run, RunRunnable runnable) {
+    public void onRunning(Run run, RunRunnable runnable) {
         log.debug("onRunning run with id {}", run.getId());
         if (log.isTraceEnabled()) {
             log.trace("run: {}", run);
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            log.trace("user : {}", String.valueOf(auth.getName()));
         }
 
         //execute an update op for the event
-        return handle(run, State.RUNNING, runnable);
+        handle(run, State.RUNNING, runnable);
     }
 
-    public Run onStopped(Run run, RunRunnable runnable) {
+    public void onStopped(Run run, RunRunnable runnable) {
         log.debug("onStopped run with id {}", run.getId());
         if (log.isTraceEnabled()) {
             log.trace("run: {}", run);
         }
 
         //execute an update op for the event
-        return handle(run, State.STOPPED, runnable);
+        handle(run, State.STOPPED, runnable);
     }
 
-    public Run onCompleted(Run run, RunRunnable runnable) {
+    public void onCompleted(Run run, RunRunnable runnable) {
         log.debug("onCompleted run with id {}", run.getId());
         if (log.isTraceEnabled()) {
             log.trace("run: {}", run);
@@ -210,11 +214,9 @@ public class RunLifecycleManager extends LifecycleManager<Run, RunEntity> {
             //publish event for framework if required
             Optional.ofNullable(runtime.delete(r)).ifPresent(rb -> eventPublisher.publishEvent(rb));
         }
-
-        return r;
     }
 
-    public Run onError(Run run, RunRunnable runnable) {
+    public void onError(Run run, RunRunnable runnable) {
         log.debug("onError run with id {}", run.getId());
         if (log.isTraceEnabled()) {
             log.trace("run: {}", run);
@@ -240,8 +242,6 @@ public class RunLifecycleManager extends LifecycleManager<Run, RunEntity> {
             //publish event for framework if required
             Optional.ofNullable(runtime.delete(r)).ifPresent(rb -> eventPublisher.publishEvent(rb));
         }
-
-        return r;
     }
 
     public void onDeleted(Run run, RunRunnable runnable) {
@@ -254,8 +254,22 @@ public class RunLifecycleManager extends LifecycleManager<Run, RunEntity> {
         String curState = StatusFieldAccessor.with(run.getStatus()).getState();
         boolean toDelete = State.DELETING.name().equals(curState);
 
-        if (!toDelete) {
-            //callback after a cleanup, no-op
+        if (!toDelete && runnable != null) {
+            //callback after a cleanup, make sure we forward to runtime
+            RunSpecAccessor runSpecAccessor = RunSpecAccessor.with(run.getSpec());
+
+            //resolve runtime either from runSpec or from taskSpec
+            Runtime<?, ?, ?, ?> runtime = runSpecAccessor.getRuntime() != null
+                ? runtimeFactory.getRuntime(runSpecAccessor.getRuntime())
+                : null;
+
+            if (runtime == null) {
+                throw new IllegalArgumentException("invalid or unsupported runtime");
+            }
+
+            //call runtime
+            Optional.ofNullable(runtime.onDeleted(run, runnable));
+
             return;
         }
 
@@ -278,6 +292,11 @@ public class RunLifecycleManager extends LifecycleManager<Run, RunEntity> {
             event,
             runnable -> {
                 if (runnable != null) {
+                    //patch user from context if available
+                    if (SecurityContextHolder.getContext().getAuthentication() != null) {
+                        runnable.setUser(SecurityContextHolder.getContext().getAuthentication().getName());
+                    }
+
                     eventPublisher.publishEvent(runnable);
                 }
             }

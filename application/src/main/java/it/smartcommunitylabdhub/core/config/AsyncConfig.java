@@ -5,11 +5,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.task.TaskExecutor;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 
 @Configuration
 @Order(5)
@@ -17,7 +18,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 public class AsyncConfig implements AsyncConfigurer {
 
     @Bean
-    TaskExecutor taskExecutor() {
+    @Primary
+    AsyncTaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(50);
         executor.setMaxPoolSize(100);
@@ -25,7 +27,9 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.setThreadNamePrefix("async-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
-        return executor;
+
+        //use a delegating executor to propagate security context
+        return new DelegatingSecurityContextAsyncTaskExecutor(executor);
     }
 
     @Bean(name = "taskScheduler")
