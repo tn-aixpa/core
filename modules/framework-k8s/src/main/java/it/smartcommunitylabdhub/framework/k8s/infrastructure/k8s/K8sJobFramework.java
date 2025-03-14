@@ -241,8 +241,10 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             return runnable;
         }
 
+        List<String> messages = new ArrayList<>();
         log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
         delete(job);
+        messages.add(String.format("job %s deleted", job.getMetadata().getName()));
 
         //secrets
         cleanRunSecret(runnable);
@@ -253,6 +255,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
                 coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+                messages.add(String.format("configMap %s deleted", configMapName));
             }
         } catch (ApiException | NullPointerException e) {
             //ignore, not existing or error
@@ -269,6 +272,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
 
         //update state
         runnable.setState(State.DELETED.name());
+        runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
