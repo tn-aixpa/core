@@ -19,7 +19,7 @@ import org.springframework.util.Assert;
 public class RunnableRepository {
 
     private static final String INSERT_SQL =
-        "INSERT INTO runnables (id, created, updated, _clazz, _data) VALUES (?, ?, ?, ?, ?)";
+        "INSERT INTO runnables (id, _user, created, updated, _clazz, _data) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String UPDATE_SQL = "UPDATE runnables SET _data = ?, updated = ? WHERE id = ? AND _clazz = ?";
     private static final String SELECT_SQL = "SELECT * FROM runnables WHERE id = ? and _clazz = ?";
     private static final String SELECT_ALL_SQL = "SELECT * FROM runnables WHERE _clazz = ?";
@@ -45,8 +45,8 @@ public class RunnableRepository {
 
         jdbcTemplate.update(
             INSERT_SQL,
-            new Object[] { entity.getId(), now, now, clazz, lob },
-            new int[] { Types.VARCHAR, Types.TIMESTAMP, Types.TIMESTAMP, Types.VARCHAR, Types.BLOB }
+            new Object[] { entity.getId(), entity.getUser(), now, now, clazz, lob },
+            new int[] { Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.TIMESTAMP, Types.VARCHAR, Types.BLOB }
         );
     }
 
@@ -102,8 +102,9 @@ public class RunnableRepository {
         @Override
         public RunnableEntity mapRow(ResultSet rs, int rowNum) throws SQLException {
             String id = rs.getString("id");
+            String user = rs.getString("_user");
             Timestamp created = rs.getTimestamp("created");
-            Timestamp updated = rs.getTimestamp("created");
+            Timestamp updated = rs.getTimestamp("updated");
 
             String clazz = rs.getString("_clazz");
             byte[] data = rs.getBytes("_data");
@@ -112,7 +113,7 @@ public class RunnableRepository {
                 return null;
             }
 
-            return new RunnableEntity(id, created, updated, clazz, data);
+            return new RunnableEntity(id, user, created, updated, clazz, data);
         }
     }
 }

@@ -16,6 +16,8 @@ public class RunnableEntity {
 
     private String id;
 
+    private String user;
+
     private Date created;
 
     private Date updated;

@@ -79,7 +79,7 @@ public class RunnableStoreImpl<T extends RunRunnable> implements RunnableStore<T
         log.debug("store runnable {} with id {}", clazz.getName(), id);
         try {
             byte[] data = objectMapper.writeValueAsBytes(e);
-            RunnableEntity entity = RunnableEntity.builder().id(id).data(data).build();
+            RunnableEntity entity = RunnableEntity.builder().id(id).user(e.getUser()).data(data).build();
 
             Optional
                 .ofNullable(find(id))

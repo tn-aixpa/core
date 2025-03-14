@@ -41,6 +41,8 @@ public class K8sRunnable implements RunRunnable, SecuredRunnable, CredentialsCon
 
     private String id;
 
+    private String user;
+
     private String project;
 
     private String runtime;

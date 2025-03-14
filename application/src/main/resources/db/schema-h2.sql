@@ -1,6 +1,7 @@
 CREATE TABLE
     IF NOT EXISTS runnables (
         id VARCHAR(255) NOT NULL PRIMARY KEY,
+        _user VARCHAR(255),
         created TIMESTAMP,
         updated TIMESTAMP,
         _clazz VARCHAR(255),
