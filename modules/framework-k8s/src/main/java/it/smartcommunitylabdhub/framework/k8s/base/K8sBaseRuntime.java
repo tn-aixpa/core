@@ -98,6 +98,10 @@ public abstract class K8sBaseRuntime<
     @SuppressWarnings("unchecked")
     @Override
     public Z onDeleted(@NotNull Run run, RunRunnable runnable) {
+        //cleanup
+        super.onDeleted(run, runnable);
+
+        //collect
         if (runnable != null && runnable instanceof K8sRunnable) {
             K8sRunnable k8sRunnable = (K8sRunnable) runnable;
             RunBaseStatus status = RunBaseStatus
