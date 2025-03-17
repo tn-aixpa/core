@@ -87,16 +87,18 @@ destination_dir="/shared"
 tmp_dir="/tmp/shared"
 
 # set minio alias for mc
-if [[ -z "${AWS_SESSION_TOKEN}" && -z "${S3_ENDPOINT_URL}"  ]]; then
+if [[ ! -z "${AWS_SESSION_TOKEN}" && ! -z "${S3_ENDPOINT_URL}"  ]]; then
     PARTS=($(urlparse $S3_ENDPOINT_URL))
     S3_ENDPOINT="${PARTS[1]}"
     S3_SCHEME="${PARTS[0]}"
     MC_HOST="${S3_SCHEME}://${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}:${AWS_SESSION_TOKEN}@${S3_ENDPOINT}"
-else
+elif [[ -z "${AWS_SESSION_TOKEN}" && ! -z "${S3_ENDPOINT_URL}"  ]]; then
     PARTS=($(urlparse $S3_ENDPOINT_URL))
     S3_ENDPOINT="${PARTS[1]}"
     S3_SCHEME="${PARTS[0]}"
     MC_HOST="${S3_SCHEME}://${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@${S3_ENDPOINT}"
+else
+    MC_HOST=""
 fi
 
 # Error handling function
