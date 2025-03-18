@@ -1,3 +1,74 @@
+# [0.10.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.10.0-beta7...0.10.0) (2025-03-14)
+
+## What's Changed
+* feat: add http single file download and branch support for git by @trubbio in https://github.com/scc-digitalhub/digitalhub-core/pull/147
+* Metrics by @micnori in https://github.com/scc-digitalhub/digitalhub-core/pull/148
+* Credentials providers by @matteo-s in https://github.com/scc-digitalhub/digitalhub-core/pull/149
+* Solr roles by @micnori in https://github.com/scc-digitalhub/digitalhub-core/pull/151
+* broadcast notifications also without id by @etomaselli in https://github.com/scc-digitalhub/digitalhub-core/pull/153
+* feat: add workflow nodes in KFRunStatus by @trubbio in https://github.com/scc-digitalhub/digitalhub-core/pull/150
+* Lucene by @micnori in https://github.com/scc-digitalhub/digitalhub-core/pull/152
+
+
+### Features
+* add user to runnables to track owner ([64fc654](https://github.com/scc-digitalhub/digitalhub-core/commit/64fc654bffcdacad7cddec8adf79f3812a3fd5af))
+* delegate auth context to async + mock user auth for async callbacks for runs ([90f37c5](https://github.com/scc-digitalhub/digitalhub-core/commit/90f37c55f35a4494536519bd351789bea0690ce0))
+* move container args from fn to run ([8dbf5d6](https://github.com/scc-digitalhub/digitalhub-core/commit/8dbf5d67722e0926e0a372fccf1a4a257808ef67))
+* update build tool to support s3 temp credentials ([b40d951](https://github.com/scc-digitalhub/digitalhub-core/commit/b40d951811c533586b16f163cce7d94ef0ecf9f1))
+* add workflow nodes in KFRunStatus ([06e3fc0](https://github.com/scc-digitalhub/digitalhub-core/commit/06e3fc09d6005f22f35fb832e60f9f9c556f7da9))
+* export S3_BUCKET from minio provider + fix S3_ENDPOINT_URL ([a5688f0](https://github.com/scc-digitalhub/digitalhub-core/commit/a5688f06e58350d0b9ad997c4784a75cce41b75d))
+* let admin set application name via ENV ([3d5a1f3](https://github.com/scc-digitalhub/digitalhub-core/commit/3d5a1f3f5f31a488f74f8f85651ad6a43fb27605))
+* remove configurable backoffPolicy + detect job failure from conditions ([9dfa29c](https://github.com/scc-digitalhub/digitalhub-core/commit/9dfa29c6b74ac382b325bfb6a51d0132ca6d2968))
+* remove env prefix and write core props with DHCORE_ ([24d763e](https://github.com/scc-digitalhub/digitalhub-core/commit/24d763e4ee38d3297b6056bd815ccbd9577118cd))
+* set DHCORE as default envs prefix for k8s ([6ccae28](https://github.com/scc-digitalhub/digitalhub-core/commit/6ccae2817c4b7ac5c175af05d7c7893f67ba8dfd))
+* add init_parameters to python run spec ([19dbf06](https://github.com/scc-digitalhub/digitalhub-core/commit/19dbf065516860b93153c9d262d1490d1a06f8b7))
+* read authorities from oidc userinfo/token for external auth ([6b3cbfb](https://github.com/scc-digitalhub/digitalhub-core/commit/6b3cbfb9e4ee3d0d37e2df545d116536e6275aa5))
+* split user notification and broadcast messages ([5fd1119](https://github.com/scc-digitalhub/digitalhub-core/commit/5fd11198534697f51f8b2c6c11b39b280172ed0e))
+* support customizing imagePullPolicy for container runtime ([afd801c](https://github.com/scc-digitalhub/digitalhub-core/commit/afd801cb9e93d4c76c309ff7c283be343394ff97))
+* add http single file download and branch support for git ([00f0870](https://github.com/scc-digitalhub/digitalhub-core/commit/00f08702d8ac9e792a9a8796a23cbb93f88ce454))
+* add scopes to oauth2 flows ([54327e3](https://github.com/scc-digitalhub/digitalhub-core/commit/54327e349842cdaf8f6ff4e27ab9aed79b1a3bc1))
+* auth code flow (wip) ([5d2ae1f](https://github.com/scc-digitalhub/digitalhub-core/commit/5d2ae1f9333c6befd84ab0d744c3e56289118edb))
+* authorization code flow + oauth login ([9011190](https://github.com/scc-digitalhub/digitalhub-core/commit/90111907b3af69cab46594d84c123d64523da4cb))
+* cred providers flow integration (wip) ([c099639](https://github.com/scc-digitalhub/digitalhub-core/commit/c099639f0a711e4fe536276e14f8154936af0dc6))
+* credentials and config providers ([0f4be0b](https://github.com/scc-digitalhub/digitalhub-core/commit/0f4be0b53d850069e92977e49ac7eb78ce5dceaa))
+* custom authentication manager + token services (wip) ([18d8987](https://github.com/scc-digitalhub/digitalhub-core/commit/18d898717cf7e34353368d7833785b66e7b38522))
+* db credentials provider ([35ca136](https://github.com/scc-digitalhub/digitalhub-core/commit/35ca136a09079040d1c379f6ead68968aaa4a046))
+* minio sts credentials provider ([33fded1](https://github.com/scc-digitalhub/digitalhub-core/commit/33fded1a6826590d07c74d3f8dd2e449af45e14f))
+* oidc external auth + internal oauth flows (wip) ([87dddba](https://github.com/scc-digitalhub/digitalhub-core/commit/87dddba84af45129aef722e7b0508f920069a780))
+* q search should be case-insensitive ([011a1e2](https://github.com/scc-digitalhub/digitalhub-core/commit/011a1e2292805a168d04aa91c15192afe1cc777a))
+* support internal jwt auth for websockets ([310e5cf](https://github.com/scc-digitalhub/digitalhub-core/commit/310e5cf51635eab975ab489db1a480f82bba38ab))
+* userinfo for openid + console login to core + minor fixes ([1bcf6ea](https://github.com/scc-digitalhub/digitalhub-core/commit/1bcf6ea34097d26f0140b6aac655f43c4c0a6b63))
+
+
+
+### Bug Fixes
+
+* add job delete message ([a44f1d4](https://github.com/scc-digitalhub/digitalhub-core/commit/a44f1d40f1cf2bce2d324b3a260fe504191a8dd5))
+* call super from k8sbase runtime to allow deletion of runnables from store ([18cfda3](https://github.com/scc-digitalhub/digitalhub-core/commit/18cfda3bea2a9ad3b400801f5a0ff6621cd5ba54))
+* update argo nodes processing ([3d056b5](https://github.com/scc-digitalhub/digitalhub-core/commit/3d056b53cf27dc67cb546aba352e942cac15d5c3))
+* deserialization of workflow obj ([cf461ad](https://github.com/scc-digitalhub/digitalhub-core/commit/cf461ad5d673dafd0ac65e05d11d086d578501d2))
+* solr index project and name as strings not text ([935b146](https://github.com/scc-digitalhub/digitalhub-core/commit/935b146d7f1d135b5cb01ff48f8b7117f4480499))
+* add nodes information to kfp run status ([a08f1db](https://github.com/scc-digitalhub/digitalhub-core/commit/a08f1dba6977c4827531c583adc1ecbc342ab965))
+* entry indexers are disabled by default ([99b338e](https://github.com/scc-digitalhub/digitalhub-core/commit/99b338eae3d7fd79256d8511662e8ff360a2ee2a))
+* make sure we do not collect null in map.of ([f7252f3](https://github.com/scc-digitalhub/digitalhub-core/commit/f7252f39f02be07ed2ed9a01d4a4f15b92359b9a))
+* remove temporary Kfp run status nodes information. ([a3b7d4e](https://github.com/scc-digitalhub/digitalhub-core/commit/a3b7d4e8df31e37d9b289d677b1c021610981f0e))
+* s3_endpoint_url ([87c9a47](https://github.com/scc-digitalhub/digitalhub-core/commit/87c9a47d94ba4c15c9490141512584e4af9bb3f0))
+* security config for oauth2 endpoints ([0888548](https://github.com/scc-digitalhub/digitalhub-core/commit/0888548552645bfc947090aee2de6ef042e25c27))
+* update workflows node information in KFPRunStatus. Added temporary property on status because at the moment FrontEnd read node information in a sub status properties and not directly from nodes property. This temporary property should be removed once front-end is fixed. Modify onComplete method on KFPRuntime now once the node execution is completed the status is update with right information. Also added input and ouputs parameters information on node status. ([52e7ac9](https://github.com/scc-digitalhub/digitalhub-core/commit/52e7ac983cb52285293a693b47c7155679665a66))
+* workaround for deserialization of credentials in k8srunnable: rename field ([532fd9f](https://github.com/scc-digitalhub/digitalhub-core/commit/532fd9f1f2ba993e4095bd4ba4f350dbb10036f9))
+* k8srunnable shoud store credentials in a deserializable manner ([66fbd41](https://github.com/scc-digitalhub/digitalhub-core/commit/66fbd4113d27fe37f1726e74f8680595c9a492f3))
+* kaniko framework should not allow users to define pull policy ([7e15683](https://github.com/scc-digitalhub/digitalhub-core/commit/7e156833b7b280a4d308d5d093e44ccfafb78ffc))
+* null credentials from providers should be filtered by service ([c40ce48](https://github.com/scc-digitalhub/digitalhub-core/commit/c40ce4839767fdbb6ca29e09ba362d2dde0f39e3))
+* workaround for building with broken upstream ([17a2b9b](https://github.com/scc-digitalhub/digitalhub-core/commit/17a2b9be8fd1acfff7ace4a586f15522378e229c))
+* add https ([5fca46e](https://github.com/scc-digitalhub/digitalhub-core/commit/5fca46ef42ab85890a3fcd2248e311d3df715258))
+* add missing info to auth config ([1741d21](https://github.com/scc-digitalhub/digitalhub-core/commit/1741d21dfd440cf1c369bfee2cebf4815b57e942))
+* fix wrong query for relationship service breaking lineage for runs ([4bc6bd3](https://github.com/scc-digitalhub/digitalhub-core/commit/4bc6bd310024866b9711546779284d4ba4f68e98))
+* minio provider can handle only assumeRole for now ([1ff8ec0](https://github.com/scc-digitalhub/digitalhub-core/commit/1ff8ec037cd8c7b02272828d838b35f17d8b5f0e))
+
+
+**Full Changelog**: https://github.com/scc-digitalhub/digitalhub-core/compare/0.9.0...0.10.0
+
+
 # [0.9.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.8.0...0.9.0) (2024-12-02)
 
 ## What's Changed
