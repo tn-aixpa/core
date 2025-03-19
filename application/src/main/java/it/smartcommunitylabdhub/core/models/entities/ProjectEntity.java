@@ -5,7 +5,7 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.models.base.BaseEntity;
 import it.smartcommunitylabdhub.core.models.base.SpecEntity;
 import it.smartcommunitylabdhub.core.models.base.StatusEntity;
-import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
+import it.smartcommunitylabdhub.core.models.converters.StateStringAttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;

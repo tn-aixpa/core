@@ -1,7 +1,8 @@
 package it.smartcommunitylabdhub.core.models.entities;
 
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
+import it.smartcommunitylabdhub.core.models.converters.StateStringAttributeConverter;
+import it.smartcommunitylabdhub.core.models.persistence.AbstractEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;

@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.core.models.entities;
 
 import it.smartcommunitylabdhub.core.models.base.SpecEntity;
+import it.smartcommunitylabdhub.core.models.persistence.AbstractEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

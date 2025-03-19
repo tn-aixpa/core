@@ -2,8 +2,8 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.commons.ApplicationKeys;
 import it.smartcommunitylabdhub.commons.models.template.Template;
-import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.TemplateFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTemplateService;

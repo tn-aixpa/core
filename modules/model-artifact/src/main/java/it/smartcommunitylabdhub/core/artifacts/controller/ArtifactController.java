@@ -1,0 +1,125 @@
+package it.smartcommunitylabdhub.core.artifacts.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.commons.ApplicationKeys;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.core.artifacts.persistence.ArtifactEntity;
+import it.smartcommunitylabdhub.core.artifacts.queries.ArtifactEntityFilter;
+import it.smartcommunitylabdhub.core.artifacts.service.SearchableArtifactService;
+import it.smartcommunitylabdhub.core.search.IndexableEntityService;
+import jakarta.annotation.Nullable;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindException;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+// @ApiVersion("v1")
+@RequestMapping("/artifacts")
+//TODO evaluate permissions for project via lookup in dto
+@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+@Validated
+@Slf4j
+@Tag(name = "Artifact base API", description = "Endpoints related to artifacts management out of the Context")
+public class ArtifactController {
+
+    @Autowired
+    SearchableArtifactService artifactService;
+
+    @Autowired
+    IndexableEntityService<ArtifactEntity> indexService;
+
+    @Operation(summary = "Create artifact", description = "Create an artifact and return")
+    @PostMapping(
+        value = "",
+        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
+        produces = "application/json; charset=UTF-8"
+    )
+    public Artifact createArtifact(@RequestBody @Valid @NotNull Artifact dto)
+        throws DuplicatedEntityException, IllegalArgumentException, SystemException, BindException {
+        return artifactService.createArtifact(dto);
+    }
+
+    @Operation(summary = "List artifacts", description = "Return a list of all artifacts")
+    @GetMapping(path = "", produces = "application/json; charset=UTF-8")
+    public Page<Artifact> getArtifacts(
+        @ParameterObject @Valid @Nullable ArtifactEntityFilter filter,
+        @ParameterObject @RequestParam(required = false, defaultValue = "all") String versions,
+        @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
+            { @SortDefault(sort = "created", direction = Direction.DESC) }
+        ) Pageable pageable
+    ) {
+        SearchFilter<ArtifactEntity> sf = null;
+        if (filter != null) {
+            sf = filter.toSearchFilter();
+        }
+        if ("latest".equals(versions)) {
+            return artifactService.searchLatestArtifacts(pageable, sf);
+        } else {
+            return artifactService.searchArtifacts(pageable, sf);
+        }
+    }
+
+    @Operation(summary = "Get an artifact by id", description = "Return an artifact")
+    @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
+    public Artifact getArtifact(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id)
+        throws NoSuchEntityException {
+        return artifactService.getArtifact(id);
+    }
+
+    @Operation(summary = "Update specific artifact", description = "Update and return the artifact")
+    @PutMapping(
+        path = "/{id}",
+        consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
+        produces = "application/json; charset=UTF-8"
+    )
+    public Artifact updateArtifact(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestBody @Valid @NotNull Artifact dto
+    ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
+        return artifactService.updateArtifact(id, dto);
+    }
+
+    @Operation(summary = "Delete an artifact", description = "Delete a specific artifact")
+    @DeleteMapping(path = "/{id}")
+    public void deleteArtifact(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
+        artifactService.deleteArtifact(id);
+    }
+
+    /*
+     * Search apis
+     */
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @Operation(summary = "Reindex all artifact", description = "Reindex artifacts")
+    @PostMapping(value = "/search/reindex", produces = "application/json; charset=UTF-8")
+    public void reindexArtifacts() {
+        //via async
+        indexService.reindexAll();
+    }
+}

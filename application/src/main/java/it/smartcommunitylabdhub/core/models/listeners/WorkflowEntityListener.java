@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.models.workflow.Workflow;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.WorkflowEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
-import it.smartcommunitylabdhub.core.services.EntityService;
+import it.smartcommunitylabdhub.core.models.service.EntityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;

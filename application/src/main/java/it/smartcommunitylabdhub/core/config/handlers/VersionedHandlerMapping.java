@@ -1,6 +1,5 @@
 package it.smartcommunitylabdhub.core.config.handlers;
 
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -16,6 +15,8 @@ import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.pattern.PathPattern;
+
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 
 public class VersionedHandlerMapping extends RequestMappingHandlerMapping {
 

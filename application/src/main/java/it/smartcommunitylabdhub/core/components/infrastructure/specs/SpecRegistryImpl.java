@@ -8,6 +8,7 @@ import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.schemas.Schema;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.services.SpecValidator;
 import it.smartcommunitylabdhub.commons.utils.SchemaUtils;
 import it.smartcommunitylabdhub.core.models.schemas.SchemaImpl;
 import it.smartcommunitylabdhub.core.models.schemas.SchemaImpl.SchemaImplBuilder;

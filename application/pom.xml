@@ -21,7 +21,7 @@
     <version>${revision}</version>
     <description>Digital Hub Core</description>
     <properties>
-        <revision>0.10.0-SNAPSHOT</revision>
+        <revision>0.11.0-SNAPSHOT</revision>
         <java.version>21</java.version>
         <spring-security.version>6.3.1</spring-security.version>
         <springdoc.version>2.2.0</springdoc.version>
@@ -33,7 +33,6 @@
         <!-- note: jetty locked to 10 due to solr 9.x incompatibility -->
         <!-- note: do NOT set jetty.version because spring bom defines it for jetty 12 -->
         <jetty4solr.version>10.0.24</jetty4solr.version>
-        <solr.version>9.7.0</solr.version>
         <lucene.version>9.11.1</lucene.version>
         <checkstyle.config.location>../checkstyle/checkstyle.xml</checkstyle.config.location>
         <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
@@ -175,11 +174,6 @@
 
         <!-- Solr -->
         <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>
-            <version>${solr.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
             <version>${jetty4solr.version}</version>
@@ -233,6 +227,22 @@
             <artifactId>dh-fsm</artifactId>
             <version>${revision}</version>
         </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-model-base</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-components-search-base</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.smartcommunitylabdhub</groupId>
+            <artifactId>dh-model-artifact</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-base</artifactId>
@@ -290,7 +300,7 @@
         </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
-            <artifactId>dh-files</artifactId>
+            <artifactId>dh-component-files</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>

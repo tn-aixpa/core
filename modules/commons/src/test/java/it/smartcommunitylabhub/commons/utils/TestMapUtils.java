@@ -1,10 +1,12 @@
 package it.smartcommunitylabhub.commons.utils;
 
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("checkstyle:MagicNumber")
 public class TestMapUtils {
 
     @Test

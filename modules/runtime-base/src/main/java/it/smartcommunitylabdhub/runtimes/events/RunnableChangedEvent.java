@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.runtimes.events;
 
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
+import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,6 +19,8 @@ public class RunnableChangedEvent<R extends RunRunnable> {
     private String state;
     private String previousState;
 
+    //TODO fix this, consumers need to check for nullity
+    @Nullable
     public String getId() {
         return runnable != null ? runnable.getId() : null;
     }
