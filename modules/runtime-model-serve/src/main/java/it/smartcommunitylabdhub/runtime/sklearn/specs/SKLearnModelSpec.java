@@ -3,7 +3,8 @@ package it.smartcommunitylabdhub.runtime.sklearn.specs;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-import it.smartcommunitylabdhub.commons.models.model.ModelBaseSpec;
+import it.smartcommunitylabdhub.core.models.specs.ModelBaseSpec;
+
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;

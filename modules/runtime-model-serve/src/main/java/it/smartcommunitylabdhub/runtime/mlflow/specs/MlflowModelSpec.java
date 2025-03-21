@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-import it.smartcommunitylabdhub.commons.models.model.ModelBaseSpec;
+import it.smartcommunitylabdhub.core.models.specs.ModelBaseSpec;
 import it.smartcommunitylabdhub.runtime.mlflow.models.Dataset;
 import it.smartcommunitylabdhub.runtime.mlflow.models.Signature;
 import java.io.Serializable;

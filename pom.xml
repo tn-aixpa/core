@@ -37,11 +37,14 @@
         <module>modules/component-labels</module>
         <module>modules/component-relationships</module>
         <module>modules/component-files</module>
+        <module>modules/component-metrics</module>
 
         <module>modules/runtime-base</module>
 
         <!-- models  -->
         <module>modules/model-artifact</module>
+        <module>modules/model-dataitem</module>
+        <module>modules/model-model</module>
 
         <!-- frameworks -->
         <!-- <module>modules/framework-k8s</module>

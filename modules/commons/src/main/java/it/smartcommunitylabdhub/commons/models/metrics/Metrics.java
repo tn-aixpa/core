@@ -1,9 +1,7 @@
 package it.smartcommunitylabdhub.commons.models.metrics;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
+import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,15 +15,14 @@ import lombok.Setter;
 @Builder
 @JsonPropertyOrder(alphabetic = true)
 public class Metrics implements Serializable {
-	
-	private String id;
-	
-	private String entityName;
-	
-	private String entityId;
-	
-	private String name;
-    
-	private  NumberOrNumberArray data;
 
+    private String id;
+
+    private String entityName;
+
+    private String entityId;
+
+    private String name;
+
+    private NumberOrNumberArray data;
 }
