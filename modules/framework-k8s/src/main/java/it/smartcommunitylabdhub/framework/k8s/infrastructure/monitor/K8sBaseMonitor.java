@@ -7,10 +7,12 @@ import it.smartcommunitylabdhub.commons.services.RunnableStore;
 import it.smartcommunitylabdhub.framework.k8s.jackson.KubernetesMapper;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtimes.events.RunnableChangedEvent;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.stream.Stream;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,11 +25,13 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
     //custom object mapper with mixIn for IntOrString
     protected static final ObjectMapper mapper = KubernetesMapper.OBJECT_MAPPER;
     protected static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
-        HashMap<String, Serializable>
-    >() {};
+            HashMap<String, Serializable>
+            >() {
+    };
     protected static final TypeReference<ArrayList<HashMap<String, Serializable>>> arrayRef = new TypeReference<
-        ArrayList<HashMap<String, Serializable>>
-    >() {};
+            ArrayList<HashMap<String, Serializable>>
+            >() {
+    };
 
     protected final RunnableStore<T> store;
     protected ApplicationEventPublisher eventPublisher;
@@ -70,34 +74,64 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
     public void monitor() {
         log.debug("monitor all RUNNING...");
         store
-            .findAll()
-            .stream()
-            .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
-            .flatMap(runnable -> {
-                log.debug("monitor run {}", runnable.getId());
+                .findAll()
+                .stream()
+                .filter(runnable -> runnable.getState() != null && runnable.getState().equals("RUNNING"))
+                .flatMap(runnable -> {
+                    log.debug("monitor run {}", runnable.getId());
 
-                if (log.isTraceEnabled()) {
-                    log.trace("runnable: {}", runnable);
-                }
-                return Stream.of(refresh(runnable));
-            })
-            .forEach(runnable -> {
-                if (log.isTraceEnabled()) {
-                    log.trace("refreshed: {}", runnable);
-                }
+                    if (log.isTraceEnabled()) {
+                        log.trace("runnable: {}", runnable);
+                    }
+                    return Stream.of(refresh(runnable));
+                })
+                .forEach(runnable -> {
+                    if (log.isTraceEnabled()) {
+                        log.trace("refreshed: {}", runnable);
+                    }
 
-                // Update the runnable
-                try {
-                    log.debug("store run {}", runnable.getId());
-                    store.store(runnable.getId(), runnable);
+                    // Update the runnable
+                    try {
+                        log.debug("store run {}", runnable.getId());
+                        store.store(runnable.getId(), runnable);
 
-                    publish(runnable);
-                } catch (StoreException e) {
-                    log.error("Error with runnable store: {}", e.getMessage());
-                }
-            });
+                        publish(runnable);
+                    } catch (StoreException e) {
+                        log.error("Error with runnable store: {}", e.getMessage());
+                    }
+                });
 
         log.debug("monitor completed.");
+    }
+
+
+    public T refresh(String id) throws StoreException {
+        try {
+            T runnable = store.find(id);
+            if(runnable == null) {
+                return null;
+            }
+            runnable = refresh(runnable);
+            if (log.isTraceEnabled()) {
+                log.trace("refreshed: {}", runnable);
+            }
+
+            // Update the runnable
+            try {
+                log.debug("store run {}", runnable.getId());
+                store.store(runnable.getId(), runnable);
+
+                publish(runnable);
+            } catch (StoreException e) {
+                log.error("Error with runnable store: {}", e.getMessage());
+            }
+
+            return runnable;
+        } catch (StoreException e) {
+            log.error("Error with runnable store: {}", e.getMessage());
+            throw e;
+        }
+
     }
 
     public abstract T refresh(T runnable);
