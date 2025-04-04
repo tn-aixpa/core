@@ -33,6 +33,7 @@ import it.smartcommunitylabdhub.framework.k8s.config.KubernetesProperties;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.jackson.KubernetesMapper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sLabelHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
@@ -105,6 +106,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected String version;
     protected K8sBuilderHelper k8sBuilderHelper;
     protected K8sSecretHelper k8sSecretHelper;
+    protected K8sLabelHelper k8sLabelHelper;
 
     protected K8sBaseFramework(ApiClient apiClient) {
         Assert.notNull(apiClient, "k8s api client is required");
@@ -235,10 +237,16 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         this.k8sSecretHelper = k8sSecretHelper;
     }
 
+    @Autowired
+    public void setK8sLabelHelper(K8sLabelHelper k8sLabelHelper) {
+        this.k8sLabelHelper = k8sLabelHelper;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         Assert.notNull(k8sBuilderHelper, "k8s helper is required");
         Assert.notNull(k8sSecretHelper, "k8s secret helper is required");
+        Assert.notNull(k8sLabelHelper, "k8s label helper is required");
         Assert.notNull(k8sProperties, "k8s properties required");
         Assert.notNull(namespace, "k8s namespace required");
         Assert.notNull(version, "k8s version required");
@@ -500,27 +508,10 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
      * TODO move to a base builder class
      */
     protected Map<String, String> buildLabels(T runnable) {
-        // Create labels for job
-        Map<String, String> appLabels = Map.of(
-            "app.kubernetes.io/instance",
-            K8sBuilderHelper.sanitizeNames(applicationProperties.getName() + "-" + runnable.getId()),
-            "app.kubernetes.io/version",
-            runnable.getId(),
-            "app.kubernetes.io/part-of",
-            K8sBuilderHelper.sanitizeNames(applicationProperties.getName() + "-" + runnable.getProject()),
-            "app.kubernetes.io/managed-by",
-            K8sBuilderHelper.sanitizeNames(applicationProperties.getName())
-        );
+        // Create base labels
+        Map<String, String> baseLabels = k8sLabelHelper.buildBaseLabels(runnable);
 
-        Map<String, String> coreLabels = Map.of(
-            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/project",
-            K8sBuilderHelper.sanitizeNames(runnable.getProject()),
-            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/framework",
-            K8sBuilderHelper.sanitizeNames(runnable.getFramework()),
-            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/runtime",
-            K8sBuilderHelper.sanitizeNames(runnable.getRuntime())
-        );
-
+        //build template labels when defined
         Map<String, String> templateLabels = new HashMap<>();
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
@@ -537,8 +528,9 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             }
         }
 
-        Map<String, String> labels = MapUtils.mergeMultipleMaps(templateLabels, appLabels, coreLabels);
+        Map<String, String> labels = MapUtils.mergeMultipleMaps(templateLabels, baseLabels);
 
+        //append user-defined labels with no override
         if (runnable.getLabels() != null && !runnable.getLabels().isEmpty()) {
             labels = new HashMap<>(labels);
             for (CoreLabel l : runnable.getLabels()) {

@@ -1,12 +1,14 @@
-package it.smartcommunitylabdhub.framework.k8s.infrastructure.watcher;
+package it.smartcommunitylabdhub.framework.k8s.config;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class K8sFabric8Client {
+@ConditionalOnKubernetes
+public class K8sFabric8ClientConfig {
 
     @Bean
     public KubernetesClient kubernetesClient() {
