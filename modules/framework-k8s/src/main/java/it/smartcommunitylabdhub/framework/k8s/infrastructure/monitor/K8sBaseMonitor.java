@@ -100,6 +100,30 @@ public abstract class K8sBaseMonitor<T extends K8sRunnable> implements Runnable 
         log.debug("monitor completed.");
     }
 
+    public void monitor(String id) throws StoreException {
+        try {
+            T runnable = store.find(id);
+            if (runnable == null) {
+                //nothing to do
+                log.debug("runnable {} not found", id);
+                return;
+            }
+            runnable = refresh(runnable);
+            if (log.isTraceEnabled()) {
+                log.trace("refreshed: {}", runnable);
+            }
+
+            // Update the runnable
+            log.debug("store run {}", runnable.getId());
+            store.store(runnable.getId(), runnable);
+
+            publish(runnable);
+        } catch (StoreException e) {
+            log.error("Error with runnable store: {}", e.getMessage());
+            throw e;
+        }
+    }
+
     public abstract T refresh(T runnable);
 
     protected void publish(T runnable) {
