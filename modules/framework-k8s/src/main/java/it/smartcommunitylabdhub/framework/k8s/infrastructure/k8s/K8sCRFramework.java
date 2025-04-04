@@ -12,6 +12,7 @@ import io.kubernetes.client.util.generic.KubernetesApiResponse;
 import io.kubernetes.client.util.generic.dynamic.DynamicKubernetesApi;
 import io.kubernetes.client.util.generic.dynamic.DynamicKubernetesObject;
 import io.kubernetes.client.util.generic.options.CreateOptions;
+import io.kubernetes.client.util.generic.options.DeleteOptions;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.exceptions.FrameworkException;
 import it.smartcommunitylabdhub.commons.models.enums.State;
@@ -198,14 +199,14 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
         return obj;
     }
 
-    public JsonElement specToJsonElement(Map<String, Serializable> spec) {
+    private JsonElement specToJsonElement(Map<String, Serializable> spec) {
         Gson gson = new Gson();
         String json = gson.toJson(spec);
         JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
         return jsonObject;
     }
 
-    public Map<String, Serializable> jsonElementToSpec(JsonElement jsonElement) throws Exception {
+    private Map<String, Serializable> jsonElementToSpec(JsonElement jsonElement) throws Exception {
         Gson gson = new Gson();
         String json = gson.toJson(jsonElement);
         return mapper.readValue(json, typeRef);
@@ -244,7 +245,11 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
             String crName = cr.getMetadata().getName();
             log.debug("delete CR for {}", crName);
 
-            dynamicApi.delete(namespace, crName);
+            //delete with foreground propagation
+            DeleteOptions options = new DeleteOptions();
+            options.setPropagationPolicy("Foreground");
+
+            dynamicApi.delete(namespace, crName, options);
         } catch (Exception e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isTraceEnabled()) {
