@@ -5,21 +5,25 @@ import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sDeploymentFr
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sJobFramework;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sServeFramework;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PostConstruct;
-
 
 @Configuration
 @Slf4j
 public class K8sWatcherConfig {
+
     private final K8sJobWatcherService jobWatcher;
     private final K8sDeploymentWatcherService deploymentWatcher;
     private final K8sServeWatcherService serviceWatcher;
     private final ApplicationProperties applicationProperties;
 
-    public K8sWatcherConfig(K8sJobWatcherService jobWatcher, K8sDeploymentWatcherService deploymentWatcher, K8sServeWatcherService serviceWatcher, ApplicationProperties applicationProperties) {
+    public K8sWatcherConfig(
+        K8sJobWatcherService jobWatcher,
+        K8sDeploymentWatcherService deploymentWatcher,
+        K8sServeWatcherService serviceWatcher,
+        ApplicationProperties applicationProperties
+    ) {
         this.jobWatcher = jobWatcher;
         this.deploymentWatcher = deploymentWatcher;
         this.serviceWatcher = serviceWatcher;
@@ -31,13 +35,21 @@ public class K8sWatcherConfig {
         log.info("🔄 Starting Kubernetes Watchers...");
 
         // Each watcher gets only its corresponding label
-        jobWatcher.startWatcher(K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/framework=" + K8sJobFramework.FRAMEWORK);
-        deploymentWatcher.startWatcher(K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/framework=" + K8sDeploymentFramework.FRAMEWORK);
-        serviceWatcher.startWatcher(K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/framework=" + K8sServeFramework.FRAMEWORK);
+        jobWatcher.startWatcher(
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/framework=" + K8sJobFramework.FRAMEWORK
+        );
+        deploymentWatcher.startWatcher(
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) +
+            "/framework=" +
+            K8sDeploymentFramework.FRAMEWORK
+        );
+        serviceWatcher.startWatcher(
+            K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) +
+            "/framework=" +
+            K8sServeFramework.FRAMEWORK
+        );
     }
 }
-
-
 //@Configuration
 //@Slf4j
 //public class K8sWatcherConfig {

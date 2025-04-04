@@ -1,11 +1,11 @@
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.watcher;
 
-
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class K8sLabelHelper {
+
     private static final Pattern INSTANCE_PATTERN = Pattern.compile("dhcore-([a-f0-9]{32})");
 
     public static String extractInstanceId(Map<String, String> labels) {
@@ -22,4 +22,3 @@ public class K8sLabelHelper {
         return matcher.find() ? matcher.group(1) : "Unknown";
     }
 }
-

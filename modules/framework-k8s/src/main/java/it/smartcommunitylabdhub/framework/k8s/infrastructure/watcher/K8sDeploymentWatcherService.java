@@ -26,35 +26,52 @@ public class K8sDeploymentWatcherService extends AbstractK8sWatcherService {
     }
 
     private void watchDeployments(String label) {
-        client.apps().deployments().inNamespace(namespace).withLabel(label).watch(new Watcher<Deployment>() {
-            @Override
-            public void eventReceived(Action action, Deployment deployment) {
-                // Get runnable id from deployment labels and refresh
-                String runnableId = K8sLabelHelper.extractInstanceId(deployment.getMetadata().getLabels());
-                debounceAndRefresh(runnableId, () -> {
-                    try {
-                        k8sDeploymentMonitor.refresh(runnableId);
+        client
+            .apps()
+            .deployments()
+            .inNamespace(namespace)
+            .withLabel(label)
+            .watch(
+                new Watcher<Deployment>() {
+                    @Override
+                    public void eventReceived(Action action, Deployment deployment) {
+                        // Get runnable id from deployment labels and refresh
+                        String runnableId = K8sLabelHelper.extractInstanceId(deployment.getMetadata().getLabels());
+                        debounceAndRefresh(
+                            runnableId,
+                            () -> {
+                                try {
+                                    k8sDeploymentMonitor.refresh(runnableId);
 
-                        String labels = deployment.getMetadata().getLabels() != null
-                                ? deployment.getMetadata().getLabels().entrySet().stream()
-                                .map(e -> e.getKey() + "=" + e.getValue())
-                                .reduce((a, b) -> a + ", " + b)
-                                .orElse("No Labels")
-                                : "No Labels";
+                                    String labels = deployment.getMetadata().getLabels() != null
+                                        ? deployment
+                                            .getMetadata()
+                                            .getLabels()
+                                            .entrySet()
+                                            .stream()
+                                            .map(e -> e.getKey() + "=" + e.getValue())
+                                            .reduce((a, b) -> a + ", " + b)
+                                            .orElse("No Labels")
+                                        : "No Labels";
 
-                        log.info("🚀 Deployment Event: [{}] - Deployment: [{}] - Labels: [{}]", action, deployment.getMetadata().getName(), labels);
-                    } catch (StoreException e) {
-                        throw new RuntimeException(e);
+                                    log.info(
+                                        "🚀 Deployment Event: [{}] - Deployment: [{}] - Labels: [{}]",
+                                        action,
+                                        deployment.getMetadata().getName(),
+                                        labels
+                                    );
+                                } catch (StoreException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        );
                     }
-                });
 
-            }
-
-            @Override
-            public void onClose(WatcherException e) {
-                log.warn("⚠️ Deployment watcher closed: {}", e.getMessage());
-            }
-        });
+                    @Override
+                    public void onClose(WatcherException e) {
+                        log.warn("⚠️ Deployment watcher closed: {}", e.getMessage());
+                    }
+                }
+            );
     }
 }
-

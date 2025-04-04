@@ -25,37 +25,51 @@ public class K8sServeWatcherService extends AbstractK8sWatcherService {
     }
 
     private void watchServices(String label) {
-        client.services().inNamespace(namespace).withLabel(label).watch(new Watcher<io.fabric8.kubernetes.api.model.Service>() {
-            @Override
-            public void eventReceived(Action action,  io.fabric8.kubernetes.api.model.Service service) {
+        client
+            .services()
+            .inNamespace(namespace)
+            .withLabel(label)
+            .watch(
+                new Watcher<io.fabric8.kubernetes.api.model.Service>() {
+                    @Override
+                    public void eventReceived(Action action, io.fabric8.kubernetes.api.model.Service service) {
+                        // Get runnable id from serve labels and refresh
+                        String runnableId = K8sLabelHelper.extractInstanceId(service.getMetadata().getLabels());
+                        debounceAndRefresh(
+                            runnableId,
+                            () -> {
+                                try {
+                                    k8sServeMonitor.refresh(runnableId);
 
+                                    String labels = service.getMetadata().getLabels() != null
+                                        ? service
+                                            .getMetadata()
+                                            .getLabels()
+                                            .entrySet()
+                                            .stream()
+                                            .map(e -> e.getKey() + "=" + e.getValue())
+                                            .reduce((a, b) -> a + ", " + b)
+                                            .orElse("No Labels")
+                                        : "No Labels";
 
-                // Get runnable id from serve labels and refresh
-                String runnableId = K8sLabelHelper.extractInstanceId(service.getMetadata().getLabels());
-                debounceAndRefresh(runnableId, () -> {
-                    try {
-                        k8sServeMonitor.refresh(runnableId);
-
-
-                        String labels = service.getMetadata().getLabels() != null
-                                ? service.getMetadata().getLabels().entrySet().stream()
-                                .map(e -> e.getKey() + "=" + e.getValue())
-                                .reduce((a, b) -> a + ", " + b)
-                                .orElse("No Labels")
-                                : "No Labels";
-
-                        log.info("🌐 Service Event: [{}] - Service: [{}] - Labels: [{}]", action, service.getMetadata().getName(), labels);
-
-                    } catch (StoreException e) {
-                        throw new RuntimeException(e);
+                                    log.info(
+                                        "🌐 Service Event: [{}] - Service: [{}] - Labels: [{}]",
+                                        action,
+                                        service.getMetadata().getName(),
+                                        labels
+                                    );
+                                } catch (StoreException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        );
                     }
-                });
-            }
 
-            @Override
-            public void onClose(WatcherException e) {
-                log.warn("⚠️ Service watcher closed: {}", e.getMessage());
-            }
-        });
+                    @Override
+                    public void onClose(WatcherException e) {
+                        log.warn("⚠️ Service watcher closed: {}", e.getMessage());
+                    }
+                }
+            );
     }
 }
