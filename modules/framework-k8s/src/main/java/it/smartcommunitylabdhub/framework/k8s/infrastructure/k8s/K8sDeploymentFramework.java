@@ -421,6 +421,11 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             replicas = template.getProfile().getReplicas().intValue();
         }
 
+        //sanity check: replicas should be > 0
+        if (replicas <= 0) {
+            throw new K8sFrameworkException("replicas should be > 0");
+        }
+
         // Create the deploymentSpec with the PodTemplateSpec, leveraging template
         V1DeploymentSpec deploymentSpec = Optional
             .ofNullable(template)
