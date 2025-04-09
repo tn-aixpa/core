@@ -230,7 +230,7 @@ public class DataItemContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.uploadFileAsUrl(id, filename);
+        return filesService.uploadFileAsUrl(id, project, filename);
     }
 
     @Operation(summary = "Create a starting multipart upload url for a given entity, if available")
@@ -247,7 +247,7 @@ public class DataItemContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.startMultiPartUpload(id, filename);
+        return filesService.startMultiPartUpload(id, project, filename);
     }
 
     @Operation(summary = "Create a multipart upload url for a given entity, if available")
@@ -266,7 +266,7 @@ public class DataItemContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.uploadMultiPart(id, filename, uploadId, partNumber);
+        return filesService.uploadMultiPart(id, project, filename, uploadId, partNumber);
     }
 
     @Operation(summary = "Create a completing multipart upload url for a given entity, if available")
@@ -285,7 +285,7 @@ public class DataItemContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return filesService.completeMultiPartUpload(id, filename, uploadId, partList);
+        return filesService.completeMultiPartUpload(id, project, filename, uploadId, partList);
     }
 
     @Operation(summary = "Get file info for a given entity, if available")

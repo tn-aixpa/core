@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.models.function.Function;
 import it.smartcommunitylabdhub.commons.models.log.Log;
 import it.smartcommunitylabdhub.commons.models.model.Model;
 import it.smartcommunitylabdhub.commons.models.project.Project;
+import it.smartcommunitylabdhub.commons.models.report.Report;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.models.secret.Secret;
 import it.smartcommunitylabdhub.commons.models.task.Task;
@@ -16,6 +17,7 @@ import it.smartcommunitylabdhub.core.models.entities.FunctionEntity;
 import it.smartcommunitylabdhub.core.models.entities.LogEntity;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.models.entities.ReportEntity;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
@@ -26,6 +28,7 @@ import it.smartcommunitylabdhub.core.repositories.FunctionRepository;
 import it.smartcommunitylabdhub.core.repositories.LogRepository;
 import it.smartcommunitylabdhub.core.repositories.ModelRepository;
 import it.smartcommunitylabdhub.core.repositories.ProjectRepository;
+import it.smartcommunitylabdhub.core.repositories.ReportRepository;
 import it.smartcommunitylabdhub.core.repositories.RunRepository;
 import it.smartcommunitylabdhub.core.repositories.SecretRepository;
 import it.smartcommunitylabdhub.core.repositories.TaskRepository;
@@ -91,6 +94,15 @@ public class PersistenceConfig {
         LogRepository repository,
         Converter<Log, LogEntity> entityBuilder,
         Converter<LogEntity, Log> dtoBuilder
+    ) {
+        return new BaseEntityServiceImpl<>(repository, entityBuilder, dtoBuilder);
+    }
+
+    @Bean
+    public EntityService<Report, ReportEntity> reportEntityService(
+        ReportRepository repository,
+        Converter<Report, ReportEntity> entityBuilder,
+        Converter<ReportEntity, Report> dtoBuilder
     ) {
         return new BaseEntityServiceImpl<>(repository, entityBuilder, dtoBuilder);
     }

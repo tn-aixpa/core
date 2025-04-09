@@ -6,16 +6,14 @@ import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.report.Report;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
-import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.ArtifactEntityFilter;
-import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
+import it.smartcommunitylabdhub.core.models.entities.ReportEntity;
+import it.smartcommunitylabdhub.core.models.queries.filters.entities.ReportEntityFilter;
+import it.smartcommunitylabdhub.core.models.queries.services.SearchableReportService;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
@@ -49,142 +47,139 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @ApiVersion("v1")
-@RequestMapping("/-/{project}/artifacts")
+@RequestMapping("/-/{project}/reports")
 @PreAuthorize(
     "hasAuthority('ROLE_ADMIN') or (hasAuthority(#project+':ROLE_USER') or hasAuthority(#project+':ROLE_ADMIN'))"
 )
 @Validated
 @Slf4j
-@Tag(name = "Artifact context API", description = "Endpoints related to artifacts management in project")
-public class ArtifactContextController {
+@Tag(name = "Report context API", description = "Endpoints related to reports management in project")
+public class ReportContextController {
 
     @Autowired
-    SearchableArtifactService artifactService;
+    SearchableReportService reportService;
 
     @Autowired
-    EntityFilesService<Artifact> filesService;
+    EntityFilesService<Report> filesService;
 
-    @Autowired
-    RelationshipsAwareEntityService<Artifact> relationshipsService;
-
-    @Operation(summary = "Create an artifact in a project context")
+    @Operation(summary = "Create a report in a project context")
     @PostMapping(
         value = "",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Artifact createArtifact(
+    public Report createReport(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @Valid @NotNull @RequestBody Artifact dto
+        @Valid @NotNull @RequestBody Report dto
     ) throws DuplicatedEntityException, IllegalArgumentException, SystemException, BindException {
         //enforce project match
         dto.setProject(project);
 
         //create as new
-        return artifactService.createArtifact(dto);
+        return reportService.createReport(dto);
     }
 
-    @Operation(summary = "Search artifacts")
+    @Operation(summary = "Search reports")
     @GetMapping(path = "", produces = "application/json; charset=UTF-8")
-    public Page<Artifact> searchArtifacts(
+    public Page<Report> searchReports(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @Valid @Nullable ArtifactEntityFilter filter,
+        @ParameterObject @Valid @Nullable ReportEntityFilter filter,
         @ParameterObject @RequestParam(required = false, defaultValue = "latest") String versions,
         @ParameterObject @PageableDefault(page = 0, size = ApplicationKeys.DEFAULT_PAGE_SIZE) @SortDefault.SortDefaults(
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
     ) {
-        SearchFilter<ArtifactEntity> sf = null;
+        SearchFilter<ReportEntity> sf = null;
         if (filter != null) {
             sf = filter.toSearchFilter();
         }
         if ("all".equals(versions)) {
-            return artifactService.searchArtifactsByProject(project, pageable, sf);
+            return reportService.searchReportsByProject(project, pageable, sf);
         } else {
-            return artifactService.searchLatestArtifactsByProject(project, pageable, sf);
+            return reportService.searchLatestReportsByProject(project, pageable, sf);
         }
     }
 
-    @Operation(summary = "Delete all version of an artifact")
+    @Operation(summary = "Delete all version of a report")
     @DeleteMapping(path = "")
-    public void deleteAllArtifacts(
+    public void deleteAllReports(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
     ) {
-        artifactService.deleteArtifacts(project, name);
+        reportService.deleteReports(project, name);
     }
 
     /*
      * Versions
      */
 
-    @Operation(summary = "Retrieve a specific artifact version given the artifact id")
+    @Operation(summary = "Retrieve a specific report version given the report id")
     @GetMapping(path = "/{id}", produces = "application/json; charset=UTF-8")
-    public Artifact getArtifactById(
+    public Report getReportById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Report report = reportService.getReport(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if (!report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return artifact;
+        return report;
     }
 
-    @Operation(summary = "Update if exist an artifact in a project context")
+    @Operation(summary = "Update if exist a report in a project context")
     @PutMapping(
         value = "/{id}",
         consumes = { MediaType.APPLICATION_JSON_VALUE, "application/x-yaml" },
         produces = "application/json; charset=UTF-8"
     )
-    public Artifact updateArtifactById(
+    public Report updateReportById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-        @RequestBody @Valid @NotNull Artifact artifactDTO
+        @RequestBody @Valid @NotNull Report reportDTO
     ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Report report = reportService.getReport(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if (!report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return artifactService.updateArtifact(id, artifactDTO);
+        return reportService.updateReport(id, reportDTO);
     }
 
-    @Operation(summary = "Delete a specific artifact version")
+    @Operation(summary = "Delete a specific report version")
     @DeleteMapping(path = "/{id}")
-    public void deleteArtifactById(
+    public void deleteReportById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Report report = reportService.getReport(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if (!report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
-        artifactService.deleteArtifact(id);
+        reportService.deleteReport(id);
     }
 
     /*
      * Files
      */
-    @Operation(summary = "Get download url for a given artifact, if available")
+    @Operation(summary = "Get download url for a given report, if available")
     @GetMapping(path = "/{id}/files/download", produces = "application/json; charset=UTF-8")
-    public DownloadInfo downloadAsUrlArtifactById(
+    public DownloadInfo downloadAsUrlReportById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @ParameterObject @RequestParam(required = false) String sub
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Report report = reportService.getReport(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if (!report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -195,51 +190,51 @@ public class ArtifactContextController {
         return filesService.downloadFileAsUrl(id);
     }
 
-    @Operation(summary = "Get download url for a given artifact file, if available")
+    @Operation(summary = "Get download url for a given report file, if available")
     @GetMapping(path = "/{id}/files/download/**", produces = "application/json; charset=UTF-8")
     public DownloadInfo downloadAsUrlFile(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         HttpServletRequest request
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Report report = reportService.getReport(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if (!report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
         String path = request.getRequestURL().toString().split("files/download/")[1];
         return filesService.downloadFileAsUrl(id, path);
     }
 
-    @Operation(summary = "Create an upload url for a given artifact, if available")
+    @Operation(summary = "Create an upload url for a given report, if available")
     @PostMapping(path = "/{id}/files/upload", produces = "application/json; charset=UTF-8")
-    public UploadInfo uploadAsUrlArtifactById(
+    public UploadInfo uploadAsUrlReportById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.findArtifact(id);
+        Report report = reportService.findReport(id);
 
         //check for project and name match
-        if ((artifact != null) && !artifact.getProject().equals(project)) {
+        if ((report != null) && !report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
         return filesService.uploadFileAsUrl(id, project, filename);
     }
 
-    @Operation(summary = "Start a multipart upload for a given artifact, if available")
+    @Operation(summary = "Start a multipart upload for a given report, if available")
     @PostMapping(path = "/{id}/files/multipart/start", produces = "application/json; charset=UTF-8")
-    public UploadInfo multipartStartUploadAsUrlArtifactById(
+    public UploadInfo multipartStartUploadAsUrlReportById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.findArtifact(id);
+        Report report = reportService.findReport(id);
 
         //check for project and name match
-        if ((artifact != null) && !artifact.getProject().equals(project)) {
+        if ((report != null) && !report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -247,55 +242,55 @@ public class ArtifactContextController {
     }
 
     @Operation(
-        summary = "Generate an upload url for a part of a given multipart upload for a given artifact, if available"
+        summary = "Generate an upload url for a part of a given multipart upload for a given report, if available"
     )
     @PutMapping(path = "/{id}/files/multipart/part", produces = "application/json; charset=UTF-8")
-    public UploadInfo multipartPartUploadAsUrlArtifactById(
+    public UploadInfo multipartPartUploadAsUrlReportById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename,
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull Integer partNumber
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.findArtifact(id);
+        Report report = reportService.findReport(id);
 
         //check for project and name match
-        if ((artifact != null) && !artifact.getProject().equals(project)) {
+        if ((report != null) && !report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
         return filesService.uploadMultiPart(id, project, filename, uploadId, partNumber);
     }
 
-    @Operation(summary = "Complete a multipart upload for a given artifact, if available")
+    @Operation(summary = "Complete a multipart upload for a given report, if available")
     @PostMapping(path = "/{id}/files/multipart/complete", produces = "application/json; charset=UTF-8")
-    public UploadInfo multipartCompleteUploadAsUrlArtifactById(
+    public UploadInfo multipartCompleteUploadAsUrlReportById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam @NotNull String filename,
         @RequestParam @NotNull String uploadId,
         @RequestParam @NotNull List<String> partList
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.findArtifact(id);
+        Report report = reportService.findReport(id);
 
         //check for project and name match
-        if ((artifact != null) && !artifact.getProject().equals(project)) {
+        if ((report != null) && !report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
         return filesService.completeMultiPartUpload(id, project, filename, uploadId, partList);
     }
 
-    @Operation(summary = "Get file info for a given artifact, if available")
+    @Operation(summary = "Get file info for a given report, if available")
     @GetMapping(path = "/{id}/files/info", produces = "application/json; charset=UTF-8")
-    public List<FileInfo> getArtifactFilesInfoById(
+    public List<FileInfo> getReportFilesInfoById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Artifact artifact = artifactService.getArtifact(id);
+        Report report = reportService.getReport(id);
 
         //check for project and name match
-        if (!artifact.getProject().equals(project)) {
+        if (!report.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
@@ -309,7 +304,7 @@ public class ArtifactContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody List<FileInfo> files
     ) throws NoSuchEntityException {
-        Artifact entity = artifactService.getArtifact(id);
+        Report entity = reportService.getReport(id);
 
         //check for project and name match
         if (!entity.getProject().equals(project)) {
@@ -319,19 +314,4 @@ public class ArtifactContextController {
         filesService.storeFileInfo(id, files);
     }
 
-    @Operation(summary = "Get relationships info for a given entity, if available")
-    @GetMapping(path = "/{id}/relationships", produces = "application/json; charset=UTF-8")
-    public List<RelationshipDetail> getRelationshipsById(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
-    ) throws NoSuchEntityException {
-        Artifact entity = artifactService.getArtifact(id);
-
-        //check for project and name match
-        if ((entity != null) && !entity.getProject().equals(project)) {
-            throw new IllegalArgumentException("invalid project");
-        }
-
-        return relationshipsService.getRelationships(id);
-    }
 }

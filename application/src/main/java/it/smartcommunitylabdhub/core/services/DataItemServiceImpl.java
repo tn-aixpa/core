@@ -617,32 +617,12 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
+    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String project, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
         log.debug("upload url for dataItem with id {}: {}", String.valueOf(id), filename);
 
         try {
-            String path =
-                filesService.getDefaultStore() +
-                "/" +
-                EntityName.DATAITEM.getValue() +
-                "/" +
-                id +
-                (filename.startsWith("/") ? filename : "/" + filename);
-
-            //dataItem may not exists (yet)
-            DataItem dataItem = entityService.find(id);
-
-            if (dataItem != null) {
-                //extract path from spec
-                DataItemBaseSpec spec = new DataItemBaseSpec();
-                spec.configure(dataItem.getSpec());
-
-                path = spec.getPath();
-                if (!StringUtils.hasText(path)) {
-                    throw new NoSuchEntityException("file");
-                }
-            }
+            String path = getOrCreatePath(id, project, filename);
 
             UploadInfo info = filesService.getUploadAsUrl(path);
             if (log.isTraceEnabled()) {
@@ -657,33 +637,12 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
+    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String project, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
         log.debug("start upload url for dataItem with id {}: {}", String.valueOf(id), filename);
 
         try {
-            String path =
-                filesService.getDefaultStore() +
-                "/" +
-                EntityName.DATAITEM.getValue() +
-                "/" +
-                id +
-                "/" +
-                (filename.startsWith("/") ? filename : "/" + filename);
-
-            //dataItem may not exists (yet)
-            DataItem dataItem = entityService.find(id);
-
-            if (dataItem != null) {
-                //extract path from spec
-                DataItemBaseSpec spec = new DataItemBaseSpec();
-                spec.configure(dataItem.getSpec());
-
-                path = spec.getPath();
-                if (!StringUtils.hasText(path)) {
-                    throw new NoSuchEntityException("file");
-                }
-            }
+            String path = getOrCreatePath(id, project, filename);
 
             UploadInfo info = filesService.startMultiPartUpload(path);
             if (log.isTraceEnabled()) {
@@ -700,34 +659,14 @@ public class DataItemServiceImpl
     @Override
     public UploadInfo uploadMultiPart(
         @Nullable String id,
+        @NotNull String project,
         @NotNull String filename,
         @NotNull String uploadId,
         @NotNull Integer partNumber
     ) throws NoSuchEntityException, SystemException {
         log.debug("upload part url for dataItem {}: {}", String.valueOf(id), filename);
         try {
-            String path =
-                filesService.getDefaultStore() +
-                "/" +
-                EntityName.DATAITEM.getValue() +
-                "/" +
-                id +
-                "/" +
-                (filename.startsWith("/") ? filename : "/" + filename);
-
-            //dataItem may not exists (yet)
-            DataItem dataItem = entityService.find(id);
-
-            if (dataItem != null) {
-                //extract path from spec
-                DataItemBaseSpec spec = new DataItemBaseSpec();
-                spec.configure(dataItem.getSpec());
-
-                path = spec.getPath();
-                if (!StringUtils.hasText(path)) {
-                    throw new NoSuchEntityException("file");
-                }
-            }
+            String path = getOrCreatePath(id, project, filename);
 
             UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber);
             if (log.isTraceEnabled()) {
@@ -744,34 +683,14 @@ public class DataItemServiceImpl
     @Override
     public UploadInfo completeMultiPartUpload(
         @Nullable String id,
+        @NotNull String project,
         @NotNull String filename,
         @NotNull String uploadId,
         @NotNull List<String> eTagPartList
     ) throws NoSuchEntityException, SystemException {
         log.debug("complete upload url for dataItem {}: {}", String.valueOf(id), filename);
         try {
-            String path =
-                filesService.getDefaultStore() +
-                "/" +
-                EntityName.DATAITEM.getValue() +
-                "/" +
-                id +
-                "/" +
-                (filename.startsWith("/") ? filename : "/" + filename);
-
-            //dataItem may not exists (yet)
-            DataItem dataItem = entityService.find(id);
-
-            if (dataItem != null) {
-                //extract path from spec
-                DataItemBaseSpec spec = new DataItemBaseSpec();
-                spec.configure(dataItem.getSpec());
-
-                path = spec.getPath();
-                if (!StringUtils.hasText(path)) {
-                    throw new NoSuchEntityException("file");
-                }
-            }
+            String path = getOrCreatePath(id, project, filename);
 
             UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList);
             if (log.isTraceEnabled()) {
@@ -797,4 +716,33 @@ public class DataItemServiceImpl
             throw new SystemException(e.getMessage());
         }
     }
+
+
+    private String getOrCreatePath(String id, String project, String filename) throws StoreException {
+        String path =
+            filesService.getDefaultStore() +
+            "/" +
+            project +
+            "/" +
+            EntityName.DATAITEM.getValue() +
+            "/" +
+            id +
+            (filename.startsWith("/") ? filename : "/" + filename);
+
+        //dataItem may not exists (yet)
+        DataItem dataItem = entityService.find(id);
+
+        if (dataItem != null) {
+            //extract path from spec
+            DataItemBaseSpec spec = new DataItemBaseSpec();
+            spec.configure(dataItem.getSpec());
+
+            path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+        }
+        return path;
+    }
+
 }

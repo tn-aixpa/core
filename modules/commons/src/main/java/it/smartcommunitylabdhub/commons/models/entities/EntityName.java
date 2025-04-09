@@ -17,7 +17,9 @@ public enum EntityName {
     TASK("task"),
     RUN("run"),
     LOG("log"),
-    METADATA("metadata");
+    METADATA("metadata"),
+    REPORT("report")
+    ;
 
     private final String value;
 

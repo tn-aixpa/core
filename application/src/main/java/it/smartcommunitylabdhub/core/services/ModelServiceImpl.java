@@ -627,32 +627,12 @@ public class ModelServiceImpl
     }
 
     @Override
-    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
+    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String project, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
         log.debug("upload url for model with id {}: {}", String.valueOf(id), filename);
 
         try {
-            String path =
-                filesService.getDefaultStore() +
-                "/" +
-                EntityName.MODEL.getValue() +
-                "/" +
-                id +
-                (filename.startsWith("/") ? filename : "/" + filename);
-
-            //model may not exists (yet)
-            Model model = entityService.find(id);
-
-            if (model != null) {
-                //extract path from spec
-                ModelBaseSpec spec = new ModelBaseSpec();
-                spec.configure(model.getSpec());
-
-                path = spec.getPath();
-                if (!StringUtils.hasText(path)) {
-                    throw new NoSuchEntityException("file");
-                }
-            }
+            String path = getOrCreatePath(id, project, filename);
 
             UploadInfo info = filesService.getUploadAsUrl(path);
             if (log.isTraceEnabled()) {
@@ -667,33 +647,12 @@ public class ModelServiceImpl
     }
 
     @Override
-    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
+    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String project, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
         log.debug("start upload url for model with id {}: {}", String.valueOf(id), filename);
 
         try {
-            String path =
-                filesService.getDefaultStore() +
-                "/" +
-                EntityName.MODEL.getValue() +
-                "/" +
-                id +
-                "/" +
-                (filename.startsWith("/") ? filename : "/" + filename);
-
-            //model may not exists (yet)
-            Model model = entityService.find(id);
-
-            if (model != null) {
-                //extract path from spec
-                ModelBaseSpec spec = new ModelBaseSpec();
-                spec.configure(model.getSpec());
-
-                path = spec.getPath();
-                if (!StringUtils.hasText(path)) {
-                    throw new NoSuchEntityException("file");
-                }
-            }
+            String path = getOrCreatePath(id, project, filename);
 
             UploadInfo info = filesService.startMultiPartUpload(path);
             if (log.isTraceEnabled()) {
@@ -710,34 +669,14 @@ public class ModelServiceImpl
     @Override
     public UploadInfo uploadMultiPart(
         @Nullable String id,
+        @NotNull String project,
         @NotNull String filename,
         @NotNull String uploadId,
         @NotNull Integer partNumber
     ) throws NoSuchEntityException, SystemException {
         log.debug("upload part url for model {}: {}", String.valueOf(id), filename);
         try {
-            String path =
-                filesService.getDefaultStore() +
-                "/" +
-                EntityName.MODEL.getValue() +
-                "/" +
-                id +
-                "/" +
-                (filename.startsWith("/") ? filename : "/" + filename);
-
-            //model may not exists (yet)
-            Model model = entityService.find(id);
-
-            if (model != null) {
-                //extract path from spec
-                ModelBaseSpec spec = new ModelBaseSpec();
-                spec.configure(model.getSpec());
-
-                path = spec.getPath();
-                if (!StringUtils.hasText(path)) {
-                    throw new NoSuchEntityException("file");
-                }
-            }
+            String path = getOrCreatePath(id, project, filename);
 
             UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber);
             if (log.isTraceEnabled()) {
@@ -754,34 +693,14 @@ public class ModelServiceImpl
     @Override
     public UploadInfo completeMultiPartUpload(
         @Nullable String id,
+        @NotNull String project,
         @NotNull String filename,
         @NotNull String uploadId,
         @NotNull List<String> eTagPartList
     ) throws NoSuchEntityException, SystemException {
         log.debug("complete upload url for model {}: {}", String.valueOf(id), filename);
         try {
-            String path =
-                filesService.getDefaultStore() +
-                "/" +
-                EntityName.MODEL.getValue() +
-                "/" +
-                id +
-                "/" +
-                (filename.startsWith("/") ? filename : "/" + filename);
-
-            //model may not exists (yet)
-            Model model = entityService.find(id);
-
-            if (model != null) {
-                //extract path from spec
-                ModelBaseSpec spec = new ModelBaseSpec();
-                spec.configure(model.getSpec());
-
-                path = spec.getPath();
-                if (!StringUtils.hasText(path)) {
-                    throw new NoSuchEntityException("file");
-                }
-            }
+            String path = getOrCreatePath(id, project, filename);
 
             UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList);
             if (log.isTraceEnabled()) {
@@ -852,5 +771,32 @@ public class ModelServiceImpl
     public Metrics saveMetrics(@NotNull String entityId, @NotNull String name, NumberOrNumberArray data)
         throws StoreException, SystemException {
         return metricsManager.saveMetrics(EntityName.MODEL.getValue(), entityId, name, data);
+    }
+
+    private String getOrCreatePath(String id, String project, String filename) throws StoreException {
+        String path =
+            filesService.getDefaultStore() +
+            "/" +
+            project +
+            "/" +
+            EntityName.MODEL.getValue() +
+            "/" +
+            id +
+            (filename.startsWith("/") ? filename : "/" + filename);
+
+        //model may not exists (yet)
+        Model model = entityService.find(id);
+
+        if (model != null) {
+            //extract path from spec
+            ModelBaseSpec spec = new ModelBaseSpec();
+            spec.configure(model.getSpec());
+
+            path = spec.getPath();
+            if (!StringUtils.hasText(path)) {
+                throw new NoSuchEntityException("file");
+            }
+        }
+        return path;
     }
 }
