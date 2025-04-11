@@ -31,12 +31,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 
 @Slf4j
-@RuntimeComponent(runtime = KubeAIServeRuntime.RUNTIME)
-public class KubeAIServeRuntime
+@RuntimeComponent(runtime = KubeAIRuntime.RUNTIME)
+public class KubeAIRuntime
     extends K8sBaseRuntime<KubeAIServeFunctionSpec, KubeAIServeRunSpec, KubeAIServeRunStatus, K8sCRRunnable>
     implements InitializingBean {
 
-    public static final String RUNTIME = "kubeaiserve";
+    public static final String RUNTIME = "kubeai";
 
     @Autowired
     private ModelService modelService;
@@ -47,7 +47,7 @@ public class KubeAIServeRuntime
     @Autowired
     private CredentialsService credentialsService;
 
-    public KubeAIServeRuntime() {
+    public KubeAIRuntime() {
         super(KubeAIServeRunSpec.KIND);
     }
 
