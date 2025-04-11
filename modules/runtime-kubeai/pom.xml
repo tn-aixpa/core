@@ -10,9 +10,9 @@
         <relativePath>../../</relativePath> <!-- lookup parent from repository -->
     </parent>
     <groupId>it.smartcommunitylabdhub</groupId>
-    <artifactId>dh-runtime-model-serve</artifactId>
+    <artifactId>dh-runtime-kubeai</artifactId>
     <name>runtime-model-serve</name>
-    <description>DHCore runtime-model-serve</description>
+    <description>DHCore runtime-kubeai</description>
 
     <dependencies>
         <dependency>

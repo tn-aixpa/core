@@ -39,6 +39,7 @@
         <module>modules/runtime-kfp</module>
         <module>modules/runtime-python</module>
         <module>modules/runtime-model-serve</module>
+        <module>modules/runtime-kubeai</module>
         <module>modules/openmetadata-integration</module>
         <module>modules/files</module>
         <module>modules/credentials-provider-db</module>
