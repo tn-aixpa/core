@@ -14,7 +14,6 @@ import lombok.Setter;
 @Builder
 public class KubeAIScaling {
 
-
     @Schema(title = "fields.kubeai.replicas.title", description = "fields.kubeai.replicas.description")
     @Builder.Default
     private Integer replicas = 1;
@@ -26,19 +25,24 @@ public class KubeAIScaling {
     @Schema(title = "fields.kubeai.maxreplicas.title", description = "fields.kubeai.maxreplicas.description")
     private Integer maxReplicas;
 
-    @Schema(title = "fields.kubeai.autoscalingdisabled.title", description = "fields.kubeai.autoscalingdisabled.description")
+    @Schema(
+        title = "fields.kubeai.autoscalingdisabled.title",
+        description = "fields.kubeai.autoscalingdisabled.description"
+    )
     @Builder.Default
     private Boolean autoscalingDisabled = false;
-    
+
     @Schema(title = "fields.kubeai.targetrequests.title", description = "fields.kubeai.targetrequests.description")
     @Builder.Default
     private Integer targetRequests = 100;
 
-    @Schema(title = "fields.kubeai.scaledowndelayseconds.title", description = "fields.kubeai.scaledowndelayseconds.description")
+    @Schema(
+        title = "fields.kubeai.scaledowndelayseconds.title",
+        description = "fields.kubeai.scaledowndelayseconds.description"
+    )
     @Builder.Default
     private Integer scaleDownDelaySeconds = 30;
 
     @Schema(title = "fields.kubeai.loadbalancing.title", description = "fields.kubeai.loadbalancing.description")
     private KubeAILoadBalancing loadBalancing;
-
 }

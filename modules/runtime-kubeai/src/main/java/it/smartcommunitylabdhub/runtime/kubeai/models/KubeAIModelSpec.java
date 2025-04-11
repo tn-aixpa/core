@@ -2,7 +2,6 @@ package it.smartcommunitylabdhub.runtime.kubeai.models;
 
 import java.util.List;
 import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -11,9 +11,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KubeAIAdapter {
-    
+
     @Schema(title = "fields.kubeai.url.title", description = "fields.kubeai.url.description")
     private String url;
+
     @Schema(
         title = "fields.modelserve.modelname.title",
         description = "fields.modelserve.modelname.description",

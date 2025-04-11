@@ -21,7 +21,6 @@ import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIModelSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeFunctionSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeRunSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeTaskSpec;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +33,7 @@ public class KubeAIServeRunner {
     private final KubeAIServeFunctionSpec functionSpec;
 
     private final ModelService modelService;
-    private final K8sBuilderHelper k8sBuilderHelper;    
+    private final K8sBuilderHelper k8sBuilderHelper;
     private Map<String, String> secretData;
     private Map<String, String> credentialsData;
 
@@ -45,8 +44,8 @@ public class KubeAIServeRunner {
 
     public KubeAIServeRunner(
         KubeAIServeFunctionSpec functionSpec,
-        Map<String, String> secretData, 
-        Map<String, String> credentialsData, 
+        Map<String, String> secretData,
+        Map<String, String> credentialsData,
         K8sBuilderHelper k8sBuilderHelper,
         ModelService modelService
     ) {
@@ -91,7 +90,7 @@ public class KubeAIServeRunner {
             }
         }
 
-        // populate env from edplicit env, then from user secret and then from explicit project secret 
+        // populate env from edplicit env, then from user secret and then from explicit project secret
         Map<String, String> env = new HashMap<>();
         // credentials secrets
         if (credentialsData != null) {
@@ -114,12 +113,15 @@ public class KubeAIServeRunner {
         //         replicas = runSpec.getScaling().getReplicas();
         //     } else if (runSpec.getScaling().getMinReplicas() != null) {
         //         replicas = runSpec.getScaling().getMinReplicas();
-        //     }            
+        //     }
         // }
-        // int minReplicas = runSpec.getScaling() != null && runSpec.getScaling().getMinReplicas() != null ? runSpec.getScaling().getMinReplicas() : replicas;
+        // int minReplicas = runSpec.getScaling() != null && runSpec.getScaling().getMinReplicas() != null
+        //     ? runSpec.getScaling().getMinReplicas()
+        //     : replicas;
         String resourceProfile = runSpec.getProfile() != null ? runSpec.getProfile() : BASE_PROFILE;
 
-        KubeAIModelSpec modelSpec = KubeAIModelSpec.builder()
+        KubeAIModelSpec modelSpec = KubeAIModelSpec
+            .builder()
             .url(url)
             .image(functionSpec.getImage())
             .args(runSpec.getArgs())
@@ -127,9 +129,10 @@ public class KubeAIServeRunner {
             .resourceProfile(resourceProfile)
             .adapters(functionSpec.getAdapters())
             .features(
-                functionSpec.getFeatures() == null ? Collections.emptyList() :
-                functionSpec.getFeatures().stream().map(KubeAIFeature::name).toList()
-            )            
+                functionSpec.getFeatures() == null
+                    ? Collections.emptyList()
+                    : functionSpec.getFeatures().stream().map(KubeAIFeature::name).toList()
+            )
             .engine(functionSpec.getEngine().name())
             .env(env)
             .files(runSpec.getFiles())
@@ -140,25 +143,25 @@ public class KubeAIServeRunner {
             .targetRequests(runSpec.getScaling().getTargetRequests())
             .scaleDownDelaySeconds(runSpec.getScaling().getScaleDownDelaySeconds())
             .loadBalancing(runSpec.getScaling().getLoadBalancing())
-        .build();
+            .build();
 
-        K8sCRRunnable k8sRunnable = K8sCRRunnable.builder()
-        .runtime(KubeAIServeRuntime.RUNTIME)
-        .task(KubeAIServeTaskSpec.KIND)
-        .state(State.READY.name())
-        .labels(
-            k8sBuilderHelper != null
-                ? List.of(new CoreLabel(k8sBuilderHelper.getLabelName("function"), taskAccessor.getFunction()))
-                : null
-        )
-        .name(functionSpec.getModelName())
-        .apiGroup(KUBEAI_API_GROUP)
-        .apiVersion(KUBEAI_API_VERSION)
-        .kind(KUBEAI_API_KIND)
-        .plural(KUBEAI_API_PLURAL)
-        .spec(JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(modelSpec, Map.class))
-        .build();
-
+        K8sCRRunnable k8sRunnable = K8sCRRunnable
+            .builder()
+            .runtime(KubeAIServeRuntime.RUNTIME)
+            .task(KubeAIServeTaskSpec.KIND)
+            .state(State.READY.name())
+            .labels(
+                k8sBuilderHelper != null
+                    ? List.of(new CoreLabel(k8sBuilderHelper.getLabelName("function"), taskAccessor.getFunction()))
+                    : null
+            )
+            .name(functionSpec.getModelName())
+            .apiGroup(KUBEAI_API_GROUP)
+            .apiVersion(KUBEAI_API_VERSION)
+            .kind(KUBEAI_API_KIND)
+            .plural(KUBEAI_API_PLURAL)
+            .spec(JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(modelSpec, Map.class))
+            .build();
 
         k8sRunnable.setId(run.getId());
         k8sRunnable.setProject(run.getProject());

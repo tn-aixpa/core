@@ -1,11 +1,6 @@
 package it.smartcommunitylabdhub.runtime.kubeai.specs;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
@@ -16,6 +11,9 @@ import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIEngine;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIFeature;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,17 +25,12 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@SpecType(
-    runtime = KubeAIServeRuntime.RUNTIME,
-    kind = KubeAIServeRuntime.RUNTIME,
-    entity = EntityName.FUNCTION
-)
+@SpecType(runtime = KubeAIServeRuntime.RUNTIME, kind = KubeAIServeRuntime.RUNTIME, entity = EntityName.FUNCTION)
 public class KubeAIServeFunctionSpec extends FunctionBaseSpec {
 
     @NotNull
     @Pattern(
-        regexp = 
-        "^(store://([^/]+)/model/huggingface/.*)" +
+        regexp = "^(store://([^/]+)/model/huggingface/.*)" +
         "|" +
         "^pvc?://.*$" +
         "|" +
@@ -66,14 +59,21 @@ public class KubeAIServeFunctionSpec extends FunctionBaseSpec {
     @Schema(title = "fields.kubeai.adapters.title", description = "fields.kubeai.adapters.description")
     private List<KubeAIAdapter> adapters;
 
-
     @JsonProperty("features")
-    @Schema(title = "fields.kubeai.features.title", description = "fields.kubeai.features.description", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+        title = "fields.kubeai.features.title",
+        description = "fields.kubeai.features.description",
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
     @Builder.Default
     private List<KubeAIFeature> features = List.of(KubeAIFeature.TextGeneration);
 
     @JsonProperty("engine")
-    @Schema(title = "fields.kubeai.engine.title", description = "fields.kubeai.engine.description", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(
+        title = "fields.kubeai.engine.title",
+        description = "fields.kubeai.engine.description",
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
     private KubeAIEngine engine;
 
     @Override

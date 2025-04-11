@@ -17,9 +17,11 @@ public class KubeAIPrefixHash {
     @Schema(title = "fields.kubeai.meanloadfactor.title", description = "fields.kubeai.meanloadfactor.description")
     @Builder.Default
     private Integer meanLoadFactor = 125;
-    @Schema(title = "fields.kubeai.replication.title", description = "fields.kubeai.replication.description" )
+
+    @Schema(title = "fields.kubeai.replication.title", description = "fields.kubeai.replication.description")
     @Builder.Default
     private Integer replication = 256;
+
     @Schema(title = "fields.kubeai.prefixcharlength.title", description = "fields.kubeai.prefixcharlength.description")
     @Builder.Default
     private Integer prefixCharLength = 100;

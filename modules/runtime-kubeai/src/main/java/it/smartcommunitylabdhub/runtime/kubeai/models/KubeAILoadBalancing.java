@@ -13,10 +13,15 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KubeAILoadBalancing {
-    
-    @Schema(title = "fields.kubeai.strategy.title", description = "fields.kubeai.strategy.description", defaultValue = "LeastLoad")
+
+    @Schema(
+        title = "fields.kubeai.strategy.title",
+        description = "fields.kubeai.strategy.description",
+        defaultValue = "LeastLoad"
+    )
     @Builder.Default
     private KubeAILoadBalancingStrategy strategy = KubeAILoadBalancingStrategy.LeastLoad;
+
     @Schema(title = "fields.kubeai.prefixhash.title", description = "fields.kubeai.prefixhash.description")
     private KubeAIPrefixHash prefixHash;
 }
