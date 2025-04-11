@@ -26,6 +26,9 @@ public class ReportBaseSpec extends BaseSpec {
     @JsonProperty("entity_type")
     private String entityType;
 
+    @JsonProperty("framework")
+    private String framework;
+
     @NotBlank
     private String path;
 
@@ -37,7 +40,9 @@ public class ReportBaseSpec extends BaseSpec {
         ReportBaseSpec spec = mapper.convertValue(data, ReportBaseSpec.class);
 
         this.entity = spec.getEntity();
+        this.entityType = spec.getEntityType();
         this.path = spec.getPath();
         this.srcPath = spec.getSrcPath();
+        this.framework = spec.getFramework();
     }
 }
