@@ -112,8 +112,8 @@ public class WorkflowEntityIndexer extends SolrBaseEntityIndexer<Workflow> imple
         return doc;
     }
 
-	@Override
-	public void remove(WorkflowEntity entity) {
+    @Override
+    public void remove(WorkflowEntity entity) {
         Assert.notNull(entity, "entity can not be null");
         if (solr != null) {
             try {
@@ -123,5 +123,5 @@ public class WorkflowEntityIndexer extends SolrBaseEntityIndexer<Workflow> imple
                 log.error("error with solr: {}", e.getMessage());
             }
         }
-	}
+    }
 }

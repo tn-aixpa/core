@@ -114,8 +114,8 @@ public class SolrFunctionEntityIndexer
         return doc;
     }
 
-	@Override
-	public void remove(FunctionEntity entity) {
+    @Override
+    public void remove(FunctionEntity entity) {
         Assert.notNull(entity, "entity can not be null");
         if (solr != null) {
             try {
@@ -125,5 +125,5 @@ public class SolrFunctionEntityIndexer
                 log.error("error with solr: {}", e.getMessage());
             }
         }
-	}
+    }
 }

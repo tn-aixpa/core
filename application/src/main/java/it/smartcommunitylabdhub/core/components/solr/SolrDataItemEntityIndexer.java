@@ -114,8 +114,8 @@ public class SolrDataItemEntityIndexer
         return doc;
     }
 
-	@Override
-	public void remove(DataItemEntity entity) {
+    @Override
+    public void remove(DataItemEntity entity) {
         Assert.notNull(entity, "entity can not be null");
         if (solr != null) {
             try {
@@ -125,5 +125,5 @@ public class SolrDataItemEntityIndexer
                 log.error("error with solr: {}", e.getMessage());
             }
         }
-	}
+    }
 }

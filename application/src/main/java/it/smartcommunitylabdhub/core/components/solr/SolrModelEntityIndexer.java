@@ -112,8 +112,8 @@ public class SolrModelEntityIndexer extends SolrBaseEntityIndexer<Model> impleme
         return doc;
     }
 
-	@Override
-	public void remove(ModelEntity entity) {
+    @Override
+    public void remove(ModelEntity entity) {
         Assert.notNull(entity, "entity can not be null");
         if (solr != null) {
             try {
@@ -123,5 +123,5 @@ public class SolrModelEntityIndexer extends SolrBaseEntityIndexer<Model> impleme
                 log.error("error with solr: {}", e.getMessage());
             }
         }
-	}
+    }
 }

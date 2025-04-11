@@ -13,6 +13,6 @@ public interface EntityIndexer<T extends BaseEntity> {
     public Collection<IndexField> fields();
 
     public void clearIndex();
-    
+
     public void remove(T entity);
 }
