@@ -48,18 +48,4 @@ public class ReportEntity extends AbstractEntity implements SpecEntity, StatusEn
     @Convert(converter = StateStringAttributeConverter.class)
     private State state;
 
-    @Override
-    public @NotNull String getName() {
-        return id;
-    }
-
-    @Override
-    public void setName(String name) {
-        //not available
-    }
-
-    @Override
-    public @NotNull String getKind() {
-        return "report";
-    }
 }

@@ -26,6 +26,7 @@ public class ReportBaseSpec extends BaseSpec {
     @JsonProperty("entity_type")
     private String entityType;
 
+    @NotEmpty
     @JsonProperty("framework")
     private String framework;
 

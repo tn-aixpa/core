@@ -318,7 +318,7 @@ public class ReportServiceImpl implements SearchableReportService, EntityFilesSe
         try {
             return entityService.get(id);
         } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.LOG.toString());
+            throw new NoSuchEntityException(EntityName.REPORT.toString());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -349,7 +349,7 @@ public class ReportServiceImpl implements SearchableReportService, EntityFilesSe
         log.debug("list reports for entity {}", entity);
         EntityService<?, ?> eService = getEntityService(entityType);
         try {
-            BaseEntity e = (BaseEntity)eService.find(entity);
+            BaseDTO e = (BaseDTO)eService.find(entity);
             if (e == null) {
                 return Collections.emptyList();
             }
@@ -378,7 +378,7 @@ public class ReportServiceImpl implements SearchableReportService, EntityFilesSe
         log.debug("list reports for entity {}", entity);
         EntityService<?, ?> eService = getEntityService(entityType);
         try {
-            BaseEntity e = (BaseEntity)eService.find(entity);
+            BaseDTO e = (BaseDTO)eService.find(entity);
             if (e == null) {
                 return Collections.emptyList();
             }
@@ -428,7 +428,7 @@ public class ReportServiceImpl implements SearchableReportService, EntityFilesSe
                 }
 
                 EntityService<?, ?> eService = getEntityService(entityType);
-                BaseEntity e = (BaseEntity)eService.find(entity);
+                BaseDTO e = (BaseDTO)eService.find(entity);
                 if (e == null) {
                     throw new IllegalArgumentException("missing or invalid entity");
                 }
@@ -440,7 +440,7 @@ public class ReportServiceImpl implements SearchableReportService, EntityFilesSe
                 //create as new
                 return entityService.create(dto);
             } catch (DuplicatedEntityException e) {
-                throw new DuplicatedEntityException(EntityName.LOG.toString(), dto.getId());
+                throw new DuplicatedEntityException(EntityName.REPORT.toString(), dto.getId());
             }
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
@@ -472,7 +472,7 @@ public class ReportServiceImpl implements SearchableReportService, EntityFilesSe
             //full update, log is modifiable
             return entityService.update(id, dto);
         } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.LOG.toString());
+            throw new NoSuchEntityException(EntityName.REPORT.toString());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
