@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.kubeai.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,5 +24,6 @@ public class KubeAILoadBalancing {
     private KubeAILoadBalancingStrategy strategy = KubeAILoadBalancingStrategy.LeastLoad;
 
     @Schema(title = "fields.kubeai.prefixhash.title", description = "fields.kubeai.prefixhash.description")
+    @JsonProperty("prefix_hash")
     private KubeAIPrefixHash prefixHash;
 }

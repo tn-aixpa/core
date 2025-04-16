@@ -1,5 +1,6 @@
 package it.smartcommunitylabdhub.runtime.kubeai.specs;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
@@ -50,6 +51,7 @@ public class KubeAIServeRunSpec extends RunBaseSpec implements K8sResourceProfil
     private String profile;
 
     @Schema(title = "fields.kubeai.cacheprofile.title", description = "fields.kubeai.cacheprofile.description")
+    @JsonProperty("cache_profile")
     private String cacheProfile;
 
     @Schema(title = "fields.kubeai.scaling.title", description = "fields.kubeai.scaling.description")
