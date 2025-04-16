@@ -25,6 +25,7 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import jakarta.validation.constraints.NotNull;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +58,7 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
 
     private static final Integer DEFAULT_DURATION = 24 * 3600; //24 hour
     private static final Integer MIN_DURATION = 300; //5 min
+    private static final Integer SKEW_DURATION = 60; //1 min
 
     @Value("${credentials.provider.db.user}")
     private String user;
@@ -85,7 +87,7 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
     private final RestTemplate restTemplate;
 
     // cache credentials for up to DURATION
-    LoadingCache<Pair<String, String>, DbCredentials> cache;
+    LoadingCache<Pair<String, String>, Pair<DbCredentials, Instant>> cache;
 
     public DbCredentialsProvider() {
         //TODO define a property bean
@@ -115,9 +117,9 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
                 .newBuilder()
                 .expireAfterWrite(cacheDuration, TimeUnit.SECONDS)
                 .build(
-                    new CacheLoader<Pair<String, String>, DbCredentials>() {
+                    new CacheLoader<Pair<String, String>, Pair<DbCredentials, Instant>>() {
                         @Override
-                        public DbCredentials load(@Nonnull Pair<String, String> key) throws Exception {
+                        public Pair<DbCredentials, Instant> load(@Nonnull Pair<String, String> key) throws Exception {
                             log.debug("load credentials for {} role {}", key.getFirst(), key.getSecond());
                             return generate(key.getFirst(), key.getSecond());
                         }
@@ -125,7 +127,8 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
                 );
     }
 
-    public DbCredentials generate(@NotNull String username, @NotNull String role) throws StoreException {
+    private Pair<DbCredentials, Instant> generate(@NotNull String username, @NotNull String role)
+        throws StoreException {
         log.debug("generate credentials for user authentication {} via STS service", username);
 
         try {
@@ -177,16 +180,28 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
             if (log.isTraceEnabled()) {
                 log.trace("response: {}", token);
             }
+            Instant now = Instant.now();
+            Instant expiration = token.getExpiration() != null
+                ? now.plusSeconds(token.getExpiration() - SKEW_DURATION)
+                : now.plusSeconds(duration - SKEW_DURATION);
+            if (expiration.toEpochMilli() - now.toEpochMilli() < MIN_DURATION * 1000) {
+                //error, no recovery
+                log.error("Error with provider, token duration is too short {}", token.getExpiration());
+                return null;
+            }
 
-            return DbCredentials
-                .builder()
-                .platform(token.getPlatform())
-                .host(token.getHost())
-                .port(token.getPort())
-                .username(token.getUsername())
-                .password(token.getPassword())
-                .database(token.getDatabase())
-                .build();
+            return Pair.of(
+                DbCredentials
+                    .builder()
+                    .platform(token.getPlatform())
+                    .host(token.getHost())
+                    .port(token.getPort())
+                    .username(token.getUsername())
+                    .password(token.getPassword())
+                    .database(token.getDatabase())
+                    .build(),
+                expiration
+            );
         } catch (RestClientException e) {
             //error, no recovery
             log.error("Error with provider {}", e);
@@ -211,7 +226,22 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
                 log.debug("get credentials for user authentication {} via STS service", username);
 
                 try {
-                    return cache.get(Pair.of(username, role.getRole()));
+                    Pair<String, String> k = Pair.of(username, role.getRole());
+                    Pair<DbCredentials, Instant> p = cache.get(k);
+                    if (p == null) {
+                        return null;
+                    }
+
+                    //check expiration and refresh if needed
+                    if (Instant.now().isAfter(p.getSecond())) {
+                        //refresh
+                        log.debug("refresh credentials for user authentication {} via STS service", username);
+                        cache.invalidate(k);
+
+                        return cache.get(k).getFirst();
+                    } else {
+                        return p.getFirst();
+                    }
                 } catch (ExecutionException e) {
                     //error, no recovery
                     log.error("Error with provider {}", e);
