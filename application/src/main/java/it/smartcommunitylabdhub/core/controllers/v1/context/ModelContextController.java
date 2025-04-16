@@ -1,31 +1,5 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
-import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.data.web.SortDefault;
-import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.BindException;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.smartcommunitylabdhub.commons.Keys;
@@ -52,7 +26,30 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindException;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @ApiVersion("v1")
@@ -73,7 +70,7 @@ public class ModelContextController {
 
     @Autowired
     RelationshipsAwareEntityService<Model> relationshipsService;
-    
+
     @Autowired
     MetricsService<Model> metricsService;
 
@@ -120,9 +117,10 @@ public class ModelContextController {
     @DeleteMapping(path = "")
     public void deleteAllModel(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
+        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
+        @RequestParam(required = false) Boolean cascade
     ) {
-        modelService.deleteModels(project, name);
+        modelService.deleteModels(project, name, cascade);
     }
 
     /*
@@ -173,7 +171,8 @@ public class ModelContextController {
     @DeleteMapping(path = "/{id}")
     public void deleteModelById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
     ) throws NoSuchEntityException {
         Model model = modelService.getModel(id);
 
@@ -182,7 +181,7 @@ public class ModelContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        modelService.deleteModel(id);
+        modelService.deleteModel(id, cascade);
     }
 
     /*
@@ -350,8 +349,8 @@ public class ModelContextController {
     @Operation(summary = "Get metrics info for a given entity, if available")
     @GetMapping(path = "/{id}/metrics", produces = "application/json; charset=UTF-8")
     public Map<String, NumberOrNumberArray> getMetrics(
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws StoreException, SystemException {
         Model entity = modelService.getModel(id);
 
@@ -359,34 +358,34 @@ public class ModelContextController {
         if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-    	
-    	return  metricsService.getMetrics(id);
+
+        return metricsService.getMetrics(id);
     }
-    
+
     @Operation(summary = "Get metrics info for a given entity and metric, if available")
     @GetMapping(path = "/{id}/metrics/{name}", produces = "application/json; charset=UTF-8")
     public NumberOrNumberArray getMetricsByName(
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-            @PathVariable String name
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @PathVariable String name
     ) throws StoreException, SystemException {
-    	Model entity = modelService.getModel(id);
+        Model entity = modelService.getModel(id);
 
         //check for project and name match
         if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-        
-    	return metricsService.getMetrics(id, name);
+
+        return metricsService.getMetrics(id, name);
     }
 
     @Operation(summary = "Store metrics info for a given entity")
     @PutMapping(path = "/{id}/metrics/{name}", produces = "application/json; charset=UTF-8")
     public void storeMetrics(
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-            @PathVariable String name,
-            @RequestBody NumberOrNumberArray data
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @PathVariable String name,
+        @RequestBody NumberOrNumberArray data
     ) throws StoreException, SystemException {
         Model entity = modelService.getModel(id);
 
@@ -394,8 +393,7 @@ public class ModelContextController {
         if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-    	
+
         metricsService.saveMetrics(id, name, data);
     }
-
 }

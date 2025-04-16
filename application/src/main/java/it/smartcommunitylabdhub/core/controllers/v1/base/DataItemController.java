@@ -109,8 +109,11 @@ public class DataItemController {
 
     @Operation(summary = "Delete a dataItem", description = "Delete a specific dataItem")
     @DeleteMapping(path = "/{id}")
-    public void deleteDataItem(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
-        dataItemService.deleteDataItem(id);
+    public void deleteDataItem(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
+    ) {
+        dataItemService.deleteDataItem(id, cascade);
     }
 
     /*

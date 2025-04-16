@@ -141,18 +141,18 @@ public interface ModelService {
      * Delete a specific model (version) via unique ID
      * @param id
      */
-    void deleteModel(@NotNull String id) throws SystemException;
+    void deleteModel(@NotNull String id, @Nullable Boolean cascade) throws SystemException;
 
     /**
      * Delete all versions of a given model
      * @param project
      * @param name
      */
-    void deleteModels(@NotNull String project, @NotNull String name) throws SystemException;
+    void deleteModels(@NotNull String project, @NotNull String name, @Nullable Boolean cascade) throws SystemException;
 
     /**
      * Delete all models for a given project, with cascade.
      * @param project
      */
-    void deleteModelsByProject(@NotNull String project) throws SystemException;
+    void deleteModelsByProject(@NotNull String project, @Nullable Boolean cascade) throws SystemException;
 }

@@ -332,13 +332,13 @@ public class ProjectServiceImpl
                     String project = prj.getName();
 
                     log.debug("cascade delete artifacts for project with id {}", String.valueOf(id));
-                    artifactService.deleteArtifactsByProject(project);
+                    artifactService.deleteArtifactsByProject(project, Boolean.TRUE);
 
                     log.debug("cascade delete dataItems for project with id {}", String.valueOf(id));
-                    dataItemService.deleteDataItemsByProject(project);
+                    dataItemService.deleteDataItemsByProject(project, Boolean.TRUE);
 
                     log.debug("cascade delete models for project with id {}", String.valueOf(id));
-                    modelService.deleteModelsByProject(project);
+                    modelService.deleteModelsByProject(project, Boolean.TRUE);
 
                     log.debug("cascade delete functions for project with id {}", String.valueOf(id));
                     functionService.deleteFunctionsByProject(project);

@@ -407,10 +407,30 @@ public class ArtifactServiceImpl
     }
 
     @Override
-    public void deleteArtifact(@NotNull String id) {
+    public void deleteArtifact(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete artifact with id {}", String.valueOf(id));
+
         try {
-            entityService.delete(id);
+            Artifact artifact = entityService.find(id);
+            if (artifact != null) {
+                if (Boolean.TRUE.equals(cascade)) {
+                    //files
+                    log.debug("cascade delete files for artifact with id {}", String.valueOf(id));
+
+                    //extract path from spec
+                    ArtifactBaseSpec spec = new ArtifactBaseSpec();
+                    spec.configure(artifact.getSpec());
+
+                    String path = spec.getPath();
+                    if (StringUtils.hasText(path)) {
+                        //delete files
+                        filesService.remove(path, UserAuthenticationHelper.getUserAuthentication());
+                    }
+                }
+
+                //delete entity
+                entityService.delete(id);
+            }
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -418,27 +438,41 @@ public class ArtifactServiceImpl
     }
 
     @Override
-    public void deleteArtifacts(@NotNull String project, @NotNull String name) {
+    public void deleteArtifacts(@NotNull String project, @NotNull String name, @Nullable Boolean cascade) {
         log.debug("delete artifacts for project {} with name {}", project, name);
 
-        Specification<ArtifactEntity> spec = Specification.allOf(
-            CommonSpecification.projectEquals(project),
-            CommonSpecification.nameEquals(name)
-        );
-        try {
-            long count = entityService.deleteAll(spec);
-            log.debug("deleted count {}", count);
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
+        if (Boolean.TRUE.equals(cascade)) {
+            //delete one by one with cascade
+            findArtifacts(project, name).forEach(a -> deleteArtifact(a.getId(), Boolean.TRUE));
+        } else {
+            //bulk delete entities only
+            Specification<ArtifactEntity> spec = Specification.allOf(
+                CommonSpecification.projectEquals(project),
+                CommonSpecification.nameEquals(name)
+            );
+            try {
+                long count = entityService.deleteAll(spec);
+                log.debug("bulk deleted count {}", count);
+            } catch (StoreException e) {
+                log.error("store error: {}", e.getMessage());
+                throw new SystemException(e.getMessage());
+            }
         }
     }
 
     @Override
-    public void deleteArtifactsByProject(@NotNull String project) {
+    public void deleteArtifactsByProject(@NotNull String project, @Nullable Boolean cascade) {
         log.debug("delete artifacts for project {}", project);
         try {
-            entityService.deleteAll(CommonSpecification.projectEquals(project));
+            if (Boolean.TRUE.equals(cascade)) {
+                //delete one by one with cascade
+                entityService
+                    .searchAll(CommonSpecification.projectEquals(project))
+                    .forEach(a -> deleteArtifact(a.getId(), Boolean.TRUE));
+            } else {
+                //bulk delete entities only
+                entityService.deleteAll(CommonSpecification.projectEquals(project));
+            }
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());

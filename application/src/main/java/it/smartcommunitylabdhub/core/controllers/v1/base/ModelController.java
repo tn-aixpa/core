@@ -109,8 +109,11 @@ public class ModelController {
 
     @Operation(summary = "Delete a model", description = "Delete a specific model")
     @DeleteMapping(path = "/{id}")
-    public void deleteModel(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
-        modelService.deleteModel(id);
+    public void deleteModel(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
+    ) {
+        modelService.deleteModel(id, cascade);
     }
 
     /*

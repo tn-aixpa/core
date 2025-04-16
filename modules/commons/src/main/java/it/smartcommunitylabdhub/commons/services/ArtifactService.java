@@ -141,18 +141,19 @@ public interface ArtifactService {
      * Delete a specific artifact (version) via unique ID
      * @param id
      */
-    void deleteArtifact(@NotNull String id) throws SystemException;
+    void deleteArtifact(@NotNull String id, @Nullable Boolean cascade) throws SystemException;
 
     /**
      * Delete all versions of a given artifact
      * @param project
      * @param name
      */
-    void deleteArtifacts(@NotNull String project, @NotNull String name) throws SystemException;
+    void deleteArtifacts(@NotNull String project, @NotNull String name, @Nullable Boolean cascade)
+        throws SystemException;
 
     /**
      * Delete all artifacts for a given project, with cascade.
      * @param project
      */
-    void deleteArtifactsByProject(@NotNull String project) throws SystemException;
+    void deleteArtifactsByProject(@NotNull String project, @Nullable Boolean cascade) throws SystemException;
 }
