@@ -652,13 +652,15 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
+    public UploadInfo uploadFileAsUrl(@NotNull String project, @Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
         log.debug("upload url for dataItem with id {}: {}", String.valueOf(id), filename);
 
         try {
             String path =
                 filesService.getDefaultStore() +
+                "/" +
+                project +
                 "/" +
                 EntityName.DATAITEM.getValue() +
                 "/" +
@@ -692,13 +694,15 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
+    public UploadInfo startMultiPartUpload(@NotNull String project, @Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
         log.debug("start upload url for dataItem with id {}: {}", String.valueOf(id), filename);
 
         try {
             String path =
                 filesService.getDefaultStore() +
+                "/" +
+                project +
                 "/" +
                 EntityName.DATAITEM.getValue() +
                 "/" +
@@ -734,6 +738,7 @@ public class DataItemServiceImpl
 
     @Override
     public UploadInfo uploadMultiPart(
+        @NotNull String project,
         @Nullable String id,
         @NotNull String filename,
         @NotNull String uploadId,
@@ -743,6 +748,8 @@ public class DataItemServiceImpl
         try {
             String path =
                 filesService.getDefaultStore() +
+                "/" +
+                project +
                 "/" +
                 EntityName.DATAITEM.getValue() +
                 "/" +
@@ -783,6 +790,7 @@ public class DataItemServiceImpl
 
     @Override
     public UploadInfo completeMultiPartUpload(
+        @NotNull String project,
         @Nullable String id,
         @NotNull String filename,
         @NotNull String uploadId,
@@ -792,6 +800,8 @@ public class DataItemServiceImpl
         try {
             String path =
                 filesService.getDefaultStore() +
+                "/" +
+                project +
                 "/" +
                 EntityName.DATAITEM.getValue() +
                 "/" +

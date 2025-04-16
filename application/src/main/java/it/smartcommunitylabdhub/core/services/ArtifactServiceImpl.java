@@ -658,13 +658,15 @@ public class ArtifactServiceImpl
     }
 
     @Override
-    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
+    public UploadInfo uploadFileAsUrl(@NotNull String project, @Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
         log.debug("upload url for artifact with id {}: {}", String.valueOf(id), filename);
 
         try {
             String path =
                 filesService.getDefaultStore() +
+                "/" +
+                project +
                 "/" +
                 EntityName.ARTIFACT.getValue() +
                 "/" +
@@ -698,13 +700,15 @@ public class ArtifactServiceImpl
     }
 
     @Override
-    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
+    public UploadInfo startMultiPartUpload(@NotNull String project, @Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException {
         log.debug("start upload url for artifact with id {}: {}", String.valueOf(id), filename);
 
         try {
             String path =
                 filesService.getDefaultStore() +
+                "/" +
+                project +
                 "/" +
                 EntityName.ARTIFACT.getValue() +
                 "/" +
@@ -740,6 +744,7 @@ public class ArtifactServiceImpl
 
     @Override
     public UploadInfo uploadMultiPart(
+        @NotNull String project,
         @Nullable String id,
         @NotNull String filename,
         @NotNull String uploadId,
@@ -749,6 +754,8 @@ public class ArtifactServiceImpl
         try {
             String path =
                 filesService.getDefaultStore() +
+                "/" +
+                project +
                 "/" +
                 EntityName.ARTIFACT.getValue() +
                 "/" +
@@ -789,6 +796,7 @@ public class ArtifactServiceImpl
 
     @Override
     public UploadInfo completeMultiPartUpload(
+        @NotNull String project,
         @Nullable String id,
         @NotNull String filename,
         @NotNull String uploadId,
@@ -798,6 +806,8 @@ public class ArtifactServiceImpl
         try {
             String path =
                 filesService.getDefaultStore() +
+                "/" +
+                project +
                 "/" +
                 EntityName.ARTIFACT.getValue() +
                 "/" +

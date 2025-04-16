@@ -20,13 +20,14 @@ public interface EntityFilesService<T extends BaseDTO> {
     public DownloadInfo downloadFileAsUrl(@NotNull String id, @NotNull String path)
         throws NoSuchEntityException, SystemException;
 
-    public UploadInfo uploadFileAsUrl(@Nullable String id, @NotNull String filename)
+    public UploadInfo uploadFileAsUrl(@NotNull String project, @Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException;
 
-    public UploadInfo startMultiPartUpload(@Nullable String id, @NotNull String filename)
+    public UploadInfo startMultiPartUpload(@NotNull String project, @Nullable String id, @NotNull String filename)
         throws NoSuchEntityException, SystemException;
 
     public UploadInfo uploadMultiPart(
+        @NotNull String project,
         @Nullable String id,
         @NotNull String filename,
         @NotNull String uploadId,
@@ -34,6 +35,7 @@ public interface EntityFilesService<T extends BaseDTO> {
     ) throws NoSuchEntityException, SystemException;
 
     public UploadInfo completeMultiPartUpload(
+        @NotNull String project,
         @Nullable String id,
         @NotNull String filename,
         @NotNull String uploadId,
