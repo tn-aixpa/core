@@ -33,13 +33,18 @@ import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.UploadPartRequest;
+import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
@@ -514,7 +519,8 @@ public class S3FilesStore implements FilesStore {
             //                .signatureDuration(Duration.ofSeconds(urlDuration))
             //                .completeMultipartUploadRequest(req)
             //                .build();
-            //            PresignedCompleteMultipartUploadRequest presignedRequest = presigner.presignCompleteMultipartUpload(preq);
+            //            PresignedCompleteMultipartUploadRequest presignedRequest =
+            //                          presigner.presignCompleteMultipartUpload(preq);
 
             UploadInfo info = new UploadInfo();
             info.setPath(path);
@@ -587,14 +593,34 @@ public class S3FilesStore implements FilesStore {
         try {
             S3Client client = getClient(s3Credentials);
 
-            //support single file in path for now
             if (key.endsWith("/")) {
-                log.warn("remove for folders is not supported: {}", path);
-                return;
-            }
+                //experimental: bulk delete folders with batch on pages
+                log.warn("remove for folders is experimental: {}", path);
+                ListObjectsV2Request listRequest = ListObjectsV2Request.builder().bucket(bucket).prefix(key).build();
+                ListObjectsV2Iterable listResponseIter = client.listObjectsV2Paginator(listRequest);
 
-            DeleteObjectRequest req = DeleteObjectRequest.builder().bucket(bucketName).key(key).build();
-            client.deleteObject(req);
+                for (ListObjectsV2Response listResponse : listResponseIter) {
+                    List<ObjectIdentifier> objects = listResponse
+                        .contents()
+                        .stream()
+                        .map(o -> ObjectIdentifier.builder().key(o.key()).build())
+                        .toList();
+                    if (objects.isEmpty()) {
+                        break;
+                    }
+
+                    //delete objects batch (max 1000)
+                    DeleteObjectsRequest req = DeleteObjectsRequest
+                        .builder()
+                        .bucket(bucket)
+                        .delete(Delete.builder().objects(objects).build())
+                        .build();
+                    client.deleteObjects(req);
+                }
+            } else {
+                DeleteObjectRequest req = DeleteObjectRequest.builder().bucket(bucketName).key(key).build();
+                client.deleteObject(req);
+            }
         } catch (SdkException e) {
             log.error("error with s3 for {}: {}", path, e.getMessage());
             throw new StoreException("error with s3: " + e.getMessage());
