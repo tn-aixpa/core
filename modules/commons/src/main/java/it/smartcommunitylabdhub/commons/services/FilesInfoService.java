@@ -13,4 +13,7 @@ public interface FilesInfoService {
 
     public FilesInfo saveFilesInfo(@NotNull String entityName, @NotNull String entityId, List<FileInfo> files)
         throws StoreException, SystemException;
+
+    public void clearFilesInfo(@NotNull String entityName, @NotNull String entityId)
+        throws StoreException, SystemException;
 }

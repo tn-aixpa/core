@@ -81,4 +81,15 @@ public class FilesInfoServiceImpl implements FilesInfoService {
         entity = repository.save(entity);
         return dtoBuilder.convert(entity);
     }
+
+    @Override
+    public void clearFilesInfo(@NotNull String entityName, @NotNull String entityId)
+        throws StoreException, SystemException {
+        log.debug("clear files info for entity {} id {}", entityName, entityId);
+
+        FilesInfoEntity entity = repository.findByEntityNameAndEntityId(entityName, entityId);
+        if (entity != null) {
+            repository.delete(entity);
+        }
+    }
 }
