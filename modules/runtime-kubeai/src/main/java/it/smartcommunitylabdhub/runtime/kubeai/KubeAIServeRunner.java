@@ -147,7 +147,7 @@ public class KubeAIServeRunner {
 
         K8sCRRunnable k8sRunnable = K8sCRRunnable
             .builder()
-            .runtime(KubeAIServeRuntime.RUNTIME)
+            .runtime(KubeAIRuntime.RUNTIME)
             .task(KubeAIServeTaskSpec.KIND)
             .state(State.READY.name())
             .labels(

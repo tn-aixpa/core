@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.function.FunctionBaseSpec;
-import it.smartcommunitylabdhub.runtime.kubeai.KubeAIServeRuntime;
+import it.smartcommunitylabdhub.runtime.kubeai.KubeAIRuntime;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIAdapter;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIEngine;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIFeature;
@@ -25,7 +25,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@SpecType(runtime = KubeAIServeRuntime.RUNTIME, kind = KubeAIServeRuntime.RUNTIME, entity = EntityName.FUNCTION)
+@SpecType(runtime = KubeAIRuntime.RUNTIME, kind = KubeAIRuntime.RUNTIME, entity = EntityName.FUNCTION)
 public class KubeAIServeFunctionSpec extends FunctionBaseSpec {
 
     @NotNull

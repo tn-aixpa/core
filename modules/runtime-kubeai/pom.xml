@@ -11,7 +11,7 @@
     </parent>
     <groupId>it.smartcommunitylabdhub</groupId>
     <artifactId>dh-runtime-kubeai</artifactId>
-    <name>runtime-model-serve</name>
+    <name>runtime-kube-ai</name>
     <description>DHCore runtime-kubeai</description>
 
     <dependencies>

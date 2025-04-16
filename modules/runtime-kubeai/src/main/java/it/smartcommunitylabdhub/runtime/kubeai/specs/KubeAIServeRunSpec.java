@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sResourceProfileAware;
-import it.smartcommunitylabdhub.runtime.kubeai.KubeAIServeRuntime;
+import it.smartcommunitylabdhub.runtime.kubeai.KubeAIRuntime;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIFile;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIScaling;
 import java.io.Serializable;
@@ -21,10 +21,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = KubeAIServeRuntime.RUNTIME, kind = KubeAIServeRunSpec.KIND, entity = EntityName.RUN)
+@SpecType(runtime = KubeAIRuntime.RUNTIME, kind = KubeAIServeRunSpec.KIND, entity = EntityName.RUN)
 public class KubeAIServeRunSpec extends RunBaseSpec implements K8sResourceProfileAware {
 
-    public static final String KIND = KubeAIServeRuntime.RUNTIME + "+run";
+    public static final String KIND = KubeAIRuntime.RUNTIME + "+run";
 
     @JsonSchemaIgnore
     @JsonUnwrapped
