@@ -42,7 +42,12 @@ public class PythonJobRunner {
 
     private static ObjectMapper jsonMapper = JacksonMapper.CUSTOM_OBJECT_MAPPER;
 
+    private static final int UID = 1000;
+    private static final int GID = 100;
+
     private final String image;
+    private final int userId;
+    private final int groupId;
     private final String command;
     private final PythonFunctionSpec functionSpec;
     private final Map<String, String> secretData;
@@ -52,6 +57,8 @@ public class PythonJobRunner {
 
     public PythonJobRunner(
         String image,
+        Integer userId,
+        Integer groupId,
         String command,
         PythonFunctionSpec functionPythonSpec,
         Map<String, String> secretData,
@@ -62,6 +69,9 @@ public class PythonJobRunner {
         this.functionSpec = functionPythonSpec;
         this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
+
+        this.userId = userId != null ? userId : UID;
+        this.groupId = groupId != null ? groupId : GID;
     }
 
     public K8sRunnable produce(Run run) {
@@ -209,7 +219,9 @@ public class PythonJobRunner {
                 .priorityClass(taskSpec.getPriorityClass())
                 .template(taskSpec.getProfile())
                 //securityContext
-                .fsGroup(1000)
+                .fsGroup(groupId)
+                .runAsGroup(groupId)
+                .runAsUser(userId)
                 .build();
 
             if (StringUtils.hasText(taskSpec.getSchedule())) {
@@ -243,6 +255,10 @@ public class PythonJobRunner {
                         .runtimeClass(taskSpec.getRuntimeClass())
                         .priorityClass(taskSpec.getPriorityClass())
                         .template(taskSpec.getProfile())
+                        //securityContext
+                        .fsGroup(groupId)
+                        .runAsGroup(groupId)
+                        .runAsUser(userId)
                         //specific
                         .schedule(taskSpec.getSchedule())
                         .build();

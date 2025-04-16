@@ -38,10 +38,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class PythonServeRunner {
 
-    private static final int DEFAULT_GROUP_ID = 1000;
+    private static final int UID = 1000;
+    private static final int GID = 1000;
     private static final int HTTP_PORT = 8080;
 
     private final String image;
+    private final int userId;
+    private final int groupId;
     private final String command;
     private final PythonFunctionSpec functionSpec;
     private final Map<String, String> secretData;
@@ -51,6 +54,8 @@ public class PythonServeRunner {
 
     public PythonServeRunner(
         String image,
+        Integer userId,
+        Integer groupId,
         String command,
         PythonFunctionSpec functionPythonSpec,
         Map<String, String> secretData,
@@ -61,6 +66,9 @@ public class PythonServeRunner {
         this.functionSpec = functionPythonSpec;
         this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
+
+        this.userId = userId != null ? userId : UID;
+        this.groupId = groupId != null ? groupId : GID;
     }
 
     public K8sRunnable produce(Run run) {
@@ -217,7 +225,9 @@ public class PythonServeRunner {
             .priorityClass(taskSpec.getPriorityClass())
             .template(taskSpec.getProfile())
             //securityContext
-            .fsGroup(DEFAULT_GROUP_ID)
+            .fsGroup(groupId)
+            .runAsGroup(groupId)
+            .runAsUser(userId)
             //specific
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort))

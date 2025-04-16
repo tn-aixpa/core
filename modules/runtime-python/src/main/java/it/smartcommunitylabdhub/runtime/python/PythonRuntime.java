@@ -50,6 +50,12 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
     @Value("${runtime.python.command}")
     private String command;
 
+    @Value("${runtime.python.user-id}")
+    private Integer userId;
+
+    @Value("${runtime.python.group-id}")
+    private Integer groupId;
+
     public PythonRuntime() {
         super(PythonRunSpec.KIND);
     }
@@ -114,6 +120,8 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
         return switch (runAccessor.getTask()) {
             case PythonJobTaskSpec.KIND -> new PythonJobRunner(
                 images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
+                userId,
+                groupId,
                 command,
                 runPythonSpec.getFunctionSpec(),
                 secretService.getSecretData(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets()),
@@ -122,6 +130,8 @@ public class PythonRuntime extends K8sBaseRuntime<PythonFunctionSpec, PythonRunS
                 .produce(run);
             case PythonServeTaskSpec.KIND -> new PythonServeRunner(
                 images.get(runPythonSpec.getFunctionSpec().getPythonVersion().name()),
+                userId,
+                groupId,
                 command,
                 runPythonSpec.getFunctionSpec(),
                 secretService.getSecretData(run.getProject(), runPythonSpec.getTaskJobSpec().getSecrets()),

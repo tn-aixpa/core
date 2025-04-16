@@ -42,6 +42,12 @@ public class SklearnServeRuntime
     @Value("${runtime.sklearnserve.image}")
     private String image;
 
+    @Value("${runtime.sklearnserve.user-id}")
+    private Integer userId;
+
+    @Value("${runtime.sklearnserve.group-id}")
+    private Integer groupId;
+
     public SklearnServeRuntime() {
         super(SklearnServeRunSpec.KIND);
     }
@@ -112,6 +118,8 @@ public class SklearnServeRuntime
         return switch (runAccessor.getTask()) {
             case SklearnServeTaskSpec.KIND -> new SklearnServeRunner(
                 image,
+                userId,
+                groupId,
                 runSpec.getFunctionSpec(),
                 secretService.getSecretData(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
                 k8sBuilderHelper,

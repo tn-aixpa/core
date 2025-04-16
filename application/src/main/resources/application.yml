@@ -66,13 +66,21 @@ runtime:
     images:
       PYTHON3_9: ${RUNTIME_PYTHON_IMAGE_3_9:ghcr.io/scc-digitalhub/digitalhub-serverless/python-runtime:3.9-latest}
       PYTHON3_10: ${RUNTIME_PYTHON_IMAGE_3_10:ghcr.io/scc-digitalhub/digitalhub-serverless/python-runtime:3.10-latest}
+    user-id: ${RUNTIME_PYTHON_USER_ID:${kubernetes.security.user}}
+    group-id: ${RUNTIME_PYTHON_GROUP_ID:${kubernetes.security.group}}      
     command: /usr/local/bin/processor
   sklearnserve:
     image: ${RUNTIME_SKLEARN_SERVE_IMAGE:seldonio/mlserver:1.6.0-sklearn}
+    user-id: ${RUNTIME_SKLEARN_SERVE_USER_ID:${kubernetes.security.user}}
+    group-id: ${RUNTIME_SKLEARN_SERVE_GROUP_ID:${kubernetes.security.group}}    
   mlflowserve:
     image: ${RUNTIME_MLFLOW_SERVE_IMAGE:seldonio/mlserver:1.6.0-mlflow}
+    user-id: ${RUNTIME_MLFLOW_SERVE_USER_ID:${kubernetes.security.user}}
+    group-id: ${RUNTIME_MLFLOW_SERVE_GROUP_ID:${kubernetes.security.group}}    
   huggingfaceserve:
     image: ${RUNTIME_HUGGINGFACE_SERVE_IMAGE:kserve/huggingfaceserver:latest}
+    user-id: ${RUNTIME_HUGGINGFACE_USER_ID:${kubernetes.security.user}}
+    group-id: ${RUNTIME_HUGGINGFACE_GROUP_ID:${kubernetes.security.group}}
 
 # Spring Docs
 springdoc:
@@ -114,6 +122,8 @@ kubernetes:
   results: ${K8S_ENABLE_RESULTS:default}
   security: 
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
+    user: ${K8S_SEC_USER:}
+    group: ${K8S_SEC_GROUP:}
   envs:
     prefix: ${K8S_ENVS_PREFIX:}    
   image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}

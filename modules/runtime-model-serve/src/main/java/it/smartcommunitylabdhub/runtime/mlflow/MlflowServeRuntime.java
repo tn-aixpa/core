@@ -42,6 +42,12 @@ public class MlflowServeRuntime
     @Value("${runtime.mlflowserve.image}")
     private String image;
 
+    @Value("${runtime.mlflowserve.user-id}")
+    private Integer userId;
+
+    @Value("${runtime.mlflowserve.group-id}")
+    private Integer groupId;
+
     public MlflowServeRuntime() {
         super(MlflowServeRunSpec.KIND);
     }
@@ -112,6 +118,8 @@ public class MlflowServeRuntime
         return switch (runAccessor.getTask()) {
             case MlflowServeTaskSpec.KIND -> new MlflowServeRunner(
                 image,
+                userId,
+                groupId,
                 runSpec.getFunctionSpec(),
                 secretService.getSecretData(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
                 k8sBuilderHelper,

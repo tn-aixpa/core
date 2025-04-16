@@ -36,8 +36,12 @@ public class HuggingfaceServeRunner {
 
     private static final int HTTP_PORT = 8080;
     private static final int GRPC_PORT = 8081;
+    private static final int UID = 1000;
+    private static final int GID = 1000;
 
     private final String image;
+    private final int userId;
+    private final int groupId;
     private final HuggingfaceServeFunctionSpec functionSpec;
     private final Map<String, String> secretData;
 
@@ -46,6 +50,8 @@ public class HuggingfaceServeRunner {
 
     public HuggingfaceServeRunner(
         String image,
+        Integer userId,
+        Integer groupId,
         HuggingfaceServeFunctionSpec functionSpec,
         Map<String, String> secretData,
         K8sBuilderHelper k8sBuilderHelper,
@@ -56,6 +62,9 @@ public class HuggingfaceServeRunner {
         this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
         this.modelService = modelService;
+
+        this.userId = userId != null ? userId : UID;
+        this.groupId = groupId != null ? groupId : GID;
     }
 
     public K8sRunnable produce(Run run) {
@@ -278,6 +287,10 @@ public class HuggingfaceServeRunner {
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort, grpcPort))
             .serviceType(taskSpec.getServiceType() != null ? taskSpec.getServiceType() : CoreServiceType.NodePort)
+            //fixed securityContext
+            .fsGroup(groupId)
+            .runAsGroup(groupId)
+            .runAsUser(userId)
             .build();
 
         k8sServeRunnable.setId(run.getId());

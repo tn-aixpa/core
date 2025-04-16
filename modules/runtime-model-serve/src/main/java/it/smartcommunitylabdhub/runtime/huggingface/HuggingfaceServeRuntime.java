@@ -42,6 +42,12 @@ public class HuggingfaceServeRuntime
     @Value("${runtime.huggingfaceserve.image}")
     private String image;
 
+    @Value("${runtime.huggingfaceserve.user-id}")
+    private Integer userId;
+
+    @Value("${runtime.huggingfaceserve.group-id}")
+    private Integer groupId;
+
     public HuggingfaceServeRuntime() {
         super(HuggingfaceServeRunSpec.KIND);
     }
@@ -112,6 +118,8 @@ public class HuggingfaceServeRuntime
         return switch (runAccessor.getTask()) {
             case HuggingfaceServeTaskSpec.KIND -> new HuggingfaceServeRunner(
                 image,
+                userId,
+                groupId,
                 runSpec.getFunctionSpec(),
                 secretService.getSecretData(run.getProject(), runSpec.getTaskServeSpec().getSecrets()),
                 k8sBuilderHelper,
