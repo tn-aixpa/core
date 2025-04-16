@@ -38,10 +38,13 @@ public class S3Config extends AbstractConfiguration {
     @JsonProperty("s3_bucket")
     private String bucket;
 
-    @JsonProperty("s3_endpoint_url")
+    //NOTE: align names with
+    //ref https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#EVarSettings
+    //
+    @JsonProperty("aws_endpoint_url")
     private String endpoint;
 
-    @JsonProperty("s3_region")
+    @JsonProperty("aws_region")
     private String region;
 
     @JsonProperty("s3_signature_version")

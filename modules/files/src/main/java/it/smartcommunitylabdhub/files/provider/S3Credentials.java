@@ -35,6 +35,9 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class S3Credentials extends AbstractCredentials {
 
+    //NOTE: align names with
+    //ref https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html#EVarSettings
+    //
     @JsonProperty("aws_access_key_id")
     private String accessKey;
 
@@ -44,10 +47,10 @@ public class S3Credentials extends AbstractCredentials {
     @JsonProperty("aws_session_token")
     private String sessionToken;
 
-    @JsonProperty("s3_endpoint_url")
+    @JsonProperty("aws_endpoint_url")
     private String endpoint;
 
-    @JsonProperty("s3_region")
+    @JsonProperty("aws_region")
     private String region;
 
     @JsonProperty("s3_signature_version")
