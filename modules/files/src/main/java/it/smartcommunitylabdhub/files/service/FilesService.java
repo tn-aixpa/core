@@ -78,7 +78,7 @@ public class FilesService {
         return match;
     }
 
-    public @Nullable DownloadInfo getDownloadAsUrl(@NotNull String path, UserAuthentication<?> auth)
+    public @Nullable DownloadInfo getDownloadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth)
         throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
@@ -101,12 +101,13 @@ public class FilesService {
         return info;
     }
 
-    public @Nullable InputStream getDownloadAsStream(@NotNull String path, UserAuthentication<?> auth)
+    public @Nullable InputStream getDownloadAsStream(@NotNull String path, @Nullable UserAuthentication<?> auth)
         throws StoreException {
         throw new UnsupportedOperationException();
     }
 
-    public List<FileInfo> getFileInfo(@NotNull String path, UserAuthentication<?> auth) throws StoreException {
+    public List<FileInfo> getFileInfo(@NotNull String path, @Nullable UserAuthentication<?> auth)
+        throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -128,7 +129,8 @@ public class FilesService {
         return metadata;
     }
 
-    public @Nullable UploadInfo getUploadAsUrl(@NotNull String path, UserAuthentication<?> auth) throws StoreException {
+    public @Nullable UploadInfo getUploadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth)
+        throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -150,7 +152,7 @@ public class FilesService {
         return info;
     }
 
-    public @Nullable UploadInfo startMultiPartUpload(@NotNull String path, UserAuthentication<?> auth)
+    public @Nullable UploadInfo startMultiPartUpload(@NotNull String path, @Nullable UserAuthentication<?> auth)
         throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
@@ -177,7 +179,7 @@ public class FilesService {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull Integer partNumber,
-        UserAuthentication<?> auth
+        @Nullable UserAuthentication<?> auth
     ) throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
         Assert.hasText(uploadId, "uploadId can not be null or empty");
@@ -206,7 +208,7 @@ public class FilesService {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull List<String> partList,
-        UserAuthentication<?> auth
+        @Nullable UserAuthentication<?> auth
     ) throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
         Assert.hasText(uploadId, "uploadId can not be null or empty");
@@ -231,7 +233,7 @@ public class FilesService {
         return info;
     }
 
-    public void remove(@NotNull String path, UserAuthentication<?> auth) throws StoreException {
+    public void remove(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {
         FilesStore store = getStore(path);
         if (store != null) {
             log.debug("found store {}", store.getClass().getName());

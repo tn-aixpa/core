@@ -97,11 +97,7 @@ public class S3FilesStore implements FilesStore {
         }
     }
 
-    private @Nullable S3Client getClient(S3Credentials s3Credentials) throws StoreException {
-        if (s3Credentials == null) {
-            return null;
-        }
-
+    private S3Client getClient(@NotNull S3Credentials s3Credentials) throws StoreException {
         AwsCredentials credentials = getCredentials(s3Credentials);
         if (credentials == null) {
             throw new StoreException("no credentials found");
@@ -120,11 +116,7 @@ public class S3FilesStore implements FilesStore {
         }
     }
 
-    private S3Presigner getPresignerClient(S3Credentials s3Credentials) throws StoreException {
-        if (s3Credentials == null) {
-            return null;
-        }
-
+    private S3Presigner getPresignerClient(@NotNull S3Credentials s3Credentials) throws StoreException {
         AwsCredentials credentials = getCredentials(s3Credentials);
         if (credentials == null) {
             throw new StoreException("no credentials found");
@@ -150,7 +142,7 @@ public class S3FilesStore implements FilesStore {
         }
     }
 
-    private S3Credentials extractCredentials(UserAuthentication<?> auth, String bucket) {
+    private @Nullable S3Credentials extractCredentials(UserAuthentication<?> auth, String bucket) {
         //pick matching credentials if available
         return auth == null
             ? null
@@ -169,7 +161,8 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public DownloadInfo downloadAsUrl(@NotNull String path, UserAuthentication<?> auth) throws StoreException {
+    public DownloadInfo downloadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth)
+        throws StoreException {
         log.debug("generate download url for {}", path);
 
         Keys keys = parseKey(path);
@@ -220,7 +213,7 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public List<FileInfo> fileInfo(@NotNull String path, UserAuthentication<?> auth) throws StoreException {
+    public List<FileInfo> fileInfo(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {
         log.debug("file info for {}", path);
 
         Keys keys = parseKey(path);
@@ -304,7 +297,7 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public UploadInfo uploadAsUrl(@NotNull String path, UserAuthentication<?> auth) throws StoreException {
+    public UploadInfo uploadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {
         log.debug("generate upload url for {}", path);
 
         Keys keys = parseKey(path);
@@ -355,7 +348,8 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public UploadInfo startMultiPartUpload(@NotNull String path, UserAuthentication<?> auth) throws StoreException {
+    public UploadInfo startMultiPartUpload(@NotNull String path, @Nullable UserAuthentication<?> auth)
+        throws StoreException {
         log.debug("generate multipart upload for {}", path);
 
         Keys keys = parseKey(path);
@@ -406,7 +400,7 @@ public class S3FilesStore implements FilesStore {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull Integer partNumber,
-        UserAuthentication<?> auth
+        @Nullable UserAuthentication<?> auth
     ) throws StoreException {
         log.debug("generate part upload url for {} -> {} - {}", path, uploadId, partNumber);
 
@@ -469,7 +463,7 @@ public class S3FilesStore implements FilesStore {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull List<String> eTagPartList,
-        UserAuthentication<?> auth
+        @Nullable UserAuthentication<?> auth
     ) throws StoreException {
         log.debug("generate complete upload url for {} -> {}", path, uploadId);
 
@@ -532,45 +526,8 @@ public class S3FilesStore implements FilesStore {
         }
     }
 
-    private Keys parseKey(String path) {
-        //parse as URI where host == bucket, or host == endpoint
-        //TODO support other path styles
-        UriComponents uri = UriComponentsBuilder.fromUriString(path).build();
-        if (uri.getPath() == null || uri.getHost() == null) {
-            return null;
-        }
-
-        String bucketName = uri.getHost();
-        String key = uri.getPath();
-
-        if (endpoint != null && endpoint.equals(bucketName)) {
-            //use first path el as bucket
-            bucketName = uri.getPathSegments().stream().findFirst().orElse(null);
-            if (bucketName != null) {
-                key = uri.getPath().substring(bucketName.length() + 1);
-            }
-        }
-
-        if (bucketName == null || key == null) {
-            return null;
-        }
-
-        if (key.startsWith("/")) {
-            key = key.substring(1);
-        }
-
-        //support root as /
-        if (key.isEmpty()) {
-            key = "/";
-        }
-
-        String fileName = key.endsWith("/") ? null : key.substring(key.lastIndexOf('/') + 1, key.length());
-
-        return new Keys(endpoint, bucketName, key, fileName);
-    }
-
     @Override
-    public void remove(@NotNull String path, UserAuthentication<?> auth) throws StoreException {
+    public void remove(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {
         Keys keys = parseKey(path);
         log.debug("resolved path to {}", keys);
 
@@ -625,6 +582,43 @@ public class S3FilesStore implements FilesStore {
             log.error("error with s3 for {}: {}", path, e.getMessage());
             throw new StoreException("error with s3: " + e.getMessage());
         }
+    }
+
+    private Keys parseKey(String path) {
+        //parse as URI where host == bucket, or host == endpoint
+        //TODO support other path styles
+        UriComponents uri = UriComponentsBuilder.fromUriString(path).build();
+        if (uri.getPath() == null || uri.getHost() == null) {
+            return null;
+        }
+
+        String bucketName = uri.getHost();
+        String key = uri.getPath();
+
+        if (endpoint != null && endpoint.equals(bucketName)) {
+            //use first path el as bucket
+            bucketName = uri.getPathSegments().stream().findFirst().orElse(null);
+            if (bucketName != null) {
+                key = uri.getPath().substring(bucketName.length() + 1);
+            }
+        }
+
+        if (bucketName == null || key == null) {
+            return null;
+        }
+
+        if (key.startsWith("/")) {
+            key = key.substring(1);
+        }
+
+        //support root as /
+        if (key.isEmpty()) {
+            key = "/";
+        }
+
+        String fileName = key.endsWith("/") ? null : key.substring(key.lastIndexOf('/') + 1, key.length());
+
+        return new Keys(endpoint, bucketName, key, fileName);
     }
 
     private record Keys(String endpoint, String bucket, String key, String fileName) {}

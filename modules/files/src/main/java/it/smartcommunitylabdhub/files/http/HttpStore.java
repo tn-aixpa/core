@@ -6,6 +6,7 @@ import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;
 import it.smartcommunitylabdhub.files.service.FilesStore;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -29,7 +30,7 @@ public class HttpStore implements FilesStore {
     private RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public DownloadInfo downloadAsUrl(@NotNull String path, UserAuthentication<?> auth) {
+    public DownloadInfo downloadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth) {
         log.debug("generate download url for {}", path);
 
         //path must be a valid url
@@ -56,7 +57,7 @@ public class HttpStore implements FilesStore {
     }
 
     @Override
-    public List<FileInfo> fileInfo(@NotNull String path, UserAuthentication<?> auth) {
+    public List<FileInfo> fileInfo(@NotNull String path, @Nullable UserAuthentication<?> auth) {
         List<FileInfo> result = new ArrayList<>();
         try {
             String[] split = path.split("/");
@@ -77,12 +78,12 @@ public class HttpStore implements FilesStore {
     }
 
     @Override
-    public UploadInfo uploadAsUrl(@NotNull String path, UserAuthentication<?> auth) {
+    public UploadInfo uploadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public UploadInfo startMultiPartUpload(@NotNull String path, UserAuthentication<?> auth) {
+    public UploadInfo startMultiPartUpload(@NotNull String path, @Nullable UserAuthentication<?> auth) {
         throw new UnsupportedOperationException();
     }
 
@@ -91,7 +92,7 @@ public class HttpStore implements FilesStore {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull Integer partNumber,
-        UserAuthentication<?> auth
+        @Nullable UserAuthentication<?> auth
     ) {
         throw new UnsupportedOperationException();
     }
@@ -101,11 +102,11 @@ public class HttpStore implements FilesStore {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull List<String> partList,
-        UserAuthentication<?> auth
+        @Nullable UserAuthentication<?> auth
     ) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void remove(@NotNull String path, UserAuthentication<?> auth) throws StoreException {}
+    public void remove(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {}
 }
