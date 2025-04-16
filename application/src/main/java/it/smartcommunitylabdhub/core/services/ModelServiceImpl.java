@@ -670,7 +670,7 @@ public class ModelServiceImpl
 
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -712,7 +712,7 @@ public class ModelServiceImpl
 
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -759,7 +759,7 @@ public class ModelServiceImpl
         log.debug("upload part url for model {}: {}", String.valueOf(id), filename);
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -811,7 +811,7 @@ public class ModelServiceImpl
         log.debug("complete upload url for model {}: {}", String.valueOf(id), filename);
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +

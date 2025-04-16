@@ -2,7 +2,11 @@ package it.smartcommunitylabdhub.files.service;
 
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.infrastructure.Configuration;
+import it.smartcommunitylabdhub.commons.infrastructure.ConfigurationProvider;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
+import it.smartcommunitylabdhub.commons.models.project.Project;
+import it.smartcommunitylabdhub.commons.models.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.files.http.HttpStore;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;
@@ -15,8 +19,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  *
@@ -25,9 +32,14 @@ import org.springframework.util.Assert;
 
 @Service
 @Slf4j
-public class FilesService {
+public class FilesService implements ConfigurationProvider, InitializingBean {
 
     private final Map<String, FilesStore> stores = new HashMap<>();
+
+    @Value("${files.default.store}")
+    private String defaultStore;
+
+    private FilesConfig config;
 
     public FilesService() {
         //create an http read-only store
@@ -37,6 +49,17 @@ public class FilesService {
         registerStore("http://", store);
         registerStore("https://", store);
         registerStore("ftp://", store);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        //build config
+        this.config = FilesConfig.builder().defaultFilesStore(defaultStore).build();
+    }
+
+    @Override
+    public Configuration getConfig() {
+        return config;
     }
 
     public void registerStore(String prefix, FilesStore store) {
@@ -53,15 +76,28 @@ public class FilesService {
     }
 
     //TODO refactor
-    public String getDefaultStore() {
-        //select configured s3:// by default
-
+    public String getDefaultStore(@Nullable Project project) {
+        //define base store, prefer any s3 with bucket if available
         List<String> keys = stores.keySet().stream().filter(k -> k.startsWith("s3://")).collect(Collectors.toList());
 
         Optional<String> dk = keys.stream().filter(k -> !k.equals("s3://")).findFirst();
         Optional<String> df = keys.stream().filter(k -> k.equals("s3://")).findFirst();
 
-        return dk.isPresent() ? dk.get() : (df.isPresent() ? df.get() : null);
+        String baseStore = dk.isPresent() ? dk.get() : (df.isPresent() ? df.get() : null);
+        String store = StringUtils.hasText(defaultStore) ? defaultStore : baseStore;
+
+        if (project != null) {
+            //check if project has a configured store
+            ProjectBaseSpec spec = new ProjectBaseSpec();
+            spec.configure(project.getSpec());
+
+            if (spec.getConfig() != null && StringUtils.hasText(spec.getConfig().getDefaultFilesStore())) {
+                //use project store as default
+                store = spec.getConfig().getDefaultFilesStore();
+            }
+        }
+
+        return store;
     }
 
     public @Nullable FilesStore getStore(@NotNull String path) {

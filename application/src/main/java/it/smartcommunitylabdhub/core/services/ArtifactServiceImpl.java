@@ -664,7 +664,7 @@ public class ArtifactServiceImpl
 
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -706,7 +706,7 @@ public class ArtifactServiceImpl
 
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -753,7 +753,7 @@ public class ArtifactServiceImpl
         log.debug("upload part url for artifact {}: {}", String.valueOf(id), filename);
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -805,7 +805,7 @@ public class ArtifactServiceImpl
         log.debug("complete upload url for artifact {}: {}", String.valueOf(id), filename);
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +

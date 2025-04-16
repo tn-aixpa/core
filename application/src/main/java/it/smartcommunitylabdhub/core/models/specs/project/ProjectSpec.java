@@ -36,13 +36,13 @@ public class ProjectSpec extends ProjectBaseSpec {
 
     @Override
     public void configure(Map<String, Serializable> data) {
-        ProjectSpec concreteSpec = mapper.convertValue(data, ProjectSpec.class);
+        ProjectSpec spec = mapper.convertValue(data, ProjectSpec.class);
 
-        this.functions = concreteSpec.getFunctions();
-        this.artifacts = concreteSpec.getArtifacts();
-        this.dataitems = concreteSpec.getDataitems();
-        this.models = concreteSpec.getModels();
-        this.workflows = concreteSpec.getWorkflows();
+        this.functions = spec.getFunctions();
+        this.artifacts = spec.getArtifacts();
+        this.dataitems = spec.getDataitems();
+        this.models = spec.getModels();
+        this.workflows = spec.getWorkflows();
 
         super.configure(data);
     }

@@ -15,11 +15,13 @@ import lombok.Setter;
 public class ProjectBaseSpec extends BaseSpec {
 
     private String source;
+    private ProjectConfig config = new ProjectConfig();
 
     @Override
     public void configure(Map<String, Serializable> data) {
-        ProjectBaseSpec concreteSpec = mapper.convertValue(data, ProjectBaseSpec.class);
+        ProjectBaseSpec spec = mapper.convertValue(data, ProjectBaseSpec.class);
 
-        this.source = concreteSpec.getSource();
+        this.config = spec.getConfig();
+        this.source = spec.getSource();
     }
 }

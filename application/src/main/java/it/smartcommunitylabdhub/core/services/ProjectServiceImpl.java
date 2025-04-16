@@ -249,6 +249,8 @@ public class ProjectServiceImpl
             ProjectSpec spec = new ProjectSpec();
             spec.configure(dto.getSpec());
 
+            //TODO build a default config?
+
             //validate
             validator.validateSpec(spec);
 

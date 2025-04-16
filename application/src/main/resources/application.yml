@@ -236,6 +236,8 @@ lucene:
 # files support
 files:
   max-column-size: ${FILES_MAX_COLUMN_SIZE:2097152}      
+  default:
+    store: ${FILES_DEFAULT_STORE:s3://${application.name}}
 
 # JWT configuration
 jwt:
@@ -275,9 +277,9 @@ credentials:
       password: ${DB_CREDENTIALS_PASSWORD:}
     minio:
       enable: ${MINIO_CREDENTIALS_PROVIDER:false}      
-      endpoint:  ${MINIO_CREDENTIALS_ENDPOINT:${files.store.s3.endpoint}}
+      endpoint:  ${MINIO_CREDENTIALS_ENDPOINT:}
       region: ${MINIO_CREDENTIALS_REGION:us-east-1}
-      bucket: ${MINIO_CREDENTIALS_BUCKET:${files.store.s3.bucket}}
+      bucket: ${MINIO_CREDENTIALS_BUCKET:}
       claim:  ${MINIO_CREDENTIALS_CLAIM:minio/policy}
       policy:  ${MINIO_CREDENTIALS_POLICY:readwrite}
       duration:  ${MINIO_CREDENTIALS_DURATION:86400}

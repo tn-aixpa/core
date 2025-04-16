@@ -658,7 +658,7 @@ public class DataItemServiceImpl
 
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -700,7 +700,7 @@ public class DataItemServiceImpl
 
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -747,7 +747,7 @@ public class DataItemServiceImpl
         log.debug("upload part url for dataItem {}: {}", String.valueOf(id), filename);
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
@@ -799,7 +799,7 @@ public class DataItemServiceImpl
         log.debug("complete upload url for dataItem {}: {}", String.valueOf(id), filename);
         try {
             String path =
-                filesService.getDefaultStore() +
+                filesService.getDefaultStore(projectService.find(project)) +
                 "/" +
                 project +
                 "/" +
