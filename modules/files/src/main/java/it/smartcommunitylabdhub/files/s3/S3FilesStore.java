@@ -271,7 +271,7 @@ public class S3FilesStore implements FilesStore {
                 );
 
                 FileInfo response = new FileInfo();
-                response.setPath(path);
+                response.setPath(null); //single files have no relative path
                 response.setName(keys.fileName);
                 response.setContentType(headObject.contentType());
                 response.setSize(headObject.contentLength());
