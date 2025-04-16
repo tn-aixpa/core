@@ -21,6 +21,7 @@ import it.smartcommunitylabdhub.commons.services.MetricsService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
+import it.smartcommunitylabdhub.core.components.security.UserAuthenticationHelper;
 import it.smartcommunitylabdhub.core.metrics.MetricsManager;
 import it.smartcommunitylabdhub.core.models.builders.model.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
@@ -413,10 +414,30 @@ public class ModelServiceImpl
     }
 
     @Override
-    public void deleteModel(@NotNull String id) {
+    public void deleteModel(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete model with id {}", String.valueOf(id));
+
         try {
-            entityService.delete(id);
+            Model model = entityService.get(id);
+            if (model != null) {
+                if (Boolean.TRUE.equals(cascade)) {
+                    //files
+                    log.debug("cascade delete files for model with id {}", String.valueOf(id));
+
+                    //extract path from spec
+                    ModelBaseSpec spec = new ModelBaseSpec();
+                    spec.configure(model.getSpec());
+
+                    String path = spec.getPath();
+                    if (StringUtils.hasText(path)) {
+                        //delete files
+                        filesService.remove(path, UserAuthenticationHelper.getUserAuthentication());
+                    }
+                }
+
+                //delete entity
+                entityService.delete(id);
+            }
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -424,27 +445,40 @@ public class ModelServiceImpl
     }
 
     @Override
-    public void deleteModels(@NotNull String project, @NotNull String name) {
+    public void deleteModels(@NotNull String project, @NotNull String name, @Nullable Boolean cascade) {
         log.debug("delete models for project {} with name {}", project, name);
-
-        Specification<ModelEntity> spec = Specification.allOf(
-            CommonSpecification.projectEquals(project),
-            CommonSpecification.nameEquals(name)
-        );
-        try {
-            long count = entityService.deleteAll(spec);
-            log.debug("deleted count {}", count);
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
+        if (Boolean.TRUE.equals(cascade)) {
+            //delete one by one with cascade
+            findModels(project, name).forEach(m -> deleteModel(m.getId(), Boolean.TRUE));
+        } else {
+            //bulk delete entities only
+            Specification<ModelEntity> spec = Specification.allOf(
+                CommonSpecification.projectEquals(project),
+                CommonSpecification.nameEquals(name)
+            );
+            try {
+                long count = entityService.deleteAll(spec);
+                log.debug("bulk deleted count {}", count);
+            } catch (StoreException e) {
+                log.error("store error: {}", e.getMessage());
+                throw new SystemException(e.getMessage());
+            }
         }
     }
 
     @Override
-    public void deleteModelsByProject(@NotNull String project) {
+    public void deleteModelsByProject(@NotNull String project, @Nullable Boolean cascade) {
         log.debug("delete models for project {}", project);
         try {
-            entityService.deleteAll(CommonSpecification.projectEquals(project));
+            if (Boolean.TRUE.equals(cascade)) {
+                //delete one by one with cascade
+                entityService
+                    .searchAll(CommonSpecification.projectEquals(project))
+                    .forEach(m -> deleteModel(m.getId(), Boolean.TRUE));
+            } else {
+                //bulk delete entities only
+                entityService.deleteAll(CommonSpecification.projectEquals(project));
+            }
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -510,7 +544,7 @@ public class ModelServiceImpl
                 throw new NoSuchEntityException("file");
             }
 
-            DownloadInfo info = filesService.getDownloadAsUrl(path);
+            DownloadInfo info = filesService.getDownloadAsUrl(path, UserAuthenticationHelper.getUserAuthentication());
             if (log.isTraceEnabled()) {
                 log.trace("download url for entity with id {}: {} -> {}", id, path, info);
             }
@@ -549,7 +583,10 @@ public class ModelServiceImpl
                 })
                 .orElse(path);
 
-            DownloadInfo info = filesService.getDownloadAsUrl(fullPath);
+            DownloadInfo info = filesService.getDownloadAsUrl(
+                fullPath,
+                UserAuthenticationHelper.getUserAuthentication()
+            );
             if (log.isTraceEnabled()) {
                 log.trace("download url for model with id {} and path {}: {} -> {}", id, sub, path, info);
             }
@@ -590,7 +627,7 @@ public class ModelServiceImpl
                     throw new NoSuchEntityException("file");
                 }
 
-                files = filesService.getFileInfo(path);
+                files = filesService.getFileInfo(path, UserAuthenticationHelper.getUserAuthentication());
             }
 
             if (files == null) {
@@ -654,7 +691,7 @@ public class ModelServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.getUploadAsUrl(path);
+            UploadInfo info = filesService.getUploadAsUrl(path, UserAuthenticationHelper.getUserAuthentication());
             if (log.isTraceEnabled()) {
                 log.trace("upload url for model with id {}: {}", id, info);
             }
@@ -695,7 +732,7 @@ public class ModelServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.startMultiPartUpload(path);
+            UploadInfo info = filesService.startMultiPartUpload(path, UserAuthenticationHelper.getUserAuthentication());
             if (log.isTraceEnabled()) {
                 log.trace("start upload url for model with id {}: {}", id, info);
             }
@@ -739,7 +776,12 @@ public class ModelServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber);
+            UploadInfo info = filesService.uploadMultiPart(
+                path,
+                uploadId,
+                partNumber,
+                UserAuthenticationHelper.getUserAuthentication()
+            );
             if (log.isTraceEnabled()) {
                 log.trace("part upload url for model with path {}: {}", path, info);
             }
@@ -783,7 +825,12 @@ public class ModelServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList);
+            UploadInfo info = filesService.completeMultiPartUpload(
+                path,
+                uploadId,
+                eTagPartList,
+                UserAuthenticationHelper.getUserAuthentication()
+            );
             if (log.isTraceEnabled()) {
                 log.trace("complete upload url for model with path {}: {}", path, info);
             }

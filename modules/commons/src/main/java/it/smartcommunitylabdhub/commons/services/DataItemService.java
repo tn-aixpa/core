@@ -139,18 +139,19 @@ public interface DataItemService {
      * Delete a specific dataItem (version) via unique ID
      * @param id
      */
-    void deleteDataItem(@NotNull String id) throws SystemException;
+    void deleteDataItem(@NotNull String id, @Nullable Boolean cascade) throws SystemException;
 
     /**
      * Delete all versions of a given dataItem
      * @param project
      * @param name
      */
-    void deleteDataItems(@NotNull String project, @NotNull String name) throws SystemException;
+    void deleteDataItems(@NotNull String project, @NotNull String name, @Nullable Boolean cascade)
+        throws SystemException;
 
     /**
      * Delete all dataItems for a given project, with cascade.
      * @param project
      */
-    void deleteDataItemsByProject(@NotNull String project) throws SystemException;
+    void deleteDataItemsByProject(@NotNull String project, @Nullable Boolean cascade) throws SystemException;
 }

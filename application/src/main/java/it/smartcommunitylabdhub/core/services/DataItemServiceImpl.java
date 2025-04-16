@@ -18,6 +18,7 @@ import it.smartcommunitylabdhub.commons.services.FilesInfoService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
+import it.smartcommunitylabdhub.core.components.security.UserAuthenticationHelper;
 import it.smartcommunitylabdhub.core.models.builders.dataitem.DataItemEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
@@ -403,10 +404,29 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public void deleteDataItem(@NotNull String id) {
+    public void deleteDataItem(@NotNull String id, @Nullable Boolean cascade) {
         log.debug("delete dataItem with id {}", String.valueOf(id));
         try {
-            entityService.delete(id);
+            DataItem dataItem = entityService.find(id);
+            if (dataItem != null) {
+                if (Boolean.TRUE.equals(cascade)) {
+                    //files
+                    log.debug("cascade delete files for dataItem with id {}", String.valueOf(id));
+
+                    //extract path from spec
+                    DataItemBaseSpec spec = new DataItemBaseSpec();
+                    spec.configure(dataItem.getSpec());
+
+                    String path = spec.getPath();
+                    if (StringUtils.hasText(path)) {
+                        //delete files
+                        filesService.remove(path, UserAuthenticationHelper.getUserAuthentication());
+                    }
+                }
+
+                //delete entity
+                entityService.delete(id);
+            }
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -414,27 +434,39 @@ public class DataItemServiceImpl
     }
 
     @Override
-    public void deleteDataItems(@NotNull String project, @NotNull String name) {
+    public void deleteDataItems(@NotNull String project, @NotNull String name, @Nullable Boolean cascade) {
         log.debug("delete dataItems for project {} with name {}", project, name);
-
-        Specification<DataItemEntity> spec = Specification.allOf(
-            CommonSpecification.projectEquals(project),
-            CommonSpecification.nameEquals(name)
-        );
-        try {
-            long count = entityService.deleteAll(spec);
-            log.debug("deleted count {}", count);
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
+        if (Boolean.TRUE.equals(cascade)) {
+            //delete one by one with cascade
+            findDataItems(project, name).forEach(d -> deleteDataItem(d.getId(), Boolean.TRUE));
+        } else {
+            //bulk delete entities only
+            Specification<DataItemEntity> spec = Specification.allOf(
+                CommonSpecification.projectEquals(project),
+                CommonSpecification.nameEquals(name)
+            );
+            try {
+                long count = entityService.deleteAll(spec);
+                log.debug("bulk deleted count {}", count);
+            } catch (StoreException e) {
+                log.error("store error: {}", e.getMessage());
+                throw new SystemException(e.getMessage());
+            }
         }
     }
 
     @Override
-    public void deleteDataItemsByProject(@NotNull String project) {
+    public void deleteDataItemsByProject(@NotNull String project, @Nullable Boolean cascade) {
         log.debug("delete dataItems for project {}", project);
         try {
-            entityService.deleteAll(CommonSpecification.projectEquals(project));
+            if (Boolean.TRUE.equals(cascade)) {
+                //delete one by one with cascade
+                entityService
+                    .searchAll(CommonSpecification.projectEquals(project))
+                    .forEach(d -> deleteDataItem(d.getId(), Boolean.TRUE));
+            } else {
+                entityService.deleteAll(CommonSpecification.projectEquals(project));
+            }
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
@@ -500,7 +532,7 @@ public class DataItemServiceImpl
                 throw new NoSuchEntityException("file");
             }
 
-            DownloadInfo info = filesService.getDownloadAsUrl(path);
+            DownloadInfo info = filesService.getDownloadAsUrl(path, UserAuthenticationHelper.getUserAuthentication());
             if (log.isTraceEnabled()) {
                 log.trace("download url for entity with id {}: {} -> {}", id, path, info);
             }
@@ -539,7 +571,10 @@ public class DataItemServiceImpl
                 })
                 .orElse(path);
 
-            DownloadInfo info = filesService.getDownloadAsUrl(fullPath);
+            DownloadInfo info = filesService.getDownloadAsUrl(
+                fullPath,
+                UserAuthenticationHelper.getUserAuthentication()
+            );
             if (log.isTraceEnabled()) {
                 log.trace("download url for dataitem with id {} and path {}: {} -> {}", id, sub, path, info);
             }
@@ -580,7 +615,7 @@ public class DataItemServiceImpl
                     throw new NoSuchEntityException("file");
                 }
 
-                files = filesService.getFileInfo(path);
+                files = filesService.getFileInfo(path, UserAuthenticationHelper.getUserAuthentication());
             }
 
             if (files == null) {
@@ -644,7 +679,7 @@ public class DataItemServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.getUploadAsUrl(path);
+            UploadInfo info = filesService.getUploadAsUrl(path, UserAuthenticationHelper.getUserAuthentication());
             if (log.isTraceEnabled()) {
                 log.trace("upload url for dataItem with id {}: {}", id, info);
             }
@@ -685,7 +720,7 @@ public class DataItemServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.startMultiPartUpload(path);
+            UploadInfo info = filesService.startMultiPartUpload(path, UserAuthenticationHelper.getUserAuthentication());
             if (log.isTraceEnabled()) {
                 log.trace("start upload url for dataItem with id {}: {}", id, info);
             }
@@ -729,7 +764,12 @@ public class DataItemServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber);
+            UploadInfo info = filesService.uploadMultiPart(
+                path,
+                uploadId,
+                partNumber,
+                UserAuthenticationHelper.getUserAuthentication()
+            );
             if (log.isTraceEnabled()) {
                 log.trace("part upload url for dataItem with path {}: {}", path, info);
             }
@@ -773,7 +813,12 @@ public class DataItemServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList);
+            UploadInfo info = filesService.completeMultiPartUpload(
+                path,
+                uploadId,
+                eTagPartList,
+                UserAuthenticationHelper.getUserAuthentication()
+            );
             if (log.isTraceEnabled()) {
                 log.trace("complete upload url for dataItem with path {}: {}", path, info);
             }

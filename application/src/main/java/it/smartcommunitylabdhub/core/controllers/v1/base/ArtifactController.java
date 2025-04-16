@@ -109,8 +109,11 @@ public class ArtifactController {
 
     @Operation(summary = "Delete an artifact", description = "Delete a specific artifact")
     @DeleteMapping(path = "/{id}")
-    public void deleteArtifact(@PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id) {
-        artifactService.deleteArtifact(id);
+    public void deleteArtifact(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
+    ) {
+        artifactService.deleteArtifact(id, cascade);
     }
 
     /*

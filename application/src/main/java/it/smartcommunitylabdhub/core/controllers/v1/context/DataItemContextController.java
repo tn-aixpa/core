@@ -110,9 +110,10 @@ public class DataItemContextController {
     @DeleteMapping(path = "")
     public void deleteAllDataItem(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
+        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
+        @RequestParam(required = false) Boolean cascade
     ) {
-        dataItemService.deleteDataItems(project, name);
+        dataItemService.deleteDataItems(project, name, cascade);
     }
 
     /*
@@ -163,7 +164,8 @@ public class DataItemContextController {
     @DeleteMapping(path = "/{id}")
     public void deleteDataItemById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
     ) throws NoSuchEntityException {
         DataItem dataItem = dataItemService.getDataItem(id);
 
@@ -172,7 +174,7 @@ public class DataItemContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        dataItemService.deleteDataItem(id);
+        dataItemService.deleteDataItem(id, cascade);
     }
 
     /*

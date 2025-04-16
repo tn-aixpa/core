@@ -1,8 +1,10 @@
 package it.smartcommunitylabdhub.core.models.listeners;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.model.Model;
 import it.smartcommunitylabdhub.commons.models.project.Project;
+import it.smartcommunitylabdhub.commons.services.FilesInfoService;
 import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ModelEntityListener extends AbstractEntityListener<ModelEntity, Model> {
 
     private EntityService<Project, ProjectEntity> projectService;
+    private FilesInfoService filesInfoService;
 
     public ModelEntityListener(Converter<ModelEntity, Model> converter) {
         super(converter);
@@ -29,6 +32,11 @@ public class ModelEntityListener extends AbstractEntityListener<ModelEntity, Mod
     @Autowired
     public void setProjectService(EntityService<Project, ProjectEntity> projectService) {
         this.projectService = projectService;
+    }
+
+    @Autowired
+    public void setFilesInfoService(FilesInfoService filesInfoService) {
+        this.filesInfoService = filesInfoService;
     }
 
     @Async
@@ -52,6 +60,20 @@ public class ModelEntityListener extends AbstractEntityListener<ModelEntity, Mod
                     //touch to set updated
                     projectService.update(project.getId(), project);
                 }
+            } catch (StoreException e) {
+                log.error("store error", e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    protected void onDelete(ModelEntity entity, Model dto) {
+        super.onDelete(entity, dto);
+
+        //delete files info
+        if (filesInfoService != null) {
+            try {
+                filesInfoService.clearFilesInfo(EntityName.MODEL.getValue(), entity.getId());
             } catch (StoreException e) {
                 log.error("store error", e.getMessage());
             }

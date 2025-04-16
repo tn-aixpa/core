@@ -2,7 +2,9 @@ package it.smartcommunitylabdhub.core.models.listeners;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
+import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.project.Project;
+import it.smartcommunitylabdhub.commons.services.FilesInfoService;
 import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DataItemEntityListener extends AbstractEntityListener<DataItemEntity, DataItem> {
 
     private EntityService<Project, ProjectEntity> projectService;
+    private FilesInfoService filesInfoService;
 
     public DataItemEntityListener(Converter<DataItemEntity, DataItem> converter) {
         super(converter);
@@ -29,6 +32,11 @@ public class DataItemEntityListener extends AbstractEntityListener<DataItemEntit
     @Autowired
     public void setProjectService(EntityService<Project, ProjectEntity> projectService) {
         this.projectService = projectService;
+    }
+
+    @Autowired
+    public void setFilesInfoService(FilesInfoService filesInfoService) {
+        this.filesInfoService = filesInfoService;
     }
 
     @Async
@@ -53,6 +61,20 @@ public class DataItemEntityListener extends AbstractEntityListener<DataItemEntit
                     //touch to set updated
                     projectService.update(project.getId(), project);
                 }
+            } catch (StoreException e) {
+                log.error("store error", e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    protected void onDelete(DataItemEntity entity, DataItem dto) {
+        super.onDelete(entity, dto);
+
+        //delete files info
+        if (filesInfoService != null) {
+            try {
+                filesInfoService.clearFilesInfo(EntityName.DATAITEM.getValue(), entity.getId());
             } catch (StoreException e) {
                 log.error("store error", e.getMessage());
             }

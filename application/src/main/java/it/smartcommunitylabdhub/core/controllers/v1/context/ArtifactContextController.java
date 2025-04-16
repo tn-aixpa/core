@@ -109,9 +109,10 @@ public class ArtifactContextController {
     @DeleteMapping(path = "")
     public void deleteAllArtifacts(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name
+        @ParameterObject @RequestParam @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String name,
+        @RequestParam(required = false) Boolean cascade
     ) {
-        artifactService.deleteArtifacts(project, name);
+        artifactService.deleteArtifacts(project, name, cascade);
     }
 
     /*
@@ -159,7 +160,8 @@ public class ArtifactContextController {
     @DeleteMapping(path = "/{id}")
     public void deleteArtifactById(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @RequestParam(required = false) Boolean cascade
     ) throws NoSuchEntityException {
         Artifact artifact = artifactService.getArtifact(id);
 
@@ -168,7 +170,7 @@ public class ArtifactContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        artifactService.deleteArtifact(id);
+        artifactService.deleteArtifact(id, cascade);
     }
 
     /*
