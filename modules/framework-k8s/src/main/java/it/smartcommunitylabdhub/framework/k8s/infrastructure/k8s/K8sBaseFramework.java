@@ -16,6 +16,8 @@ import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1LocalObjectReference;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimSpec;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSecurityContext;
@@ -25,6 +27,7 @@ import io.kubernetes.client.openapi.models.V1SecurityContext;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.V1VolumeResourceRequirements;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
 import it.smartcommunitylabdhub.commons.models.enums.State;
@@ -44,6 +47,8 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResourceDefinition;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -95,6 +100,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected String gpuResourceKey;
     protected CoreResourceDefinition cpuResourceDefinition = new CoreResourceDefinition();
     protected CoreResourceDefinition memResourceDefinition = new CoreResourceDefinition();
+    protected CoreResourceDefinition pvcResourceDefinition = new CoreResourceDefinition();
     protected List<String> templateKeys = Collections.emptyList();
 
     protected Map<String, K8sTemplate<T>> templates = Collections.emptyMap();
@@ -197,6 +203,28 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     ) {
         if (StringUtils.hasText(memResourceDefinition)) {
             this.memResourceDefinition.setLimits(memResourceDefinition);
+        }
+    }
+
+    public void setPvcResourceDefinition(CoreResourceDefinition pvcResourceDefinition) {
+        this.pvcResourceDefinition = pvcResourceDefinition;
+    }
+
+    @Autowired
+    public void setPvcRequestsResourceDefinition(
+        @Value("${kubernetes.resources.pvc.requests}") String pvcResourceDefinition
+    ) {
+        if (StringUtils.hasText(pvcResourceDefinition)) {
+            this.pvcResourceDefinition.setRequests(pvcResourceDefinition);
+        }
+    }
+
+    @Autowired
+    public void setPvcLimitsResourceDefinition(
+        @Value("${kubernetes.resources.pvc.limits}") String pvcResourceDefinition
+    ) {
+        if (StringUtils.hasText(pvcResourceDefinition)) {
+            this.pvcResourceDefinition.setLimits(pvcResourceDefinition);
         }
     }
 
@@ -586,7 +614,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             runnable
                 .getVolumes()
                 .forEach(volumeMap -> {
-                    V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
+                    V1Volume volume = k8sBuilderHelper.getVolume(runnable.getId(), volumeMap);
                     if (volume != null) {
                         volumes.add(volume);
                     }
@@ -602,7 +630,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                 template
                     .getVolumes()
                     .forEach(volumeMap -> {
-                        V1Volume volume = k8sBuilderHelper.getVolume(volumeMap);
+                        V1Volume volume = k8sBuilderHelper.getVolume(runnable.getId(), volumeMap);
                         if (volume != null) {
                             volumes.add(volume);
                         }
@@ -624,7 +652,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                     .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
             ) {
                 //use framework definition
-                V1Volume volume = k8sBuilderHelper.getVolume(k8sProperties.getSharedVolume());
+                V1Volume volume = k8sBuilderHelper.getVolume(runnable.getId(), k8sProperties.getSharedVolume());
                 volumes.add(volume);
             }
 
@@ -1128,5 +1156,66 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         }
 
         return runnable.getAffinity();
+    }
+
+    public List<V1PersistentVolumeClaim> buildPersistentVolumeClaims(T runnable) throws K8sFrameworkException {
+        // Volumes to attach to the pod based on the volume spec with the additional volume_type
+        List<V1PersistentVolumeClaim> volumes = new LinkedList<>();
+        if (runnable.getVolumes() != null) {
+            runnable
+                .getVolumes()
+                .stream()
+                .filter(v -> v.getVolumeType() == CoreVolume.VolumeType.persistent_volume_claim)
+                .forEach(v -> {
+                    //build claim
+                    Map<String, String> spec = Optional.ofNullable(v.getSpec()).orElse(Collections.emptyMap());
+                    Quantity quantity = Quantity.fromString(
+                        spec.getOrDefault("size", pvcResourceDefinition.getRequests())
+                    );
+                    V1VolumeResourceRequirements req = new V1VolumeResourceRequirements()
+                        .requests(Map.of("storage", quantity));
+
+                    //enforce limit
+                    //TODO check if valid!
+                    if (pvcResourceDefinition.getLimits() != null) {
+                        Quantity limit = Quantity.fromString(pvcResourceDefinition.getLimits());
+                        req.setLimits(Map.of("storage", limit));
+                    }
+
+                    V1PersistentVolumeClaim claim = new V1PersistentVolumeClaim()
+                        .metadata(
+                            new V1ObjectMeta().name(k8sBuilderHelper.getVolumeName(runnable.getId(), v.getName()))
+                        )
+                        .spec(
+                            new V1PersistentVolumeClaimSpec()
+                                .accessModes(Collections.singletonList("ReadWriteOnce"))
+                                .volumeMode("Filesystem")
+                                .storageClassName(spec.getOrDefault("storage_class", null))
+                                .resources(req)
+                        );
+
+                    volumes.add(claim);
+                });
+        }
+
+        //volumes defined in template
+        //TODO evaluate support
+        if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
+            //add template
+            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
+
+            if (template.getVolumes() != null) {
+                template
+                    .getVolumes()
+                    .stream()
+                    .filter(v -> v.getVolumeType() == CoreVolume.VolumeType.persistent_volume_claim)
+                    .forEach(v -> {
+                        //TODO evaluate support
+                        log.warn("Volumes defined in templates are not fully supported");
+                    });
+            }
+        }
+
+        return volumes;
     }
 }
