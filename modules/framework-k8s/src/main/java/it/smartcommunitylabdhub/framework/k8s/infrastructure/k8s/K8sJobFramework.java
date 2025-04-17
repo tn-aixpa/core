@@ -12,6 +12,7 @@ import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1JobSpec;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
@@ -135,6 +136,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             results.put("secret", secret.stringData(Collections.emptyMap()).data(Collections.emptyMap()));
         }
 
+        //configmap
         try {
             V1ConfigMap initConfigMap = buildInitConfigMap(runnable);
             if (initConfigMap != null) {
@@ -150,6 +152,26 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             }
 
             throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+        }
+
+        //pvcs
+        List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+        if (pvcs != null) {
+            for (V1PersistentVolumeClaim pvc : pvcs) {
+                log.info("create pvc for {}", String.valueOf(pvc.getMetadata().getName()));
+                try {
+                    coreV1Api.createNamespacedPersistentVolumeClaim(namespace, pvc, null, null, null, null);
+                    //store
+                    results.put("pvc", pvc);
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+
+                    throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
         }
 
         log.info("create job for {}", String.valueOf(job.getMetadata().getName()));
@@ -215,6 +237,38 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             //ignore, not existing or error
         }
 
+        List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+        if (pvcs != null) {
+            for (V1PersistentVolumeClaim pvc : pvcs) {
+                String pvcName = pvc.getMetadata().getName();
+                try {
+                    V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(pvcName, namespace, null);
+                    if (v != null) {
+                        log.info("delete pvc for {}", String.valueOf(pvcName));
+
+                        coreV1Api.deleteNamespacedPersistentVolumeClaim(
+                            pvcName,
+                            namespace,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        );
+                        messages.add(String.format("pvc %s deleted", pvcName));
+                    }
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+                    //don't propagate
+                    // throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
+        }
+
         //update state
         runnable.setState(State.STOPPED.name());
         runnable.setMessage(String.join(", ", messages));
@@ -259,6 +313,39 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             }
         } catch (ApiException | NullPointerException e) {
             //ignore, not existing or error
+        }
+
+        //pvcs
+        List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+        if (pvcs != null) {
+            for (V1PersistentVolumeClaim pvc : pvcs) {
+                String pvcName = pvc.getMetadata().getName();
+                try {
+                    V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(pvcName, namespace, null);
+                    if (v != null) {
+                        log.info("delete pvc for {}", String.valueOf(pvcName));
+
+                        coreV1Api.deleteNamespacedPersistentVolumeClaim(
+                            pvcName,
+                            namespace,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        );
+                        messages.add(String.format("pvc %s deleted", pvcName));
+                    }
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+                    //don't propagate
+                    // throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
         }
 
         if (!"keep".equals(collectResults)) {

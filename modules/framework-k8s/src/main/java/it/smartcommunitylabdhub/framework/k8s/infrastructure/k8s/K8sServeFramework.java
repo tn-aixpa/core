@@ -14,6 +14,7 @@ import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1LabelSelector;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
@@ -123,6 +124,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             results.put("secret", secret.stringData(Collections.emptyMap()).data(Collections.emptyMap()));
         }
 
+        //configmap
         try {
             V1ConfigMap initConfigMap = buildInitConfigMap(runnable);
             if (initConfigMap != null) {
@@ -138,6 +140,26 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             }
 
             throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+        }
+
+        //pvcs
+        List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+        if (pvcs != null) {
+            for (V1PersistentVolumeClaim pvc : pvcs) {
+                log.info("create pvc for {}", String.valueOf(pvc.getMetadata().getName()));
+                try {
+                    coreV1Api.createNamespacedPersistentVolumeClaim(namespace, pvc, null, null, null, null);
+                    //store
+                    results.put("pvc", pvc);
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+
+                    throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
         }
 
         log.info("create deployment for {}", String.valueOf(deployment.getMetadata().getName()));
@@ -221,6 +243,38 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             }
         } catch (ApiException | NullPointerException e) {
             //ignore, not existing or error
+        }
+
+        List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+        if (pvcs != null) {
+            for (V1PersistentVolumeClaim pvc : pvcs) {
+                String pvcName = pvc.getMetadata().getName();
+                try {
+                    V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(pvcName, namespace, null);
+                    if (v != null) {
+                        log.info("delete pvc for {}", String.valueOf(pvcName));
+
+                        coreV1Api.deleteNamespacedPersistentVolumeClaim(
+                            pvcName,
+                            namespace,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null
+                        );
+                        messages.add(String.format("pvc %s deleted", pvcName));
+                    }
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+                    //don't propagate
+                    // throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
         }
 
         V1Service service;

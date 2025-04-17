@@ -397,7 +397,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
                 .noneMatch(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
         ) {
             //use framework definition
-            V1Volume sharedVolume = k8sBuilderHelper.getVolume(k8sProperties.getSharedVolume());
+            V1Volume sharedVolume = k8sBuilderHelper.getVolume(runnable.getId(), k8sProperties.getSharedVolume());
             volumes.add(sharedVolume);
 
             V1VolumeMount sharedVolumeMount = k8sBuilderHelper.getVolumeMount(k8sProperties.getSharedVolume());

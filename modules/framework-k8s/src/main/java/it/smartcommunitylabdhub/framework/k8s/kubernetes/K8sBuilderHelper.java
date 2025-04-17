@@ -15,6 +15,7 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -134,7 +135,7 @@ public class K8sBuilderHelper implements InitializingBean {
         return Collections.emptyList();
     }
 
-    public V1Volume getVolume(CoreVolume coreVolume) {
+    public V1Volume getVolume(String id, @NotNull CoreVolume coreVolume) {
         V1Volume volume = new V1Volume().name(coreVolume.getName());
         String type = coreVolume.getVolumeType().name();
         Map<String, String> spec = coreVolume.getSpec();
@@ -165,8 +166,8 @@ public class K8sBuilderHelper implements InitializingBean {
             //     );
             case "persistent_volume_claim":
                 return volume.persistentVolumeClaim(
-                    new V1PersistentVolumeClaimVolumeSource()
-                        .claimName(spec.getOrDefault("claimName", coreVolume.getName()))
+                    new V1PersistentVolumeClaimVolumeSource().claimName(getVolumeName(id, coreVolume.getName()))
+                    // .claimName(spec.getOrDefault("claimName", coreVolume.getName()))
                 );
             case "empty_dir":
                 return volume.emptyDir(
@@ -179,16 +180,16 @@ public class K8sBuilderHelper implements InitializingBean {
         }
     }
 
+    public V1VolumeMount getVolumeMount(@NotNull CoreVolume coreVolume) {
+        return new V1VolumeMount().name(coreVolume.getName()).mountPath(coreVolume.getMountPath());
+    }
+
     public Map<String, Quantity> convertResources(Map<String, String> map) {
         return map
             .entrySet()
             .stream()
             .map(entry -> Map.entry(entry.getKey(), Quantity.fromString(entry.getValue())))
             .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    }
-
-    public V1VolumeMount getVolumeMount(CoreVolume coreVolume) {
-        return new V1VolumeMount().name(coreVolume.getName()).mountPath(coreVolume.getMountPath());
     }
 
     /*
@@ -217,6 +218,11 @@ public class K8sBuilderHelper implements InitializingBean {
     // Generate and return service name
     public String getServiceName(String runtime, String task, String id) {
         return sanitizeNames("s" + "-" + task + "-" + id);
+    }
+
+    // Generate and return volume name
+    public String getVolumeName(String id, String name) {
+        return sanitizeNames("v" + "-" + id + "-" + name);
     }
 
     public String getImageName(String image, String id) {

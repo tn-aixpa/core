@@ -147,6 +147,9 @@ kubernetes:
       limits: ${K8S_RESOURCE_MEM_LIMIT:}      
     gpu:
       key: ${K8S_RESOURCE_GPU_KEY:nvidia.com/gpu}
+    pvc:
+      requests: ${K8S_RESOURCE_PVC_DEFAULT:2Gi}
+      limits: ${K8S_RESOURCE_PVC_LIMIT:}    
   config:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}
