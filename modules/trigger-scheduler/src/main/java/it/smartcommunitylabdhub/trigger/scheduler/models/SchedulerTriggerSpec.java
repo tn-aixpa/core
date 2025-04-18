@@ -25,4 +25,10 @@ public class SchedulerTriggerSpec extends TriggerBaseSpec {
         SchedulerTriggerSpec spec = mapper.convertValue(data, SchedulerTriggerSpec.class);
         this.schedule = spec.getSchedule();
     }
+    
+    public static SchedulerTriggerSpec from(Map<String, Serializable> data) {
+    	SchedulerTriggerSpec spec = new SchedulerTriggerSpec();
+    	spec.configure(data);
+    	return spec;
+    }
 }

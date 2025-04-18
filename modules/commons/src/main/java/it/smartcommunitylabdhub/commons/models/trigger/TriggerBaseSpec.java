@@ -13,11 +13,11 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TriggerBaseSpec extends BaseSpec {
 
-    @NotEmpty
-    private String task;
+	@NotEmpty
+	private String task;
 
     @NotEmpty
-    private String run;
+    private String function;
 
     @NotEmpty
     private Map<String, Serializable> template;
@@ -27,7 +27,7 @@ public class TriggerBaseSpec extends BaseSpec {
         TriggerBaseSpec spec = mapper.convertValue(data, TriggerBaseSpec.class);
 
         this.task = spec.getTask();
-        this.run = spec.getRun();
+        this.function = spec.getFunction();
         this.template = spec.getTemplate();
     }
 

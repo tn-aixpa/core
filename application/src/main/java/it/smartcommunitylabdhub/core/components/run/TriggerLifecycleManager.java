@@ -1,5 +1,17 @@
 package it.smartcommunitylabdhub.core.components.run;
 
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
+
+import it.smartcommunitylabdhub.commons.Fields;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
@@ -31,16 +43,7 @@ import it.smartcommunitylabdhub.core.models.events.EntityOperation;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransitionException;
 import jakarta.validation.constraints.NotNull;
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 
 @Slf4j
 @Component
@@ -90,10 +93,10 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
                     Map<String, Serializable> actuatorStatus = status.isPresent() ? status.get().toMap() : null;
 
                     //update status
-                    TriggerBaseStatus runBaseStatus = TriggerBaseStatus.with(tr.getStatus());
-                    runBaseStatus.setState(state.name());
+                    TriggerBaseStatus baseStatus = TriggerBaseStatus.with(tr.getStatus());
+                    baseStatus.setState(state.name());
 
-                    tr.setStatus(MapUtils.mergeMultipleMaps(tr.getStatus(), actuatorStatus, runBaseStatus.toMap()));
+                    tr.setStatus(MapUtils.mergeMultipleMaps(tr.getStatus(), actuatorStatus, baseStatus.toMap()));
                     return tr;
                 } catch (InvalidTransitionException e) {
                     log.debug("Invalid transition {} -> {}", e.getFromState(), e.getToState());
@@ -128,10 +131,10 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
                     Map<String, Serializable> actuatorStatus = status.isPresent() ? status.get().toMap() : null;
 
                     //update status
-                    TriggerBaseStatus runBaseStatus = TriggerBaseStatus.with(tr.getStatus());
-                    runBaseStatus.setState(state.name());
+                    TriggerBaseStatus baseStatus = TriggerBaseStatus.with(tr.getStatus());
+                    baseStatus.setState(state.name());
 
-                    tr.setStatus(MapUtils.mergeMultipleMaps(tr.getStatus(), actuatorStatus, runBaseStatus.toMap()));
+                    tr.setStatus(MapUtils.mergeMultipleMaps(tr.getStatus(), actuatorStatus, baseStatus.toMap()));
                     return tr;
                 } catch (InvalidTransitionException e) {
                     log.debug("Invalid transition {} -> {}", e.getFromState(), e.getToState());
@@ -195,14 +198,16 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
                         triggerRunStatus,
                         baseStatus.toMap()
                     );
+                    
+                    Map<String, Serializable>addSpec = Map.of(Fields.FUNCTION, baseSpec.getFunction(), Fields.TASK, baseSpec.getTask());
 
                     //build run from trigger template
                     Run run = Run
                         .builder()
-                        .kind(baseSpec.getRun())
+                        .kind(specAccessor.getRuntime() + "+run") //TODO hardcoded, to fix
                         .project(task.getProject())
                         .user(trigger.getUser())
-                        .spec(baseSpec.getTemplate())
+                        .spec(MapUtils.mergeMultipleMaps(baseSpec.getTemplate(), addSpec))
                         .metadata(relMetadata.toMap())
                         .status(runStatus)
                         .build();

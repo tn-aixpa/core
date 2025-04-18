@@ -1,5 +1,21 @@
 package it.smartcommunitylabdhub.core.services;
 
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
+
 import it.smartcommunitylabdhub.commons.Fields;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
@@ -15,6 +31,7 @@ import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseSpec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
+import it.smartcommunitylabdhub.core.components.run.TriggerLifecycleManager;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
@@ -25,21 +42,7 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableTriggerSe
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -54,7 +57,7 @@ public class TriggerServiceImpl implements SearchableTriggerService {
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
-
+    
     @Autowired
     private SpecRegistry specRegistry;
 
@@ -63,6 +66,9 @@ public class TriggerServiceImpl implements SearchableTriggerService {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+    
+    @Autowired
+    TriggerLifecycleManager triggerManager;
 
     @Override
     public Page<Trigger> listTriggers(Pageable pageable) {
@@ -229,41 +235,18 @@ public class TriggerServiceImpl implements SearchableTriggerService {
                 if (!StringUtils.hasText(baseSpec.getTask())) {
                     throw new IllegalArgumentException("spec: missing task");
                 }
-
-                //access task details from ref, same as run
-                RunSpecAccessor specAccessor = RunSpecAccessor.with(dto.getSpec());
-                if (!StringUtils.hasText(specAccessor.getTaskId())) {
-                    throw new IllegalArgumentException("spec: invalid task");
+                if (!StringUtils.hasText(baseSpec.getFunction())) {
+                	throw new IllegalArgumentException("spec: missing function");
                 }
-
-                //check project match
-                if (dto.getProject() != null && !dto.getProject().equals(specAccessor.getProject())) {
-                    throw new IllegalArgumentException("project mismatch");
-                }
-
-                Task task = taskService.find(specAccessor.getTaskId());
-                if (task == null) {
-                    throw new IllegalArgumentException("invalid task entity");
-                }
-
-                //double check: template must match task
-                RunSpecAccessor templateSpecAccessor = RunSpecAccessor.with(baseSpec.getTemplate());
-                if (
-                    !task.getId().equals(templateSpecAccessor.getTaskId()) ||
-                    !task.getProject().equals(templateSpecAccessor.getProject())
-                ) {
-                    throw new IllegalArgumentException("invalid or mismatched run template");
-                }
-
-                //TODO check run kind matches task runtime
-                if (!StringUtils.hasText(baseSpec.getRun())) {
-                    throw new IllegalArgumentException("spec: invalid run");
-                }
-
+                              
                 //create as new
-                return entityService.create(dto);
+                Trigger trigger = entityService.create(dto);
+                
+                trigger = triggerManager.run(trigger);
+                
+                return trigger;
             } catch (DuplicatedEntityException e) {
-                throw new DuplicatedEntityException(EntityName.TASK.toString(), dto.getId());
+                throw new DuplicatedEntityException(EntityName.TRIGGER.toString(), dto.getId());
             }
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
@@ -307,27 +290,10 @@ public class TriggerServiceImpl implements SearchableTriggerService {
 
             //access task details from ref, same as run
             RunSpecAccessor specAccessor = RunSpecAccessor.with(dto.getSpec());
-            if (!StringUtils.hasText(specAccessor.getTaskId())) {
-                throw new IllegalArgumentException("spec: invalid task");
-            }
 
             //check project match
             if (dto.getProject() != null && !dto.getProject().equals(specAccessor.getProject())) {
                 throw new IllegalArgumentException("project mismatch");
-            }
-
-            Task task = taskService.find(specAccessor.getTaskId());
-            if (task == null) {
-                throw new IllegalArgumentException("invalid task entity");
-            }
-
-            //double check: template must match task
-            RunSpecAccessor templateSpecAccessor = RunSpecAccessor.with(baseSpec.getTemplate());
-            if (
-                !task.getId().equals(templateSpecAccessor.getTaskId()) ||
-                !task.getProject().equals(templateSpecAccessor.getProject())
-            ) {
-                throw new IllegalArgumentException("invalid or mismatched run template");
             }
 
             //full update, trigger is modifiable
@@ -373,4 +339,5 @@ public class TriggerServiceImpl implements SearchableTriggerService {
             return criteriaBuilder.equal(root.get(Fields.TASK), task);
         };
     }
+    
 }

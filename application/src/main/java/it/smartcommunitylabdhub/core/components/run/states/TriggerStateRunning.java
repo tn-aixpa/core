@@ -30,7 +30,7 @@ public class TriggerStateRunning implements FsmState.Builder<State, TriggerEvent
                     return Optional.ofNullable(context.actuator.onFire(context.trigger, run));
                 })
                 .build(),
-            //(STOP)->STOP
+            //(STOP)->STOPPED
             new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun>()
                 .event(TriggerEvent.STOP)
                 .nextState(State.STOPPED)

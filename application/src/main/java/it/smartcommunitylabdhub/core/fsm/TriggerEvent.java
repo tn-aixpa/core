@@ -4,4 +4,5 @@ public enum TriggerEvent {
     RUN,
     STOP,
     FIRE,
+    ERROR
 }
