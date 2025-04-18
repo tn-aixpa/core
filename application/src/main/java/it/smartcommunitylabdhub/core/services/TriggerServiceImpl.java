@@ -1,10 +1,7 @@
 package it.smartcommunitylabdhub.core.services;
 
-import java.io.Serializable;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -262,16 +259,10 @@ public class TriggerServiceImpl implements SearchableTriggerService {
             //fetch current and merge
             Trigger current = entityService.get(id);
 
-            //hardcoded: task ref is not modifiable
-            Map<String, Serializable> specMap = new HashMap<>();
-            if (dto.getSpec() != null) {
-                specMap.putAll(dto.getSpec());
-            }
-            if (current.getSpec() != null) {
-                specMap.put("task", current.getSpec().get("task"));
-            }
-
-            Spec spec = specRegistry.createSpec(dto.getKind(), specMap);
+            //spec is not modificable: enforce current 
+            dto.setSpec(current.getSpec());
+            
+            Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
             if (spec == null) {
                 throw new IllegalArgumentException("invalid kind");
             }
@@ -282,10 +273,13 @@ public class TriggerServiceImpl implements SearchableTriggerService {
             //update spec as exported
             dto.setSpec(spec.toMap());
 
-            //check task is valid
+            //check task and function are valid
             TriggerBaseSpec baseSpec = TriggerBaseSpec.from(dto.getSpec());
             if (!StringUtils.hasText(baseSpec.getTask())) {
                 throw new IllegalArgumentException("spec: missing task");
+            }
+            if (!StringUtils.hasText(baseSpec.getFunction())) {
+                throw new IllegalArgumentException("spec: missing function");
             }
 
             //access task details from ref, same as run
