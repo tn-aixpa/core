@@ -7,11 +7,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SchedulerFactory;
 import org.quartz.TriggerBuilder;
-import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.ActuatorComponent;
 import it.smartcommunitylabdhub.commons.infrastructure.Actuator;
@@ -21,7 +18,6 @@ import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseStatus;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerRunBaseStatus;
 import it.smartcommunitylabdhub.trigger.scheduler.models.SchedulerTriggerSpec;
 import it.smartcommunitylabdhub.trigger.scheduler.quartz.SchedulerJob;
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,24 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 public class SchedulerActuator implements Actuator<SchedulerTriggerSpec, TriggerBaseStatus, TriggerRunBaseStatus> {
 	
 	@Autowired
-    ApplicationEventPublisher applicationEventPublisher;
-	
-	//StdSchedulerFactory schedulerFactory = new StdSchedulerFactory();
-	@Autowired
 	Scheduler scheduler;
 	
     public static final String ACTUATOR = "scheduler";
 
-    @PostConstruct
-    public void onInit() {
-    	try {
-        	scheduler.getContext().put("eventPublisher", applicationEventPublisher);
-        	scheduler.start();			
-		} catch (SchedulerException e) {
-			log.warn("scheduler init error: {}", e.getMessage());
-		}
-    }
-    
     @Override
     public TriggerBaseStatus run(@NotNull Trigger trigger) {
     	JobKey jobKey = JobKey.jobKey(trigger.getKey(), ACTUATOR); 
