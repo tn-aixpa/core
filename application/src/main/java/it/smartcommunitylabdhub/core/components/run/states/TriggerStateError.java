@@ -15,11 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class TriggerStateStopped implements FsmState.Builder<State, TriggerEvent, TriggerContext, TriggerRun> {
+public class TriggerStateError implements FsmState.Builder<State, TriggerEvent, TriggerContext, TriggerRun> {
 
     public FsmState<State, TriggerEvent, TriggerContext, TriggerRun> build() {
         //define state
-        State state = State.STOPPED;
+        State state = State.ERROR;
 
         //transitions
         List<Transition<State, TriggerEvent, TriggerContext, TriggerRun>> txs = List.of(
@@ -31,15 +31,7 @@ public class TriggerStateStopped implements FsmState.Builder<State, TriggerEvent
                     //run callback
                     return Optional.ofNullable(context.actuator.run(context.trigger));
                 })
-                .build(),
-            new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun>()
-                .event(TriggerEvent.ERROR)
-                .nextState(State.ERROR)
-                .withInternalLogic((currentState, nextState, event, context, runnable) -> {
-                    //no-op, nothing happened yet
-                    return Optional.empty();
-                })
-                .build()                                                
+                .build()
         );
         
         return new FsmState<>(state, txs);

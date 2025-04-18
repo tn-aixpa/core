@@ -32,6 +32,7 @@ public class SchedulerActuator implements Actuator<SchedulerTriggerSpec, Trigger
 
     @Override
     public TriggerBaseStatus run(@NotNull Trigger trigger) {
+    	log.debug("create job for {}", trigger.getKey());
     	JobKey jobKey = JobKey.jobKey(trigger.getKey(), ACTUATOR); 
     	SchedulerTriggerSpec spec = SchedulerTriggerSpec.from(trigger.getSpec());
     	JobDetail jobDetail = JobBuilder.newJob().ofType(SchedulerJob.class).withIdentity(jobKey).build();
@@ -54,9 +55,11 @@ public class SchedulerActuator implements Actuator<SchedulerTriggerSpec, Trigger
 
     @Override
     public TriggerBaseStatus stop(@NotNull Trigger trigger) {
+    	log.debug("delete job for {}", trigger.getKey());
     	JobKey jobKey = JobKey.jobKey(trigger.getKey(), ACTUATOR);
     	try {
-			scheduler.deleteJob(jobKey);
+			boolean deleteJob = scheduler.deleteJob(jobKey);
+			log.debug("job deleted for {}, {}", trigger.getKey(), deleteJob);
 		} catch (SchedulerException e) {
 			log.warn("run error: {}, {}", trigger.getKey(), e.getMessage());
 		}

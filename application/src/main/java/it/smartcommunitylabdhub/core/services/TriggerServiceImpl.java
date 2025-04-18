@@ -312,7 +312,10 @@ public class TriggerServiceImpl implements SearchableTriggerService {
         try {
             Trigger trigger = findTrigger(id);
             if (trigger != null) {
-                if (Boolean.TRUE.equals(cascade)) {
+            	//delete job
+            	triggerManager.stop(trigger);
+            	
+                if (Boolean.TRUE.equals(cascade)) {                	
                     log.debug("cascade delete for trigger with id {}", String.valueOf(id));
 
                     //delete via async event to let manager do cleanups

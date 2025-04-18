@@ -38,7 +38,15 @@ public class TriggerStateRunning implements FsmState.Builder<State, TriggerEvent
                     //run callback
                     return Optional.ofNullable(context.actuator.stop(context.trigger));
                 })
-                .build()
+                .build(),
+            new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun>()
+                .event(TriggerEvent.ERROR)
+                .nextState(State.ERROR)
+                .withInternalLogic((currentState, nextState, event, context, runnable) -> {
+                    //no-op, nothing happened yet
+                    return Optional.empty();
+                })
+                .build()                                
         );
 
         return new FsmState<>(state, txs);
