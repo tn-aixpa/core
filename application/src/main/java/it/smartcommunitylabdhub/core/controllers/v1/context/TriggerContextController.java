@@ -8,9 +8,9 @@ import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
-import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.components.run.TriggerLifecycleManager;
 import it.smartcommunitylabdhub.core.models.entities.TriggerEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.entities.TriggerEntityFilter;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTriggerService;
@@ -55,7 +55,7 @@ public class TriggerContextController {
     SearchableTriggerService triggerService;
 
     @Autowired
-    RunService runService;
+    private TriggerLifecycleManager triggerManager;
 
     @Operation(summary = "Create a trigger in a project context")
     @PostMapping(
@@ -71,7 +71,12 @@ public class TriggerContextController {
         dto.setProject(project);
 
         //create as new, will check for duplicated
-        return triggerService.createTrigger(dto);
+        Trigger trigger = triggerService.createTrigger(dto);
+
+        //run
+        triggerManager.run(trigger);
+
+        return trigger;
     }
 
     @Operation(summary = "Search triggers, with optional filter")
@@ -142,6 +147,41 @@ public class TriggerContextController {
             throw new IllegalArgumentException("invalid project");
         }
 
-        triggerService.deleteTrigger(id, cascade);
+        //TODO via manager to avoid race condition between cleanup and delete
+        triggerManager.stop(trigger);
+        triggerService.deleteTrigger(id, cascade != null && cascade);
+    }
+
+    @Operation(summary = "Execute a specific trigger")
+    @PostMapping(path = "/{id}/run")
+    public Trigger runTriggerById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Trigger trigger = triggerService.getTrigger(id);
+
+        //check for project  match
+        if (!trigger.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        // via manager
+        return triggerManager.run(trigger);
+    }
+
+    @Operation(summary = "Stop a specific trigger execution")
+    @PostMapping(path = "/{id}/stop")
+    public Trigger stopTriggerById(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+    ) throws NoSuchEntityException {
+        Trigger trigger = triggerService.getTrigger(id);
+        //check for project  match
+        if (!trigger.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        // via manager
+        return triggerManager.stop(trigger);
     }
 }

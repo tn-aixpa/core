@@ -15,13 +15,10 @@ import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseSpec;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
-import it.smartcommunitylabdhub.core.components.run.TriggerLifecycleManager;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.entities.TriggerEntity;
-import it.smartcommunitylabdhub.core.models.events.EntityAction;
-import it.smartcommunitylabdhub.core.models.events.EntityOperation;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableTriggerService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
@@ -30,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -58,12 +54,6 @@ public class TriggerServiceImpl implements SearchableTriggerService {
 
     @Autowired
     private SpecValidator validator;
-
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
-    TriggerLifecycleManager triggerManager;
 
     @Override
     public Page<Trigger> listTriggers(Pageable pageable) {
@@ -235,11 +225,7 @@ public class TriggerServiceImpl implements SearchableTriggerService {
                 }
 
                 //create as new
-                Trigger trigger = entityService.create(dto);
-
-                trigger = triggerManager.run(trigger);
-
-                return trigger;
+                return entityService.create(dto);
             } catch (DuplicatedEntityException e) {
                 throw new DuplicatedEntityException(EntityName.TRIGGER.toString(), dto.getId());
             }
@@ -304,22 +290,6 @@ public class TriggerServiceImpl implements SearchableTriggerService {
         try {
             Trigger trigger = findTrigger(id);
             if (trigger != null) {
-                //delete job
-                triggerManager.stop(trigger);
-
-                if (Boolean.TRUE.equals(cascade)) {
-                    log.debug("cascade delete for trigger with id {}", String.valueOf(id));
-
-                    //delete via async event to let manager do cleanups
-                    log.debug("publish op: delete for {}", trigger.getId());
-                    EntityOperation<Trigger> event = new EntityOperation<>(trigger, EntityAction.DELETE);
-                    if (log.isTraceEnabled()) {
-                        log.trace("event: {}", String.valueOf(event));
-                    }
-
-                    eventPublisher.publishEvent(event);
-                }
-
                 //delete the trigger
                 entityService.delete(id);
             }

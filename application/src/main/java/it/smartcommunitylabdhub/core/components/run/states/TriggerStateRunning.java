@@ -2,8 +2,9 @@ package it.smartcommunitylabdhub.core.components.run.states;
 
 import it.smartcommunitylabdhub.commons.infrastructure.TriggerRun;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.trigger.TriggerEvent;
+import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
 import it.smartcommunitylabdhub.core.fsm.TriggerContext;
-import it.smartcommunitylabdhub.core.fsm.TriggerEvent;
 import it.smartcommunitylabdhub.fsm.FsmState;
 import it.smartcommunitylabdhub.fsm.Transition;
 import java.util.List;
@@ -13,16 +14,17 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class TriggerStateRunning implements FsmState.Builder<State, TriggerEvent, TriggerContext, TriggerRun> {
+public class TriggerStateRunning
+    implements FsmState.Builder<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>> {
 
-    public FsmState<State, TriggerEvent, TriggerContext, TriggerRun> build() {
+    public FsmState<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>> build() {
         //define state
         State state = State.RUNNING;
 
         //transitions
-        List<Transition<State, TriggerEvent, TriggerContext, TriggerRun>> txs = List.of(
+        List<Transition<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>>> txs = List.of(
             //(FIRE)->RUNNING
-            new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun>()
+            new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>>()
                 .event(TriggerEvent.FIRE)
                 .nextState(State.RUNNING)
                 .withInternalLogic((currentState, nextState, event, context, run) -> {
@@ -31,7 +33,7 @@ public class TriggerStateRunning implements FsmState.Builder<State, TriggerEvent
                 })
                 .build(),
             //(STOP)->STOPPED
-            new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun>()
+            new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>>()
                 .event(TriggerEvent.STOP)
                 .nextState(State.STOPPED)
                 .withInternalLogic((currentState, nextState, event, context, run) -> {
@@ -39,7 +41,7 @@ public class TriggerStateRunning implements FsmState.Builder<State, TriggerEvent
                     return Optional.ofNullable(context.actuator.stop(context.trigger));
                 })
                 .build(),
-            new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun>()
+            new Transition.Builder<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>>()
                 .event(TriggerEvent.ERROR)
                 .nextState(State.ERROR)
                 .withInternalLogic((currentState, nextState, event, context, runnable) -> {

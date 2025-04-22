@@ -18,13 +18,14 @@ import it.smartcommunitylabdhub.commons.models.task.Task;
 import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseSpec;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseStatus;
+import it.smartcommunitylabdhub.commons.models.trigger.TriggerEvent;
+import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerRunBaseStatus;
 import it.smartcommunitylabdhub.commons.services.RunService;
 import it.smartcommunitylabdhub.commons.services.TaskService;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.runtimes.ActuatorFactory;
 import it.smartcommunitylabdhub.core.fsm.TriggerContext;
-import it.smartcommunitylabdhub.core.fsm.TriggerEvent;
 import it.smartcommunitylabdhub.core.fsm.TriggerFsmFactory;
 import it.smartcommunitylabdhub.core.models.entities.TriggerEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityAction;
@@ -33,7 +34,6 @@ import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransitionException;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,9 +75,12 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
         //resolve actuator
         Actuator<? extends TriggerBaseSpec, ? extends TriggerBaseStatus, ? extends TriggerRunBaseStatus> actuator =
             actuatorFactory.getActuator(trigger.getKind());
+        if (actuator == null) {
+            throw new IllegalArgumentException("invalid or unsupported actuator");
+        }
 
         // build state machine on current context
-        Fsm<State, TriggerEvent, TriggerContext, TriggerRun> fsm = fsm(trigger, actuator);
+        Fsm<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>> fsm = fsm(trigger, actuator);
 
         //execute update op with locking
         return exec(
@@ -113,9 +116,12 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
         //resolve actuator
         Actuator<? extends TriggerBaseSpec, ? extends TriggerBaseStatus, ? extends TriggerRunBaseStatus> actuator =
             actuatorFactory.getActuator(trigger.getKind());
+        if (actuator == null) {
+            throw new IllegalArgumentException("invalid or unsupported actuator");
+        }
 
         // build state machine on current context
-        Fsm<State, TriggerEvent, TriggerContext, TriggerRun> fsm = fsm(trigger, actuator);
+        Fsm<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>> fsm = fsm(trigger, actuator);
 
         //execute update op with locking
         return exec(
@@ -142,29 +148,33 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
         );
     }
 
-    public Trigger fire(@NotNull Trigger trigger) {
-        log.debug("fire trigger with id {}", trigger.getId());
+    /*
+     * Events: fire
+     */
+    public void onFire(@NotNull Trigger trigger, TriggerRun<? extends TriggerJob> run) {
+        log.debug("fire trigger with id {}", run.getId());
         if (log.isTraceEnabled()) {
-            log.trace("trigger: {}", trigger);
+            log.trace("trigger: {}", run);
         }
 
         //resolve actuator
         Actuator<? extends TriggerBaseSpec, ? extends TriggerBaseStatus, ? extends TriggerRunBaseStatus> actuator =
             actuatorFactory.getActuator(trigger.getKind());
-
+        if (actuator == null) {
+            throw new IllegalArgumentException("invalid or unsupported actuator");
+        }
         // build state machine on current context
-        Fsm<State, TriggerEvent, TriggerContext, TriggerRun> fsm = fsm(trigger, actuator);
-
-        TriggerRun instance = TriggerRun.builder().triggerId(trigger.getId()).timestamp(Instant.now()).build();
+        Fsm<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>> fsm = fsm(trigger, actuator);
 
         //execute read op with locking
-        return exec(
-            new EntityOperation<>(trigger, EntityAction.READ),
+        exec(
+            new EntityOperation<>(trigger, EntityAction.UPDATE),
             tr -> {
                 try {
                     //perform via FSM
-                    Optional<TriggerRunBaseStatus> status = fsm.perform(TriggerEvent.FIRE, instance);
-                    TriggerRunBaseStatus trRunStatus = TriggerRunBaseStatus.builder().trigger(instance).build();
+                    Optional<TriggerRunBaseStatus> status = fsm.perform(TriggerEvent.FIRE, run);
+                    TriggerRunBaseStatus trRunStatus = TriggerRunBaseStatus.builder().trigger(run).build();
+
                     Map<String, Serializable> actuatorRunStatus = status.isPresent() ? status.get().toMap() : null;
                     Map<String, Serializable> triggerRunStatus = MapUtils.mergeMultipleMaps(
                         actuatorRunStatus,
@@ -204,30 +214,35 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
                         baseSpec.getTask()
                     );
 
+                    //build template
+                    //TODO process with details
+                    // Map<String, Serializable> details = run.getDetails();
+                    Map<String, Serializable> template = baseSpec.getTemplate();
+
                     //build run from trigger template
-                    Run run = Run
+                    Run taskRun = Run
                         .builder()
                         .kind(specAccessor.getRuntime() + "+run") //TODO hardcoded, to fix
-                        .project(task.getProject())
-                        .user(trigger.getUser())
-                        .spec(MapUtils.mergeMultipleMaps(baseSpec.getTemplate(), addSpec))
+                        .project(tr.getProject())
+                        .user(run.getUser())
+                        .spec(MapUtils.mergeMultipleMaps(template, addSpec))
                         .metadata(relMetadata.toMap())
                         .status(runStatus)
                         .build();
 
                     if (log.isTraceEnabled()) {
-                        log.trace("built run: {}", run);
+                        log.trace("built run: {}", taskRun);
                     }
 
                     //create run via service as CREATED
-                    run = runService.createRun(run);
+                    taskRun = runService.createRun(taskRun);
 
                     //build now
-                    run = runManager.build(run);
+                    taskRun = runManager.build(taskRun);
 
                     //dispatch for run
                     //TODO evaluate detaching via async
-                    run = runManager.run(run);
+                    taskRun = runManager.run(taskRun);
 
                     //update trigger status
                     //TODO evaluate storing trigger event
@@ -247,7 +262,48 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
         );
     }
 
-    private Fsm<State, TriggerEvent, TriggerContext, TriggerRun> fsm(Trigger trigger, Actuator<?, ?, ?> actuator) {
+    public void onError(@NotNull Trigger trigger, TriggerRun<? extends TriggerJob> run) {
+        log.debug("error trigger with id {}", trigger.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("trigger: {}", trigger);
+        }
+
+        //resolve actuator
+        Actuator<? extends TriggerBaseSpec, ? extends TriggerBaseStatus, ? extends TriggerRunBaseStatus> actuator =
+            actuatorFactory.getActuator(trigger.getKind());
+        if (actuator == null) {
+            throw new IllegalArgumentException("invalid or unsupported actuator");
+        }
+
+        // build state machine on current context
+        Fsm<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>> fsm = fsm(trigger, actuator);
+
+        //execute read op with locking
+        exec(
+            new EntityOperation<>(trigger, EntityAction.UPDATE),
+            tr -> {
+                try {
+                    //perform via FSM
+                    Optional<RunBaseStatus> status = fsm.goToState(State.ERROR, run);
+                    State state = fsm.getCurrentState();
+
+                    //update status
+                    RunBaseStatus runBaseStatus = status.orElse(RunBaseStatus.with(tr.getStatus()));
+                    runBaseStatus.setState(state.name());
+                    return tr;
+                } catch (InvalidTransitionException e) {
+                    log.debug("Invalid transition {} -> {}", e.getFromState(), e.getToState());
+                    return tr;
+                }
+            }
+        );
+        //TODO evaluate callback to actuator on error
+    }
+
+    private Fsm<State, TriggerEvent, TriggerContext, TriggerRun<? extends TriggerJob>> fsm(
+        Trigger trigger,
+        Actuator<?, ?, ?> actuator
+    ) {
         //initial state is current state
         State initialState = State.valueOf(StatusFieldAccessor.with(trigger.getStatus()).getState());
         TriggerContext context = TriggerContext.builder().trigger(trigger).actuator(actuator).build();
