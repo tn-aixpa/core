@@ -1,16 +1,5 @@
 package it.smartcommunitylabdhub.core.components.run;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
-
 import it.smartcommunitylabdhub.commons.Fields;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
@@ -43,7 +32,16 @@ import it.smartcommunitylabdhub.core.models.events.EntityOperation;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransitionException;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Slf4j
 @Component
@@ -198,8 +196,13 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
                         triggerRunStatus,
                         baseStatus.toMap()
                     );
-                    
-                    Map<String, Serializable>addSpec = Map.of(Fields.FUNCTION, baseSpec.getFunction(), Fields.TASK, baseSpec.getTask());
+
+                    Map<String, Serializable> addSpec = Map.of(
+                        Fields.FUNCTION,
+                        baseSpec.getFunction(),
+                        Fields.TASK,
+                        baseSpec.getTask()
+                    );
 
                     //build run from trigger template
                     Run run = Run

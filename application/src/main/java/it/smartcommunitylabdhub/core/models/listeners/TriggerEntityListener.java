@@ -1,16 +1,15 @@
 package it.smartcommunitylabdhub.core.models.listeners;
 
+import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
+import it.smartcommunitylabdhub.core.models.entities.TriggerEntity;
+import it.smartcommunitylabdhub.core.models.events.EntityEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
-import it.smartcommunitylabdhub.core.models.entities.TriggerEntity;
-import it.smartcommunitylabdhub.core.models.events.EntityEvent;
-import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j

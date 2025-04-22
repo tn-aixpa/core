@@ -12,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TriggerExecutionEvent {
-	String id;
-	String event;
+
+    String id;
+    String event;
 }

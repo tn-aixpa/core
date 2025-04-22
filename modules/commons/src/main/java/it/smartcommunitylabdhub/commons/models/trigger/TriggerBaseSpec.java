@@ -13,8 +13,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TriggerBaseSpec extends BaseSpec {
 
-	@NotEmpty
-	private String task;
+    @NotEmpty
+    private String task;
 
     @NotEmpty
     private String function;

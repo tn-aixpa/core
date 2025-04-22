@@ -1,18 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
-
 import it.smartcommunitylabdhub.commons.Fields;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
@@ -39,7 +26,18 @@ import it.smartcommunitylabdhub.core.models.queries.services.SearchableTriggerSe
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
+import java.util.Collections;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 @Service
 @Transactional
@@ -54,7 +52,7 @@ public class TriggerServiceImpl implements SearchableTriggerService {
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
-    
+
     @Autowired
     private SpecRegistry specRegistry;
 
@@ -63,7 +61,7 @@ public class TriggerServiceImpl implements SearchableTriggerService {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
-    
+
     @Autowired
     TriggerLifecycleManager triggerManager;
 
@@ -233,14 +231,14 @@ public class TriggerServiceImpl implements SearchableTriggerService {
                     throw new IllegalArgumentException("spec: missing task");
                 }
                 if (!StringUtils.hasText(baseSpec.getFunction())) {
-                	throw new IllegalArgumentException("spec: missing function");
+                    throw new IllegalArgumentException("spec: missing function");
                 }
-                              
+
                 //create as new
                 Trigger trigger = entityService.create(dto);
-                
+
                 trigger = triggerManager.run(trigger);
-                
+
                 return trigger;
             } catch (DuplicatedEntityException e) {
                 throw new DuplicatedEntityException(EntityName.TRIGGER.toString(), dto.getId());
@@ -259,9 +257,9 @@ public class TriggerServiceImpl implements SearchableTriggerService {
             //fetch current and merge
             Trigger current = entityService.get(id);
 
-            //spec is not modificable: enforce current 
+            //spec is not modificable: enforce current
             dto.setSpec(current.getSpec());
-            
+
             Spec spec = specRegistry.createSpec(dto.getKind(), dto.getSpec());
             if (spec == null) {
                 throw new IllegalArgumentException("invalid kind");
@@ -306,10 +304,10 @@ public class TriggerServiceImpl implements SearchableTriggerService {
         try {
             Trigger trigger = findTrigger(id);
             if (trigger != null) {
-            	//delete job
-            	triggerManager.stop(trigger);
-            	
-                if (Boolean.TRUE.equals(cascade)) {                	
+                //delete job
+                triggerManager.stop(trigger);
+
+                if (Boolean.TRUE.equals(cascade)) {
                     log.debug("cascade delete for trigger with id {}", String.valueOf(id));
 
                     //delete via async event to let manager do cleanups
@@ -336,5 +334,4 @@ public class TriggerServiceImpl implements SearchableTriggerService {
             return criteriaBuilder.equal(root.get(Fields.TASK), task);
         };
     }
-    
 }

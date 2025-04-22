@@ -46,7 +46,7 @@ public class TriggerStateRunning implements FsmState.Builder<State, TriggerEvent
                     //no-op, nothing happened yet
                     return Optional.empty();
                 })
-                .build()                                
+                .build()
         );
 
         return new FsmState<>(state, txs);
