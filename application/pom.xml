@@ -199,7 +199,7 @@
             <artifactId>jetty-http</artifactId>
             <version>${jetty4solr.version}</version>
         </dependency>
-        
+
         <!-- LUCENE -->
         <dependency>
             <groupId>org.apache.lucene</groupId>
@@ -257,7 +257,7 @@
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-trigger-scheduler</artifactId>
             <version>${revision}</version>
-        </dependency>                
+        </dependency>
         <dependency>
             <groupId>it.smartcommunitylabdhub</groupId>
             <artifactId>dh-runtime-container</artifactId>
