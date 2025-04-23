@@ -34,6 +34,8 @@ spring:
     password: ${JDBC_PASS:password}
     username: ${JDBC_USER:sa}
     url: ${JDBC_URL:jdbc:h2:file:./data/db}
+  quartz:
+    job-store-type: jdbc
 
   h2:
     console:
