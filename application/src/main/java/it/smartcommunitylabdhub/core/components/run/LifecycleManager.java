@@ -30,7 +30,7 @@ public abstract class LifecycleManager<D extends BaseDTO, E extends BaseEntity> 
     private Map<String, Pair<ReentrantLock, Instant>> locks = new ConcurrentHashMap<>();
     private int timeout = DEFAULT_TIMEOUT;
 
-    private EntityService<D, E> entityService;
+    protected EntityService<D, E> entityService;
 
     protected ApplicationEventPublisher eventPublisher;
 
