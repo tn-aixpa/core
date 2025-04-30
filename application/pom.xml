@@ -12,7 +12,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.5</version>
+        <version>3.3.11</version>
         <relativePath>../</relativePath>
     </parent>
     <groupId>it.smartcommunitylabdhub</groupId>
@@ -23,7 +23,7 @@
     <properties>
         <revision>0.11.0-SNAPSHOT</revision>
         <java.version>21</java.version>
-        <spring-security.version>6.3.1</spring-security.version>
+        <spring-security.version>6.3.9</spring-security.version>
         <springdoc.version>2.2.0</springdoc.version>
 
         <!-- <jackson.version>2.15.3</jackson.version> -->
