@@ -26,6 +26,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
@@ -110,6 +111,7 @@ public class S3FilesStore implements FilesStore {
                 .endpointOverride(URI.create(endpoint))
                 //also enable path style for endpoint by default
                 .forcePathStyle(config.getPathStyle() != null ? config.getPathStyle().booleanValue() : true)
+                .region(s3Credentials.getRegion() != null ? Region.of(s3Credentials.getRegion()) : null)
                 .build();
         } else {
             return S3Client.builder().credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
@@ -136,6 +138,7 @@ public class S3FilesStore implements FilesStore {
                         .build()
                 )
                 .endpointOverride(URI.create(endpoint))
+                .region(s3Credentials.getRegion() != null ? Region.of(s3Credentials.getRegion()) : null)
                 .build();
         } else {
             return S3Presigner.builder().credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
