@@ -36,11 +36,19 @@ spring:
     url: ${JDBC_URL:jdbc:h2:file:./data/db}
   quartz:
     job-store-type: jdbc
-
+    jdbc:
+      initialize-schema: never
   h2:
     console:
       enabled: ${H2_CONSOLE:false}
 
+
+
+# patch loader for quartz
+spring.org.quartz.scheduler.classLoadHelper.class: org.quartz.simpl.ThreadContextClassLoadHelper
+# fix driver for postgres
+# NOTE: we do NOT support h2 with quartz this way..
+spring.quartz.properties.org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
 
 # Management Endpoints
 management:
