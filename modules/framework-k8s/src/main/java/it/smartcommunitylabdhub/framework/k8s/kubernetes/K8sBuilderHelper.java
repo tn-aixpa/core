@@ -173,7 +173,7 @@ public class K8sBuilderHelper implements InitializingBean {
                 return volume.emptyDir(
                     new V1EmptyDirVolumeSource()
                         .medium(spec.getOrDefault("medium", null))
-                        .sizeLimit(Quantity.fromString(spec.getOrDefault("sizeLimit", "128Mi")))
+                        .sizeLimit(Quantity.fromString(spec.getOrDefault("size_limit", "128Mi")))
                 );
             default:
                 return null;
