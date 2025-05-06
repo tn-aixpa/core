@@ -660,7 +660,12 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             V1Container initContainer = new V1Container()
                 .name("init-container-" + runnable.getId())
                 .image(initImage)
-                .volumeMounts(volumeMounts)
+                .volumeMounts(
+                    volumeMounts
+                        .stream()
+                        .filter(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+                        .collect(Collectors.toList())
+                )
                 .resources(resources)
                 .env(env)
                 .envFrom(envFrom)

@@ -457,7 +457,12 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
             V1Container initContainer = new V1Container()
                 .name("init-container-" + runnable.getId())
                 .image(initImage)
-                .volumeMounts(volumeMounts)
+                .volumeMounts(
+                    volumeMounts
+                        .stream()
+                        .filter(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+                        .collect(Collectors.toList())
+                )
                 .resources(resources)
                 .env(env)
                 .envFrom(envFrom)
