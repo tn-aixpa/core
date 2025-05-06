@@ -1,9 +1,5 @@
 package it.smartcommunitylabdhub.core.services;
 
-import it.smartcommunitylabdhub.authorization.model.ResourceShareEntity;
-import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
-import it.smartcommunitylabdhub.authorization.services.ResourceSharingService;
-import it.smartcommunitylabdhub.authorization.services.ShareableAwareEntityService;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
@@ -42,14 +38,12 @@ import it.smartcommunitylabdhub.core.utils.RefUtils;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -61,12 +55,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class ProjectServiceImpl
-    implements
-        SearchableProjectService,
-        AuthorizableAwareEntityService<Project>,
-        ShareableAwareEntityService<Project>,
-        RelationshipsAwareEntityService<Project> {
+public class ProjectServiceImpl implements SearchableProjectService, RelationshipsAwareEntityService<Project> {
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -95,9 +84,6 @@ public class ProjectServiceImpl
 
     @Autowired
     private LabelService labelService;
-
-    @Autowired
-    private ResourceSharingService sharingService;
 
     @Autowired
     private EntityRelationshipsService relationshipsService;
@@ -358,255 +344,6 @@ public class ProjectServiceImpl
                 //delete the project
                 entityService.delete(id);
             }
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Cacheable("findIdByCreatedBy")
-    public List<String> findIdsByCreatedBy(@NotNull String createdBy) {
-        log.debug("find id of projects for createdBy {}", createdBy);
-        try {
-            return entityService
-                .searchAll(CommonSpecification.createdByEquals(createdBy))
-                .stream()
-                .map(p -> p.getId())
-                .toList();
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Cacheable("findIdByUpdatedBy")
-    public List<String> findIdsByUpdatedBy(@NotNull String updatedBy) {
-        log.debug("find id of projects for updatedBy {}", updatedBy);
-        try {
-            return entityService
-                .searchAll(CommonSpecification.updatedByEquals(updatedBy))
-                .stream()
-                .map(p -> p.getId())
-                .toList();
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Cacheable("findIdByProject")
-    public List<String> findIdsByProject(@NotNull String project) {
-        log.debug("find id of projects for project {}", project);
-        try {
-            Project p = entityService.find(project);
-            if (p == null) {
-                return Collections.emptyList();
-            }
-
-            return Collections.singletonList(p.getId());
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Cacheable("findNameByCreatedBy")
-    public List<String> findNamesByCreatedBy(@NotNull String createdBy) {
-        log.debug("find name of projects for createdBy {}", createdBy);
-        try {
-            return entityService
-                .searchAll(CommonSpecification.createdByEquals(createdBy))
-                .stream()
-                .map(p -> p.getName())
-                .toList();
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Cacheable("findNameByUpdatedBy")
-    public List<String> findNamesByUpdatedBy(@NotNull String updatedBy) {
-        log.debug("find name of projects for updatedBy {}", updatedBy);
-        try {
-            return entityService
-                .searchAll(CommonSpecification.updatedByEquals(updatedBy))
-                .stream()
-                .map(p -> p.getName())
-                .toList();
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Cacheable("findNameByProject")
-    public List<String> findNamesByProject(@NotNull String project) {
-        log.debug("find name of projects for project {}", project);
-        try {
-            Project p = entityService.find(project);
-            if (p == null) {
-                return Collections.emptyList();
-            }
-
-            return Collections.singletonList(p.getName());
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Cacheable("findIdsBySharedTo")
-    public List<String> findIdsBySharedTo(@NotNull String user) {
-        log.debug("find ids of projects shared to {}", user);
-        try {
-            List<ResourceShareEntity> shares = sharingService
-                .listByUser(user)
-                .stream()
-                .filter(s -> EntityName.PROJECT.getValue().equals(s.getEntity()))
-                .toList();
-
-            //for every project check if owner matches
-            //DISABLED, we expect shares to be valid
-            return shares
-                .stream()
-                .map(s -> {
-                    try {
-                        Project p = entityService.find(s.getEntityId());
-                        // if (p != null && p.getUser() != null && p.getUser().equals(s.getOwner())) {
-                        return p;
-                        // }
-                    } catch (StoreException e) {
-                        log.error("store error: {}", e.getMessage());
-                    }
-
-                    return null;
-                })
-                .filter(p -> p != null)
-                .map(p -> p.getId())
-                .toList();
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @Cacheable("findNamesBySharedTo")
-    public List<String> findNamesBySharedTo(@NotNull String user) {
-        log.debug("find name of projects shared to {}", user);
-        try {
-            List<ResourceShareEntity> shares = sharingService
-                .listByUser(user)
-                .stream()
-                .filter(s -> EntityName.PROJECT.getValue().equals(s.getEntity()))
-                .toList();
-
-            //for every project check if owner matches
-            //DISABLED, we expect shares to be valid
-            return shares
-                .stream()
-                .map(s -> {
-                    try {
-                        Project p = entityService.find(s.getEntityId());
-                        // if (p != null && p.getUser() != null && p.getUser().equals(s.getOwner())) {
-                        return p;
-                        // }
-                    } catch (StoreException e) {
-                        log.error("store error: {}", e.getMessage());
-                    }
-
-                    return null;
-                })
-                .filter(p -> p != null)
-                .map(p -> p.getName())
-                .toList();
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @CacheEvict(value = { "findIdsBySharedTo", "findNamesBySharedTo" }, allEntries = true)
-    public ResourceShareEntity share(@NotNull String id, @NotNull String user) {
-        log.debug("share project with id {} to {}", String.valueOf(id), String.valueOf(user));
-
-        try {
-            Project project = entityService.get(id);
-
-            //check if a share with same user already exists
-            List<ResourceShareEntity> shares = sharingService.listByProjectAndEntity(
-                project.getProject(),
-                EntityName.PROJECT,
-                id,
-                user
-            );
-            if (!shares.isEmpty()) {
-                return shares.get(0);
-            }
-
-            //create
-            ResourceShareEntity share = sharingService.share(project.getProject(), EntityName.PROJECT, id, user);
-
-            if (log.isTraceEnabled()) {
-                log.trace("share: {}", share);
-            }
-
-            return share;
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.PROJECT.toString());
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    @CacheEvict(value = { "findIdsBySharedTo", "findNamesBySharedTo" }, allEntries = true)
-    public void revoke(@NotNull String id, @NotNull String shareId) {
-        log.debug("revoke share project {} with id {}", String.valueOf(id), String.valueOf(shareId));
-
-        try {
-            Project project = entityService.get(id);
-            ResourceShareEntity share = sharingService.get(shareId);
-
-            if (share == null) {
-                return;
-            }
-
-            //check project match
-            if (!project.getId().equals(share.getProject())) {
-                throw new IllegalArgumentException("project-mismatch");
-            }
-            if (!id.equals(share.getEntityId()) || !EntityName.PROJECT.getValue().equals(share.getEntity())) {
-                throw new IllegalArgumentException("invalid");
-            }
-
-            //revoke
-            sharingService.revoke(shareId);
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.PROJECT.toString());
-        } catch (StoreException e) {
-            log.error("store error: {}", e.getMessage());
-            throw new SystemException(e.getMessage());
-        }
-    }
-
-    @Override
-    public List<ResourceShareEntity> listSharesById(@NotNull String id) {
-        log.debug("list shares for project with id {}", String.valueOf(id));
-        try {
-            return sharingService.listByProjectAndEntity(id, EntityName.PROJECT, id);
-        } catch (NoSuchEntityException e) {
-            throw new NoSuchEntityException(EntityName.PROJECT.toString());
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());

@@ -1,10 +1,13 @@
 package it.smartcommunitylabdhub.core.services;
 
+import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
+import it.smartcommunitylabdhub.authorization.services.CredentialsService;
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
@@ -85,6 +88,9 @@ public class ArtifactServiceImpl
 
     @Autowired
     private ArtifactEntityRelationshipsManager relationshipsManager;
+
+    @Autowired
+    private CredentialsService credentialsService;
 
     @Override
     public Page<Artifact> listArtifacts(Pageable pageable) {
@@ -423,8 +429,14 @@ public class ArtifactServiceImpl
 
                     String path = spec.getPath();
                     if (StringUtils.hasText(path)) {
+                        //try to resolve credentials
+                        UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+                        List<Credentials> credentials = auth != null && credentialsService != null
+                            ? credentialsService.getCredentials(auth)
+                            : null;
+
                         //delete files
-                        filesService.remove(path, UserAuthenticationHelper.getUserAuthentication());
+                        filesService.remove(path, credentials);
                     }
                 }
 
@@ -538,7 +550,13 @@ public class ArtifactServiceImpl
                 throw new NoSuchEntityException("file");
             }
 
-            DownloadInfo info = filesService.getDownloadAsUrl(path, UserAuthenticationHelper.getUserAuthentication());
+            //try to resolve credentials
+            UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+            List<Credentials> credentials = auth != null && credentialsService != null
+                ? credentialsService.getCredentials(auth)
+                : null;
+
+            DownloadInfo info = filesService.getDownloadAsUrl(path, credentials);
             if (log.isTraceEnabled()) {
                 log.trace("download url for artifact with id {}: {} -> {}", id, path, info);
             }
@@ -577,10 +595,13 @@ public class ArtifactServiceImpl
                 })
                 .orElse(path);
 
-            DownloadInfo info = filesService.getDownloadAsUrl(
-                fullPath,
-                UserAuthenticationHelper.getUserAuthentication()
-            );
+            //try to resolve credentials
+            UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+            List<Credentials> credentials = auth != null && credentialsService != null
+                ? credentialsService.getCredentials(auth)
+                : null;
+
+            DownloadInfo info = filesService.getDownloadAsUrl(fullPath, credentials);
             if (log.isTraceEnabled()) {
                 log.trace("download url for artifact with id {} and path {}: {} -> {}", id, sub, path, info);
             }
@@ -602,6 +623,12 @@ public class ArtifactServiceImpl
             StatusFieldAccessor statusFieldAccessor = StatusFieldAccessor.with(entity.getStatus());
             List<FileInfo> files = statusFieldAccessor.getFiles();
 
+            //try to resolve credentials
+            UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+            List<Credentials> credentials = auth != null && credentialsService != null
+                ? credentialsService.getCredentials(auth)
+                : null;
+
             if (files == null || files.isEmpty()) {
                 FilesInfo filesInfo = filesInfoService.getFilesInfo(EntityName.ARTIFACT.getValue(), id);
                 if (filesInfo != null && (filesInfo.getFiles() != null)) {
@@ -621,7 +648,7 @@ public class ArtifactServiceImpl
                     throw new NoSuchEntityException("file");
                 }
 
-                files = filesService.getFileInfo(path, UserAuthenticationHelper.getUserAuthentication());
+                files = filesService.getFileInfo(path, credentials);
             }
 
             if (files == null) {
@@ -687,7 +714,13 @@ public class ArtifactServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.getUploadAsUrl(path, UserAuthenticationHelper.getUserAuthentication());
+            //try to resolve credentials
+            UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+            List<Credentials> credentials = auth != null && credentialsService != null
+                ? credentialsService.getCredentials(auth)
+                : null;
+
+            UploadInfo info = filesService.getUploadAsUrl(path, credentials);
             if (log.isTraceEnabled()) {
                 log.trace("upload url for artifact with id {}: {}", id, info);
             }
@@ -730,7 +763,13 @@ public class ArtifactServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.startMultiPartUpload(path, UserAuthenticationHelper.getUserAuthentication());
+            //try to resolve credentials
+            UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+            List<Credentials> credentials = auth != null && credentialsService != null
+                ? credentialsService.getCredentials(auth)
+                : null;
+
+            UploadInfo info = filesService.startMultiPartUpload(path, credentials);
             if (log.isTraceEnabled()) {
                 log.trace("start upload url for artifact with id {}: {}", id, info);
             }
@@ -777,12 +816,12 @@ public class ArtifactServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.uploadMultiPart(
-                path,
-                uploadId,
-                partNumber,
-                UserAuthenticationHelper.getUserAuthentication()
-            );
+            //try to resolve credentials
+            UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+            List<Credentials> credentials = auth != null && credentialsService != null
+                ? credentialsService.getCredentials(auth)
+                : null;
+            UploadInfo info = filesService.uploadMultiPart(path, uploadId, partNumber, credentials);
             if (log.isTraceEnabled()) {
                 log.trace("part upload url for artifact with path {}: {}", path, info);
             }
@@ -829,12 +868,13 @@ public class ArtifactServiceImpl
                 }
             }
 
-            UploadInfo info = filesService.completeMultiPartUpload(
-                path,
-                uploadId,
-                eTagPartList,
-                UserAuthenticationHelper.getUserAuthentication()
-            );
+            //try to resolve credentials
+            UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+            List<Credentials> credentials = auth != null && credentialsService != null
+                ? credentialsService.getCredentials(auth)
+                : null;
+
+            UploadInfo info = filesService.completeMultiPartUpload(path, uploadId, eTagPartList, credentials);
             if (log.isTraceEnabled()) {
                 log.trace("complete upload url for artifact with path {}: {}", path, info);
             }

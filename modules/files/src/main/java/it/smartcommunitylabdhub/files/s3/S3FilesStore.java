@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.files.s3;
 
-import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;
@@ -142,12 +142,11 @@ public class S3FilesStore implements FilesStore {
         }
     }
 
-    private @Nullable S3Credentials extractCredentials(UserAuthentication<?> auth, String bucket) {
+    private @Nullable S3Credentials extractCredentials(List<Credentials> credentials, String bucket) {
         //pick matching credentials if available
-        return auth == null
+        return credentials == null
             ? null
-            : auth
-                .getCredentials()
+            : credentials
                 .stream()
                 .filter(S3Credentials.class::isInstance)
                 .map(c -> (S3Credentials) c)
@@ -161,7 +160,7 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public DownloadInfo downloadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth)
+    public DownloadInfo downloadAsUrl(@NotNull String path, @Nullable List<Credentials> credentials)
         throws StoreException {
         log.debug("generate download url for {}", path);
 
@@ -175,7 +174,7 @@ public class S3FilesStore implements FilesStore {
             throw new StoreException("bucket mismatch");
         }
 
-        S3Credentials s3Credentials = extractCredentials(auth, bucketName);
+        S3Credentials s3Credentials = extractCredentials(credentials, bucketName);
         if (s3Credentials == null) {
             throw new StoreException("no credentials found");
         }
@@ -213,7 +212,8 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public List<FileInfo> fileInfo(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {
+    public List<FileInfo> fileInfo(@NotNull String path, @Nullable List<Credentials> credentials)
+        throws StoreException {
         log.debug("file info for {}", path);
 
         Keys keys = parseKey(path);
@@ -226,7 +226,7 @@ public class S3FilesStore implements FilesStore {
             throw new StoreException("bucket mismatch");
         }
 
-        S3Credentials s3Credentials = extractCredentials(auth, bucketName);
+        S3Credentials s3Credentials = extractCredentials(credentials, bucketName);
         if (s3Credentials == null) {
             throw new StoreException("no credentials found");
         }
@@ -297,7 +297,7 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public UploadInfo uploadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {
+    public UploadInfo uploadAsUrl(@NotNull String path, @Nullable List<Credentials> credentials) throws StoreException {
         log.debug("generate upload url for {}", path);
 
         Keys keys = parseKey(path);
@@ -310,7 +310,7 @@ public class S3FilesStore implements FilesStore {
             throw new StoreException("bucket mismatch");
         }
 
-        S3Credentials s3Credentials = extractCredentials(auth, bucketName);
+        S3Credentials s3Credentials = extractCredentials(credentials, bucketName);
         if (s3Credentials == null) {
             throw new StoreException("no credentials found");
         }
@@ -348,7 +348,7 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public UploadInfo startMultiPartUpload(@NotNull String path, @Nullable UserAuthentication<?> auth)
+    public UploadInfo startMultiPartUpload(@NotNull String path, @Nullable List<Credentials> credentials)
         throws StoreException {
         log.debug("generate multipart upload for {}", path);
 
@@ -362,7 +362,7 @@ public class S3FilesStore implements FilesStore {
             throw new StoreException("bucket mismatch");
         }
 
-        S3Credentials s3Credentials = extractCredentials(auth, bucketName);
+        S3Credentials s3Credentials = extractCredentials(credentials, bucketName);
         if (s3Credentials == null) {
             throw new StoreException("no credentials found");
         }
@@ -400,7 +400,7 @@ public class S3FilesStore implements FilesStore {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull Integer partNumber,
-        @Nullable UserAuthentication<?> auth
+        @Nullable List<Credentials> credentials
     ) throws StoreException {
         log.debug("generate part upload url for {} -> {} - {}", path, uploadId, partNumber);
 
@@ -414,7 +414,7 @@ public class S3FilesStore implements FilesStore {
             throw new StoreException("bucket mismatch");
         }
 
-        S3Credentials s3Credentials = extractCredentials(auth, bucketName);
+        S3Credentials s3Credentials = extractCredentials(credentials, bucketName);
         if (s3Credentials == null) {
             throw new StoreException("no credentials found");
         }
@@ -463,7 +463,7 @@ public class S3FilesStore implements FilesStore {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull List<String> eTagPartList,
-        @Nullable UserAuthentication<?> auth
+        @Nullable List<Credentials> credentials
     ) throws StoreException {
         log.debug("generate complete upload url for {} -> {}", path, uploadId);
 
@@ -477,7 +477,7 @@ public class S3FilesStore implements FilesStore {
             throw new StoreException("bucket mismatch");
         }
 
-        S3Credentials s3Credentials = extractCredentials(auth, bucketName);
+        S3Credentials s3Credentials = extractCredentials(credentials, bucketName);
         if (s3Credentials == null) {
             throw new StoreException("no credentials found");
         }
@@ -527,7 +527,7 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public void remove(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {
+    public void remove(@NotNull String path, @Nullable List<Credentials> credentials) throws StoreException {
         Keys keys = parseKey(path);
         log.debug("resolved path to {}", keys);
 
@@ -538,7 +538,7 @@ public class S3FilesStore implements FilesStore {
             throw new StoreException("bucket mismatch");
         }
 
-        S3Credentials s3Credentials = extractCredentials(auth, bucketName);
+        S3Credentials s3Credentials = extractCredentials(credentials, bucketName);
         if (s3Credentials == null) {
             throw new StoreException("no credentials found");
         }

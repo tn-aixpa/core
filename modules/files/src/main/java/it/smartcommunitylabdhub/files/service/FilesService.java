@@ -1,9 +1,9 @@
 package it.smartcommunitylabdhub.files.service;
 
-import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Configuration;
 import it.smartcommunitylabdhub.commons.infrastructure.ConfigurationProvider;
+import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.project.ProjectBaseSpec;
@@ -114,7 +114,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         return match;
     }
 
-    public @Nullable DownloadInfo getDownloadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth)
+    public @Nullable DownloadInfo getDownloadAsUrl(@NotNull String path, @Nullable List<Credentials> credentials)
         throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
@@ -128,7 +128,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
 
         log.debug("found store {}", store.getClass().getName());
 
-        DownloadInfo info = store.downloadAsUrl(path, auth);
+        DownloadInfo info = store.downloadAsUrl(path, credentials);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to download {}", info);
@@ -137,12 +137,12 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         return info;
     }
 
-    public @Nullable InputStream getDownloadAsStream(@NotNull String path, @Nullable UserAuthentication<?> auth)
+    public @Nullable InputStream getDownloadAsStream(@NotNull String path, @Nullable List<Credentials> credentials)
         throws StoreException {
         throw new UnsupportedOperationException();
     }
 
-    public List<FileInfo> getFileInfo(@NotNull String path, @Nullable UserAuthentication<?> auth)
+    public List<FileInfo> getFileInfo(@NotNull String path, @Nullable List<Credentials> credentials)
         throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
@@ -156,7 +156,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
 
         log.debug("found store {}", store.getClass().getName());
 
-        List<FileInfo> metadata = store.fileInfo(path, auth);
+        List<FileInfo> metadata = store.fileInfo(path, credentials);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to metadata {}", metadata);
@@ -165,7 +165,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         return metadata;
     }
 
-    public @Nullable UploadInfo getUploadAsUrl(@NotNull String path, @Nullable UserAuthentication<?> auth)
+    public @Nullable UploadInfo getUploadAsUrl(@NotNull String path, @Nullable List<Credentials> credentials)
         throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
@@ -179,7 +179,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
 
         log.debug("found store {}", store.getClass().getName());
 
-        UploadInfo info = store.uploadAsUrl(path, auth);
+        UploadInfo info = store.uploadAsUrl(path, credentials);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to upload {}", info);
@@ -188,7 +188,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         return info;
     }
 
-    public @Nullable UploadInfo startMultiPartUpload(@NotNull String path, @Nullable UserAuthentication<?> auth)
+    public @Nullable UploadInfo startMultiPartUpload(@NotNull String path, @Nullable List<Credentials> credentials)
         throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
@@ -202,7 +202,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
 
         log.debug("found store {}", store.getClass().getName());
 
-        UploadInfo info = store.startMultiPartUpload(path, auth);
+        UploadInfo info = store.startMultiPartUpload(path, credentials);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to multi-part upload {}", info);
@@ -215,7 +215,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull Integer partNumber,
-        @Nullable UserAuthentication<?> auth
+        @Nullable List<Credentials> credentials
     ) throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
         Assert.hasText(uploadId, "uploadId can not be null or empty");
@@ -231,7 +231,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
 
         log.debug("found store {}", store.getClass().getName());
 
-        UploadInfo info = store.uploadMultiPart(path, uploadId, partNumber, auth);
+        UploadInfo info = store.uploadMultiPart(path, uploadId, partNumber, credentials);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to part upload {}", info);
@@ -244,7 +244,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         @NotNull String path,
         @NotNull String uploadId,
         @NotNull List<String> partList,
-        @Nullable UserAuthentication<?> auth
+        @Nullable List<Credentials> credentials
     ) throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
         Assert.hasText(uploadId, "uploadId can not be null or empty");
@@ -260,7 +260,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
 
         log.debug("found store {}", store.getClass().getName());
 
-        UploadInfo info = store.completeMultiPartUpload(path, uploadId, partList, auth);
+        UploadInfo info = store.completeMultiPartUpload(path, uploadId, partList, credentials);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to complete upload {}", info);
@@ -269,11 +269,12 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         return info;
     }
 
-    public void remove(@NotNull String path, @Nullable UserAuthentication<?> auth) throws StoreException {
+    public void remove(@NotNull String path, @Nullable List<Credentials> credentials) throws StoreException {
         FilesStore store = getStore(path);
         if (store != null) {
             log.debug("found store {}", store.getClass().getName());
-            store.remove(path, auth);
+
+            store.remove(path, credentials);
             log.debug("remove path {}", path);
         } else {
             log.debug("no store found.");
