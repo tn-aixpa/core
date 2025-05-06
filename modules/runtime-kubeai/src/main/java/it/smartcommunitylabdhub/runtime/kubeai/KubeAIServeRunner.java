@@ -118,7 +118,7 @@ public class KubeAIServeRunner {
         // int minReplicas = runSpec.getScaling() != null && runSpec.getScaling().getMinReplicas() != null
         //     ? runSpec.getScaling().getMinReplicas()
         //     : replicas;
-        String resourceProfile = runSpec.getProfile() != null ? runSpec.getProfile() : BASE_PROFILE;
+        String resourceProfile = runSpec.getProfile() != null ? runSpec.getProfile() + ":1" : BASE_PROFILE;
 
         KubeAIModelSpec modelSpec = KubeAIModelSpec
             .builder()
