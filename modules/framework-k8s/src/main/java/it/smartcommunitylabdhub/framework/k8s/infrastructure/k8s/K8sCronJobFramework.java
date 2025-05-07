@@ -343,7 +343,10 @@ public class K8sCronJobFramework extends K8sBaseFramework<K8sCronJobRunnable, V1
                 .volumeMounts(
                     volumeMounts
                         .stream()
-                        .filter(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+                        .filter(v ->
+                            k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()) ||
+                            "/init-config-map".equals(v.getMountPath())
+                        )
                         .collect(Collectors.toList())
                 )
                 .resources(resources)

@@ -460,7 +460,10 @@ public class K8sDeploymentFramework extends K8sBaseFramework<K8sDeploymentRunnab
                 .volumeMounts(
                     volumeMounts
                         .stream()
-                        .filter(v -> k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()))
+                        .filter(v ->
+                            k8sProperties.getSharedVolume().getMountPath().equals(v.getMountPath()) ||
+                            "/init-config-map".equals(v.getMountPath())
+                        )
                         .collect(Collectors.toList())
                 )
                 .resources(resources)
