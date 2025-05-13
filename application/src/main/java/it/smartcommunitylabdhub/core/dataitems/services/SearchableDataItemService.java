@@ -1,10 +1,10 @@
-package it.smartcommunitylabdhub.core.models.queries.services;
+package it.smartcommunitylabdhub.core.dataitems.services;
 
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.DataItemService;
-import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
+import it.smartcommunitylabdhub.core.dataitems.persistence.DataItemEntity;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;

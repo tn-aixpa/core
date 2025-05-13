@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.specs.dataitem;
+package it.smartcommunitylabdhub.core.dataitems.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItemBaseSpec;

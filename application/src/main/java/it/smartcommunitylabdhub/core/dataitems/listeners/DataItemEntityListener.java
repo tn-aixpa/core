@@ -1,13 +1,14 @@
-package it.smartcommunitylabdhub.core.models.listeners;
+package it.smartcommunitylabdhub.core.dataitems.listeners;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.services.FilesInfoService;
-import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
+import it.smartcommunitylabdhub.core.dataitems.persistence.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.events.EntityEvent;
+import it.smartcommunitylabdhub.core.models.listeners.AbstractEntityListener;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

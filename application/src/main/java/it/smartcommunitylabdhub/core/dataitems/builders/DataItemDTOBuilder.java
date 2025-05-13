@@ -1,9 +1,9 @@
-package it.smartcommunitylabdhub.core.models.builders.dataitem;
+package it.smartcommunitylabdhub.core.dataitems.builders;
 
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
 import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
+import it.smartcommunitylabdhub.core.dataitems.persistence.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.metadata.BaseMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.metadata.VersioningMetadataBuilder;

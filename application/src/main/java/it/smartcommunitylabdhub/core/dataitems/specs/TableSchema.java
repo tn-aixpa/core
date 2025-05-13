@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.specs.dataitem;
+package it.smartcommunitylabdhub.core.dataitems.specs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;

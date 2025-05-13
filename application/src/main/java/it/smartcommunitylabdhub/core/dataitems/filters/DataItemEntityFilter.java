@@ -1,6 +1,6 @@
-package it.smartcommunitylabdhub.core.models.queries.filters.entities;
+package it.smartcommunitylabdhub.core.dataitems.filters;
 
-import it.smartcommunitylabdhub.core.models.entities.DataItemEntity;
+import it.smartcommunitylabdhub.core.dataitems.persistence.DataItemEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractEntityFilter;
 import lombok.Getter;
 import lombok.Setter;
