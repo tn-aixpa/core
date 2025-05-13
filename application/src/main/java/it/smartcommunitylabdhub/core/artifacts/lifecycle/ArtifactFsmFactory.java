@@ -16,18 +16,19 @@
 
 package it.smartcommunitylabdhub.core.artifacts.lifecycle;
 
-import it.smartcommunitylabdhub.core.fsm.AbstractFsmFactory;
-import it.smartcommunitylabdhub.fsm.FsmState;
-import java.util.List;
+import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
+import it.smartcommunitylabdhub.core.lifecycle.BaseFsmFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ArtifactFsmFactory
-    extends AbstractFsmFactory<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent> {
+public class ArtifactFsmFactory extends BaseFsmFactory<Artifact> {
 
-    public ArtifactFsmFactory(
-        List<FsmState.Builder<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent>> builders
-    ) {
-        super(builders);
+    public ArtifactFsmFactory() {
+        super(
+            new ArtifactStateCreated(),
+            new ArtifactStateUploading(),
+            new ArtifactStateReady(),
+            new ArtifactStateError()
+        );
     }
 }

@@ -44,10 +44,17 @@ import org.springframework.scheduling.annotation.Async;
 public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E extends BaseEntity, T extends Spec>
     extends LifecycleManager<D, E> {
 
-    private BaseFsmFactory<D, State, LifecycleEvents> fsmFactory;
+    private Fsm.Factory<
+        State,
+        LifecycleEvents,
+        LifecycleContext<D>,
+        LifecycleEvent<D, State, LifecycleEvents>
+    > fsmFactory;
 
-    @Autowired
-    public void setFsmFactory(BaseFsmFactory<D, State, LifecycleEvents> fsmFactory) {
+    @Autowired(required = false)
+    public void setFsmFactory(
+        Fsm.Factory<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> fsmFactory
+    ) {
         this.fsmFactory = fsmFactory;
     }
 
@@ -106,7 +113,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
     /*
      * Perform lifecycle operation from events
      */
-    protected D perform(@NotNull D dto, @NotNull LifecycleEvents event) {
+    public D perform(@NotNull D dto, @NotNull LifecycleEvents event) {
         //build synthetic input from event
         LifecycleEvent<D, State, LifecycleEvents> input = new LifecycleEvent<>();
         input.setId(dto.getId());
@@ -118,7 +125,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         return perform(dto, event, input, null);
     }
 
-    protected D perform(
+    public D perform(
         @NotNull D dto,
         @NotNull LifecycleEvents event,
         @Nullable LifecycleEvent<D, State, LifecycleEvents> input
@@ -126,7 +133,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         return perform(dto, event, input, null);
     }
 
-    protected D perform(
+    public D perform(
         @NotNull D dto,
         @NotNull LifecycleEvents event,
         @Nullable LifecycleEvent<D, State, LifecycleEvents> input,
@@ -150,7 +157,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
                     State state = fsm.getCurrentState();
 
                     //update status from fsm output
-                    Map<String, Serializable> baseStatus = Map.of("state", state);
+                    Map<String, Serializable> baseStatus = Map.of("state", state.name());
 
                     //merge action output into status
                     d.setStatus(
@@ -178,7 +185,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
     /*
      * Handle lifecycle events from state changes
      */
-    protected D handle(@NotNull D dto, State nexState) {
+    public D handle(@NotNull D dto, State nexState) {
         //build synthetic input from state change
         LifecycleEvent<D, State, LifecycleEvents> input = new LifecycleEvent<>();
         input.setId(dto.getId());
@@ -190,11 +197,11 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         return handle(dto, nexState, input, null);
     }
 
-    protected D handle(@NotNull D dto, State nexState, @Nullable LifecycleEvent<D, State, LifecycleEvents> input) {
+    public D handle(@NotNull D dto, State nexState, @Nullable LifecycleEvent<D, State, LifecycleEvents> input) {
         return handle(dto, nexState, input, null);
     }
 
-    protected D handle(
+    public D handle(
         @NotNull D dto,
         State nexState,
         @Nullable LifecycleEvent<D, State, LifecycleEvents> input,
@@ -218,7 +225,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
                     State state = fsm.getCurrentState();
 
                     //update status from fsm output
-                    Map<String, Serializable> baseStatus = Map.of("state", state);
+                    Map<String, Serializable> baseStatus = Map.of("state", state.name());
 
                     //merge action output into status
                     d.setStatus(

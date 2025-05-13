@@ -11,6 +11,7 @@ import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.artifact.ArtifactBaseSpec;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.commons.models.files.FilesInfo;
 import it.smartcommunitylabdhub.commons.models.project.Project;
@@ -20,6 +21,9 @@ import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.services.FilesInfoService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
+import it.smartcommunitylabdhub.core.artifacts.ArtifactsLifecycleManager;
+import it.smartcommunitylabdhub.core.artifacts.specs.ArtifactBaseStatus;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.components.security.UserAuthenticationHelper;
 import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
@@ -91,6 +95,9 @@ public class ArtifactServiceImpl
 
     @Autowired
     private CredentialsService credentialsService;
+
+    @Autowired
+    private ArtifactsLifecycleManager lifecycleManager;
 
     @Override
     public Page<Artifact> listArtifacts(Pageable pageable) {
@@ -371,18 +378,34 @@ public class ArtifactServiceImpl
                 throw new IllegalArgumentException("invalid kind");
             }
 
-            //validate
+            //validate spec
             validator.validateSpec(spec);
 
             //update spec as exported
             dto.setSpec(spec.toMap());
+
+            //on create status is *always* CREATED
+            //keep the user provided and move via lifecycle if needed
+            ArtifactBaseStatus status = ArtifactBaseStatus.with(dto.getStatus());
+            State nextState = status.getState() == null ? State.CREATED : State.valueOf(status.getState());
+
+            status.setState(nextState.name());
+            dto.setStatus(MapUtils.mergeMultipleMaps(dto.getStatus(), status.toMap()));
 
             try {
                 if (log.isTraceEnabled()) {
                     log.trace("storable dto: {}", dto);
                 }
 
-                return entityService.create(dto);
+                //persist to store
+                dto = entityService.create(dto);
+
+                //perform transition if needed
+                if (nextState != State.CREATED) {
+                    dto = lifecycleManager.handle(dto, nextState);
+                }
+
+                return dto;
             } catch (DuplicatedEntityException e) {
                 throw new DuplicatedEntityException(EntityName.ARTIFACT.toString(), dto.getId());
             }
@@ -393,17 +416,45 @@ public class ArtifactServiceImpl
     }
 
     @Override
-    public Artifact updateArtifact(@NotNull String id, @NotNull Artifact artifactDTO) throws NoSuchEntityException {
+    public Artifact updateArtifact(@NotNull String id, @NotNull Artifact dto) throws NoSuchEntityException {
         log.debug("update artifact with id {}", String.valueOf(id));
         try {
             //fetch current and merge
             Artifact current = entityService.get(id);
+            ArtifactBaseStatus curStatus = ArtifactBaseStatus.with(current.getStatus());
+            //we assume that missing status means CREATED
+            State currentState = curStatus.getState() == null ? State.CREATED : State.valueOf(curStatus.getState());
 
             //spec is not modificable: enforce current
-            artifactDTO.setSpec(current.getSpec());
+            dto.setSpec(current.getSpec());
 
-            //update
-            return entityService.update(id, artifactDTO);
+            //update status and handle lifecycle
+            //keep the user provided and move via lifecycle if needed
+            ArtifactBaseStatus status = ArtifactBaseStatus.with(dto.getStatus());
+            State nextState = status.getState() == null ? State.CREATED : State.valueOf(status.getState());
+
+            //keep current state for update, we evaluate later
+            status.setState(currentState.name());
+            dto.setStatus(MapUtils.mergeMultipleMaps(dto.getStatus(), status.toMap()));
+            if (log.isTraceEnabled()) {
+                log.trace("storable dto: {}", dto);
+            }
+
+            if (currentState != nextState) {
+                //move to next state
+                log.debug("state change update from {} to {}, handle via lifecycle", currentState, nextState);
+
+                //update via lifecycle transition
+                dto = lifecycleManager.handle(dto, nextState);
+            } else {
+                //keep same state
+                log.debug("same state update {}, handle via store", currentState);
+
+                //direct update
+                dto = entityService.update(id, dto);
+            }
+
+            return dto;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.ARTIFACT.toString());
         } catch (StoreException e) {

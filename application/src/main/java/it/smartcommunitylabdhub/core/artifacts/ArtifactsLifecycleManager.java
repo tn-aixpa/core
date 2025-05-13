@@ -16,78 +16,54 @@
 
 package it.smartcommunitylabdhub.core.artifacts;
 
-import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.services.ArtifactService;
-import it.smartcommunitylabdhub.core.artifacts.lifecycle.LifecycleEvent;
-import it.smartcommunitylabdhub.core.artifacts.lifecycle.ArtifactFsmFactory;
-import it.smartcommunitylabdhub.core.artifacts.lifecycle.ArtifactLifecycleContext;
-import it.smartcommunitylabdhub.core.artifacts.lifecycle.ArtifactLifecycleEvent;
-import it.smartcommunitylabdhub.core.artifacts.lifecycle.ArtifactState;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.artifacts.specs.ArtifactBaseStatus;
+import it.smartcommunitylabdhub.core.lifecycle.BaseLifecycleManager;
+import it.smartcommunitylabdhub.core.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
-import it.smartcommunitylabdhub.fsm.Fsm;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class ArtifactsLifecycleManager
-    extends BaseLifecycleManager<
-        Artifact,
-        ArtifactEntity,
-        ArtifactBaseStatus,
-        ArtifactState,
-        ArtifactLifecycleEvent,
-        ArtifactLifecycleContext,
-        LifecycleEvent
-    > {
-
-    @Autowired
-    private ArtifactFsmFactory fsmFactory;
-
-    @Autowired
-    private ArtifactService artifactService;
-
-    @Override
-    protected Fsm<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, LifecycleEvent> fsm(
-        Artifact artifact
-    ) {
-        //initial state is current state
-        ArtifactState initialState = ArtifactState.valueOf(StatusFieldAccessor.with(artifact.getStatus()).getState());
-        ArtifactLifecycleContext context = ArtifactLifecycleContext.builder().artifact(artifact).build();
-
-        // create state machine via factory
-        return fsmFactory.create(initialState, context);
-    }
+public class ArtifactsLifecycleManager extends BaseLifecycleManager<Artifact, ArtifactEntity, ArtifactBaseStatus> {
 
     /*
      * Actions: ask to perform
      */
 
     public Artifact upload(@NotNull Artifact artifact) {
-        return perform(artifact, ArtifactLifecycleEvent.UPLOAD);
+        return perform(artifact, LifecycleEvents.UPLOAD);
     }
 
     public Artifact delete(@NotNull Artifact artifact) {
-        return perform(artifact, ArtifactLifecycleEvent.DELETE);
+        return perform(artifact, LifecycleEvents.DELETE);
     }
 
     public Artifact update(@NotNull Artifact artifact) {
-        return perform(artifact, ArtifactLifecycleEvent.UPDATE);
+        return perform(artifact, LifecycleEvents.UPDATE);
     }
 
     /*
      * Events: callbacks
      */
 
-    public void onReady(@NotNull Artifact artifact) {
-        perform(artifact, ArtifactLifecycleEvent.READY);
+    //NOTE: disabled, we can not handle onCreated because there is no state change
+    // public Artifact onCreated(@NotNull Artifact artifact) {
+    //     return handle(artifact, State.CREATED);
+    // }
+
+    public Artifact onUploading(@NotNull Artifact artifact) {
+        return handle(artifact, State.UPLOADING);
     }
 
-    public void onError(@NotNull Artifact artifact) {
-        perform(artifact, ArtifactLifecycleEvent.ERROR);
+    public Artifact onReady(@NotNull Artifact artifact) {
+        return handle(artifact, State.READY);
+    }
+
+    public Artifact onError(@NotNull Artifact artifact) {
+        return handle(artifact, State.ERROR);
     }
 }

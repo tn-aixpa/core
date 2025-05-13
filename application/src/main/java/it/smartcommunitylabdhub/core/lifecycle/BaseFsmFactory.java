@@ -17,15 +17,33 @@
 package it.smartcommunitylabdhub.core.lifecycle;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
 import it.smartcommunitylabdhub.core.fsm.AbstractFsmFactory;
 import it.smartcommunitylabdhub.fsm.FsmState;
+import java.util.Arrays;
 import java.util.List;
 
-public abstract class BaseFsmFactory<D extends BaseDTO & StatusDTO, S extends Enum<S>, X extends Enum<X>>
-    extends AbstractFsmFactory<S, X, LifecycleContext<D>, LifecycleEvent<D, S, X>> {
+public abstract class BaseFsmFactory<D extends BaseDTO & StatusDTO>
+    extends AbstractFsmFactory<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> {
 
-    public BaseFsmFactory(List<FsmState.Builder<S, X, LifecycleContext<D>, LifecycleEvent<D, S, X>>> builders) {
+    public BaseFsmFactory(
+        List<
+            FsmState.Builder<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>>
+        > builders
+    ) {
         super(builders);
+    }
+
+    @SafeVarargs
+    public BaseFsmFactory(
+        FsmState.Builder<
+            State,
+            LifecycleEvents,
+            LifecycleContext<D>,
+            LifecycleEvent<D, State, LifecycleEvents>
+        >... builders
+    ) {
+        super(Arrays.asList(builders));
     }
 }

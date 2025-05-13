@@ -16,55 +16,25 @@
 
 package it.smartcommunitylabdhub.core.artifacts.lifecycle;
 
-import it.smartcommunitylabdhub.fsm.FsmState;
-import it.smartcommunitylabdhub.fsm.Transition;
-import java.util.List;
-import java.util.Optional;
+import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.core.lifecycle.BaseEntityState;
+import it.smartcommunitylabdhub.core.lifecycle.LifecycleEvents;
+import java.util.Set;
+import org.springframework.data.util.Pair;
 
-public class ArtifactStateError
-    implements FsmState.Builder<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent> {
+public class ArtifactStateError extends BaseEntityState<Artifact> {
 
-    @Override
-    public FsmState<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent> build() {
-        //define state
-        ArtifactState state = ArtifactState.ERROR;
-
-        //TODO evaluate restricting transitions to only DELETE
-        List<Transition<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent>> txs = List.of(
-            new Transition.Builder<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent>()
-                .event(ArtifactLifecycleEvent.UPLOAD)
-                .nextState(ArtifactState.UPLOADING)
-                .withInternalLogic((currentArtifactState, nextArtifactState, event, context, runnable) -> {
-                    //no-op, nothing happened yet
-                    return Optional.empty();
-                })
-                .build(),
-            new Transition.Builder<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent>()
-                .event(ArtifactLifecycleEvent.READY)
-                .nextState(ArtifactState.READY)
-                .withInternalLogic((currentArtifactState, nextArtifactState, event, context, runnable) -> {
-                    //no-op, nothing happened yet
-                    return Optional.empty();
-                })
-                .build(),
-            new Transition.Builder<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent>()
-                .event(ArtifactLifecycleEvent.ERROR)
-                .nextState(ArtifactState.ERROR)
-                .withInternalLogic((currentArtifactState, nextArtifactState, event, context, runnable) -> {
-                    //no-op, nothing happened yet
-                    return Optional.empty();
-                })
-                .build(),
-            new Transition.Builder<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent>()
-                .event(ArtifactLifecycleEvent.DELETE)
-                .nextState(ArtifactState.DELETED)
-                .withInternalLogic((currentArtifactState, nextArtifactState, event, context, runnable) -> {
-                    //no-op, nothing happened yet
-                    return Optional.empty();
-                })
-                .build()
+    public ArtifactStateError() {
+        super(
+            State.ERROR,
+            //TODO evaluate restricting transitions to only DELETE
+            Set.of(
+                Pair.of(LifecycleEvents.UPLOAD, State.UPLOADING),
+                Pair.of(LifecycleEvents.READY, State.READY),
+                Pair.of(LifecycleEvents.ERROR, State.ERROR),
+                Pair.of(LifecycleEvents.DELETE, State.DELETED)
+            )
         );
-
-        return new FsmState<>(state, txs);
     }
 }

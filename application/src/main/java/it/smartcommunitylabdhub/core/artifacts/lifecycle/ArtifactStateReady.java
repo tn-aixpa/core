@@ -16,30 +16,23 @@
 
 package it.smartcommunitylabdhub.core.artifacts.lifecycle;
 
-import it.smartcommunitylabdhub.fsm.FsmState;
-import it.smartcommunitylabdhub.fsm.Transition;
-import java.util.List;
-import java.util.Optional;
+import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
+import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.core.lifecycle.BaseEntityState;
+import it.smartcommunitylabdhub.core.lifecycle.LifecycleEvents;
+import java.util.Set;
+import org.springframework.data.util.Pair;
 
-public class ArtifactStateReady
-    implements FsmState.Builder<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent> {
+public class ArtifactStateReady extends BaseEntityState<Artifact> {
 
-    @Override
-    public FsmState<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent> build() {
-        //define state
-        ArtifactState state = ArtifactState.READY;
-
-        List<Transition<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent>> txs = List.of(
-            new Transition.Builder<ArtifactState, ArtifactLifecycleEvent, ArtifactLifecycleContext, ArtifactEvent>()
-                .event(ArtifactLifecycleEvent.DELETE)
-                .nextState(ArtifactState.DELETED)
-                .withInternalLogic((currentArtifactState, nextArtifactState, event, context, runnable) -> {
-                    //no-op, nothing happened yet
-                    return Optional.empty();
-                })
-                .build()
+    public ArtifactStateReady() {
+        super(
+            State.READY,
+            Set.of(
+                Pair.of(LifecycleEvents.READY, State.READY),
+                Pair.of(LifecycleEvents.ERROR, State.ERROR),
+                Pair.of(LifecycleEvents.DELETE, State.DELETED)
+            )
         );
-
-        return new FsmState<>(state, txs);
     }
 }
