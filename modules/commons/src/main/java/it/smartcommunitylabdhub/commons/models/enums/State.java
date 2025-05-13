@@ -25,4 +25,5 @@ public enum State {
     STOPPED,
     SUCCESS,
     UNKNOWN,
+    UPLOADING,
 }
