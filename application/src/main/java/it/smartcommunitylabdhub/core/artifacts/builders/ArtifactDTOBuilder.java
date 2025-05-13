@@ -1,9 +1,9 @@
-package it.smartcommunitylabdhub.core.models.builders.artifact;
+package it.smartcommunitylabdhub.core.artifacts.builders;
 
 import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
+import it.smartcommunitylabdhub.core.artifacts.persistence.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.metadata.BaseMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.metadata.VersioningMetadataBuilder;

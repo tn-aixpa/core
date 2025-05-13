@@ -1,6 +1,6 @@
-package it.smartcommunitylabdhub.core.models.queries.filters.entities;
+package it.smartcommunitylabdhub.core.artifacts.filters;
 
-import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
+import it.smartcommunitylabdhub.core.artifacts.persistence.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.queries.filters.abstracts.AbstractEntityFilter;
 import lombok.Getter;
 import lombok.Setter;

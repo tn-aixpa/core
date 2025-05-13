@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.services;
+package it.smartcommunitylabdhub.core.artifacts.services;
 
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.services.CredentialsService;
@@ -23,18 +23,18 @@ import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.artifacts.ArtifactsLifecycleManager;
+import it.smartcommunitylabdhub.core.artifacts.builders.ArtifactEntityBuilder;
+import it.smartcommunitylabdhub.core.artifacts.persistence.ArtifactEntity;
+import it.smartcommunitylabdhub.core.artifacts.relationships.ArtifactEntityRelationshipsManager;
 import it.smartcommunitylabdhub.core.artifacts.specs.ArtifactBaseStatus;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.components.security.UserAuthenticationHelper;
-import it.smartcommunitylabdhub.core.models.builders.artifact.ArtifactEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
-import it.smartcommunitylabdhub.core.models.entities.ArtifactEntity;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
-import it.smartcommunitylabdhub.core.models.queries.services.SearchableArtifactService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.relationships.ArtifactEntityRelationshipsManager;
+import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;
 import it.smartcommunitylabdhub.files.service.EntityFilesService;
