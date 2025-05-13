@@ -9,10 +9,12 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
 import it.smartcommunitylabdhub.commons.models.task.Task;
 import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseSpec;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.persistence.AbstractEntity_;
@@ -38,7 +40,7 @@ import org.springframework.validation.BindException;
 @Service
 @Transactional
 @Slf4j
-public class TriggerServiceImpl implements SearchableTriggerService {
+public class TriggerServiceImpl implements SearchableTriggerService, RelationshipsAwareEntityService<Trigger> {
 
     @Autowired
     private EntityService<Trigger, TriggerEntity> entityService;
@@ -48,6 +50,12 @@ public class TriggerServiceImpl implements SearchableTriggerService {
 
     @Autowired
     private EntityService<Project, ProjectEntity> projectService;
+
+    @Autowired
+    private TriggerEntityRelationshipsManager relationshipsManager;
+
+    @Autowired
+    private TriggerEntityBuilder entityBuilder;
 
     @Autowired
     private SpecRegistry specRegistry;
@@ -293,6 +301,20 @@ public class TriggerServiceImpl implements SearchableTriggerService {
                 //delete the trigger
                 entityService.delete(id);
             }
+        } catch (StoreException e) {
+            log.error("store error: {}", e.getMessage());
+            throw new SystemException(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<RelationshipDetail> getRelationships(String id) {
+        log.debug("get relationships for trigger {}", String.valueOf(id));
+
+        try {
+            Trigger trigger = entityService.get(id);
+
+            return relationshipsManager.getRelationships(entityBuilder.convert(trigger));
         } catch (StoreException e) {
             log.error("store error: {}", e.getMessage());
             throw new SystemException(e.getMessage());
