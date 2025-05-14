@@ -1,6 +1,5 @@
-package it.smartcommunitylabdhub.core.repositories;
+package it.smartcommunitylabdhub.core.models.persistence;
 
-import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;

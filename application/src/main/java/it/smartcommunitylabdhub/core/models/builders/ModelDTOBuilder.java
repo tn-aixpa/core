@@ -1,12 +1,12 @@
-package it.smartcommunitylabdhub.core.models.builders.model;
+package it.smartcommunitylabdhub.core.models.builders;
 
 import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.models.model.Model;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.metadata.BaseMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.metadata.VersioningMetadataBuilder;
+import it.smartcommunitylabdhub.core.models.persistence.ModelEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.util.HashMap;

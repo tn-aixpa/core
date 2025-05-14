@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.specs.model;
+package it.smartcommunitylabdhub.core.models.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;

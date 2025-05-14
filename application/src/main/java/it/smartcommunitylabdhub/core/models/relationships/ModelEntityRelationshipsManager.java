@@ -1,13 +1,14 @@
-package it.smartcommunitylabdhub.core.relationships;
+package it.smartcommunitylabdhub.core.models.relationships;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
 import it.smartcommunitylabdhub.commons.models.model.Model;
 import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
-import it.smartcommunitylabdhub.core.models.builders.model.ModelDTOBuilder;
-import it.smartcommunitylabdhub.core.models.entities.ModelEntity;
+import it.smartcommunitylabdhub.core.models.builders.ModelDTOBuilder;
 import it.smartcommunitylabdhub.core.models.entities.RelationshipEntity;
+import it.smartcommunitylabdhub.core.models.persistence.ModelEntity;
+import it.smartcommunitylabdhub.core.relationships.BaseEntityRelationshipsManager;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
