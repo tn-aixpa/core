@@ -1,11 +1,10 @@
-package it.smartcommunitylabdhub.core.models.builders.secret;
+package it.smartcommunitylabdhub.core.secrets.persistence;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.models.secret.Secret;
-import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.ZoneOffset;

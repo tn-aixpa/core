@@ -1,9 +1,8 @@
-package it.smartcommunitylabdhub.core.models.builders.secret;
+package it.smartcommunitylabdhub.core.secrets.persistence;
 
 import it.smartcommunitylabdhub.commons.models.metadata.EmbeddableMetadata;
 import it.smartcommunitylabdhub.commons.models.secret.Secret;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
-import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import it.smartcommunitylabdhub.core.models.metadata.AuditMetadataBuilder;
 import it.smartcommunitylabdhub.core.models.metadata.BaseMetadataBuilder;
 import jakarta.persistence.AttributeConverter;

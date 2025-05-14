@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.services;
+package it.smartcommunitylabdhub.core.secrets.service;
 
 import it.smartcommunitylabdhub.commons.annotations.common.Identifier;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
@@ -14,9 +14,10 @@ import it.smartcommunitylabdhub.commons.services.SecretService;
 import it.smartcommunitylabdhub.commons.services.SecretsProvider;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
-import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
+import it.smartcommunitylabdhub.core.secrets.persistence.SecretEntity;
+import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;

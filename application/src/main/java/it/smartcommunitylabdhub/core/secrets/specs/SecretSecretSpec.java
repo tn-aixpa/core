@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.specs.secret;
+package it.smartcommunitylabdhub.core.secrets.specs;
 
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;

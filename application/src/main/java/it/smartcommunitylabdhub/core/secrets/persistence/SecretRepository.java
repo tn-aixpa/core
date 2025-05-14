@@ -1,6 +1,5 @@
-package it.smartcommunitylabdhub.core.repositories;
+package it.smartcommunitylabdhub.core.secrets.persistence;
 
-import it.smartcommunitylabdhub.core.models.entities.SecretEntity;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
