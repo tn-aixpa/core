@@ -48,6 +48,14 @@ public class DataItemEntityListener extends AbstractEntityListener<DataItemEntit
             return;
         }
 
+        log.debug("receive event for {} {}", clazz.getSimpleName(), event.getAction());
+
+        DataItemEntity entity = event.getEntity();
+        DataItemEntity prev = event.getPrev();
+        if (log.isTraceEnabled()) {
+            log.trace("{}: {}", clazz.getSimpleName(), String.valueOf(entity));
+        }
+
         //handle
         super.handle(event);
 
@@ -64,6 +72,22 @@ public class DataItemEntityListener extends AbstractEntityListener<DataItemEntit
                 }
             } catch (StoreException e) {
                 log.error("store error", e.getMessage());
+            }
+        }
+
+        //notify user event if either: prev == null (for create/delete), prev != null and state has changed (update)
+        if (prev == null || (prev != null && prev.getState() != entity.getState())) {
+            //always broadcast updates
+            super.broadcast(event);
+
+            if (entity.getUpdatedBy() != null) {
+                //notify user
+                super.notify(entity.getUpdatedBy(), event);
+
+                if (!entity.getUpdatedBy().equals(entity.getCreatedBy())) {
+                    //notify owner
+                    super.notify(entity.getCreatedBy(), event);
+                }
             }
         }
     }
