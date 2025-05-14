@@ -1,11 +1,10 @@
-package it.smartcommunitylabdhub.core.models.builders.files;
+package it.smartcommunitylabdhub.core.files.persistence;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.commons.models.files.FilesInfo;
-import it.smartcommunitylabdhub.core.models.entities.FilesInfoEntity;
 import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;

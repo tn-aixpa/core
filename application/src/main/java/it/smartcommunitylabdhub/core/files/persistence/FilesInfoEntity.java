@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.entities;
+package it.smartcommunitylabdhub.core.files.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,14 +1,14 @@
-package it.smartcommunitylabdhub.core.services;
+package it.smartcommunitylabdhub.core.files.service;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.commons.models.files.FilesInfo;
 import it.smartcommunitylabdhub.commons.services.FilesInfoService;
-import it.smartcommunitylabdhub.core.models.builders.files.FilesInfoDTOBuilder;
-import it.smartcommunitylabdhub.core.models.builders.files.FilesInfoEntityBuilder;
-import it.smartcommunitylabdhub.core.models.entities.FilesInfoEntity;
-import it.smartcommunitylabdhub.core.repositories.FilesInfoRepository;
+import it.smartcommunitylabdhub.core.files.persistence.FilesInfoDTOBuilder;
+import it.smartcommunitylabdhub.core.files.persistence.FilesInfoEntity;
+import it.smartcommunitylabdhub.core.files.persistence.FilesInfoEntityBuilder;
+import it.smartcommunitylabdhub.core.files.persistence.FilesInfoRepository;
 import it.smartcommunitylabdhub.core.utils.UUIDKeyGenerator;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

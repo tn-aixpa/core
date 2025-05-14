@@ -1,6 +1,5 @@
-package it.smartcommunitylabdhub.core.repositories;
+package it.smartcommunitylabdhub.core.files.persistence;
 
-import it.smartcommunitylabdhub.core.models.entities.FilesInfoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
