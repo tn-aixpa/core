@@ -9,6 +9,7 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.commons.models.files.FilesInfo;
 import it.smartcommunitylabdhub.commons.models.metrics.Metrics;
@@ -23,6 +24,7 @@ import it.smartcommunitylabdhub.commons.services.FilesInfoService;
 import it.smartcommunitylabdhub.commons.services.MetricsService;
 import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.components.security.UserAuthenticationHelper;
 import it.smartcommunitylabdhub.core.metrics.MetricsManager;
@@ -31,9 +33,11 @@ import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
 import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
+import it.smartcommunitylabdhub.core.models.lifecycle.ModelLifecycleManager;
 import it.smartcommunitylabdhub.core.models.persistence.ModelEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.models.relationships.ModelEntityRelationshipsManager;
+import it.smartcommunitylabdhub.core.models.specs.ModelBaseStatus;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;
@@ -100,6 +104,9 @@ public class ModelServiceImpl
 
     @Autowired
     private MetricsManager metricsManager;
+
+    @Autowired
+    private ModelLifecycleManager lifecycleManager;
 
     @Override
     public Page<Model> listModels(Pageable pageable) {
@@ -383,12 +390,28 @@ public class ModelServiceImpl
             //update spec as exported
             dto.setSpec(spec.toMap());
 
+            //on create status is *always* CREATED
+            //keep the user provided and move via lifecycle if needed
+            ModelBaseStatus status = ModelBaseStatus.with(dto.getStatus());
+            State nextState = status.getState() == null ? State.CREATED : State.valueOf(status.getState());
+
+            status.setState(nextState.name());
+            dto.setStatus(MapUtils.mergeMultipleMaps(dto.getStatus(), status.toMap()));
+
             try {
                 if (log.isTraceEnabled()) {
                     log.trace("storable dto: {}", dto);
                 }
 
-                return entityService.create(dto);
+                //persist to store
+                dto = entityService.create(dto);
+
+                //perform transition if needed
+                if (nextState != State.CREATED) {
+                    dto = lifecycleManager.handle(dto, nextState);
+                }
+
+                return dto;
             } catch (DuplicatedEntityException e) {
                 throw new DuplicatedEntityException(EntityName.MODEL.toString(), dto.getId());
             }
@@ -399,18 +422,46 @@ public class ModelServiceImpl
     }
 
     @Override
-    public Model updateModel(@NotNull String id, @NotNull Model modelDTO)
+    public Model updateModel(@NotNull String id, @NotNull Model dto)
         throws NoSuchEntityException, BindException, IllegalArgumentException {
         log.debug("model model with id {}", String.valueOf(id));
         try {
             //fetch current and merge
             Model current = entityService.get(id);
+            ModelBaseStatus curStatus = ModelBaseStatus.with(current.getStatus());
+            //we assume that missing status means CREATED
+            State currentState = curStatus.getState() == null ? State.CREATED : State.valueOf(curStatus.getState());
 
             //spec is not modificable: enforce current
-            modelDTO.setSpec(current.getSpec());
+            dto.setSpec(current.getSpec());
 
-            //update
-            return entityService.update(id, modelDTO);
+            //update status and handle lifecycle
+            //keep the user provided and move via lifecycle if needed
+            ModelBaseStatus status = ModelBaseStatus.with(dto.getStatus());
+            State nextState = status.getState() == null ? State.CREATED : State.valueOf(status.getState());
+
+            //keep current state for update, we evaluate later
+            status.setState(currentState.name());
+            dto.setStatus(MapUtils.mergeMultipleMaps(dto.getStatus(), status.toMap()));
+            if (log.isTraceEnabled()) {
+                log.trace("storable dto: {}", dto);
+            }
+
+            if (currentState != nextState) {
+                //move to next state
+                log.debug("state change update from {} to {}, handle via lifecycle", currentState, nextState);
+
+                //update via lifecycle transition
+                dto = lifecycleManager.handle(dto, nextState);
+            } else {
+                //keep same state
+                log.debug("same state update {}, handle via store", currentState);
+
+                //direct update
+                dto = entityService.update(id, dto);
+            }
+
+            return dto;
         } catch (NoSuchEntityException e) {
             throw new NoSuchEntityException(EntityName.MODEL.toString());
         } catch (StoreException e) {
