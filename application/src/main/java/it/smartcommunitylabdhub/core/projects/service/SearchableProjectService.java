@@ -1,10 +1,10 @@
-package it.smartcommunitylabdhub.core.models.queries.services;
+package it.smartcommunitylabdhub.core.projects.service;
 
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.commons.services.ProjectService;
-import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
 import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

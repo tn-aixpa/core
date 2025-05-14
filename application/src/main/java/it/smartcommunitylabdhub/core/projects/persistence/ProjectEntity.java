@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.entities;
+package it.smartcommunitylabdhub.core.projects.persistence;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.smartcommunitylabdhub.commons.models.enums.State;

@@ -1,11 +1,11 @@
-package it.smartcommunitylabdhub.core.models.builders.project;
+package it.smartcommunitylabdhub.core.projects.builders;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.project.ProjectBaseSpec;
-import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
 import jakarta.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.time.ZoneOffset;

@@ -30,11 +30,11 @@ import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidat
 import it.smartcommunitylabdhub.core.metrics.MetricsManager;
 import it.smartcommunitylabdhub.core.models.builders.run.RunEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
-import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.RunEntity;
 import it.smartcommunitylabdhub.core.models.entities.TaskEntity;
 import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
 import it.smartcommunitylabdhub.core.relationships.RunEntityRelationshipsManager;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;

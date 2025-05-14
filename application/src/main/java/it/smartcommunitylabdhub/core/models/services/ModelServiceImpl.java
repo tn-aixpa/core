@@ -30,7 +30,6 @@ import it.smartcommunitylabdhub.core.components.security.UserAuthenticationHelpe
 import it.smartcommunitylabdhub.core.metrics.MetricsManager;
 import it.smartcommunitylabdhub.core.models.builders.ModelEntityBuilder;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
-import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.lifecycle.ModelLifecycleManager;
@@ -38,6 +37,7 @@ import it.smartcommunitylabdhub.core.models.persistence.ModelEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.models.relationships.ModelEntityRelationshipsManager;
 import it.smartcommunitylabdhub.core.models.specs.ModelBaseStatus;
+import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;

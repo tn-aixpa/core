@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.core.projects;
+package it.smartcommunitylabdhub.core.projects.service;
 
 import it.smartcommunitylabdhub.authorization.model.ResourceShareEntity;
 import it.smartcommunitylabdhub.authorization.services.AuthorizableAwareEntityService;
@@ -23,8 +23,8 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.project.Project;
-import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;

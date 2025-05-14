@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.services;
+package it.smartcommunitylabdhub.core.projects.service;
 
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
@@ -28,12 +28,12 @@ import it.smartcommunitylabdhub.commons.services.WorkflowService;
 import it.smartcommunitylabdhub.commons.utils.EmbedUtils;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
-import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import it.smartcommunitylabdhub.core.models.entities.RelationshipEntity;
-import it.smartcommunitylabdhub.core.models.queries.services.SearchableProjectService;
 import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
-import it.smartcommunitylabdhub.core.models.specs.project.ProjectSpec;
+import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
+import it.smartcommunitylabdhub.core.projects.specs.ProjectSpec;
 import it.smartcommunitylabdhub.core.relationships.EntityRelationshipsService;
+import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.core.utils.RefUtils;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;

@@ -1,6 +1,5 @@
-package it.smartcommunitylabdhub.core.repositories;
+package it.smartcommunitylabdhub.core.projects.persistence;
 
-import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
 import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;

@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.models.queries.filters.entities;
+package it.smartcommunitylabdhub.core.projects.filters;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.Keys;
@@ -7,7 +7,7 @@ import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
 import it.smartcommunitylabdhub.core.models.base.BaseEntityFilter;
 import it.smartcommunitylabdhub.core.models.base.BaseEntitySearchCriteria;
-import it.smartcommunitylabdhub.core.models.entities.ProjectEntity;
+import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
