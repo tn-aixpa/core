@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.relationships;
 
-import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.persistence.BaseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class BaseEntityRelationshipsManager<T extends BaseEntity> implements EntityRelationshipsManager<T> {

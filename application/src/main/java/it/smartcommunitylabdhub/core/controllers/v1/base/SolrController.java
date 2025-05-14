@@ -2,9 +2,9 @@ package it.smartcommunitylabdhub.core.controllers.v1.base;
 
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.components.solr.SolrComponent;
-import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
-import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
-import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.indexers.SearchGroupResult;
+import it.smartcommunitylabdhub.core.indexers.SolrPage;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

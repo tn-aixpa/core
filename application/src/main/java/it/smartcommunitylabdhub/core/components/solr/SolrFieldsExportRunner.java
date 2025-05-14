@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
-import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import it.smartcommunitylabdhub.core.indexers.EntityIndexer;
+import it.smartcommunitylabdhub.core.indexers.IndexField;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

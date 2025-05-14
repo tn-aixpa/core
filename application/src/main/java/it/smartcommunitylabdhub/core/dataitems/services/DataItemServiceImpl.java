@@ -29,11 +29,11 @@ import it.smartcommunitylabdhub.core.dataitems.lifecycle.DataItemLifecycleManage
 import it.smartcommunitylabdhub.core.dataitems.persistence.DataItemEntity;
 import it.smartcommunitylabdhub.core.dataitems.relationships.DataItemEntityRelationshipsManager;
 import it.smartcommunitylabdhub.core.dataitems.specs.DataItemBaseStatus;
+import it.smartcommunitylabdhub.core.indexers.EntityIndexer;
+import it.smartcommunitylabdhub.core.indexers.IndexableEntityService;
 import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
-import it.smartcommunitylabdhub.core.models.indexers.EntityIndexer;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
-import it.smartcommunitylabdhub.core.models.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
+import it.smartcommunitylabdhub.core.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;

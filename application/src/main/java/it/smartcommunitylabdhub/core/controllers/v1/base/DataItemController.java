@@ -13,7 +13,7 @@ import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.dataitems.filters.DataItemEntityFilter;
 import it.smartcommunitylabdhub.core.dataitems.persistence.DataItemEntity;
 import it.smartcommunitylabdhub.core.dataitems.services.SearchableDataItemService;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
+import it.smartcommunitylabdhub.core.indexers.IndexableEntityService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

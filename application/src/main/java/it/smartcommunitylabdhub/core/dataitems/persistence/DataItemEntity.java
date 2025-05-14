@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.core.dataitems.persistence;
 
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.models.base.SpecEntity;
-import it.smartcommunitylabdhub.core.models.base.StatusEntity;
-import it.smartcommunitylabdhub.core.models.converters.types.StateStringAttributeConverter;
-import it.smartcommunitylabdhub.core.models.entities.AbstractEntity;
+import it.smartcommunitylabdhub.core.persistence.AbstractEntity;
+import it.smartcommunitylabdhub.core.persistence.SpecEntity;
+import it.smartcommunitylabdhub.core.persistence.StatusEntity;
+import it.smartcommunitylabdhub.core.repositories.converters.types.StateStringAttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;

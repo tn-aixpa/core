@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.websocket;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.core.models.events.EntityAction;
+import it.smartcommunitylabdhub.core.events.EntityAction;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.ResolvableTypeProvider;

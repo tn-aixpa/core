@@ -13,7 +13,7 @@ import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.artifacts.filters.ArtifactEntityFilter;
 import it.smartcommunitylabdhub.core.artifacts.persistence.ArtifactEntity;
 import it.smartcommunitylabdhub.core.artifacts.services.SearchableArtifactService;
-import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
+import it.smartcommunitylabdhub.core.indexers.IndexableEntityService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

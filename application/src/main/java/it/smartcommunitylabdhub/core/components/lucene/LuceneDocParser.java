@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
 import it.smartcommunitylabdhub.commons.utils.KeyUtils;
-import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.indexers.ItemResult;
 import org.apache.lucene.document.Document;
 
 public class LuceneDocParser {

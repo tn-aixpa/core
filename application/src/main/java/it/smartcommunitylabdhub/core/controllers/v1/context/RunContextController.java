@@ -1,10 +1,34 @@
 package it.smartcommunitylabdhub.core.controllers.v1.context;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import it.smartcommunitylabdhub.commons.Keys;
+import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.exceptions.SystemException;
+import it.smartcommunitylabdhub.commons.models.log.Log;
+import it.smartcommunitylabdhub.commons.models.metrics.NumberOrNumberArray;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
+import it.smartcommunitylabdhub.commons.models.run.Run;
+import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
+import it.smartcommunitylabdhub.commons.services.LogService;
+import it.smartcommunitylabdhub.commons.services.MetricsService;
+import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
+import it.smartcommunitylabdhub.core.ApplicationKeys;
+import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.runs.filters.RunEntityFilter;
+import it.smartcommunitylabdhub.core.runs.lifecycle.RunLifecycleManager;
+import it.smartcommunitylabdhub.core.runs.persistence.RunEntity;
+import it.smartcommunitylabdhub.core.runs.service.SearchableRunService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Nullable;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,33 +48,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import it.smartcommunitylabdhub.commons.Keys;
-import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
-import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.exceptions.SystemException;
-import it.smartcommunitylabdhub.commons.models.log.Log;
-import it.smartcommunitylabdhub.commons.models.metrics.NumberOrNumberArray;
-import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
-import it.smartcommunitylabdhub.commons.models.run.Run;
-import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
-import it.smartcommunitylabdhub.commons.services.LogService;
-import it.smartcommunitylabdhub.commons.services.MetricsService;
-import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
-import it.smartcommunitylabdhub.core.ApplicationKeys;
-import it.smartcommunitylabdhub.core.annotations.ApiVersion;
-import it.smartcommunitylabdhub.core.components.run.RunLifecycleManager;
-import it.smartcommunitylabdhub.core.models.entities.RunEntity;
-import it.smartcommunitylabdhub.core.models.queries.filters.entities.RunEntityFilter;
-import it.smartcommunitylabdhub.core.models.queries.services.SearchableRunService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @ApiVersion("v1")
@@ -74,7 +71,7 @@ public class RunContextController {
 
     @Autowired
     RelationshipsAwareEntityService<Run> relationshipsService;
-    
+
     @Autowired
     MetricsService<Run> metricsService;
 
@@ -300,12 +297,12 @@ public class RunContextController {
 
         return relationshipsService.getRelationships(id);
     }
-    
+
     @Operation(summary = "Get metrics info for a given entity, if available")
     @GetMapping(path = "/{id}/metrics", produces = "application/json; charset=UTF-8")
     public Map<String, NumberOrNumberArray> getMetrics(
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws StoreException, SystemException {
         Run entity = runService.getRun(id);
 
@@ -313,16 +310,16 @@ public class RunContextController {
         if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-    	
-    	return  metricsService.getMetrics(id);
+
+        return metricsService.getMetrics(id);
     }
-    
+
     @Operation(summary = "Get metrics info for a given entity and metric, if available")
     @GetMapping(path = "/{id}/metrics/{name}", produces = "application/json; charset=UTF-8")
     public NumberOrNumberArray getMetricsByName(
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-            @PathVariable String name
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @PathVariable String name
     ) throws StoreException, SystemException {
         Run entity = runService.getRun(id);
 
@@ -330,17 +327,17 @@ public class RunContextController {
         if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-        
-    	return metricsService.getMetrics(id, name);
+
+        return metricsService.getMetrics(id, name);
     }
-    
+
     @Operation(summary = "Store metrics info for a given entity")
     @PutMapping(path = "/{id}/metrics/{name}", produces = "application/json; charset=UTF-8")
     public void storeMetrics(
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-            @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
-            @PathVariable String name,
-            @RequestBody NumberOrNumberArray data
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @PathVariable String name,
+        @RequestBody NumberOrNumberArray data
     ) throws StoreException, SystemException {
         Run entity = runService.getRun(id);
 
@@ -348,7 +345,7 @@ public class RunContextController {
         if ((entity != null) && !entity.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
-    	
+
         metricsService.saveMetrics(id, name, data);
     }
 }

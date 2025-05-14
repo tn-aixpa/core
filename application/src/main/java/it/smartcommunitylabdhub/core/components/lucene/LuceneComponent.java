@@ -1,10 +1,10 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
-import it.smartcommunitylabdhub.core.models.indexers.IndexerException;
-import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
-import it.smartcommunitylabdhub.core.models.indexers.SearchGroupResult;
-import it.smartcommunitylabdhub.core.models.indexers.SolrPage;
-import it.smartcommunitylabdhub.core.models.indexers.SolrSearchService;
+import it.smartcommunitylabdhub.core.indexers.IndexerException;
+import it.smartcommunitylabdhub.core.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.indexers.SearchGroupResult;
+import it.smartcommunitylabdhub.core.indexers.SolrPage;
+import it.smartcommunitylabdhub.core.indexers.SolrSearchService;
 import java.util.List;
 import javax.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;

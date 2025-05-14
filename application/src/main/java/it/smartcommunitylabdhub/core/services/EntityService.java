@@ -4,7 +4,7 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.core.models.base.BaseEntity;
+import it.smartcommunitylabdhub.core.persistence.BaseEntity;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.springframework.data.domain.Page;

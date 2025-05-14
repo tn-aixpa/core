@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-import it.smartcommunitylabdhub.core.models.events.EntityAction;
+import it.smartcommunitylabdhub.core.events.EntityAction;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.OffsetDateTime;

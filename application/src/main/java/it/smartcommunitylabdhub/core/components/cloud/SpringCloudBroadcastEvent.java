@@ -3,7 +3,7 @@ package it.smartcommunitylabdhub.core.components.cloud;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
-import it.smartcommunitylabdhub.core.models.events.EntityAction;
+import it.smartcommunitylabdhub.core.events.EntityAction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.secrets.filters;
 
 import it.smartcommunitylabdhub.commons.utils.DateUtils;
-import it.smartcommunitylabdhub.core.models.queries.filters.interfaces.SpecificationFilter;
+import it.smartcommunitylabdhub.core.queries.filters.SpecificationFilter;
 import it.smartcommunitylabdhub.core.secrets.persistence.SecretEntity;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;

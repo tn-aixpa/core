@@ -6,7 +6,7 @@ import it.smartcommunitylabdhub.commons.models.metadata.AuditMetadata;
 import it.smartcommunitylabdhub.commons.models.metadata.BaseMetadata;
 import it.smartcommunitylabdhub.commons.models.metadata.MetadataDTO;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
-import it.smartcommunitylabdhub.core.models.indexers.IndexField;
+import it.smartcommunitylabdhub.core.indexers.IndexField;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;

@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.components.solr;
 
 import it.smartcommunitylabdhub.commons.utils.KeyUtils;
-import it.smartcommunitylabdhub.core.models.indexers.ItemResult;
+import it.smartcommunitylabdhub.core.indexers.ItemResult;
 import java.util.Date;
 import java.util.List;
 import org.apache.solr.common.SolrDocument;

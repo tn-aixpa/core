@@ -1,6 +1,6 @@
 package it.smartcommunitylabdhub.core.components.lucene;
 
-import it.smartcommunitylabdhub.core.models.indexers.IndexableEntityService;
+import it.smartcommunitylabdhub.core.indexers.IndexableEntityService;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
