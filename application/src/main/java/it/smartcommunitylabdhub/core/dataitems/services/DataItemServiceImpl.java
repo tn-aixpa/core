@@ -31,7 +31,7 @@ import it.smartcommunitylabdhub.core.dataitems.relationships.DataItemEntityRelat
 import it.smartcommunitylabdhub.core.dataitems.specs.DataItemBaseStatus;
 import it.smartcommunitylabdhub.core.indexers.EntityIndexer;
 import it.smartcommunitylabdhub.core.indexers.IndexableEntityService;
-import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
+import it.smartcommunitylabdhub.core.persistence.AbstractEntity_;
 import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
 import it.smartcommunitylabdhub.core.queries.specifications.CommonSpecification;
 import it.smartcommunitylabdhub.core.services.EntityService;

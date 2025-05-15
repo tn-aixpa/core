@@ -1,7 +1,7 @@
 package it.smartcommunitylabdhub.core.queries.specifications;
 
 import it.smartcommunitylabdhub.commons.Fields;
-import it.smartcommunitylabdhub.core.models.entities.AbstractEntity_;
+import it.smartcommunitylabdhub.core.persistence.AbstractEntity_;
 import it.smartcommunitylabdhub.core.persistence.BaseEntity;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
