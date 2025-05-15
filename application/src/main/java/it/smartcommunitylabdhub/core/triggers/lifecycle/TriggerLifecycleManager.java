@@ -30,9 +30,11 @@ import it.smartcommunitylabdhub.core.events.EntityAction;
 import it.smartcommunitylabdhub.core.events.EntityOperation;
 import it.smartcommunitylabdhub.core.runs.lifecycle.RunLifecycleManager;
 import it.smartcommunitylabdhub.core.triggers.persistence.TriggerEntity;
+import it.smartcommunitylabdhub.core.triggers.service.TemplateProcessor;
 import it.smartcommunitylabdhub.fsm.Fsm;
 import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransitionException;
 import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +63,9 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
 
     @Autowired
     private RunLifecycleManager runManager;
+
+    @Autowired(required = false)
+    private TemplateProcessor templateProcessor;
 
     /*
      * Actions: ask to perform
@@ -215,9 +220,17 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
                     );
 
                     //build template
-                    //TODO process with details
-                    // Map<String, Serializable> details = run.getDetails();
                     Map<String, Serializable> template = baseSpec.getTemplate();
+
+                    if (templateProcessor != null) {
+                        try {
+                            //process template with details
+                            template = templateProcessor.process(baseSpec.getTemplate(), run.getDetails());
+                        } catch (IOException e) {
+                            log.error(null, e);
+                            throw new RuntimeException("error processing template", e);
+                        }
+                    }
 
                     //build run from trigger template
                     Run taskRun = Run
