@@ -17,6 +17,7 @@
 package it.smartcommunitylabdhub.commons.lifecycle;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
@@ -30,8 +31,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LifecycleEvent<D extends BaseDTO & StatusDTO, S extends Enum<S>, X extends Enum<X>>
-    implements Serializable {
+public class LifecycleEvent<D extends BaseDTO & StatusDTO> implements Serializable {
 
     private String id;
     private String kind;
@@ -39,8 +39,8 @@ public class LifecycleEvent<D extends BaseDTO & StatusDTO, S extends Enum<S>, X 
     private String user;
     private String project;
 
-    private X event;
-    private S state;
+    private LifecycleEvents event;
+    private State state;
     private String message;
     private String error;
 

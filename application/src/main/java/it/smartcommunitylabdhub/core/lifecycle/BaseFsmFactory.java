@@ -27,24 +27,17 @@ import java.util.Arrays;
 import java.util.List;
 
 public abstract class BaseFsmFactory<D extends BaseDTO & StatusDTO>
-    extends AbstractFsmFactory<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> {
+    extends AbstractFsmFactory<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> {
 
     public BaseFsmFactory(
-        List<
-            FsmState.Builder<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>>
-        > builders
+        List<FsmState.Builder<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>>> builders
     ) {
         super(builders);
     }
 
     @SafeVarargs
     public BaseFsmFactory(
-        FsmState.Builder<
-            State,
-            LifecycleEvents,
-            LifecycleContext<D>,
-            LifecycleEvent<D, State, LifecycleEvents>
-        >... builders
+        FsmState.Builder<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>>... builders
     ) {
         super(Arrays.asList(builders));
     }

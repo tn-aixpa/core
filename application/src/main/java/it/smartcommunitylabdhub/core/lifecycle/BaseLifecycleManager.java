@@ -43,21 +43,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E extends BaseEntity, T extends Spec>
     extends LifecycleManager<D, E> {
 
-    private Fsm.Factory<
-        State,
-        LifecycleEvents,
-        LifecycleContext<D>,
-        LifecycleEvent<D, State, LifecycleEvents>
-    > fsmFactory;
+    private Fsm.Factory<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> fsmFactory;
 
     @Autowired(required = false)
-    public void setFsmFactory(
-        Fsm.Factory<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> fsmFactory
-    ) {
+    public void setFsmFactory(Fsm.Factory<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> fsmFactory) {
         this.fsmFactory = fsmFactory;
     }
 
-    protected Fsm<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> fsm(D dto) {
+    protected Fsm<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> fsm(D dto) {
         if (fsmFactory == null) {
             throw new IllegalStateException("FSM factory not set: provide or override");
         }
@@ -84,7 +77,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
      */
     // @Async
     // @EventListener
-    // public void receive(LifecycleEvent<D, State, LifecycleEvents> event) {
+    // public void receive(LifecycleEvent<D> event) {
     //     if (event.getEvent() == null) {
     //         return;
     //     }
@@ -115,7 +108,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
      */
     public D perform(@NotNull D dto, @NotNull LifecycleEvents event) {
         //build synthetic input from event
-        LifecycleEvent<D, State, LifecycleEvents> input = new LifecycleEvent<>();
+        LifecycleEvent<D> input = new LifecycleEvent<>();
         input.setId(dto.getId());
         input.setKind(dto.getKind());
         input.setUser(dto.getUser());
@@ -125,18 +118,14 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         return perform(dto, event, input, null);
     }
 
-    public D perform(
-        @NotNull D dto,
-        @NotNull LifecycleEvents event,
-        @Nullable LifecycleEvent<D, State, LifecycleEvents> input
-    ) {
+    public D perform(@NotNull D dto, @NotNull LifecycleEvents event, @Nullable LifecycleEvent<D> input) {
         return perform(dto, event, input, null);
     }
 
     public D perform(
         @NotNull D dto,
         @NotNull LifecycleEvents event,
-        @Nullable LifecycleEvent<D, State, LifecycleEvents> input,
+        @Nullable LifecycleEvent<D> input,
         @Nullable BiConsumer<D, T> effect
     ) {
         log.debug("perform {} for {} with id {}", event, dto.getClass().getSimpleName().toLowerCase(), dto.getId());
@@ -145,7 +134,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         }
 
         // build state machine on current context
-        Fsm<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> fsm = fsm(dto);
+        Fsm<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> fsm = fsm(dto);
 
         //execute update op with locking
         return exec(
@@ -174,15 +163,15 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
                     }
 
                     //publish new event
-                    LifecycleEvent<D, State, LifecycleEvents> e = new LifecycleEvent<>();
-                    input.setId(dto.getId());
-                    input.setKind(dto.getKind());
-                    input.setUser(dto.getUser());
-                    input.setProject(dto.getProject());
-                    input.setEvent(event);
-                    input.setState(state);
+                    LifecycleEvent<D> e = new LifecycleEvent<>();
+                    e.setId(dto.getId());
+                    e.setKind(dto.getKind());
+                    e.setUser(dto.getUser());
+                    e.setProject(dto.getProject());
+                    e.setEvent(event);
+                    e.setState(state);
                     //append object to event
-                    input.setDto(d);
+                    e.setDto(d);
 
                     log.debug("publish event {} for {}", event, dto.getId());
                     if (log.isTraceEnabled()) {
@@ -204,7 +193,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
      */
     public D handle(@NotNull D dto, State nexState) {
         //build synthetic input from state change
-        LifecycleEvent<D, State, LifecycleEvents> input = new LifecycleEvent<>();
+        LifecycleEvent<D> input = new LifecycleEvent<>();
         input.setId(dto.getId());
         input.setKind(dto.getKind());
         input.setUser(dto.getUser());
@@ -214,14 +203,14 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         return handle(dto, nexState, input, null);
     }
 
-    public D handle(@NotNull D dto, State nexState, @Nullable LifecycleEvent<D, State, LifecycleEvents> input) {
+    public D handle(@NotNull D dto, State nexState, @Nullable LifecycleEvent<D> input) {
         return handle(dto, nexState, input, null);
     }
 
     public D handle(
         @NotNull D dto,
         State nexState,
-        @Nullable LifecycleEvent<D, State, LifecycleEvents> input,
+        @Nullable LifecycleEvent<D> input,
         @Nullable BiConsumer<D, T> effect
     ) {
         log.debug("handle {} for {} with id {}", nexState, dto.getClass().getSimpleName().toLowerCase(), dto.getId());
@@ -230,7 +219,7 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         }
 
         // build state machine on current context
-        Fsm<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> fsm = fsm(dto);
+        Fsm<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> fsm = fsm(dto);
 
         //execute update op with locking
         return exec(
@@ -259,14 +248,16 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
                     }
 
                     //publish new event
-                    LifecycleEvent<D, State, LifecycleEvents> e = new LifecycleEvent<>();
-                    input.setId(dto.getId());
-                    input.setKind(dto.getKind());
-                    input.setUser(dto.getUser());
-                    input.setProject(dto.getProject());
-                    input.setState(state);
-                    //append object to event
-                    input.setDto(d);
+                    LifecycleEvent<D> e = LifecycleEvent
+                        .<D>builder()
+                        .id(dto.getId())
+                        .kind(dto.getKind())
+                        .user(dto.getUser())
+                        .project(dto.getProject())
+                        .state(state)
+                        //append object to event
+                        .dto(d)
+                        .build();
 
                     log.debug("publish event on state {} for {}", state, dto.getId());
                     if (log.isTraceEnabled()) {

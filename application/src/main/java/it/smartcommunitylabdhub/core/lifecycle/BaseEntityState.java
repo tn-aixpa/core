@@ -32,14 +32,11 @@ import java.util.stream.Collectors;
 import org.springframework.data.util.Pair;
 
 public class BaseEntityState<D extends BaseDTO & StatusDTO>
-    implements
-        FsmState.Builder<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> {
+    implements FsmState.Builder<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> {
 
     protected final State state;
     protected final Set<Pair<LifecycleEvents, State>> nextStates;
-    protected List<
-        Transition<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>>
-    > txs;
+    protected List<Transition<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>>> txs;
 
     protected BaseEntityState(@NotNull State state, @Nullable Set<Pair<LifecycleEvents, State>> nextStates) {
         this.state = state;
@@ -48,9 +45,7 @@ public class BaseEntityState<D extends BaseDTO & StatusDTO>
 
     protected BaseEntityState(
         @NotNull State state,
-        @NotNull List<
-            Transition<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>>
-        > txs
+        @NotNull List<Transition<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>>> txs
     ) {
         this.state = state;
         this.txs = txs;
@@ -64,7 +59,7 @@ public class BaseEntityState<D extends BaseDTO & StatusDTO>
     }
 
     @Override
-    public FsmState<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D, State, LifecycleEvents>> build() {
+    public FsmState<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> build() {
         if (txs != null) {
             return new FsmState<>(state, txs);
         }
@@ -74,12 +69,7 @@ public class BaseEntityState<D extends BaseDTO & StatusDTO>
             nextStates
                 .stream()
                 .map(pair ->
-                    new Transition.Builder<
-                        State,
-                        LifecycleEvents,
-                        LifecycleContext<D>,
-                        LifecycleEvent<D, State, LifecycleEvents>
-                    >()
+                    new Transition.Builder<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>>()
                         .event(pair.getFirst())
                         .nextState(pair.getSecond())
                         .withInternalLogic((currentState, nextState, event, context, input) -> {

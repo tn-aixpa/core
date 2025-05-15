@@ -16,11 +16,13 @@
 
 package it.smartcommunitylabdhub.trigger.lifecycle;
 
+import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.ActuatorComponent;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Actuator;
 import it.smartcommunitylabdhub.commons.infrastructure.TriggerRun;
+import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseStatus;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
@@ -29,10 +31,13 @@ import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleTriggerJob;
 import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleTriggerSpec;
 import it.smartcommunitylabdhub.trigger.lifecycle.store.TriggerJobStore;
 import jakarta.validation.constraints.NotNull;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @ActuatorComponent(actuator = LifecycleActuator.ACTUATOR)
@@ -60,6 +65,25 @@ public class LifecycleActuator
         //build job
         LifecycleTriggerSpec spec = LifecycleTriggerSpec.from(trigger.getSpec());
 
+        //validate states
+        Set<State> states = spec.getStates() == null
+            ? Set.of()
+            : spec.getStates().stream().map(State::valueOf).collect(Collectors.toSet());
+
+        //rebuild ant-style key
+        KeyAccessor k = KeyAccessor.with(spec.getKey());
+
+        //validate key
+        if (!trigger.getProject().equals(k.getProject())) {
+            throw new IllegalArgumentException("project in key does not match trigger project");
+        }
+
+        StringBuilder key = new StringBuilder("store://" + k.getProject());
+        key.append(StringUtils.hasText(k.getType()) ? "/" + k.getType() : "/*");
+        key.append(StringUtils.hasText(k.getKind()) ? "/" + k.getKind() : "/*");
+        key.append(StringUtils.hasText(k.getName()) ? "/" + k.getName() : "/*");
+        key.append(StringUtils.hasText(k.getId()) ? ":" + k.getId() : ":*");
+
         LifecycleTriggerJob job = LifecycleTriggerJob
             .builder()
             .id(trigger.getId())
@@ -67,8 +91,8 @@ public class LifecycleActuator
             .task(spec.getTask())
             .project(trigger.getProject())
             //spec
-            .key(spec.getKey())
-            .states(spec.getStates())
+            .key(key.toString())
+            .states(states.stream().map(State::name).collect(Collectors.toList()))
             .build();
 
         //store job

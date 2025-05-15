@@ -303,3 +303,9 @@ credentials:
 # Templates
 templates:
   path: ${TEMPLATES_PATH:classpath:/templates}
+
+
+# Triggers
+triggers:
+  lifecycle:
+    store: memory

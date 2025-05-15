@@ -20,9 +20,7 @@ import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.TriggerRun;
 import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvent;
-import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerEvent;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerExecutionEvent;
@@ -30,6 +28,7 @@ import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleTriggerJob;
 import it.smartcommunitylabdhub.trigger.lifecycle.store.TriggerJobStore;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +37,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 @Slf4j
+@Component
 public class LifecycleTriggerListener {
 
     private TriggerJobStore<LifecycleTriggerJob> store;
@@ -57,8 +58,8 @@ public class LifecycleTriggerListener {
 
     @Async
     @EventListener
-    public <D extends BaseDTO & StatusDTO> void receive(LifecycleEvent<D, State, LifecycleEvents> event) {
-        if (event.getEvent() == null) {
+    public void receive(LifecycleEvent<? extends BaseDTO> event) {
+        if (event.getState() == null) {
             return;
         }
 
@@ -73,26 +74,24 @@ public class LifecycleTriggerListener {
         }
 
         try {
-            log.debug("receive event {} for {}", event.getEvent(), event.getId());
+            log.debug("receive event on {} for {}", event.getState(), event.getId());
             if (log.isTraceEnabled()) {
                 log.trace("event: {}", event);
             }
 
-            String id = event.getId();
-
             //load details
-            D dto = event.getDto();
+            BaseDTO dto = event.getDto();
             if (dto == null) {
                 log.error("Missing dto");
                 return;
             }
 
-            String state = event.getState() != null ? event.getState().name() : null;
-            if (state == null) {
-                //read from dto status
-                StatusFieldAccessor accessor = StatusFieldAccessor.with(dto.getStatus());
-                state = accessor.getState();
-            }
+            //read from dto status when available
+            StatusFieldAccessor accessor = (dto instanceof StatusDTO)
+                ? StatusFieldAccessor.with(((StatusDTO) dto).getStatus())
+                : StatusFieldAccessor.with(Collections.emptyMap());
+
+            String state = event.getState() != null ? event.getState().name() : accessor.getState();
 
             if (state == null) {
                 log.error("Missing or invalid state");
@@ -104,6 +103,11 @@ public class LifecycleTriggerListener {
 
             //submit fire for all these jobs
             jobs.forEach(job -> {
+                //sanity check: project id must match
+                if (!job.getProject().equals(dto.getProject())) {
+                    return;
+                }
+
                 //build a run for this job
                 Map<String, Serializable> details = Map.of(
                     "timestamp",
@@ -111,7 +115,7 @@ public class LifecycleTriggerListener {
                     "key",
                     job.getKey(),
                     "state",
-                    job.getState(),
+                    state,
                     "input",
                     dto
                 );
