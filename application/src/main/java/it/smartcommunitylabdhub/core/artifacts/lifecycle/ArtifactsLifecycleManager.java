@@ -16,12 +16,12 @@
 
 package it.smartcommunitylabdhub.core.artifacts.lifecycle;
 
+import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.artifacts.persistence.ArtifactEntity;
 import it.smartcommunitylabdhub.core.artifacts.specs.ArtifactBaseStatus;
 import it.smartcommunitylabdhub.core.lifecycle.BaseLifecycleManager;
-import it.smartcommunitylabdhub.core.lifecycle.LifecycleEvents;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

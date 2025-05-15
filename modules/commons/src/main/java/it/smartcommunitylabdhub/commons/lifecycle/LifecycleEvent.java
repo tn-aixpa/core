@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.core.lifecycle;
+package it.smartcommunitylabdhub.commons.lifecycle;
 
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
@@ -43,4 +43,6 @@ public class LifecycleEvent<D extends BaseDTO & StatusDTO, S extends Enum<S>, X 
     private S state;
     private String message;
     private String error;
+
+    private D dto;
 }

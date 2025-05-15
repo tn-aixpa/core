@@ -17,7 +17,8 @@
 package it.smartcommunitylabdhub.core.lifecycle;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
-import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvent;
+import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.specs.Spec;
@@ -37,8 +38,6 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 
 @Slf4j
 public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E extends BaseEntity, T extends Spec>
@@ -81,34 +80,35 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
 
     /*
      * Listen for event callbacks
+     * DISABLED: we are producers of events not consumers!
      */
-    @Async
-    @EventListener
-    public void receive(LifecycleEvent<D, State, LifecycleEvents> event) {
-        if (event.getEvent() == null) {
-            return;
-        }
-        try {
-            log.debug("receive event {} for {}", event.getEvent(), event.getId());
-            if (log.isTraceEnabled()) {
-                log.trace("event: {}", event);
-            }
+    // @Async
+    // @EventListener
+    // public void receive(LifecycleEvent<D, State, LifecycleEvents> event) {
+    //     if (event.getEvent() == null) {
+    //         return;
+    //     }
+    //     try {
+    //         log.debug("receive event {} for {}", event.getEvent(), event.getId());
+    //         if (log.isTraceEnabled()) {
+    //             log.trace("event: {}", event);
+    //         }
 
-            String id = event.getId();
+    //         String id = event.getId();
 
-            //load trigger from db
-            D dto = entityService.find(event.getId());
-            if (dto == null) {
-                log.error("Entity with id {} not found", id);
-                return;
-            }
+    //         //load trigger from db
+    //         D dto = entityService.find(event.getId());
+    //         if (dto == null) {
+    //             log.error("Entity with id {} not found", id);
+    //             return;
+    //         }
 
-            //perform lifecycle operation as callback to event
-            perform(dto, event.getEvent(), event);
-        } catch (StoreException e) {
-            log.error("Error with store", e.getMessage());
-        }
-    }
+    //         //perform lifecycle operation as callback to event
+    //         perform(dto, event.getEvent(), event);
+    //     } catch (StoreException e) {
+    //         log.error("Error with store", e.getMessage());
+    //     }
+    // }
 
     /*
      * Perform lifecycle operation from events
@@ -172,6 +172,23 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
                     if (effect != null) {
                         effect.accept(d, output.orElse(null));
                     }
+
+                    //publish new event
+                    LifecycleEvent<D, State, LifecycleEvents> e = new LifecycleEvent<>();
+                    input.setId(dto.getId());
+                    input.setKind(dto.getKind());
+                    input.setUser(dto.getUser());
+                    input.setProject(dto.getProject());
+                    input.setEvent(event);
+                    input.setState(state);
+                    //append object to event
+                    input.setDto(d);
+
+                    log.debug("publish event {} for {}", event, dto.getId());
+                    if (log.isTraceEnabled()) {
+                        log.trace("event: {}", e);
+                    }
+                    this.eventPublisher.publishEvent(e);
 
                     return d;
                 } catch (InvalidTransitionException e) {
@@ -240,6 +257,22 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
                     if (effect != null) {
                         effect.accept(d, output.orElse(null));
                     }
+
+                    //publish new event
+                    LifecycleEvent<D, State, LifecycleEvents> e = new LifecycleEvent<>();
+                    input.setId(dto.getId());
+                    input.setKind(dto.getKind());
+                    input.setUser(dto.getUser());
+                    input.setProject(dto.getProject());
+                    input.setState(state);
+                    //append object to event
+                    input.setDto(d);
+
+                    log.debug("publish event on state {} for {}", state, dto.getId());
+                    if (log.isTraceEnabled()) {
+                        log.trace("event: {}", e);
+                    }
+                    this.eventPublisher.publishEvent(e);
 
                     return d;
                 } catch (InvalidTransitionException e) {

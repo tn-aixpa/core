@@ -16,10 +16,10 @@
 
 package it.smartcommunitylabdhub.core.models.lifecycle;
 
+import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.model.Model;
 import it.smartcommunitylabdhub.core.lifecycle.BaseLifecycleManager;
-import it.smartcommunitylabdhub.core.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.core.models.persistence.ModelEntity;
 import it.smartcommunitylabdhub.core.models.specs.ModelBaseStatus;
 import jakarta.validation.constraints.NotNull;

@@ -16,6 +16,8 @@
 
 package it.smartcommunitylabdhub.core.lifecycle;
 
+import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvent;
+import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
