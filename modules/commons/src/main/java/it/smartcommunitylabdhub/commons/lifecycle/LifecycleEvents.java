@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.core.lifecycle;
+package it.smartcommunitylabdhub.commons.lifecycle;
 
 public enum LifecycleEvents {
     CREATE,

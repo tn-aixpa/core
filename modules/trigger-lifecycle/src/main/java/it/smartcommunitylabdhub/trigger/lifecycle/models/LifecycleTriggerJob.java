@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package it.smartcommunitylabdhub.core.lifecycle;
+package it.smartcommunitylabdhub.trigger.lifecycle.models;
 
-import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
-import java.io.Serializable;
+import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
+import it.smartcommunitylabdhub.trigger.lifecycle.LifecycleActuator;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,17 +30,22 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LifecycleEvent<D extends BaseDTO & StatusDTO, S extends Enum<S>, X extends Enum<X>>
-    implements Serializable {
+public class LifecycleTriggerJob implements TriggerJob {
 
     private String id;
-    private String kind;
-
     private String user;
+    private String task;
     private String project;
 
-    private X event;
-    private S state;
+    private String state;
     private String message;
     private String error;
+
+    private String key;
+    private List<String> states;
+
+    @Override
+    public String getActuator() {
+        return LifecycleActuator.ACTUATOR;
+    }
 }

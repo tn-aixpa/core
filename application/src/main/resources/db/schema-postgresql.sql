@@ -10,6 +10,19 @@ CREATE TABLE
 
 CREATE INDEX IF NOT EXISTS runnables_id_index ON public.runnables (id, _clazz);
 
+
+CREATE TABLE
+    IF NOT EXISTS public.trigger_jobs (
+        id VARCHAR(255) NOT NULL PRIMARY KEY,
+        _user VARCHAR(255),
+        created TIMESTAMP(6) WITH TIME ZONE,
+        updated TIMESTAMP(6) WITH TIME ZONE,
+        _clazz VARCHAR(255) NOT NULL,
+        _data BYTEA
+    );
+
+CREATE INDEX IF NOT EXISTS trigger_jobs_id_index ON public.trigger_jobs (id, _clazz);
+
 -- alter table public.runnable
 --     owner to postgres;
 
