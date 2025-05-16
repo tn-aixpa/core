@@ -16,15 +16,20 @@
 
 package it.smartcommunitylabdhub.core.triggers.service;
 
+import ch.qos.logback.core.encoder.JsonEscapeUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheException;
 import com.github.mustachejava.MustacheFactory;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.io.Writer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +43,14 @@ public class MustacheTemplateProcessor implements TemplateProcessor {
         HashMap<String, Serializable>
     >() {};
 
-    private final MustacheFactory factory = new DefaultMustacheFactory();
+    private final MustacheFactory factory;
+
+    public MustacheTemplateProcessor() {
+        NoEncodingMustacheFactory f = new NoEncodingMustacheFactory();
+        f.setObjectHandler(new JsonObjectHandler());
+
+        this.factory = f;
+    }
 
     @Override
     public Map<String, Serializable> process(Map<String, Serializable> template, Map<String, Serializable> data)
@@ -61,5 +73,48 @@ public class MustacheTemplateProcessor implements TemplateProcessor {
         Map<String, Serializable> map = JacksonMapper.CUSTOM_OBJECT_MAPPER.readValue(result, typeRef);
 
         return map;
+    }
+
+    private static class NoEncodingMustacheFactory extends DefaultMustacheFactory {
+
+        @Override
+        public void encode(String value, Writer writer) {
+            try {
+                //write string as is, no encoding
+                //this is needed to avoid encoding of json strings
+                writer.write(value);
+            } catch (IOException e) {
+                throw new MustacheException(e);
+            }
+        }
+    }
+
+    class JsonObjectHandler extends com.github.mustachejava.reflect.SimpleObjectHandler {
+
+        // @Override
+        // public Object read(String key, String value) {
+        //     return JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(value, Object.class);
+        // }
+        @Override
+        public String stringify(Object object) {
+            if (object == null) {
+                return null;
+            }
+
+            if (object instanceof BaseDTO || object instanceof Map || object instanceof Collection) {
+                // convert to json
+                try {
+                    return JsonEscapeUtil.jsonEscapeString(
+                        JacksonMapper.CUSTOM_OBJECT_MAPPER.writeValueAsString(object)
+                    );
+                } catch (IOException e) {
+                    log.error("error serializing object: {}", e.getMessage());
+                    return null;
+                }
+            }
+
+            //return bare string representation
+            return object.toString();
+        }
     }
 }
