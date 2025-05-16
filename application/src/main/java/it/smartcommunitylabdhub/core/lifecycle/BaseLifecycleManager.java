@@ -137,55 +137,58 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         Fsm<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> fsm = fsm(dto);
 
         //execute update op with locking
-        return exec(
-            new EntityOperation<>(dto, EntityAction.UPDATE),
-            d -> {
-                try {
-                    //perform via FSM
-                    Optional<T> output = fsm.perform(event, input);
-                    State state = fsm.getCurrentState();
+        dto =
+            exec(
+                new EntityOperation<>(dto, EntityAction.UPDATE),
+                d -> {
+                    try {
+                        //perform via FSM
+                        Optional<T> output = fsm.perform(event, input);
+                        State state = fsm.getCurrentState();
 
-                    //update status from fsm output
-                    Map<String, Serializable> baseStatus = Map.of("state", state.name());
+                        //update status from fsm output
+                        Map<String, Serializable> baseStatus = Map.of("state", state.name());
 
-                    //merge action output into status
-                    d.setStatus(
-                        MapUtils.mergeMultipleMaps(
-                            d.getStatus(),
-                            output.isPresent() ? output.get().toMap() : null,
-                            baseStatus
-                        )
-                    );
+                        //merge action output into status
+                        d.setStatus(
+                            MapUtils.mergeMultipleMaps(
+                                d.getStatus(),
+                                output.isPresent() ? output.get().toMap() : null,
+                                baseStatus
+                            )
+                        );
 
-                    //side effect
-                    if (effect != null) {
-                        effect.accept(d, output.orElse(null));
+                        //side effect
+                        if (effect != null) {
+                            effect.accept(d, output.orElse(null));
+                        }
+
+                        return d;
+                    } catch (InvalidTransitionException e) {
+                        log.debug("Invalid transition {} -> {}", e.getFromState(), e.getToState());
+                        return d;
                     }
-
-                    //publish new event
-                    LifecycleEvent<D> e = new LifecycleEvent<>();
-                    e.setId(dto.getId());
-                    e.setKind(dto.getKind());
-                    e.setUser(dto.getUser());
-                    e.setProject(dto.getProject());
-                    e.setEvent(event);
-                    e.setState(state);
-                    //append object to event
-                    e.setDto(d);
-
-                    log.debug("publish event {} for {}", event, dto.getId());
-                    if (log.isTraceEnabled()) {
-                        log.trace("event: {}", e);
-                    }
-                    this.eventPublisher.publishEvent(e);
-
-                    return d;
-                } catch (InvalidTransitionException e) {
-                    log.debug("Invalid transition {} -> {}", e.getFromState(), e.getToState());
-                    return d;
                 }
-            }
-        );
+            );
+
+        //publish new event
+        LifecycleEvent<D> e = new LifecycleEvent<>();
+        e.setId(dto.getId());
+        e.setKind(dto.getKind());
+        e.setUser(dto.getUser());
+        e.setProject(dto.getProject());
+        e.setEvent(event);
+        e.setState(fsm.getCurrentState());
+        //append object to event
+        e.setDto(dto);
+
+        log.debug("publish event {} for {}", event, dto.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("event: {}", e);
+        }
+        this.eventPublisher.publishEvent(e);
+
+        return dto;
     }
 
     /*
@@ -209,11 +212,11 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
 
     public D handle(
         @NotNull D dto,
-        State nexState,
+        State nextState,
         @Nullable LifecycleEvent<D> input,
         @Nullable BiConsumer<D, T> effect
     ) {
-        log.debug("handle {} for {} with id {}", nexState, dto.getClass().getSimpleName().toLowerCase(), dto.getId());
+        log.debug("handle {} for {} with id {}", nextState, dto.getClass().getSimpleName().toLowerCase(), dto.getId());
         if (log.isTraceEnabled()) {
             log.trace("dto: {}", dto);
         }
@@ -222,55 +225,58 @@ public abstract class BaseLifecycleManager<D extends BaseDTO & StatusDTO, E exte
         Fsm<State, LifecycleEvents, LifecycleContext<D>, LifecycleEvent<D>> fsm = fsm(dto);
 
         //execute update op with locking
-        return exec(
-            new EntityOperation<>(dto, EntityAction.UPDATE),
-            d -> {
-                try {
-                    //perform via FSM
-                    Optional<T> output = fsm.goToState(nexState, input);
-                    State state = fsm.getCurrentState();
+        dto =
+            exec(
+                new EntityOperation<>(dto, EntityAction.UPDATE),
+                d -> {
+                    try {
+                        //perform via FSM
+                        Optional<T> output = fsm.goToState(nextState, input);
+                        State state = fsm.getCurrentState();
 
-                    //update status from fsm output
-                    Map<String, Serializable> baseStatus = Map.of("state", state.name());
+                        //update status from fsm output
+                        Map<String, Serializable> baseStatus = Map.of("state", state.name());
 
-                    //merge action output into status
-                    d.setStatus(
-                        MapUtils.mergeMultipleMaps(
-                            d.getStatus(),
-                            output.isPresent() ? output.get().toMap() : null,
-                            baseStatus
-                        )
-                    );
+                        //merge action output into status
+                        d.setStatus(
+                            MapUtils.mergeMultipleMaps(
+                                d.getStatus(),
+                                output.isPresent() ? output.get().toMap() : null,
+                                baseStatus
+                            )
+                        );
 
-                    //side effect
-                    if (effect != null) {
-                        effect.accept(d, output.orElse(null));
+                        //side effect
+                        if (effect != null) {
+                            effect.accept(d, output.orElse(null));
+                        }
+
+                        return d;
+                    } catch (InvalidTransitionException e) {
+                        log.debug("Invalid transition {} -> {}", e.getFromState(), e.getToState());
+                        return d;
                     }
-
-                    //publish new event
-                    LifecycleEvent<D> e = LifecycleEvent
-                        .<D>builder()
-                        .id(dto.getId())
-                        .kind(dto.getKind())
-                        .user(dto.getUser())
-                        .project(dto.getProject())
-                        .state(state)
-                        //append object to event
-                        .dto(d)
-                        .build();
-
-                    log.debug("publish event on state {} for {}", state, dto.getId());
-                    if (log.isTraceEnabled()) {
-                        log.trace("event: {}", e);
-                    }
-                    this.eventPublisher.publishEvent(e);
-
-                    return d;
-                } catch (InvalidTransitionException e) {
-                    log.debug("Invalid transition {} -> {}", e.getFromState(), e.getToState());
-                    return d;
                 }
-            }
-        );
+            );
+
+        //publish new event
+        LifecycleEvent<D> e = LifecycleEvent
+            .<D>builder()
+            .id(dto.getId())
+            .kind(dto.getKind())
+            .user(dto.getUser())
+            .project(dto.getProject())
+            .state(fsm.getCurrentState())
+            //append object to event
+            .dto(dto)
+            .build();
+
+        log.debug("publish event on state {} for {}", nextState, dto.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("event: {}", e);
+        }
+        this.eventPublisher.publishEvent(e);
+
+        return dto;
     }
 }
