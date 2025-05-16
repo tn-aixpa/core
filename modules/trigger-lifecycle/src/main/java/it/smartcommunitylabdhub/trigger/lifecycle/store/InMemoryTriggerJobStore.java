@@ -17,28 +17,21 @@
 package it.smartcommunitylabdhub.trigger.lifecycle.store;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleTriggerJob;
+import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Assert;
-import org.springframework.util.PathMatcher;
 
 @Slf4j
-public class InMemoryTriggerJobStore implements TriggerJobStore<LifecycleTriggerJob> {
+public class InMemoryTriggerJobStore<T extends TriggerJob> implements TriggerJobStore<T> {
 
-    private final Map<String, LifecycleTriggerJob> store = new ConcurrentHashMap<>();
-    private PathMatcher matcher = new AntPathMatcher();
-
-    public void setMatcher(PathMatcher matcher) {
-        Assert.notNull(matcher, "matcher is required");
-        this.matcher = matcher;
-    }
+    private final Map<String, T> store = new ConcurrentHashMap<>();
 
     @Override
-    public void store(String id, LifecycleTriggerJob e) {
+    public void store(String id, T e) {
         Assert.hasText(id, "id must not be empty");
         Assert.notNull(e, "trigger job must not be null");
 
@@ -57,7 +50,7 @@ public class InMemoryTriggerJobStore implements TriggerJobStore<LifecycleTrigger
     }
 
     @Override
-    public LifecycleTriggerJob find(String id) {
+    public T find(String id) {
         Assert.hasText(id, "id must not be empty");
 
         log.debug("find trigger job {} in memory", id);
@@ -65,35 +58,19 @@ public class InMemoryTriggerJobStore implements TriggerJobStore<LifecycleTrigger
     }
 
     @Override
-    public List<LifecycleTriggerJob> findAll() throws StoreException {
+    public List<T> findAll() throws StoreException {
         log.debug("find all trigger jobs in memory");
         return List.copyOf(store.values());
     }
 
     @Override
-    public List<LifecycleTriggerJob> findMatchingKey(String key) throws StoreException {
-        Assert.hasText(key, "key must not be empty");
-
-        if (matcher == null) {
-            throw new StoreException("matcher is not set");
+    public List<T> findMatching(Predicate<T> filter) throws StoreException {
+        if (filter == null) {
+            return findAll();
         }
 
-        return store.values().stream().filter(e -> matcher.match(e.getKey(), key)).toList();
-    }
-
-    @Override
-    public List<LifecycleTriggerJob> findMatchingKeyAndState(String key, String state) throws StoreException {
-        Assert.hasText(key, "key must not be empty");
-        Assert.hasText(state, "state must not be empty");
-
-        if (matcher == null) {
-            throw new StoreException("matcher is not set");
-        }
-
-        return store
-            .values()
-            .stream()
-            .filter(e -> matcher.match(e.getKey(), key) && e.getStates().contains(state))
-            .toList();
+        //apply filter predicate
+        log.debug("find all matching trigger jobs in memory");
+        return store.values().stream().filter(filter).toList();
     }
 }

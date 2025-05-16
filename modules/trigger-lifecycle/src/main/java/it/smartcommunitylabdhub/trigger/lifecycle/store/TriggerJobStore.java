@@ -17,10 +17,12 @@
 package it.smartcommunitylabdhub.trigger.lifecycle.store;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
+import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.function.Predicate;
 
-public interface TriggerJobStore<T> {
+public interface TriggerJobStore<T extends TriggerJob> {
     void store(@NotNull String id, @NotNull T e) throws StoreException;
 
     void remove(@NotNull String id) throws StoreException;
@@ -28,7 +30,5 @@ public interface TriggerJobStore<T> {
     T find(@NotNull String id) throws StoreException;
 
     List<T> findAll() throws StoreException;
-
-    List<T> findMatchingKey(String key) throws StoreException;
-    List<T> findMatchingKeyAndState(String key, String state) throws StoreException;
+    List<T> findMatching(Predicate<T> filter) throws StoreException;
 }

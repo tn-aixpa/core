@@ -38,6 +38,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.Assert;
+import org.springframework.util.PathMatcher;
 
 @Slf4j
 @Component
@@ -45,6 +48,7 @@ public class LifecycleTriggerListener {
 
     private TriggerJobStore<LifecycleTriggerJob> store;
     private ApplicationEventPublisher applicationEventPublisher;
+    private PathMatcher matcher = new AntPathMatcher();
 
     @Autowired
     public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
@@ -54,6 +58,11 @@ public class LifecycleTriggerListener {
     @Autowired(required = false)
     public void setStore(TriggerJobStore<LifecycleTriggerJob> store) {
         this.store = store;
+    }
+
+    public void setMatcher(PathMatcher matcher) {
+        Assert.notNull(matcher, "matcher is required");
+        this.matcher = matcher;
     }
 
     @Async
@@ -99,7 +108,9 @@ public class LifecycleTriggerListener {
             }
 
             //pick matching jobs
-            List<LifecycleTriggerJob> jobs = store.findMatchingKeyAndState(dto.getKey(), state);
+            List<LifecycleTriggerJob> jobs = store.findMatching(j ->
+                matcher.match(j.getKey(), dto.getKey()) && j.getStates().contains(state)
+            );
 
             //submit fire for all these jobs
             jobs.forEach(job -> {

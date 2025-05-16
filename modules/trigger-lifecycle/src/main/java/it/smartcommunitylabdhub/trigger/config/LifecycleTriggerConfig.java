@@ -18,7 +18,9 @@ package it.smartcommunitylabdhub.trigger.config;
 
 import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleTriggerJob;
 import it.smartcommunitylabdhub.trigger.lifecycle.store.InMemoryTriggerJobStore;
+import it.smartcommunitylabdhub.trigger.lifecycle.store.JdbcTriggerJobStore;
 import it.smartcommunitylabdhub.trigger.lifecycle.store.TriggerJobStore;
+import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,9 +32,11 @@ public class LifecycleTriggerConfig {
     private String triggerJobStore;
 
     @Bean
-    TriggerJobStore<LifecycleTriggerJob> lifecycleTriggerJobStore() {
+    TriggerJobStore<LifecycleTriggerJob> lifecycleTriggerJobStore(DataSource dataSource) {
         if ("memory".equalsIgnoreCase(triggerJobStore)) {
-            return new InMemoryTriggerJobStore();
+            return new InMemoryTriggerJobStore<>();
+        } else if ("jdbc".equalsIgnoreCase(triggerJobStore)) {
+            return new JdbcTriggerJobStore<>(dataSource, LifecycleTriggerJob.class);
         } else {
             throw new IllegalArgumentException("Unsupported trigger job store: " + triggerJobStore);
         }
