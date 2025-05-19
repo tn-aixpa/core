@@ -24,6 +24,19 @@ CREATE TABLE
 CREATE INDEX IF NOT EXISTS trigger_jobs_id_index ON public.trigger_jobs (id, _clazz);
 
 CREATE TABLE
+    IF NOT EXISTS refresh_tokens (
+        id VARCHAR(255) NOT NULL PRIMARY KEY,
+        _user VARCHAR(255),
+        issued_at TIMESTAMP(6) WITH TIME ZONE,
+        expires_at TIMESTAMP(6) WITH TIME ZONE,
+        scope VARCHAR(255),
+        _auth BYTEA
+    );
+
+CREATE INDEX IF NOT EXISTS refresh_tokens_tokens_exp_idx ON refresh_tokens (expires_at);
+CREATE INDEX IF NOT EXISTS refresh_tokens_tokens_user_idx ON refresh_tokens (_user);
+
+CREATE TABLE
     IF NOT EXISTS personal_access_tokens (
         id VARCHAR(255) NOT NULL PRIMARY KEY,
         _user VARCHAR(255),
