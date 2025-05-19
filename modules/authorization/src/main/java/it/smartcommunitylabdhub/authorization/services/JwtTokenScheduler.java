@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.authorization.services;
 
 import it.smartcommunitylabdhub.authorization.repositories.RefreshTokenRepository;
+import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.Date;
@@ -26,8 +27,8 @@ public class JwtTokenScheduler {
             Date now = Date.from(Instant.now());
 
             log.info("remove refresh tokens expired before {}", now);
-            refreshTokenRepository.deleteByExpirationTime(now);
-        } catch (RuntimeException e) {
+            refreshTokenRepository.removeByExpirationTime(now);
+        } catch (StoreException e) {
             log.error("error removing expired refresh tokens", e);
         }
     }

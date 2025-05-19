@@ -101,7 +101,7 @@ public class PersonalAccessTokenRepository {
 
     public PersonalAccessToken find(@NotNull String id) throws StoreException {
         Assert.hasText(id, "id must not be empty");
-        log.debug("findpersonal access token {}", id);
+        log.debug("find personal access token {}", id);
 
         try {
             return jdbcTemplate.queryForObject(SELECT_SQL, new Object[] { id }, new int[] { Types.VARCHAR }, rowMapper);
@@ -111,8 +111,8 @@ public class PersonalAccessTokenRepository {
     }
 
     public List<PersonalAccessToken> findByUser(@NotNull String user) throws StoreException {
-        log.debug("find all trigger jobs");
-
+        Assert.hasText(user, "user must not be empty");
+        log.debug("find personal access by user {}", user);
         return jdbcTemplate.query(SELECT_USER_SQL, new Object[] { user }, new int[] { Types.VARCHAR }, rowMapper);
     }
 }
