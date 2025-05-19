@@ -40,6 +40,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
+import org.springframework.security.oauth2.server.resource.authentication.OpaqueTokenAuthenticationProvider;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
@@ -130,6 +131,13 @@ public class SecurityConfig {
             JwtAuthenticationProvider coreJwtAuthProvider = new JwtAuthenticationProvider(jwtTokenService.getDecoder());
             coreJwtAuthProvider.setJwtAuthenticationConverter(jwtTokenService.getAuthenticationConverter());
             authProviders.add(coreJwtAuthProvider);
+
+            // enable PAT auth provider
+            OpaqueTokenAuthenticationProvider patAuthProvider = new OpaqueTokenAuthenticationProvider(
+                jwtTokenService.getPersonalAccessTokenIntrospector()
+            );
+            patAuthProvider.setAuthenticationConverter(jwtTokenService.getPersonalAccessTokenConverter());
+            authProviders.add(patAuthProvider);
 
             //enable basic if required
             if (properties.isBasicAuthEnabled()) {

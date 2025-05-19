@@ -41,6 +41,13 @@ public class TokenResponse {
     @JsonProperty("issuer")
     private String issuer;
 
+    @JsonProperty("issued_token_type")
+    private String issuedTokenType;
+
+    public void setIssuedTokenType(String issuedTokenType) {
+        this.issuedTokenType = issuedTokenType;
+    }
+
     @JsonIgnore
     private Map<String, String> credentials;
 
