@@ -20,7 +20,7 @@ import com.nimbusds.jwt.SignedJWT;
 import it.smartcommunitylabdhub.authorization.components.JWKSetKeyStore;
 import it.smartcommunitylabdhub.authorization.exceptions.JwtTokenServiceException;
 import it.smartcommunitylabdhub.authorization.model.PersonalAccessToken;
-import it.smartcommunitylabdhub.authorization.model.RefreshTokenEntity;
+import it.smartcommunitylabdhub.authorization.model.RefreshToken;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.repositories.PersonalAccessTokenRepository;
 import it.smartcommunitylabdhub.authorization.repositories.RefreshTokenRepository;
@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -412,21 +411,21 @@ public class JwtTokenService implements InitializingBean {
             log.debug("store refresh token for {} with id {}", authentication.getName(), jti);
 
             // store Refresh Token into db
-            RefreshTokenEntity refreshToken = RefreshTokenEntity
+            RefreshToken refreshToken = RefreshToken
                 .builder()
                 .id(jti)
-                .subject(authentication.getName())
-                .authentication(auth)
-                .issuedTime(Date.from(now))
-                .expirationTime(Date.from(now.plusSeconds(refreshTokenDuration)))
+                .user(authentication.getName())
+                .auth(auth)
+                .issuedAt(Date.from(now))
+                .expiresAt(Date.from(now.plusSeconds(refreshTokenDuration)))
                 .build();
 
             //save
-            refreshToken = refreshTokenRepository.saveAndFlush(refreshToken);
+            refreshTokenRepository.store(jti, refreshToken);
 
             //id is the token value
             return refreshToken.getId();
-        } catch (IOException e) {
+        } catch (IOException | StoreException e) {
             throw new JwtTokenServiceException(e.getMessage());
         }
     }
@@ -443,43 +442,25 @@ public class JwtTokenService implements InitializingBean {
         //value is the ID for the table
         String id = refreshToken;
 
-        // Lock the token
-        Optional<RefreshTokenEntity> tokenEntity = refreshTokenRepository.findByIdForUpdate(id);
-        if (tokenEntity.isEmpty()) {
-            log.debug("refresh token does not exists: {} id {}", refreshToken, id);
-            throw new JwtTokenServiceException("Refresh token does not exist");
-        }
-
-        RefreshTokenEntity token = tokenEntity.get();
-
-        if (log.isTraceEnabled()) {
-            log.trace("token: {}", token);
-        }
-
-        // // Parse the access token
-        // String accessToken = token.getToken();
-        // if (!StringUtils.hasText(accessToken)) {
-        //     //no access token stored along refresh, nothing to use to rebuild context
-        //     throw new JwtTokenServiceException("Missing access token");
-        // }
-
-        // SignedJWT signedJWT = SignedJWT.parse(accessToken);
-
-        // // Verify the token signature
-        // if (!signedJWT.verify(verifier)) {
-        //     throw new JwtTokenServiceException("Invalid access token");
-        // }
-
-        // Delete the token after usage: it matches the subject and should not be reused
-        refreshTokenRepository.deleteById(token.getId());
-
-        // Check expiration
-        if (token.getExpirationTime().before(Date.from(Instant.now()))) {
-            throw new JwtTokenServiceException("Refresh token has expired");
-        }
         try {
+            // consume the token
+            RefreshToken token = refreshTokenRepository.consume(id);
+            if (token == null) {
+                log.debug("refresh token does not exists: {} id {}", refreshToken, id);
+                throw new JwtTokenServiceException("Refresh token does not exist");
+            }
+
+            if (log.isTraceEnabled()) {
+                log.trace("token: {}", token);
+            }
+
+            // Check expiration
+            if (token.getExpiresAt().before(Date.from(Instant.now()))) {
+                throw new JwtTokenServiceException("Refresh token has expired");
+            }
+
             //deserialize authentication
-            byte[] bytes = token.getAuthentication();
+            byte[] bytes = token.getAuth();
             if (bytes == null || bytes.length == 0) {
                 throw new JwtTokenServiceException("Missing authentication for token");
             }
@@ -497,7 +478,7 @@ public class JwtTokenService implements InitializingBean {
             //     throw new JwtTokenServiceException("Error verifying JWT token", e);
             // }
 
-        } catch (IOException e) {
+        } catch (IOException | StoreException e) {
             throw new JwtTokenServiceException(e.getMessage());
         }
     }
