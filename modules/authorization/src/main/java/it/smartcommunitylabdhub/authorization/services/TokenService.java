@@ -18,14 +18,26 @@ package it.smartcommunitylabdhub.authorization.services;
 
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 
 public interface TokenService {
-    TokenResponse generateToken(@NotNull UserAuthentication<?> authentication);
+    TokenResponse generatePersonalAccessToken(
+        @NotNull UserAuthentication<?> authentication,
+        @Nullable List<String> scopes
+    );
 
-    TokenResponse generateToken(
+    TokenResponse generateAccessToken(
         @NotNull UserAuthentication<?> authentication,
         boolean withCredentials,
         boolean withRefresh
+    );
+
+    TokenResponse generateAccessToken(
+        @NotNull UserAuthentication<?> authentication,
+        boolean withCredentials,
+        boolean withRefresh,
+        boolean withExchange
     );
 }
