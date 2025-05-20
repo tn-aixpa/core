@@ -25,6 +25,7 @@ public class KubeAIModelSpec {
     private String resourceProfile;
     private String cacheProfile;
     private Map<String, String> env;
+    private List<KubeAiEnvFrom> envFrom;
     private Integer replicas;
     private Integer minReplicas;
     private Integer maxReplicas;

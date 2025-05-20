@@ -14,10 +14,14 @@ import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.services.ModelService;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCRRunnable;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIFeature;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIModelSpec;
+import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAiEnvFrom;
+import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAiEnvFromRef;
 import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeFunctionSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeRunSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeTaskSpec;
@@ -25,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class KubeAIServeRunner {
 
@@ -34,8 +39,8 @@ public class KubeAIServeRunner {
 
     private final ModelService modelService;
     private final K8sBuilderHelper k8sBuilderHelper;
+    private final K8sSecretHelper k8sSecretHelper;
     private Map<String, String> secretData;
-    private Map<String, String> credentialsData;
 
     private static final String KUBEAI_API_GROUP = "kubeai.org";
     private static final String KUBEAI_API_VERSION = "v1";
@@ -45,15 +50,15 @@ public class KubeAIServeRunner {
     public KubeAIServeRunner(
         KubeAIServeFunctionSpec functionSpec,
         Map<String, String> secretData,
-        Map<String, String> credentialsData,
         K8sBuilderHelper k8sBuilderHelper,
+        K8sSecretHelper k8sSecretHelper,
         ModelService modelService
     ) {
         this.functionSpec = functionSpec;
         this.modelService = modelService;
         this.secretData = secretData;
-        this.credentialsData = credentialsData;
         this.k8sBuilderHelper = k8sBuilderHelper;
+        this.k8sSecretHelper = k8sSecretHelper;
     }
 
     @SuppressWarnings("unchecked")
@@ -90,22 +95,29 @@ public class KubeAIServeRunner {
             }
         }
 
-        // populate env from edplicit env, then from user secret and then from explicit project secret
+        List<CoreEnv> coreSecrets = secretData == null
+            ? null
+            : secretData.entrySet().stream().map(e -> new CoreEnv(e.getKey(), e.getValue())).toList();
+
+        // populate env from explicit env only, secrets are referenced in the spec
         Map<String, String> env = new HashMap<>();
-        // credentials secrets
-        if (credentialsData != null) {
-            env.putAll(credentialsData);
-        }
-        // explcit secrets
-        if (secretData != null) {
-            env.putAll(secretData);
-        }
 
-        // enviornment variables from run spec
+        // environment variables from run spec
         if (runSpec.getEnv() != null) {
-            env.putAll(runSpec.getEnv());
+            //TODO evaluate enforcing uppercase
+            env.putAll(
+                runSpec.getEnv().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+            );
         }
 
+        List<KubeAiEnvFrom> envFrom = null;
+        String secretName = k8sSecretHelper.getSecretName(KubeAIRuntime.RUNTIME, KubeAIServeTaskSpec.KIND, run.getId());
+        if (secretName != null) {
+            //TODO evaluate if we will get the secret, for now we assume it is always there
+
+            envFrom =
+                Collections.singletonList(KubeAiEnvFrom.builder().secretRef(new KubeAiEnvFromRef(secretName)).build());
+        }
         // set to 1 if no scaling is defined
         // int replicas = 1;
         // if (runSpec.getScaling() != null) {
@@ -135,6 +147,7 @@ public class KubeAIServeRunner {
             )
             .engine(functionSpec.getEngine().name())
             .env(env)
+            .envFrom(envFrom)
             .files(runSpec.getFiles())
             .replicas(runSpec.getScaling().getReplicas())
             .minReplicas(runSpec.getScaling().getMinReplicas())
@@ -161,7 +174,11 @@ public class KubeAIServeRunner {
             .kind(KUBEAI_API_KIND)
             .plural(KUBEAI_API_PLURAL)
             .spec(JacksonMapper.CUSTOM_OBJECT_MAPPER.convertValue(modelSpec, Map.class))
+            .requiresSecret(envFrom != null)
             .build();
+
+        //inject secrets
+        k8sRunnable.setSecrets(coreSecrets);
 
         k8sRunnable.setId(run.getId());
         k8sRunnable.setProject(run.getProject());
