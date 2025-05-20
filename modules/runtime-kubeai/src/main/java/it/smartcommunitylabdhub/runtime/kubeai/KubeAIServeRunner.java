@@ -30,10 +30,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.util.StringUtils;
 
 public class KubeAIServeRunner {
 
-    private static final String BASE_PROFILE = "cpu:1";
+    private static final String BASE_PROFILE = "cpu";
 
     private final KubeAIServeFunctionSpec functionSpec;
 
@@ -130,7 +131,8 @@ public class KubeAIServeRunner {
         // int minReplicas = runSpec.getScaling() != null && runSpec.getScaling().getMinReplicas() != null
         //     ? runSpec.getScaling().getMinReplicas()
         //     : replicas;
-        String resourceProfile = runSpec.getProfile() != null ? runSpec.getProfile() + ":1" : BASE_PROFILE;
+        int processors = runSpec.getProcessors() != null ? runSpec.getProcessors() : 1;
+        String resourceProfile = StringUtils.hasText(runSpec.getProfile()) ? runSpec.getProfile() : BASE_PROFILE;
 
         KubeAIModelSpec modelSpec = KubeAIModelSpec
             .builder()
@@ -138,7 +140,7 @@ public class KubeAIServeRunner {
             .image(functionSpec.getImage())
             .args(runSpec.getArgs())
             .cacheProfile(runSpec.getCacheProfile())
-            .resourceProfile(resourceProfile)
+            .resourceProfile(resourceProfile + ":" + Integer.toString(processors))
             .adapters(functionSpec.getAdapters())
             .features(
                 functionSpec.getFeatures() == null

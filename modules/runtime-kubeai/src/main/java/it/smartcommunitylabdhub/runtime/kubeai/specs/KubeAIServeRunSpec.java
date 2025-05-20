@@ -54,6 +54,9 @@ public class KubeAIServeRunSpec extends RunBaseSpec implements K8sResourceProfil
     @JsonProperty("cache_profile")
     private String cacheProfile;
 
+    @Schema(title = "fields.kubeai.processors.title", description = "fields.kubeai.processors.description")
+    private Integer processors;
+
     @Schema(title = "fields.kubeai.scaling.title", description = "fields.kubeai.scaling.description")
     private KubeAIScaling scaling = new KubeAIScaling();
 
