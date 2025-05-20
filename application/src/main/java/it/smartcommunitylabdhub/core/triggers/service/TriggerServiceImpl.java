@@ -20,9 +20,11 @@ import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidat
 import it.smartcommunitylabdhub.core.persistence.AbstractEntity_;
 import it.smartcommunitylabdhub.core.projects.persistence.ProjectEntity;
 import it.smartcommunitylabdhub.core.queries.specifications.CommonSpecification;
+import it.smartcommunitylabdhub.core.relationships.TriggerEntityRelationshipsManager;
 import it.smartcommunitylabdhub.core.services.EntityService;
 import it.smartcommunitylabdhub.core.tasks.persistence.TaskEntity;
 import it.smartcommunitylabdhub.core.triggers.persistence.TriggerEntity;
+import it.smartcommunitylabdhub.core.triggers.persistence.TriggerEntityBuilder;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
