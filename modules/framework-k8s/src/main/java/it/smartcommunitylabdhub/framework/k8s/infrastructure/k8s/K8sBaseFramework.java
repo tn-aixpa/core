@@ -23,6 +23,7 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSecurityContext;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.models.V1SecretEnvSource;
 import io.kubernetes.client.openapi.models.V1SecurityContext;
 import io.kubernetes.client.openapi.models.V1Toleration;
 import io.kubernetes.client.openapi.models.V1Volume;
@@ -47,7 +48,6 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResourceDefinition;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import java.io.IOException;
@@ -574,19 +574,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         //shared envs
         List<V1EnvVar> sharedEnvs = k8sBuilderHelper.getV1EnvVar();
 
-        //secrets
-        V1Secret secret = buildRunSecret(runnable);
-        List<V1EnvVar> runSecretEnvs = new LinkedList<>();
-        if (secret != null && secret.getStringData() != null && !secret.getStringData().isEmpty()) {
-            Map<String, Set<String>> runSecretKeys = Collections.singletonMap(
-                secret.getMetadata().getName(),
-                secret.getStringData().keySet()
-            );
-            runSecretEnvs.addAll(k8sBuilderHelper.getEnvVarsFromSecrets(runSecretKeys));
-            runSecretEnvs.add(new V1EnvVar().name("DH_RUN_SECRET_NAME").value(secret.getMetadata().getName()));
-        }
+        //shared secrets
+        List<V1EnvVar> secretEnvs = k8sSecretHelper.getV1EnvVar();
 
         // function specific envs
+        // NOTE: we let users override core envs and secrets at their risk
         List<V1EnvVar> functionEnvs = runnable
             .getEnvs()
             .stream()
@@ -595,16 +587,29 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         //merge all avoiding duplicates
         Map<String, V1EnvVar> envs = new HashMap<>();
+        //shared have the priority
         sharedEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
+        secretEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
         functionEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
-        runSecretEnvs.forEach(e -> envs.putIfAbsent(e.getName(), e));
 
         return envs.values().stream().toList();
     }
 
     protected List<V1EnvFromSource> buildEnvFrom(T runnable) {
-        List<V1EnvFromSource> envVarsFromSource = k8sBuilderHelper.getV1EnvFromSource();
-        return envVarsFromSource;
+        //mount configmap and secret as env sources
+        List<V1EnvFromSource> envVarsFrom = new LinkedList<>();
+
+        //secrets
+        V1Secret secret = buildRunSecret(runnable);
+        if (secret != null && secret.getMetadata() != null && secret.getMetadata().getName() != null) {
+            envVarsFrom.add(
+                new V1EnvFromSource().secretRef(new V1SecretEnvSource().name(secret.getMetadata().getName()))
+            );
+        }
+
+        //TODO evaluate configuration into configmap
+
+        return envVarsFrom;
     }
 
     protected List<V1Volume> buildVolumes(T runnable) {
@@ -936,19 +941,14 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             runnable.getSecrets().forEach(s -> data.put(s.name(), s.value()));
         }
 
-        //set core credentials as env with prefix (when required)
+        //set core config as env
+        if (runnable.getConfigurationMap() != null) {
+            runnable.getConfigurationMap().entrySet().forEach(e -> data.put(e.getKey().toUpperCase(), e.getValue()));
+        }
+
+        //set core credentials as env
         if (runnable.getCredentialsMap() != null) {
-            String envsPrefix = k8sSecretHelper.getEnvsPrefix();
-            runnable
-                .getCredentialsMap()
-                .entrySet()
-                .forEach(e -> {
-                    if (StringUtils.hasText(envsPrefix)) {
-                        data.put(envsPrefix.toUpperCase() + "_" + e.getKey().toUpperCase(), e.getValue());
-                    } else {
-                        data.put(e.getKey().toUpperCase(), e.getValue());
-                    }
-                });
+            runnable.getCredentialsMap().entrySet().forEach(e -> data.put(e.getKey().toUpperCase(), e.getValue()));
         }
 
         if (!data.isEmpty()) {

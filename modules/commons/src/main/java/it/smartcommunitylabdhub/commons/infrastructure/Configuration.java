@@ -23,4 +23,5 @@ public interface Configuration extends Serializable {
     //TODO evaluate namespacing
     String toJson();
     Map<String, Serializable> toMap();
+    Map<String, String> toStringMap();
 }
