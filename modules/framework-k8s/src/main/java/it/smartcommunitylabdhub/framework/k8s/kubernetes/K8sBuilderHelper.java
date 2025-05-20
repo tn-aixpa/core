@@ -2,13 +2,14 @@ package it.smartcommunitylabdhub.framework.k8s.kubernetes;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.models.V1ConfigMapEnvSource;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ConfigMapKeySelector;
 import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
-import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
-import io.kubernetes.client.openapi.models.V1SecretEnvSource;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
@@ -23,7 +24,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,8 +45,7 @@ public class K8sBuilderHelper implements InitializingBean {
     public static final int K8S_NAME_MAX_LENGTH = 62;
     public static final int TAG_LENGTH = 5;
 
-    @Autowired
-    ApiClient apiClient;
+    private final CoreV1Api api;
 
     @Autowired
     ApplicationProperties applicationProperties;
@@ -54,62 +53,77 @@ public class K8sBuilderHelper implements InitializingBean {
     @Value("${application.endpoint}")
     private String coreEndpoint;
 
-    @Value("${kubernetes.config.secret}")
-    private List<String> sharedSecrets;
-
     @Value("${kubernetes.config.config-map}")
     private List<String> sharedConfigMaps;
 
     @Value("${kubernetes.namespace}")
     private String namespace;
 
-    @Value("${kubernetes.envs.prefix}")
-    private String envsPrefix;
+    public K8sBuilderHelper(ApiClient client) {
+        api = new CoreV1Api(client);
+    }
 
     @Override
     public void afterPropertiesSet() {
         Assert.hasText(coreEndpoint, "core endpoint must be set");
     }
 
-    /**
-     * Retrieve the dh end point variable
-     *
-     * @return V1EnvVar
-     */
     public List<V1EnvVar> getV1EnvVar() {
         List<V1EnvVar> vars = new ArrayList<>();
-        //if no configMap build a minimal config
-        if (sharedConfigMaps == null || sharedConfigMaps.isEmpty()) {
-            String name = StringUtils.hasText(envsPrefix)
-                ? sanitizeNames(envsPrefix.toUpperCase()) + "_DHCORE_ENDPOINT"
-                : "DHCORE_ENDPOINT";
-            vars.add(new V1EnvVar().name(name).value(coreEndpoint));
+
+        //always inject the core endpoint + namespace
+        vars.add(new V1EnvVar().name("DHCORE_ENDPOINT").value(coreEndpoint));
+        vars.add(new V1EnvVar().name("DHCORE_NAMESPACE").value(namespace));
+
+        // add shared config maps
+        if (sharedConfigMaps != null) {
+            sharedConfigMaps
+                .stream()
+                .forEach(c -> {
+                    try {
+                        V1ConfigMap configMap = api.readNamespacedConfigMap(c, namespace, "");
+                        if (configMap != null && configMap.getData() != null) {
+                            configMap
+                                .getData()
+                                .forEach((key, v) ->
+                                    vars.add(
+                                        //add as reference
+                                        new V1EnvVar()
+                                            .name(key)
+                                            .valueFrom(
+                                                new V1EnvVarSource()
+                                                    .configMapKeyRef(new V1ConfigMapKeySelector().name(c).key(key))
+                                            )
+                                    )
+                                );
+                        }
+                    } catch (ApiException e) {
+                        //catch and skip this container's logs
+                        log.error("Error with k8s: {}", e.getMessage());
+                        if (log.isTraceEnabled()) {
+                            log.trace("k8s api response: {}", e.getResponseBody());
+                        }
+                    }
+                });
         }
 
         return vars;
     }
 
-    /**
-     * Method to retrieve a list of V1EnvFromSource containing environment variables for a Kubernetes .
-     * It retrieve env from Config Map and Secret
-     *
-     * @return A list of V1EnvVar objects representing environment variables for a Kubernetes .
-     */
-
-    public List<V1EnvFromSource> getV1EnvFromSource() {
-        // Get Env var from secret and config map
-        return Stream
-            .concat(
-                sharedConfigMaps
-                    .stream()
-                    .map(value -> new V1EnvFromSource().configMapRef(new V1ConfigMapEnvSource().name(value))),
-                sharedSecrets
-                    .stream()
-                    //.filter(secret -> !secret.equals("")) // skip postgres
-                    .map(secret -> new V1EnvFromSource().secretRef(new V1SecretEnvSource().name(secret)))
-            )
-            .toList();
-    }
+    // public List<V1EnvFromSource> getV1EnvFromSource() {
+    //     // Get Env var from secret and config map
+    //     return Stream
+    //         .concat(
+    //             sharedConfigMaps
+    //                 .stream()
+    //                 .map(value -> new V1EnvFromSource().configMapRef(new V1ConfigMapEnvSource().name(value))),
+    //             sharedSecrets
+    //                 .stream()
+    //                 //.filter(secret -> !secret.equals("")) // skip postgres
+    //                 .map(secret -> new V1EnvFromSource().secretRef(new V1SecretEnvSource().name(secret)))
+    //         )
+    //         .toList();
+    // }
 
     public List<V1EnvVar> getEnvVarsFromSecrets(Map<String, Set<String>> secrets) {
         if (secrets != null) {

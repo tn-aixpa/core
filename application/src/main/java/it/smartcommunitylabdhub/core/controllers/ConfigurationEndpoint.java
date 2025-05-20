@@ -1,11 +1,10 @@
 package it.smartcommunitylabdhub.core.controllers;
 
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
-import it.smartcommunitylabdhub.commons.infrastructure.ConfigurationProvider;
+import it.smartcommunitylabdhub.core.services.ConfigurationService;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ConfigurationEndpoint {
 
     @Autowired
-    private List<ConfigurationProvider> providers;
+    private ConfigurationService configurationService;
 
     @Autowired
     private ApplicationProperties applicationProperties;
@@ -40,8 +39,8 @@ public class ConfigurationEndpoint {
 
     private Map<String, Serializable> generate() {
         Map<String, Serializable> map = new HashMap<>();
-        if (providers != null) {
-            providers.forEach(p -> map.putAll(p.getConfig().toMap()));
+        if (configurationService != null) {
+            configurationService.getConfigurations().forEach(c -> map.putAll(c.toMap()));
         }
 
         //always override core props

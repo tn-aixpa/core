@@ -3,6 +3,8 @@ package it.smartcommunitylabdhub.core.runs.lifecycle.states;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.services.CredentialsService;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
+import it.smartcommunitylabdhub.commons.infrastructure.ConfigurableRunnable;
+import it.smartcommunitylabdhub.commons.infrastructure.Configuration;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.infrastructure.SecuredRunnable;
@@ -10,6 +12,7 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.core.components.security.UserAuthenticationHelper;
 import it.smartcommunitylabdhub.core.runs.lifecycle.RunContext;
 import it.smartcommunitylabdhub.core.runs.lifecycle.RunEvent;
+import it.smartcommunitylabdhub.core.services.ConfigurationService;
 import it.smartcommunitylabdhub.fsm.FsmState;
 import it.smartcommunitylabdhub.fsm.Transition;
 import java.util.List;
@@ -24,6 +27,9 @@ public class RunStateBuilt implements FsmState.Builder<State, RunEvent, RunConte
 
     @Autowired
     CredentialsService credentialsService;
+
+    @Autowired
+    ConfigurationService configurationService;
 
     public FsmState<State, RunEvent, RunContext, RunRunnable> build() {
         //define state
@@ -53,6 +59,12 @@ public class RunStateBuilt implements FsmState.Builder<State, RunEvent, RunConte
                             );
 
                             ((SecuredRunnable) r).setCredentials(credentials);
+                        }
+
+                        //inject configuration if supported
+                        if (r instanceof ConfigurableRunnable) {
+                            List<Configuration> configurations = configurationService.getConfigurations();
+                            ((ConfigurableRunnable) r).setConfigurations(configurations);
                         }
                     });
 
