@@ -60,7 +60,6 @@ public class QuartzConfig {
         	properties.setProperty("org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.StdJDBCDelegate");
         }
         properties.setProperty("org.quartz.jobStore.tablePrefix", "QRTZ_");
-        properties.setProperty("org.quartz.jobStore.isClustered", "true");
         return properties;
     }
 
