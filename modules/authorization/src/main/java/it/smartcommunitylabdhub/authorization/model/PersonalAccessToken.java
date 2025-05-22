@@ -16,6 +16,7 @@
 
 package it.smartcommunitylabdhub.authorization.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Date;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -30,14 +31,19 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PersonalAccessToken {
 
     private String id;
+    private String name;
     private String user;
     private Date issuedAt;
     private Date expiresAt;
 
+    private String token;
     private Set<String> scopes;
+
+    private String ipAddress;
 
     @ToString.Exclude
     private byte[] auth;

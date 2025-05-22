@@ -29,24 +29,30 @@ CREATE TABLE
         _user VARCHAR(255),
         issued_at TIMESTAMP(6) WITH TIME ZONE,
         expires_at TIMESTAMP(6) WITH TIME ZONE,
+        token VARCHAR(255) NOT NULL UNIQUE,
         scope VARCHAR(255),
+        ip_addr VARCHAR(255),
         _auth BYTEA
     );
 
-CREATE INDEX IF NOT EXISTS refresh_tokens_tokens_exp_idx ON refresh_tokens (expires_at);
-CREATE INDEX IF NOT EXISTS refresh_tokens_tokens_user_idx ON refresh_tokens (_user);
+CREATE INDEX IF NOT EXISTS refresh_tokens_token_idx ON refresh_tokens (token);
+CREATE INDEX IF NOT EXISTS refresh_tokens_exp_idx ON refresh_tokens (expires_at);
+CREATE INDEX IF NOT EXISTS refresh_tokens_user_idx ON refresh_tokens (_user);
 
 CREATE TABLE
     IF NOT EXISTS personal_access_tokens (
         id VARCHAR(255) NOT NULL PRIMARY KEY,
+        name VARCHAR(255),
         _user VARCHAR(255),
         issued_at TIMESTAMP(6) WITH TIME ZONE,
         expires_at TIMESTAMP(6) WITH TIME ZONE,
+        token VARCHAR(255) NOT NULL UNIQUE,
         scope VARCHAR(255),
+        ip_addr VARCHAR(255),
         _auth BYTEA
     );
 
-CREATE INDEX IF NOT EXISTS personal_access_tokens_exp_idx ON personal_access_tokens (expires_at);
+CREATE INDEX IF NOT EXISTS personal_access_tokens_token_idx ON personal_access_tokens (token);
 CREATE INDEX IF NOT EXISTS personal_access_tokens_user_idx ON personal_access_tokens (_user);
 
 -- alter table public.runnable

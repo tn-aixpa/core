@@ -16,6 +16,8 @@
 
 package it.smartcommunitylabdhub.authorization.services;
 
+import it.smartcommunitylabdhub.authorization.model.PersonalAccessToken;
+import it.smartcommunitylabdhub.authorization.model.RefreshToken;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import jakarta.annotation.Nullable;
@@ -25,6 +27,11 @@ import java.util.List;
 public interface TokenService {
     TokenResponse generatePersonalAccessToken(
         @NotNull UserAuthentication<?> authentication,
+        @Nullable List<String> scopes
+    );
+    TokenResponse generatePersonalAccessToken(
+        @NotNull UserAuthentication<?> authentication,
+        String name,
         @Nullable List<String> scopes
     );
 
@@ -40,4 +47,23 @@ public interface TokenService {
         boolean withRefresh,
         boolean withExchange
     );
+
+    //TODO evaluate common interface for all token types
+    public List<PersonalAccessToken> getPersonalAccessTokens(@NotNull UserAuthentication<?> authentication);
+
+    public @Nullable PersonalAccessToken getPersonalAccessToken(
+        @NotNull UserAuthentication<?> authentication,
+        @NotNull String tokenId
+    );
+
+    public void revokePersonalAccessToken(@NotNull UserAuthentication<?> authentication, @NotNull String tokenId);
+
+    public List<RefreshToken> getRefreshTokens(@NotNull UserAuthentication<?> authentication);
+
+    public @Nullable RefreshToken getRefreshToken(
+        @NotNull UserAuthentication<?> authentication,
+        @NotNull String tokenId
+    );
+
+    public void revokeRefreshToken(@NotNull UserAuthentication<?> authentication, @NotNull String tokenId);
 }
