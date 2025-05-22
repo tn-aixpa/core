@@ -17,6 +17,8 @@
 package it.smartcommunitylabdhub.authorization.services;
 
 import com.nimbusds.jwt.SignedJWT;
+import it.smartcommunitylabdhub.authorization.model.PersonalAccessToken;
+import it.smartcommunitylabdhub.authorization.model.RefreshToken;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse;
 import it.smartcommunitylabdhub.authorization.model.TokenResponse.TokenResponseBuilder;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
@@ -166,12 +168,22 @@ public class CredentialsServiceImpl implements CredentialsService, TokenService 
         @NotNull UserAuthentication<?> authentication,
         @Nullable List<String> scopes
     ) {
+        return generatePersonalAccessToken(authentication, null, scopes);
+    }
+
+    @Override
+    public TokenResponse generatePersonalAccessToken(
+        @NotNull UserAuthentication<?> authentication,
+        @Nullable String name,
+        @Nullable List<String> scopes
+    ) {
         //response
         TokenResponseBuilder response = TokenResponse.builder();
 
         if (jwtTokenService != null) {
             String accessToken = jwtTokenService.generatePersonalAccessToken(
                 authentication,
+                name,
                 scopes != null ? Set.copyOf(scopes) : null
             );
 
@@ -183,5 +195,58 @@ public class CredentialsServiceImpl implements CredentialsService, TokenService 
         }
 
         return response.build();
+    }
+
+    @Override
+    public PersonalAccessToken getPersonalAccessToken(
+        @NotNull UserAuthentication<?> authentication,
+        @NotNull String tokenId
+    ) {
+        if (jwtTokenService == null) {
+            return null;
+        }
+
+        return jwtTokenService.findPersonalAccessToken(authentication.getName(), tokenId);
+    }
+
+    @Override
+    public List<PersonalAccessToken> getPersonalAccessTokens(@NotNull UserAuthentication<?> authentication) {
+        if (jwtTokenService == null) {
+            return Collections.emptyList();
+        }
+
+        return jwtTokenService.findPersonalAccessTokens(authentication.getName());
+    }
+
+    @Override
+    public void revokePersonalAccessToken(@NotNull UserAuthentication<?> authentication, @NotNull String tokenId) {
+        if (jwtTokenService != null) {
+            jwtTokenService.deletePersonalAccessToken(authentication.getName(), tokenId);
+        }
+    }
+
+    @Override
+    public RefreshToken getRefreshToken(@NotNull UserAuthentication<?> authentication, @NotNull String tokenId) {
+        if (jwtTokenService == null) {
+            return null;
+        }
+
+        return jwtTokenService.findRefreshToken(authentication.getName(), tokenId);
+    }
+
+    @Override
+    public List<RefreshToken> getRefreshTokens(@NotNull UserAuthentication<?> authentication) {
+        if (jwtTokenService == null) {
+            return Collections.emptyList();
+        }
+
+        return jwtTokenService.findRefreshTokens(authentication.getName());
+    }
+
+    @Override
+    public void revokeRefreshToken(@NotNull UserAuthentication<?> authentication, @NotNull String tokenId) {
+        if (jwtTokenService != null) {
+            jwtTokenService.deleteRefreshToken(authentication.getName(), tokenId);
+        }
     }
 }

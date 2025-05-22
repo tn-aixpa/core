@@ -39,8 +39,9 @@ import org.springframework.util.StringUtils;
 public class PersonalAccessTokenRepository {
 
     private static final String INSERT_SQL =
-        "INSERT INTO personal_access_tokens (id, _user, issued_at, expires_at, scope, _auth) VALUES (?, ?, ?, ?, ?, ?)";
+        "INSERT INTO personal_access_tokens (id, name, _user, issued_at, expires_at, token, scope, ip_addr, _auth) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_SQL = "SELECT * FROM personal_access_tokens WHERE id = ?";
+    private static final String SELECT_TOKEN_SQL = "SELECT * FROM personal_access_tokens WHERE token = ?";
     private static final String SELECT_USER_SQL = "SELECT * FROM personal_access_tokens WHERE _user = ?";
     private static final String DELETE_SQL = "DELETE FROM personal_access_tokens WHERE id = ?";
 
@@ -55,10 +56,13 @@ public class PersonalAccessTokenRepository {
             (rs, rowNum) -> {
                 PersonalAccessToken token = new PersonalAccessToken();
                 token.setId(rs.getString("id"));
+                token.setName(rs.getString("name"));
                 token.setUser(rs.getString("_user"));
                 token.setIssuedAt(rs.getTimestamp("issued_at"));
                 token.setExpiresAt(rs.getTimestamp("expires_at"));
+                token.setToken(rs.getString("token"));
                 token.setScopes(StringUtils.commaDelimitedListToSet(rs.getString("scope")));
+                token.setIpAddress(rs.getString("ip_addr"));
                 token.setAuth(rs.getBytes("_auth"));
                 return token;
             };
@@ -68,6 +72,7 @@ public class PersonalAccessTokenRepository {
         Assert.hasText(id, "id must not be empty");
         Assert.notNull(token, "token must not be null");
         Assert.hasText(token.getUser(), "token user must not be null");
+        Assert.hasText(token.getToken(), "token value must not be null");
 
         log.debug("store personal access token {}", id);
 
@@ -82,13 +87,26 @@ public class PersonalAccessTokenRepository {
             INSERT_SQL,
             new Object[] {
                 id,
+                token.getName(),
                 token.getUser(),
                 createdAt,
                 expiresAt,
+                token.getToken(),
                 StringUtils.collectionToCommaDelimitedString(token.getScopes()),
+                token.getIpAddress(),
                 lob,
             },
-            new int[] { Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.TIMESTAMP, Types.VARCHAR, Types.BLOB }
+            new int[] {
+                Types.VARCHAR,
+                Types.VARCHAR,
+                Types.VARCHAR,
+                Types.TIMESTAMP,
+                Types.TIMESTAMP,
+                Types.VARCHAR,
+                Types.VARCHAR,
+                Types.VARCHAR,
+                Types.BLOB,
+            }
         );
     }
 
@@ -105,6 +123,22 @@ public class PersonalAccessTokenRepository {
 
         try {
             return jdbcTemplate.queryForObject(SELECT_SQL, new Object[] { id }, new int[] { Types.VARCHAR }, rowMapper);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+    public PersonalAccessToken consume(@NotNull String value) throws StoreException {
+        Assert.hasText(value, "value must not be empty");
+        log.debug("find personal access token {}", value);
+
+        try {
+            return jdbcTemplate.queryForObject(
+                SELECT_TOKEN_SQL,
+                new Object[] { value },
+                new int[] { Types.VARCHAR },
+                rowMapper
+            );
         } catch (EmptyResultDataAccessException e) {
             return null;
         }

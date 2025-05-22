@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +67,7 @@ import org.springframework.security.oauth2.server.resource.authentication.Bearer
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -222,7 +224,7 @@ public class JwtTokenService implements InitializingBean {
             public OAuth2AuthenticatedPrincipal introspect(String token) {
                 try {
                     // Find the token
-                    PersonalAccessToken pat = personalAccessTokenRepository.find(token);
+                    PersonalAccessToken pat = personalAccessTokenRepository.consume(token);
                     if (pat == null) {
                         return null;
                     }
@@ -398,10 +400,18 @@ public class JwtTokenService implements InitializingBean {
             log.trace("access token: {}", accessToken.serialize());
         }
 
+        String id = UUID.randomUUID().toString();
+
         //refresh tokens are opaque
-        //use UUID as secret value
         String jti = keyGenerator.generateKey();
         Instant now = Instant.now();
+
+        //fetch ip address if available
+        String ipAddress = null;
+        Object details = authentication.getToken().getDetails();
+        if (details instanceof WebAuthenticationDetails) {
+            ipAddress = ((WebAuthenticationDetails) details).getRemoteAddress();
+        }
 
         //store auth object serialized
         // byte[] auth = SerializationUtils.serialize(authentication);
@@ -413,18 +423,19 @@ public class JwtTokenService implements InitializingBean {
             // store Refresh Token into db
             RefreshToken refreshToken = RefreshToken
                 .builder()
-                .id(jti)
+                .id(id)
+                .token(jti)
                 .user(authentication.getName())
                 .auth(auth)
                 .issuedAt(Date.from(now))
                 .expiresAt(Date.from(now.plusSeconds(refreshTokenDuration)))
+                .ipAddress(ipAddress)
                 .build();
 
             //save
-            refreshTokenRepository.store(jti, refreshToken);
+            refreshTokenRepository.store(id, refreshToken);
 
-            //id is the token value
-            return refreshToken.getId();
+            return refreshToken.getToken();
         } catch (IOException | StoreException e) {
             throw new JwtTokenServiceException(e.getMessage());
         }
@@ -439,14 +450,11 @@ public class JwtTokenService implements InitializingBean {
 
         log.debug("consume refresh token: {}", refreshToken);
 
-        //value is the ID for the table
-        String id = refreshToken;
-
         try {
             // consume the token
-            RefreshToken token = refreshTokenRepository.consume(id);
+            RefreshToken token = refreshTokenRepository.consume(refreshToken);
             if (token == null) {
-                log.debug("refresh token does not exists: {} id {}", refreshToken, id);
+                log.debug("refresh token does not exists: {} ", refreshToken);
                 throw new JwtTokenServiceException("Refresh token does not exist");
             }
 
@@ -483,6 +491,73 @@ public class JwtTokenService implements InitializingBean {
         }
     }
 
+    public List<RefreshToken> findRefreshTokens(@NotNull String user) {
+        log.debug("find all refresh tokens for {}", user);
+        try {
+            return refreshTokenRepository
+                .findByUser(user)
+                .stream()
+                .map(t -> {
+                    //erase token
+                    t.setToken(null);
+
+                    //erase auth to avoid leaking authentication data
+                    t.setAuth(null);
+                    return t;
+                })
+                .toList();
+        } catch (StoreException e) {
+            throw new JwtTokenServiceException(e.getMessage());
+        }
+    }
+
+    public void deleteRefreshToken(@NotNull String user, @NotNull String id) {
+        log.debug("delete refresh token {} for {}", id, user);
+        try {
+            RefreshToken token = refreshTokenRepository.find(id);
+            if (token == null) {
+                //nothing to do
+                return;
+            }
+
+            //check user matches
+            if (!user.equals(token.getUser())) {
+                throw new JwtTokenServiceException("Invalid user for refresh token");
+            }
+
+            //remove
+            refreshTokenRepository.remove(id);
+        } catch (StoreException e) {
+            throw new JwtTokenServiceException(e.getMessage());
+        }
+    }
+
+    public RefreshToken findRefreshToken(@NotNull String user, @NotNull String id) {
+        log.debug("find refresh token {} for {}", id, user);
+        try {
+            RefreshToken token = refreshTokenRepository.find(id);
+            if (token == null) {
+                //nothing to do
+                return null;
+            }
+
+            //check user matches
+            if (!user.equals(token.getUser())) {
+                throw new JwtTokenServiceException("Invalid user for refresh token");
+            }
+
+            //erase token
+            token.setToken(null);
+
+            //erase auth to avoid leaking authentication data
+            token.setAuth(null);
+
+            return token;
+        } catch (StoreException e) {
+            throw new JwtTokenServiceException(e.getMessage());
+        }
+    }
+
     // public List<RefreshTokenEntity> findRefreshTokens(@NotNull String subject) {
     //     log.debug("find refresh tokens for {}", subject);
     //     return refreshTokenRepository.findBy(null, null)
@@ -493,15 +568,27 @@ public class JwtTokenService implements InitializingBean {
      */
     public String generatePersonalAccessToken(
         @NotNull UserAuthentication<?> authentication,
+        @Nullable String name,
         @Nullable Set<String> scopes
     ) throws JwtTokenServiceException {
         log.debug("generate personal access token for {}", authentication.getName());
 
+        String id = UUID.randomUUID().toString();
+        if (!StringUtils.hasText(name)) {
+            name = keyGenerator.generateKey();
+        }
+
         //PAT tokens are opaque
-        //use UUID as secret value
         String jti = keyGenerator.generateKey();
         Instant now = Instant.now();
         Date expires = Date.from(now.plusSeconds(personalTokenDuration));
+
+        //fetch ip address if available
+        String ipAddress = null;
+        Object details = authentication.getToken().getDetails();
+        if (details instanceof WebAuthenticationDetails) {
+            ipAddress = ((WebAuthenticationDetails) details).getRemoteAddress();
+        }
 
         try {
             //serialize auth to keep authentication context
@@ -510,19 +597,21 @@ public class JwtTokenService implements InitializingBean {
             log.debug("store personal access token for {} with id {}", authentication.getName(), jti);
             PersonalAccessToken personalAccessToken = PersonalAccessToken
                 .builder()
-                .id(jti)
+                .id(id)
+                .name(name)
+                .token(jti)
                 .user(authentication.getName())
                 .issuedAt(Date.from(now))
                 .expiresAt(expires)
                 .scopes(scopes)
+                .ipAddress(ipAddress)
                 .auth(auth)
                 .build();
 
             //save
-            personalAccessTokenRepository.store(jti, personalAccessToken);
+            personalAccessTokenRepository.store(id, personalAccessToken);
 
-            //id is the token value
-            return personalAccessToken.getId();
+            return personalAccessToken.getToken();
         } catch (IOException | StoreException e) {
             throw new JwtTokenServiceException(e.getMessage());
         }
@@ -535,11 +624,40 @@ public class JwtTokenService implements InitializingBean {
                 .findByUser(user)
                 .stream()
                 .map(t -> {
+                    //erase token
+                    t.setToken(null);
+
                     //erase auth to avoid leaking authentication data
                     t.setAuth(null);
                     return t;
                 })
                 .toList();
+        } catch (StoreException e) {
+            throw new JwtTokenServiceException(e.getMessage());
+        }
+    }
+
+    public PersonalAccessToken findPersonalAccessToken(@NotNull String user, @NotNull String personalAccessToken) {
+        log.debug("find personal access token {} for {}", personalAccessToken, user);
+        try {
+            PersonalAccessToken token = personalAccessTokenRepository.find(personalAccessToken);
+            if (token == null) {
+                //nothing to do
+                return null;
+            }
+
+            //check user matches
+            if (!user.equals(token.getUser())) {
+                throw new JwtTokenServiceException("Invalid user for personal access token");
+            }
+
+            //erase token
+            token.setToken(null);
+
+            //erase auth to avoid leaking authentication data
+            token.setAuth(null);
+
+            return token;
         } catch (StoreException e) {
             throw new JwtTokenServiceException(e.getMessage());
         }

@@ -42,11 +42,12 @@ import org.springframework.util.StringUtils;
 public class RefreshTokenRepository {
 
     private static final String INSERT_SQL =
-        "INSERT INTO refresh_tokens (id, _user, issued_at, expires_at, scope, _auth) VALUES (?, ?, ?, ?, ?, ?)";
+        "INSERT INTO refresh_tokens (id, _user, issued_at, expires_at, token, scope, ip_addr, _auth) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_SQL = "SELECT * FROM refresh_tokens WHERE id = ?";
     //TODO: use FOR UPDATE on postgresql, h2 has a different syntax...
-    private static final String SELECT_FOR_UPDATE_SQL = "SELECT * FROM refresh_tokens WHERE id = ?";
-    private static final String SELECT_USER_SQL = "SELECT * FROM refresh_tokens WHERE _user = ?";
+    private static final String SELECT_FOR_UPDATE_SQL = "SELECT * FROM refresh_tokens WHERE token = ?";
+    private static final String SELECT_USER_SQL =
+        "SELECT * FROM refresh_tokens WHERE _user = ? ORDER BY issued_at DESC";
     private static final String DELETE_SQL = "DELETE FROM refresh_tokens WHERE id = ?";
     private static final String DELETE_EXPIRED_SQL = "DELETE FROM refresh_tokens WHERE expires_at < ?";
 
@@ -64,7 +65,9 @@ public class RefreshTokenRepository {
                 token.setUser(rs.getString("_user"));
                 token.setIssuedAt(rs.getTimestamp("issued_at"));
                 token.setExpiresAt(rs.getTimestamp("expires_at"));
+                token.setToken(rs.getString("token"));
                 token.setScopes(StringUtils.commaDelimitedListToSet(rs.getString("scope")));
+                token.setIpAddress(rs.getString("ip_addr"));
                 token.setAuth(rs.getBytes("_auth"));
                 return token;
             };
@@ -74,6 +77,7 @@ public class RefreshTokenRepository {
         Assert.hasText(id, "id must not be empty");
         Assert.notNull(token, "token must not be null");
         Assert.hasText(token.getUser(), "token user must not be null");
+        Assert.hasText(token.getToken(), "token value must not be null");
 
         log.debug("store refresh token {}", id);
 
@@ -91,10 +95,21 @@ public class RefreshTokenRepository {
                 token.getUser(),
                 createdAt,
                 expiresAt,
+                token.getToken(),
                 StringUtils.collectionToCommaDelimitedString(token.getScopes()),
+                token.getIpAddress(),
                 lob,
             },
-            new int[] { Types.VARCHAR, Types.VARCHAR, Types.TIMESTAMP, Types.TIMESTAMP, Types.VARCHAR, Types.BLOB }
+            new int[] {
+                Types.VARCHAR,
+                Types.VARCHAR,
+                Types.TIMESTAMP,
+                Types.TIMESTAMP,
+                Types.VARCHAR,
+                Types.VARCHAR,
+                Types.VARCHAR,
+                Types.BLOB,
+            }
         );
     }
 
@@ -123,14 +138,14 @@ public class RefreshTokenRepository {
         }
     }
 
-    public RefreshToken consume(@NotNull String id) throws StoreException {
-        Assert.hasText(id, "id must not be empty");
-        log.debug("consume refresh token {}", id);
+    public RefreshToken consume(@NotNull String value) throws StoreException {
+        Assert.hasText(value, "token must not be empty");
+        log.debug("consume refresh token {}", value);
 
         try {
             RefreshToken token = jdbcTemplate.queryForObject(
                 SELECT_FOR_UPDATE_SQL,
-                new Object[] { id },
+                new Object[] { value },
                 new int[] { Types.VARCHAR },
                 rowMapper
             );
@@ -140,7 +155,7 @@ public class RefreshTokenRepository {
             }
 
             //remove
-            jdbcTemplate.update(DELETE_SQL, id);
+            jdbcTemplate.update(DELETE_SQL, value);
 
             return token;
         } catch (EmptyResultDataAccessException e) {
