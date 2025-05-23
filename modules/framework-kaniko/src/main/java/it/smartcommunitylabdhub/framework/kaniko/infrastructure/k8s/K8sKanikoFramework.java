@@ -460,8 +460,9 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             .affinity(buildAffinity(runnable))
             .tolerations(buildTolerations(runnable))
             .volumes(volumes)
-            .restartPolicy("Never")
-            .securityContext(buildPodSecurityContext(runnable));
+            .restartPolicy("Never");
+        //DISABLED: kaniko needs to run as root!
+        // .securityContext(buildPodSecurityContext(runnable));
 
         // Create a PodTemplateSpec with the PodSpec
         V1PodTemplateSpec podTemplateSpec = new V1PodTemplateSpec().metadata(metadata).spec(podSpec);
