@@ -91,6 +91,8 @@ runtime:
     image: ${RUNTIME_HUGGINGFACE_SERVE_IMAGE:kserve/huggingfaceserver:latest}
     user-id: ${RUNTIME_HUGGINGFACE_USER_ID:${kubernetes.security.user}}
     group-id: ${RUNTIME_HUGGINGFACE_GROUP_ID:${kubernetes.security.group}}
+  kubeai:
+    endpoint: ${RUNTIME_KUBEAI_ENDPOINT:}
 
 # Spring Docs
 springdoc:
@@ -165,6 +167,8 @@ kubernetes:
   jobs:
     activeDeadlineSeconds: ${K8S_JOB_DEADLINE:259200}
     suspend: ${K8S_JOB_SUSPEND:false}
+  crds:
+    api-groups: ${K8S_CUSTOM_API_GROUPS:kubeai.org/v1}
 
 # Application endpoint
 application:

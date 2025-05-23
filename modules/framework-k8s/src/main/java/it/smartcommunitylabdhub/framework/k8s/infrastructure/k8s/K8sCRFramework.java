@@ -17,8 +17,10 @@ import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComp
 import it.smartcommunitylabdhub.commons.exceptions.FrameworkException;
 import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCRRunnable;
 import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,15 +28,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @FrameworkComponent(framework = K8sCRFramework.FRAMEWORK)
 public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKubernetesObject> {
 
     public static final String FRAMEWORK = "k8scr";
+
+    private Set<String> apiGroups = Collections.unmodifiableSet(Collections.emptySet());
 
     private final ApiClient apiClient;
 
@@ -45,6 +53,13 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
     public K8sCRFramework(ApiClient apiClient) {
         super(apiClient);
         this.apiClient = apiClient;
+    }
+
+    @Autowired
+    public void setApiGroups(@Value("${kubernetes.crds.api-groups}") String groups) {
+        if (groups != null) {
+            this.apiGroups = Collections.unmodifiableSet(StringUtils.commaDelimitedListToSet(groups));
+        }
     }
 
     @Override
@@ -64,6 +79,13 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
         }
 
         DynamicKubernetesObject cr = build(runnable);
+
+        //permission check: api should be whitelisted
+        if (cr.getApiVersion() == null || !apiGroups.contains(cr.getApiVersion())) {
+            throw new IllegalArgumentException(
+                "Invalid or unsupported api group or version " + String.valueOf(cr.getApiVersion())
+            );
+        }
 
         log.info("create CR for {}", String.valueOf(cr.getMetadata().getName()));
         cr = create(cr, getDynamicKubernetesApi(runnable));
@@ -100,6 +122,7 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
         return null;
     }
 
+    @Deprecated
     public DynamicKubernetesApi getDynamicKubernetesApi(K8sCRRunnable runnable) {
         return new DynamicKubernetesApi(
             runnable.getApiGroup(),
@@ -160,6 +183,8 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
         }
     }
 
+    //TODO replace return object, contains a GSON JsonObject which is *not* serializable by Jackson
+    @Deprecated
     public DynamicKubernetesObject get(@NotNull DynamicKubernetesObject cr, DynamicKubernetesApi dynamicApi)
         throws K8sFrameworkException {
         Assert.notNull(cr.getMetadata(), "metadata can not be null");
@@ -182,7 +207,10 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
     public DynamicKubernetesObject build(K8sCRRunnable runnable) {
         DynamicKubernetesObject obj = new DynamicKubernetesObject();
 
-        String crName = k8sBuilderHelper.getCRName(runnable.getName(), runnable.getId());
+        // String crName = k8sBuilderHelper.getCRName(runnable.getName(), runnable.getId());
+        String crName = StringUtils.hasText(runnable.getName())
+            ? K8sBuilderHelper.sanitizeNames(runnable.getName())
+            : runnable.getId();
 
         String apiVersion = runnable.getApiGroup() + "/" + runnable.getApiVersion();
         obj.setApiVersion(apiVersion);
@@ -194,19 +222,19 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
         // Create the Deployment metadata
         V1ObjectMeta metadata = new V1ObjectMeta().name(crName).labels(labels).namespace(namespace);
         obj.setMetadata(metadata);
-
         obj.getRaw().add("spec", specToJsonElement(runnable.getSpec()));
+
         return obj;
     }
 
-    private JsonElement specToJsonElement(Map<String, Serializable> spec) {
+    public static JsonElement specToJsonElement(Map<String, Serializable> spec) {
         Gson gson = new Gson();
         String json = gson.toJson(spec);
         JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
         return jsonObject;
     }
 
-    private Map<String, Serializable> jsonElementToSpec(JsonElement jsonElement) throws Exception {
+    public static HashMap<String, Serializable> jsonElementToSpec(JsonElement jsonElement) throws IOException {
         Gson gson = new Gson();
         String json = gson.toJson(jsonElement);
         return mapper.readValue(json, typeRef);
