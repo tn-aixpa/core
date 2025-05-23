@@ -21,6 +21,7 @@ import lombok.experimental.SuperBuilder;
 public class K8sCRRunnable extends K8sRunnable {
 
     private Map<String, Serializable> spec;
+    private Map<String, Serializable> status;
 
     private String apiGroup;
     private String apiVersion;

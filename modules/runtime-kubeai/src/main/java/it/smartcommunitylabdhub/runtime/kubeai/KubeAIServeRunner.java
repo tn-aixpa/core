@@ -134,6 +134,17 @@ public class KubeAIServeRunner {
         int processors = runSpec.getProcessors() != null ? runSpec.getProcessors() : 1;
         String resourceProfile = StringUtils.hasText(runSpec.getProfile()) ? runSpec.getProfile() : BASE_PROFILE;
 
+        //build custom resource name matching model name
+        //TODO evaluate letting users specify real names
+        String modelName = functionSpec.getModelName() != null
+            ? K8sBuilderHelper.sanitizeNames(functionSpec.getModelName() + "-" + run.getId())
+            : run.getId();
+
+        //enforce kubeAI max model name length 40chars
+        if (modelName.length() > 39) {
+            modelName = modelName.substring(0, 39);
+        }
+
         KubeAIModelSpec modelSpec = KubeAIModelSpec
             .builder()
             .url(url)
@@ -170,7 +181,7 @@ public class KubeAIServeRunner {
                     ? List.of(new CoreLabel(k8sBuilderHelper.getLabelName("function"), taskAccessor.getFunction()))
                     : null
             )
-            .name(functionSpec.getModelName())
+            .name(modelName)
             .apiGroup(KUBEAI_API_GROUP)
             .apiVersion(KUBEAI_API_VERSION)
             .kind(KUBEAI_API_KIND)
