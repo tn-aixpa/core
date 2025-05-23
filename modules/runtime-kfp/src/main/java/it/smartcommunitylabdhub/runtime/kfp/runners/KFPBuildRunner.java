@@ -7,7 +7,6 @@ import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.KFPRuntime;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPBuildTaskSpec;
-import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +52,7 @@ public class KFPBuildRunner {
         K8sRunnable k8sJobRunnable = K8sJobRunnable
             .builder()
             .runtime(KFPRuntime.RUNTIME)
-            .task(KFPPipelineTaskSpec.KIND)
+            .task(KFPBuildTaskSpec.KIND)
             .image(image)
             .command("python")
             .args(List.of("wrapper.py").toArray(String[]::new))
