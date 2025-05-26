@@ -19,6 +19,7 @@ package it.smartcommunitylabdhub.core.components.cloud;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
+import it.smartcommunitylabdhub.core.utils.EntityUtils;
 import it.smartcommunitylabdhub.core.websocket.UserNotification;
 import it.smartcommunitylabdhub.core.websocket.UserNotificationEntityEvent;
 import it.smartcommunitylabdhub.core.websocket.UserNotificationService;
@@ -44,6 +45,9 @@ public abstract class BaseCloudListener<D extends BaseDTO & StatusDTO> {
             return;
         }
 
+        //resolve entity name
+        EntityName entityName = EntityUtils.getEntityName(dto.getClass());
+
         if (notificationService != null) {
             log.debug("receive notify for {}: {}", user, dto.getId());
 
@@ -51,7 +55,7 @@ public abstract class BaseCloudListener<D extends BaseDTO & StatusDTO> {
             UserNotification<D> notification = UserNotification
                 .<D>builder()
                 .action(event.getAction())
-                .entity(EntityName.RUN)
+                .entity(entityName)
                 .user(user)
                 .dto(dto)
                 .build();
@@ -67,11 +71,14 @@ public abstract class BaseCloudListener<D extends BaseDTO & StatusDTO> {
             log.debug("receive event for {}: {}", dto.getId(), event.getAction());
 
             if (notificationService != null && event.getDto() != null) {
+                //resolve entity name
+                EntityName entityName = EntityUtils.getEntityName(dto.getClass());
+
                 //unpack and notify
                 UserNotification<D> notification = UserNotification
                     .<D>builder()
                     .action(event.getAction())
-                    .entity(EntityName.RUN)
+                    .entity(entityName)
                     .dto(event.getDto())
                     .build();
 
