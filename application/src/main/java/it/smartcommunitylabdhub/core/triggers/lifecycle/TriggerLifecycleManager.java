@@ -36,6 +36,7 @@ import it.smartcommunitylabdhub.fsm.exceptions.InvalidTransitionException;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -200,10 +201,13 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
                     Task task = taskService.getTask(specAccessor.getTaskId());
 
                     //build meta
-                    RelationshipsMetadata relMetadata = RelationshipsMetadata
-                        .builder()
-                        .relationships(List.of(new RelationshipDetail(RelationshipName.PRODUCEDBY, null, tr.getKey())))
-                        .build();
+                    List<RelationshipDetail> rels = new ArrayList<>();
+                    rels.add(new RelationshipDetail(RelationshipName.PRODUCEDBY, null, tr.getKey()));
+                    if (run.getJob().getRelationships() != null) {
+                        rels.addAll(run.getJob().getRelationships());
+                    }
+
+                    RelationshipsMetadata relMetadata = RelationshipsMetadata.builder().relationships(rels).build();
 
                     //status
                     RunBaseStatus baseStatus = RunBaseStatus.baseBuilder().state(State.CREATED.name()).build();

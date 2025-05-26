@@ -16,6 +16,7 @@
 
 package it.smartcommunitylabdhub.trigger.lifecycle.models;
 
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
 import it.smartcommunitylabdhub.trigger.lifecycle.LifecycleActuator;
 import java.util.List;
@@ -43,6 +44,8 @@ public class LifecycleTriggerJob implements TriggerJob {
 
     private String key;
     private List<String> states;
+
+    private List<RelationshipDetail> relationships;
 
     @Override
     public String getActuator() {

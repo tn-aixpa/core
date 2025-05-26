@@ -16,7 +16,9 @@
 
 package it.smartcommunitylabdhub.commons.models.trigger;
 
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import java.io.Serializable;
+import java.util.List;
 
 public interface TriggerJob extends Serializable {
     String getId();
@@ -33,4 +35,8 @@ public interface TriggerJob extends Serializable {
     void setState(String state);
     void setMessage(String message);
     void setError(String error);
+
+    default List<RelationshipDetail> getRelationships() {
+        return null;
+    }
 }

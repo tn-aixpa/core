@@ -21,6 +21,8 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.TriggerRun;
 import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvent;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
+import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
+import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerEvent;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerExecutionEvent;
@@ -130,6 +132,9 @@ public class LifecycleTriggerListener {
                     "input",
                     dto
                 );
+
+                //inflate job with relationships
+                job.setRelationships(List.of(new RelationshipDetail(RelationshipName.CONSUMES, null, dto.getKey())));
 
                 TriggerRun<LifecycleTriggerJob> run = TriggerRun
                     .<LifecycleTriggerJob>builder()
