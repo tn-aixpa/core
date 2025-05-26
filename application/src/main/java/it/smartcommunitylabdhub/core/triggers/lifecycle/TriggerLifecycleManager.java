@@ -216,12 +216,12 @@ public class TriggerLifecycleManager extends LifecycleManager<Trigger, TriggerEn
                         baseStatus.toMap()
                     );
 
-                    Map<String, Serializable> addSpec = Map.of(
-                        Fields.FUNCTION,
-                        baseSpec.getFunction(),
-                        Fields.TASK,
-                        baseSpec.getTask()
-                    );
+                    //build either function or workflow run
+                    Map<String, Serializable> addSpec = StringUtils.hasText(baseSpec.getFunction())
+                        ? Map.of(Fields.FUNCTION, baseSpec.getFunction(), Fields.TASK, baseSpec.getTask())
+                        : Map.of(Fields.WORKFLOW, baseSpec.getWorkflow(), Fields.TASK, baseSpec.getTask());
+
+                    //TODO validate spec against task spec
 
                     //build template
                     Map<String, Serializable> template = baseSpec.getTemplate();

@@ -16,8 +16,9 @@ public class TriggerBaseSpec extends BaseSpec {
     @NotEmpty
     private String task;
 
-    @NotEmpty
     private String function;
+
+    private String workflow;
 
     @NotEmpty
     private Map<String, Serializable> template;
@@ -28,6 +29,8 @@ public class TriggerBaseSpec extends BaseSpec {
 
         this.task = spec.getTask();
         this.function = spec.getFunction();
+        this.workflow = spec.getWorkflow();
+
         this.template = spec.getTemplate();
     }
 

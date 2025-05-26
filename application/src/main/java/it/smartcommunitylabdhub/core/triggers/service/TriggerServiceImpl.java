@@ -230,8 +230,8 @@ public class TriggerServiceImpl implements SearchableTriggerService, Relationshi
                 if (!StringUtils.hasText(baseSpec.getTask())) {
                     throw new IllegalArgumentException("spec: missing task");
                 }
-                if (!StringUtils.hasText(baseSpec.getFunction())) {
-                    throw new IllegalArgumentException("spec: missing function");
+                if (!StringUtils.hasText(baseSpec.getFunction()) && !StringUtils.hasText(baseSpec.getWorkflow())) {
+                    throw new IllegalArgumentException("spec: missing function or workflow");
                 }
 
                 //create as new
@@ -272,8 +272,8 @@ public class TriggerServiceImpl implements SearchableTriggerService, Relationshi
             if (!StringUtils.hasText(baseSpec.getTask())) {
                 throw new IllegalArgumentException("spec: missing task");
             }
-            if (!StringUtils.hasText(baseSpec.getFunction())) {
-                throw new IllegalArgumentException("spec: missing function");
+            if (!StringUtils.hasText(baseSpec.getFunction()) && !StringUtils.hasText(baseSpec.getWorkflow())) {
+                throw new IllegalArgumentException("spec: missing function or workflow");
             }
 
             //access task details from ref, same as run
