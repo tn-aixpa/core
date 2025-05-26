@@ -556,7 +556,11 @@ public class S3FilesStore implements FilesStore {
             if (key.endsWith("/")) {
                 //experimental: bulk delete folders with batch on pages
                 log.warn("remove for folders is experimental: {}", path);
-                ListObjectsV2Request listRequest = ListObjectsV2Request.builder().bucket(bucket).prefix(key).build();
+                ListObjectsV2Request listRequest = ListObjectsV2Request
+                    .builder()
+                    .bucket(bucketName)
+                    .prefix(key)
+                    .build();
                 ListObjectsV2Iterable listResponseIter = client.listObjectsV2Paginator(listRequest);
 
                 for (ListObjectsV2Response listResponse : listResponseIter) {
@@ -572,7 +576,7 @@ public class S3FilesStore implements FilesStore {
                     //delete objects batch (max 1000)
                     DeleteObjectsRequest req = DeleteObjectsRequest
                         .builder()
-                        .bucket(bucket)
+                        .bucket(bucketName)
                         .delete(Delete.builder().objects(objects).build())
                         .build();
                     client.deleteObjects(req);
