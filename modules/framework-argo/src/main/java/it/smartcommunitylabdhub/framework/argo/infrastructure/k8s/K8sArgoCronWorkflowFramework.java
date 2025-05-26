@@ -354,8 +354,7 @@ public class K8sArgoCronWorkflowFramework extends K8sBaseFramework<K8sArgoCronWo
 
         if (workflow.getSpec().getWorkflowSpec().getTemplates() != null) {
             for (IoArgoprojWorkflowV1alpha1Template template : workflow.getSpec().getWorkflowSpec().getTemplates()) {
-                template// .automountServiceAccountToken(false)
-                .securityContext(templateDefaults.getSecurityContext());
+                template.securityContext(templateDefaults.getSecurityContext()); // .automountServiceAccountToken(false)
             }
         }
     }
