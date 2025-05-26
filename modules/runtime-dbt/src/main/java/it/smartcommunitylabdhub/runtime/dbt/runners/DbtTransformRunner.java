@@ -63,6 +63,9 @@ public class DbtTransformRunner {
             .envs(coreEnvList)
             .affinity(taskSpec.getAffinity())
             .tolerations(taskSpec.getTolerations())
+            .runtimeClass(taskSpec.getRuntimeClass())
+            .priorityClass(taskSpec.getPriorityClass())
+            .template(taskSpec.getProfile())
             .state(State.READY.name())
             .build();
 
