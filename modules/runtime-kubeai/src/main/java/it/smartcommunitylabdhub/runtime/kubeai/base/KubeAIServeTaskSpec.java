@@ -1,9 +1,6 @@
-package it.smartcommunitylabdhub.runtime.kubeai.specs;
+package it.smartcommunitylabdhub.runtime.kubeai.base;
 
-import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.function.FunctionTaskBaseSpec;
-import it.smartcommunitylabdhub.runtime.kubeai.KubeAIRuntime;
 import java.io.Serializable;
 import java.util.Map;
 import lombok.Getter;
@@ -13,10 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = KubeAIRuntime.RUNTIME, kind = KubeAIServeTaskSpec.KIND, entity = EntityName.TASK)
 public class KubeAIServeTaskSpec extends FunctionTaskBaseSpec {
-
-    public static final String KIND = KubeAIRuntime.RUNTIME + "+serve";
 
     public static KubeAIServeTaskSpec with(Map<String, Serializable> data) {
         KubeAIServeTaskSpec spec = new KubeAIServeTaskSpec();

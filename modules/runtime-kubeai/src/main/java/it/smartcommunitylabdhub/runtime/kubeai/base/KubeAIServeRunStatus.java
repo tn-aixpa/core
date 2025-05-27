@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.kubeai.specs;
+package it.smartcommunitylabdhub.runtime.kubeai.base;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseStatus;

@@ -1,0 +1,111 @@
+package it.smartcommunitylabdhub.runtime.kubeai.base;
+
+import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
+import it.smartcommunitylabdhub.commons.models.run.Run;
+import it.smartcommunitylabdhub.commons.services.ModelService;
+import it.smartcommunitylabdhub.commons.services.SecretService;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
+import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sServiceInfo;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCRRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
+import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIAdapter;
+import it.smartcommunitylabdhub.runtime.kubeai.models.OpenAIService;
+import jakarta.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
+@Slf4j
+public abstract class KubeAIRuntime<F extends KubeAIServeFunctionSpec, R extends KubeAIServeRunSpec>
+    extends K8sBaseRuntime<F, R, KubeAIServeRunStatus, K8sCRRunnable>
+    implements InitializingBean {
+
+    @Value("${runtime.kubeai.endpoint}")
+    protected String kubeAiEndpoint;
+
+    @Autowired
+    protected ModelService modelService;
+
+    @Autowired
+    protected SecretService secretService;
+
+    @Autowired(required = false)
+    protected K8sSecretHelper k8sSecretHelper;
+
+    protected KubeAIRuntime(String kind) {
+        super(kind);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        // nothing to do
+    }
+
+    @Override
+    public KubeAIServeRunStatus onRunning(@NotNull Run run, RunRunnable runnable) {
+        KubeAIServeRunStatus status = KubeAIServeRunStatus.with(run.getStatus());
+
+        KubeAIServeFunctionSpec functionSpec = KubeAIServeFunctionSpec.with(run.getSpec());
+        if (functionSpec.getModelName() == null) {
+            //error
+            return null;
+        }
+
+        //build openapi descriptor only once
+        if (status.getOpenai() == null) {
+            OpenAIService openai = new OpenAIService();
+            openai.setBaseUrl(kubeAiEndpoint + "/openai/v1");
+            openai.setModel(functionSpec.getModelName());
+
+            if (runnable != null && runnable instanceof K8sCRRunnable) {
+                //model name is set via resource name for kubeAi
+                openai.setModel(((K8sCRRunnable) runnable).getName());
+            }
+
+            if (functionSpec.getAdapters() != null) {
+                openai.setAdapters(
+                    functionSpec
+                        .getAdapters()
+                        .stream()
+                        .map(a -> KubeAIAdapter.builder().name(a.getName()).build())
+                        .toList()
+                );
+            }
+
+            status.setOpenai(openai);
+        }
+
+        if (status.getService() == null) {
+            String baseUrl = kubeAiEndpoint + "/openai";
+            K8sServiceInfo service = new K8sServiceInfo();
+            service.setUrl(baseUrl);
+
+            List<String> urls = new ArrayList<>();
+            //model always available
+            urls.add(baseUrl + "/v1/models");
+            service.setUrls(urls);
+
+            status.setService(service);
+        }
+
+        if (runnable != null && runnable instanceof K8sRunnable) {
+            K8sRunnable k8sRunnable = (K8sRunnable) runnable;
+
+            status.setState(k8sRunnable.getState());
+            status.setMessage(k8sRunnable.getMessage());
+        }
+
+        if (runnable != null && runnable instanceof K8sCRRunnable) {
+            //TODO fetch status to read replicas
+            // K8sCRRunnable crRunnable = (K8sCRRunnable) runnable;
+            // crRunnable.getStatus();
+
+        }
+
+        return status;
+    }
+}

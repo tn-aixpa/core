@@ -1,4 +1,4 @@
-package it.smartcommunitylabdhub.runtime.kubeai;
+package it.smartcommunitylabdhub.runtime.kubeai.base;
 
 import it.smartcommunitylabdhub.commons.Keys;
 import it.smartcommunitylabdhub.commons.accessors.fields.KeyAccessor;
@@ -18,13 +18,9 @@ import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCRRunnable;
-import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIFeature;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIModelSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAiEnvFrom;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAiEnvFromRef;
-import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeFunctionSpec;
-import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeRunSpec;
-import it.smartcommunitylabdhub.runtime.kubeai.specs.KubeAIServeTaskSpec;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +34,10 @@ public class KubeAIServeRunner {
 
     private final KubeAIServeFunctionSpec functionSpec;
 
+    private final String runtime;
+    private final String engine;
+    private final List<String> features;
+
     private final ModelService modelService;
     private final K8sBuilderHelper k8sBuilderHelper;
     private final K8sSecretHelper k8sSecretHelper;
@@ -49,12 +49,18 @@ public class KubeAIServeRunner {
     private static final String KUBEAI_API_PLURAL = "models";
 
     public KubeAIServeRunner(
+        String runtime,
+        String engine,
+        List<String> features,
         KubeAIServeFunctionSpec functionSpec,
         Map<String, String> secretData,
         K8sBuilderHelper k8sBuilderHelper,
         K8sSecretHelper k8sSecretHelper,
         ModelService modelService
     ) {
+        this.runtime = runtime;
+        this.engine = engine;
+        this.features = features;
         this.functionSpec = functionSpec;
         this.modelService = modelService;
         this.secretData = secretData;
@@ -112,7 +118,7 @@ public class KubeAIServeRunner {
         }
 
         List<KubeAiEnvFrom> envFrom = null;
-        String secretName = k8sSecretHelper.getSecretName(KubeAIRuntime.RUNTIME, KubeAIServeTaskSpec.KIND, run.getId());
+        String secretName = k8sSecretHelper.getSecretName(runtime, runtime + "+serve", run.getId());
         if (secretName != null) {
             //TODO evaluate if we will get the secret, for now we assume it is always there
 
@@ -153,12 +159,8 @@ public class KubeAIServeRunner {
             .cacheProfile(runSpec.getCacheProfile())
             .resourceProfile(resourceProfile + ":" + Integer.toString(processors))
             .adapters(functionSpec.getAdapters())
-            .features(
-                functionSpec.getFeatures() == null
-                    ? Collections.emptyList()
-                    : functionSpec.getFeatures().stream().map(KubeAIFeature::name).toList()
-            )
-            .engine(functionSpec.getEngine().name())
+            .features(features == null ? Collections.emptyList() : features)
+            .engine(engine)
             .env(env)
             .envFrom(envFrom)
             .files(runSpec.getFiles())
@@ -173,8 +175,8 @@ public class KubeAIServeRunner {
 
         K8sCRRunnable k8sRunnable = K8sCRRunnable
             .builder()
-            .runtime(KubeAIRuntime.RUNTIME)
-            .task(KubeAIServeTaskSpec.KIND)
+            .runtime(runtime)
+            .task(runtime + "+serve")
             .state(State.READY.name())
             .labels(
                 k8sBuilderHelper != null
