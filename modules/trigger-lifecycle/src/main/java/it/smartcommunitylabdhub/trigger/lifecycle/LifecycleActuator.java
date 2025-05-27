@@ -22,11 +22,11 @@ import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Actuator;
 import it.smartcommunitylabdhub.commons.infrastructure.TriggerRun;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseStatus;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerRunBaseStatus;
+import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleStates;
 import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleTriggerJob;
 import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleTriggerSpec;
 import it.smartcommunitylabdhub.trigger.lifecycle.store.TriggerJobStore;
@@ -66,9 +66,7 @@ public class LifecycleActuator
         LifecycleTriggerSpec spec = LifecycleTriggerSpec.from(trigger.getSpec());
 
         //validate states
-        Set<State> states = spec.getStates() == null
-            ? Set.of()
-            : spec.getStates().stream().map(State::valueOf).collect(Collectors.toSet());
+        Set<LifecycleStates> states = spec.getStates() == null ? Set.of() : Set.copyOf(spec.getStates());
 
         //rebuild ant-style key
         KeyAccessor k = KeyAccessor.with(spec.getKey());
@@ -92,7 +90,7 @@ public class LifecycleActuator
             .project(trigger.getProject())
             //spec
             .key(key.toString())
-            .states(states.stream().map(State::name).collect(Collectors.toList()))
+            .states(states.stream().map(LifecycleStates::name).collect(Collectors.toList()))
             .build();
 
         //store job

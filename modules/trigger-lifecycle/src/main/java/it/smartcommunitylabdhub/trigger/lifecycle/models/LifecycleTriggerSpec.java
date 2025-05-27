@@ -20,6 +20,7 @@ import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerBaseSpec;
 import it.smartcommunitylabdhub.trigger.lifecycle.LifecycleActuator;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.List;
@@ -33,9 +34,10 @@ import lombok.Setter;
 public class LifecycleTriggerSpec extends TriggerBaseSpec {
 
     @Pattern(regexp = "store://([^/]+)/(.+)")
+    @NotBlank
     private String key;
 
-    private List<String> states;
+    private List<LifecycleStates> states;
 
     @Override
     public void configure(Map<String, Serializable> data) {
