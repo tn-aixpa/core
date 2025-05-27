@@ -19,11 +19,11 @@
     },
     "KubeAIEngine" : {
       "type" : "string",
-      "enum" : [ "OLlama", "VLLM", "FasterWhisper", "Infinity" ]
+      "enum" : [ "OLlama", "VLLM", "Infinity" ]
     },
     "KubeAIFeature" : {
       "type" : "string",
-      "enum" : [ "TextGeneration", "TextEmbedding", "SpeechToText" ]
+      "enum" : [ "TextGeneration", "TextEmbedding" ]
     }
   },
   "type" : "object",
@@ -72,6 +72,6 @@
     }
   },
   "required" : [ "engine", "features", "url" ],
-  "title" : "specs.kubeai.title",
-  "description" : "specs.kubeai.description"
+  "title" : "specs.kubeai-text.title",
+  "description" : "specs.kubeai-text.description"
 }

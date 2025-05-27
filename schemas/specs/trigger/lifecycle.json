@@ -12,6 +12,10 @@
       "type" : "boolean",
       "title" : "boolean"
     },
+    "LifecycleStates" : {
+      "type" : "string",
+      "enum" : [ "CREATED", "DELETED", "ERROR", "READY", "UPLOADING" ]
+    },
     "Map_String.Serializable_" : {
       "type" : "object",
       "additionalProperties" : {
@@ -56,6 +60,7 @@
       "type" : "string",
       "title" : "fields.key.title",
       "description" : "fields.key.description",
+      "minLength" : 1,
       "pattern" : "store://([^/]+)/(.+)"
     },
     "states" : {
@@ -63,7 +68,7 @@
       "description" : "fields.states.description",
       "type" : "array",
       "items" : {
-        "type" : "string",
+        "$ref" : "#/$defs/LifecycleStates",
         "title" : "fields.states.item.title",
         "description" : "fields.states.item.description"
       }
@@ -91,7 +96,7 @@
       "description" : "fields.workflow.description"
     }
   },
-  "required" : [ "task", "template" ],
+  "required" : [ "key", "task", "template" ],
   "title" : "specs.lifecycle.title",
   "description" : "specs.lifecycle.description"
 }

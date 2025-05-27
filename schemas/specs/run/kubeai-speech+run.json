@@ -178,8 +178,8 @@
     }
   },
   "required" : [ "task" ],
-  "title" : "specs.kubeai+run.title",
-  "description" : "specs.kubeai+run.description",
+  "title" : "specs.kubeai-speech+run.title",
+  "description" : "specs.kubeai-speech+run.description",
   "allOf" : [ {
     "type" : "object",
     "properties" : {
@@ -191,7 +191,7 @@
       }
     },
     "required" : [ "function" ],
-    "title" : "specs.kubeai+serve.title",
-    "description" : "specs.kubeai+serve.description"
+    "title" : "specs.kubeai-text+serve.title",
+    "description" : "specs.kubeai-text+serve.description"
   } ]
 }

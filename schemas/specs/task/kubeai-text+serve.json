@@ -10,6 +10,6 @@
     }
   },
   "required" : [ "function" ],
-  "title" : "specs.kubeai+serve.title",
-  "description" : "specs.kubeai+serve.description"
+  "title" : "specs.kubeai-text+serve.title",
+  "description" : "specs.kubeai-text+serve.description"
 }
