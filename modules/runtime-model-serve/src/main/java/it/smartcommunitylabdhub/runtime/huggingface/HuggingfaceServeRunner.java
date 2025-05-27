@@ -17,7 +17,6 @@ import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.runtime.huggingface.specs.HuggingfaceServeFunctionSpec;
@@ -286,7 +285,7 @@ public class HuggingfaceServeRunner {
             //specific
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort, grpcPort))
-            .serviceType(taskSpec.getServiceType() != null ? taskSpec.getServiceType() : CoreServiceType.NodePort)
+            .serviceType(taskSpec.getServiceType())
             //fixed securityContext
             .fsGroup(groupId)
             .runAsGroup(groupId)

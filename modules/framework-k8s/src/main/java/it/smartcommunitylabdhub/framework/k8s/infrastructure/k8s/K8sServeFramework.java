@@ -29,6 +29,7 @@ import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import jakarta.validation.constraints.NotNull;
@@ -63,7 +64,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     private String initImage;
     private List<String> initCommand = null;
 
-    private String serviceType;
+    private CoreServiceType serviceType = CoreServiceType.ClusterIP;
 
     public K8sServeFramework(ApiClient apiClient) {
         super(apiClient);
@@ -85,7 +86,14 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
 
     @Autowired
     public void setServiceType(@Value("${kubernetes.service.type}") String serviceType) {
-        this.serviceType = serviceType;
+        if (StringUtils.hasText(serviceType)) {
+            try {
+                this.serviceType = CoreServiceType.valueOf(serviceType);
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid service type: {}", serviceType);
+                throw new IllegalArgumentException("Invalid service type: " + serviceType, e);
+            }
+        }
     }
 
     @Override
@@ -458,8 +466,8 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             )
             .orElse(null);
 
-        // service type (ClusterIP or NodePort)
-        String type = Optional.ofNullable(runnable.getServiceType()).map(Enum::name).orElse(serviceType);
+        // service type
+        String type = Optional.ofNullable(runnable.getServiceType()).map(Enum::name).orElse(serviceType.name());
 
         //check template
         if (template != null) {

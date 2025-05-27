@@ -10,7 +10,6 @@ import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
@@ -231,7 +230,7 @@ public class PythonServeRunner {
             //specific
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort))
-            .serviceType(taskSpec.getServiceType() != null ? taskSpec.getServiceType() : CoreServiceType.NodePort)
+            .serviceType(taskSpec.getServiceType())
             .build();
 
         k8sServeRunnable.setId(run.getId());

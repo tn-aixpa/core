@@ -1,6 +1,7 @@
 package it.smartcommunitylabdhub.runtime.container.specs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.framework.k8s.objects.CorePort;
@@ -25,8 +26,8 @@ public class ContainerServeTaskSpec extends ContainerDeployTaskSpec {
     @JsonProperty("service_ports")
     private List<CorePort> servicePorts;
 
-    // ClusterIP or NodePort
-    @JsonProperty("service_type")
+    @JsonProperty(value = "service_type", defaultValue = "ClusterIP")
+    @Schema(defaultValue = "ClusterIP")
     private CoreServiceType serviceType;
 
     public ContainerServeTaskSpec(Map<String, Serializable> data) {

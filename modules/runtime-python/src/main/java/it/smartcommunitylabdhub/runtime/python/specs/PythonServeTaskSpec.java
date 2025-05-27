@@ -28,9 +28,8 @@ public class PythonServeTaskSpec extends K8sFunctionTaskBaseSpec {
     @Min(0)
     private Integer replicas;
 
-    // ClusterIP or NodePort
-    @JsonProperty(value = "service_type", defaultValue = "NodePort")
-    @Schema(defaultValue = "NodePort")
+    @JsonProperty(value = "service_type", defaultValue = "ClusterIP")
+    @Schema(defaultValue = "ClusterIP")
     private CoreServiceType serviceType;
 
     public PythonServeTaskSpec(Map<String, Serializable> data) {
