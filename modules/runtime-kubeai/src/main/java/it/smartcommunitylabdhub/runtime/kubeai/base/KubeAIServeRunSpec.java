@@ -1,16 +1,13 @@
-package it.smartcommunitylabdhub.runtime.kubeai.specs;
+package it.smartcommunitylabdhub.runtime.kubeai.base;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.v3.oas.annotations.media.Schema;
-import it.smartcommunitylabdhub.commons.annotations.common.SpecType;
-import it.smartcommunitylabdhub.commons.jackson.annotations.JsonSchemaIgnore;
-import it.smartcommunitylabdhub.commons.models.entities.EntityName;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sResourceProfileAware;
-import it.smartcommunitylabdhub.runtime.kubeai.KubeAIRuntime;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIFile;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIScaling;
+import it.smartcommunitylabdhub.runtime.kubeai.text.specs.KubeAITextServeTaskSpec;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -22,17 +19,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@SpecType(runtime = KubeAIRuntime.RUNTIME, kind = KubeAIServeRunSpec.KIND, entity = EntityName.RUN)
 public class KubeAIServeRunSpec extends RunBaseSpec implements K8sResourceProfileAware {
 
-    public static final String KIND = KubeAIRuntime.RUNTIME + "+run";
-
-    @JsonSchemaIgnore
     @JsonUnwrapped
-    private KubeAIServeFunctionSpec functionSpec;
-
-    @JsonUnwrapped
-    private KubeAIServeTaskSpec taskServeSpec;
+    private KubeAITextServeTaskSpec taskServeSpec;
 
     // execution
     @Schema(title = "fields.kubeai.args.title", description = "fields.kubeai.args.description")
@@ -64,7 +54,6 @@ public class KubeAIServeRunSpec extends RunBaseSpec implements K8sResourceProfil
     public void configure(Map<String, Serializable> data) {
         super.configure(data);
         KubeAIServeRunSpec spec = mapper.convertValue(data, KubeAIServeRunSpec.class);
-        this.functionSpec = spec.getFunctionSpec();
         this.taskServeSpec = spec.getTaskServeSpec();
         this.args = spec.getArgs();
         this.profile = spec.getProfile();
@@ -75,11 +64,7 @@ public class KubeAIServeRunSpec extends RunBaseSpec implements K8sResourceProfil
         this.secrets = spec.getSecrets();
     }
 
-    public void setFunctionSpec(KubeAIServeFunctionSpec functionSpec) {
-        this.functionSpec = functionSpec;
-    }
-
-    public void setTaskServeSpec(KubeAIServeTaskSpec taskServeSpec) {
+    public void setTaskServeSpec(KubeAITextServeTaskSpec taskServeSpec) {
         this.taskServeSpec = taskServeSpec;
     }
 
