@@ -1,8 +1,7 @@
 package it.smartcommunitylabdhub.core.triggers.lifecycle;
 
-import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManager;
 import it.smartcommunitylabdhub.commons.infrastructure.TriggerRun;
-import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerExecutionEvent;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerJob;
@@ -11,11 +10,13 @@ import java.util.Collections;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.BiConsumer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.TransientSecurityContext;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,13 @@ public class TriggerListener {
     private final TriggerService triggerService;
     private final TriggerLifecycleManager triggerManager;
     private final ThreadPoolTaskExecutor executor;
+
+    private UserAuthenticationManager authenticationManager;
+
+    @Autowired(required = false)
+    public void setAuthenticationManager(UserAuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
+    }
 
     public TriggerListener(TriggerService triggerService, TriggerLifecycleManager triggerManager) {
         Assert.notNull(triggerManager, "trigger manager is required");
@@ -52,12 +60,20 @@ public class TriggerListener {
         log.trace("wrap trigger callback for user {}", String.valueOf(user));
         if (user != null) {
             //wrap in a security context
-            //TODO restore user roles/context?
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+
+            UsernamePasswordAuthenticationToken userAuth = new UsernamePasswordAuthenticationToken(
                 user,
                 null,
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
             );
+
+            // restore user roles/context
+            Authentication auth = userAuth;
+            if (authenticationManager != null) {
+                //process to get full credentials
+                auth = authenticationManager.process(userAuth);
+            }
+
             Runnable wrapped = DelegatingSecurityContextRunnable.create(
                 () -> lambda.accept(trigger, run),
                 new TransientSecurityContext(auth)
