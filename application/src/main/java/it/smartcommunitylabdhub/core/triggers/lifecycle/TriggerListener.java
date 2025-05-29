@@ -1,6 +1,8 @@
 package it.smartcommunitylabdhub.core.triggers.lifecycle;
 
 import it.smartcommunitylabdhub.authorization.UserAuthenticationManager;
+import it.smartcommunitylabdhub.authorization.UserAuthenticationManagerBuilder;
+import it.smartcommunitylabdhub.authorization.providers.NoOpAuthenticationProvider;
 import it.smartcommunitylabdhub.commons.infrastructure.TriggerRun;
 import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
 import it.smartcommunitylabdhub.commons.models.trigger.TriggerExecutionEvent;
@@ -32,9 +34,9 @@ public class TriggerListener {
 
     private UserAuthenticationManager authenticationManager;
 
-    @Autowired(required = false)
-    public void setAuthenticationManager(UserAuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
+    @Autowired
+    public void setAuthenticationManagerBuilder(UserAuthenticationManagerBuilder authenticationManagerBuilder) {
+        this.authenticationManager = authenticationManagerBuilder.build(new NoOpAuthenticationProvider());
     }
 
     public TriggerListener(TriggerService triggerService, TriggerLifecycleManager triggerManager) {
