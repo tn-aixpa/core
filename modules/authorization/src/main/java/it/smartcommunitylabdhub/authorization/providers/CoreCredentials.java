@@ -38,10 +38,10 @@ import org.springframework.util.StringUtils;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CoreCredentials extends AbstractCredentials {
 
-    @JsonProperty("projects")
+    @JsonProperty("dh_projects")
     private Set<String> projects;
 
-    @JsonGetter("projects")
+    @JsonGetter("dh_projects")
     private String getProjectsAsString() {
         return projects == null ? null : StringUtils.collectionToCommaDelimitedString(projects);
     }
