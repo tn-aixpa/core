@@ -12,6 +12,8 @@ metadata:
     - validation
 spec:
   python_version: PYTHON3_10
+  requirements:
+    - frictionless  
   source:
     source: main.py
     handler: main
