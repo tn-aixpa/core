@@ -129,7 +129,7 @@ public class KubeAITextRuntime extends KubeAIRuntime<KubeAITextFunctionSpec, Kub
             status.getOpenai().setFeatures(functionSpec.getFeatures().stream().map(KubeAIFeature::name).toList());
         }
 
-        if (status.getService() == null) {
+        if (status.getService() != null) {
             //feature based urls
             String baseUrl = kubeAiEndpoint + "/openai";
 

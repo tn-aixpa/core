@@ -131,7 +131,7 @@ public class KubeAISpeechToTextRuntime
             status.getOpenai().setFeatures(List.of(FEATURE));
         }
 
-        if (status.getService() == null) {
+        if (status.getService() != null) {
             //feature based urls
             String baseUrl = kubeAiEndpoint + "/openai";
 
