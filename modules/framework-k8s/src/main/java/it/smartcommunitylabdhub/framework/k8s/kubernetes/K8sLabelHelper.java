@@ -57,7 +57,9 @@ public class K8sLabelHelper {
             prefix + "runtime",
             K8sBuilderHelper.sanitizeNames(runnable.getRuntime()),
             prefix + "run",
-            K8sBuilderHelper.sanitizeNames(runnable.getId())
+            K8sBuilderHelper.sanitizeNames(runnable.getId()),
+            prefix + "user",
+            K8sBuilderHelper.sanitizeNames(runnable.getUser() != null ? runnable.getUser() : "")
         );
     }
 
@@ -68,7 +70,7 @@ public class K8sLabelHelper {
     public Map<String, String> extractCoreLabels(@NotNull Map<String, String> labels) {
         String prefix = K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/";
 
-        List<String> coreLabels = List.of("project", "framework", "runtime", "run");
+        List<String> coreLabels = List.of("project", "framework", "runtime", "run", "user");
 
         return labels
             .entrySet()
