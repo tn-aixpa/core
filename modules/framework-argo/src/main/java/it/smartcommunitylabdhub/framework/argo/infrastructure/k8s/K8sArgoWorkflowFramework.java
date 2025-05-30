@@ -184,7 +184,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
         K8sWorkflowObject workflow;
         try {
             workflow = get(build(runnable));
-        } catch (K8sFrameworkException e) {
+        } catch (K8sFrameworkException | IllegalArgumentException e) {
             runnable.setState(State.DELETED.name());
             return runnable;
         }

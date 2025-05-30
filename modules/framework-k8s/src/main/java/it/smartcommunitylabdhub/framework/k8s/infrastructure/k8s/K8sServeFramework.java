@@ -227,7 +227,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         try {
             // Retrieve the deployment
             deployment = get(buildDeployment(runnable));
-        } catch (K8sFrameworkException e) {
+        } catch (K8sFrameworkException | IllegalArgumentException e) {
             deployment = null;
         }
 
@@ -253,43 +253,52 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             //ignore, not existing or error
         }
 
-        List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
-        if (pvcs != null) {
-            for (V1PersistentVolumeClaim pvc : pvcs) {
-                String pvcName = pvc.getMetadata().getName();
-                try {
-                    V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(pvcName, namespace, null);
-                    if (v != null) {
-                        log.info("delete pvc for {}", String.valueOf(pvcName));
-
-                        coreV1Api.deleteNamespacedPersistentVolumeClaim(
+        try {
+            List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+            if (pvcs != null) {
+                for (V1PersistentVolumeClaim pvc : pvcs) {
+                    String pvcName = pvc.getMetadata().getName();
+                    try {
+                        V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(
                             pvcName,
                             namespace,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
                             null
                         );
-                        messages.add(String.format("pvc %s deleted", pvcName));
+                        if (v != null) {
+                            log.info("delete pvc for {}", String.valueOf(pvcName));
+
+                            coreV1Api.deleteNamespacedPersistentVolumeClaim(
+                                pvcName,
+                                namespace,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
+                            );
+                            messages.add(String.format("pvc %s deleted", pvcName));
+                        }
+                    } catch (ApiException e) {
+                        log.error("Error with k8s: {}", e.getMessage());
+                        if (log.isTraceEnabled()) {
+                            log.trace("k8s api response: {}", e.getResponseBody());
+                        }
+                        //don't propagate
+                        // throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
                     }
-                } catch (ApiException e) {
-                    log.error("Error with k8s: {}", e.getMessage());
-                    if (log.isTraceEnabled()) {
-                        log.trace("k8s api response: {}", e.getResponseBody());
-                    }
-                    //don't propagate
-                    // throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
                 }
             }
+        } catch (IllegalArgumentException re) {
+            //don't propagate
+            log.error("Error with k8s: {}", re.getMessage());
         }
 
         V1Service service;
         try {
             // Retrieve the service
             service = get(build(runnable));
-        } catch (K8sFrameworkException e) {
+        } catch (K8sFrameworkException | IllegalArgumentException e) {
             runnable.setState(State.DELETED.name());
             return runnable;
         }

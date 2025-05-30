@@ -145,7 +145,7 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
         DynamicKubernetesObject cr;
         try {
             cr = get(build(runnable), dynamicApi);
-        } catch (K8sFrameworkException e) {
+        } catch (K8sFrameworkException | IllegalArgumentException e) {
             runnable.setState(State.DELETED.name());
             return runnable;
         }
