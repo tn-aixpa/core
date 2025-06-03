@@ -7,10 +7,12 @@ import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.models.task.Task;
 import it.smartcommunitylabdhub.commons.models.task.TaskBaseSpec;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sServiceInfo;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCRRunnable;
 import it.smartcommunitylabdhub.runtime.kubeai.base.KubeAIRuntime;
 import it.smartcommunitylabdhub.runtime.kubeai.base.KubeAIServeRunStatus;
 import it.smartcommunitylabdhub.runtime.kubeai.base.KubeAIServeRunner;
+import it.smartcommunitylabdhub.runtime.kubeai.models.OpenAIService;
 import it.smartcommunitylabdhub.runtime.kubeai.stt.specs.KubeAISpeechToTextFunctionSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.stt.specs.KubeAISpeechToTextRunSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.stt.specs.KubeAISpeechToTextServeTaskSpec;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -120,29 +123,40 @@ public class KubeAISpeechToTextRuntime
 
     @Override
     public KubeAIServeRunStatus onRunning(@NotNull Run run, RunRunnable runnable) {
-        KubeAIServeRunStatus status = super.onRunning(run, runnable);
+        KubeAIServeRunStatus status = KubeAIServeRunStatus.with(run.getStatus());
         KubeAISpeechToTextFunctionSpec functionSpec = KubeAISpeechToTextFunctionSpec.with(run.getSpec());
         if (status == null || functionSpec == null) {
             return null;
         }
 
-        if (status.getOpenai() != null) {
-            //set features
-            status.getOpenai().setFeatures(List.of(FEATURE));
+        //build openapi descriptor only once
+        if (status.getOpenai() == null) {
+            //inflate super or rebuild
+            OpenAIService openai = Optional
+                .ofNullable(super.onRunning(run, runnable))
+                .map(s -> s.getOpenai())
+                .orElse(new OpenAIService());
+
+            //set features and persist
+            openai.setFeatures(List.of(FEATURE));
+            status.setOpenai(openai);
         }
 
-        if (status.getService() != null) {
+        //build service descriptor only once
+        if (status.getService() == null) {
+            //inflate super or rebuild
+            K8sServiceInfo service = Optional
+                .ofNullable(super.onRunning(run, runnable))
+                .map(s -> s.getService())
+                .orElse(new K8sServiceInfo());
+
             //feature based urls
             String baseUrl = kubeAiEndpoint + "/openai";
-
-            List<String> urls = status.getService() != null
-                ? new ArrayList<>(status.getService().getUrls())
-                : new ArrayList<>();
-
-            //feature based url
+            List<String> urls = service.getUrls() != null ? new ArrayList<>(service.getUrls()) : new ArrayList<>();
             urls.add(baseUrl + "/v1/audio/transcriptions");
 
-            status.getService().setUrls(urls);
+            service.setUrls(urls);
+            status.setService(service);
         }
 
         return status;
