@@ -160,6 +160,7 @@ kubernetes:
     pvc:
       requests: ${K8S_RESOURCE_PVC_DEFAULT:2Gi}
       limits: ${K8S_RESOURCE_PVC_LIMIT:}    
+      storage-class: ${K8S_RESOURCE_PVC_STORAGE_CLASS:}
   config:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}

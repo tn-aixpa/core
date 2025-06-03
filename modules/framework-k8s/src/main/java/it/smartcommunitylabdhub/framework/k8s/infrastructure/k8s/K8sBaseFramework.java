@@ -61,7 +61,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -101,6 +100,8 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected CoreResourceDefinition cpuResourceDefinition = new CoreResourceDefinition();
     protected CoreResourceDefinition memResourceDefinition = new CoreResourceDefinition();
     protected CoreResourceDefinition pvcResourceDefinition = new CoreResourceDefinition();
+    protected String pvcStorageClass;
+
     protected List<String> templateKeys = Collections.emptyList();
 
     protected Map<String, K8sTemplate<T>> templates = Collections.emptyMap();
@@ -225,6 +226,13 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     ) {
         if (StringUtils.hasText(pvcResourceDefinition)) {
             this.pvcResourceDefinition.setLimits(pvcResourceDefinition);
+        }
+    }
+
+    @Autowired
+    public void setPvcStorageClass(@Value("${kubernetes.resources.pvc.storage-class}") String pvcStorageClass) {
+        if (StringUtils.hasText(pvcStorageClass)) {
+            this.pvcStorageClass = pvcStorageClass;
         }
     }
 
@@ -1190,7 +1198,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                             new V1PersistentVolumeClaimSpec()
                                 .accessModes(Collections.singletonList("ReadWriteOnce"))
                                 .volumeMode("Filesystem")
-                                .storageClassName(spec.getOrDefault("storage_class", null))
+                                .storageClassName(spec.getOrDefault("storage_class", pvcStorageClass))
                                 .resources(req)
                         );
 
