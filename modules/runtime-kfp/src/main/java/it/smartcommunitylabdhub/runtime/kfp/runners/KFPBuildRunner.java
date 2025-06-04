@@ -39,7 +39,7 @@ public class KFPBuildRunner {
             List.of(
                 new CoreEnv("PROJECT_NAME", run.getProject()),
                 new CoreEnv("RUN_ID", run.getId()),
-                new CoreEnv("DIGITALHUB_CORE_WORKFLOW_IMAGE", image)
+                new CoreEnv("DHCORE_WORKFLOW_IMAGE", image)
             )
         );
 
