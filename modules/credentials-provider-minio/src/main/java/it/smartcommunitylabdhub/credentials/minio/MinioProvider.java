@@ -20,8 +20,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import io.minio.credentials.AssumeRoleProvider;
+import io.minio.messages.ResponseDate;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.services.CredentialsProvider;
+import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.ConfigurationProvider;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
@@ -31,8 +33,11 @@ import it.smartcommunitylabdhub.files.provider.S3Credentials;
 import it.smartcommunitylabdhub.files.s3.S3FilesStore;
 import it.smartcommunitylabdhub.files.service.FilesService;
 import jakarta.validation.constraints.NotNull;
+import java.lang.reflect.Field;
 import java.security.NoSuchAlgorithmException;
 import java.security.ProviderException;
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +52,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -54,8 +60,8 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class MinioProvider implements ConfigurationProvider, CredentialsProvider, InitializingBean {
 
-    private static final Integer DEFAULT_DURATION = 24 * 3600; //24 hour
-    private static final Integer MIN_DURATION = 300; //5 min
+    private static final int DEFAULT_DURATION = 24 * 3600; //24 hour
+    private static final int MIN_DURATION = 300; //5 min
 
     @Value("${credentials.provider.minio.access-key}")
     private String accessKey;
@@ -69,19 +75,19 @@ public class MinioProvider implements ConfigurationProvider, CredentialsProvider
     @Value("${credentials.provider.minio.policy}")
     private String defaultPolicy;
 
-    @Value("${credentials.provider.minio.duration}")
-    private Integer duration = DEFAULT_DURATION;
-
     @Value("${credentials.provider.minio.endpoint}")
     private String endpointUrl;
 
     @Value("${credentials.provider.minio.region}")
     private String region;
 
-    private String bucket;
-
     @Value("${credentials.provider.minio.enable}")
     private Boolean enabled;
+
+    private String bucket;
+
+    private int duration = DEFAULT_DURATION;
+    private int accessTokenDuration = JwtTokenService.DEFAULT_ACCESS_TOKEN_DURATION;
 
     private final FilesService filesService;
     private S3Config config;
@@ -105,6 +111,13 @@ public class MinioProvider implements ConfigurationProvider, CredentialsProvider
         }
     }
 
+    @Autowired
+    public void setAccessTokenDuration(@Value("${jwt.access-token.duration}") Integer accessTokenDuration) {
+        if (accessTokenDuration != null) {
+            this.accessTokenDuration = accessTokenDuration.intValue();
+        }
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         if (Boolean.TRUE.equals(enabled)) {
@@ -113,8 +126,9 @@ public class MinioProvider implements ConfigurationProvider, CredentialsProvider
             enabled = StringUtils.hasText(endpointUrl);
         }
 
-        if (duration == null || duration < MIN_DURATION) {
-            duration = DEFAULT_DURATION;
+        //set duration to 2x access token duration to ensure we have valid credentials for a full cycle
+        if (accessTokenDuration * 2 > duration || accessTokenDuration * 3 < duration) {
+            duration = accessTokenDuration * 2;
         }
 
         //keep cache shorter than token duration to avoid releasing soon to be expired keys
@@ -185,11 +199,26 @@ public class MinioProvider implements ConfigurationProvider, CredentialsProvider
 
             io.minio.credentials.Credentials response = provider.fetch();
 
+            //extract private field because minio obj has no getter for expiration...
+            ZonedDateTime exp = ZonedDateTime.now().plus(Duration.ofSeconds(duration - MIN_DURATION));
+            try {
+                Field field = io.minio.credentials.Credentials.class.getDeclaredField("expiration");
+                field.setAccessible(true);
+
+                ResponseDate rd = (ResponseDate) ReflectionUtils.getField(field, response);
+                if (rd != null) {
+                    exp = rd.zonedDateTime();
+                }
+            } catch (NoSuchFieldException | SecurityException e) {
+                //no expiration, assume duration is valid
+            }
+
             return S3Credentials
                 .builder()
                 .accessKey(response.accessKey())
                 .secretKey(response.secretKey())
                 .sessionToken(response.sessionToken())
+                .expiration(exp)
                 .endpoint(endpointUrl)
                 .region(region)
                 .bucket(bucket)
@@ -222,7 +251,29 @@ public class MinioProvider implements ConfigurationProvider, CredentialsProvider
                 String username = auth.getName();
                 log.debug("get credentials for user authentication {} from cache", username);
                 try {
-                    return cache.get(Pair.of(username, policy.getPolicy()));
+                    Pair<String, String> key = Pair.of(username, policy.getPolicy());
+                    S3Credentials credentials = cache.get(key);
+                    if (credentials == null) {
+                        return null;
+                    }
+
+                    //check remaining duration against access token
+                    if (
+                        credentials.getExpiration() != null &&
+                        ZonedDateTime
+                            .now()
+                            .plus(Duration.ofSeconds(accessTokenDuration + MIN_DURATION))
+                            .isAfter(credentials.getExpiration())
+                    ) {
+                        //invalidate cache and re-fetch as new
+                        log.debug("refresh credentials for user authentication {} via STS service", username);
+                        cache.invalidate(key);
+
+                        //direct cache load, if it fails we don't want to retry
+                        return cache.get(key);
+                    }
+
+                    return credentials;
                 } catch (ExecutionException e) {
                     //error, no recovery
                     log.error("Error with provider {}", e);

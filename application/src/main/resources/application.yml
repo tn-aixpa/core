@@ -299,7 +299,6 @@ credentials:
       bucket: ${MINIO_CREDENTIALS_BUCKET:}
       claim:  ${MINIO_CREDENTIALS_CLAIM:minio/policy}
       policy:  ${MINIO_CREDENTIALS_POLICY:readwrite}
-      duration:  ${MINIO_CREDENTIALS_DURATION:86400}
       access-key: ${MINIO_CREDENTIALS_ACCESS_KEY:}
       secret-key: ${MINIO_CREDENTIALS_SECRET_KEY:}      
 

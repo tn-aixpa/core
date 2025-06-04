@@ -77,13 +77,13 @@ import org.springframework.util.StringUtils;
 //TODO extract an interface
 public class JwtTokenService implements InitializingBean {
 
-    private static final int DEFAULT_ACCESS_TOKEN_DURATION = 3600 * 8; //8 hours
-    private static final int DEFAULT_REFRESH_TOKEN_DURATION = 3600 * 24 * 30; //30 days
-    private static final int DEFAULT_PERSONAL_TOKEN_DURATION = 3600 * 24 * 365; //1 year
+    public static final int DEFAULT_ACCESS_TOKEN_DURATION = 3600 * 8; //8 hours
+    public static final int DEFAULT_REFRESH_TOKEN_DURATION = 3600 * 24 * 30; //30 days
+    public static final int DEFAULT_PERSONAL_TOKEN_DURATION = 3600 * 24 * 365; //1 year
 
-    private static final int DEFAULT_KEY_LENGTH = 54;
+    public static final int DEFAULT_KEY_LENGTH = 54;
 
-    private static final String CLAIM_AUTHORITIES = "authorities";
+    public static final String CLAIM_AUTHORITIES = "authorities";
 
     @Autowired
     //TODO move to JDBC!

@@ -16,9 +16,11 @@
 
 package it.smartcommunitylabdhub.files.provider;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.smartcommunitylabdhub.authorization.model.AbstractCredentials;
+import java.time.ZonedDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,6 +54,10 @@ public class S3Credentials extends AbstractCredentials {
 
     @JsonProperty("aws_region")
     private String region;
+
+    @JsonProperty("aws_credentials_expiration")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH':'mm':'ss'Z'")
+    private ZonedDateTime expiration;
 
     @JsonProperty("s3_signature_version")
     private String signatureVersion;
