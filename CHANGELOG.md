@@ -1,4 +1,4 @@
-# [0.11.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.11.0-...0.10.0) (2025-05-30)
+# [0.11.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.11.0-...0.10.0) (2025-06-04)
 
 ## What's Changed
 * feat: Support for CR runnable in K8s Framework by @kazhamiakin in https://github.com/scc-digitalhub/digitalhub-core/pull/154
@@ -23,6 +23,9 @@
 
 ### Features
 
+* i18n keys generation ([6f6a99f](https://github.com/scc-digitalhub/digitalhub-core/commit/6f6a99f33e7ca780a79392a696aaeaa794d859aa))
+* let admin configure default pvc storage class ([982f9ff](https://github.com/scc-digitalhub/digitalhub-core/commit/982f9ff55b8ae77eb06407258d26a4d7e20d9728))
+* minio credentials expiration handling ([345130d](https://github.com/scc-digitalhub/digitalhub-core/commit/345130dd1f163b6524af7bd67a82ed97d5a58f31))
 * add user label to k8s resources ([db10aea](https://github.com/scc-digitalhub/digitalhub-core/commit/db10aea4df5bbef94a69e01aa484c1d929785850))
 * bump spring boot version + bump k8s lib version + drop mysql dep ([ca74feb](https://github.com/scc-digitalhub/digitalhub-core/commit/ca74feb0cb663e839ea62f47d96480c731826db0))
 * collect runtime errors for k8s runs ([f84e7a3](https://github.com/scc-digitalhub/digitalhub-core/commit/f84e7a3cfa374310b06888fe8651e66743350f79))
@@ -72,6 +75,10 @@
 
 ### Bug Fixes
 
+* build kubeai status descriptors only once ([ec804ec](https://github.com/scc-digitalhub/digitalhub-core/commit/ec804ec920fcb9975233fe297a5b6843301e4100))
+* db credentials expiration should be more than access token ([e463938](https://github.com/scc-digitalhub/digitalhub-core/commit/e463938f9f3b756abaf2fa8aa6b20b23630e3f36))
+* restore old version of jetty for solr ([7bc9fb4](https://github.com/scc-digitalhub/digitalhub-core/commit/7bc9fb4d87d27a88579e9a91f50d6fca3663bdc1))
+* update kfp build env vars to align with sdk ([e6388ac](https://github.com/scc-digitalhub/digitalhub-core/commit/e6388ac18f4f844f741f1d235dd09c84d842a1ac))
 * make sure auth manager is available for triggered runs ([02d5cdb](https://github.com/scc-digitalhub/digitalhub-core/commit/02d5cdbfe79be08677a39c71e293c15eb60d498b))
 * triggered runs may have partial credentials, restore full context on fire ([4cbb160](https://github.com/scc-digitalhub/digitalhub-core/commit/4cbb16022e078069444c463b8f84fcf34b73d6c9))
 * dbt runner supports templates as per spec ([bfc782c](https://github.com/scc-digitalhub/digitalhub-core/commit/bfc782c33003e710f8f25b38156a00e1c8b90162))
