@@ -21,6 +21,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
 import it.smartcommunitylabdhub.authorization.services.CredentialsProvider;
+import it.smartcommunitylabdhub.authorization.services.JwtTokenService;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import jakarta.validation.constraints.NotNull;
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpEntity;
@@ -56,9 +58,9 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class DbCredentialsProvider implements CredentialsProvider, InitializingBean {
 
-    private static final Integer DEFAULT_DURATION = 24 * 3600; //24 hour
-    private static final Integer MIN_DURATION = 300; //5 min
-    private static final Integer SKEW_DURATION = 60; //1 min
+    private static final int DEFAULT_DURATION = 24 * 3600; //24 hour
+    private static final int MIN_DURATION = 300; //5 min
+    private static final int SKEW_DURATION = 60; //1 min
 
     @Value("${credentials.provider.db.user}")
     private String user;
@@ -75,8 +77,8 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
     @Value("${credentials.provider.db.role}")
     private String defaultRole;
 
-    @Value("${credentials.provider.db.duration}")
-    private Integer duration = DEFAULT_DURATION;
+    private int duration = DEFAULT_DURATION;
+    private int accessTokenDuration = JwtTokenService.DEFAULT_ACCESS_TOKEN_DURATION;
 
     @Value("${credentials.provider.db.endpoint}")
     private String endpointUrl;
@@ -101,11 +103,23 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
         restTemplate.setMessageConverters(converters);
     }
 
+    @Autowired
+    public void setAccessTokenDuration(@Value("${jwt.access-token.duration}") Integer accessTokenDuration) {
+        if (accessTokenDuration != null) {
+            this.accessTokenDuration = accessTokenDuration.intValue();
+        }
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         if (Boolean.TRUE.equals(enabled)) {
             //check config
             enabled = StringUtils.hasText(endpointUrl);
+        }
+
+        //set duration to 2x access token duration to ensure we have valid credentials for a full cycle
+        if (accessTokenDuration * 2 > duration || accessTokenDuration * 3 < duration) {
+            duration = accessTokenDuration * 2;
         }
 
         //keep cache shorter than token duration to avoid releasing soon to be expired keys
@@ -232,8 +246,8 @@ public class DbCredentialsProvider implements CredentialsProvider, InitializingB
                         return null;
                     }
 
-                    //check expiration and refresh if needed
-                    if (Instant.now().isAfter(p.getSecond())) {
+                    //check expiration against access token and refresh if needed
+                    if (Instant.now().plusSeconds(accessTokenDuration + MIN_DURATION).isAfter(p.getSecond())) {
                         //refresh
                         log.debug("refresh credentials for user authentication {} via STS service", username);
                         cache.invalidate(k);
