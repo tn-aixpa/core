@@ -96,10 +96,11 @@ The minimal set of configuration parameters required to deploy CORE are listed b
 
 Core is a networked application which exposes an API and a user web console. It is fundamental that the application is accessible by every client, web or machine, via a public facing address. To configure a split-horizon (unsupported!) system override the DH_ENDPOINT variable in the kubernetes env with the locally accessible address.
 
-| KEY         | DEFAULT               | DESCRIPTION                                                                                                       |
-| ----------- | --------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| DH_ENDPOINT | http://localhost:8080 | external user facing address for core. The endpoint needs to be accessible from the cluster and from the outside. |
-| DH_NAME     | dhcore                | The name of the application as shown in API responses and user console                                            |
+| KEY               | DEFAULT               | DESCRIPTION                                                                                                       |
+| ----------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| DH_ENDPOINT       | http://localhost:8080 | external user facing address for core. The endpoint needs to be accessible from the cluster and from the outside. |
+| DH_NAME           | dhcore                | The name of the application as shown in API responses and user console                                            |
+| DH_CONTACTS_EMAIL |                       | A contact email for the deployment. Blank by default                                                              |
 
 **Database**
 While CORE can use the internal embedded H2 Database, it is not suitable for production usage.

@@ -66,6 +66,9 @@
 | K8S_CUSTOM_API_GROUPS             | kubeai.org/v1                                                      |             |
 | DH_ENDPOINT                       | http://localhost:8080                                              |
 | DH_NAME                           | dhcore                                                             |             |
+| DH_CONTACTS_EMAIL                 |                                                                    |             |
+| DH_CONTACTS_NAME                  |                                                                    |
+| DH_CONTACTS_LINK                  | https://github.com/scc-digitalhub/digitalhub-core                  |             |
 | DH_API_LEVEL                      |                                                                    |
 | spring.profiles.active            | default                                                            |             |
 | LOG_LEVEL                         | INFO                                                               |             |
