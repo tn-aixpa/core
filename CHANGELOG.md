@@ -1,4 +1,21 @@
-# [0.11.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.11.0-...0.10.0) (2025-06-04)
+# [0.12.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.11.0...0.12.0) (2025-06-30)
+
+### Features
+
+* k8s templates for deploying core ([81b600e](https://github.com/scc-digitalhub/digitalhub-core/commit/81b600e720803a7d71e39eca85ee838b420699ac))
+* minio credentials expiration handling ([345130d](https://github.com/scc-digitalhub/digitalhub-core/commit/345130dd1f163b6524af7bd67a82ed97d5a58f31))
+* security.txt well-known ([52a5dcf](https://github.com/scc-digitalhub/digitalhub-core/commit/52a5dcf1856e65b39cabba98898e10abaf4ec004))
+
+### Bug Fixes
+
+* add missing processors param to deserde for kubeai spec ([e96fdac](https://github.com/scc-digitalhub/digitalhub-core/commit/e96fdac2e5ce3be4c4a80e12d6c7267373557769))
+* db credentials expiration should be more than access token ([e463938](https://github.com/scc-digitalhub/digitalhub-core/commit/e463938f9f3b756abaf2fa8aa6b20b23630e3f36))
+* remove annotation for k8s watchers ([6488263](https://github.com/scc-digitalhub/digitalhub-core/commit/6488263d4aaa791391fa7563e7c24a5934dadedd))
+* update kfp build env vars to align with sdk ([e6388ac](https://github.com/scc-digitalhub/digitalhub-core/commit/e6388ac18f4f844f741f1d235dd09c84d842a1ac))
+
+**Full Changelog**: https://github.com/scc-digitalhub/digitalhub-core/compare/0.11.0...0.12.0
+
+# [0.11.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.10.0-...0.11.0) (2025-06-04)
 
 ## What's Changed
 * feat: Support for CR runnable in K8s Framework by @kazhamiakin in https://github.com/scc-digitalhub/digitalhub-core/pull/154
@@ -108,7 +125,7 @@
 
 
 
-# [0.10.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.10.0-beta7...0.10.0) (2025-03-14)
+# [0.10.0](https://github.com/scc-digitalhub/digitalhub-core/compare/0.9.0...0.10.0) (2025-03-14)
 
 ## What's Changed
 * feat: add http single file download and branch support for git by @trubbio in https://github.com/scc-digitalhub/digitalhub-core/pull/147
