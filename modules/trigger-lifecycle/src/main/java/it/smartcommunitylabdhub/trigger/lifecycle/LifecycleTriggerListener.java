@@ -24,16 +24,16 @@ package it.smartcommunitylabdhub.trigger.lifecycle;
 
 import it.smartcommunitylabdhub.commons.accessors.fields.StatusFieldAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
-import it.smartcommunitylabdhub.commons.infrastructure.TriggerRun;
 import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvent;
 import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
-import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
-import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.status.StatusDTO;
-import it.smartcommunitylabdhub.commons.models.trigger.TriggerEvent;
-import it.smartcommunitylabdhub.commons.models.trigger.TriggerExecutionEvent;
+import it.smartcommunitylabdhub.relationships.RelationshipDetail;
+import it.smartcommunitylabdhub.relationships.RelationshipName;
 import it.smartcommunitylabdhub.trigger.lifecycle.models.LifecycleTriggerJob;
 import it.smartcommunitylabdhub.trigger.lifecycle.store.TriggerJobStore;
+import it.smartcommunitylabdhub.triggers.infrastructure.TriggerRun;
+import it.smartcommunitylabdhub.triggers.lifecycle.TriggerEvent;
+import it.smartcommunitylabdhub.triggers.lifecycle.TriggerExecutionEvent;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Collections;
@@ -108,7 +108,7 @@ public class LifecycleTriggerListener {
                 ? StatusFieldAccessor.with(((StatusDTO) dto).getStatus())
                 : StatusFieldAccessor.with(Collections.emptyMap());
 
-            String state = event.getState() != null ? event.getState().name() : accessor.getState();
+            String state = event.getState() != null ? event.getState() : accessor.getState();
 
             if (state == null) {
                 log.error("Missing or invalid state");

@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.files.service;
@@ -27,11 +27,11 @@ import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Configuration;
 import it.smartcommunitylabdhub.commons.infrastructure.ConfigurationProvider;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
-import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.commons.models.project.Project;
 import it.smartcommunitylabdhub.commons.models.project.ProjectBaseSpec;
 import it.smartcommunitylabdhub.files.http.HttpStore;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
+import it.smartcommunitylabdhub.files.models.FileInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
@@ -98,6 +98,10 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         stores.put(prefix, store);
     }
 
+    public Map<String, FilesStore> getStores() {
+        return this.stores;
+    }
+
     //TODO refactor
     public String getDefaultStore(@Nullable Project project) {
         //define base store, prefer any s3 with bucket if available
@@ -137,8 +141,11 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         return match;
     }
 
-    public @Nullable DownloadInfo getDownloadAsUrl(@NotNull String path, @Nullable List<Credentials> credentials)
-        throws StoreException {
+    public @Nullable DownloadInfo getDownloadAsUrl(
+        @NotNull String path,
+        @Nullable Integer duration,
+        @Nullable List<Credentials> credentials
+    ) throws StoreException {
         Assert.hasText(path, "path can not be null or empty");
 
         log.debug("resolve store for {}", path);
@@ -151,7 +158,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
 
         log.debug("found store {}", store.getClass().getName());
 
-        DownloadInfo info = store.downloadAsUrl(path, credentials);
+        DownloadInfo info = store.downloadAsUrl(path, duration, credentials);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to download {}", info);
@@ -179,7 +186,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
 
         log.debug("found store {}", store.getClass().getName());
 
-        List<FileInfo> metadata = store.fileInfo(path, credentials);
+        List<FileInfo> metadata = store.fileInfo(path, true, credentials);
 
         if (log.isTraceEnabled()) {
             log.trace("path resolved to metadata {}", metadata);
@@ -297,7 +304,7 @@ public class FilesService implements ConfigurationProvider, InitializingBean {
         if (store != null) {
             log.debug("found store {}", store.getClass().getName());
 
-            store.remove(path, credentials);
+            store.remove(path, true, credentials);
             log.debug("remove path {}", path);
         } else {
             log.debug("no store found.");

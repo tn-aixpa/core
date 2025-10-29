@@ -6,29 +6,29 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.core.queries.filters;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import it.smartcommunitylabdhub.commons.Keys;
-import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.base.BaseDTO;
 import it.smartcommunitylabdhub.commons.models.queries.SearchCriteria;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.core.persistence.BaseEntity;
+import it.smartcommunitylabdhub.commons.models.queries.SearchFilter.Condition;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
@@ -51,7 +51,7 @@ import org.springframework.util.StringUtils;
 @AllArgsConstructor
 @NoArgsConstructor
 @Valid
-public abstract class AbstractEntityFilter<T extends BaseEntity> {
+public abstract class AbstractEntityFilter<T extends BaseDTO> {
 
     @Nullable
     protected String q;
@@ -62,7 +62,7 @@ public abstract class AbstractEntityFilter<T extends BaseEntity> {
     protected String name;
 
     @Nullable
-    @Pattern(regexp = Keys.SLUG_PATTERN)
+    @Pattern(regexp = Keys.KIND_PATTERN)
     @Schema(example = "function", defaultValue = "", description = "Kind identifier")
     protected String kind;
 
@@ -85,13 +85,19 @@ public abstract class AbstractEntityFilter<T extends BaseEntity> {
     public SearchFilter<T> toSearchFilter() {
         //build default search fields in AND
         List<SearchCriteria<T>> criteria = new ArrayList<>();
+        List<SearchFilter<T>> filters = new ArrayList<>();
 
-        //TODO handle q in OR with name+description+version
+        //handle q in OR with id+name
         Optional
             .ofNullable(q)
-            .ifPresent(value ->
-                criteria.add(new BaseEntitySearchCriteria<>("name", value, SearchCriteria.Operation.like))
-            );
+            .ifPresent(value -> {
+                BaseEntityFilter<T> qf = BaseEntityFilter
+                    .<T>builder()
+                    .condition(Condition.or)
+                    .criteria(processQFields(value))
+                    .build();
+                filters.add(qf);
+            });
 
         Optional
             .ofNullable(name)
@@ -114,16 +120,14 @@ public abstract class AbstractEntityFilter<T extends BaseEntity> {
         Optional
             .ofNullable(user)
             .ifPresent(value ->
-                criteria.add(new BaseEntitySearchCriteria<>("createdBy", value, SearchCriteria.Operation.equal))
+                criteria.add(new BaseEntitySearchCriteria<>("user", value, SearchCriteria.Operation.equal))
             );
 
         Optional
             .ofNullable(state)
             .ifPresent(value -> {
                 try {
-                    criteria.add(
-                        new BaseEntitySearchCriteria<>("state", State.valueOf(value), SearchCriteria.Operation.equal)
-                    );
+                    criteria.add(new BaseEntitySearchCriteria<>("state", value, SearchCriteria.Operation.equal));
                 } catch (IllegalArgumentException e) {
                     //invalid enum value, skip
                 }
@@ -195,6 +199,18 @@ public abstract class AbstractEntityFilter<T extends BaseEntity> {
                 }
             });
 
-        return BaseEntityFilter.<T>builder().criteria(criteria).condition(SearchFilter.Condition.and).build();
+        return BaseEntityFilter
+            .<T>builder()
+            .criteria(criteria)
+            .filters(filters)
+            .condition(SearchFilter.Condition.and)
+            .build();
+    }
+
+    protected List<SearchCriteria<T>> processQFields(String q) {
+        return List.of(
+            new BaseEntitySearchCriteria<>("id", q, SearchCriteria.Operation.like),
+            new BaseEntitySearchCriteria<>("name", q, SearchCriteria.Operation.like)
+        );
     }
 }

@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.framework.kaniko.infrastructure.k8s;
@@ -45,7 +45,6 @@ import io.kubernetes.client.openapi.models.V1SecretVolumeSource;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
@@ -53,7 +52,8 @@ import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
-import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnableState;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sContainerBuilderRunnable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -75,10 +75,9 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 @Slf4j
-@FrameworkComponent(framework = K8sKanikoFramework.FRAMEWORK)
-public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Job> {
+@FrameworkComponent(framework = K8sContainerBuilderRunnable.FRAMEWORK)
+public class K8sKanikoFramework extends K8sBaseFramework<K8sContainerBuilderRunnable, V1Job> {
 
-    public static final String FRAMEWORK = "k8sbuild";
     public static final int DEADLINE_SECONDS = 3600 * 24 * 3; //3 days
     private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
         HashMap<String, Serializable>
@@ -88,22 +87,22 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
 
     private int activeDeadlineSeconds = DEADLINE_SECONDS;
 
-    @Value("${kaniko.image}")
+    @Value("${builder.kaniko.image}")
     private String kanikoImage;
 
     private String initImage;
     private List<String> initCommand = null;
 
-    @Value("${kaniko.image-prefix}")
+    @Value("${builder.kaniko.image-prefix}")
     private String imagePrefix;
 
-    @Value("${kaniko.image-registry}")
+    @Value("${builder.kaniko.image-registry}")
     private String imageRegistry;
 
-    @Value("${kaniko.secret}")
+    @Value("${builder.kaniko.secret}")
     private String kanikoSecret;
 
-    @Value("${kaniko.args}")
+    @Value("${builder.kaniko.args}")
     private List<String> kanikoArgs;
 
     public K8sKanikoFramework(ApiClient apiClient) {
@@ -131,7 +130,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         Assert.hasText(initImage, "init image should be set to a valid builder-tool image");
 
         //load templates
-        this.templates = loadTemplates(K8sKanikoRunnable.class);
+        this.templates = loadTemplates(K8sContainerBuilderRunnable.class);
 
         //build default shared volume definition for context building
         if (k8sProperties.getSharedVolume() == null) {
@@ -142,7 +141,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     }
 
     @Override
-    public K8sKanikoRunnable run(K8sKanikoRunnable runnable) throws K8sFrameworkException {
+    public K8sContainerBuilderRunnable run(K8sContainerBuilderRunnable runnable) throws K8sFrameworkException {
         log.info("run for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
@@ -243,7 +242,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         results.put("job", job);
 
         //update state
-        runnable.setState(State.RUNNING.name());
+        runnable.setState(K8sRunnableState.RUNNING.name());
 
         //update results
         if (!"disable".equals(collectResults)) {
@@ -268,7 +267,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     }
 
     @Override
-    public K8sKanikoRunnable stop(K8sKanikoRunnable runnable) throws K8sFrameworkException {
+    public K8sContainerBuilderRunnable stop(K8sContainerBuilderRunnable runnable) throws K8sFrameworkException {
         log.info("stop for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
@@ -291,7 +290,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             String configMapName = "init-config-map-" + runnable.getId();
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
-                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null, null);
                 messages.add(String.format("configMap %s deleted", configMapName));
             }
         } catch (ApiException | NullPointerException e) {
@@ -299,7 +298,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         }
 
         //update state
-        runnable.setState(State.STOPPED.name());
+        runnable.setState(K8sRunnableState.STOPPED.name());
         runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
@@ -310,7 +309,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
     }
 
     @Override
-    public K8sKanikoRunnable delete(K8sKanikoRunnable runnable) throws K8sFrameworkException {
+    public K8sContainerBuilderRunnable delete(K8sContainerBuilderRunnable runnable) throws K8sFrameworkException {
         log.info("delete for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
@@ -320,7 +319,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         try {
             job = get(build(runnable));
         } catch (K8sFrameworkException e) {
-            runnable.setState(State.DELETED.name());
+            runnable.setState(K8sRunnableState.DELETED.name());
             return runnable;
         }
 
@@ -337,7 +336,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             String configMapName = "init-config-map-" + runnable.getId();
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
-                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null, null);
                 messages.add(String.format("configMap %s deleted", configMapName));
             }
         } catch (ApiException | NullPointerException e) {
@@ -345,7 +344,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         }
 
         //update state
-        runnable.setState(State.DELETED.name());
+        runnable.setState(K8sRunnableState.DELETED.name());
         runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
@@ -355,7 +354,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         return runnable;
     }
 
-    public V1Job build(K8sKanikoRunnable runnable) throws K8sFrameworkException {
+    public V1Job build(K8sContainerBuilderRunnable runnable) throws K8sFrameworkException {
         log.debug("build for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
@@ -372,10 +371,13 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
         log.debug("build k8s job for {}", jobName);
 
         //check template
-        K8sTemplate<K8sKanikoRunnable> template = null;
+        K8sTemplate<K8sContainerBuilderRunnable> template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //get template
             template = templates.get(runnable.getTemplate());
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE);
         }
 
         //build destination image name and set to runnable
@@ -499,12 +501,11 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             .resources(resources)
             .env(env)
             .envFrom(envFrom)
+            .securityContext(buildSecurityContext(runnable))
             .command(initCommand);
 
         // Set initContainer as first container in the PodSpec
         podSpec.setInitContainers(Collections.singletonList(initContainer));
-
-        int backoffLimit = Optional.ofNullable(runnable.getBackoffLimit()).orElse(0);
 
         // Create the JobSpec with the PodTemplateSpec, leverage template if provided
         V1JobSpec jobSpec = Optional
@@ -517,7 +518,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             .activeDeadlineSeconds(Long.valueOf(activeDeadlineSeconds))
             .parallelism(1)
             .completions(1)
-            .backoffLimit(backoffLimit)
+            .backoffLimit(0)
             .template(podTemplateSpec);
 
         // Return a new job with metadata and jobSpec
@@ -575,7 +576,7 @@ public class K8sKanikoFramework extends K8sBaseFramework<K8sKanikoRunnable, V1Jo
             String jobName = job.getMetadata().getName();
             log.debug("delete k8s job for {}", jobName);
 
-            batchV1Api.deleteNamespacedJob(jobName, namespace, null, null, null, null, "Foreground", null);
+            batchV1Api.deleteNamespacedJob(jobName, namespace, null, null, null, null, null, "Foreground", null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isDebugEnabled()) {

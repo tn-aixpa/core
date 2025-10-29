@@ -41,23 +41,11 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DbCredentials extends AbstractCredentials {
 
-    @JsonProperty("db_platform")
-    private String platform;
-
-    @JsonProperty("db_host")
-    private String host;
-
-    @JsonProperty("db_port")
-    private Integer port;
-
     @JsonProperty("db_username")
     private String username;
 
     @JsonProperty("db_password")
     private String password;
-
-    @JsonProperty("db_database")
-    private String database;
 
     @Override
     public void eraseCredentials() {

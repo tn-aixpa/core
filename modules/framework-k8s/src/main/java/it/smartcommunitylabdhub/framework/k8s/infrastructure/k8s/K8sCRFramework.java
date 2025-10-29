@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
@@ -29,7 +29,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.util.generic.KubernetesApiResponse;
 import io.kubernetes.client.util.generic.dynamic.DynamicKubernetesApi;
@@ -38,10 +41,10 @@ import io.kubernetes.client.util.generic.options.CreateOptions;
 import io.kubernetes.client.util.generic.options.DeleteOptions;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.exceptions.FrameworkException;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCRRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnableState;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.Serializable;
@@ -119,7 +122,7 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
             log.error(e.getMessage());
         }
         //update state
-        runnable.setState(State.RUNNING.name());
+        runnable.setState(K8sRunnableState.PENDING.name());
 
         runnable.setResults(
             results.entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> mapper.convertValue(e, typeRef)))
@@ -156,7 +159,27 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
     }
 
     @Override
-    public K8sCRRunnable delete(K8sCRRunnable runnable) throws FrameworkException {
+    public K8sCRRunnable stop(K8sCRRunnable runnable) throws K8sFrameworkException {
+        log.info("stop for {}", runnable.getId());
+        if (log.isTraceEnabled()) {
+            log.trace("runnable: {}", runnable);
+        }
+
+        //stop by deleting
+        runnable = delete(runnable);
+
+        //update state
+        runnable.setState(K8sRunnableState.STOPPED.name());
+
+        if (log.isTraceEnabled()) {
+            log.trace("result: {}", runnable);
+        }
+
+        return runnable;
+    }
+
+    @Override
+    public K8sCRRunnable delete(K8sCRRunnable runnable) throws K8sFrameworkException {
         log.info("delete for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
@@ -169,7 +192,7 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
         try {
             cr = get(build(runnable), dynamicApi);
         } catch (K8sFrameworkException | IllegalArgumentException e) {
-            runnable.setState(State.DELETED.name());
+            runnable.setState(K8sRunnableState.DELETED.name());
             return runnable;
         }
 
@@ -189,7 +212,7 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
         }
 
         //update state
-        runnable.setState(State.DELETED.name());
+        runnable.setState(K8sRunnableState.DELETED.name());
         runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
@@ -307,6 +330,58 @@ public class K8sCRFramework extends K8sBaseFramework<K8sCRRunnable, DynamicKuber
                 log.trace("k8s api response: {}", e.getMessage());
             }
             throw new K8sFrameworkException(e.getMessage(), e.getMessage());
+        }
+    }
+
+    @Override
+    public DynamicKubernetesObject get(DynamicKubernetesObject obj) throws K8sFrameworkException {
+        //not updatable without api.
+        return obj;
+    }
+
+    @Override
+    public List<V1Pod> pods(DynamicKubernetesObject object) throws K8sFrameworkException {
+        if (object == null || object.getMetadata() == null) {
+            return null;
+        }
+
+        //try super first
+        List<V1Pod> items = super.pods(object);
+        if (items != null && !items.isEmpty()) {
+            return items;
+        }
+
+        //build labels to select pods
+        //we expect a label matching the api kind = resource name
+        //TODO make this extensible
+        String name = object.getMetadata().getName();
+        String label = object.getKind().toLowerCase();
+        String labelSelector = label + "=" + name;
+        try {
+            log.debug("load pods for {}", labelSelector);
+            V1PodList pods = coreV1Api.listNamespacedPod(
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                labelSelector,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
+
+            return pods.getItems();
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
     }
 }

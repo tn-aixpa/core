@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.runtime.python.runners;
@@ -34,14 +34,14 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGenerator;
 import it.smartcommunitylabdhub.framework.kaniko.infrastructure.docker.DockerfileGeneratorFactory;
-import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sKanikoRunnable;
+import it.smartcommunitylabdhub.framework.kaniko.runnables.K8sContainerBuilderRunnable;
 import it.smartcommunitylabdhub.runtime.python.PythonRuntime;
 import it.smartcommunitylabdhub.runtime.python.model.NuclioFunctionBuilder;
 import it.smartcommunitylabdhub.runtime.python.model.NuclioFunctionSpec;
 import it.smartcommunitylabdhub.runtime.python.model.PythonSourceCode;
+import it.smartcommunitylabdhub.runtime.python.specs.PythonBuildRunSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonBuildTaskSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonFunctionSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.PythonRunSpec;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -59,31 +59,24 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Slf4j
 public class PythonBuildRunner {
 
-    private final String image;
+    private final Map<String, String> images;
     private final String command;
-    private final PythonFunctionSpec functionSpec;
-    private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
 
-    public PythonBuildRunner(
-        String image,
-        String command,
-        PythonFunctionSpec functionPythonSpec,
-        Map<String, String> secretData,
-        K8sBuilderHelper k8sBuilderHelper
-    ) {
-        this.image = image;
+    public PythonBuildRunner(Map<String, String> images, String command, K8sBuilderHelper k8sBuilderHelper) {
+        this.images = images;
         this.command = command;
-        this.functionSpec = functionPythonSpec;
-        this.secretData = secretData;
         this.k8sBuilderHelper = k8sBuilderHelper;
     }
 
-    public K8sKanikoRunnable produce(Run run) {
-        PythonRunSpec runSpec = new PythonRunSpec(run.getSpec());
+    public K8sContainerBuilderRunnable produce(Run run, Map<String, String> secretData) {
+        PythonBuildRunSpec runSpec = new PythonBuildRunSpec(run.getSpec());
         PythonBuildTaskSpec taskSpec = runSpec.getTaskBuildSpec();
         TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
+        PythonFunctionSpec functionSpec = runSpec.getFunctionSpec();
+
+        String image = images.get(functionSpec.getPythonVersion().name());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
@@ -234,7 +227,7 @@ public class PythonBuildRunner {
             }
         }
 
-        return K8sKanikoRunnable
+        return K8sContainerBuilderRunnable
             .builder()
             .id(run.getId())
             .project(run.getProject())
@@ -252,7 +245,7 @@ public class PythonBuildRunner {
             .contextSources(contextSources)
             .envs(coreEnvList)
             .secrets(coreSecrets)
-            .resources(taskSpec.getResources())
+            .resources(k8sBuilderHelper != null ? k8sBuilderHelper.convertResources(taskSpec.getResources()) : null)
             .volumes(taskSpec.getVolumes())
             .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())

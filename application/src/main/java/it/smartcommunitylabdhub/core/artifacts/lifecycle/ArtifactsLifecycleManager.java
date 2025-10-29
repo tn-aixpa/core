@@ -22,54 +22,14 @@
 
 package it.smartcommunitylabdhub.core.artifacts.lifecycle;
 
-import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.commons.models.artifact.Artifact;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.artifacts.persistence.ArtifactEntity;
-import it.smartcommunitylabdhub.core.artifacts.specs.ArtifactBaseStatus;
-import it.smartcommunitylabdhub.core.lifecycle.BaseLifecycleManager;
-import jakarta.validation.constraints.NotNull;
+import it.smartcommunitylabdhub.lifecycle.BaseLifecycleManager;
+import it.smartcommunitylabdhub.lifecycle.LifecycleManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class ArtifactsLifecycleManager extends BaseLifecycleManager<Artifact, ArtifactEntity, ArtifactBaseStatus> {
-
-    /*
-     * Actions: ask to perform
-     */
-
-    public Artifact upload(@NotNull Artifact artifact) {
-        return perform(artifact, LifecycleEvents.UPLOAD);
-    }
-
-    public Artifact delete(@NotNull Artifact artifact) {
-        return perform(artifact, LifecycleEvents.DELETE);
-    }
-
-    public Artifact update(@NotNull Artifact artifact) {
-        return perform(artifact, LifecycleEvents.UPDATE);
-    }
-
-    /*
-     * Events: callbacks
-     */
-
-    //NOTE: disabled, we can not handle onCreated because there is no state change
-    // public Artifact onCreated(@NotNull Artifact artifact) {
-    //     return handle(artifact, State.CREATED);
-    // }
-
-    public Artifact onUploading(@NotNull Artifact artifact) {
-        return handle(artifact, State.UPLOADING);
-    }
-
-    public Artifact onReady(@NotNull Artifact artifact) {
-        return handle(artifact, State.READY);
-    }
-
-    public Artifact onError(@NotNull Artifact artifact) {
-        return handle(artifact, State.ERROR);
-    }
-}
+public class ArtifactsLifecycleManager
+    extends BaseLifecycleManager<Artifact, ArtifactState, ArtifactEvents>
+    implements LifecycleManager<Artifact> {}

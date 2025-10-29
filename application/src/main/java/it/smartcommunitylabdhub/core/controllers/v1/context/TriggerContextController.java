@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.core.controllers.v1.context;
@@ -30,20 +30,20 @@ import it.smartcommunitylabdhub.commons.exceptions.DuplicatedEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.NoSuchEntityException;
 import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.trigger.Trigger;
-import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
+import it.smartcommunitylabdhub.commons.services.TriggerManager;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
 import it.smartcommunitylabdhub.core.triggers.filters.TriggerEntityFilter;
-import it.smartcommunitylabdhub.core.triggers.lifecycle.TriggerLifecycleManager;
-import it.smartcommunitylabdhub.core.triggers.persistence.TriggerEntity;
-import it.smartcommunitylabdhub.core.triggers.service.SearchableTriggerService;
+import it.smartcommunitylabdhub.lifecycle.LifecycleManager;
+import it.smartcommunitylabdhub.relationships.RelationshipDetail;
+import it.smartcommunitylabdhub.relationships.RelationshipsAwareEntityService;
+import it.smartcommunitylabdhub.triggers.lifecycle.TriggerEvent;
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
-import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,10 +78,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class TriggerContextController {
 
     @Autowired
-    SearchableTriggerService triggerService;
+    TriggerManager triggerManager;
 
     @Autowired
-    private TriggerLifecycleManager triggerManager;
+    private LifecycleManager<Trigger> lifecycleManager;
 
     @Autowired
     RelationshipsAwareEntityService<Trigger> relationshipsService;
@@ -100,10 +100,10 @@ public class TriggerContextController {
         dto.setProject(project);
 
         //create as new, will check for duplicated
-        Trigger trigger = triggerService.createTrigger(dto);
+        Trigger trigger = triggerManager.createTrigger(dto);
 
         //run
-        triggerManager.run(trigger);
+        lifecycleManager.perform(trigger, TriggerEvent.RUN.name());
 
         return trigger;
     }
@@ -117,12 +117,12 @@ public class TriggerContextController {
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
     ) {
-        SearchFilter<TriggerEntity> sf = null;
+        SearchFilter<Trigger> sf = null;
         if (filter != null) {
             sf = filter.toSearchFilter();
         }
 
-        return triggerService.searchTriggersByProject(project, pageable, sf);
+        return triggerManager.searchTriggersByProject(project, pageable, sf);
     }
 
     @Operation(summary = "Retrieve a specific trigger given the trigger id")
@@ -131,7 +131,7 @@ public class TriggerContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Trigger trigger = triggerService.getTrigger(id);
+        Trigger trigger = triggerManager.getTrigger(id);
 
         //check for project match
         if (!trigger.getProject().equals(project)) {
@@ -152,14 +152,14 @@ public class TriggerContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Trigger triggerDTO
     ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
-        Trigger trigger = triggerService.getTrigger(id);
+        Trigger trigger = triggerManager.getTrigger(id);
 
         //check for project match
         if (!trigger.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return triggerService.updateTrigger(id, triggerDTO);
+        return triggerManager.updateTrigger(id, triggerDTO);
     }
 
     @Operation(summary = "Delete a specific trigger, with optional cascade")
@@ -169,7 +169,7 @@ public class TriggerContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestParam(required = false) Boolean cascade
     ) throws NoSuchEntityException {
-        Trigger trigger = triggerService.getTrigger(id);
+        Trigger trigger = triggerManager.getTrigger(id);
 
         //check for project  match
         if (!trigger.getProject().equals(project)) {
@@ -177,8 +177,8 @@ public class TriggerContextController {
         }
 
         //TODO via manager to avoid race condition between cleanup and delete
-        triggerManager.stop(trigger);
-        triggerService.deleteTrigger(id, cascade != null && cascade);
+        lifecycleManager.perform(trigger, TriggerEvent.STOP.name());
+        triggerManager.deleteTrigger(id, cascade != null && cascade);
     }
 
     @Operation(summary = "Execute a specific trigger")
@@ -187,7 +187,7 @@ public class TriggerContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Trigger trigger = triggerService.getTrigger(id);
+        Trigger trigger = triggerManager.getTrigger(id);
 
         //check for project  match
         if (!trigger.getProject().equals(project)) {
@@ -195,7 +195,7 @@ public class TriggerContextController {
         }
 
         // via manager
-        return triggerManager.run(trigger);
+        return lifecycleManager.perform(trigger, TriggerEvent.RUN.name());
     }
 
     @Operation(summary = "Stop a specific trigger execution")
@@ -204,14 +204,14 @@ public class TriggerContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Trigger trigger = triggerService.getTrigger(id);
+        Trigger trigger = triggerManager.getTrigger(id);
         //check for project  match
         if (!trigger.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
         // via manager
-        return triggerManager.stop(trigger);
+        return lifecycleManager.perform(trigger, TriggerEvent.STOP.name());
     }
 
     @Operation(summary = "Get relationships info for a given entity, if available")
@@ -220,7 +220,7 @@ public class TriggerContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Trigger entity = triggerService.getTrigger(id);
+        Trigger entity = triggerManager.getTrigger(id);
 
         //check for project and name match
         if ((entity != null) && !entity.getProject().equals(project)) {

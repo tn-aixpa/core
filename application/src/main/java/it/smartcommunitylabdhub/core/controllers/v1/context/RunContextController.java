@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.core.controllers.v1.context;
@@ -33,24 +33,28 @@ import it.smartcommunitylabdhub.commons.exceptions.SystemException;
 import it.smartcommunitylabdhub.commons.models.log.Log;
 import it.smartcommunitylabdhub.commons.models.metrics.NumberOrNumberArray;
 import it.smartcommunitylabdhub.commons.models.queries.SearchFilter;
-import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.models.run.RunBaseSpec;
 import it.smartcommunitylabdhub.commons.services.LogService;
 import it.smartcommunitylabdhub.commons.services.MetricsService;
-import it.smartcommunitylabdhub.commons.services.RelationshipsAwareEntityService;
+import it.smartcommunitylabdhub.commons.services.RunManager;
 import it.smartcommunitylabdhub.core.ApplicationKeys;
 import it.smartcommunitylabdhub.core.annotations.ApiVersion;
+import it.smartcommunitylabdhub.core.components.proxy.ProxyService;
 import it.smartcommunitylabdhub.core.runs.filters.RunEntityFilter;
-import it.smartcommunitylabdhub.core.runs.lifecycle.RunLifecycleManager;
-import it.smartcommunitylabdhub.core.runs.persistence.RunEntity;
-import it.smartcommunitylabdhub.core.runs.service.SearchableRunService;
+import it.smartcommunitylabdhub.framework.k8s.model.K8sServiceStatus;
+import it.smartcommunitylabdhub.lifecycle.LifecycleManager;
+import it.smartcommunitylabdhub.relationships.RelationshipDetail;
+import it.smartcommunitylabdhub.relationships.RelationshipsAwareEntityService;
+import it.smartcommunitylabdhub.runtimes.lifecycle.RunEvent;
+import jakarta.annotation.Nullable;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,8 +63,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.BindException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -71,6 +80,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @ApiVersion("v1")
@@ -84,10 +94,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class RunContextController {
 
     @Autowired
-    SearchableRunService runService;
+    RunManager runManager;
 
     @Autowired
-    RunLifecycleManager runManager;
+    LifecycleManager<Run> lifecycleManager;
 
     @Autowired
     LogService logService;
@@ -97,6 +107,9 @@ public class RunContextController {
 
     @Autowired
     MetricsService<Run> metricsService;
+
+    @Autowired
+    private ProxyService proxyService;
 
     @Operation(summary = "Create a run in a project context")
     @PostMapping(
@@ -112,15 +125,15 @@ public class RunContextController {
         dto.setProject(project);
 
         //create as new, will check for duplicated
-        Run run = runService.createRun(dto);
+        Run run = runManager.createRun(dto);
 
         //if !local then also build+run
         RunBaseSpec runBaseSpec = new RunBaseSpec();
         runBaseSpec.configure(run.getSpec());
 
         if (Boolean.FALSE.equals(runBaseSpec.getLocalExecution())) {
-            run = runManager.build(run);
-            run = runManager.run(run);
+            run = lifecycleManager.perform(run, RunEvent.BUILD.name());
+            run = lifecycleManager.perform(run, RunEvent.RUN.name());
         }
 
         return run;
@@ -135,12 +148,12 @@ public class RunContextController {
             { @SortDefault(sort = "created", direction = Direction.DESC) }
         ) Pageable pageable
     ) {
-        SearchFilter<RunEntity> sf = null;
+        SearchFilter<Run> sf = null;
         if (filter != null) {
             sf = filter.toSearchFilter();
         }
 
-        return runService.searchRunsByProject(project, pageable, sf);
+        return runManager.searchRunsByProject(project, pageable, sf);
     }
 
     @Operation(summary = "Retrieve a specific run given the run id")
@@ -149,7 +162,7 @@ public class RunContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Run run = runService.getRun(id);
+        Run run = runManager.getRun(id);
 
         //check for project match
         if (!run.getProject().equals(project)) {
@@ -170,14 +183,14 @@ public class RunContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @RequestBody @Valid @NotNull Run runDTO
     ) throws NoSuchEntityException, IllegalArgumentException, SystemException, BindException {
-        Run run = runService.getRun(id);
+        Run run = runManager.getRun(id);
 
         //check for project match
         if (!run.getProject().equals(project)) {
             throw new IllegalArgumentException("invalid project");
         }
 
-        return runService.updateRun(id, runDTO);
+        return runManager.updateRun(id, runDTO);
     }
 
     @Operation(summary = "Delete a specific run, with optional cascade")
@@ -186,7 +199,7 @@ public class RunContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Run run = runService.getRun(id);
+        Run run = runManager.getRun(id);
 
         //check for project  match
         if (!run.getProject().equals(project)) {
@@ -194,19 +207,20 @@ public class RunContextController {
         }
 
         //delete via manager
-        return runManager.delete(run);
+        return lifecycleManager.perform(run, RunEvent.DELETE.name());
     }
 
     /*
      * Actions
      */
-    @Operation(summary = "Build a specific run")
-    @PostMapping(path = "/{id}/build")
-    public Run buildRunById(
+    @Operation(summary = "Perform action on a specific run")
+    @PostMapping(path = "/{id}/{action}")
+    public Run performOnRun(
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String action
     ) throws NoSuchEntityException {
-        Run run = runService.getRun(id);
+        Run run = runManager.getRun(id);
 
         //check for project  match
         if (!run.getProject().equals(project)) {
@@ -214,75 +228,7 @@ public class RunContextController {
         }
 
         // via manager
-        return runManager.build(run);
-    }
-
-    @Operation(summary = "Execute a specific run")
-    @PostMapping(path = "/{id}/run")
-    public Run runRunById(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
-    ) throws NoSuchEntityException {
-        Run run = runService.getRun(id);
-
-        //check for project  match
-        if (!run.getProject().equals(project)) {
-            throw new IllegalArgumentException("invalid project");
-        }
-
-        // via manager
-        return runManager.run(run);
-    }
-
-    @Operation(summary = "Stop a specific run execution")
-    @PostMapping(path = "/{id}/stop")
-    public Run stopRunById(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
-    ) throws NoSuchEntityException {
-        Run run = runService.getRun(id);
-
-        //check for project  match
-        if (!run.getProject().equals(project)) {
-            throw new IllegalArgumentException("invalid project");
-        }
-
-        // via manager
-        return runManager.stop(run);
-    }
-
-    @Operation(summary = "Resume a specific run execution")
-    @PostMapping(path = "/{id}/resume")
-    public Run resumeRunById(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
-    ) throws NoSuchEntityException {
-        Run run = runService.getRun(id);
-
-        //check for project  match
-        if (!run.getProject().equals(project)) {
-            throw new IllegalArgumentException("invalid project");
-        }
-
-        // via manager
-        return runManager.resume(run);
-    }
-
-    @Operation(summary = "Delete a specific run execution")
-    @PostMapping(path = "/{id}/delete")
-    public Run deleteRunById(
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
-        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
-    ) throws NoSuchEntityException {
-        Run run = runService.getRun(id);
-
-        //check for project  match
-        if (!run.getProject().equals(project)) {
-            throw new IllegalArgumentException("invalid project");
-        }
-
-        // via manager
-        return runManager.delete(run);
+        return lifecycleManager.perform(run, action.toUpperCase());
     }
 
     /*
@@ -295,7 +241,7 @@ public class RunContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Run run = runService.getRun(id);
+        Run run = runManager.getRun(id);
 
         //check for project
         if (!run.getProject().equals(project)) {
@@ -311,7 +257,7 @@ public class RunContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws NoSuchEntityException {
-        Run entity = runService.getRun(id);
+        Run entity = runManager.getRun(id);
 
         //check for project and name match
         if ((entity != null) && !entity.getProject().equals(project)) {
@@ -327,7 +273,7 @@ public class RunContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id
     ) throws StoreException, SystemException {
-        Run entity = runService.getRun(id);
+        Run entity = runManager.getRun(id);
 
         //check for project and name match
         if ((entity != null) && !entity.getProject().equals(project)) {
@@ -344,7 +290,7 @@ public class RunContextController {
         @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
         @PathVariable String name
     ) throws StoreException, SystemException {
-        Run entity = runService.getRun(id);
+        Run entity = runManager.getRun(id);
 
         //check for project and name match
         if ((entity != null) && !entity.getProject().equals(project)) {
@@ -362,7 +308,7 @@ public class RunContextController {
         @PathVariable String name,
         @RequestBody NumberOrNumberArray data
     ) throws StoreException, SystemException {
-        Run entity = runService.getRun(id);
+        Run entity = runManager.getRun(id);
 
         //check for project and name match
         if ((entity != null) && !entity.getProject().equals(project)) {
@@ -370,5 +316,93 @@ public class RunContextController {
         }
 
         metricsService.saveMetrics(id, name, data);
+    }
+
+    @RequestMapping(value = "/{id}/proxy")
+    public ResponseEntity<String> proxyRequest(
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String project,
+        @PathVariable @Valid @NotNull @Pattern(regexp = Keys.SLUG_PATTERN) String id,
+        HttpServletRequest request
+    ) throws IOException {
+        Run entity = runManager.getRun(id);
+
+        //check for project and name match
+        if (!entity.getProject().equals(project)) {
+            throw new IllegalArgumentException("invalid project");
+        }
+
+        //custom header for request url forwarding
+        String requestUrl = request.getHeader("X-Proxy-URL");
+        if (requestUrl == null || requestUrl.isEmpty()) {
+            throw new IllegalArgumentException("missing proxy url");
+        }
+
+        if (!requestUrl.startsWith("http://") && !requestUrl.startsWith("https://")) {
+            requestUrl = "http://" + requestUrl;
+        }
+
+        String requestMethod = request.getHeader("X-Proxy-Method");
+        if (requestMethod == null || requestMethod.isEmpty()) {
+            requestMethod = "GET";
+        }
+
+        //check that run contains the same url
+        if (entity.getStatus() == null) {
+            throw new IllegalArgumentException("invalid run status");
+        }
+
+        K8sServiceStatus k8sService = K8sServiceStatus.with(entity.getStatus());
+        if (k8sService == null || k8sService.getService() == null || k8sService.getService().getUrl() == null) {
+            throw new IllegalArgumentException("invalid run service");
+        }
+        String serviceUrl = k8sService.getService().getUrl();
+        if (serviceUrl == null || serviceUrl.isEmpty()) {
+            throw new IllegalArgumentException("invalid run service url");
+        }
+
+        if (!serviceUrl.startsWith("http://") && !serviceUrl.startsWith("https://")) {
+            serviceUrl = "http://" + serviceUrl;
+        }
+
+        //check for host match
+        String requestHost = UriComponentsBuilder.fromUriString(requestUrl).build().getHost();
+        String serviceHost = UriComponentsBuilder.fromUriString(serviceUrl).build().getHost();
+
+        if (!requestHost.startsWith(serviceHost)) {
+            throw new IllegalArgumentException("invalid destination host");
+        }
+
+        log.info("Receive {} for url {}", request.getMethod(), requestUrl);
+
+        ResponseEntity<String> response = proxyService.proxyRequest(requestUrl, requestMethod, request);
+
+        //build response
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        if (response.getHeaders() != null) {
+            //keep content type
+            MediaType contentType = response.getHeaders().getContentType() != null
+                ? response.getHeaders().getContentType()
+                : MediaType.TEXT_PLAIN;
+            headers.add(HttpHeaders.CONTENT_TYPE, contentType.toString());
+
+            //copy everything else as X-Proxy response
+            response
+                .getHeaders()
+                .entrySet()
+                .forEach(e -> {
+                    String h = "X-Proxy-" + e.getKey();
+                    headers.put(h, e.getValue());
+                    //make sure all X-Proxy headers are exposed
+                    headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, h);
+                });
+
+            //append status code
+            if (response.getStatusCode() != null) {
+                headers.add("X-Proxy-Status", response.getStatusCode().toString());
+                //make sure all X-Proxy headers are exposed
+                headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "X-Proxy-Status");
+            }
+        }
+        return new ResponseEntity<>(response.getBody(), headers, HttpStatus.OK);
     }
 }

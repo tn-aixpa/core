@@ -6,47 +6,57 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.runtime.kfp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.argoproj.workflow.models.IoArgoprojWorkflowV1alpha1Workflow;
+import it.smartcommunitylabdhub.authorization.model.UserAuthentication;
+import it.smartcommunitylabdhub.authorization.providers.AccessCredentials;
+import it.smartcommunitylabdhub.authorization.providers.AccessCredentialsProvider;
+import it.smartcommunitylabdhub.authorization.services.CredentialsService;
+import it.smartcommunitylabdhub.authorization.utils.UserAuthenticationHelper;
 import it.smartcommunitylabdhub.commons.accessors.spec.RunSpecAccessor;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.RuntimeComponent;
+import it.smartcommunitylabdhub.commons.infrastructure.Configuration;
+import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
 import it.smartcommunitylabdhub.commons.infrastructure.RunRunnable;
 import it.smartcommunitylabdhub.commons.jackson.YamlMapperFactory;
 import it.smartcommunitylabdhub.commons.models.base.Executable;
 import it.smartcommunitylabdhub.commons.models.objects.SourceCode;
 import it.smartcommunitylabdhub.commons.models.run.Run;
 import it.smartcommunitylabdhub.commons.models.task.Task;
-import it.smartcommunitylabdhub.commons.models.task.TaskBaseSpec;
 import it.smartcommunitylabdhub.commons.models.workflow.Workflow;
+import it.smartcommunitylabdhub.commons.services.ConfigurationService;
 import it.smartcommunitylabdhub.commons.services.SecretService;
-import it.smartcommunitylabdhub.commons.services.WorkflowService;
+import it.smartcommunitylabdhub.commons.services.WorkflowManager;
 import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.k8s.base.K8sBaseRuntime;
+import it.smartcommunitylabdhub.framework.k8s.base.K8sFunctionTaskBaseSpec;
 import it.smartcommunitylabdhub.framework.k8s.jackson.KubernetesMapper;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
 import it.smartcommunitylabdhub.runtime.kfp.dtos.NodeStatusDTO;
 import it.smartcommunitylabdhub.runtime.kfp.mapper.NodeStatusMapper;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPBuildRunner;
 import it.smartcommunitylabdhub.runtime.kfp.runners.KFPPipelineRunner;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPBuildRunSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPBuildTaskSpec;
+import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineRunSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPPipelineTaskSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunSpec;
 import it.smartcommunitylabdhub.runtime.kfp.specs.KFPRunStatus;
@@ -55,6 +65,7 @@ import it.smartcommunitylabdhub.runtime.kfp.specs.KFPWorkflowSpec.KFPWorkflowCod
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -67,44 +78,72 @@ import org.springframework.beans.factory.annotation.Value;
 @Slf4j
 public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPRunStatus, K8sRunnable> {
 
+    public static final Integer DEFAULT_DURATION = 3600 * 8; // 8 hour
+    public static final Integer MIN_DURATION = 300; // 5 minutes
+
     public static final String RUNTIME = "kfp";
+    public static final String[] KINDS = { KFPBuildRunSpec.KIND, KFPPipelineRunSpec.KIND };
 
     @Autowired
     SecretService secretService;
 
     @Autowired
-    private WorkflowService workflowService;
+    private WorkflowManager workflowService;
+
+    @Autowired
+    private CredentialsService credentialsService;
+
+    @Autowired(required = false)
+    private AccessCredentialsProvider accessCredentialsProvider;
+
+    @Autowired
+    private ConfigurationService configurationService;
 
     private NodeStatusMapper nodeStatusMapper = new NodeStatusMapper();
 
     @Value("${runtime.kfp.image}")
     private String image;
 
-    public KFPRuntime() {
-        super(KFPRunSpec.KIND);
+    private Integer duration = DEFAULT_DURATION;
+
+    public KFPRuntime() {}
+
+    @Autowired
+    public void setDuration(@Value("${runtime.kfp.duration}") Integer duration) {
+        if (duration != null && duration > MIN_DURATION) {
+            // set a minimum duration of 5 minutes
+            this.duration = duration;
+        } else {
+            log.warn("Invalid KFP runtime duration {}. Using default {}", duration, DEFAULT_DURATION);
+            this.duration = DEFAULT_DURATION;
+        }
     }
 
     @Override
     public KFPRunSpec build(@NotNull Executable workflow, @NotNull Task task, @NotNull Run run) {
-        if (!KFPRunSpec.KIND.equals(run.getKind())) {
-            throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), KFPRunSpec.KIND)
-            );
+        //check run kind
+        if (!isSupported(run)) {
+            throw new IllegalArgumentException("Run kind {} unsupported".formatted(String.valueOf(run.getKind())));
         }
 
         KFPWorkflowSpec workSpec = new KFPWorkflowSpec(workflow.getSpec());
-        KFPRunSpec runSpec = new KFPRunSpec(run.getSpec());
-
-        String kind = task.getKind();
+        KFPRunSpec runSpec =
+            switch (run.getKind()) {
+                case KFPPipelineRunSpec.KIND -> new KFPPipelineRunSpec(run.getSpec());
+                case KFPBuildRunSpec.KIND -> new KFPBuildRunSpec(run.getSpec());
+                default -> throw new IllegalArgumentException(
+                    "Kind not recognized. Cannot retrieve the right Spec for Run."
+                );
+            };
 
         //build task spec as defined
-        TaskBaseSpec taskSpec =
-            switch (kind) {
+        Map<String, Serializable> taskSpec =
+            switch (task.getKind()) {
                 case KFPPipelineTaskSpec.KIND -> {
-                    yield new KFPPipelineTaskSpec(task.getSpec());
+                    yield new KFPPipelineTaskSpec(task.getSpec()).toMap();
                 }
                 case KFPBuildTaskSpec.KIND -> {
-                    yield new KFPBuildTaskSpec(task.getSpec());
+                    yield new KFPBuildTaskSpec(task.getSpec()).toMap();
                 }
                 default -> throw new IllegalArgumentException(
                     "Kind not recognized. Cannot retrieve the right builder or specialize Spec for Run and Task."
@@ -114,39 +153,71 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
         //build run merging task spec overrides
         Map<String, Serializable> map = new HashMap<>();
         map.putAll(runSpec.toMap());
-        taskSpec.toMap().forEach(map::putIfAbsent);
+        taskSpec.forEach(map::putIfAbsent);
+        //ensure workflow is not modified
+        map.putAll(workSpec.toMap());
 
-        KFPRunSpec kfpSpec = new KFPRunSpec(map);
-        //ensure function is not modified
-        kfpSpec.setWorkflowSpec(workSpec);
+        runSpec.configure(map);
 
-        return kfpSpec;
+        return runSpec;
     }
 
     @Override
     public K8sRunnable run(@NotNull Run run) {
         //check run kind
-        if (!KFPRunSpec.KIND.equals(run.getKind())) {
-            throw new IllegalArgumentException(
-                "Run kind {} unsupported, expecting {}".formatted(String.valueOf(run.getKind()), KFPRunSpec.KIND)
-            );
+        if (!isSupported(run)) {
+            throw new IllegalArgumentException("Run kind {} unsupported".formatted(String.valueOf(run.getKind())));
         }
 
-        // Create spec for run
-        KFPRunSpec runKfpSpec = new KFPRunSpec(run.getSpec());
+        //read base task spec to extract secrets
+        K8sFunctionTaskBaseSpec taskSpec = new K8sFunctionTaskBaseSpec();
+        taskSpec.configure(run.getSpec());
+        Map<String, String> secrets = secretService.getSecretData(run.getProject(), taskSpec.getSecrets());
 
         // Create string run accessor from task
         RunSpecAccessor runAccessor = RunSpecAccessor.with(run.getSpec());
 
-        return switch (runAccessor.getTask()) {
-            case KFPPipelineTaskSpec.KIND -> new KFPPipelineRunner().produce(run);
-            case KFPBuildTaskSpec.KIND -> new KFPBuildRunner(
-                image,
-                secretService.getSecretData(run.getProject(), runKfpSpec.getTaskBuildSpec().getSecrets())
-            )
-                .produce(run);
-            default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
-        };
+        K8sRunnable runnable =
+            switch (runAccessor.getTask()) {
+                case KFPPipelineTaskSpec.KIND -> new KFPPipelineRunner().produce(run);
+                case KFPBuildTaskSpec.KIND -> new KFPBuildRunner(image, secrets).produce(run);
+                default -> throw new IllegalArgumentException("Kind not recognized. Cannot retrieve the right Runner");
+            };
+
+        //extract auth from security context to inflate secured credentials
+        UserAuthentication<?> auth = UserAuthenticationHelper.getUserAuthentication();
+        if (auth != null) {
+            //get only core credentials from providers
+            if (accessCredentialsProvider != null) {
+                if (KFPPipelineTaskSpec.KIND.equals(runAccessor.getTask())) {
+                    //get custom duration credentials
+                    List<Credentials> credentials = List.of(
+                        accessCredentialsProvider.get((UserAuthentication<?>) auth, duration)
+                    );
+                    runnable.setCredentials(credentials);
+                } else {
+                    //keep standard duration
+                    List<Credentials> credentials = List.of(
+                        accessCredentialsProvider.get((UserAuthentication<?>) auth)
+                    );
+                    runnable.setCredentials(credentials);
+                }
+            } else {
+                //keep globally provided access credentials
+                List<Credentials> credentials = credentialsService
+                    .getCredentials((UserAuthentication<?>) auth)
+                    .stream()
+                    .filter(c -> c instanceof AccessCredentials)
+                    .toList();
+                runnable.setCredentials(credentials);
+            }
+        }
+
+        //inject configuration
+        List<Configuration> configurations = configurationService.getConfigurations();
+        runnable.setConfigurations(configurations);
+
+        return runnable;
     }
 
     @Override
@@ -254,5 +325,10 @@ public class KFPRuntime extends K8sBaseRuntime<KFPWorkflowSpec, KFPRunSpec, KFPR
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean isSupported(@NotNull Run run) {
+        return Arrays.asList(KINDS).contains(run.getKind());
     }
 }

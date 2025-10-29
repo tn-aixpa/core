@@ -6,27 +6,27 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.files.s3;
 
 import it.smartcommunitylabdhub.commons.exceptions.StoreException;
 import it.smartcommunitylabdhub.commons.infrastructure.Credentials;
-import it.smartcommunitylabdhub.commons.models.files.FileInfo;
 import it.smartcommunitylabdhub.files.models.DownloadInfo;
+import it.smartcommunitylabdhub.files.models.FileInfo;
 import it.smartcommunitylabdhub.files.models.UploadInfo;
 import it.smartcommunitylabdhub.files.provider.S3Config;
 import it.smartcommunitylabdhub.files.provider.S3Credentials;
@@ -39,7 +39,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
@@ -81,6 +83,8 @@ import software.amazon.awssdk.services.s3.presigner.model.UploadPartPresignReque
 public class S3FilesStore implements FilesStore {
 
     public static final int URL_DURATION = 3600 * 8; //8 hours
+    public static final int MAX_DURATION = 3600 * 24 * 5; //5 days
+
     public static final int MAX_KEYS = 200;
 
     private final S3Config config;
@@ -134,7 +138,7 @@ public class S3FilesStore implements FilesStore {
                 .endpointOverride(URI.create(endpoint))
                 //also enable path style for endpoint by default
                 .forcePathStyle(config.getPathStyle() != null ? config.getPathStyle().booleanValue() : true)
-                .region(s3Credentials.getRegion() != null ? Region.of(s3Credentials.getRegion()) : null)
+                .region(config.getRegion() != null ? Region.of(config.getRegion()) : null)
                 .build();
         } else {
             return S3Client.builder().credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
@@ -161,7 +165,7 @@ public class S3FilesStore implements FilesStore {
                         .build()
                 )
                 .endpointOverride(URI.create(endpoint))
-                .region(s3Credentials.getRegion() != null ? Region.of(s3Credentials.getRegion()) : null)
+                .region(config.getRegion() != null ? Region.of(config.getRegion()) : null)
                 .build();
         } else {
             return S3Presigner.builder().credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
@@ -176,18 +180,22 @@ public class S3FilesStore implements FilesStore {
                 .stream()
                 .filter(S3Credentials.class::isInstance)
                 .map(c -> (S3Credentials) c)
-                //pick either matching or global credentials
-                .filter(c ->
-                    (c.getBucket() == null || c.getBucket().equals(bucket)) &&
-                    (c.getEndpoint() == null || c.getEndpoint().equals(endpoint))
-                )
+                //DISABLED: only single provider supported for now
+                // //pick either matching or global credentials
+                // .filter(c ->
+                //     (c.getBucket() == null || c.getBucket().equals(bucket)) &&
+                //     (c.getEndpoint() == null || c.getEndpoint().equals(endpoint))
+                // )
                 .findFirst()
                 .orElse(null);
     }
 
     @Override
-    public DownloadInfo downloadAsUrl(@NotNull String path, @Nullable List<Credentials> credentials)
-        throws StoreException {
+    public DownloadInfo downloadAsUrl(
+        @NotNull String path,
+        @Nullable Integer duration,
+        @Nullable List<Credentials> credentials
+    ) throws StoreException {
         log.debug("generate download url for {}", path);
 
         Keys keys = parseKey(path);
@@ -195,6 +203,9 @@ public class S3FilesStore implements FilesStore {
 
         String key = keys.key;
         String bucketName = keys.bucket;
+        int expiresIn = duration != null && (duration.intValue() > 0 && duration.intValue() < MAX_DURATION)
+            ? duration.intValue()
+            : urlDuration;
 
         if (StringUtils.hasText(bucket) && !bucket.equals(bucketName)) {
             throw new StoreException("bucket mismatch");
@@ -221,7 +232,7 @@ public class S3FilesStore implements FilesStore {
 
             GetObjectPresignRequest preq = GetObjectPresignRequest
                 .builder()
-                .signatureDuration(Duration.ofSeconds(urlDuration))
+                .signatureDuration(Duration.ofSeconds(expiresIn))
                 .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key(key).build())
                 .build();
             PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(preq);
@@ -238,8 +249,11 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public List<FileInfo> fileInfo(@NotNull String path, @Nullable List<Credentials> credentials)
-        throws StoreException {
+    public List<FileInfo> fileInfo(
+        @NotNull String path,
+        @Nullable Boolean recursive,
+        @Nullable List<Credentials> credentials
+    ) throws StoreException {
         log.debug("file info for {}", path);
 
         Keys keys = parseKey(path);
@@ -261,6 +275,13 @@ public class S3FilesStore implements FilesStore {
             log.trace("read object metadata for {}: {}", bucketName, key);
         }
 
+        //disable grouping by path to let api list all objects as flat
+        String delimiter = null;
+        if (Boolean.FALSE.equals(recursive)) {
+            //group by path
+            delimiter = "/";
+        }
+
         try {
             S3Client client = getClient(s3Credentials);
             //support single file in path for now
@@ -271,12 +292,13 @@ public class S3FilesStore implements FilesStore {
                     .builder()
                     .bucket(bucketName)
                     .prefix(prefix)
-                    // .delimiter("/") //disable grouping by path to let api list all objects as flat
+                    .delimiter(delimiter)
                     .maxKeys(MAX_KEYS)
                     .build();
 
-                return client
-                    .listObjectsV2(req)
+                ListObjectsV2Response response = client.listObjectsV2(req);
+
+                List<FileInfo> files = response
                     .contents()
                     .stream()
                     .limit(MAX_KEYS)
@@ -291,6 +313,21 @@ public class S3FilesStore implements FilesStore {
                             .build();
                     })
                     .toList();
+
+                //append common prefixes to list subfolders
+                List<FileInfo> folders = response
+                    .commonPrefixes()
+                    .stream()
+                    // .filter(o -> StringUtils.countOccurrencesOf(o.prefix(), "/") < 2)
+                    .map(o -> {
+                        String p = prefix != null
+                            ? (o.prefix().startsWith(prefix) ? o.prefix().substring(prefix.length()) : o.prefix())
+                            : o.prefix();
+                        return FileInfo.builder().path(p).name(p).build();
+                    })
+                    .toList();
+
+                return Stream.concat(folders.stream(), files.stream()).toList();
             } else {
                 HeadObjectResponse headObject = client.headObject(
                     HeadObjectRequest.builder().bucket(bucketName).key(key).build()
@@ -305,6 +342,8 @@ public class S3FilesStore implements FilesStore {
 
                 if (StringUtils.hasText(headObject.checksumSHA256())) {
                     response.setHash("sha256:" + headObject.checksumSHA256());
+                } else if (StringUtils.hasText(headObject.eTag())) {
+                    response.setHash("ETAG:" + headObject.eTag());
                 }
 
                 headObject
@@ -365,6 +404,7 @@ public class S3FilesStore implements FilesStore {
             UploadInfo info = new UploadInfo();
             info.setPath(path);
             info.setUrl(presignedRequest.url().toExternalForm());
+            info.setMethod(HttpMethod.PUT);
             info.setExpiration(presignedRequest.expiration());
             return info;
         } catch (SdkException e) {
@@ -414,6 +454,7 @@ public class S3FilesStore implements FilesStore {
             UploadInfo info = new UploadInfo();
             info.setPath(path);
             info.setUploadId(response.uploadId());
+            info.setMethod(HttpMethod.POST);
             return info;
         } catch (SdkException e) {
             log.error("error with s3 for {}: {}", path, e.getMessage());
@@ -476,6 +517,8 @@ public class S3FilesStore implements FilesStore {
             UploadInfo info = new UploadInfo();
             info.setPath(path);
             info.setUrl(presignedRequest.url().toExternalForm());
+            info.setMethod(HttpMethod.PUT);
+            info.setPartNumber(partNumber);
             info.setExpiration(presignedRequest.expiration());
             return info;
         } catch (SdkException e) {
@@ -545,6 +588,7 @@ public class S3FilesStore implements FilesStore {
             UploadInfo info = new UploadInfo();
             info.setPath(path);
             info.setUploadId(uploadId);
+            info.setMethod(HttpMethod.POST);
             return info;
         } catch (SdkException e) {
             log.error("error with s3 for {}: {}", path, e.getMessage());
@@ -553,7 +597,8 @@ public class S3FilesStore implements FilesStore {
     }
 
     @Override
-    public void remove(@NotNull String path, @Nullable List<Credentials> credentials) throws StoreException {
+    public void remove(@NotNull String path, @Nullable Boolean recursive, @Nullable List<Credentials> credentials)
+        throws StoreException {
         Keys keys = parseKey(path);
         log.debug("resolved path to {}", keys);
 
@@ -573,6 +618,13 @@ public class S3FilesStore implements FilesStore {
             log.trace("remove object for {}: {}", bucketName, key);
         }
 
+        //disable grouping by path to let api list all objects as flat
+        String delimiter = null;
+        if (Boolean.FALSE.equals(recursive)) {
+            //group by path
+            delimiter = "/";
+        }
+
         try {
             S3Client client = getClient(s3Credentials);
 
@@ -583,6 +635,7 @@ public class S3FilesStore implements FilesStore {
                     .builder()
                     .bucket(bucketName)
                     .prefix(key)
+                    .delimiter(delimiter)
                     .build();
                 ListObjectsV2Iterable listResponseIter = client.listObjectsV2Paginator(listRequest);
 

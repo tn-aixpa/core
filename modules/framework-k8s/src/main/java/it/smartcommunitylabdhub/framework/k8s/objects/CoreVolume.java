@@ -55,7 +55,9 @@ public class CoreVolume implements Serializable {
     public enum VolumeType {
         // config_map,
         // secret,
+        shared_volume,
         persistent_volume_claim,
+        ephemeral,
         empty_dir,
     }
 }

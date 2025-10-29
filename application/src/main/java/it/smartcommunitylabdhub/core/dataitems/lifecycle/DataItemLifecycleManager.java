@@ -22,54 +22,14 @@
 
 package it.smartcommunitylabdhub.core.dataitems.lifecycle;
 
-import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvents;
 import it.smartcommunitylabdhub.commons.models.dataitem.DataItem;
-import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.core.dataitems.persistence.DataItemEntity;
-import it.smartcommunitylabdhub.core.dataitems.specs.DataItemBaseStatus;
-import it.smartcommunitylabdhub.core.lifecycle.BaseLifecycleManager;
-import jakarta.validation.constraints.NotNull;
+import it.smartcommunitylabdhub.lifecycle.BaseLifecycleManager;
+import it.smartcommunitylabdhub.lifecycle.LifecycleManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class DataItemLifecycleManager extends BaseLifecycleManager<DataItem, DataItemEntity, DataItemBaseStatus> {
-
-    /*
-     * Actions: ask to perform
-     */
-
-    public DataItem upload(@NotNull DataItem dataItem) {
-        return perform(dataItem, LifecycleEvents.UPLOAD);
-    }
-
-    public DataItem delete(@NotNull DataItem dataItem) {
-        return perform(dataItem, LifecycleEvents.DELETE);
-    }
-
-    public DataItem update(@NotNull DataItem dataItem) {
-        return perform(dataItem, LifecycleEvents.UPDATE);
-    }
-
-    /*
-     * Events: callbacks
-     */
-
-    //NOTE: disabled, we can not handle onCreated because there is no state change
-    // public DataItem onCreated(@NotNull DataItem dataItem) {
-    //     return handle(dataItem, State.CREATED);
-    // }
-
-    public DataItem onUploading(@NotNull DataItem dataItem) {
-        return handle(dataItem, State.UPLOADING);
-    }
-
-    public DataItem onReady(@NotNull DataItem dataItem) {
-        return handle(dataItem, State.READY);
-    }
-
-    public DataItem onError(@NotNull DataItem dataItem) {
-        return handle(dataItem, State.ERROR);
-    }
-}
+public class DataItemLifecycleManager
+    extends BaseLifecycleManager<DataItem, DataItemState, DataItemEvents>
+    implements LifecycleManager<DataItem> {}

@@ -7,7 +7,7 @@
     },
     "SourceCodeLanguages" : {
       "type" : "string",
-      "enum" : [ "python", "java", "javascript", "typescript", "markdown", "html", "json", "sql", "css", "yaml", "text" ]
+      "enum" : [ "python", "java", "javascript", "typescript", "dockerfile", "markdown", "html", "json", "sql", "css", "yaml", "text", "sh" ]
     },
     "SourceCode_SourceCodeLanguages_" : {
       "type" : "object",

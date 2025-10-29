@@ -1,6 +1,6 @@
 # DigitalHub CORE
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/tn-aixpa/core/release.yaml?event=release) [![license](https://img.shields.io/badge/license-Apache%202.0-blue)](https://github.com/tn-aixpa/core/LICENSE) ![GitHub Release](https://img.shields.io/github/v/release/tn-aixpa/core)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/scc-digitalhub/digitalhub-core/release.yaml?event=release) [![license](https://img.shields.io/badge/license-Apache%202.0-blue)](https://github.com/scc-digitalhub/digitalhub-core/LICENSE) ![GitHub Release](https://img.shields.io/github/v/release/scc-digitalhub/digitalhub-core)
 ![Status](https://img.shields.io/badge/status-stable-gold)
 
 **Digital Hub** is an Open-Source platform for building and managing Data and AI applications and services.

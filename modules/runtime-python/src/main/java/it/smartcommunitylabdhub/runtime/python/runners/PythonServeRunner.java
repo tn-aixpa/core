@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.runtime.python.runners;
@@ -26,7 +26,9 @@ package it.smartcommunitylabdhub.runtime.python.runners;
 import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.models.function.Function;
 import it.smartcommunitylabdhub.commons.models.run.Run;
+import it.smartcommunitylabdhub.commons.services.FunctionManager;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextRef;
 import it.smartcommunitylabdhub.framework.k8s.model.ContextSource;
@@ -40,7 +42,7 @@ import it.smartcommunitylabdhub.runtime.python.model.NuclioFunctionBuilder;
 import it.smartcommunitylabdhub.runtime.python.model.NuclioFunctionSpec;
 import it.smartcommunitylabdhub.runtime.python.model.PythonSourceCode;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonFunctionSpec;
-import it.smartcommunitylabdhub.runtime.python.specs.PythonRunSpec;
+import it.smartcommunitylabdhub.runtime.python.specs.PythonServeRunSpec;
 import it.smartcommunitylabdhub.runtime.python.specs.PythonServeTaskSpec;
 import java.io.IOException;
 import java.io.Serializable;
@@ -60,43 +62,46 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 public class PythonServeRunner {
 
-    private static final int UID = 1000;
-    private static final int GID = 1000;
+    private static final int UID = 8877;
+    private static final int GID = 999;
     private static final int HTTP_PORT = 8080;
 
-    private final String image;
+    private final Map<String, String> images;
+
     private final int userId;
     private final int groupId;
     private final String command;
-    private final PythonFunctionSpec functionSpec;
-    private final Map<String, String> secretData;
 
     private final K8sBuilderHelper k8sBuilderHelper;
+    private final FunctionManager functionService;
+
     private final Resource entrypoint = new ClassPathResource("runtime-python/docker/entrypoint.sh");
 
     public PythonServeRunner(
-        String image,
+        Map<String, String> images,
         Integer userId,
         Integer groupId,
         String command,
-        PythonFunctionSpec functionPythonSpec,
-        Map<String, String> secretData,
-        K8sBuilderHelper k8sBuilderHelper
+        K8sBuilderHelper k8sBuilderHelper,
+        FunctionManager functionService
     ) {
-        this.image = image;
+        this.images = images;
         this.command = command;
-        this.functionSpec = functionPythonSpec;
-        this.secretData = secretData;
+
         this.k8sBuilderHelper = k8sBuilderHelper;
+        this.functionService = functionService;
 
         this.userId = userId != null ? userId : UID;
         this.groupId = groupId != null ? groupId : GID;
     }
 
-    public K8sRunnable produce(Run run) {
-        PythonRunSpec runSpec = new PythonRunSpec(run.getSpec());
+    public K8sRunnable produce(Run run, Map<String, String> secretData) {
+        PythonServeRunSpec runSpec = new PythonServeRunSpec(run.getSpec());
         PythonServeTaskSpec taskSpec = runSpec.getTaskServeSpec();
         TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(taskSpec.toMap());
+        PythonFunctionSpec functionSpec = runSpec.getFunctionSpec();
+
+        String image = images.get(functionSpec.getPythonVersion().name());
 
         List<CoreEnv> coreEnvList = new ArrayList<>(
             List.of(new CoreEnv("PROJECT_NAME", run.getProject()), new CoreEnv("RUN_ID", run.getId()))
@@ -220,6 +225,22 @@ public class PythonServeRunner {
         //expose http trigger only
         CorePort servicePort = new CorePort(HTTP_PORT, HTTP_PORT);
 
+        //evaluate service names
+        List<String> serviceNames = new ArrayList<>();
+        if (taskSpec.getServiceName() != null && StringUtils.hasText(taskSpec.getServiceName())) {
+            //prepend with function name
+            serviceNames.add(taskAccessor.getFunction() + "-" + taskSpec.getServiceName());
+        }
+
+        if (functionService != null) {
+            //check if latest
+            Function latest = functionService.getLatestFunction(run.getProject(), taskAccessor.getFunction());
+            if (taskAccessor.getFunctionId().equals(latest.getId())) {
+                //prepend with function name
+                serviceNames.add(taskAccessor.getFunction() + "-latest");
+            }
+        }
+
         K8sRunnable k8sServeRunnable = K8sServeRunnable
             .builder()
             .runtime(PythonRuntime.RUNTIME)
@@ -238,7 +259,7 @@ public class PythonServeRunner {
             .contextSources(contextSources)
             .envs(coreEnvList)
             .secrets(coreSecrets)
-            .resources(taskSpec.getResources())
+            .resources(k8sBuilderHelper != null ? k8sBuilderHelper.convertResources(taskSpec.getResources()) : null)
             .volumes(taskSpec.getVolumes())
             .nodeSelector(taskSpec.getNodeSelector())
             .affinity(taskSpec.getAffinity())
@@ -254,6 +275,7 @@ public class PythonServeRunner {
             .replicas(taskSpec.getReplicas())
             .servicePorts(List.of(servicePort))
             .serviceType(taskSpec.getServiceType())
+            .serviceNames(serviceNames != null && !serviceNames.isEmpty() ? serviceNames : null)
             .build();
 
         k8sServeRunnable.setId(run.getId());

@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.framework.k8s.kubernetes;
@@ -32,21 +32,29 @@ import io.kubernetes.client.openapi.models.V1ConfigMapKeySelector;
 import io.kubernetes.client.openapi.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1EnvVarSource;
+import io.kubernetes.client.openapi.models.V1EphemeralVolumeSource;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimSpec;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimTemplate;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeClaimVolumeSource;
 import io.kubernetes.client.openapi.models.V1SecretKeySelector;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
+import io.kubernetes.client.openapi.models.V1VolumeResourceRequirements;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.framework.k8s.annotations.ConditionalOnKubernetes;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreResourceDefinition;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreResources;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume.VolumeType;
 import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,6 +90,55 @@ public class K8sBuilderHelper implements InitializingBean {
     @Value("${kubernetes.namespace}")
     private String namespace;
 
+    @Value("${kubernetes.resources.gpu.key}")
+    String gpuResourceKey;
+
+    private String emptyDirDefaultSize = "128Mi";
+    private String emptyDirDefaultMedium = null;
+
+    protected CoreResourceDefinition ephemeralResourceDefinition = new CoreResourceDefinition();
+    protected String ephemeralStorageClass;
+
+    public void setEphemeralResourceDefinition(CoreResourceDefinition ephemeralResourceDefinition) {
+        this.ephemeralResourceDefinition = ephemeralResourceDefinition;
+    }
+
+    //set ephemeral resource definition for volumes matching pvc
+    //we want to manage pvc and ephemeral volumes as "user volumes" under the same limits
+    @Autowired
+    public void setEphemeralRequestsResourceDefinition(
+        @Value("${kubernetes.resources.pvc.requests}") String pvcResourceDefinition
+    ) {
+        if (StringUtils.hasText(pvcResourceDefinition)) {
+            this.ephemeralResourceDefinition.setValue(pvcResourceDefinition);
+        }
+    }
+
+    @Autowired
+    public void setEphemeralStorageClass(
+        @Value("${kubernetes.resources.ephemeral.storage-class}") String ephemeralStorageClass
+    ) {
+        if (StringUtils.hasText(ephemeralStorageClass)) {
+            this.ephemeralStorageClass = ephemeralStorageClass;
+        }
+    }
+
+    @Autowired(required = false)
+    public void setEmptyDirDefaultMedium(@Value("${kubernetes.empty-dir.medium}") String emptyDirDefaultMedium) {
+        this.emptyDirDefaultMedium = emptyDirDefaultMedium;
+    }
+
+    @Autowired
+    public void setEmptyDirDefaultSize(@Value("${kubernetes.empty-dir.size}") String emptyDirDefaultSize) {
+        if (StringUtils.hasText(emptyDirDefaultSize)) {
+            //ensure we have a valid size
+            Quantity.fromString(emptyDirDefaultSize);
+            this.emptyDirDefaultSize = emptyDirDefaultSize;
+        } else {
+            log.warn("EmptyDir default size not set, using default 128Mi");
+        }
+    }
+
     public K8sBuilderHelper(ApiClient client) {
         api = new CoreV1Api(client);
     }
@@ -93,10 +150,6 @@ public class K8sBuilderHelper implements InitializingBean {
 
     public List<V1EnvVar> getV1EnvVar() {
         List<V1EnvVar> vars = new ArrayList<>();
-
-        //always inject the core endpoint + namespace
-        vars.add(new V1EnvVar().name("DHCORE_ENDPOINT").value(coreEndpoint));
-        vars.add(new V1EnvVar().name("DHCORE_NAMESPACE").value(namespace));
 
         // add shared config maps
         if (sharedConfigMaps != null) {
@@ -128,6 +181,14 @@ public class K8sBuilderHelper implements InitializingBean {
                         }
                     }
                 });
+        }
+
+        //always inject core endpoint + namespace when missing
+        if (vars.stream().noneMatch(v -> v.getName().equals("DHCORE_ENDPOINT"))) {
+            vars.add(new V1EnvVar().name("DHCORE_ENDPOINT").value(coreEndpoint));
+        }
+        if (vars.stream().noneMatch(v -> v.getName().equals("DHCORE_NAMESPACE"))) {
+            vars.add(new V1EnvVar().name("DHCORE_NAMESPACE").value(namespace));
         }
 
         return vars;
@@ -174,8 +235,8 @@ public class K8sBuilderHelper implements InitializingBean {
 
     public V1Volume getVolume(String id, @NotNull CoreVolume coreVolume) {
         V1Volume volume = new V1Volume().name(coreVolume.getName());
-        String type = coreVolume.getVolumeType().name();
-        Map<String, String> spec = coreVolume.getSpec();
+        VolumeType type = coreVolume.getVolumeType();
+        Map<String, String> spec = Optional.ofNullable(coreVolume.getSpec()).orElse(Collections.emptyMap());
         switch (type) {
             // TODO: support items
             //DISABLED: users should not be able to mount arbitrary config maps
@@ -201,16 +262,50 @@ public class K8sBuilderHelper implements InitializingBean {
             //                     .toList()
             //             )
             //     );
-            case "persistent_volume_claim":
+            case VolumeType.shared_volume:
+                return volume.persistentVolumeClaim(
+                    new V1PersistentVolumeClaimVolumeSource()
+                        .claimName(spec.getOrDefault("claimName", coreVolume.getName()))
+                );
+            case VolumeType.persistent_volume_claim:
                 return volume.persistentVolumeClaim(
                     new V1PersistentVolumeClaimVolumeSource().claimName(getVolumeName(id, coreVolume.getName()))
                     // .claimName(spec.getOrDefault("claimName", coreVolume.getName()))
                 );
-            case "empty_dir":
+            case VolumeType.ephemeral:
+                //build claim
+                Quantity quantity = Quantity.fromString(
+                    spec.getOrDefault("size", ephemeralResourceDefinition.getValue())
+                );
+                V1VolumeResourceRequirements req = new V1VolumeResourceRequirements()
+                    .requests(Map.of("storage", quantity));
+
+                //enforce limit
+                //TODO check if valid!
+                // if (ephemeralResourceDefinition.getLimits() != null) {
+                //     Quantity limit = Quantity.fromString(ephemeralResourceDefinition.getLimits());
+                //     req.setLimits(Map.of("storage", limit));
+                // }
+
+                return volume.ephemeral(
+                    new V1EphemeralVolumeSource()
+                        .volumeClaimTemplate(
+                            new V1PersistentVolumeClaimTemplate()
+                                .metadata(new V1ObjectMeta().name(getVolumeName(id, coreVolume.getName())))
+                                .spec(
+                                    new V1PersistentVolumeClaimSpec()
+                                        .accessModes(Collections.singletonList("ReadWriteOnce"))
+                                        .volumeMode("Filesystem")
+                                        .storageClassName(spec.getOrDefault("storage_class", ephemeralStorageClass))
+                                        .resources(req)
+                                )
+                        )
+                );
+            case VolumeType.empty_dir:
                 return volume.emptyDir(
                     new V1EmptyDirVolumeSource()
-                        .medium(spec.getOrDefault("medium", null))
-                        .sizeLimit(Quantity.fromString(spec.getOrDefault("size_limit", "128Mi")))
+                        .medium(emptyDirDefaultMedium) //configured by admin only!
+                        .sizeLimit(Quantity.fromString(spec.getOrDefault("size_limit", emptyDirDefaultSize)))
                 );
             default:
                 return null;
@@ -221,12 +316,26 @@ public class K8sBuilderHelper implements InitializingBean {
         return new V1VolumeMount().name(coreVolume.getName()).mountPath(coreVolume.getMountPath());
     }
 
-    public Map<String, Quantity> convertResources(Map<String, String> map) {
-        return map
-            .entrySet()
-            .stream()
-            .map(entry -> Map.entry(entry.getKey(), Quantity.fromString(entry.getValue())))
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    public CoreResources convertResources(CoreResource resource) {
+        if (resource == null) {
+            return null;
+        }
+
+        CoreResources resources = new CoreResources();
+        List<CoreResourceDefinition> definitions = new ArrayList<>();
+        if (resource != null) {
+            if (resource.getCpu() != null) {
+                definitions.add(new CoreResourceDefinition("cpu", resource.getCpu()));
+            }
+            if (resource.getMem() != null) {
+                definitions.add(new CoreResourceDefinition("memory", resource.getMem()));
+            }
+            if (resource.getGpu() != null) {
+                definitions.add(new CoreResourceDefinition(gpuResourceKey, resource.getGpu()));
+            }
+        }
+        resources.setRequests(definitions);
+        return resources;
     }
 
     /*
@@ -281,7 +390,7 @@ public class K8sBuilderHelper implements InitializingBean {
             return null;
         } else {
             //use only allowed chars in k8s resource names!
-            String value = name.toLowerCase().replaceAll("[^a-zA-Z0-9._-]+", "");
+            String value = name.toLowerCase().replaceAll("[^a-z0-9-]+", "");
             if (value.length() > K8S_NAME_MAX_LENGTH) {
                 log.error("Name exceeds max length: {} ({})", String.valueOf(value.length()), value);
 

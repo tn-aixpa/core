@@ -6,25 +6,24 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.BatchV1Api;
@@ -43,11 +42,11 @@ import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sJobRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnableState;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -146,7 +145,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             log.trace("runnable: {}", runnable);
         }
 
-        Map<String, KubernetesObject> results = new HashMap<>();
+        Map<String, Object> results = new HashMap<>();
 
         //create job
         V1Job job = build(runnable);
@@ -180,12 +179,19 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         //pvcs
         List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
         if (pvcs != null) {
+            List<V1PersistentVolumeClaim> pvcsFinal = new ArrayList<>();
             for (V1PersistentVolumeClaim pvc : pvcs) {
                 log.info("create pvc for {}", String.valueOf(pvc.getMetadata().getName()));
                 try {
-                    coreV1Api.createNamespacedPersistentVolumeClaim(namespace, pvc, null, null, null, null);
-                    //store
-                    results.put("pvc", pvc);
+                    V1PersistentVolumeClaim v = coreV1Api.createNamespacedPersistentVolumeClaim(
+                        namespace,
+                        pvc,
+                        null,
+                        null,
+                        null,
+                        null
+                    );
+                    pvcsFinal.add(v);
                 } catch (ApiException e) {
                     log.error("Error with k8s: {}", e.getMessage());
                     if (log.isTraceEnabled()) {
@@ -195,6 +201,48 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                     throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
                 }
             }
+
+            //store
+            results.put("pvcs", pvcs);
+        }
+
+        //shared volumes
+        List<V1PersistentVolumeClaim> sharedPvcs = buildSharedVolumeClaims(runnable);
+        //shared volumes are already created, we check permissions
+        if (sharedPvcs != null) {
+            List<V1PersistentVolumeClaim> sharedPvcsFinal = new ArrayList<>();
+            for (V1PersistentVolumeClaim pvc : sharedPvcs) {
+                String pvcName = pvc.getMetadata().getName();
+                try {
+                    V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(pvcName, namespace, null);
+                    if (v == null) {
+                        throw new K8sFrameworkException("Shared volume " + pvcName + " not found");
+                    }
+
+                    //check project label matches this runnable
+                    Map.Entry<String, String> label = k8sLabelHelper.buildCoreLabel("project", runnable.getProject());
+                    if (v != null && v.getMetadata() != null && v.getMetadata().getLabels() != null) {
+                        if (!label.getValue().equals(v.getMetadata().getLabels().get(label.getKey()))) {
+                            throw new K8sFrameworkException("Shared volume project mismatch");
+                        }
+                    } else {
+                        throw new K8sFrameworkException("Shared volume " + pvcName + "invalid");
+                    }
+
+                    //keep updated definition
+                    sharedPvcsFinal.add(v);
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+
+                    throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
+
+            //store
+            results.put("sharedPvs", sharedPvcsFinal);
         }
 
         log.info("create job for {}", String.valueOf(job.getMetadata().getName()));
@@ -202,7 +250,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         results.put("job", job);
 
         //update state
-        runnable.setState(State.RUNNING.name());
+        runnable.setState(K8sRunnableState.PENDING.name());
 
         if (!"disable".equals(collectResults)) {
             //update results
@@ -237,13 +285,20 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         }
 
         List<String> messages = new ArrayList<>();
+        K8sFrameworkException exception = null;
 
         V1Job job = get(build(runnable));
 
         //stop by deleting
-        log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
-        delete(job);
-        messages.add(String.format("job %s deleted", job.getMetadata().getName()));
+        try {
+            log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
+            delete(job);
+            messages.add(String.format("job %s deleted", job.getMetadata().getName()));
+        } catch (K8sFrameworkException | NullPointerException e) {
+            //collect but keep going
+            log.error("error deleting job {}: {}", runnable.getId(), e.getMessage());
+            exception = new K8sFrameworkException(e.getMessage());
+        }
 
         //secrets
         cleanRunSecret(runnable);
@@ -253,7 +308,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             String configMapName = "init-config-map-" + runnable.getId();
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
-                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null, null);
                 messages.add(String.format("configMap %s deleted", configMapName));
             }
         } catch (ApiException | NullPointerException e) {
@@ -277,6 +332,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                             null,
                             null,
                             null,
+                            "Background",
                             null
                         );
                         messages.add(String.format("pvc %s deleted", pvcName));
@@ -293,11 +349,15 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         }
 
         //update state
-        runnable.setState(State.STOPPED.name());
+        runnable.setState(K8sRunnableState.STOPPED.name());
         runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
+        }
+
+        if (exception != null) {
+            throw exception;
         }
 
         return runnable;
@@ -310,18 +370,27 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             log.trace("runnable: {}", runnable);
         }
 
-        V1Job job;
+        K8sFrameworkException exception = null;
+        List<String> messages = new ArrayList<>();
+
+        V1Job job = null;
         try {
             job = get(build(runnable));
         } catch (K8sFrameworkException | IllegalArgumentException e) {
-            runnable.setState(State.DELETED.name());
-            return runnable;
+            runnable.setState(K8sRunnableState.DELETED.name());
         }
 
-        List<String> messages = new ArrayList<>();
-        log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
-        delete(job);
-        messages.add(String.format("job %s deleted", job.getMetadata().getName()));
+        if (job != null) {
+            try {
+                log.info("delete job for {}", String.valueOf(job.getMetadata().getName()));
+                delete(job);
+                messages.add(String.format("job %s deleted", job.getMetadata().getName()));
+            } catch (K8sFrameworkException | NullPointerException e) {
+                //collect but keep going
+                log.error("error deleting job {}: {}", runnable.getId(), e.getMessage());
+                exception = new K8sFrameworkException(e.getMessage());
+            }
+        }
 
         //secrets
         cleanRunSecret(runnable);
@@ -331,7 +400,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
             String configMapName = "init-config-map-" + runnable.getId();
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
-                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null, null);
                 messages.add(String.format("configMap %s deleted", configMapName));
             }
         } catch (ApiException | NullPointerException e) {
@@ -361,6 +430,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                                 null,
                                 null,
                                 null,
+                                "Background",
                                 null
                             );
                             messages.add(String.format("pvc %s deleted", pvcName));
@@ -390,11 +460,15 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         }
 
         //update state
-        runnable.setState(State.DELETED.name());
+        runnable.setState(K8sRunnableState.DELETED.name());
         runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
+        }
+
+        if (exception != null) {
+            throw exception;
         }
 
         return runnable;
@@ -421,6 +495,9 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //get template
             template = templates.get(runnable.getTemplate());
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE);
         }
 
         //build labels
@@ -505,6 +582,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
                 .resources(resources)
                 .env(env)
                 .envFrom(envFrom)
+                .securityContext(buildSecurityContext(runnable))
                 .command(initCommand);
 
             podSpec.setInitContainers(Collections.singletonList(initContainer));
@@ -566,7 +644,7 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         }
     }
 
-    public V1Job create(V1Job job) throws K8sFrameworkException {
+    private V1Job create(V1Job job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
         try {
@@ -587,14 +665,14 @@ public class K8sJobFramework extends K8sBaseFramework<K8sJobRunnable, V1Job> {
         }
     }
 
-    public void delete(V1Job job) throws K8sFrameworkException {
+    private void delete(V1Job job) throws K8sFrameworkException {
         Assert.notNull(job.getMetadata(), "metadata can not be null");
 
         try {
             String jobName = job.getMetadata().getName();
             log.debug("delete k8s job for {}", jobName);
 
-            batchV1Api.deleteNamespacedJob(jobName, namespace, null, null, null, null, "Foreground", null);
+            batchV1Api.deleteNamespacedJob(jobName, namespace, null, null, null, null, null, "Foreground", null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isTraceEnabled()) {

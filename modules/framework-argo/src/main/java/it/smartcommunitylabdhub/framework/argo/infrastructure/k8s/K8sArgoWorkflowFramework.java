@@ -22,20 +22,26 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeClaim;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSecurityContext;
 import io.kubernetes.client.openapi.models.V1Secret;
+import io.kubernetes.client.openapi.models.V1SecurityContext;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.jackson.YamlMapperFactory;
-import it.smartcommunitylabdhub.commons.models.enums.State;
+import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.argo.exceptions.K8sArgoFrameworkException;
 import it.smartcommunitylabdhub.framework.argo.objects.K8sWorkflowObject;
 import it.smartcommunitylabdhub.framework.argo.runnables.K8sArgoWorkflowRunnable;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s.K8sBaseFramework;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnableState;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -48,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @FrameworkComponent(framework = K8sArgoWorkflowFramework.FRAMEWORK)
@@ -67,6 +74,8 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
     private String artifactRepositoryKey;
     private String serviceAccountName;
     private Integer runAsUser;
+    protected String pvcStorageClass;
+    protected String pvcAccessMode = "ReadWriteMany";
 
     private static final TypeReference<HashMap<String, Serializable>> typeRef = new TypeReference<
         HashMap<String, Serializable>
@@ -97,6 +106,19 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
         this.runAsUser = runAsUser;
     }
 
+    @Autowired
+    @Override
+    public void setPvcStorageClass(@Value("${kubernetes.resources.workflow.storage-class}") String pvcStorageClass) {
+        if (StringUtils.hasText(pvcStorageClass)) {
+            this.pvcStorageClass = pvcStorageClass;
+        }
+    }
+
+    @Autowired
+    public void setPvcAccessMode(@Value("${kubernetes.resources.workflow.access-mode}") String pvcAccessMode) {
+        this.pvcAccessMode = pvcAccessMode;
+    }
+
     @Override
     public K8sArgoWorkflowRunnable run(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
         log.info("run for {}", runnable.getId());
@@ -123,13 +145,34 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
             //create workflow with reference to secret
             K8sWorkflowObject workflow = build(runnable);
             log.info("create workflow for {}", String.valueOf(workflow.getMetadata().getName()));
+
+            //pvcs
+            List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+            if (pvcs != null) {
+                for (V1PersistentVolumeClaim pvc : pvcs) {
+                    log.info("create pvc for {}", String.valueOf(pvc.getMetadata().getName()));
+                    try {
+                        coreV1Api.createNamespacedPersistentVolumeClaim(namespace, pvc, null, null, null, null);
+                        //store
+                        results.put("pvc", pvc);
+                    } catch (ApiException e) {
+                        log.error("Error with k8s: {}", e.getMessage());
+                        if (log.isTraceEnabled()) {
+                            log.trace("k8s api response: {}", e.getResponseBody());
+                        }
+
+                        throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                    }
+                }
+            }
+
             workflow = create(workflow);
             results.put("workflow", workflow);
             name = workflow.getMetadata().getName();
         }
 
         //update state
-        runnable.setState(State.RUNNING.name());
+        runnable.setState(K8sRunnableState.RUNNING.name());
 
         //update results
         if (!"disable".equals(collectResults)) {
@@ -164,14 +207,52 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
             log.trace("runnable: {}", runnable);
         }
 
+        List<String> messages = new ArrayList<>();
+
         K8sWorkflowObject workflow = get(build(runnable));
 
         //stop by deleting
         log.info("stopping Argo Workflow for {}", String.valueOf(workflow.getMetadata().getName()));
         delete(workflow);
+        messages.add(String.format("workflow %s deleted", workflow.getMetadata().getName()));
+
+        //pvcs
+        List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+        if (pvcs != null) {
+            for (V1PersistentVolumeClaim pvc : pvcs) {
+                String pvcName = pvc.getMetadata().getName();
+                try {
+                    V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(pvcName, namespace, null);
+                    if (v != null) {
+                        log.info("delete pvc for {}", String.valueOf(pvcName));
+
+                        coreV1Api.deleteNamespacedPersistentVolumeClaim(
+                            pvcName,
+                            namespace,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "Background",
+                            null
+                        );
+                        messages.add(String.format("pvc %s deleted", pvcName));
+                    }
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+                    //don't propagate
+                    // throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
+        }
 
         //update state
-        runnable.setState(State.STOPPED.name());
+        runnable.setState(K8sRunnableState.STOPPED.name());
+        runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
@@ -187,11 +268,13 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
             log.trace("runnable: {}", runnable);
         }
 
+        List<String> messages = new ArrayList<>();
+
         K8sWorkflowObject workflow;
         try {
             workflow = get(build(runnable));
         } catch (K8sFrameworkException | IllegalArgumentException e) {
-            runnable.setState(State.DELETED.name());
+            runnable.setState(K8sRunnableState.DELETED.name());
             return runnable;
         }
 
@@ -200,9 +283,44 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
 
         log.info("delete Argo Workflow for {}", String.valueOf(workflow.getMetadata().getName()));
         delete(workflow);
+        messages.add(String.format("workflow %s deleted", workflow.getMetadata().getName()));
+
+        //pvcs
+        List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
+        if (pvcs != null) {
+            for (V1PersistentVolumeClaim pvc : pvcs) {
+                String pvcName = pvc.getMetadata().getName();
+                try {
+                    V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(pvcName, namespace, null);
+                    if (v != null) {
+                        log.info("delete pvc for {}", String.valueOf(pvcName));
+
+                        coreV1Api.deleteNamespacedPersistentVolumeClaim(
+                            pvcName,
+                            namespace,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            "Background",
+                            null
+                        );
+                        messages.add(String.format("pvc %s deleted", pvcName));
+                    }
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+                    //don't propagate
+                    // throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
+        }
 
         //update state
-        runnable.setState(State.DELETED.name());
+        runnable.setState(K8sRunnableState.DELETED.name());
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
@@ -342,10 +460,12 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
     }
 
     private void appendArtifactRepository(IoArgoprojWorkflowV1alpha1Workflow workflow) {
-        IoArgoprojWorkflowV1alpha1ArtifactRepositoryRef ref = new IoArgoprojWorkflowV1alpha1ArtifactRepositoryRef()
-            .configMap(artifactRepositoryConfigMap)
-            .key(artifactRepositoryKey);
-        workflow.getSpec().setArtifactRepositoryRef(ref);
+        if (StringUtils.hasText(artifactRepositoryConfigMap) || StringUtils.hasText(artifactRepositoryKey)) {
+            IoArgoprojWorkflowV1alpha1ArtifactRepositoryRef ref = new IoArgoprojWorkflowV1alpha1ArtifactRepositoryRef()
+                .configMap(artifactRepositoryConfigMap)
+                .key(artifactRepositoryKey);
+            workflow.getSpec().setArtifactRepositoryRef(ref);
+        }
     }
 
     private void appendTemplateDefaults(IoArgoprojWorkflowV1alpha1Workflow workflow, K8sArgoWorkflowRunnable runnable)
@@ -376,6 +496,7 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
         }
 
         container.envFrom(envFrom).env(env).resources(buildResources(runnable));
+        container.securityContext(buildSecurityContext(runnable));
 
         V1PodSecurityContext securityContext = buildPodSecurityContext(runnable);
 
@@ -399,12 +520,21 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
             });
     }
 
-    public V1PodSecurityContext buildPodSecurityContext(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
-        V1PodSecurityContext context = new V1PodSecurityContext();
-        //enforce policy for non root when requested by admin
-        if (disableRoot) {
-            context.runAsNonRoot(true);
+    public V1SecurityContext buildSecurityContext(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
+        V1SecurityContext context = super.buildSecurityContext(runnable);
+
+        //override user when configured
+        if (runAsUser != null && runAsUser != 0) {
+            context.setRunAsUser((long) runAsUser);
         }
+
+        return context;
+    }
+
+    public V1PodSecurityContext buildPodSecurityContext(K8sArgoWorkflowRunnable runnable) throws K8sFrameworkException {
+        V1PodSecurityContext context = super.buildPodSecurityContext(runnable);
+
+        //override user when configured
         if (runAsUser != null && runAsUser != 0) {
             context.setRunAsUser((long) runAsUser);
         }
@@ -508,5 +638,72 @@ public class K8sArgoWorkflowFramework extends K8sBaseFramework<K8sArgoWorkflowRu
 
             throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
         }
+    }
+
+    @Override
+    public List<V1Pod> pods(K8sWorkflowObject workflow) throws K8sFrameworkException {
+        if (workflow == null || workflow.getMetadata() == null) {
+            return null;
+        }
+
+        //fetch labels to select pods
+        String workflowName = workflow.getMetadata().getName();
+
+        String labelSelector = "workflows.argoproj.io/workflow=" + workflowName;
+        try {
+            log.debug("load pods for {}", labelSelector);
+            V1PodList pods = coreV1Api.listNamespacedPod(
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                labelSelector,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
+
+            return pods.getItems();
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+        }
+    }
+
+    @Override
+    public List<V1PersistentVolumeClaim> buildPersistentVolumeClaims(K8sArgoWorkflowRunnable runnable)
+        throws K8sFrameworkException {
+        List<V1PersistentVolumeClaim> volumes = super.buildPersistentVolumeClaims(runnable);
+        if (volumes != null) {
+            for (V1PersistentVolumeClaim pvc : volumes) {
+                if (pvc.getMetadata() == null) {
+                    pvc.setMetadata(new V1ObjectMeta());
+                }
+
+                //add workflow label to pvcs
+                //workflow name is == runnable.id (see build)
+                Map<String, String> wl = Map.of("workflows.argoproj.io/workflow", runnable.getId());
+                Map<String, String> labels = MapUtils.mergeMultipleMaps(wl, pvc.getMetadata().getLabels());
+                pvc.getMetadata().setLabels(labels);
+
+                //set access mode+storage class
+                if (pvc.getSpec() != null) {
+                    pvc.getSpec().setAccessModes(List.of(pvcAccessMode));
+                    if (StringUtils.hasText(pvcStorageClass)) {
+                        pvc.getSpec().setStorageClassName(pvcStorageClass);
+                    }
+                }
+            }
+        }
+
+        return volumes;
     }
 }

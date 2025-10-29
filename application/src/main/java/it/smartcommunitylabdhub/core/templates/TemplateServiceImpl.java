@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.core.templates;
@@ -36,14 +36,15 @@ import it.smartcommunitylabdhub.commons.models.template.Template;
 import it.smartcommunitylabdhub.commons.services.SpecRegistry;
 import it.smartcommunitylabdhub.core.components.infrastructure.specs.SpecValidator;
 import it.smartcommunitylabdhub.core.utils.UUIDKeyGenerator;
+import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -203,8 +204,7 @@ public class TemplateServiceImpl implements SearchableTemplateService, Initializ
         return template;
     }
 
-    private List<Template> filterTemplate(List<Template> list, Pageable pageable, TemplateFilter filter)
-        throws Exception {
+    private List<Template> filterTemplate(List<Template> list, Pageable pageable, TemplateFilter filter) {
         return list
             .stream()
             .filter(f -> {
@@ -249,7 +249,7 @@ public class TemplateServiceImpl implements SearchableTemplateService, Initializ
             int end = Math.min((start + pageable.getPageSize()), list.size());
             List<Template> pageContent = list.subList(start, end);
             return new PageImpl<>(pageContent, pageable, list.size());
-        } catch (Exception e) {
+        } catch (ExecutionException e) {
             throw new SystemException("error retrieving templates:" + e.getMessage(), e);
         }
     }
@@ -264,7 +264,7 @@ public class TemplateServiceImpl implements SearchableTemplateService, Initializ
             int end = Math.min((start + pageable.getPageSize()), list.size());
             List<Template> pageContent = list.subList(start, end);
             return new PageImpl<>(pageContent, pageable, list.size());
-        } catch (Exception e) {
+        } catch (ExecutionException e) {
             throw new SystemException("error retrieving templates:" + e.getMessage(), e);
         }
     }
@@ -274,7 +274,7 @@ public class TemplateServiceImpl implements SearchableTemplateService, Initializ
         try {
             List<Template> list = templateCache.get(type);
             return list.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
-        } catch (Exception e) {
+        } catch (ExecutionException e) {
             throw new SystemException("error retrieving templates:" + e.getMessage(), e);
         }
     }

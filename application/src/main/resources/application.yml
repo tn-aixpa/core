@@ -53,26 +53,33 @@ management:
   server:
     port: ${MANAGEMENT_PORT:8081}
   endpoints:
-    enabled-by-default: false
+    access:
+      default: none
     web:
       base-path:
       exposure.include: "health,info,metrics"
   endpoint:
     info:
-      enabled: true
+      access: read-only
     health:
-      enabled: true
+      access: read-only
 
 # Runtimes
 runtime:
   dbt:
-    image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-dbt:latest}
+    image: ${RUNTIME_DBT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk-wrapper-dbt/wrapper-dbt:latest}
   kfp:
-    image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk/wrapper-kfp:latest}
+    image: ${RUNTIME_KFP_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk-wrapper-kfp/wrapper-kfp:latest}
+    duration: ${RUNTIME_KFP_DURATION:${jwt.refresh-token.duration}}
+  hera:
+    image: ${RUNTIME_HERA_IMAGE:ghcr.io/scc-digitalhub/digitalhub-sdk-wrapper-hera/wrapper-hera:latest}
+    duration: ${RUNTIME_HERA_DURATION:${jwt.refresh-token.duration}}
   python:
     images:
       PYTHON3_9: ${RUNTIME_PYTHON_IMAGE_3_9:ghcr.io/scc-digitalhub/digitalhub-serverless/python-runtime:3.9-latest}
       PYTHON3_10: ${RUNTIME_PYTHON_IMAGE_3_10:ghcr.io/scc-digitalhub/digitalhub-serverless/python-runtime:3.10-latest}
+      PYTHON3_11: ${RUNTIME_PYTHON_IMAGE_3_11:ghcr.io/scc-digitalhub/digitalhub-serverless/python-runtime:3.11-latest}
+      PYTHON3_12: ${RUNTIME_PYTHON_IMAGE_3_12:ghcr.io/scc-digitalhub/digitalhub-serverless/python-runtime:3.12-latest}
     user-id: ${RUNTIME_PYTHON_USER_ID:${kubernetes.security.user}}
     group-id: ${RUNTIME_PYTHON_GROUP_ID:${kubernetes.security.group}}
     command: /usr/local/bin/processor
@@ -90,19 +97,52 @@ runtime:
     group-id: ${RUNTIME_HUGGINGFACE_GROUP_ID:${kubernetes.security.group}}
   kubeai:
     endpoint: ${RUNTIME_KUBEAI_ENDPOINT:}
+  flower:
+    images:
+      server: ${RUNTIME_FLOWER_SERVER:flwr/superlink:1.20.0-py3.12-ubuntu24.04}
+      client: ${RUNTIME_FLOWER_CLIENT:flwr/supernode:1.20.0-py3.12-ubuntu24.04}
+      runner: ${RUNTIME_FLOWER_RUNNER:flwr/clientapp:1.20.0-py3.12-ubuntu24.04}
+    user-id: ${RUNTIME_FLOWER_USER_ID:}
+    group-id: ${RUNTIME_FLOWER_GROUP_ID:}
+    tls-ca-cert: ${RUNTIME_FLOWER_TLS_CA_CERT:}
+    tls-ca-key: ${RUNTIME_FLOWER_TLS_CA_KEY:}
+    tls-conf: ${RUNTIME_FLOWER_TLS_CONF:classpath:/runtime-flower/docker/certificate.conf}
+    tls-int-domain: ${RUNTIME_FLOWER_TLS_INT_DOMAIN:${kubernetes.namespace}}
+    tls-ext-domain: ${RUNTIME_FLOWER_TLS_EXT_DOMAIN:}
 
 # Spring Docs
 springdoc:
   api-docs:
     path: /v1/api-docs
 
-# Kaniko config
-kaniko:
-  image: ${KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
-  image-prefix: ${KANIKO_IMAGE_PREFIX:dhcore}
-  image-registry: ${KANIKO_IMAGE_REGISTRY:${registry.name}}
-  secret: ${KANIKO_SECRET:${registry.secret}}
-  args: ${KANIKO_ARGS:}
+
+# registry
+registry:
+  name: ${IMAGE_REGISTRY:}
+  secret: ${IMAGE_REGISTRY_SECRET:}    
+
+# build config
+builder:
+  framework: ${BUILDER_FRAMEWORK:kaniko}
+  image-prefix: ${BUILDER_IMAGE_PREFIX:dhcore}
+  kaniko:
+    image: ${KANIKO_IMAGE:gcr.io/kaniko-project/executor:latest}
+    image-prefix: ${KANIKO_IMAGE_PREFIX:${builder.image-prefix}}
+    image-registry: ${KANIKO_IMAGE_REGISTRY:${registry.name}}
+    secret: ${KANIKO_SECRET:${registry.secret}}
+    args: ${KANIKO_ARGS:}
+  buildkit:
+    image: ${BUILDKIT_IMAGE:moby/buildkit:master-rootless}
+    image-prefix: ${BUILDKIT_IMAGE_PREFIX:${builder.image-prefix}}
+    image-registry: ${BUILDKIT_IMAGE_REGISTRY:${registry.name}}
+    secret: ${BUILDKIT_SECRET:${registry.secret}}
+    command: ${BUILDKIT_COMMAND:buildctl-daemonless.sh}
+    args: ${BUILDKIT_ARGS:build,--frontend,dockerfile.v0}
+    client-secret: 
+      name: ${BUILDKIT_CLIENT_SECRET_NAME:}
+      mount-path: ${BUILDKIT_CLIENT_SECRET_MOUNT_PATH:/certs/client}
+
+
 
 # MLRun config
 mlrun:
@@ -110,30 +150,31 @@ mlrun:
   image-prefix: ${MLRUN_IMAGE_PREFIX:dhcore}
   image-registry: ${MLRUN_IMAGE_REGISTRY:}
 
-# registry
-registry:
-  name: ${DOCKER_REGISTRY:}
-  secret: ${DOCKER_REGISTRY_SECRET:}
+
 
 argoworkflows:
   artifacts:
-    configmap: ${ARGOWORKFLOWS_ARTIFACTS_CONFIGMAP:artifact-repositories}
-    key: ${ARGOWORKFLOWS_ARTIFACTS_KEY:default-artifact-repository}
+    configmap: ${ARGOWORKFLOWS_ARTIFACTS_CONFIGMAP:}
+    key: ${ARGOWORKFLOWS_ARTIFACTS_KEY:}
   serviceaccount: ${ARGOWORKFLOWS_SERVICE_ACCOUNT:default}
   user: ${ARGOWORKFLOWS_USER:1000}
 
 # Kubernetes
 kubernetes:
   namespace: ${K8S_NAMESPACE:default}
-  logs: ${K8S_ENABLE_LOGS:true}
+  logs:
+    enable: ${K8S_ENABLE_LOGS:true}
+    max-length: ${K8S_LOGS_MAX_LENGTH:1048576}
   metrics: ${K8S_ENABLE_METRICS:true}
   # supported values for results: default,keep,disable
   results: ${K8S_ENABLE_RESULTS:default}
   security:
     disable-root: ${K8S_SEC_DISABLE_ROOT:false}
+    seccomp-profile: ${K8S_SEC_SECCOMP_PROFILE:RuntimeDefault}
     user: ${K8S_SEC_USER:}
     group: ${K8S_SEC_GROUP:}
   image-pull-policy: ${K8S_IMAGE_PULL_POLICY:IfNotPresent}
+  registry-secret: ${K8S_REGISTRY_SECRET:${registry.secret}}  
   init:
     image: ${K8S_INIT_IMAGE:ghcr.io/scc-digitalhub/digitalhub-core-builder-tool:latest}
     command: "/bin/bash,-c,/app/builder-tool.sh"
@@ -143,6 +184,9 @@ kubernetes:
     mount_path: /shared
     spec:
       sizeLimit: 100Mi
+  empty-dir:
+    size: ${K8S_EMPTY_DIR_SIZE:128Mi}
+    medium: ${K8S_EMPTY_DIR_MEDIUM:}
   service:
     type: ${K8S_SERVICE_TYPE:NodePort}
   resources:
@@ -150,14 +194,22 @@ kubernetes:
       requests: ${K8S_RESOURCE_CPU_DEFAULT:100m}
       limits: ${K8S_RESOURCE_CPU_LIMIT:}
     mem:
-      requests: ${K8S_RESOURCE_MEM_DEFAULT:64m}
+      requests: ${K8S_RESOURCE_MEM_DEFAULT:256Mi}
       limits: ${K8S_RESOURCE_MEM_LIMIT:}
+      toleration: ${K8S_RESOURCE_MEM_TOLERATION:1.1}
     gpu:
       key: ${K8S_RESOURCE_GPU_KEY:nvidia.com/gpu}
     pvc:
       requests: ${K8S_RESOURCE_PVC_DEFAULT:2Gi}
       limits: ${K8S_RESOURCE_PVC_LIMIT:}
       storage-class: ${K8S_RESOURCE_PVC_STORAGE_CLASS:}
+    ephemeral:
+      requests: ${K8S_RESOURCE_EPHEMERAL_DEFAULT:2Gi}
+      limits: ${K8S_RESOURCE_EPHEMERAL_LIMIT:}
+      storage-class: ${K8S_RESOURCE_EPHEMERAL_STORAGE_CLASS:}    
+    workflow:
+      storage-class: ${K8S_RESOURCE_WORKFLOW_STORAGE_CLASS:}  
+      access-mode: ${K8S_RESOURCE_WORKFLOW_ACCESS_MODE:ReadWriteMany}
   config:
     config-map: ${DH_CONFIG_COMMON_MAPS:}
     secret: ${DH_CONFIG_COMMON_SECRETS:}
@@ -226,8 +278,8 @@ event-queue:
 
 # Managing monitors delay and other information
 monitors:
-  min-delay: 60
-  delay: ${MONITORS_DELAY:60}
+  min-delay: 10
+  delay: ${MONITORS_DELAY:10}
 
 # Solr configuration
 solr:
@@ -243,7 +295,7 @@ solr:
   reindex: ${SOLR_REINDEX:never}
 
 lucene:
-  index-path: ${LUCENE_INDEX_PATH:false}
+  index-path: ${LUCENE_INDEX_PATH:./data/index}
   reindex: ${LUCENE_REINDEX:never}
 
 # files support
@@ -280,6 +332,9 @@ credentials:
       path-style-access: ${S3_PATH_STYLE_ACCESS:}
     db:
       enable: ${DB_CREDENTIALS_PROVIDER:false}
+      platform: ${DB_CREDENTIALS_PLATFORM:postgresql}
+      host: ${DB_CREDENTIALS_HOST:}
+      port: ${DB_CREDENTIALS_PORT:}
       database: ${DB_CREDENTIALS_DATABASE:}
       endpoint: ${DB_CREDENTIALS_ENDPOINT:}
       claim: ${DB_CREDENTIALS_CLAIM:db/role}
@@ -291,8 +346,9 @@ credentials:
       endpoint: ${MINIO_CREDENTIALS_ENDPOINT:}
       region: ${MINIO_CREDENTIALS_REGION:us-east-1}
       bucket: ${MINIO_CREDENTIALS_BUCKET:}
-      claim: ${MINIO_CREDENTIALS_CLAIM:minio/policy}
-      policy: ${MINIO_CREDENTIALS_POLICY:readwrite}
+      claim: ${MINIO_CREDENTIALS_CLAIM_PREFIX:minio}
+      policy: ${MINIO_CREDENTIALS_POLICY:{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:*"],"Resource":["arn:aws:s3:::*"]}]}}
+      roleArn: ${MINIO_CREDENTIALS_ROLE_ARN:}
       access-key: ${MINIO_CREDENTIALS_ACCESS_KEY:}
       secret-key: ${MINIO_CREDENTIALS_SECRET_KEY:}
 

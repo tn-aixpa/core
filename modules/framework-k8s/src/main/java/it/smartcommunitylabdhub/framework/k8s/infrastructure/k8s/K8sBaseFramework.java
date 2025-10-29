@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
@@ -32,7 +32,11 @@ import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.apis.EventsV1Api;
+import io.kubernetes.client.openapi.models.EventsV1Event;
+import io.kubernetes.client.openapi.models.EventsV1EventList;
 import io.kubernetes.client.openapi.models.V1Affinity;
+import io.kubernetes.client.openapi.models.V1Capabilities;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.openapi.models.V1EnvFromSource;
@@ -45,6 +49,7 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSecurityContext;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1SeccompProfile;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretEnvSource;
 import io.kubernetes.client.openapi.models.V1SecurityContext;
@@ -54,7 +59,6 @@ import io.kubernetes.client.openapi.models.V1VolumeMount;
 import io.kubernetes.client.openapi.models.V1VolumeResourceRequirements;
 import it.smartcommunitylabdhub.commons.config.ApplicationProperties;
 import it.smartcommunitylabdhub.commons.infrastructure.Framework;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.config.KubernetesProperties;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
@@ -69,11 +73,13 @@ import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLog;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreMetric;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreNodeSelector;
-import it.smartcommunitylabdhub.framework.k8s.objects.CoreResource;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreResourceDefinition;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnable;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnableState;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,6 +105,10 @@ import org.springframework.util.StringUtils;
 public abstract class K8sBaseFramework<T extends K8sRunnable, K extends KubernetesObject>
     implements Framework<T>, InitializingBean {
 
+    public static final String DEFAULT_TEMPLATE = "default";
+    public static final float DEFAULT_MEM_TOLERATION = 1.1f;
+    public static final int MIN_MEM = 64 * 1024 * 1024; //64Mi
+
     //custom object mapper with mixIn for IntOrString
     protected static final ObjectMapper mapper = KubernetesMapper.OBJECT_MAPPER;
 
@@ -118,12 +128,28 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     protected String defaultImagePullPolicy = "IfNotPresent";
 
     protected boolean disableRoot = false;
+    protected String seccompProfile = "RuntimeDefault";
 
-    protected String gpuResourceKey;
-    protected CoreResourceDefinition cpuResourceDefinition = new CoreResourceDefinition();
-    protected CoreResourceDefinition memResourceDefinition = new CoreResourceDefinition();
-    protected CoreResourceDefinition pvcResourceDefinition = new CoreResourceDefinition();
+    protected CoreResourceDefinition cpuRequestResourceDefinition = new CoreResourceDefinition("cpu", null);
+    protected CoreResourceDefinition cpuLimitResourceDefinition = new CoreResourceDefinition("cpu", null);
+    protected CoreResourceDefinition memRequestResourceDefinition = new CoreResourceDefinition(
+        "memory",
+        String.valueOf(MIN_MEM)
+    );
+    protected CoreResourceDefinition memLimitResourceDefinition = new CoreResourceDefinition("memory", null);
+    protected Float memResourceToleration = DEFAULT_MEM_TOLERATION;
+    protected CoreResourceDefinition gpuLimitResourceDefinition = new CoreResourceDefinition();
+    protected CoreResourceDefinition pvcRequestResourceDefinition = new CoreResourceDefinition("storage", null);
+    protected CoreResourceDefinition pvcLimitResourceDefinition = new CoreResourceDefinition("storage", null);
     protected String pvcStorageClass;
+    protected CoreResourceDefinition ephemeralRequestResourceDefinition = new CoreResourceDefinition(
+        "ephemeral-storage",
+        null
+    );
+    protected CoreResourceDefinition ephemeralLimitResourceDefinition = new CoreResourceDefinition(
+        "ephemeral-storage",
+        null
+    );
 
     protected List<String> templateKeys = Collections.emptyList();
 
@@ -160,7 +186,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     }
 
     @Autowired
-    public void setCollectLogs(@Value("${kubernetes.logs}") Boolean collectLogs) {
+    public void setCollectLogs(@Value("${kubernetes.logs.enable}") Boolean collectLogs) {
         this.collectLogs = collectLogs;
     }
 
@@ -174,8 +200,12 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         this.collectResults = collectResults;
     }
 
-    public void setCpuResourceDefinition(CoreResourceDefinition cpuResourceDefinition) {
-        this.cpuResourceDefinition = cpuResourceDefinition;
+    public void setCpuRequestResourceDefinition(CoreResourceDefinition cpuResourceDefinition) {
+        this.cpuRequestResourceDefinition = cpuResourceDefinition;
+    }
+
+    public void setCpuLimitResourceDefinition(CoreResourceDefinition cpuLimitResourceDefinition) {
+        this.cpuLimitResourceDefinition = cpuLimitResourceDefinition;
     }
 
     @Autowired
@@ -183,7 +213,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         @Value("${kubernetes.resources.cpu.requests}") String cpuResourceDefinition
     ) {
         if (StringUtils.hasText(cpuResourceDefinition)) {
-            this.cpuResourceDefinition.setRequests(cpuResourceDefinition);
+            this.cpuRequestResourceDefinition.setValue(cpuResourceDefinition);
         }
     }
 
@@ -192,7 +222,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         @Value("${kubernetes.resources.cpu.limits}") String cpuResourceDefinition
     ) {
         if (StringUtils.hasText(cpuResourceDefinition)) {
-            this.cpuResourceDefinition.setLimits(cpuResourceDefinition);
+            this.cpuLimitResourceDefinition.setValue(cpuResourceDefinition);
         }
     }
 
@@ -204,12 +234,21 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     }
 
     @Autowired
+    public void setSeccompProfile(@Value("${kubernetes.security.seccomp-profile}") String seccompProfile) {
+        this.seccompProfile = seccompProfile;
+    }
+
+    @Autowired
     public void setImagePullPolicy(@Value("${kubernetes.image-pull-policy}") String imagePullPolicy) {
         this.defaultImagePullPolicy = imagePullPolicy;
     }
 
-    public void setMemResourceDefinition(CoreResourceDefinition memResourceDefinition) {
-        this.memResourceDefinition = memResourceDefinition;
+    public void setMemRequestResourceDefinition(CoreResourceDefinition memResourceDefinition) {
+        this.memRequestResourceDefinition = memResourceDefinition;
+    }
+
+    public void setMemLimitResourceDefinition(CoreResourceDefinition memLimitResourceDefinition) {
+        this.memLimitResourceDefinition = memLimitResourceDefinition;
     }
 
     @Autowired
@@ -217,7 +256,16 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         @Value("${kubernetes.resources.mem.requests}") String memResourceDefinition
     ) {
         if (StringUtils.hasText(memResourceDefinition)) {
-            this.memResourceDefinition.setRequests(memResourceDefinition);
+            //check request is a valid measure for memory
+            Quantity q = Quantity.fromString(memResourceDefinition);
+            if (q.getNumber().compareTo(new BigDecimal(MIN_MEM)) >= 0) {
+                this.memRequestResourceDefinition.setValue(memResourceDefinition);
+            } else {
+                log.warn("Memory requests must be at least {} bytes", MIN_MEM);
+            }
+        } else {
+            log.warn("Memory requests not set, removing default value");
+            this.memRequestResourceDefinition.setValue(null);
         }
     }
 
@@ -226,12 +274,29 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         @Value("${kubernetes.resources.mem.limits}") String memResourceDefinition
     ) {
         if (StringUtils.hasText(memResourceDefinition)) {
-            this.memResourceDefinition.setLimits(memResourceDefinition);
+            //check request is a valid measure for memory
+            Quantity q = Quantity.fromString(memResourceDefinition);
+            if (q.getNumber().compareTo(new BigDecimal(MIN_MEM)) >= 0) {
+                this.memLimitResourceDefinition.setValue(memResourceDefinition);
+            } else {
+                log.warn("Memory limits must be at least {} bytes", MIN_MEM);
+            }
         }
     }
 
-    public void setPvcResourceDefinition(CoreResourceDefinition pvcResourceDefinition) {
-        this.pvcResourceDefinition = pvcResourceDefinition;
+    @Autowired
+    public void setMemResourceToleration(@Value("${kubernetes.resources.mem.toleration}") Float memResourceToleration) {
+        if (memResourceToleration != null && memResourceToleration > 1) {
+            this.memResourceToleration = memResourceToleration;
+        }
+    }
+
+    public void setPvcRequestResourceDefinition(CoreResourceDefinition pvcResourceDefinition) {
+        this.pvcRequestResourceDefinition = pvcResourceDefinition;
+    }
+
+    public void setPvcLimitResourceDefinition(CoreResourceDefinition pvcLimitResourceDefinition) {
+        this.pvcLimitResourceDefinition = pvcLimitResourceDefinition;
     }
 
     @Autowired
@@ -239,7 +304,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         @Value("${kubernetes.resources.pvc.requests}") String pvcResourceDefinition
     ) {
         if (StringUtils.hasText(pvcResourceDefinition)) {
-            this.pvcResourceDefinition.setRequests(pvcResourceDefinition);
+            this.pvcRequestResourceDefinition.setValue(pvcResourceDefinition);
         }
     }
 
@@ -248,7 +313,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         @Value("${kubernetes.resources.pvc.limits}") String pvcResourceDefinition
     ) {
         if (StringUtils.hasText(pvcResourceDefinition)) {
-            this.pvcResourceDefinition.setLimits(pvcResourceDefinition);
+            this.pvcLimitResourceDefinition.setValue(pvcResourceDefinition);
         }
     }
 
@@ -259,10 +324,40 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         }
     }
 
+    public void setEphemeralRequestResourceDefinition(CoreResourceDefinition ephemeralResourceDefinition) {
+        this.ephemeralRequestResourceDefinition = ephemeralResourceDefinition;
+    }
+
+    public void setEphemeralLimitResourceDefinition(CoreResourceDefinition ephemeralLimitResourceDefinition) {
+        this.ephemeralLimitResourceDefinition = ephemeralLimitResourceDefinition;
+    }
+
+    @Autowired
+    public void setEphemeralRequestsResourceDefinition(
+        @Value("${kubernetes.resources.ephemeral.requests}") String ephemeralResourceDefinition
+    ) {
+        if (StringUtils.hasText(ephemeralResourceDefinition)) {
+            this.ephemeralRequestResourceDefinition.setValue(ephemeralResourceDefinition);
+        }
+    }
+
+    @Autowired
+    public void setEphemeralLimitsResourceDefinition(
+        @Value("${kubernetes.resources.ephemeral.limits}") String ephemeralResourceDefinition
+    ) {
+        if (StringUtils.hasText(ephemeralResourceDefinition)) {
+            this.ephemeralLimitResourceDefinition.setValue(ephemeralResourceDefinition);
+        }
+    }
+
+    public void setGpuLimitResourceDefinition(CoreResourceDefinition gpuLimitResourceDefinition) {
+        this.gpuLimitResourceDefinition = gpuLimitResourceDefinition;
+    }
+
     @Autowired
     public void setGpuResourceKey(@Value("${kubernetes.resources.gpu.key}") String gpuResourceKey) {
         if (StringUtils.hasText(gpuResourceKey)) {
-            this.gpuResourceKey = gpuResourceKey;
+            this.gpuLimitResourceDefinition.setKey(gpuResourceKey);
         }
     }
 
@@ -272,7 +367,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     }
 
     @Autowired
-    public void setRegistrySecret(@Value("${registry.secret}") String secret) {
+    public void setRegistrySecret(@Value("${kubernetes.registry-secret}") String secret) {
         this.registrySecret = secret;
     }
 
@@ -358,7 +453,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             //TODO collect or rebuild objects
             // destroy(runnable);
 
-            runnable.setState(State.STOPPED.name());
+            runnable.setState(K8sRunnableState.STOPPED.name());
         }
         return runnable;
     }
@@ -369,9 +464,47 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         return null;
     }
 
+    public abstract K build(T runnable) throws K8sFrameworkException;
+
+    public abstract K get(K obj) throws K8sFrameworkException;
+
     /*
      * K8s methods
      */
+
+    public List<EventsV1Event> events(KubernetesObject object) throws K8sFrameworkException {
+        if (object == null || object.getMetadata() == null) {
+            return null;
+        }
+
+        String fieldSelector = "regarding.name=" + object.getMetadata().getName();
+        try {
+            EventsV1Api eventsApi = new EventsV1Api(coreV1Api.getApiClient());
+            EventsV1EventList events = eventsApi.listNamespacedEvent(
+                namespace,
+                null,
+                null,
+                null,
+                fieldSelector,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            );
+
+            return events.getItems();
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+        }
+    }
 
     public List<V1Pod> pods(K object) throws K8sFrameworkException {
         if (object == null || object.getMetadata() == null) {
@@ -458,6 +591,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                                 null,
                                 null,
                                 null,
+                                null,
                                 null
                             );
 
@@ -487,6 +621,7 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                                 namespace,
                                 c,
                                 Boolean.FALSE,
+                                null,
                                 null,
                                 null,
                                 null,
@@ -572,18 +707,22 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         //build template labels when defined
         Map<String, String> templateLabels = new HashMap<>();
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
+            template = templates.get(runnable.getTemplate()).getProfile();
             templateLabels.put(
                 K8sBuilderHelper.sanitizeNames(applicationProperties.getName()) + "/template",
                 runnable.getTemplate()
             );
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
+        }
 
-            if (template.getLabels() != null && !template.getLabels().isEmpty()) {
-                for (CoreLabel l : template.getLabels()) {
-                    templateLabels.putIfAbsent(l.name(), K8sBuilderHelper.sanitizeNames(l.value()));
-                }
+        if (template != null && template.getLabels() != null && !template.getLabels().isEmpty()) {
+            for (CoreLabel l : template.getLabels()) {
+                templateLabels.putIfAbsent(l.name(), K8sBuilderHelper.sanitizeNames(l.value()));
             }
         }
 
@@ -658,22 +797,25 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         }
 
         //volumes defined in template
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
-
-            if (template.getVolumes() != null) {
-                template
-                    .getVolumes()
-                    .forEach(volumeMap -> {
-                        V1Volume volume = k8sBuilderHelper.getVolume(runnable.getId(), volumeMap);
-                        if (volume != null) {
-                            volumes.add(volume);
-                        }
-                    });
-            }
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
         }
 
+        if (template != null && template.getVolumes() != null) {
+            template
+                .getVolumes()
+                .forEach(volumeMap -> {
+                    V1Volume volume = k8sBuilderHelper.getVolume(runnable.getId(), volumeMap);
+                    if (volume != null) {
+                        volumes.add(volume);
+                    }
+                });
+        }
         //check if context build volume is required
         if (
             (runnable.getContextRefs() != null && !runnable.getContextRefs().isEmpty()) ||
@@ -716,20 +858,24 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
         }
 
         //volumes defined in template
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
+        }
 
-            if (template.getVolumes() != null) {
-                template
-                    .getVolumes()
-                    .forEach(volumeMap -> {
-                        V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
-                        if (mount != null) {
-                            volumeMounts.add(mount);
-                        }
-                    });
-            }
+        if (template != null && template.getVolumes() != null) {
+            template
+                .getVolumes()
+                .forEach(volumeMap -> {
+                    V1VolumeMount mount = k8sBuilderHelper.getVolumeMount(volumeMap);
+                    if (mount != null) {
+                        volumeMounts.add(mount);
+                    }
+                });
         }
 
         //check if context build volume is required
@@ -760,136 +906,283 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
     protected V1ResourceRequirements buildResources(T runnable) {
         V1ResourceRequirements resources = new V1ResourceRequirements();
-        if (runnable.getResources() != null) {
-            //translate requests and limits
-            CoreResource res = runnable.getResources();
-            Map<String, String> requests = new HashMap<>();
-            Map<String, String> limits = new HashMap<>();
 
-            //cpu
-            Optional
-                .ofNullable(res.getCpu())
-                .ifPresent(cpu -> {
-                    if (cpu.getRequests() != null) {
-                        requests.put("cpu", cpu.getRequests());
-                    }
-                    if (cpu.getLimits() != null) {
-                        limits.put("cpu", cpu.getLimits());
-                    }
-                });
-
-            //mem
-            Optional
-                .ofNullable(res.getMem())
-                .ifPresent(mem -> {
-                    if (mem.getRequests() != null) {
-                        requests.put("memory", mem.getRequests());
-                    }
-                    if (mem.getLimits() != null) {
-                        limits.put("memory", mem.getLimits());
-                    }
-                });
-
-            //gpu
-            Optional
-                .ofNullable(res.getGpu())
-                .ifPresent(cpu -> {
-                    if (gpuResourceKey != null && res.getGpu().getRequests() != null) {
-                        requests.put(gpuResourceKey, res.getGpu().getRequests());
-                    }
-                    if (gpuResourceKey != null && res.getGpu().getLimits() != null) {
-                        limits.put(gpuResourceKey, res.getGpu().getLimits());
-                    }
-                });
-
-            resources.setRequests(k8sBuilderHelper.convertResources(requests));
-            resources.setLimits(k8sBuilderHelper.convertResources(limits));
-        }
-
+        // template overrides user request
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
-            if (template != null && template.getResources() != null) {
-                //override *all* definitions if set
-                //translate requests and limits
-                CoreResource res = template.getResources();
-                Map<String, String> requests = new HashMap<>();
-                Map<String, String> limits = new HashMap<>();
-
-                //cpu
-                Optional
-                    .ofNullable(res.getCpu())
-                    .ifPresent(cpu -> {
-                        if (cpu.getRequests() != null) {
-                            requests.put("cpu", cpu.getRequests());
-                        }
-                        if (cpu.getLimits() != null) {
-                            limits.put("cpu", cpu.getLimits());
-                        }
-                    });
-
-                //mem
-                Optional
-                    .ofNullable(res.getMem())
-                    .ifPresent(mem -> {
-                        if (mem.getRequests() != null) {
-                            requests.put("memory", mem.getRequests());
-                        }
-                        if (mem.getLimits() != null) {
-                            limits.put("memory", mem.getLimits());
-                        }
-                    });
-
-                //gpu
-                Optional
-                    .ofNullable(res.getGpu())
-                    .ifPresent(cpu -> {
-                        if (gpuResourceKey != null && res.getGpu().getRequests() != null) {
-                            requests.put(gpuResourceKey, res.getGpu().getRequests());
-                        }
-                        if (gpuResourceKey != null && res.getGpu().getLimits() != null) {
-                            limits.put(gpuResourceKey, res.getGpu().getLimits());
-                        }
-                    });
-
-                resources.setRequests(k8sBuilderHelper.convertResources(requests));
-                resources.setLimits(k8sBuilderHelper.convertResources(limits));
-            }
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
         }
 
-        //default resources fallback
-        Map<String, Quantity> requests = resources.getRequests() == null
-            ? new HashMap<>()
-            : new HashMap<>(resources.getRequests());
-
-        if (cpuResourceDefinition.getRequests() != null) {
-            //merge if missing
-            requests.putIfAbsent("cpu", Quantity.fromString(cpuResourceDefinition.getRequests()));
+        //translate requests
+        Map<String, Quantity> requests = new HashMap<>();
+        if (runnable.getResources() != null && runnable.getResources().getRequests() != null) {
+            //copy all definitions
+            runnable
+                .getResources()
+                .getRequests()
+                .stream()
+                .filter(r -> r != null)
+                .forEach(req -> {
+                    if (StringUtils.hasText(req.getKey()) && StringUtils.hasText(req.getValue())) {
+                        //add as-is
+                        requests.put(req.getKey(), Quantity.fromString(req.getValue()));
+                    }
+                });
         }
 
-        if (memResourceDefinition.getRequests() != null) {
-            //merge if missing
-            requests.putIfAbsent("memory", Quantity.fromString(memResourceDefinition.getRequests()));
+        if (template != null && template.getResources() != null && template.getResources().getRequests() != null) {
+            template
+                .getResources()
+                .getRequests()
+                .stream()
+                .filter(r -> r != null)
+                .forEach(req -> {
+                    if (StringUtils.hasText(req.getKey()) && StringUtils.hasText(req.getValue())) {
+                        //add as-is
+                        requests.put(req.getKey(), Quantity.fromString(req.getValue()));
+                    }
+                });
         }
+
+        //defaults if defined and missing
+        List<CoreResourceDefinition> defaultRequests = List.of(
+            cpuRequestResourceDefinition,
+            memRequestResourceDefinition,
+            ephemeralRequestResourceDefinition
+        );
+
+        defaultRequests
+            .stream()
+            .filter(r -> r != null)
+            .forEach(req -> {
+                if (StringUtils.hasText(req.getKey()) && StringUtils.hasText(req.getValue())) {
+                    //add if missing
+                    requests.putIfAbsent(req.getKey(), Quantity.fromString(req.getValue()));
+                }
+            });
 
         resources.setRequests(requests);
 
-        //default limits
-        Map<String, Quantity> limits = resources.getLimits() == null
-            ? new HashMap<>()
-            : new HashMap<>(resources.getLimits());
-
-        if (cpuResourceDefinition.getLimits() != null) {
-            //merge if missing
-            limits.putIfAbsent("cpu", Quantity.fromString(cpuResourceDefinition.getLimits()));
+        //limits are either in template or calculated
+        Map<String, Quantity> limits = new HashMap<>();
+        if (template != null && template.getResources() != null && template.getResources().getLimits() != null) {
+            template
+                .getResources()
+                .getLimits()
+                .stream()
+                .filter(r -> r != null)
+                .forEach(req -> {
+                    if (StringUtils.hasText(req.getKey()) && StringUtils.hasText(req.getValue())) {
+                        //add as-is
+                        limits.put(req.getKey(), Quantity.fromString(req.getValue()));
+                    }
+                });
         }
 
-        if (memResourceDefinition.getLimits() != null) {
-            //merge if missing
-            limits.putIfAbsent("memory", Quantity.fromString(memResourceDefinition.getLimits()));
+        //set default when missing
+
+        //CPU
+        //TODO evaluate auto-calculation based on factor
+        if (!limits.containsKey("cpu")) {
+            if (StringUtils.hasText(cpuLimitResourceDefinition.getValue())) {
+                limits.putIfAbsent("cpu", Quantity.fromString(cpuLimitResourceDefinition.getValue()));
+            } else if (requests.containsKey("cpu")) {
+                //set equal to request when missing
+                limits.put("cpu", requests.get("cpu"));
+            }
+        }
+
+        //MEM
+        if (!limits.containsKey("memory")) {
+            if (requests.containsKey("memory") && memResourceToleration != null) {
+                BigDecimal ml = requests
+                    .get("memory")
+                    .getNumber()
+                    .multiply(new BigDecimal(memResourceToleration))
+                    .setScale(0, RoundingMode.UP);
+                limits.put("memory", new Quantity(ml, requests.get("memory").getFormat()));
+            } else if (memLimitResourceDefinition.getValue() != null) {
+                //merge if missing
+                limits.putIfAbsent("memory", Quantity.fromString(memLimitResourceDefinition.getValue()));
+            }
+        }
+
+        //GPU
+        if (
+            StringUtils.hasText(gpuLimitResourceDefinition.getKey()) &&
+            requests.containsKey(gpuLimitResourceDefinition.getKey())
+        ) {
+            //set as limit when defined in request and missing because for GPU they must match
+            limits.putIfAbsent(gpuLimitResourceDefinition.getKey(), requests.get(gpuLimitResourceDefinition.getKey()));
+        }
+
+        //EPHEMERAL STORAGE
+        if (StringUtils.hasText(ephemeralLimitResourceDefinition.getValue())) {
+            limits.putIfAbsent("ephemeral-storage", Quantity.fromString(ephemeralLimitResourceDefinition.getValue()));
         }
 
         resources.setLimits(limits);
+
+        //     //cpu
+        //     Optional
+        //         .ofNullable(res.getCpu())
+        //         .ifPresent(cpu -> {
+        //             if (cpu.getRequests() != null) {
+        //                 requests.put("cpu", cpu.getRequests());
+        //             }
+        //             if (cpu.getLimits() != null) {
+        //                 limits.put("cpu", cpu.getLimits());
+        //             }
+        //         });
+
+        //     //mem
+        //     Optional
+        //         .ofNullable(res.getMem())
+        //         .ifPresent(mem -> {
+        //             if (mem.getRequests() != null) {
+        //                 requests.put("memory", mem.getRequests());
+        //             }
+        //             if (mem.getLimits() != null) {
+        //                 limits.put("memory", mem.getLimits());
+        //             }
+        //         });
+
+        //     //gpu
+        //     Optional
+        //         .ofNullable(res.getGpu())
+        //         .ifPresent(cpu -> {
+        //             if (gpuResourceKey != null && res.getGpu().getRequests() != null) {
+        //                 requests.put(gpuResourceKey, res.getGpu().getRequests());
+        //             }
+        //             if (gpuResourceKey != null && res.getGpu().getLimits() != null) {
+        //                 limits.put(gpuResourceKey, res.getGpu().getLimits());
+        //             }
+        //         });
+
+        //     resources.setRequests(k8sBuilderHelper.convertResources(requests));
+        //     resources.setLimits(k8sBuilderHelper.convertResources(limits));
+        // }
+        // K8sRunnable template = null;
+        // if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
+        //     //add template
+        //     template = templates.get(runnable.getTemplate()).getProfile();
+        // } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+        //     //use default template
+        //     template = templates.get(DEFAULT_TEMPLATE).getProfile();
+        // }
+
+        // if (template != null && template.getResources() != null) {
+        //     //override *all* definitions if set
+        //     //translate requests and limits
+        //     CoreResource res = template.getResources();
+        //     Map<String, String> requests = new HashMap<>();
+        //     Map<String, String> limits = new HashMap<>();
+
+        //     //cpu
+        //     Optional
+        //         .ofNullable(res.getCpu())
+        //         .ifPresent(cpu -> {
+        //             if (cpu.getRequests() != null) {
+        //                 requests.put("cpu", cpu.getRequests());
+        //             }
+        //             if (cpu.getLimits() != null) {
+        //                 limits.put("cpu", cpu.getLimits());
+        //             }
+        //         });
+
+        //     //mem
+        //     Optional
+        //         .ofNullable(res.getMem())
+        //         .ifPresent(mem -> {
+        //             if (mem.getRequests() != null) {
+        //                 requests.put("memory", mem.getRequests());
+        //             }
+        //             if (mem.getLimits() != null) {
+        //                 limits.put("memory", mem.getLimits());
+        //             }
+        //         });
+
+        //     //gpu
+        //     Optional
+        //         .ofNullable(res.getGpu())
+        //         .ifPresent(cpu -> {
+        //             if (gpuResourceKey != null && res.getGpu().getRequests() != null) {
+        //                 requests.put(gpuResourceKey, res.getGpu().getRequests());
+        //             }
+        //             if (gpuResourceKey != null && res.getGpu().getLimits() != null) {
+        //                 limits.put(gpuResourceKey, res.getGpu().getLimits());
+        //             }
+        //         });
+
+        //     resources.setRequests(k8sBuilderHelper.convertResources(requests));
+        //     resources.setLimits(k8sBuilderHelper.convertResources(limits));
+        // }
+
+        //default resources fallback
+        // Map<String, Quantity> requests = resources.getRequests() == null
+        //     ? new HashMap<>()
+        //     : new HashMap<>(resources.getRequests());
+
+        // if (cpuRequestResourceDefinition.getRequests() != null) {
+        //     //merge if missing
+        //     requests.putIfAbsent("cpu", Quantity.fromString(cpuRequestResourceDefinition.getRequests()));
+        // }
+
+        // if (memRequestResourceDefinition.getRequests() != null) {
+        //     //merge if missing
+        //     requests.putIfAbsent("memory", Quantity.fromString(memRequestResourceDefinition.getRequests()));
+        // }
+
+        // if (ephemeralRequestResourceDefinition.getRequests() != null) {
+        //     //merge if set
+        //     requests.putIfAbsent(
+        //         "ephemeral-storage",
+        //         Quantity.fromString(ephemeralRequestResourceDefinition.getRequests())
+        //     );
+        // }
+
+        // // resources.setRequests(requests);
+
+        // //default limits
+        // Map<String, Quantity> limits = resources.getLimits() == null
+        //     ? new HashMap<>()
+        //     : new HashMap<>(resources.getLimits());
+
+        // //cpu: either user specified, or admin specified, or none
+        // if (cpuRequestResourceDefinition.getLimits() != null) {
+        //     //merge if missing
+        //     limits.putIfAbsent("cpu", Quantity.fromString(cpuRequestResourceDefinition.getLimits()));
+        // }
+
+        // //mem: either user specified, or auto-calculated, or admin specified, or none
+        // if (!limits.containsKey("memory")) {
+        //     if (requests.containsKey("memory") && memResourceToleration != null) {
+        //         BigDecimal ml = requests
+        //             .get("memory")
+        //             .getNumber()
+        //             .multiply(new BigDecimal(memResourceToleration))
+        //             .setScale(0, RoundingMode.UP);
+        //         limits.put("memory", new Quantity(ml, requests.get("memory").getFormat()));
+        //     } else if (memRequestResourceDefinition.getLimits() != null) {
+        //         //merge if missing
+        //         limits.putIfAbsent("memory", Quantity.fromString(memRequestResourceDefinition.getLimits()));
+        //     }
+        // }
+
+        // //ephemeral storage: enforce limit when defined
+        // if (ephemeralRequestResourceDefinition.getLimits() != null) {
+        //     //merge if set
+        //     limits.putIfAbsent(
+        //         "ephemeral-storage",
+        //         Quantity.fromString(ephemeralRequestResourceDefinition.getLimits())
+        //     );
+        // }
+
+        // resources.setLimits(limits);
 
         return resources;
     }
@@ -905,19 +1198,23 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             );
         }
 
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
-            if (template.getNodeSelector() != null && !template.getNodeSelector().isEmpty()) {
-                selectors.putAll(
-                    template
-                        .getNodeSelector()
-                        .stream()
-                        .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
-                );
-            }
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
         }
 
+        if (template != null && template.getNodeSelector() != null && !template.getNodeSelector().isEmpty()) {
+            selectors.putAll(
+                template
+                    .getNodeSelector()
+                    .stream()
+                    .collect(Collectors.toMap(CoreNodeSelector::key, CoreNodeSelector::value))
+            );
+        }
         if (selectors.isEmpty()) {
             return null;
         }
@@ -932,12 +1229,17 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             tolerations.addAll(runnable.getTolerations().stream().map(t -> t).collect(Collectors.toList()));
         }
 
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
-            if (template.getTolerations() != null && !template.getTolerations().isEmpty()) {
-                tolerations.addAll(template.getTolerations().stream().map(t -> t).collect(Collectors.toList()));
-            }
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
+        }
+
+        if (template != null && template.getTolerations() != null && !template.getTolerations().isEmpty()) {
+            tolerations.addAll(template.getTolerations().stream().map(t -> t).collect(Collectors.toList()));
         }
 
         if (tolerations.isEmpty()) {
@@ -1126,8 +1428,14 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         //enforce policy for non root when requested by admin
         if (disableRoot) {
+            context.capabilities(new V1Capabilities().drop(Collections.singletonList("ALL")));
             context.allowPrivilegeEscalation(false);
             context.runAsNonRoot(true);
+        }
+
+        if (seccompProfile != null) {
+            //set seccomp profile
+            context.setSeccompProfile(new V1SeccompProfile().type(seccompProfile));
         }
 
         //check for additional config, root is *always* disallowed
@@ -1149,6 +1457,11 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
             context.runAsNonRoot(true);
         }
 
+        if (seccompProfile != null) {
+            //set seccomp profile
+            context.setSeccompProfile(new V1SeccompProfile().type(seccompProfile));
+        }
+
         //check for additional config, root is *always* disallowed
         if (runnable.getRunAsUser() != null && runnable.getRunAsUser() != 0) {
             context.setRunAsUser((long) runnable.getRunAsUser().intValue());
@@ -1163,27 +1476,51 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
     }
 
     public String buildPriorityClassName(T runnable) throws K8sFrameworkException {
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //use template
-            return templates.get(runnable.getTemplate()).getProfile().getPriorityClass();
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
+        }
+
+        if (template != null) {
+            return template.getPriorityClass();
         }
 
         return runnable.getPriorityClass();
     }
 
     public String buildRuntimeClassName(T runnable) throws K8sFrameworkException {
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //use template
-            return templates.get(runnable.getTemplate()).getProfile().getRuntimeClass();
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
+        }
+
+        if (template != null) {
+            return template.getRuntimeClass();
         }
 
         return runnable.getRuntimeClass();
     }
 
     public V1Affinity buildAffinity(T runnable) throws K8sFrameworkException {
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //use template
-            return templates.get(runnable.getTemplate()).getProfile().getAffinity();
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
+        }
+
+        if (template != null) {
+            return template.getAffinity();
         }
 
         return runnable.getAffinity();
@@ -1201,21 +1538,23 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
                     //build claim
                     Map<String, String> spec = Optional.ofNullable(v.getSpec()).orElse(Collections.emptyMap());
                     Quantity quantity = Quantity.fromString(
-                        spec.getOrDefault("size", pvcResourceDefinition.getRequests())
+                        spec.getOrDefault("size", pvcRequestResourceDefinition.getValue())
                     );
                     V1VolumeResourceRequirements req = new V1VolumeResourceRequirements()
                         .requests(Map.of("storage", quantity));
 
                     //enforce limit
                     //TODO check if valid!
-                    if (pvcResourceDefinition.getLimits() != null) {
-                        Quantity limit = Quantity.fromString(pvcResourceDefinition.getLimits());
+                    if (pvcLimitResourceDefinition.getValue() != null) {
+                        Quantity limit = Quantity.fromString(pvcLimitResourceDefinition.getValue());
                         req.setLimits(Map.of("storage", limit));
                     }
 
                     V1PersistentVolumeClaim claim = new V1PersistentVolumeClaim()
                         .metadata(
-                            new V1ObjectMeta().name(k8sBuilderHelper.getVolumeName(runnable.getId(), v.getName()))
+                            new V1ObjectMeta()
+                                .name(k8sBuilderHelper.getVolumeName(runnable.getId(), v.getName()))
+                                .labels(buildLabels(runnable))
                         )
                         .spec(
                             new V1PersistentVolumeClaimSpec()
@@ -1231,21 +1570,54 @@ public abstract class K8sBaseFramework<T extends K8sRunnable, K extends Kubernet
 
         //volumes defined in template
         //TODO evaluate support
+        K8sRunnable template = null;
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //add template
-            K8sRunnable template = templates.get(runnable.getTemplate()).getProfile();
-
-            if (template.getVolumes() != null) {
-                template
-                    .getVolumes()
-                    .stream()
-                    .filter(v -> v.getVolumeType() == CoreVolume.VolumeType.persistent_volume_claim)
-                    .forEach(v -> {
-                        //TODO evaluate support
-                        log.warn("Volumes defined in templates are not fully supported");
-                    });
-            }
+            template = templates.get(runnable.getTemplate()).getProfile();
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE).getProfile();
         }
+
+        if (template != null && template.getVolumes() != null) {
+            template
+                .getVolumes()
+                .stream()
+                .filter(v -> v.getVolumeType() == CoreVolume.VolumeType.persistent_volume_claim)
+                .forEach(v -> {
+                    //TODO evaluate support
+                    log.warn("Volumes defined in templates are not fully supported");
+                });
+        }
+
+        return volumes;
+    }
+
+    public List<V1PersistentVolumeClaim> buildSharedVolumeClaims(T runnable) throws K8sFrameworkException {
+        // Volumes to attach to the pod based on the volume spec with the additional volume_type
+        List<V1PersistentVolumeClaim> volumes = new LinkedList<>();
+        if (runnable.getVolumes() != null) {
+            runnable
+                .getVolumes()
+                .stream()
+                .filter(v -> v.getVolumeType() == CoreVolume.VolumeType.shared_volume)
+                .forEach(v -> {
+                    //build claim
+                    Map<String, String> spec = Optional.ofNullable(v.getSpec()).orElse(Collections.emptyMap());
+                    String name = spec.getOrDefault("claimName", v.getName());
+
+                    //static build definition
+                    V1PersistentVolumeClaim claim = new V1PersistentVolumeClaim()
+                        .metadata(new V1ObjectMeta().name(name).labels(buildLabels(runnable)))
+                        .spec(new V1PersistentVolumeClaimSpec().volumeMode("Filesystem"));
+
+                    volumes.add(claim);
+                });
+        }
+
+        //volumes defined in template
+        //TODO evaluate support
+        // K8sRunnable template = null;
 
         return volumes;
     }

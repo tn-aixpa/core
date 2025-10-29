@@ -22,54 +22,14 @@
 
 package it.smartcommunitylabdhub.core.models.lifecycle;
 
-import it.smartcommunitylabdhub.commons.lifecycle.LifecycleEvents;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.models.model.Model;
-import it.smartcommunitylabdhub.core.lifecycle.BaseLifecycleManager;
-import it.smartcommunitylabdhub.core.models.persistence.ModelEntity;
-import it.smartcommunitylabdhub.core.models.specs.ModelBaseStatus;
-import jakarta.validation.constraints.NotNull;
+import it.smartcommunitylabdhub.lifecycle.BaseLifecycleManager;
+import it.smartcommunitylabdhub.lifecycle.LifecycleManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class ModelLifecycleManager extends BaseLifecycleManager<Model, ModelEntity, ModelBaseStatus> {
-
-    /*
-     * Actions: ask to perform
-     */
-
-    public Model upload(@NotNull Model model) {
-        return perform(model, LifecycleEvents.UPLOAD);
-    }
-
-    public Model delete(@NotNull Model model) {
-        return perform(model, LifecycleEvents.DELETE);
-    }
-
-    public Model update(@NotNull Model model) {
-        return perform(model, LifecycleEvents.UPDATE);
-    }
-
-    /*
-     * Events: callbacks
-     */
-
-    //NOTE: disabled, we can not handle onCreated because there is no state change
-    // public Model onCreated(@NotNull Model model) {
-    //     return handle(model, State.CREATED);
-    // }
-
-    public Model onUploading(@NotNull Model model) {
-        return handle(model, State.UPLOADING);
-    }
-
-    public Model onReady(@NotNull Model model) {
-        return handle(model, State.READY);
-    }
-
-    public Model onError(@NotNull Model model) {
-        return handle(model, State.ERROR);
-    }
-}
+public class ModelLifecycleManager
+    extends BaseLifecycleManager<Model, ModelState, ModelEvents>
+    implements LifecycleManager<Model> {}

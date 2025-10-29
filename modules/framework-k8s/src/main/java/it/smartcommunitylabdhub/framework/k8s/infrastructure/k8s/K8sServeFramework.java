@@ -6,25 +6,24 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.framework.k8s.infrastructure.k8s;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -48,13 +47,14 @@ import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.openapi.models.V1VolumeMount;
 import it.smartcommunitylabdhub.commons.annotations.infrastructure.FrameworkComponent;
-import it.smartcommunitylabdhub.commons.models.enums.State;
 import it.smartcommunitylabdhub.commons.utils.MapUtils;
 import it.smartcommunitylabdhub.framework.k8s.exceptions.K8sFrameworkException;
 import it.smartcommunitylabdhub.framework.k8s.model.K8sTemplate;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreServiceType;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreVolume;
+import it.smartcommunitylabdhub.framework.k8s.runnables.K8sRunnableState;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sServeRunnable;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -143,7 +143,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             log.trace("runnable: {}", runnable);
         }
 
-        Map<String, KubernetesObject> results = new HashMap<>();
+        Map<String, Object> results = new HashMap<>();
         // Create a deployment from a Deployment+Service
         V1Deployment deployment = buildDeployment(runnable);
 
@@ -176,12 +176,19 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         //pvcs
         List<V1PersistentVolumeClaim> pvcs = buildPersistentVolumeClaims(runnable);
         if (pvcs != null) {
+            List<V1PersistentVolumeClaim> pvcsFinal = new ArrayList<>();
             for (V1PersistentVolumeClaim pvc : pvcs) {
                 log.info("create pvc for {}", String.valueOf(pvc.getMetadata().getName()));
                 try {
-                    coreV1Api.createNamespacedPersistentVolumeClaim(namespace, pvc, null, null, null, null);
-                    //store
-                    results.put("pvc", pvc);
+                    V1PersistentVolumeClaim v = coreV1Api.createNamespacedPersistentVolumeClaim(
+                        namespace,
+                        pvc,
+                        null,
+                        null,
+                        null,
+                        null
+                    );
+                    pvcsFinal.add(v);
                 } catch (ApiException e) {
                     log.error("Error with k8s: {}", e.getMessage());
                     if (log.isTraceEnabled()) {
@@ -191,6 +198,48 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                     throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
                 }
             }
+
+            //store
+            results.put("pvcs", pvcs);
+        }
+
+        //shared volumes
+        List<V1PersistentVolumeClaim> sharedPvcs = buildSharedVolumeClaims(runnable);
+        //shared volumes are already created, we check permissions
+        if (sharedPvcs != null) {
+            List<V1PersistentVolumeClaim> sharedPvcsFinal = new ArrayList<>();
+            for (V1PersistentVolumeClaim pvc : sharedPvcs) {
+                String pvcName = pvc.getMetadata().getName();
+                try {
+                    V1PersistentVolumeClaim v = coreV1Api.readNamespacedPersistentVolumeClaim(pvcName, namespace, null);
+                    if (v == null) {
+                        throw new K8sFrameworkException("Shared volume " + pvcName + " not found");
+                    }
+
+                    //check project label matches this runnable
+                    Map.Entry<String, String> label = k8sLabelHelper.buildCoreLabel("project", runnable.getProject());
+                    if (v != null && v.getMetadata() != null && v.getMetadata().getLabels() != null) {
+                        if (!label.getValue().equals(v.getMetadata().getLabels().get(label.getKey()))) {
+                            throw new K8sFrameworkException("Shared volume project mismatch");
+                        }
+                    } else {
+                        throw new K8sFrameworkException("Shared volume " + pvcName + "invalid");
+                    }
+
+                    //keep updated definition
+                    sharedPvcsFinal.add(v);
+                } catch (ApiException e) {
+                    log.error("Error with k8s: {}", e.getMessage());
+                    if (log.isTraceEnabled()) {
+                        log.trace("k8s api response: {}", e.getResponseBody());
+                    }
+
+                    throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+                }
+            }
+
+            //store
+            results.put("sharedPvs", sharedPvcsFinal);
         }
 
         log.info("create deployment for {}", String.valueOf(deployment.getMetadata().getName()));
@@ -203,8 +252,18 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         service = create(service);
         results.put("service", service);
 
+        //check if additional names are specified
+        if (runnable.getServiceNames() != null) {
+            for (String serviceName : runnable.getServiceNames()) {
+                //build service with additional name
+                V1Service additionalService = build(runnable, serviceName);
+                log.info("create additional service for {}", String.valueOf(additionalService.getMetadata().getName()));
+                additionalService = createOrUpdate(additionalService);
+            }
+        }
+
         //update state
-        runnable.setState(State.RUNNING.name());
+        runnable.setState(K8sRunnableState.PENDING.name());
 
         if (!"disable".equals(collectResults)) {
             //update results
@@ -244,6 +303,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             log.trace("runnable: {}", runnable);
         }
 
+        K8sFrameworkException exception = null;
         List<String> messages = new ArrayList<>();
 
         V1Deployment deployment;
@@ -255,10 +315,16 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
 
         if (deployment != null) {
-            // Delete the deployment
-            log.info("delete deployment for {}", String.valueOf(deployment.getMetadata().getName()));
-            delete(deployment);
-            messages.add(String.format("deployment %s deleted", deployment.getMetadata().getName()));
+            try {
+                // Delete the deployment
+                log.info("delete deployment for {}", String.valueOf(deployment.getMetadata().getName()));
+                delete(deployment);
+                messages.add(String.format("deployment %s deleted", deployment.getMetadata().getName()));
+            } catch (K8sFrameworkException | NullPointerException e) {
+                //collect but keep going
+                log.error("error deleting deployment {}: {}", runnable.getId(), e.getMessage());
+                exception = new K8sFrameworkException(e.getMessage());
+            }
         }
 
         //secrets
@@ -269,7 +335,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             String configMapName = "init-config-map-" + runnable.getId();
             V1ConfigMap initConfigMap = coreV1Api.readNamespacedConfigMap(configMapName, namespace, null);
             if (initConfigMap != null) {
-                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null);
+                coreV1Api.deleteNamespacedConfigMap(configMapName, namespace, null, null, null, null, null, null, null);
                 messages.add(String.format("configMap %s deleted", configMapName));
             }
         } catch (ApiException | NullPointerException e) {
@@ -298,6 +364,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                                 null,
                                 null,
                                 null,
+                                "Background",
                                 null
                             );
                             messages.add(String.format("pvc %s deleted", pvcName));
@@ -322,7 +389,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             // Retrieve the service
             service = get(build(runnable));
         } catch (K8sFrameworkException | IllegalArgumentException e) {
-            runnable.setState(State.DELETED.name());
+            runnable.setState(K8sRunnableState.DELETED.name());
             return runnable;
         }
 
@@ -330,6 +397,37 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         log.info("delete service for {}", String.valueOf(service.getMetadata().getName()));
         delete(service);
         messages.add(String.format("service %s deleted", service.getMetadata().getName()));
+
+        //check if additional names are specified
+        if (runnable.getServiceNames() != null) {
+            for (String serviceName : runnable.getServiceNames()) {
+                //build service with additional name
+                try {
+                    V1Service additionalService = get(build(runnable, serviceName));
+                    //check for label match to avoid removing services for different runs
+                    if (
+                        additionalService == null ||
+                        additionalService.getMetadata() == null ||
+                        additionalService.getMetadata().getLabels() == null ||
+                        !runnable
+                            .getId()
+                            .equals(additionalService.getMetadata().getLabels().get("app.kubernetes.io/version"))
+                    ) {
+                        continue;
+                    }
+
+                    log.info(
+                        "delete additional service for {}",
+                        String.valueOf(additionalService.getMetadata().getName())
+                    );
+                    delete(additionalService);
+                    messages.add(String.format("service %s deleted", additionalService.getMetadata().getName()));
+                } catch (K8sFrameworkException | IllegalArgumentException e) {
+                    //skip
+                    log.debug("error deleting additional services k8s results: {}", e.getMessage());
+                }
+            }
+        }
 
         if (!"keep".equals(collectResults)) {
             //update results
@@ -341,11 +439,15 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
 
         //update state
-        runnable.setState(State.DELETED.name());
+        runnable.setState(K8sRunnableState.DELETED.name());
         runnable.setMessage(String.join(", ", messages));
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
+        }
+
+        if (exception != null) {
+            throw exception;
         }
 
         return runnable;
@@ -390,7 +492,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
 
         //update state
-        runnable.setState(State.STOPPED.name());
+        runnable.setState(K8sRunnableState.STOPPED.name());
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
@@ -441,7 +543,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
 
         //update state
-        runnable.setState(State.RUNNING.name());
+        runnable.setState(K8sRunnableState.RUNNING.name());
 
         if (log.isTraceEnabled()) {
             log.trace("result: {}", runnable);
@@ -451,17 +553,19 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
     }
 
     public V1Service build(K8sServeRunnable runnable) throws K8sFrameworkException {
+        return build(runnable, null);
+    }
+
+    public V1Service build(K8sServeRunnable runnable, @Nullable String serviceNameSuffix) throws K8sFrameworkException {
         log.debug("build for {}", runnable.getId());
         if (log.isTraceEnabled()) {
             log.trace("runnable: {}", runnable);
         }
 
         // Generate deploymentName and ContainerName
-        String serviceName = k8sBuilderHelper.getServiceName(
-            runnable.getRuntime(),
-            runnable.getTask(),
-            runnable.getId()
-        );
+        String serviceName = serviceNameSuffix == null
+            ? k8sBuilderHelper.getServiceName(runnable.getRuntime(), runnable.getTask(), runnable.getId())
+            : k8sBuilderHelper.getServiceName(runnable.getRuntime(), runnable.getProject(), serviceNameSuffix);
 
         log.debug("build k8s service for {}", serviceName);
 
@@ -470,6 +574,9 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //get template
             template = templates.get(runnable.getTemplate());
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE);
         }
 
         Map<String, String> labels = buildLabels(runnable);
@@ -580,6 +687,33 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         }
     }
 
+    public V1Service createOrUpdate(V1Service service) throws K8sFrameworkException {
+        Assert.notNull(service.getMetadata(), "metadata can not be null");
+
+        try {
+            String serviceName = service.getMetadata().getName();
+            log.debug("create or update k8s service for {}", serviceName);
+
+            try {
+                V1Service s = coreV1Api.readNamespacedService(serviceName, namespace, null);
+                log.debug("replace k8s service for {}", s.getMetadata().getName());
+
+                return coreV1Api.replaceNamespacedService(serviceName, namespace, service, null, null, null, null);
+            } catch (ApiException e) {
+                log.debug("create k8s service for {}", serviceName);
+
+                return coreV1Api.createNamespacedService(namespace, service, null, null, null, null);
+            }
+        } catch (ApiException e) {
+            log.error("Error with k8s: {}", e.getMessage());
+            if (log.isTraceEnabled()) {
+                log.trace("k8s api response: {}", e.getResponseBody());
+            }
+
+            throw new K8sFrameworkException(e.getMessage(), e.getResponseBody());
+        }
+    }
+
     public void delete(V1Service service) throws K8sFrameworkException {
         // Delete also the Service
         try {
@@ -588,7 +722,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             String serviceName = service.getMetadata().getName();
             log.debug("delete k8s service for {}", serviceName);
 
-            coreV1Api.deleteNamespacedService(serviceName, namespace, null, null, null, null, null, null);
+            coreV1Api.deleteNamespacedService(serviceName, namespace, null, null, null, null, null, null, null);
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getMessage());
             if (log.isTraceEnabled()) {
@@ -628,6 +762,9 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
         if (StringUtils.hasText(runnable.getTemplate()) && templates.containsKey(runnable.getTemplate())) {
             //get template
             template = templates.get(runnable.getTemplate());
+        } else if (templates.containsKey(DEFAULT_TEMPLATE)) {
+            //use default template
+            template = templates.get(DEFAULT_TEMPLATE);
         }
 
         // Create labels for job
@@ -712,6 +849,7 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
                 .resources(resources)
                 .env(env)
                 .envFrom(envFrom)
+                .securityContext(buildSecurityContext(runnable))
                 .command(initCommand);
 
             podSpec.setInitContainers(Collections.singletonList(initContainer));
@@ -804,7 +942,17 @@ public class K8sServeFramework extends K8sBaseFramework<K8sServeRunnable, V1Serv
             String deploymentName = deployment.getMetadata().getName();
             log.debug("delete k8s deployment for {}", deploymentName);
 
-            appsV1Api.deleteNamespacedDeployment(deploymentName, namespace, null, null, null, null, "Foreground", null);
+            appsV1Api.deleteNamespacedDeployment(
+                deploymentName,
+                namespace,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "Foreground",
+                null
+            );
         } catch (ApiException e) {
             log.error("Error with k8s: {}", e.getResponseBody());
             if (log.isTraceEnabled()) {

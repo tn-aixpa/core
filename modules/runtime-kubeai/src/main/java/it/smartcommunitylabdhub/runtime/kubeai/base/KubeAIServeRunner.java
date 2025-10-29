@@ -6,19 +6,19 @@
 
 /*
  * Copyright 2025 the original author or authors.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * https://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
 package it.smartcommunitylabdhub.runtime.kubeai.base;
@@ -29,21 +29,23 @@ import it.smartcommunitylabdhub.commons.accessors.spec.TaskSpecAccessor;
 import it.smartcommunitylabdhub.commons.exceptions.CoreRuntimeException;
 import it.smartcommunitylabdhub.commons.jackson.JacksonMapper;
 import it.smartcommunitylabdhub.commons.models.entities.EntityName;
-import it.smartcommunitylabdhub.commons.models.enums.RelationshipName;
 import it.smartcommunitylabdhub.commons.models.enums.State;
-import it.smartcommunitylabdhub.commons.models.metadata.RelationshipsMetadata;
 import it.smartcommunitylabdhub.commons.models.model.Model;
-import it.smartcommunitylabdhub.commons.models.relationships.RelationshipDetail;
 import it.smartcommunitylabdhub.commons.models.run.Run;
-import it.smartcommunitylabdhub.commons.services.ModelService;
+import it.smartcommunitylabdhub.commons.services.ModelManager;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sBuilderHelper;
 import it.smartcommunitylabdhub.framework.k8s.kubernetes.K8sSecretHelper;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreEnv;
 import it.smartcommunitylabdhub.framework.k8s.objects.CoreLabel;
 import it.smartcommunitylabdhub.framework.k8s.runnables.K8sCRRunnable;
+import it.smartcommunitylabdhub.relationships.RelationshipDetail;
+import it.smartcommunitylabdhub.relationships.RelationshipName;
+import it.smartcommunitylabdhub.relationships.RelationshipsMetadata;
+import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIEngine;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAIModelSpec;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAiEnvFrom;
 import it.smartcommunitylabdhub.runtime.kubeai.models.KubeAiEnvFromRef;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +63,7 @@ public class KubeAIServeRunner {
     private final String engine;
     private final List<String> features;
 
-    private final ModelService modelService;
+    private final ModelManager modelService;
     private final K8sBuilderHelper k8sBuilderHelper;
     private final K8sSecretHelper k8sSecretHelper;
     private Map<String, String> secretData;
@@ -79,7 +81,7 @@ public class KubeAIServeRunner {
         Map<String, String> secretData,
         K8sBuilderHelper k8sBuilderHelper,
         K8sSecretHelper k8sSecretHelper,
-        ModelService modelService
+        ModelManager modelService
     ) {
         this.runtime = runtime;
         this.engine = engine;
@@ -94,7 +96,8 @@ public class KubeAIServeRunner {
     @SuppressWarnings("unchecked")
     public K8sCRRunnable produce(Run run) {
         KubeAIServeRunSpec runSpec = KubeAIServeRunSpec.with(run.getSpec());
-        TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(runSpec.getTaskServeSpec().toMap());
+        TaskSpecAccessor taskAccessor = TaskSpecAccessor.with(run.getSpec());
+        KubeAIServeTaskSpec taskSpec = KubeAIServeTaskSpec.with(run.getSpec());
 
         String url = functionSpec.getUrl();
         if (url.startsWith(Keys.STORE_PREFIX)) {
@@ -161,7 +164,7 @@ public class KubeAIServeRunner {
         //     ? runSpec.getScaling().getMinReplicas()
         //     : replicas;
         int processors = runSpec.getProcessors() != null ? runSpec.getProcessors() : 1;
-        String resourceProfile = StringUtils.hasText(runSpec.getProfile()) ? runSpec.getProfile() : BASE_PROFILE;
+        String resourceProfile = StringUtils.hasText(taskSpec.getProfile()) ? taskSpec.getProfile() : BASE_PROFILE;
 
         //build custom resource name matching model name
         //TODO evaluate letting users specify real names
@@ -174,11 +177,28 @@ public class KubeAIServeRunner {
             modelName = modelName.substring(0, 39);
         }
 
+        List<String> args = new ArrayList<>();
+        if (KubeAIEngine.VLLM.name().equals(engine)) {
+            //inject args to reduce logging
+            args.add("--disable-log-requests");
+            args.add("--disable-log-stats");
+            args.add("--uvicorn-log-level=warning");
+        }
+        if (KubeAIEngine.OLlama.name().equals(engine)) {
+            //inject args to reduce logging
+            env.put("OLLAMA_DEBUG", "false");
+            env.put("GIN_MODE", "release");
+        }
+
+        if (runSpec.getArgs() != null) {
+            args.addAll(runSpec.getArgs());
+        }
+
         KubeAIModelSpec modelSpec = KubeAIModelSpec
             .builder()
             .url(url)
             .image(functionSpec.getImage())
-            .args(runSpec.getArgs())
+            .args(args.isEmpty() ? null : args)
             .cacheProfile(runSpec.getCacheProfile())
             .resourceProfile(resourceProfile + ":" + Integer.toString(processors))
             .adapters(functionSpec.getAdapters())
